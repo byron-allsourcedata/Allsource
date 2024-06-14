@@ -1,0 +1,40 @@
+from enum import Enum, IntEnum
+
+class StripePaymentStatusEnum(Enum):
+    COMPLETE = 1
+    ONGOING = 2
+    PENDING = 3
+    FAILED = 4
+
+class Permission(int, Enum):
+    ANALYTICS = 0
+    AUTOMATION_EDIT = 1
+    CAMPAIGN_CLOSE = 2
+    CAMPAIGN_CREATE = 3
+    CAMPAIGN_DELETE = 5
+    CAMPAIGN_EDIT = 4
+    CREATIVE = 6
+    CREATIVE_POSTURL = 7
+    CREATORS_UPLOAD = 8
+    CREATOR_DOWNLOAD = 23
+    CREATOR_SHORTLIST = 9
+    DISCVOVERY = 10
+    ECOMMERCE_INTEGRATION = 11
+    JOB_CLOSE = 12
+    JOB_CREATE = 13
+    JOB_DELETE = 15
+    JOB_EDIT = 14
+    JOB_SEND = 16
+    LIST_ADD = 17
+    LIST_CREATE = 18
+    MARKETPLACE = 19
+    MESSAGE = 20
+    PAYMENT = 21
+    STRIPE = 22
+
+class SubscriptionsCodes(int, Enum):
+    SUB_EXPIRED = 1
+    TRIAL_EXPIRED = 2
+    PAYMENT_FAILED = 3
+    SUB_NOT_FOUND = 4
+    EMAIL_IS_NOT_CONFIRMED = 5
