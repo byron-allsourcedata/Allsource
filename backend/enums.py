@@ -1,10 +1,17 @@
-from enum import Enum, IntEnum
+from enum import Enum, auto
+
 
 class StripePaymentStatusEnum(Enum):
     COMPLETE = 1
     ONGOING = 2
     PENDING = 3
     FAILED = 4
+
+class SignUpStatus(Enum):
+    SUCCESS = auto()
+    NOT_VALID_EMAIL = auto()
+    EMAIL_ALREADY_EXISTS = auto()
+    PASSWORD_NOT_VALID = auto()
 
 class Permission(int, Enum):
     ANALYTICS = 0
