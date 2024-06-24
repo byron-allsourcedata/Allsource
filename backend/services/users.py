@@ -2,6 +2,7 @@ from datetime import datetime, timedelta, timezone
 from sqlalchemy import func
 
 from ..enums import SignUpStatus
+from ..models.template import Template
 from ..models.users import Users
 import logging
 import os
@@ -12,6 +13,8 @@ from ..schemas.users import UserSignUpForm
 from ..services.auth import create_access_token, get_password_hash
 from ..services.sendgrid import SendGridHandler
 from ..config.sendgrid import SendgridConfigBase
+from google.auth.transport import requests as google_requests
+from google.oauth2 import id_token
 
 logging.basicConfig(
     level=logging.ERROR,
@@ -21,7 +24,58 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def create_account(user_form: UserSignUpForm, db):
+def create_account_google(user_form: UserSignUpForm, db):
+    response = {}
+    CLIENT_ID = os.getenv("CLIENT_ID")
+    google_token = '1'
+    iss = os.getenv("ISS")
+    google_request = google_requests.Request()
+    idinfo = id_token.verify_oauth2_token(google_token, google_request, CLIENT_ID)
+    if idinfo:
+        google_payload = {
+            "first_name": idinfo.get("given_name"),
+            "username": idinfo.get("email"),
+            "last_name": idinfo.get("family_name"),
+            "iss": iss,
+        }
+        username = idinfo.get("email")
+        name = idinfo.get("given_name")
+    else:
+        return {
+            'status': SignUpStatus.NOT_VALID_EMAIL
+        }
+    check_user_object = get_user(db, username)
+    if check_user_object is not None:
+        logger.info(f"User already exists in database with email: {username}")
+        return {
+            'status': SignUpStatus.EMAIL_ALREADY_EXISTS
+        }
+
+    customer_object = stripe.Customer.create(
+        email=user_form.email,
+        description="User form web app signup google form",
+        name=f"{user_form.full_name}"
+    )
+    customer_id = customer_object.get("id")
+    payload = None
+    user_object = add_user(db, customer_id, payload, google_payload, hashed_password)
+    if user_object is None:
+        return False
+    update_user_parent_v2(db, user_object.get("user_filed_id"))
+    token = create_access_token(user_object)
+    response.update({"token": token})
+    logger.info("Token created")
+    google_email_confirmed_for_non_cc(db, user_object.get("user_filed_id"))
+    user_plan = plans.set_plan_without_card(db, user_object.get("user_filed_id"))
+    logger.info(f"Set plan {user_plan.title} for new user")
+    logger.info("Token created")
+    return {
+        'status': SignUpStatus.SUCCESS,
+        'token': token
+    }
+
+
+def create_account(user_form: UserSignUpForm, db, is_special_offer):
     response = {}
     user_form.password = get_password_hash(user_form.password)
     check_user_object = get_user(db, user_form.email)
@@ -32,8 +86,8 @@ def create_account(user_form: UserSignUpForm, db):
         }
     customer_object = stripe.Customer.create(
         email=user_form.email,
-        description="User form web app signup form)",
-        name=f"{user_form.first_name} {user_form.last_name}"
+        description="User form web app signup form",
+        name=f"{user_form.full_name}"
     )
     customer_id = customer_object.get("id")
     user_object = add_user(db, customer_id, user_form)
@@ -41,16 +95,17 @@ def create_account(user_form: UserSignUpForm, db):
     token = create_access_token(user_object)
     response.update({"token": token})
     logger.info("Token created")
-    confirm_email_url = f"{os.getenv('SITE_HOST_URL')}/authentication/verify-token?token={token}&skip_pricing=true"
-    mail_object = SendGridHandler()
-    mail_object.send_sign_up_mail(
+    if is_special_offer:
+        confirm_email_url = f"{os.getenv('SITE_HOST_URL')}/authentication/verify-token?token={token}&skip_pricing=true"
+        mail_object = SendGridHandler()
+        mail_object.send_sign_up_mail(
         subject="Please Verify Your Email Address",
         to_emails=user_object.email,
         template_id=get_template_id(db, '123'),
         template_placeholder={"Full_name": user_object.full_name, "Link": confirm_email_url},
-    )
-    logger.info("Confirmation Email Sent")
-    user_plan = plans.set_default_plan(db, user_object.get("user_filed_id"), True)
+        )
+        logger.info("Confirmation Email Sent")
+        user_plan = plans.set_default_plan(db, user_object.get("user_filed_id"), True)
     logger.info(f"Set plan {user_plan.title} for new user")
     logger.info("Token created")
     return {
@@ -58,8 +113,14 @@ def create_account(user_form: UserSignUpForm, db):
         'token': token
     }
 
-def get_template_id(db, name):
-    return db.query(Users).filter(func.lower(Users.email) == func.lower(email)).first()
+
+def get_template_id(db, alias):
+    template = db.query(Template).filter(Template.alias == alias).first()
+    if template:
+        return template.template_id
+    return None
+
+
 def get_user(db, email):
     user_object = db.query(Users).filter(func.lower(Users.email) == func.lower(email)).first()
     return user_object
