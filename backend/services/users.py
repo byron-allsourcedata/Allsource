@@ -10,6 +10,8 @@ import stripe
 from ..services import plans
 from ..schemas.users import UserSignUpForm
 from ..services.auth import create_access_token, get_password_hash
+from ..services.sendgrid import SendGridHandler
+from ..config.sendgrid import SendgridConfigBase
 
 logging.basicConfig(
     level=logging.ERROR,
@@ -40,13 +42,13 @@ def create_account(user_form: UserSignUpForm, db):
     response.update({"token": token})
     logger.info("Token created")
     confirm_email_url = f"{os.getenv('SITE_HOST_URL')}/authentication/verify-token?token={token}&skip_pricing=true"
-    # mail_object = SendGridHandler()
-    # mail_object.send_signup_mail(
-    #     subject="Please Verify Your Email Address",
-    #     to_emails=[user_object.get("email")],
-    #     template_id=SendgridConfigBase.email_verification_template_id,
-    #     template_placeholder={"Firstname": user_object.get("user_firstname"), "Link": confirm_email_url},
-    # )
+    mail_object = SendGridHandler()
+    mail_object.send_sign_up_mail(
+        subject="Please Verify Your Email Address",
+        to_emails=user_object.email,
+        template_id=get_template_id(db, '123'),
+        template_placeholder={"Full_name": user_object.full_name, "Link": confirm_email_url},
+    )
     logger.info("Confirmation Email Sent")
     user_plan = plans.set_default_plan(db, user_object.get("user_filed_id"), True)
     logger.info(f"Set plan {user_plan.title} for new user")
@@ -56,7 +58,8 @@ def create_account(user_form: UserSignUpForm, db):
         'token': token
     }
 
-
+def get_template_id(db, name):
+    return db.query(Users).filter(func.lower(Users.email) == func.lower(email)).first()
 def get_user(db, email):
     user_object = db.query(Users).filter(func.lower(Users.email) == func.lower(email)).first()
     return user_object
