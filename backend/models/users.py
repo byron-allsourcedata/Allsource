@@ -13,8 +13,7 @@ class Users(Base):
     email = Column(VARCHAR)
     email_confirmed = Column(BOOLEAN, default=False)
     password = Column(VARCHAR)
-    first_name = Column(VARCHAR)
-    last_name = Column(VARCHAR)
+    full_name = Column(VARCHAR)
     parent_id = Column(BIGINT)
     image = Column(VARCHAR)
     company = Column(VARCHAR)
@@ -23,7 +22,6 @@ class Users(Base):
     payment_status = Column(INTEGER, default=5)
     customer_id = Column(VARCHAR)
     website = Column(VARCHAR)
-    companylogo = Column(VARCHAR)
     reset_password_expiration_time = Column(DateTime)
 
 

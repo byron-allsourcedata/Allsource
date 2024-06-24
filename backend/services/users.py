@@ -71,25 +71,22 @@ def add_user(db, customer_id: str, user_form: Optional[dict] = None, google_toke
         email=user_form.email if len(google_token) == 0 else google_token.get("email"),
         email_confirmed=False,
         password=user_form.password,
-        first_name=user_form.first_name if len(google_token) == 0 else google_token.get("first_name"),
-        last_name=user_form.last_name if len(google_token) == 0 else google_token.get("last_name"),
-        image=user_form.image,
-        company=user_form.company if user_form.company is not None else user_form.first_name,
+        full_name=user_form.full_name if len(google_token) == 0 else google_token.get("full_name"),
+        image=user_form.get('image', None),
+        company=user_form.get('company', None),
         created_at=get_utc_aware_date_for_mssql(),
         last_login=get_utc_aware_date_for_mssql(),
         # payment_status=StripePaymentStatusEnum.PENDING.value if user_form.payment_version == "app_v2" else StripePaymentStatusEnum.ONGOING.value,
         parent_id=0,
         customer_id=customer_id,
-        website=user_form.website,
-        # companylogo=user_form.companylogo,
+        website=user_form.get('website', None)
     )
     db.add(user_object)
     db.commit()
     token_info = {
         "user_filed_id": user_object.id,
         "email": user_object.email,
-        "user_firstname": user_object.first_name,
-        "user_lastname": user_object.last_name,
+        "full_name": user_object.full_name,
         "iss": "Filed-Token-Issuer",
         "user_account_state": user_object.payment_status,
         "aud": "Filed-Client-Apps",

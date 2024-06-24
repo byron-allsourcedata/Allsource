@@ -6,12 +6,9 @@ from backend.enums import SignUpStatus
 
 
 class UserSignUpForm(BaseModel):
+    full_name: str = Field(...)
     email: str = Field(...)
     password: str = Field(...)
-    first_name: str = Field(...)
-    last_name: str = Field(...)
-    company: Optional[str]
-    website: Optional[str]
 
 
 class UserSignUpFormResponse(BaseModel):
@@ -20,5 +17,5 @@ class UserSignUpFormResponse(BaseModel):
 
 
 class SignIn(BaseModel):
-    username: Optional[str] = Form(None, alias="username")
-    password: Optional[str] = Form(None, alias="password")
+    email: str = Field(...)
+    password: str = Field(...)
