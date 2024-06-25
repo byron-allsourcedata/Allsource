@@ -7,10 +7,12 @@ from dotenv import find_dotenv, load_dotenv
 class Base:
     env = os.getenv("ENV", "dev")
     port = int(os.getenv("PORT", 8000))
-    host = str(os.getenv("HOST", "localhost"))
+    domain = str(os.getenv("DOMAIN"))
     allowed_origins = [
-        f"http://{host}:{port}",
-        f"https://{host}:{port}",
+        f"http://localhost:{port}",
+        f"https://localhost:{port}",
+        f"http://{domain}",
+        f"https://{domain}",
     ]
 
 
