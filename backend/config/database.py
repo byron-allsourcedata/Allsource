@@ -31,43 +31,22 @@ class SqlConfigBase(Base):
         return sessionmaker(bind=create_engine(self.url, pool_size=20))
 
 
-class SqlConfigDev(SqlConfigBase):
-    @property
-    def name(self):
+def SqlConfig():
+    env = os.getenv("ENV", "dev")
+    if env == 'dev':
+        return os.getenv("SMI_DB_NAME")
+    else:
         return os.getenv("SMI_DB_NAME")
 
-
-class SqlConfigProd(SqlConfigBase):
-    @property
-    def name(self):
-        return os.getenv("SMI_DB_NAME")
-
-
-sql_config = {"dev": SqlConfigDev, "prod": SqlConfigProd}
-
-SqlConfig = sql_config[os.getenv("ENV", "dev")]()
-
-
+SqlConfig = SqlConfig()
 database_uri = SqlConfig.url
 engine = create_engine(
     database_uri,
     pool_pre_ping=True,
-    pool_size=500,
+    pool_size=20,
     max_overflow=100,
     pool_recycle=60 * 60,
     pool_timeout=30,
 )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-
-@contextmanager
-def session_scope():
-    db = SessionLocal()
-    try:
-        yield db
-    except Exception:
-        db.rollback()
-        raise
-    finally:
-        db.close()

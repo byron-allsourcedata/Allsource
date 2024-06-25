@@ -1,18 +1,11 @@
-import base64
 import json
 import logging
 import os
-import re
 import ssl
 from typing import List, Optional
+from sendgrid import Content, ReplyTo, SendGridAPIClient
+from sendgrid.helpers.mail import Cc, From, Mail, Subject
 
-import requests
-from sendgrid import Content, From, ReplyTo, SendGridAPIClient, Subject
-from sendgrid.helpers.mail import Attachment, Cc, Disposition, FileContent, FileName, From, Mail, Subject
-from sqlalchemy import inspect
-
-
-from ..config.database import session_scope
 logger = logging.getLogger(__name__)
 
 
