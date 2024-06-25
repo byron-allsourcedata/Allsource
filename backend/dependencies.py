@@ -1,12 +1,11 @@
-from backend.config.database import SessionLocal, SqlConfig
+from backend.config.database import SessionLocal
+from contextlib import contextmanager
 
 
-def get_sql_db():
-    db = SqlConfig.session()
+@contextmanager
+def get_db():
+    db = SessionLocal()
     try:
         yield db
-    except Exception:
-        db.rollback()
-        raise
     finally:
         db.close()
