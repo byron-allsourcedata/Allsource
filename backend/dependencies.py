@@ -1,4 +1,4 @@
-from backend.config.sql import SessionLocal, SqlConfig
+from backend.config.database import SessionLocal, SqlConfig
 
 
 def get_sql_db():

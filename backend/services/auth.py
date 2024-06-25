@@ -1,10 +1,8 @@
 import os
 from datetime import datetime, timedelta
 from typing import Dict, Mapping, Union
-
 from jose import jwt
 from passlib.context import CryptContext
-
 from ..config.auth import AuthConfig
 from ..exceptions import TokenError
 from ..schemas.auth import Token

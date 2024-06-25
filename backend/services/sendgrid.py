@@ -12,7 +12,7 @@ from sendgrid.helpers.mail import Attachment, Cc, Disposition, FileContent, File
 from sqlalchemy import inspect
 
 
-from ..config.sql import session_scope
+from ..config.database import session_scope
 logger = logging.getLogger(__name__)
 
 

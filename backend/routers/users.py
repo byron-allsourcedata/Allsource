@@ -9,13 +9,13 @@ from fastapi.responses import RedirectResponse
 router = APIRouter()
 
 
-async def get_user_id(user_id: str = Path(None)):
-    return user_id
+async def get_special_offer(is_special_offer: str):
+    return is_special_offer
 
 
 @router.post("/sign-up/{is_special_offer}", response_model=UserSignUpFormResponse)
 async def create_user(user_form: UserSignUpForm, db: Session = Depends(get_sql_db),
-                      is_special_offer: str = Depends(get_user_id)):
+                      is_special_offer: str = Depends(get_special_offer)):
     users.create_account(user_form, db, is_special_offer)
     if is_special_offer:
         return RedirectResponse(url=f"/api/v1/users/sign-up?email={user_form.email}")
@@ -24,5 +24,6 @@ async def create_user(user_form: UserSignUpForm, db: Session = Depends(get_sql_d
 
 @router.post("/sign-up_google/{is_special_offer}", response_model=UserSignUpFormResponse)
 async def create_user_google(user_form: UserSignUpForm, db: Session = Depends(get_sql_db),
-                             is_special_offer: str = Depends(get_user_id)):
+                             is_special_offer: str = Depends(get_special_offer)):
     users.create_account_google(user_form, db, is_special_offer)
+    return RedirectResponse(url=f"/api/v1/users/set_plan_without_card")
