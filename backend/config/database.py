@@ -33,7 +33,7 @@ engine = create_engine(
     pool_size=20,
     max_overflow=100,
     pool_recycle=60 * 60,
-    pool_timeout=30,
+    pool_timeout=10,
 )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
