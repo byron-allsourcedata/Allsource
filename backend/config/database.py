@@ -10,7 +10,6 @@ load_dotenv()
 
 
 class SqlConfigBase(Base):
-    driver: str = None
 
     def __init__(self):
         self.host: str = os.getenv("DB_HOST")
@@ -21,9 +20,7 @@ class SqlConfigBase(Base):
 
     @property
     def url(self) -> str:
-        if self.driver:
-            return f"postgresql://{self.username}:{self.password}@{self.host}/{self.name}?driver={self.driver}"
-        return f"postgresql://{self.username}:{self.password}@{self.host}:{self.port}/{self.name}"
+        return f"postgresql://{self.username}:{self.password}@{self.host}:{self.port}/{self.db_name}"
 
 
 sql_config = SqlConfigBase()

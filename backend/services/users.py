@@ -163,8 +163,8 @@ class ServiceUsers:
             name=f"{user_form.full_name}"
         )
         customer_id = customer_object.get("id")
-        user_object = self.add_user(db, customer_id, user_form)
-        self.update_user_parent_v2(db, user_object.get("user_filed_id"))
+        user_object = self.add_user(customer_id, user_form)
+        self.update_user_parent_v2(user_object.get("user_filed_id"))
         token = create_access_token(user_object)
         response.update({"token": token})
         logger.info("Token created")
