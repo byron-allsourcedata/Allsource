@@ -1,5 +1,9 @@
 from backend.config.database import SessionLocal
 from contextlib import contextmanager
+from sqlalchemy.orm import Session
+from fastapi import Depends
+
+from backend.services.users import ServiceUsers
 
 
 @contextmanager
@@ -9,3 +13,7 @@ def get_db():
         yield db
     finally:
         db.close()
+
+
+def get_user_service(db: Session = Depends(get_db)):
+    return ServiceUsers(db=db)
