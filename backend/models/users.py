@@ -1,8 +1,6 @@
 from sqlalchemy import Column, DateTime, event
 from sqlalchemy.dialects.postgresql import BIGINT, BOOLEAN, INTEGER, TIMESTAMP, VARCHAR
-from sqlalchemy.orm import relationship
 
-from ..enums import Permission
 from .base import Base, create_timestamps, update_timestamps
 
 
