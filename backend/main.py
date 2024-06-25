@@ -16,9 +16,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 app = FastAPI()
-origins = [
-    "http://localhost:3000",
-]
+origins = Base.allowed_origins
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
