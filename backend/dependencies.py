@@ -6,7 +6,6 @@ from fastapi import Depends
 from backend.services.users import ServiceUsers
 
 
-@contextmanager
 def get_db():
     db = SessionLocal()
     try:
