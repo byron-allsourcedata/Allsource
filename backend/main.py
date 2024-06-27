@@ -1,5 +1,7 @@
 import logging
 
+from h11._abnf import status_code
+
 from backend.config.base import Base
 from backend.enums import SignUpStatus
 from backend.routers.users import router
@@ -32,7 +34,7 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
     return JSONResponse(
         status_code=exc.status_code,
         content={
-            'status': SignUpStatus.ERROR.value,
+            'status': status_code,
             'detail': {'error': traceback.format_exc()}
         }
     )
@@ -44,7 +46,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     return JSONResponse(
         status_code=400,
         content={
-            'status': SignUpStatus.ERROR.value,
+            'status': status_code,
             'detail': {'error': traceback.format_exc()}
         }
     )

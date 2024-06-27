@@ -11,18 +11,13 @@ from ..services.users import ServiceUsers
 
 router = APIRouter()
 
-
-async def get_special_offer(is_special_offer: str):
-    return is_special_offer
-
-
-@router.post("/sign-up/{is_special_offer}", response_model=UserSignUpFormResponse)
-async def create_user(user_form: UserSignUpForm, is_special_offer: str = Depends(get_special_offer),
-                      users: ServiceUsers = Depends(get_user_service)):
-    users.create_account(user_form, is_special_offer)
+@router.post("/sign-up", response_model=UserSignUpFormResponse)
+async def create_user(user_form: UserSignUpForm, users_service: ServiceUsers = Depends(get_user_service)):
+    users_service.create_account(user_form)
     if is_special_offer:
-        return RedirectResponse(url=f"/api/v1/users/sign-up?email={user_form.email}")
-    return RedirectResponse(url=f"/api/v1/users/set_plan_without_card")
+        return RedirectResponse(url=f"/sign-up?email={user_form.email}")
+    return RedirectResponse(url=f"/set_plan_without_card")
+
 
 
 @router.post("/sign-up_google/{is_special_offer}", response_model=UserSignUpFormResponse)

@@ -5,7 +5,7 @@ from .base import Base, create_timestamps, update_timestamps
 
 
 class UserSubscriptions(Base):
-    __tablename__ = "usersubscriptions"
+    __tablename__ = "user_subscriptions"
 
     id = Column(BIGINT, primary_key=True)
     updated_at = Column(TIMESTAMP(precision=7))

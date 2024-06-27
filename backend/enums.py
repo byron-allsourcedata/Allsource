@@ -12,7 +12,7 @@ class SignUpStatus(Enum):
     NOT_VALID_EMAIL = auto()
     EMAIL_ALREADY_EXISTS = auto()
     PASSWORD_NOT_VALID = auto()
-    ERROR = auto()
+    NEED_CONFIRM_EMAIL = auto()
 
 class AutomationSystemTemplate(Enum):
     EMAIL_VERIFICATION_TEMPLATE = auto()
