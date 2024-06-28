@@ -1,20 +1,20 @@
 from datetime import datetime, timedelta, timezone
 from sqlalchemy import func
-from ..enums import SignUpStatus, StripePaymentStatusEnum, AutomationSystemTemplate
-from ..models.send_grid_template import SendGridTemplate
-from ..models.users import Users
-import logging
-import os
-from typing import Optional
-import stripe
-from ..services import plans
-from ..schemas.users import UserSignUpForm
-from ..services.auth import create_access_token, get_password_hash
-from ..services.sendgrid import SendGridHandler
 from sqlalchemy.orm import Session
-from google.auth.transport import requests as google_requests
-from google.oauth2 import id_token
-from sqlalchemy.orm import sessionmaker
+
+from .user_persistence_service import UserPersistenceService
+from backend.services.payments_plans import PaymentsPlans
+from backend.models.users import Users
+import logging
+from passlib.context import CryptContext
+from typing import Dict, Mapping, Union
+from jose import jwt
+from ..config.auth import AuthConfig
+from ..exceptions import TokenError
+from ..schemas.auth import Token
+from ..enums import SignUpStatus, StripePaymentStatusEnum, AutomationSystemTemplate
+from typing import Optional
+from ..schemas.users import UserSignUpForm
 
 logging.basicConfig(
     level=logging.ERROR,
@@ -23,19 +23,55 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-class ServiceUsers:
-    def __init__(self, db: Session):
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+class UserAuthService:
+    def __init__(self, db: Session, plans_service: PaymentsPlans, user_persistence_service: UserPersistenceService):
         self.db = db
+        self.plans_service = plans_service
+        self.user_persistence_service = user_persistence_service
 
-    def get_template_id(self, alias):
-        template = self.db.query(SendGridTemplate).filter(SendGridTemplate.alias == alias).first()
-        if template:
-            return template.template_id
-        return None
 
-    def get_user(self, email):
-        user_object = self.db.query(Users).filter(func.lower(Users.email) == func.lower(email)).first()
-        return user_object
+    def create_access_token(self, token: Token, expires_delta: Union[timedelta, None] = None):
+        if expires_delta:
+            expire = datetime.utcnow() + expires_delta
+        else:
+            expire = datetime.utcnow() + timedelta(days=AuthConfig.expire_days)
+
+        if isinstance(token, dict):
+            token_dict = token
+        else:
+            token_dict = token.__dict__
+
+        token_dict.update({"exp": int(expire.timestamp())})
+        encoded_jwt = jwt.encode(token_dict, AuthConfig.secret_key, AuthConfig.algorithm)
+        return encoded_jwt
+
+    def verify_password(self, plain_password, hashed_password):
+        return pwd_context.verify(plain_password, hashed_password)
+
+    def decode_jwt_from_headers(self, headers: dict) -> Mapping:
+        """
+        Extracts Authorization Bearer JWT from request header and decodes it.
+        Works for both Flask and FastAPI.
+        :param headers: header dictionary (Flask) or Header Object (FastAPI)
+        :return: decoded jwt data
+        """
+        return self.decode_jwt_data(headers.get("Authorization", ""))
+
+    # def decode_jwt_data(self, token: str) -> Union[Mapping, Dict]:
+    #     """
+    #     Decodes data from JWT.
+    #     :param token: Bearer JWT
+    #     :return: decoded jwt data
+    #     """
+    #     try:
+    #         token = token.replace("Bearer ", "")
+    #     except AttributeError:
+    #         raise TokenError
+    #     jwt_data = jwt.decode(token, options={"verify_signature": False}, audience="Filed-Client-Apps",
+    #                           algorithms=["HS256"])
+    #     return jwt_data
 
     def get_utc_aware_date(self):
         return datetime.now(timezone.utc).replace(microsecond=0)
@@ -46,15 +82,8 @@ class ServiceUsers:
             date += delta
         return date.isoformat()[:-6] + "Z"
 
-    def update_user_parent_v2(self, parent_id: int):
-        self.db.query(Users).filter(Users.id == parent_id).update({Users.parent_id: parent_id},
-                                                                  synchronize_session=False)
-
-    def google_email_confirmed_for_non_cc(self, db, user_id: int):
-        query = db.query(Users).filter(Users.id == user_id)
-        if query:
-            db.query(Users).filter(Users.id == user_id).update({"email_confirmed": True})
-            db.commit()
+    def get_password_hash(self, password):
+        return pwd_context.hash(password)
 
     def add_user(self, customer_id: str, user_form: Optional[dict] = None, google_token: Optional[dict] = None):
         user_object = Users(
@@ -66,7 +95,7 @@ class ServiceUsers:
             company=user_form.image if hasattr(user_form, 'company') else None,
             created_at=self.get_utc_aware_date_for_mssql(),
             last_login=self.get_utc_aware_date_for_mssql(),
-            payment_status=StripePaymentStatusEnum.PENDING.value,
+            payment_status=StripePaymentStatusEnum.PENDING.name,
             parent_id=0,
             customer_id=customer_id,
             website=user_form.image if hasattr(user_form, 'website') else None
@@ -88,7 +117,7 @@ class ServiceUsers:
         }
         return token_info
 
-    def create_account_google(self, user_form: UserSignUpForm, is_without_card):
+    def create_account_google(self, user_form: UserSignUpForm):
         response = {}
         CLIENT_ID = os.getenv("CLIENT_ID")
         google_token = '1'
@@ -121,12 +150,12 @@ class ServiceUsers:
         payload = None
 
         user_object = self.add_user(customer_id, payload, google_payload)
-        self.update_user_parent_v2(user_object.get("user_filed_id"))
-        token = create_access_token(user_object)
+        self.user_persistence_service.update_user_parent_v2(user_object.get("user_filed_id"))
+        token = self.create_access_token(user_object)
         response.update({"token": token})
         logger.info("Token created")
         self.google_email_confirmed_for_non_cc(user_object.get("user_filed_id"))
-        user_plan = plans.set_default_plan(self.db, user_object.get("user_filed_id"), False)
+        user_plan = self.plans_service.set_default_plan(self.db, user_object.get("user_filed_id"), False)
         if not user_plan:
             return {
                 'status': SignUpStatus.NOT_VALID_EMAIL
@@ -134,14 +163,15 @@ class ServiceUsers:
         logger.info(f"Set plan {user_plan.title} for new user")
         logger.info("Token created")
         return {
-            'status': SignUpStatus.SUCCESS,
+            'status': SignUpStatus.NEED_CHOOSE_PLAN,
             'token': token
         }
 
-    def create_account(self, user_form: UserSignUpForm, is_without_card):
+    def create_account(self, user_form: UserSignUpForm):
         response = {}
-        user_form.password = get_password_hash(user_form.password)
-        check_user_object = self.get_user(user_form.email)
+        user_form.password = self.get_password_hash(user_form.password)
+        check_user_object = self.user_persistence_service.get_user(user_form.email)
+        is_without_card = user_form.is_without_card
         if check_user_object is not None:
             logger.info(f"User already exists in database with email: {user_form.email}")
             return {
@@ -155,8 +185,8 @@ class ServiceUsers:
         # customer_id = customer_object.get("id")
         customer_id = '1'
         user_object = self.add_user(customer_id, user_form)
-        self.update_user_parent_v2(user_object.get("user_filed_id"))
-        token = create_access_token(user_object)
+        self.user_persistence_service.update_user_parent_v2(user_object.get("user_filed_id"))
+        token = self.create_access_token(user_object)
         response.update({"token": token})
         logger.info("Token created")
         if is_without_card:
@@ -169,16 +199,16 @@ class ServiceUsers:
                 template_placeholder={"Full_name": user_object.full_name, "Link": confirm_email_url},
             )
             logger.info("Confirmation Email Sent")
-            user_plan = plans.set_default_plan(self.db, user_object.get("user_filed_id"), True)
+            user_plan = self.plans_service.set_default_plan(self.db, user_object.get("user_filed_id"), True)
             return {
                 'status': SignUpStatus.NEED_CONFIRM_EMAIL,
                 'token': token
             }
         else:
-            user_plan = plans.set_default_plan(self.db, user_object.get("user_filed_id"), False)
-        logger.info(f"Set plan {user_plan.title} for new user")
+            user_plan = self.plans_service.set_default_plan(user_object.get("user_filed_id"), False)
+            logger.info(f"Set plan {user_plan.title} for new user")
         logger.info("Token created")
         return {
-            'status': SignUpStatus.SUCCESS,
+            'status': SignUpStatus.NEED_CHOOSE_PLAN,
             'token': token
         }

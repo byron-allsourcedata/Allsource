@@ -1,24 +1,33 @@
 import logging
 from datetime import datetime
-from ..models.subscriptions import Subscription
-from ..services import users
 
-logger = logging.getLogger(__name__)
+from .user_persistence_service import UserPersistenceService
+from ..models.subscriptions import Subscription
+from sqlalchemy.orm import Session
+
 ACTIVE_STATUSES = ["active", "trialing", "completed"]
 
+logging.basicConfig(
+    level=logging.ERROR,
+    format='%(asctime)s %(levelname)s: %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+logger = logging.getLogger(__name__)
 
-def get_subscription(db, user_id: int):
-    subscription = db.query(Subscription).filter(Subscription.user_id == user_id).order_by(
-        Subscription.created_at.desc()).first()
-    if subscription is None:
-        sub_user = users.get_user_by_id(db=db, user_id=user_id)
-        subscription = db.query(Subscription).filter(Subscription.user_id == sub_user.parent_id).order_by(
+
+class SubscriptionService:
+    def __init__(self, db: Session, user_persistence_service: UserPersistenceService):
+        self.db = db
+        self.user_persistence_service = user_persistence_service
+
+
+    def get_subscription(self, user_id: int):
+        subscription = self.db.query(Subscription).filter(Subscription.user_id == user_id).order_by(
             Subscription.created_at.desc()).first()
-    return subscription
+        return subscription
 
-
-def is_active(sub_status, end_date):
-    if sub_status == 'canceled':
-        return end_date >= datetime.now()
-    else:
-        return sub_status in ACTIVE_STATUSES
+    def is_active(sub_status, end_date):
+        if sub_status == 'canceled':
+            return end_date >= datetime.now()
+        else:
+            return sub_status in ACTIVE_STATUSES

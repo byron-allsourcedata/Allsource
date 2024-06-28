@@ -1,4 +1,4 @@
-from sqlalchemy import Column, DateTime, event
+from sqlalchemy import Column, DateTime, event, Integer
 from sqlalchemy.dialects.postgresql import BIGINT, BOOLEAN, INTEGER, TIMESTAMP, VARCHAR
 
 from .base import Base, create_timestamps, update_timestamps
@@ -7,7 +7,7 @@ from .base import Base, create_timestamps, update_timestamps
 class Users(Base):
     __tablename__ = "users"
 
-    id = Column(BIGINT, primary_key=True)
+    id = Column(Integer, primary_key=True)
     email = Column(VARCHAR)
     email_confirmed = Column(BOOLEAN, default=False)
     password = Column(VARCHAR)

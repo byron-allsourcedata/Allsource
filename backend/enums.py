@@ -2,17 +2,17 @@ from enum import Enum, auto
 
 
 class StripePaymentStatusEnum(Enum):
-    COMPLETE = auto()
-    ONGOING = auto()
-    PENDING = auto()
-    FAILED = auto()
+    COMPLETE = 'COMPLETE'
+    ONGOING = 'ONGOING'
+    PENDING = 'PENDING'
+    FAILED = 'FAILED'
 
 class SignUpStatus(Enum):
-    SUCCESS = auto()
-    NOT_VALID_EMAIL = auto()
-    EMAIL_ALREADY_EXISTS = auto()
-    PASSWORD_NOT_VALID = auto()
-    NEED_CONFIRM_EMAIL = auto()
+    NEED_CHOOSE_PLAN = 'NEED_CHOOSE_PLAN'
+    NOT_VALID_EMAIL = 'NOT_VALID_EMAIL'
+    EMAIL_ALREADY_EXISTS = 'EMAIL_ALREADY_EXISTS'
+    PASSWORD_NOT_VALID = 'PASSWORD_NOT_VALID'
+    NEED_CONFIRM_EMAIL = 'NEED_CONFIRM_EMAIL'
 
 class AutomationSystemTemplate(Enum):
-    EMAIL_VERIFICATION_TEMPLATE = auto()
+    EMAIL_VERIFICATION_TEMPLATE = 'EMAIL_VERIFICATION_TEMPLATE'
