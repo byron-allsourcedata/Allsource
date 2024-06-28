@@ -13,7 +13,7 @@ const Signup: React.FC = () => {
 
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
-  const [formValues, setFormValues] = useState({ fullName: '', is_without_card: isWithoutCard ? 'true' : 'false', email: '', password: '' });
+  const [formValues, setFormValues] = useState({ full_name: '', email: '', password: '', is_without_card: isWithoutCard ? 'true' : 'false'});
   const handleGoogleSignup = () => {
     console.log('Google signup clicked');
   };
@@ -22,11 +22,11 @@ const Signup: React.FC = () => {
     const newErrors: { [key: string]: string } = { ...errors };
 
     switch (name) {
-      case 'fullName':
+      case 'full_name':
         if (!value) {
-          newErrors.fullName = 'Full name is required';
+          newErrors.full_name = 'Full name is required';
         } else {
-          delete newErrors.fullName;
+          delete newErrors.full_name;
         }
         break;
       case 'email':
@@ -65,8 +65,8 @@ const Signup: React.FC = () => {
     event.preventDefault();
     const newErrors: { [key: string]: string } = {};
 
-    if (!formValues.fullName) {
-      newErrors.fullName = 'Full name is required';
+    if (!formValues.full_name) {
+      newErrors.full_name = 'Full name is required';
     }
 
     if (!formValues.email) {
@@ -84,7 +84,7 @@ const Signup: React.FC = () => {
     if (Object.keys(newErrors).length === 0) {
       console.log(JSON.stringify(formValues))
       try {
-        const response = await fetch('http://localhost:8000/signup', {
+        const response = await fetch('http://localhost:8000/sign-up', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -123,10 +123,10 @@ const Signup: React.FC = () => {
       maxWidth: '31rem',
       margin: '0 auto',
       position: 'relative',
-      boxShadow: '0rem 2px 8px 0px #00000033',
+      boxShadow: '0rem 0.2em 0.8em 0px #00000033',
       borderRadius: '0.625rem',
       border: '0.125rem solid transparent',
-      marginTop: '120px',
+      marginTop: '7.5em',
       '@media (max-width: 440px)': {
         boxShadow: '0rem 0px 0px 0px #00000033',
         border: 'none',
@@ -249,13 +249,13 @@ const Signup: React.FC = () => {
           <TextField
             InputLabelProps={{ sx: styles.inputLabel }}
             label="Full name"
-            name="fullName"
+            name="full_name"
             variant="outlined"
             fullWidth
-            value={formValues.fullName}
+            value={formValues.full_name}
             onChange={handleChange}
-            error={Boolean(errors.fullName)}
-            helperText={errors.fullName}
+            error={Boolean(errors.full_name)}
+            helperText={errors.full_name}
           />
           <TextField
             InputLabelProps={{ sx: styles.inputLabel }}

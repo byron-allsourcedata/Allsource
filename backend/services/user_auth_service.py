@@ -127,7 +127,7 @@ class UserAuthService:
         if idinfo:
             google_payload = {
                 "email": idinfo.get("email"),
-                "full_name": f"{idinfo.get("given_name")} {idinfo.get("family_name")}",
+                "full_name": f"{idinfo.get('given_name')} {idinfo.get('family_name')}",
                 "iss": iss,
             }
             email = idinfo.get("email")
