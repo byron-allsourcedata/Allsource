@@ -5,6 +5,9 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from backend.config.base import Base
 from dotenv import load_dotenv
+from sqlalchemy import create_engine
+
+from sqlalchemy.ext.declarative import declarative_base
 
 load_dotenv()
 
@@ -12,6 +15,7 @@ load_dotenv()
 class SqlConfigBase(Base):
 
     def __init__(self):
+        super().__init__()
         self.host: str = os.getenv("DB_HOST")
         self.port: str = os.getenv("DB_PORT")
         self.username: str = os.getenv("DB_USERNAME")
@@ -25,8 +29,6 @@ class SqlConfigBase(Base):
 
 sql_config = SqlConfigBase()
 database_uri: str = sql_config.url
-
-
 engine = create_engine(
     database_uri,
     pool_pre_ping=True,

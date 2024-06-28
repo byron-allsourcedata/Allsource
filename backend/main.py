@@ -1,5 +1,8 @@
 import logging
 
+from h11._abnf import status_code
+
+from backend.config.base import Base
 from backend.enums import SignUpStatus
 from backend.routers.users import router
 from fastapi.middleware.cors import CORSMiddleware
@@ -16,12 +19,11 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 app = FastAPI()
-origins = Base.allowed_origins
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=Base.allowed_origins,
     allow_credentials=True,
-    allow_methods=["GET", "POST"],
+    allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"]
 )
 
@@ -32,7 +34,7 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
     return JSONResponse(
         status_code=exc.status_code,
         content={
-            'status': SignUpStatus.ERROR,
+            'status': status_code,
             'detail': {'error': traceback.format_exc()}
         }
     )
@@ -44,7 +46,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     return JSONResponse(
         status_code=400,
         content={
-            'status': SignUpStatus.ERROR,
+            'status': status_code,
             'detail': {'error': traceback.format_exc()}
         }
     )
