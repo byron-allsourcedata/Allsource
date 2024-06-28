@@ -1,0 +1,21 @@
+# Environments
+*.*env
+.inf
+
+# Cache
+__pycache__
+.pytest_cache/
+.coverage
+
+# Vim
+tags
+
+# Docs
+*/docs/build
+Makefile
+*.bat
+
+# files
+.suo
+.vscode
+app/data/cities.json
