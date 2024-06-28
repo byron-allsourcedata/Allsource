@@ -9,26 +9,19 @@ import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 const Signup: React.FC = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const isWithoutCard = searchParams.get('is_without_card') === 'true';
 
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
-  const [formValues, setFormValues] = useState({ fullName: '', is_without_card: isWithoutCard ? 'true' : 'false', email: '', password: '' });
+  const [formValues, setFormValues] = useState({ email: '', password: '' });
+  
   const handleGoogleSignup = () => {
-    console.log('Google signup clicked');
+    console.log('Google login clicked');
   };
 
   const validateField = (name: string, value: string) => {
     const newErrors: { [key: string]: string } = { ...errors };
 
     switch (name) {
-      case 'fullName':
-        if (!value) {
-          newErrors.fullName = 'Full name is required';
-        } else {
-          delete newErrors.fullName;
-        }
-        break;
       case 'email':
         if (!value) {
           newErrors.email = 'Email address is required';
@@ -65,10 +58,6 @@ const Signup: React.FC = () => {
     event.preventDefault();
     const newErrors: { [key: string]: string } = {};
 
-    if (!formValues.fullName) {
-      newErrors.fullName = 'Full name is required';
-    }
-
     if (!formValues.email) {
       newErrors.email = 'Email address is required';
     } else if (!/\S+@\S+\.\S+/.test(formValues.email)) {
@@ -84,7 +73,7 @@ const Signup: React.FC = () => {
     if (Object.keys(newErrors).length === 0) {
       console.log(JSON.stringify(formValues))
       try {
-        const response = await fetch('http://localhost:8000/signup', {
+        const response = await fetch('http://localhost:8000/login', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -99,7 +88,7 @@ const Signup: React.FC = () => {
           console.error('Error:', errorData);
         } else {
           const data = await response.json();
-          router.push('/login');
+          router.push('/account');
         }
       } catch (error) {
         console.error('Error:', error);
@@ -180,7 +169,6 @@ const Signup: React.FC = () => {
     form: {
       width: '100%',
       maxWidth: '360px',
-      padding: '0 0px 24px',
       fontFamily: 'Nunito',
     },
     inputLabel: {
@@ -196,7 +184,7 @@ const Signup: React.FC = () => {
         backgroundColor: 'lightgreen',
       },
       fontWeight: 'bold',
-      margin: '24px 0px 0 0px',
+      margin: '24px 0px 0px 0px',
       textTransform: 'none',
       minHeight: '3rem',
       fontSize: '16px',
@@ -204,7 +192,13 @@ const Signup: React.FC = () => {
     },
     loginText: {
       mt: 2,
-      margin: '40px 0px 24px',
+    margin: '1.25em 0px 24px',
+      fontFamily: 'Nunito',
+      fontSize: '16px',
+    },
+    resetPassword: {
+      mt: 2,
+    margin: '3em 0em 0em',
       fontFamily: 'Nunito',
       fontSize: '16px',
     },
@@ -225,7 +219,7 @@ const Signup: React.FC = () => {
 
       <Box sx={styles.container}>
         <Typography variant="h4" component="h1" sx={styles.title}>
-          Create a new account
+          Login
         </Typography>
         <Button
           variant="contained"
@@ -236,7 +230,7 @@ const Signup: React.FC = () => {
             <Image src="/google-icon.svg" alt="Google icon" width={20} height={20} />
           }
         >
-          Sign in with Google
+          Continue with Google
         </Button>
         <Box sx={styles.orDivider}>
           <Box sx={{ borderBottom: '1px solid #000000', flexGrow: 1 }} />
@@ -246,17 +240,6 @@ const Signup: React.FC = () => {
           <Box sx={{ borderBottom: '1px solid #000000', flexGrow: 1 }} />
         </Box>
         <Box component="form" onSubmit={handleSubmit} sx={styles.form}>
-          <TextField
-            InputLabelProps={{ sx: styles.inputLabel }}
-            label="Full name"
-            name="fullName"
-            variant="outlined"
-            fullWidth
-            value={formValues.fullName}
-            onChange={handleChange}
-            error={Boolean(errors.fullName)}
-            helperText={errors.fullName}
-          />
           <TextField
             InputLabelProps={{ sx: styles.inputLabel }}
             label="Email address"
@@ -272,7 +255,7 @@ const Signup: React.FC = () => {
           />
           <TextField
             InputLabelProps={{ sx: styles.inputLabel }}
-            label="Create password"
+            label="Enter password"
             name="password"
             type={showPassword ? 'text' : 'password'}
             variant="outlined"
@@ -301,10 +284,15 @@ const Signup: React.FC = () => {
             Activate Account
           </Button>
         </Box>
+        <Typography variant="body2" sx={styles.resetPassword}>
+          <Link href="/reset-password" sx={styles.loginLink}>
+            Reset password
+          </Link>
+          </Typography>
         <Typography variant="body2" sx={styles.loginText}>
-          Already have an account{' '}
-          <Link href="/login" sx={styles.loginLink}>
-            Login
+          No account?{' '}
+          <Link href="/signup" sx={styles.loginLink}>
+            Create one
           </Link>
         </Typography>
       </Box>
