@@ -2,7 +2,9 @@ from datetime import datetime, timedelta, timezone
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
+from .sendgrid import SendGridHandler
 from .user_persistence_service import UserPersistenceService
+import os
 from backend.services.payments_plans import PaymentsPlans
 from backend.models.users import Users
 import logging
@@ -127,7 +129,7 @@ class UserAuthService:
         if idinfo:
             google_payload = {
                 "email": idinfo.get("email"),
-                "full_name": f"{idinfo.get("given_name")} {idinfo.get("family_name")}",
+                "full_name": f"{idinfo.get('given_name')} {idinfo.get('family_name')}",
                 "iss": iss,
             }
             email = idinfo.get("email")
@@ -205,6 +207,7 @@ class UserAuthService:
                 'token': token
             }
         else:
+            pass
             user_plan = self.plans_service.set_default_plan(user_object.get("user_filed_id"), False)
             logger.info(f"Set plan {user_plan.title} for new user")
         logger.info("Token created")

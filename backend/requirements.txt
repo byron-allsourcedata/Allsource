@@ -1,0 +1,10 @@
+SQLAlchemy~=2.0.30
+python-dotenv~=1.0.1
+h11~=0.14.0
+fastapi~=0.111.0
+starlette~=0.37.2
+pydantic~=2.7.3
+passlib~=1.7.4
+python-jose~=3.3.0
+psycopg2~=2.9.9
+sendgrid~=6.11.0
