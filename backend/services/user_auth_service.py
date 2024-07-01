@@ -2,6 +2,7 @@ from datetime import datetime, timedelta, timezone
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
+from .sendgrid import SendGridHandler
 from .user_persistence_service import UserPersistenceService
 import os
 from backend.services.payments_plans import PaymentsPlans
