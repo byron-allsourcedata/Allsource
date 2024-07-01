@@ -8,7 +8,6 @@ import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 
 const Signup: React.FC = () => {
   const router = useRouter();
-  const searchParams = useSearchParams();
 
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
@@ -88,7 +87,7 @@ const Signup: React.FC = () => {
           console.error('Error:', errorData);
         } else {
           const data = await response.json();
-          router.push('/account');
+          router.push('/dashboard');
         }
       } catch (error) {
         console.error('Error:', error);

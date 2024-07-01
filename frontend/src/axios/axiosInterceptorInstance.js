@@ -30,7 +30,7 @@ axiosInterceptorInstance.interceptors.response.use(
     if (error.response) {
       switch (error.response.status) {
         case 400:
-          // Обработка 400 ошибки (Bad Request) и редирект на /login
+          // 400 error handler (Bad Request)
           console.error("Bad request - redirecting to login.");
           useRouter.push("/login");
           break;

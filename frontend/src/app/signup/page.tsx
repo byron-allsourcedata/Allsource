@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { Box, Button, TextField, Typography, Link, IconButton, InputAdornment } from '@mui/material';
@@ -19,6 +19,13 @@ const Signup: React.FC = () => {
   const handleGoogleSignup = () => {
     console.log('Google signup clicked');
   };
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      router.push('/dashboard');
+    }
+  }, [router]);
 
   const validateField = (name: string, value: string) => {
     const newErrors: { [key: string]: string } = { ...errors };
@@ -66,29 +73,38 @@ const Signup: React.FC = () => {
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     const newErrors: { [key: string]: string } = {};
-
+  
     if (!formValues.full_name) {
       newErrors.full_name = 'Full name is required';
     }
-
+  
     if (!formValues.email) {
       newErrors.email = 'Email address is required';
     } else if (!/\S+@\S+\.\S+/.test(formValues.email)) {
       newErrors.email = 'Email address is invalid';
     }
-
+  
     if (!formValues.password) {
       newErrors.password = 'Password is required';
     }
-
+  
     setErrors(newErrors);
-
+  
     if (Object.keys(newErrors).length === 0) {
       try {
         const response = await axiosInstance.post('/sign-up', formValues);
-
+  
         if (response.status === 200) {
-          router.push('/login');
+          const responseData = response.data;
+  
+          if (responseData.status === "NEED_CHOOSE_PLAN") {
+            localStorage.setItem('token', responseData.token);
+            router.push('/choose-plan');
+          } else if (responseData.status === "EMAIL_ALREADY_EXISTS") {
+            router.push('/login');
+          } else if (responseData.status === "NEED_CONFIRM_EMAIL") {
+            router.push('/email-verificate');
+          }
         }
       } catch (err) {
         const error = err as AxiosError;
@@ -101,6 +117,7 @@ const Signup: React.FC = () => {
       }
     }
   };
+  
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);

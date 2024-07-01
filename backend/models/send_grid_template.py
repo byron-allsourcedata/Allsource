@@ -5,7 +5,7 @@ from .base import Base, create_timestamps, update_timestamps
 
 
 class SendGridTemplate(Base):
-    __tablename__ = "send_grid_template"
+    __tablename__ = "send_grid_templates"
 
     id = Column(BIGINT, primary_key=True, nullable=False)
     alias = Column(VARCHAR(32))

@@ -3,6 +3,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from .user_persistence_service import UserPersistenceService
+import os
 from backend.services.payments_plans import PaymentsPlans
 from backend.models.users import Users
 import logging
@@ -205,6 +206,7 @@ class UserAuthService:
                 'token': token
             }
         else:
+            pass
             user_plan = self.plans_service.set_default_plan(user_object.get("user_filed_id"), False)
             logger.info(f"Set plan {user_plan.title} for new user")
         logger.info("Token created")
