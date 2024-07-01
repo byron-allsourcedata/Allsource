@@ -5,6 +5,8 @@ import Image from 'next/image';
 import { Box, Button, TextField, Typography, Link, IconButton, InputAdornment } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+import axiosInstance from '../../axios/axiosInterceptorInstance';
+import { AxiosError } from 'axios';
 
 const Signup: React.FC = () => {
   const router = useRouter();
@@ -82,27 +84,20 @@ const Signup: React.FC = () => {
     setErrors(newErrors);
 
     if (Object.keys(newErrors).length === 0) {
-      console.log(JSON.stringify(formValues))
       try {
-        const response = await fetch('http://localhost:8000/sign-up', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(formValues),
-        });
+        const response = await axiosInstance.post('/sign-up', formValues);
 
-        /// Смотрим что приходит с бека и проверяем ответ
-        if (!response.ok) {
-          const errorData = await response.json();
-          setErrors(errorData);
-          console.error('Error:', errorData);
-        } else {
-          const data = await response.json();
+        if (response.status === 200) {
           router.push('/login');
         }
-      } catch (error) {
-        console.error('Error:', error);
+      } catch (err) {
+        const error = err as AxiosError;
+        if (error.response && error.response.data) {
+          const errorData = error.response.data as { [key: string]: string };
+          setErrors(errorData);
+        } else {
+          console.error('Error:', error);
+        }
       }
     }
   };
