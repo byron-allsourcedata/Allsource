@@ -1,20 +1,84 @@
 'use client';
-import React, { useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { Bounce, ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import Image from 'next/image';
-import { Box, Button, TextField, Typography, Link, IconButton, InputAdornment } from '@mui/material';
+import { Box, Button, Typography } from '@mui/material';
+import axios from '../../axios/axiosInterceptorInstance';
+import { jwtDecode } from 'jwt-decode';
 
 const EmailVerificate: React.FC = () => {
-    const router = useRouter();
-    const email = 'abcd@gmail.com';
-  
-    const handleResendEmail = () => {
-      // Логика повторной отправки письма
-      console.log('Resend email clicked');
-    };
+  const [canResend, setCanResend] = useState(true);
+  const [timer, setTimer] = useState(60);
+  const router = useRouter();
+  const token = localStorage.getItem('token')
+  const email = sessionStorage.getItem('email');
 
 
-    const styles = {
+  const notify = () => {
+    toast.success(<CustomToast />, {
+      position: "bottom-center",
+      autoClose: 4000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      draggable: true,
+      style: {
+        background: '#EFFAE5',
+        color: '#56991B',
+        fontFamily: 'Nunito',
+        fontSize: '16',
+        fontWeight: 'bold'
+      },
+      theme: "light",
+      transition: Bounce,
+      icon: false,
+    });
+  };
+
+  const handleResendEmail = () => {
+    if (canResend) {
+      setCanResend(false);
+      setTimer(60);
+      axios.post('/resend-verification-email', { token })
+    }
+  };
+
+  useEffect(() => {
+    // Проверка статуса верификации
+    const interval = setInterval(() => {
+      axios.get('/check-verification-status')
+        .then(response => {
+          if (response.status === 200 && response.data.status === "SUCCESS") {
+            notify();
+            clearInterval(interval);
+            router.push('/dashboard');
+          }
+        })
+        .catch(error => console.error('Error:', error));
+    }, 10000);
+
+    return () => clearInterval(interval);
+  }, [token, router]);
+
+  useEffect(() => {
+    let countdown: NodeJS.Timeout;
+    if (!canResend) {
+      countdown = setInterval(() => {
+        setTimer(prevTimer => {
+          if (prevTimer === 1) {
+            setCanResend(true);
+            clearInterval(countdown);
+            return 60;
+          }
+          return prevTimer - 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(countdown);
+  }, [canResend]);
+
+  const styles = {
     container: {
       display: 'flex',
       flexDirection: 'column',
@@ -36,6 +100,11 @@ const EmailVerificate: React.FC = () => {
         marginTop: '3.75em',
       },
     },
+    hidepc: {
+      display: 'none',
+      Visibility: 'hidden'
+    }
+    ,
     logoContainer: {
       paddingLeft: '2.5em',
       paddingRight: '0.5em',
@@ -49,36 +118,8 @@ const EmailVerificate: React.FC = () => {
       padding: '1.5rem 1rem 2.5rem',
       fontFamily: 'Nunito',
     },
-    googleButton: {
-      mb: 2,
-      bgcolor: '#FFFFFF',
-      color: '#000000',
-      padding: '0.875rem 7.5625rem',
-      whiteSpace: 'nowrap',
-      border: '0.125rem solid transparent',
-      '&:hover': {
-        borderColor: '#Grey/Light',
-        backgroundColor: 'white',
-      },
-      textTransform: 'none',
-      width: '100%',
-      maxWidth: '22.5rem',
-      fontWeight: 'medium',
-      fontSize: '0.875rem',
-    },
-    orDivider: {
-      display: 'flex',
-      alignItems: 'center',
-      width: '100%',
-      maxWidth: '22.5rem',
-      mt: '24px',
-      mb: '24px',
-    },
-    orText: {
-      px: 2,
-      fontWeight: 'regular',
-      fontSize: '14px',
-      fontFamily: 'Nunito',
+    icon: {
+      marginBottom: '20px',
     },
     form: {
       maxwidth: '100%',
@@ -87,42 +128,33 @@ const EmailVerificate: React.FC = () => {
       alignItems: 'center',
       padding: '52px 32.5px '
     },
-    inputLabel: {
-      fontFamily: 'Nunito',
-      fontSize: '16px',
-    },
-    submitButton: {
-      mt: 2,
-      backgroundColor: '#F45745',
-      color: '#FFFFFF',
-      '&:hover': {
-        borderColor: '#000000',
-        backgroundColor: 'lightgreen',
+    orDivider: {
+      alignItems: 'center',
+      width: '100%',
+      maxWidth: '22.5rem',
+      mt: '24px',
+      mb: '24px',
+      display: 'none',
+      Visibility: 'hidden',
+      '@media (max-width: 440px)': {
+        display: 'flex',
+        Visibility: 'none',
       },
-      fontWeight: 'bold',
-      margin: '24px 0px 0px 0px',
-      textTransform: 'none',
-      minHeight: '3rem',
-      fontSize: '16px',
-      fontFamily: 'Nunito',
     },
-    loginText: {
-      mt: 2,
-    margin: '1.25em 0px 24px',
+    orText: {
+      px: 2,
+      fontWeight: 'regular',
+      fontSize: '14px',
       fontFamily: 'Nunito',
-      fontSize: '16px',
     },
     text: {
-        fontFamily: 'Nunito',
-        fontSize: '14',
-        text: 'center'
+      fontFamily: 'Nunito',
+      fontSize: '14',
+      text: 'center',
     },
-    icon: {
-        marginBottom: '20px',
-      },
     resetPassword: {
       mt: 2,
-    margin: '3em 0em 0em',
+      margin: '3em 0em 0em',
       fontFamily: 'Nunito',
       fontSize: '16px',
     },
@@ -132,11 +164,25 @@ const EmailVerificate: React.FC = () => {
       fontWeight: 'bold',
       fontFamily: 'Nunito',
       textDecoration: 'none',
+      margin: '16px 89px 24px'
     },
   };
 
   return (
     <>
+      <ToastContainer
+        position="bottom-center"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+        progressClassName="custom-progress-bar"
+      />
       <Box sx={styles.logoContainer}>
         <Image src='/logo.svg' alt='logo' height={80} width={60} />
       </Box>
@@ -146,19 +192,41 @@ const EmailVerificate: React.FC = () => {
           Check your inbox
         </Typography>
         <Box sx={styles.icon}>
-          <Image src="/mail-icon.svg" alt="Mail Icon" width={200} height={200} />
+          <Button onClick={handleResendEmail}>
+            <Image src="/mail-icon.svg" alt="Mail Icon" width={200} height={200} />
+          </Button>
+        </Box>
+        <Box sx={styles.orDivider}>
+          <Box sx={{ borderBottom: '1px solid #000000', flexGrow: 1 }} />
+          <Typography variant="body1" sx={styles.orText}>
+            OR
+          </Typography>
+          <Box sx={{ borderBottom: '1px solid #000000', flexGrow: 1 }} />
         </Box>
         <Box component="form" sx={styles.form}>
-            <Typography sx={styles.text}>
-            To complete setup and login, Click the verification link in the email we’ve sent to <strong>abcd@gmail.com</strong>
-            </Typography>
-        </Box>
-        <Typography variant="body2" sx={styles.resetPassword}>
-        <Link onClick={handleResendEmail} sx={styles.loginLink}>Resend Verification Email</Link>
+          <Typography sx={{...styles.text, textAlign: 'center'}}>
+            To complete setup and login, Click the verification link in the email we’ve sent to <strong>{ email }</strong>
           </Typography>
+        </Box>
+        <Typography sx={styles.resetPassword}>
+          <Button onClick={handleResendEmail} sx={styles.loginLink} disabled={!canResend}>
+            {canResend ? 'Resend Verification Email' : `Resend in ${timer}s`}
+          </Button>
+        </Typography>
       </Box>
     </>
   );
 };
+
+const CustomToast = () => (
+  <div style={{ color: 'green' }}>
+    <Typography style={{ fontWeight: 'bold'  }}>
+      Success
+    </Typography>
+    <Typography variant="body2">
+        Verification done successfully
+    </Typography>
+  </div>
+);
 
 export default EmailVerificate;

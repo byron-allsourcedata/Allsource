@@ -29,14 +29,10 @@ axiosInterceptorInstance.interceptors.response.use(
   (error) => {
     if (error.response) {
       switch (error.response.status) {
-        case 400:
-          // 400 error handler (Bad Request)
-          console.error("Bad request - redirecting to login.");
-          useRouter.push("/login");
-          break;
         case 401:
           //401 error handler (Unauthorized)
-          console.error("Unauthorized access - perhaps redirect to login.");
+          localStorage.clear()
+          useRouter.push('/login')
           break;
         case 500:
           //500 error handler (Internal Server Error)
@@ -46,11 +42,6 @@ axiosInterceptorInstance.interceptors.response.use(
         default:
           console.error("An error occurred:", error.response.data);
       }
-    } else if (error.code === 'ERR_NETWORK') {
-        console.error("Network error - redirecting to login.");
-        useRouter.push("/login");
-      } else {
-        console.error("Error:", error.message);
     }
     return Promise.reject(error);
   }
