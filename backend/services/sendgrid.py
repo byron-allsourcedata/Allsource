@@ -27,7 +27,7 @@ def analytics():
 
 class SendGridHandler:
     SENDGRID_API_KEY = os.getenv("SMI_EMAIL")
-    SENDGRID_API_KEY_V2 = os.getenv("SMI_EMAIL_v2")
+    SENDGRID_API_KEY_V2 = os.getenv("SMI_EMAIL")
 
     @classmethod
     def send_mail(
@@ -39,7 +39,7 @@ class SendGridHandler:
         cc_emails: List[str] = None,
         plain_text_content: str = None,
         html_content: str = None,
-        from_user: str = "outreach@lolly.com",
+        from_user: str = "noreply@lolly.com",
     ) -> dict:
         # UNSAFE: opt out of ssl check
         tempfunc = ssl._create_default_https_context

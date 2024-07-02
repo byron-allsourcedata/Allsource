@@ -169,6 +169,9 @@ class UserAuthService:
             'token': token
         }
 
+    def get_template_id(self, template_type: AutomationSystemTemplate) -> str:
+        return template_type.value
+
     def create_account(self, user_form: UserSignUpForm):
         response = {}
         user_form.password = self.get_password_hash(user_form.password)
@@ -196,9 +199,9 @@ class UserAuthService:
             mail_object = SendGridHandler()
             mail_object.send_sign_up_mail(
                 subject="Please Verify Your Email Address",
-                to_emails=user_object.email,
+                to_emails=user_object.get("email"),
                 template_id=self.get_template_id(AutomationSystemTemplate.EMAIL_VERIFICATION_TEMPLATE),
-                template_placeholder={"Full_name": user_object.full_name, "Link": confirm_email_url},
+                template_placeholder={"Full_name": user_object.get("full_name"), "Link": confirm_email_url},
             )
             logger.info("Confirmation Email Sent")
             user_plan = self.plans_service.set_default_plan(self.db, user_object.get("user_filed_id"), True)
