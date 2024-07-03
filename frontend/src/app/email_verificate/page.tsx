@@ -41,14 +41,14 @@ const EmailVerificate: React.FC = () => {
     if (canResend) {
       setCanResend(false);
       setTimer(60);
-      axios.post('/resend-verification-email', { token })
+      axios.post('api/resend-verification-email', { token })
     }
   };
 
   useEffect(() => {
     // Проверка статуса верификации
     const interval = setInterval(() => {
-      axios.get('/check-verification-status')
+      axios.get('api/check-verification-status')
         .then(response => {
           if (response.status === 200 && response.data.status === "SUCCESS") {
             notify();
