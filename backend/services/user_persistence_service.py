@@ -29,8 +29,8 @@ class UserPersistenceService:
         self.db.query(Users).filter(Users.id == parent_id).update({Users.parent_id: parent_id},
                                                                   synchronize_session=False)
 
-    def google_email_confirmed_for_non_cc(self, db, user_id: int):
-        query = db.query(Users).filter(Users.id == user_id)
+    def email_confirmed(self, user_id: int):
+        query = self.db.query(Users).filter(Users.id == user_id)
         if query:
-            db.query(Users).filter(Users.id == user_id).update({"email_confirmed": True})
-            db.commit()
+            self.db.query(Users).filter(Users.id == user_id).update({"email_confirmed": True})
+            self.db.commit()

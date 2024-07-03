@@ -54,3 +54,9 @@ class PaymentsPlans:
         except Exception as e:
             self.db.rollback()
             return False
+
+    def check_user_plan(self, user_id):
+        logger.info(f"call check_user_plan for user_id = {user_id}")
+        user_plan_obj = self.db.query(UserSubscriptionPlan).filter(UserSubscriptionPlan.user_id == user_id).first()
+        if user_plan_obj is None:
+            self.set_default_plan(user_id, True)
