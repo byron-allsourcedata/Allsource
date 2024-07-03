@@ -99,11 +99,13 @@ const Signup: React.FC = () => {
 
           if (responseData.status === "NEED_CHOOSE_PLAN") {
             localStorage.setItem('token', responseData.token);
+            sessionStorage.setItem('me', JSON.stringify({ email: formValues.email }));
             router.push('/choose-plan');
           } else if (responseData.status === "EMAIL_ALREADY_EXISTS") {
             router.push('/login');
           } else if (responseData.status === "NEED_CONFIRM_EMAIL") {
             localStorage.setItem('token', responseData.token);
+            sessionStorage.setItem('me', JSON.stringify({ email: formValues.email }));
             router.push('/email_verificate');
           }
         }
