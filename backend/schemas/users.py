@@ -2,7 +2,7 @@ from typing import Optional
 from fastapi import Form
 from pydantic import BaseModel, Field
 
-from backend.enums import SignUpStatus
+from backend.enums import SignUpStatus, LoginStatus
 
 
 class UserSignUpForm(BaseModel):
@@ -16,7 +16,11 @@ class UserSignUpFormResponse(BaseModel):
     status: SignUpStatus
     token: Optional[str] = None
 
+class UserLoginFormResponse(BaseModel):
+    status: LoginStatus
+    token: Optional[str] = None
 
-class SignIn(BaseModel):
+
+class UserLoginForm(BaseModel):
     email: str = Field(...)
     password: str = Field(...)

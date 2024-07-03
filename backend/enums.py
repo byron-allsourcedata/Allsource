@@ -1,11 +1,21 @@
 from enum import Enum, auto
 
 
+class BaseEnum(Enum):
+    SUCCESS = 'SUCCESS'
+    FAILURE = 'FAILURE'
+
+
 class StripePaymentStatusEnum(Enum):
     COMPLETE = 'COMPLETE'
     ONGOING = 'ONGOING'
     PENDING = 'PENDING'
     FAILED = 'FAILED'
+
+
+class MiddleWareEnum(Enum):
+    NEED_EMAIL_CONFIRMATION = 'NEED_EMAIL_CONFIRMATION'
+
 
 class SignUpStatus(Enum):
     NEED_CHOOSE_PLAN = 'NEED_CHOOSE_PLAN'
@@ -14,5 +24,11 @@ class SignUpStatus(Enum):
     PASSWORD_NOT_VALID = 'PASSWORD_NOT_VALID'
     NEED_CONFIRM_EMAIL = 'NEED_CONFIRM_EMAIL'
 
+
+class LoginStatus(Enum):
+    INCORRECT_PASSWORD_OR_EMAIL = 'INCORRECT_PASSWORD_OR_EMAIL'
+    SUCCESS = 'SUCCESS'
+
+
 class AutomationSystemTemplate(Enum):
-    EMAIL_VERIFICATION_TEMPLATE = 'EMAIL_VERIFICATION_TEMPLATE'
+    EMAIL_VERIFICATION_TEMPLATE = 'd-1c7fdcd2ea9047639143db1d4bde581c'
