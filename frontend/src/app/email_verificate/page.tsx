@@ -13,7 +13,8 @@ const EmailVerificate: React.FC = () => {
   const [timer, setTimer] = useState(60);
   const router = useRouter();
   const token = localStorage.getItem('token')
-  const email = sessionStorage.getItem('email');
+  const storedMe = sessionStorage.getItem('me');
+  const email = storedMe ? JSON.parse(storedMe)?.email : null;
 
 
   const notify = () => {

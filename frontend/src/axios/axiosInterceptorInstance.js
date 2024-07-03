@@ -8,7 +8,7 @@ const axiosInterceptorInstance = axios.create({
 // Request interceptor
 axiosInterceptorInstance.interceptors.request.use(
   (config) => {
-    const accessToken = JSON.parse(localStorage.getItem("token"));
+    const accessToken = localStorage.getItem("token");
 
     if (accessToken) {
       if (config.headers)
