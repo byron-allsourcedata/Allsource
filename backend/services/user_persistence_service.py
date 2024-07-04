@@ -32,5 +32,5 @@ class UserPersistenceService:
     def email_confirmed(self, user_id: int):
         query = self.db.query(Users).filter(Users.id == user_id)
         if query:
-            self.db.query(Users).filter(Users.id == user_id).update({"email_confirmed": True})
+            self.db.query(Users).filter(Users.id == user_id).update({"is_email_confirmed": True})
             self.db.commit()

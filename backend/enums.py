@@ -12,6 +12,11 @@ class StripePaymentStatusEnum(Enum):
     PENDING = 'PENDING'
     FAILED = 'FAILED'
 
+class UserAuthorizationStatus(Enum):
+    SUCCESS = 'SUCCESS'
+    NEED_CHOOSE_PLAN = 'NEED_CHOOSE_PLAN'
+    NEED_CONFIRM_EMAIL = 'NEED_CONFIRM_EMAIL'
+    FILL_COMPANY_DETAILS = 'FILL_COMPANY_DETAILS'
 
 class MiddleWareEnum(Enum):
     NEED_EMAIL_CONFIRMATION = 'NEED_EMAIL_CONFIRMATION'

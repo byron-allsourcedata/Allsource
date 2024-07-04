@@ -9,7 +9,9 @@ class Users(Base):
 
     id = Column(Integer, primary_key=True)
     email = Column(VARCHAR)
-    email_confirmed = Column(BOOLEAN, default=False)
+    is_email_confirmed = Column(BOOLEAN, default=False)
+    is_with_card = Column(BOOLEAN, default=False)
+    is_company_details_filled = Column(BOOLEAN, default=False)
     password = Column(VARCHAR)
     full_name = Column(VARCHAR)
     parent_id = Column(BIGINT)
