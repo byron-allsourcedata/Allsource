@@ -1,30 +1,18 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import { useRouter} from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { Box, Button, TextField, Typography, Link, IconButton, InputAdornment } from '@mui/material';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
-import axiosInstance from '../../axios/axiosInterceptorInstance';
 import { AxiosError } from 'axios';
+import axiosInstance from '../../axios/axiosInterceptorInstance';
+
 
 const Signup: React.FC = () => {
   const router = useRouter();
 
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      router.push('/dashboard');
-    }
-  }, [router]);
-
-  const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [formValues, setFormValues] = useState({ email: '', password: '' });
   
-  const handleGoogleSignup = () => {
-    console.log('Google login clicked');
-  };
 
   const validateField = (name: string, value: string) => {
     const newErrors: { [key: string]: string } = { ...errors };
@@ -38,15 +26,6 @@ const Signup: React.FC = () => {
         } else {
           delete newErrors.email;
         }
-        break;
-      case 'password':
-        if (!value) {
-          newErrors.password = 'Password is required';
-        } else {
-          delete newErrors.password;
-        }
-        break;
-      default:
         break;
     }
 
@@ -65,55 +44,33 @@ const Signup: React.FC = () => {
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     const newErrors: { [key: string]: string } = {};
-  
+
     if (!formValues.email) {
       newErrors.email = 'Email address is required';
+      setErrors(newErrors);
+      return;
     }
-  
-    if (!formValues.password) {
-      newErrors.password = 'Password is required';
-    }
-  
-    setErrors(newErrors);
-  
-    if (Object.keys(newErrors).length === 0) {
-      try {
-        const response = await axiosInstance.post('api/login', formValues);
-  
-        if (response.status === 200) {
-          const responseData = response.data;
-  
-          if (responseData.status === "LOGIN_SUCCESSFUL") {
-            if (typeof window !== 'undefined') {
-              localStorage.setItem('token', responseData.token);
-            }
-            sessionStorage.setItem('me', JSON.stringify({ email: formValues.email }));
-            router.push('/dashboard');
-          } else if (responseData.status === "EMAIL_NOT_VERIFIED") {
-            router.push('/email_verification');
-          } else if (responseData.status === "INVALID_CREDENTIALS") {
-            setErrors({ general: 'Invalid email or password' });
-          } else {
-            console.error('Unexpected status:', responseData.status);
-          }
-        } else {
-          console.error('Error:', response);
-        }
-      } catch (err) {
-        const error = err as AxiosError;
-        if (error.response && error.response.data) {
-          const errorData = error.response.data as { [key: string]: string };
-          setErrors(errorData);
-        } else {
-          console.error('Error:', error);
-        }
+
+    try {
+      const response = await axiosInstance.post('api/reset-password', {
+        email: formValues.email,
+      });
+
+      if (response.status === 200) {
+        sessionStorage.setItem('me', JSON.stringify({ email: formValues.email }));
+        router.push('/confirm_send');
+      }
+    } catch (err) {
+      const error = err as AxiosError;
+      if (error.response && error.response.data) {
+        const errorData = error.response.data as { [key: string]: string };
+        setErrors(errorData);
+      } else {
+        console.error('Error:', error);
       }
     }
   };
 
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
-  };
 
   const styles = {
     container: {
@@ -121,16 +78,16 @@ const Signup: React.FC = () => {
       flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
-      minHeight: '50vh',
+      minHeight: '30vh',
       backgroundColor: '#ffffff',
       width: '100%',
-      maxWidth: '31rem',
+      maxWidth: '28rem',
       margin: '0 auto',
       position: 'relative',
       boxShadow: '0rem 2px 8px 0px #00000033',
       borderRadius: '0.625rem',
       border: '0.125rem solid transparent',
-      marginTop: '120px',
+      marginTop: '220px',
       '@media (max-width: 440px)': {
         boxShadow: '0rem 0px 0px 0px #00000033',
         border: 'none',
@@ -147,7 +104,7 @@ const Signup: React.FC = () => {
       fontSize: '28px',
       whiteSpace: 'nowrap',
       textAlign: 'center',
-      padding: '1.5rem 1rem 2.5rem',
+      padding: '1.5rem 1rem 0',
       fontFamily: 'Nunito',
     },
     googleButton: {
@@ -183,7 +140,7 @@ const Signup: React.FC = () => {
     },
     form: {
       width: '100%',
-      maxWidth: '360px',
+      maxWidth: '384px',
       fontFamily: 'Nunito',
     },
     inputLabel: {
@@ -193,13 +150,14 @@ const Signup: React.FC = () => {
     submitButton: {
       mt: 2,
       backgroundColor: '#F45745',
+      margin: '3em 2 em 1.5em',
       color: '#FFFFFF',
       '&:hover': {
         borderColor: '#000000',
         backgroundColor: 'lightgreen',
       },
       fontWeight: 'bold',
-      margin: '24px 0px 0px 0px',
+      m: '3.25rem 0 1.5rem',
       textTransform: 'none',
       minHeight: '3rem',
       fontSize: '16px',
@@ -217,6 +175,14 @@ const Signup: React.FC = () => {
       fontFamily: 'Nunito',
       fontSize: '16px',
     },
+    text: {
+      fontSize: '14px',
+      fontFamily: 'Nunito',
+      fontWeight: '500',
+      textAlign: 'center',
+      padding: '1rem 2rem 2.25rem'
+      
+    },
     loginLink: {
       color: '#F45745',
       cursor: 'pointer',
@@ -231,29 +197,13 @@ const Signup: React.FC = () => {
       <Box sx={styles.logoContainer}>
         <Image src='/logo.svg' alt='logo' height={80} width={60} />
       </Box>
-
       <Box sx={styles.container}>
         <Typography variant="h4" component="h1" sx={styles.title}>
-          Login
+          Forgot your password?
         </Typography>
-        <Button
-          variant="contained"
-          onClick={handleGoogleSignup}
-          sx={styles.googleButton}
-          disableFocusRipple
-          startIcon={
-            <Image src="/google-icon.svg" alt="Google icon" width={20} height={20} />
-          }
-        >
-          Continue with Google
-        </Button>
-        <Box sx={styles.orDivider}>
-          <Box sx={{ borderBottom: '1px solid #000000', flexGrow: 1 }} />
-          <Typography variant="body1" sx={styles.orText}>
-            OR
-          </Typography>
-          <Box sx={{ borderBottom: '1px solid #000000', flexGrow: 1 }} />
-        </Box>
+        <Typography sx={styles.text}>
+        You will receive an email to reset your password. Please enter the email address associated with your account
+        </Typography>
         <Box component="form" onSubmit={handleSubmit} sx={styles.form}>
           <TextField
             InputLabelProps={{ sx: styles.inputLabel }}
@@ -268,48 +218,15 @@ const Signup: React.FC = () => {
             error={Boolean(errors.email)}
             helperText={errors.email}
           />
-          <TextField
-            InputLabelProps={{ sx: styles.inputLabel }}
-            label="Enter password"
-            name="password"
-            type={showPassword ? 'text' : 'password'}
-            variant="outlined"
-            fullWidth
-            margin="normal"
-            value={formValues.password}
-            onChange={handleChange}
-            error={Boolean(errors.password)}
-            helperText={errors.password}
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton onClick={togglePasswordVisibility} edge="end">
-                    {showPassword ? <VisibilityIcon /> : <VisibilityOffIcon />}
-                  </IconButton>
-                </InputAdornment>
-              ),
-            }}
-          />
           <Button
             type="submit"
             variant="contained"
             sx={styles.submitButton}
             fullWidth
           >
-            Activate Account
+            Send
           </Button>
         </Box>
-        <Typography variant="body2" sx={styles.resetPassword}>
-          <Link href="/reset-password" sx={styles.loginLink}>
-            Reset password
-          </Link>
-          </Typography>
-        <Typography variant="body2" sx={styles.loginText}>
-          No account?{' '}
-          <Link href="/signup" sx={styles.loginLink}>
-            Create one
-          </Link>
-        </Typography>
       </Box>
     </>
   );

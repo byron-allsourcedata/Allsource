@@ -1,0 +1,179 @@
+'use client';
+import React, { useState, useEffect } from 'react';
+import { useRouter} from 'next/navigation';
+import Image from 'next/image';
+import { Box, Button, TextField, Typography, Link, IconButton, InputAdornment } from '@mui/material';
+
+
+
+const ConfirmSend: React.FC = () => {
+  const router = useRouter();
+  const [email, setEmail] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedMe = sessionStorage.getItem('me');
+      setEmail(storedMe ? JSON.parse(storedMe)?.email : null);
+    }
+  }, []);
+
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    router.push('/login');
+  };
+  
+
+
+  const styles = {
+    container: {
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: '30vh',
+      backgroundColor: '#ffffff',
+      width: '100%',
+      maxWidth: '28rem',
+      margin: '0 auto',
+      position: 'relative',
+      boxShadow: '0rem 2px 8px 0px #00000033',
+      borderRadius: '0.625rem',
+      border: '0.125rem solid transparent',
+      marginTop: '220px',
+      '@media (max-width: 440px)': {
+        boxShadow: '0rem 0px 0px 0px #00000033',
+        border: 'none',
+        marginTop: '3.75em',
+      },
+    },
+    logoContainer: {
+      paddingLeft: '2.5em',
+      paddingRight: '0.5em',
+    },
+    title: {
+      mb: 2,
+      fontWeight: 'bold',
+      fontSize: '28px',
+      whiteSpace: 'nowrap',
+      textAlign: 'center',
+      padding: '1.5rem 1rem 0',
+      fontFamily: 'Nunito',
+    },
+    googleButton: {
+      mb: 2,
+      bgcolor: '#FFFFFF',
+      color: '#000000',
+      padding: '0.875rem 7.5625rem',
+      whiteSpace: 'nowrap',
+      border: '0.125rem solid transparent',
+      '&:hover': {
+        borderColor: '#Grey/Light',
+        backgroundColor: 'white',
+      },
+      textTransform: 'none',
+      width: '100%',
+      maxWidth: '22.5rem',
+      fontWeight: 'medium',
+      fontSize: '0.875rem',
+    },
+    orDivider: {
+      display: 'flex',
+      alignItems: 'center',
+      width: '100%',
+      maxWidth: '22.5rem',
+      mt: '24px',
+      mb: '24px',
+    },
+    orText: {
+      px: 2,
+      fontWeight: 'regular',
+      fontSize: '14px',
+      fontFamily: 'Nunito',
+    },
+    form: {
+      width: '100%',
+      maxWidth: '384px',
+      fontFamily: 'Nunito',
+    },
+    inputLabel: {
+      fontFamily: 'Nunito',
+      fontSize: '16px',
+    },
+    submitButton: {
+      mt: 2,
+      backgroundColor: '#FFFFFF',
+      border: '1px solid transparent',
+      margin: '3em 2 em 1.5em',
+      borderColor: '#F45745',
+      color: '#F45745',
+      '&:hover': {
+        borderColor: '#F45745',
+        backgroundColor: 'white',
+      },
+      fontWeight: 'bold',
+      m: '3.25rem 0 1.5rem',
+      textTransform: 'none',
+      minHeight: '3rem',
+      fontSize: '16px',
+      fontFamily: 'Nunito',
+    },
+    loginText: {
+      mt: 2,
+    margin: '1.25em 0px 24px',
+      fontFamily: 'Nunito',
+      fontSize: '16px',
+    },
+    resetPassword: {
+      mt: 2,
+    margin: '3em 0em 0em',
+      fontFamily: 'Nunito',
+      fontSize: '16px',
+    },
+    text: {
+      fontSize: '14px',
+      fontFamily: 'Nunito',
+      fontWeight: '500',
+      textAlign: 'center',
+      padding: '1rem 2rem 1rem'
+      
+    },
+    loginLink: {
+      color: '#F45745',
+      cursor: 'pointer',
+      fontFamily: 'Nunito',
+      textDecoration: 'none',
+    },
+  };
+
+  return (
+    <>
+      <Box sx={styles.logoContainer}>
+        <Image src='/logo.svg' alt='logo' height={80} width={60} />
+      </Box>
+      <Box sx={styles.container}>
+        <Typography variant="h4" component="h1" sx={styles.title}>
+        Help is on the way
+        </Typography>
+        <Typography sx={styles.text}>
+        If <strong>{email}</strong> exists, you will receive an email there shortly.
+        </Typography>
+        <Typography sx={styles.text}>
+         If you haven’t received an email within that timeframe, please check your spam folder or <Link href="/" sx={styles.loginLink}>try sending again.</Link>
+        </Typography>
+
+        <Box component="form" onSubmit={handleSubmit} sx={styles.form}>
+          <Button
+            type="submit"
+            variant="contained"
+            sx={styles.submitButton}
+            fullWidth
+          >
+            Back to login
+          </Button>
+        </Box>
+      </Box>
+    </>
+  );
+};
+
+export default ConfirmSend;
