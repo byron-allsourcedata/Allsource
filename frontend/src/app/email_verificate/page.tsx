@@ -6,16 +6,23 @@ import 'react-toastify/dist/ReactToastify.css';
 import Image from 'next/image';
 import { Box, Button, Typography } from '@mui/material';
 import axios from '../../axios/axiosInterceptorInstance';
-import { jwtDecode } from 'jwt-decode';
 
 const EmailVerificate: React.FC = () => {
   const [canResend, setCanResend] = useState(true);
   const [timer, setTimer] = useState(60);
   const router = useRouter();
-  const token = localStorage.getItem('token')
-  const storedMe = sessionStorage.getItem('me');
-  const email = storedMe ? JSON.parse(storedMe)?.email : null;
+  const [token, setToken] = useState<string | null>(null);
+  const [email, setEmail] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const localToken = localStorage.getItem('token');
+      setToken(localToken);
+
+      const storedMe = sessionStorage.getItem('me');
+      setEmail(storedMe ? JSON.parse(storedMe)?.email : null);
+    }
+  }, []);
 
   const notify = () => {
     toast.success(<CustomToast />, {
@@ -28,7 +35,7 @@ const EmailVerificate: React.FC = () => {
         background: '#EFFAE5',
         color: '#56991B',
         fontFamily: 'Nunito',
-        fontSize: '16',
+        fontSize: '16px',
         fontWeight: 'bold'
       },
       theme: "light",
@@ -46,7 +53,6 @@ const EmailVerificate: React.FC = () => {
   };
 
   useEffect(() => {
-    // Проверка статуса верификации
     const interval = setInterval(() => {
       axios.get('api/check-verification-status')
         .then(response => {
@@ -60,7 +66,7 @@ const EmailVerificate: React.FC = () => {
     }, 10000);
 
     return () => clearInterval(interval);
-  }, [token, router]);
+  }, [router]);
 
   useEffect(() => {
     let countdown: NodeJS.Timeout;
@@ -103,9 +109,8 @@ const EmailVerificate: React.FC = () => {
     },
     hidepc: {
       display: 'none',
-      Visibility: 'hidden'
-    }
-    ,
+      visibility: 'hidden'
+    },
     logoContainer: {
       paddingLeft: '2.5em',
       paddingRight: '0.5em',
@@ -123,11 +128,11 @@ const EmailVerificate: React.FC = () => {
       marginBottom: '20px',
     },
     form: {
-      maxwidth: '100%',
+      maxWidth: '100%',
       fontFamily: 'Nunito',
       text: 'nowrap',
       alignItems: 'center',
-      padding: '52px 32.5px '
+      padding: '52px 32.5px'
     },
     orDivider: {
       alignItems: 'center',
@@ -136,10 +141,10 @@ const EmailVerificate: React.FC = () => {
       mt: '24px',
       mb: '24px',
       display: 'none',
-      Visibility: 'hidden',
+      visibility: 'hidden',
       '@media (max-width: 440px)': {
         display: 'flex',
-        Visibility: 'none',
+        visibility: 'visible',
       },
     },
     orText: {
@@ -150,8 +155,8 @@ const EmailVerificate: React.FC = () => {
     },
     text: {
       fontFamily: 'Nunito',
-      fontSize: '14',
-      text: 'center',
+      fontSize: '14px',
+      textAlign: 'center',
     },
     resetPassword: {
       mt: 2,
@@ -193,7 +198,7 @@ const EmailVerificate: React.FC = () => {
           Check your inbox
         </Typography>
         <Box sx={styles.icon}>
-          <Button onClick={handleResendEmail}>
+          <Button onClick={handleResendEmail} disabled={!canResend}>
             <Image src="/mail-icon.svg" alt="Mail Icon" width={200} height={200} />
           </Button>
         </Box>
@@ -205,8 +210,8 @@ const EmailVerificate: React.FC = () => {
           <Box sx={{ borderBottom: '1px solid #000000', flexGrow: 1 }} />
         </Box>
         <Box component="form" sx={styles.form}>
-          <Typography sx={{...styles.text, textAlign: 'center'}}>
-            To complete setup and login, Click the verification link in the email we’ve sent to <strong>{ email }</strong>
+          <Typography sx={styles.text}>
+            To complete setup and login, click the verification link in the email we’ve sent to <strong>{email}</strong>
           </Typography>
         </Box>
         <Typography sx={styles.resetPassword}>
@@ -221,11 +226,11 @@ const EmailVerificate: React.FC = () => {
 
 const CustomToast = () => (
   <div style={{ color: 'green' }}>
-    <Typography style={{ fontWeight: 'bold'  }}>
+    <Typography style={{ fontWeight: 'bold' }}>
       Success
     </Typography>
     <Typography variant="body2">
-        Verification done successfully
+      Verification done successfully
     </Typography>
   </div>
 );
