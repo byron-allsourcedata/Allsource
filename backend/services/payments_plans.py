@@ -23,21 +23,16 @@ class PaymentsPlans:
         self.user_persistence_service = user_persistence_service
 
     def set_default_plan(self, user_id: int, is_trial: bool):
-        # try:
         user_subscription_id = None
         default_plan = self.db.query(SubscriptionPlan).filter(SubscriptionPlan.is_default == True).first()
         user_subscription = self.subscription_service.get_subscription(user_id)
         if user_subscription:
             user_subscription_id = user_subscription.id
         plan_object = UserSubscriptionPlan(user_id=user_id, plan_id=default_plan.id, is_trial=is_trial,
-                                           subscription_id=user_subscription_id)
+                                               subscription_id=user_subscription_id)
         self.db.add(plan_object)
         self.db.commit()
         return default_plan
-
-    # except Exception as e:
-    #     db.rollback()
-    #     return False
 
     def set_plan_without_card(self, user_id):
         try:

@@ -14,15 +14,6 @@ from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from backend.services.user_persistence_service import UserPersistenceService
-
-FREE_ENDPOINTS = [
-    "/favicon.ico",
-    "/api/sign-up",
-    "/api/login",
-    "/api/sign-up_google",
-    "/api/authentication/verify-token"
-]
 
 logging.basicConfig(
     level=logging.ERROR,
@@ -65,22 +56,3 @@ app.add_middleware(
     allow_headers=["*"]
 )
 app.include_router(router, prefix=f"/api", dependencies=[Depends(request_logger)])
-
-
-@app.middleware("http")
-async def check_limits(request: Request, call_next):
-    if (request.method == "OPTIONS") or (request.url.path in FREE_ENDPOINTS) or (
-            "/docs" in request.url.path) or ("/openapi.json" in request.url.path):
-        return await call_next(request)
-    token = request.headers.get('Authorization')
-    db = SessionLocal()
-    user = valid_user(token, db=db)
-    if not user.email_confirmed:
-        return JSONResponse(
-            status_code=403,
-            content={
-                'status': MiddleWareEnum.NEED_EMAIL_CONFIRMATION.value,
-            }
-        )
-    response = await call_next(request)
-    return response

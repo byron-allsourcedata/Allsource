@@ -5,6 +5,7 @@ from time import sleep
 from .sendgrid import SendGridHandler
 from .user_persistence_service import UserPersistenceService
 from ..enums import AutomationSystemTemplate, BaseEnum
+from ..models.users import Users
 
 logging.basicConfig(
     level=logging.ERROR,
@@ -15,15 +16,12 @@ logger = logging.getLogger(__name__)
 
 
 class Users:
-    def __init__(self, user: dict, user_persistence_service: UserPersistenceService):
+    def __init__(self, user: Users, user_persistence_service: UserPersistenceService):
         self.user = user
-
         self.user_persistence_service = user_persistence_service
 
     def get_my_info(self):
-        db_user = self.user_persistence_service.get_user_by_id(self.user.id)
-        sleep(10)
-        return {"email": db_user.email}
+        return {"email": self.user.email}
 
     def get_template_id(self, template_type: AutomationSystemTemplate) -> str:
         return template_type.value
@@ -46,12 +44,10 @@ class Users:
 
     def check_verification_status(self):
         if self.user:
-            db_user = self.user_persistence_service.get_user_by_id(self.user.id)
-            if db_user:
-                if db_user.email_confirmed:
-                    return {
-                        'status': BaseEnum.SUCCESS
-                    }
+            if self.user.is_email_confirmed:
+                return {
+                    'status': BaseEnum.SUCCESS
+                }
         return {
             'status': BaseEnum.FAILURE
         }

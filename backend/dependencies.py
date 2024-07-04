@@ -9,8 +9,9 @@ from backend.config.database import SessionLocal
 from contextlib import contextmanager
 from sqlalchemy.orm import Session
 from typing_extensions import Annotated
-from fastapi import Depends, Header, Request
+from fastapi import Depends, Header, Request, HTTPException, status, Query
 
+from backend.enums import UserAuthorizationStatus
 from backend.exceptions import InvalidToken
 from backend.schemas.auth_token import Token
 from backend.services.payments_plans import PaymentsPlans
@@ -36,9 +37,27 @@ def get_db():
         db.close()
 
 
+def get_user_persistence_service(db: Session = Depends(get_db)):
+    return UserPersistenceService(db=db)
+
+
+def check_user_subscription():
+    return UserAuthorizationStatus.NEED_CHOOSE_PLAN
+
+
+def get_user_authorization_status(user: User):
+    if user.is_with_card:
+        return check_user_subscription()
+    else:
+        if not user.is_email_confirmed:
+            return UserAuthorizationStatus.NEED_CONFIRM_EMAIL
+        if not user.is_company_details_filled:
+            return UserAuthorizationStatus.FILL_COMPANY_DETAILS
+    return UserAuthorizationStatus.SUCCESS
+
+
 def parse_jwt_data(Authorization: Annotated[str, Header()]) -> Token:
     access_token = Authorization.replace("Bearer ", "")
-    print(access_token)
     try:
         data = jwt.decode(
             access_token,
@@ -53,8 +72,30 @@ def parse_jwt_data(Authorization: Annotated[str, Header()]) -> Token:
         raise InvalidToken
 
 
-def get_user_persistence_service(db: Session = Depends(get_db) ):
-    return UserPersistenceService(db=db)
+def check_user_auth_and_authorization(request: Request, Authorization: Annotated[str, Header()],
+                                      user_persistence_service: UserPersistenceService = Depends(
+                                          get_user_persistence_service)) -> Token:
+    user_data = parse_jwt_data(Authorization)
+    user = user_persistence_service.get_user_by_id(user_data.id)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={
+                "status": 'NOT_FOUND'
+            }
+        )
+    current_url = request.url.__str__()
+    if not current_url.endswith('/check-verification-status') and not current_url.endswith('/resend-verification-email'):
+        auth_status = get_user_authorization_status(user)
+        if auth_status != UserAuthorizationStatus.SUCCESS:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail={
+                    "status": auth_status
+                }
+            )
+    return user
+
 
 def get_subscription_service(db: Session = Depends(get_db),
                              user_persistence_service: UserPersistenceService = Depends(get_user_persistence_service)):
@@ -68,17 +109,17 @@ def get_plans_service(db: Session = Depends(get_db),
                          user_persistence_service=user_persistence_service)
 
 
-def get_users_auth(db: Session = Depends(get_db), payments_plans: PaymentsPlans = Depends(get_plans_service),
-                   user_persistence_service: UserPersistenceService = Depends(get_user_persistence_service)):
+def get_users_auth_service(db: Session = Depends(get_db), payments_plans: PaymentsPlans = Depends(get_plans_service),
+                           user_persistence_service: UserPersistenceService = Depends(get_user_persistence_service)):
     return UsersAuth(db=db, plans_service=payments_plans, user_persistence_service=user_persistence_service)
 
 
-def get_users(user: dict = Depends(parse_jwt_data),
-              user_persistence_service: UserPersistenceService = Depends(get_user_persistence_service)):
+def get_users_service(user: User = Depends(check_user_auth_and_authorization),
+                      user_persistence_service: UserPersistenceService = Depends(get_user_persistence_service)):
     return Users(user=user, user_persistence_service=user_persistence_service)
 
 
-def valid_user(token: str, db) -> User:
+def valid_user(token: str) -> User:
     access_token = token.replace("Bearer ", "")
     try:
         data = jwt.decode(
@@ -89,14 +130,9 @@ def valid_user(token: str, db) -> User:
         )
         if datetime.utcnow() > datetime.fromtimestamp(data["exp"]):
             raise InvalidToken
-        data_user = Token(**data)
+        return Token(**data)
     except JWTError:
         raise InvalidToken
-    user = db.query(User).filter(User.id == data_user.id).first()
-
-    if user:
-        return user
-    return None
 
 
 def request_logger(r: Request):
