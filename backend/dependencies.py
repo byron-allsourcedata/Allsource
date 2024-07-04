@@ -85,7 +85,7 @@ def check_user_auth_and_authorization(request: Request, Authorization: Annotated
             }
         )
     current_url = request.url.__str__()
-    if not current_url.endswith('/check-verification-status') and not current_url.endswith('/resend-verification-email'):
+    if not current_url.endswith('/check-verification-status') and not current_url.endswith('/resend-verification-email') and not current_url.endswith('/reset-password'):
         auth_status = get_user_authorization_status(user)
         if auth_status != UserAuthorizationStatus.SUCCESS:
             raise HTTPException(
