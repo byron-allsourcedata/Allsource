@@ -1,6 +1,8 @@
 from datetime import datetime, timedelta, timezone
+
 from sqlalchemy.orm import Session
 
+from . import stripe_service
 from .jwt_service import get_password_hash, create_access_token, verify_password, decode_jwt_data
 from .sendgrid import SendGridHandler
 from .user_persistence_service import UserPersistenceService
@@ -14,7 +16,7 @@ from ..enums import SignUpStatus, StripePaymentStatusEnum, AutomationSystemTempl
 from typing import Optional
 
 from ..schemas.auth_google_token import AuthGoogleToken
-from ..schemas.users import UserSignUpForm, UserLoginForm
+from ..schemas.users import UserSignUpForm, UserLoginForm, ResetPassword
 
 logging.basicConfig(
     level=logging.ERROR,
@@ -22,7 +24,6 @@ logging.basicConfig(
     datefmt='%Y-%m-%d %H:%M:%S'
 )
 logger = logging.getLogger(__name__)
-
 
 class UsersAuth:
     def __init__(self, db: Session, plans_service: PaymentsPlans, user_persistence_service: UserPersistenceService):
@@ -68,6 +69,43 @@ class UsersAuth:
     def get_template_id(self, template_type: AutomationSystemTemplate) -> str:
         return template_type.value
 
+    def create_account_google(self, auth_google_token: AuthGoogleToken):
+        response = {}
+        CLIENT_ID = os.getenv("CLIENT_ID")
+        google_request = google_requests.Request()
+        is_without_card = auth_google_token.is_without_card
+        idinfo = id_token.verify_oauth2_token(auth_google_token, google_request, CLIENT_ID)
+        if idinfo:
+            google_payload = {
+                "email": idinfo.get("email"),
+                "full_name": f"{idinfo.get('given_name')} {idinfo.get('family_name')}"
+            }
+            email = idinfo.get("email")
+        else:
+            return {
+                'status': SignUpStatus.NOT_VALID_EMAIL
+            }
+        check_user_object = self.user_persistence_service.get_user(email)
+        if check_user_object is not None:
+            logger.info(f"User already exists in database with email: {email}")
+            return {
+                'status': SignUpStatus.EMAIL_ALREADY_EXISTS
+            }
+        customer_id = stripe_service.create_customer(google_payload)
+        user_object = self.add_user(is_without_card, customer_id=customer_id, google_payload=google_payload)
+        self.user_persistence_service.update_user_parent_v2(user_object.get("user_filed_id"))
+        token = self.create_access_token(user_object)
+        response.update({"token": token})
+        logger.info("Token created")
+        self.user_persistence_service.email_confirmed(user_object.id)
+        user_plan = self.plans_service.set_default_plan(self.db, user_object.get("user_filed_id"), True)
+        logger.info(f"Set plan {user_plan.title} for new user")
+        logger.info("Token created")
+        return {
+            'status': SignUpStatus.NEED_CHOOSE_PLAN,
+            'token': token,
+        }
+
     def create_account(self, user_form: UserSignUpForm):
         response = {}
         user_form.password = get_password_hash(user_form.password)
@@ -78,13 +116,7 @@ class UsersAuth:
             return {
                 'status': SignUpStatus.EMAIL_ALREADY_EXISTS
             }
-        # customer_object = stripe.Customer.create(
-        #     email=user_form.email,
-        #     description="User form web app signup form",
-        #     name=f"{user_form.full_name}"
-        # )
-        # customer_id = customer_object.get("id")
-        customer_id = '1'
+        customer_id = stripe_service.create_customer(user_form)
         user_object = self.add_user(is_without_card, customer_id, user_form)
         self.user_persistence_service.update_user_parent_v2(user_object.get("user_filed_id"))
         token = create_access_token(user_object)
@@ -150,4 +182,24 @@ class UsersAuth:
             }
         return {
             'status': BaseEnum.FAILURE
+        }
+
+    def reset_password(self, reset_password: ResetPassword):
+        if reset_password is not None and reset_password:
+            db_user = self.user_persistence_service.get_user(reset_password)
+            if db_user:
+                confirm_email_url = f"{os.getenv('SITE_HOST_URL')}/authentication/verify-token?token={token}&skip_pricing=true"
+                mail_object = SendGridHandler()
+                mail_object.send_sign_up_mail(
+                    subject="Please Verify Your Email Address",
+                    to_emails=db_user.email,
+                    template_id=self.get_template_id(AutomationSystemTemplate.EMAIL_VERIFICATION_TEMPLATE),
+                    template_placeholder={"Full_name": db_user.full_name, "Link": confirm_email_url},
+                )
+                logger.info("Confirmation Email Sent")
+                return {
+                    'status': BaseEnum.SUCCESS
+                }
+        return {
+            'status': SignUpStatus.NOT_VALID_EMAIL
         }

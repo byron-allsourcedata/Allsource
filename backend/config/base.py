@@ -10,7 +10,6 @@ class Base:
     port = int(os.getenv("PORT", 8000))
     domain = str(os.getenv("DOMAIN"))
     allowed_origins = [
-        "http://localhost:3000",
         f"http://{domain}",
         f"https://{domain}",
     ]
