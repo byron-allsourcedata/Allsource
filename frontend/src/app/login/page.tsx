@@ -7,6 +7,7 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import axiosInstance from '../../axios/axiosInterceptorInstance';
 import { AxiosError } from 'axios';
+import { loginStyles } from './loginStyles';
 
 const Signup: React.FC = () => {
   const router = useRouter();
@@ -115,148 +116,39 @@ const Signup: React.FC = () => {
     setShowPassword(!showPassword);
   };
 
-  const styles = {
-    container: {
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      minHeight: '50vh',
-      backgroundColor: '#ffffff',
-      width: '100%',
-      maxWidth: '31rem',
-      margin: '0 auto',
-      position: 'relative',
-      boxShadow: '0rem 2px 8px 0px #00000033',
-      borderRadius: '0.625rem',
-      border: '0.125rem solid transparent',
-      marginTop: '120px',
-      '@media (max-width: 440px)': {
-        boxShadow: '0rem 0px 0px 0px #00000033',
-        border: 'none',
-        marginTop: '3.75em',
-      },
-    },
-    logoContainer: {
-      paddingLeft: '2.5em',
-      paddingRight: '0.5em',
-    },
-    title: {
-      mb: 2,
-      fontWeight: 'bold',
-      fontSize: '28px',
-      whiteSpace: 'nowrap',
-      textAlign: 'center',
-      padding: '1.5rem 1rem 2.5rem',
-      fontFamily: 'Nunito',
-    },
-    googleButton: {
-      mb: 2,
-      bgcolor: '#FFFFFF',
-      color: '#000000',
-      padding: '0.875rem 7.5625rem',
-      whiteSpace: 'nowrap',
-      border: '0.125rem solid transparent',
-      '&:hover': {
-        borderColor: '#Grey/Light',
-        backgroundColor: 'white',
-      },
-      textTransform: 'none',
-      width: '100%',
-      maxWidth: '22.5rem',
-      fontWeight: 'medium',
-      fontSize: '0.875rem',
-    },
-    orDivider: {
-      display: 'flex',
-      alignItems: 'center',
-      width: '100%',
-      maxWidth: '22.5rem',
-      mt: '24px',
-      mb: '24px',
-    },
-    orText: {
-      px: 2,
-      fontWeight: 'regular',
-      fontSize: '14px',
-      fontFamily: 'Nunito',
-    },
-    form: {
-      width: '100%',
-      maxWidth: '360px',
-      fontFamily: 'Nunito',
-    },
-    inputLabel: {
-      fontFamily: 'Nunito',
-      fontSize: '16px',
-    },
-    submitButton: {
-      mt: 2,
-      backgroundColor: '#F45745',
-      color: '#FFFFFF',
-      '&:hover': {
-        borderColor: '#000000',
-        backgroundColor: 'lightgreen',
-      },
-      fontWeight: 'bold',
-      margin: '24px 0px 0px 0px',
-      textTransform: 'none',
-      minHeight: '3rem',
-      fontSize: '16px',
-      fontFamily: 'Nunito',
-    },
-    loginText: {
-      mt: 2,
-    margin: '1.25em 0px 24px',
-      fontFamily: 'Nunito',
-      fontSize: '16px',
-    },
-    resetPassword: {
-      mt: 2,
-    margin: '3em 0em 0em',
-      fontFamily: 'Nunito',
-      fontSize: '16px',
-    },
-    loginLink: {
-      color: '#F45745',
-      cursor: 'pointer',
-      fontWeight: 'bold',
-      fontFamily: 'Nunito',
-      textDecoration: 'none',
-    },
-  };
+  
 
   return (
     <>
-      <Box sx={styles.logoContainer}>
-        <Image src='/logo.svg' alt='logo' height={80} width={60} />
+      <Box sx={loginStyles.logoContainer}>
+        <Image src='./logo.svg' alt='logo' height={80} width={60} />
       </Box>
 
-      <Box sx={styles.container}>
-        <Typography variant="h4" component="h1" sx={styles.title}>
+      <Box sx={loginStyles.container}>
+        <Typography variant="h4" component="h1" sx={loginStyles.title}>
           Login
         </Typography>
         <Button
           variant="contained"
           onClick={handleGoogleSignup}
-          sx={styles.googleButton}
+          sx={loginStyles.googleButton}
           disableFocusRipple
           startIcon={
-            <Image src="/google-icon.svg" alt="Google icon" width={20} height={20} />
+            <Image src="./google-icon.svg" alt="Google icon" width={20} height={20} />
           }
         >
           Continue with Google
         </Button>
-        <Box sx={styles.orDivider}>
+        <Box sx={loginStyles.orDivider}>
           <Box sx={{ borderBottom: '1px solid #000000', flexGrow: 1 }} />
-          <Typography variant="body1" sx={styles.orText}>
+          <Typography variant="body1" sx={loginStyles.orText}>
             OR
           </Typography>
           <Box sx={{ borderBottom: '1px solid #000000', flexGrow: 1 }} />
         </Box>
-        <Box component="form" onSubmit={handleSubmit} sx={styles.form}>
+        <Box component="form" onSubmit={handleSubmit} sx={loginStyles.form}>
           <TextField
-            InputLabelProps={{ sx: styles.inputLabel }}
+            InputLabelProps={{ sx: loginStyles.inputLabel }}
             label="Email address"
             name="email"
             type="email"
@@ -269,7 +161,7 @@ const Signup: React.FC = () => {
             helperText={errors.email}
           />
           <TextField
-            InputLabelProps={{ sx: styles.inputLabel }}
+            InputLabelProps={{ sx: loginStyles.inputLabel }}
             label="Enter password"
             name="password"
             type={showPassword ? 'text' : 'password'}
@@ -293,20 +185,20 @@ const Signup: React.FC = () => {
           <Button
             type="submit"
             variant="contained"
-            sx={styles.submitButton}
+            sx={loginStyles.submitButton}
             fullWidth
           >
             Activate Account
           </Button>
         </Box>
-        <Typography variant="body2" sx={styles.resetPassword}>
-          <Link href="/reset-password" sx={styles.loginLink}>
+        <Typography variant="body2" sx={loginStyles.resetPassword}>
+          <Link href="/reset-password.html" sx={loginStyles.loginLink}>
             Reset password
           </Link>
           </Typography>
-        <Typography variant="body2" sx={styles.loginText}>
+        <Typography variant="body2" sx={loginStyles.loginText}>
           No account?{' '}
-          <Link href="/signup" sx={styles.loginLink}>
+          <Link href="/signup.html" sx={loginStyles.loginLink}>
             Create one
           </Link>
         </Typography>

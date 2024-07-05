@@ -6,6 +6,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import Image from 'next/image';
 import { Box, Button, Typography } from '@mui/material';
 import axios from '../../axios/axiosInterceptorInstance';
+import { emailStyles } from './emailStyles';
 
 const EmailVerificate: React.FC = () => {
   const [canResend, setCanResend] = useState(true);
@@ -46,6 +47,7 @@ const EmailVerificate: React.FC = () => {
 
   const handleResendEmail = () => {
     if (canResend) {
+      notify();
       setCanResend(false);
       setTimer(60);
       axios.post('api/resend-verification-email', { token })
@@ -56,7 +58,7 @@ const EmailVerificate: React.FC = () => {
     const interval = setInterval(() => {
       axios.get('api/check-verification-status')
         .then(response => {
-          if (response.status === 200 && response.data.status === "SUCCESS") {
+          if (response.status === 200 && response.data.status === "EMAIL_VERIFIED") {
             notify();
             clearInterval(interval);
             router.push('/dashboard');
@@ -85,95 +87,6 @@ const EmailVerificate: React.FC = () => {
     return () => clearInterval(countdown);
   }, [canResend]);
 
-  const styles = {
-    container: {
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      minHeight: '50vh',
-      backgroundColor: '#ffffff',
-      width: '100%',
-      maxWidth: '32rem',
-      margin: '0 auto',
-      position: 'relative',
-      boxShadow: '0rem 2px 8px 0px #00000033',
-      borderRadius: '0.625rem',
-      border: '0.125rem solid transparent',
-      marginTop: '120px',
-      '@media (max-width: 440px)': {
-        boxShadow: '0rem 0px 0px 0px #00000033',
-        border: 'none',
-        marginTop: '3.75em',
-      },
-    },
-    hidepc: {
-      display: 'none',
-      visibility: 'hidden'
-    },
-    logoContainer: {
-      paddingLeft: '2.5em',
-      paddingRight: '0.5em',
-    },
-    title: {
-      mb: 2,
-      fontWeight: 'bold',
-      fontSize: '28px',
-      whiteSpace: 'nowrap',
-      textAlign: 'center',
-      padding: '1.5rem 1rem 2.5rem',
-      fontFamily: 'Nunito',
-    },
-    icon: {
-      marginBottom: '20px',
-    },
-    form: {
-      maxWidth: '100%',
-      fontFamily: 'Nunito',
-      text: 'nowrap',
-      alignItems: 'center',
-      padding: '52px 32.5px'
-    },
-    orDivider: {
-      alignItems: 'center',
-      width: '100%',
-      maxWidth: '22.5rem',
-      mt: '24px',
-      mb: '24px',
-      display: 'none',
-      visibility: 'hidden',
-      '@media (max-width: 440px)': {
-        display: 'flex',
-        visibility: 'visible',
-      },
-    },
-    orText: {
-      px: 2,
-      fontWeight: 'regular',
-      fontSize: '14px',
-      fontFamily: 'Nunito',
-    },
-    text: {
-      fontFamily: 'Nunito',
-      fontSize: '14px',
-      textAlign: 'center',
-    },
-    resetPassword: {
-      mt: 2,
-      margin: '3em 0em 0em',
-      fontFamily: 'Nunito',
-      fontSize: '16px',
-    },
-    loginLink: {
-      color: '#F45745',
-      cursor: 'pointer',
-      fontWeight: 'bold',
-      fontFamily: 'Nunito',
-      textDecoration: 'none',
-      margin: '16px 89px 24px'
-    },
-  };
-
   return (
     <>
       <ToastContainer
@@ -189,33 +102,31 @@ const EmailVerificate: React.FC = () => {
         theme="light"
         progressClassName="custom-progress-bar"
       />
-      <Box sx={styles.logoContainer}>
-        <Image src='/logo.svg' alt='logo' height={80} width={60} />
+      <Box sx={emailStyles.logoContainer}>
+        <Image src='./logo.svg' alt='logo' height={80} width={60} />
       </Box>
 
-      <Box sx={styles.container}>
-        <Typography variant="h4" component="h1" sx={styles.title}>
+      <Box sx={emailStyles.container}>
+        <Typography variant="h4" component="h1" sx={emailStyles.title}>
           Check your inbox
         </Typography>
-        <Box sx={styles.icon}>
-          <Button onClick={handleResendEmail} disabled={!canResend}>
-            <Image src="/mail-icon.svg" alt="Mail Icon" width={200} height={200} />
-          </Button>
+        <Box sx={emailStyles.icon}>
+            <Image src="./mail-icon.svg" alt="Mail Icon" width={200} height={200} />
         </Box>
-        <Box sx={styles.orDivider}>
+        <Box sx={emailStyles.orDivider}>
           <Box sx={{ borderBottom: '1px solid #000000', flexGrow: 1 }} />
-          <Typography variant="body1" sx={styles.orText}>
+          <Typography variant="body1" sx={emailStyles.orText}>
             OR
           </Typography>
           <Box sx={{ borderBottom: '1px solid #000000', flexGrow: 1 }} />
         </Box>
-        <Box component="form" sx={styles.form}>
-          <Typography sx={styles.text}>
+        <Box component="form" sx={emailStyles.form}>
+          <Typography sx={emailStyles.text}>
             To complete setup and login, click the verification link in the email we’ve sent to <strong>{email}</strong>
           </Typography>
         </Box>
-        <Typography sx={styles.resetPassword}>
-          <Button onClick={handleResendEmail} sx={styles.loginLink} disabled={!canResend}>
+        <Typography sx={emailStyles.resetPassword}>
+          <Button onClick={handleResendEmail} sx={emailStyles.loginLink} disabled={!canResend}>
             {canResend ? 'Resend Verification Email' : `Resend in ${timer}s`}
           </Button>
         </Typography>
@@ -226,7 +137,7 @@ const EmailVerificate: React.FC = () => {
 
 const CustomToast = () => (
   <div style={{ color: 'green' }}>
-    <Typography style={{ fontWeight: 'bold' }}>
+    <Typography style={{ fontWeight: 'bold', color: 'rgba(86, 153, 27, 1)' }}>
       Success
     </Typography>
     <Typography variant="body2">
