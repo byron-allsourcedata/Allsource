@@ -12,11 +12,11 @@ from backend.services.payments_plans import PaymentsPlans
 from backend.models.users import Users
 import logging
 from google.oauth2 import id_token
-from ..enums import SignUpStatus, StripePaymentStatusEnum, AutomationSystemTemplate, LoginStatus, BaseEnum
+from backend.enums import SignUpStatus, StripePaymentStatusEnum, AutomationSystemTemplate, LoginStatus, BaseEnum
 from typing import Optional
 
-from ..schemas.auth_google_token import AuthGoogleToken
-from ..schemas.users import UserSignUpForm, UserLoginForm, ResetPassword
+from backend.schemas.auth_google_token import AuthGoogleToken
+from backend.schemas.users import UserSignUpForm, UserLoginForm, ResetPassword
 
 logging.basicConfig(
     level=logging.ERROR,

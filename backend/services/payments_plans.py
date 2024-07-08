@@ -2,7 +2,7 @@ import logging
 
 from .subscriptions import SubscriptionService
 from .user_persistence_service import UserPersistenceService
-from ..models.plans import SubscriptionPlan, UserSubscriptionPlan
+from backend.models.plans import SubscriptionPlan, UserSubscriptionPlan
 from sqlalchemy.orm import Session
 
 TRIAL_STUB_PLAN_ID = 17

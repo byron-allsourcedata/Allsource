@@ -1,12 +1,12 @@
 from fastapi import APIRouter, Depends, Query
 from fastapi.params import Header
-from ..dependencies import get_users_auth_service, get_users_service, get_users_email_verification_service
-from ..models.users import Users
-from ..schemas.auth_google_token import AuthGoogleToken
-from ..schemas.users import UserSignUpForm, UserSignUpFormResponse, UserLoginFormResponse, UserLoginForm, ResetPassword
-from ..services.users_auth import UsersAuth
-from ..services.users_email_verification import UsersEmailVerificationService
-from ..services.users import UsersService
+from backend.dependencies import get_users_auth_service, get_users_service, get_users_email_verification_service
+from backend.models.users import Users
+from backend.schemas.auth_google_token import AuthGoogleToken
+from backend.schemas.users import UserSignUpForm, UserSignUpFormResponse, UserLoginFormResponse, UserLoginForm, ResetPassword
+from backend.services.users_auth import UsersAuth
+from backend.services.users_email_verification import UsersEmailVerificationService
+from backend.services.users import UsersService
 from typing_extensions import Annotated
 
 router = APIRouter()

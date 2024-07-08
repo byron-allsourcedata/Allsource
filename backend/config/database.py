@@ -3,7 +3,7 @@ import os
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from backend.config.base import Base
+from .base import Base
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
 

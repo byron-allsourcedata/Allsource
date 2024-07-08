@@ -2,8 +2,8 @@ import logging
 import os
 from .sendgrid import SendGridHandler
 from .user_persistence_service import UserPersistenceService
-from ..enums import AutomationSystemTemplate, VerificationEmail
-from ..models.users import Users
+from backend.enums import AutomationSystemTemplate, VerificationEmail
+from backend.models.users import Users
 
 logging.basicConfig(
     level=logging.ERROR,

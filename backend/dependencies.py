@@ -4,23 +4,23 @@ from datetime import datetime
 
 from jose import jwt, JWTError
 
-from backend.config.auth import AuthConfig
-from backend.config.database import SessionLocal
+from config.auth import AuthConfig
+from config.database import SessionLocal
 from contextlib import contextmanager
 from sqlalchemy.orm import Session
 from typing_extensions import Annotated
 from fastapi import Depends, Header, Request, HTTPException, status, Query
 
-from backend.enums import UserAuthorizationStatus
-from backend.exceptions import InvalidToken
-from backend.schemas.auth_token import Token
-from backend.services.payments_plans import PaymentsPlans
-from backend.services.subscriptions import SubscriptionService
-from backend.services.users_email_verification import UsersEmailVerificationService
-from backend.services.users import UsersService
-from backend.models.users import Users as User
-from backend.services.users_auth import UsersAuth
-from backend.services.user_persistence_service import UserPersistenceService
+from enums import UserAuthorizationStatus
+from exceptions import InvalidToken
+from schemas.auth_token import Token
+from services.payments_plans import PaymentsPlans
+from services.subscriptions import SubscriptionService
+from services.users_email_verification import UsersEmailVerificationService
+from services.users import UsersService
+from models.users import Users as User
+from services.users_auth import UsersAuth
+from services.user_persistence_service import UserPersistenceService
 
 logging.basicConfig(
     level=logging.ERROR,
