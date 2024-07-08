@@ -16,7 +16,8 @@ from backend.exceptions import InvalidToken
 from backend.schemas.auth_token import Token
 from backend.services.payments_plans import PaymentsPlans
 from backend.services.subscriptions import SubscriptionService
-from backend.services.users import Users
+from backend.services.users_email_verification import UsersEmailVerificationService
+from backend.services.users import UsersService
 from backend.models.users import Users as User
 from backend.services.users_auth import UsersAuth
 from backend.services.user_persistence_service import UserPersistenceService
@@ -39,7 +40,6 @@ def get_db():
 
 def get_user_persistence_service(db: Session = Depends(get_db)):
     return UserPersistenceService(db=db)
-
 
 def check_user_subscription():
     return UserAuthorizationStatus.NEED_CHOOSE_PLAN
@@ -72,8 +72,8 @@ def parse_jwt_data(Authorization: Annotated[str, Header()]) -> Token:
         raise InvalidToken
 
 
-def check_user_auth_and_authorization(request: Request, Authorization: Annotated[str, Header()],
-                                      user_persistence_service: UserPersistenceService = Depends(
+def check_user_authorization(Authorization: Annotated[str, Header()],
+                             user_persistence_service: UserPersistenceService = Depends(
                                           get_user_persistence_service)) -> Token:
     user_data = parse_jwt_data(Authorization)
     user = user_persistence_service.get_user_by_id(user_data.id)
@@ -84,16 +84,28 @@ def check_user_auth_and_authorization(request: Request, Authorization: Annotated
                 "status": 'NOT_FOUND'
             }
         )
-    current_url = request.url.__str__()
-    if not current_url.endswith('/check-verification-status') and not current_url.endswith('/resend-verification-email') and not current_url.endswith('/reset-password'):
-        auth_status = get_user_authorization_status(user)
-        if auth_status != UserAuthorizationStatus.SUCCESS:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail={
-                    "status": auth_status
-                }
-            )
+    auth_status = get_user_authorization_status(user)
+    if auth_status != UserAuthorizationStatus.SUCCESS:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={
+                "status": auth_status
+            }
+        )
+    return user
+
+def check_user_authentication(Authorization: Annotated[str, Header()],
+                             user_persistence_service: UserPersistenceService = Depends(
+                                          get_user_persistence_service)) -> Token:
+    user_data = parse_jwt_data(Authorization)
+    user = user_persistence_service.get_user_by_id(user_data.id)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={
+                "status": 'NOT_FOUND'
+            }
+        )
     return user
 
 
@@ -114,9 +126,13 @@ def get_users_auth_service(db: Session = Depends(get_db), payments_plans: Paymen
     return UsersAuth(db=db, plans_service=payments_plans, user_persistence_service=user_persistence_service)
 
 
-def get_users_service(user: User = Depends(check_user_auth_and_authorization),
+def get_users_service(user: User = Depends(check_user_authorization),
                       user_persistence_service: UserPersistenceService = Depends(get_user_persistence_service)):
-    return Users(user=user, user_persistence_service=user_persistence_service)
+    return UsersService(user=user, user_persistence_service=user_persistence_service)
+
+def get_users_email_verification_service(user: User = Depends(check_user_authentication),
+                      user_persistence_service: UserPersistenceService = Depends(get_user_persistence_service)):
+    return UsersEmailVerificationService(user=user, user_persistence_service=user_persistence_service)
 
 
 def valid_user(token: str) -> User:

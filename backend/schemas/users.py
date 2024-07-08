@@ -14,6 +14,7 @@ class UserSignUpFormResponse(BaseModel):
     status: SignUpStatus
     token: Optional[str] = None
 
+
 class UserLoginFormResponse(BaseModel):
     status: LoginStatus
     token: Optional[str] = None
@@ -22,3 +23,7 @@ class UserLoginFormResponse(BaseModel):
 class UserLoginForm(BaseModel):
     email: str = Field(...)
     password: str = Field(...)
+
+
+class ResetPassword(BaseModel):
+    email: str = Field(...)

@@ -1,20 +1,19 @@
 from fastapi import APIRouter, Depends, Query
 from fastapi.params import Header
-from starlette.responses import RedirectResponse
-
-from ..dependencies import get_users_auth_service, get_users_service
-from ..enums import SignUpStatus
+from ..dependencies import get_users_auth_service, get_users_service, get_users_email_verification_service
+from ..models.users import Users
 from ..schemas.auth_google_token import AuthGoogleToken
-from ..schemas.users import UserSignUpForm, UserSignUpFormResponse, UserLoginFormResponse, UserLoginForm
+from ..schemas.users import UserSignUpForm, UserSignUpFormResponse, UserLoginFormResponse, UserLoginForm, ResetPassword
 from ..services.users_auth import UsersAuth
-from ..services.users import Users
+from ..services.users_email_verification import UsersEmailVerificationService
+from ..services.users import UsersService
 from typing_extensions import Annotated
 
 router = APIRouter()
 
 
 @router.get("/me")
-def get(user: Users = Depends(get_users_service)):
+def get(user: UsersService = Depends(get_users_service)):
     return user.get_my_info()
 
 
@@ -38,18 +37,22 @@ async def create_user_google(auth_google_token: AuthGoogleToken, users: UsersAut
 
 
 @router.get("/authentication/verify-token")
-async def verify_token(users: UsersAuth = Depends(get_users_auth_service), token: str = Query(...),
+async def verify_token(user: UsersAuth = Depends(get_users_auth_service), token: str = Query(...),
                        skip_pricing: bool = Query(True)):
 
-    return users.verify_token(token, skip_pricing)
+    return user.verify_token(token, skip_pricing)
 
 
 @router.post("/resend-verification-email")
-async def resend_verification_email(authorization: Annotated[str, Header()], user: Users = Depends(get_users_service)):
+async def resend_verification_email(authorization: Annotated[str, Header()], user: UsersEmailVerificationService = Depends(get_users_email_verification_service)):
     token = (authorization.replace("Bearer ", ""))
     return user.resend_verification_email(token)
 
+@router.post("/reset-password")
+async def resend_verification_email(reset_password: ResetPassword, user: UsersAuth = Depends(get_users_auth_service)):
+    return user.reset_password(reset_password)
+
 
 @router.get("/check-verification-status")
-async def check_verification_status(user: Users = Depends(get_users_service)):
+async def check_verification_status(user: UsersEmailVerificationService = Depends(get_users_email_verification_service)):
     return user.check_verification_status()
