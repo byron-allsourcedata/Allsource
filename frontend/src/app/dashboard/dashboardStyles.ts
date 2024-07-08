@@ -1,6 +1,6 @@
 import { SxProps, Theme } from '@mui/system';
 
-export const planStyles: { [key: string]: SxProps<Theme> } = {
+export const dashboardStyles: { [key: string]: SxProps<Theme> } = {
   container: {
     display: 'flex',
     flexDirection: 'column',
