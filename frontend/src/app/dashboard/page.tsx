@@ -18,7 +18,7 @@ const Dashboard: React.FC = () => {
   return (
     <>
       <Box sx={dashboardStyles.logoContainer}>
-        <Image src='./logo.svg' alt='logo' height={80} width={60} />
+        <Image src='/logo.svg' alt='logo' height={80} width={60} />
       </Box>
       <Typography variant="h4" component="h1" sx={dashboardStyles.title}>
         Dashboard

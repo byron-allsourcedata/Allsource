@@ -26,7 +26,7 @@ const ConfirmSend: React.FC = () => {
   return (
     <>
       <Box sx={confirmStyles.logoContainer}>
-        <Image src='../logo.svg' alt='logo' height={80} width={60} />
+        <Image src='/logo.svg' alt='logo' height={80} width={60} />
       </Box>
       <Box sx={confirmStyles.container}>
         <Typography variant="h4" component="h1" sx={confirmStyles.title}>

@@ -113,7 +113,7 @@ const Signup: React.FC = () => {
               localStorage.setItem('token', responseData.token);
             }
             sessionStorage.setItem('me', JSON.stringify({ email: formValues.email }));
-            router.push('/email_verificate');
+            router.push('/email-verificate');
           }
         }
       } catch (err) {
@@ -137,7 +137,7 @@ const Signup: React.FC = () => {
   return (
     <>
       <Box sx={signupStyles.logoContainer}>
-        <Image src='./logo.svg' alt='logo' height={80} width={60} />
+        <Image src='/logo.svg' alt='logo' height={80} width={60} />
       </Box>
 
       <Box sx={signupStyles.container}>
@@ -220,7 +220,7 @@ const Signup: React.FC = () => {
         </Box>
         <Typography variant="body2" sx={signupStyles.loginText}>
           Already have an account{' '}
-          <Link href="/login" sx={signupStyles.loginLink}>
+          <Link href="/signin" sx={signupStyles.loginLink}>
             Login
           </Link>
         </Typography>
