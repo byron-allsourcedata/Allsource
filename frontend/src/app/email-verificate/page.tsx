@@ -103,7 +103,7 @@ const EmailVerificate: React.FC = () => {
         progressClassName="custom-progress-bar"
       />
       <Box sx={emailStyles.logoContainer}>
-        <Image src='./logo.svg' alt='logo' height={80} width={60} />
+        <Image src='/logo.svg' alt='logo' height={80} width={60} />
       </Box>
 
       <Box sx={emailStyles.container}>

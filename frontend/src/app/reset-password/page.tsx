@@ -59,7 +59,7 @@ const Signup: React.FC = () => {
 
       if (response.status === 200) {
         sessionStorage.setItem('me', JSON.stringify({ email: formValues.email }));
-        router.push('/confirm_send');
+        router.push('/confirm-send');
       }
     } catch (err) {
       const error = err as AxiosError;
@@ -75,7 +75,7 @@ const Signup: React.FC = () => {
   return (
     <>
       <Box sx={resetStyles.logoContainer}>
-        <Image src='./logo.svg' alt='logo' height={80} width={60} />
+        <Image src='/logo.svg' alt='logo' height={80} width={60} />
       </Box>
       <Box sx={resetStyles.container}>
         <Typography variant="h4" component="h1" sx={resetStyles.title}>

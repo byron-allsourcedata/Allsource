@@ -121,7 +121,7 @@ const Signup: React.FC = () => {
   return (
     <>
       <Box sx={loginStyles.logoContainer}>
-        <Image src='./logo.svg' alt='logo' height={80} width={60} />
+        <Image src='/logo.svg' alt='logo' height={80} width={60} />
       </Box>
 
       <Box sx={loginStyles.container}>
@@ -134,7 +134,7 @@ const Signup: React.FC = () => {
           sx={loginStyles.googleButton}
           disableFocusRipple
           startIcon={
-            <Image src="./google-icon.svg" alt="Google icon" width={20} height={20} />
+            <Image src="/google-icon.svg" alt="Google icon" width={20} height={20} />
           }
         >
           Continue with Google
@@ -192,13 +192,13 @@ const Signup: React.FC = () => {
           </Button>
         </Box>
         <Typography variant="body2" sx={loginStyles.resetPassword}>
-          <Link href="/reset-password.html" sx={loginStyles.loginLink}>
+          <Link href="/reset-password" sx={loginStyles.loginLink}>
             Reset password
           </Link>
           </Typography>
         <Typography variant="body2" sx={loginStyles.loginText}>
           No account?{' '}
-          <Link href="/signup.html" sx={loginStyles.loginLink}>
+          <Link href="/signup" sx={loginStyles.loginLink}>
             Create one
           </Link>
         </Typography>

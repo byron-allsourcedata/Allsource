@@ -18,7 +18,7 @@ const PlanPage: React.FC = () => {
   return (
     <>
       <Box sx={planStyles.logoContainer}>
-        <Image src='./logo.svg' alt='logo' height={80} width={60} />
+        <Image src='/logo.svg' alt='logo' height={80} width={60} />
       </Box>
       <Typography variant="h4" component="h1" sx={planStyles.title}>
         We’ve got a plan thats perfect for you!
