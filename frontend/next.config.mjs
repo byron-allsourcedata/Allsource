@@ -2,7 +2,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     output: 'export',
-    trailingSlash: false
+    trailingSlash: true
 };
 
 export default nextConfig;
