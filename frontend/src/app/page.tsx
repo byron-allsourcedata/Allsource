@@ -10,7 +10,7 @@ function RedirectPage() {
         router.push('/dashboard');
       }
       else {
-        router.push('/login')
+        router.push('/signin')
       }
   }
 }
