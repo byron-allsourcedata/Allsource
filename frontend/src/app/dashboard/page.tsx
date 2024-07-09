@@ -11,6 +11,11 @@ const Dashboard: React.FC = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
 
+  const handleSignOut = () => {
+    localStorage.clear();
+    sessionStorage.clear();
+    router.push('/signin');
+  };
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   
@@ -23,7 +28,12 @@ const Dashboard: React.FC = () => {
       <Typography variant="h4" component="h1" sx={dashboardStyles.title}>
         Dashboard
       </Typography>
-
+      <Button
+          onClick={handleSignOut}
+          sx={dashboardStyles.title}
+        >
+          Sign Out
+        </Button>
     </>
   );
 };

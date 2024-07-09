@@ -4,17 +4,24 @@ import { Box, Button, TextField, Typography } from '@mui/material';
 import Image from 'next/image';
 import PersonIcon from '@mui/icons-material/Person';
 import { styles } from './accountStyles';
+import { useRouter} from 'next/navigation';
 
 const AccountSetupPage = () => {
   const [name, setName] = useState<string | null>(null);
   const [selectedEmployees, setSelectedEmployees] = useState<number | null>(null);
-
+  const router = useRouter();
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const storedMe = sessionStorage.getItem('me');
       setName(storedMe ? JSON.parse(storedMe)?.name : null);
     }
   }, []);
+
+  const handleSignOut = () => {
+    localStorage.clear();
+    sessionStorage.clear();
+    router.push('/signin');
+  };
 
   const getButtonStyles = (isSelected: boolean): any => {
     return isSelected
@@ -102,6 +109,12 @@ const AccountSetupPage = () => {
           Next
         </Button>
       </Box>
+      <Button
+          onClick={handleSignOut}
+          sx={{ widht: '5%'}}
+        >
+          Sign Out
+        </Button>
     </Box>
   );
 };

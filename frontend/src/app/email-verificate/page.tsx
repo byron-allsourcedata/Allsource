@@ -25,6 +25,12 @@ const EmailVerificate: React.FC = () => {
     }
   }, []);
 
+  const handleSignOut = () => {
+    localStorage.clear();
+    sessionStorage.clear();
+    router.push('/signin');
+  };
+
   const notify = () => {
     toast.success(<CustomToast />, {
       position: "bottom-center",
@@ -130,6 +136,12 @@ const EmailVerificate: React.FC = () => {
             {canResend ? 'Resend Verification Email' : `Resend in ${timer}s`}
           </Button>
         </Typography>
+        <Button
+          onClick={handleSignOut}
+          sx={{ widht: '5%'}}
+        >
+          Sign Out
+        </Button>
       </Box>
     </>
   );

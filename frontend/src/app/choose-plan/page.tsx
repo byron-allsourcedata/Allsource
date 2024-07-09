@@ -30,12 +30,18 @@ const PlanCard = ({ planName, price, features }: { planName: string; price: stri
         Talk to us
       </Button>
     </Box>
+
   );
 };
 
 const PlanPage: React.FC = () => {
   const router = useRouter();
 
+  const handleSignOut = () => {
+    localStorage.clear();
+    sessionStorage.clear();
+    router.push('/signin');
+  };
   const plans = [
     {
       planName: 'Basic Plan',
@@ -90,6 +96,12 @@ const PlanPage: React.FC = () => {
           </Box>
         ))}
       </Box>
+      <Button
+    onClick={handleSignOut}
+    sx={{ widht: '5%'}}
+  >
+    Sign Out
+  </Button>
     </>
   );
 };
