@@ -26,10 +26,12 @@ app = FastAPI()
 @app.exception_handler(StarletteHTTPException)
 async def http_exception_handler(request: Request, exc: StarletteHTTPException):
     logger.error(f"HTTP Exception: {exc.detail}\n{traceback.format_exc()}")
+    logger.error("--------")
+    logger.error(exc.detail)
     return JSONResponse(
         status_code=exc.status_code,
         content={
-            'status': status_code,
+            'status': exc.detail['status'].value,
             'detail': {'error': traceback.format_exc()}
         }
     )

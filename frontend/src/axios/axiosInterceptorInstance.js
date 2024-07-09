@@ -46,11 +46,25 @@ axiosInterceptorInstance.interceptors.response.use(
   },
   (error) => {
     if (error.response) {
+      console.log(error)
       switch (error.response.status) {
         case 401:
           // 401 error handler (Unauthorized)
           localStorage.clear();
-          navigateTo('/login');
+          Router.push('/login');
+          break;
+      case 403: 
+          switch(error.response.data.status){
+            case "NEED_CONFIRM_EMAIL":
+              navigateTo('/email-verificate');
+              break;
+            case "FILL_COMPANY_DETAILS":
+              navigateTo('/account-setup');
+              break;
+            case "NEED_CHOOSE_PLAN":
+              navigateTo('/choose-plan');
+              break;
+          }
           break;
         case 500:
           // 500 error handler (Internal Server Error)

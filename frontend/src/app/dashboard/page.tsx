@@ -10,12 +10,26 @@ import { dashboardStyles } from './dashboardStyles';
 const Dashboard: React.FC = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [data, setData] = useState(null);
 
   const handleSignOut = () => {
     localStorage.clear();
     sessionStorage.clear();
     router.push('/signin');
   };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await axiosInstance.get('api/dashboard');
+        setData(response.data);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    };
+
+    fetchData();
+  }, [router]);
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   
