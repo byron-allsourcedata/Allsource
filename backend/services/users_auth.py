@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from . import stripe_service
 from .jwt_service import get_password_hash, create_access_token, verify_password, decode_jwt_data
-from .send_grid_persistence import SendGridPersistenceService
+from .sendgrid_persistence import SendGridPersistenceService
 from .sendgrid import SendGridHandler
 from .user_persistence_service import UserPersistenceService
 import os

@@ -15,7 +15,7 @@ from enums import UserAuthorizationStatus
 from exceptions import InvalidToken
 from schemas.auth_token import Token
 from services.payments_plans import PaymentsPlans
-from services.send_grid_persistence import SendGridPersistenceService
+from services.sendgrid_persistence import SendGridPersistenceService
 from services.subscriptions import SubscriptionService
 from services.users_email_verification import UsersEmailVerificationService
 from services.users import UsersService

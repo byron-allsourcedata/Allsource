@@ -3,7 +3,7 @@ import os
 from datetime import datetime, timedelta
 
 from .jwt_service import get_password_hash
-from .send_grid_persistence import SendGridPersistenceService
+from .sendgrid_persistence import SendGridPersistenceService
 from .sendgrid import SendGridHandler
 from .user_persistence_service import UserPersistenceService
 from enums import AutomationSystemTemplate, VerificationEmail, UpdatePasswordStatus

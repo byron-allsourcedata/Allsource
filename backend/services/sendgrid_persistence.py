@@ -1,4 +1,4 @@
-from models.send_grid_template import SendGridTemplate
+from models.sendgrid_template import SendGridTemplate
 from sqlalchemy.orm import Session
 
 
