@@ -79,11 +79,12 @@ export const signupStyles: { [key: string]: SxProps<Theme> } = {
   },
   submitButton: {
     mt: 2,
-    backgroundColor: '#F45745',
-    color: '#FFFFFF',
+    backgroundColor: '#FFFFFF',
+    color: 'rgba(244, 87, 69, 1)',
     '&:hover': {
-      borderColor: '#000000',
-      backgroundColor: 'lightgreen',
+      backgroundColor: 'rgba(244, 87, 69, 1)',
+      borderColor: 'rgba(244, 87, 69, 1)',
+      color: 'rgba(255, 255, 255, 1)'
     },
     fontWeight: 'bold',
     margin: '24px 0px 0 0px',
