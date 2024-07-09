@@ -25,7 +25,7 @@ def analytics():
     raise NotImplementedError
 
 
-class SendGridHandler:
+class SendgridHandler:
     SENDGRID_API_KEY = os.getenv("SENDGRID_API_KEY")
 
     @classmethod

@@ -11,10 +11,17 @@ class UserPersistenceService:
     def __init__(self, db: Session):
         self.db = db
 
-    def set_message_expiration_now(self, user_id: int):
+    def set_reset_password_sent_now(self, user_id: int):
         send_message_expiration_time = datetime.now()
         self.db.query(Users).filter(Users.id == user_id).update(
-            {Users.send_message_expiration_time: send_message_expiration_time},
+            {Users.reset_password_sent_at: send_message_expiration_time},
+            synchronize_session=False)
+        self.db.commit()
+
+    def set_verified_email_sent_now(self, user_id: int):
+        send_message_expiration_time = datetime.now()
+        self.db.query(Users).filter(Users.id == user_id).update(
+            {Users.verified_email_sent_at: send_message_expiration_time},
             synchronize_session=False)
         self.db.commit()
 

@@ -3,8 +3,8 @@ import os
 from datetime import datetime, timedelta
 
 from .jwt_service import get_password_hash
-from .send_grid_persistence import SendGridPersistenceService
-from .sendgrid import SendGridHandler
+from .sendgrid_persistence import SendgridPersistenceService
+from .sendgrid import SendgridHandler
 from .user_persistence_service import UserPersistenceService
 from enums import AutomationSystemTemplate, VerificationEmail, UpdatePasswordStatus
 from models.users import Users
@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 class UsersEmailVerificationService:
-    def __init__(self, user: Users, user_persistence_service: UserPersistenceService, send_grid_persistence_service: SendGridPersistenceService):
+    def __init__(self, user: Users, user_persistence_service: UserPersistenceService, send_grid_persistence_service: SendgridPersistenceService):
         self.user = user
         self.user_persistence_service = user_persistence_service
         self.send_grid_persistence_service = send_grid_persistence_service
@@ -28,7 +28,7 @@ class UsersEmailVerificationService:
                     'is_success': False,
                     'error': 'email template not found'
                 }
-            message_expiration_time = self.user.send_message_expiration_time
+            message_expiration_time = self.user.verified_email_sent_at
             time_now = datetime.now()
             if message_expiration_time is not None:
                 if (message_expiration_time + timedelta(minutes=1)) > time_now:
@@ -37,14 +37,14 @@ class UsersEmailVerificationService:
                         'status': VerificationEmail.RESEND_TOO_SOON
                     }
             confirm_email_url = f"{os.getenv('SITE_HOST_URL')}/authentication/verify-token?token={token}&skip_pricing=true"
-            mail_object = SendGridHandler()
+            mail_object = SendgridHandler()
             mail_object.send_sign_up_mail(
                 subject="Please Verify Your Email",
                 to_emails=self.user.email,
                 template_id=template_id,
                 template_placeholder={"full_name": self.user.full_name, "link": confirm_email_url},
             )
-            self.user_persistence_service.set_message_expiration_now(self.user.id)
+            self.user_persistence_service.set_verified_email_sent_now(self.user.id)
             logger.info("Confirmation Email Sent")
             return {
                 'is_success': True,

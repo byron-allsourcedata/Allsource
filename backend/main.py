@@ -14,7 +14,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 
 logging.basicConfig(
-    level=logging.ERROR,
+    level=logging.DEBUG,
     format='%(asctime)s %(levelname)s: %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S'
 )

@@ -15,7 +15,7 @@ from enums import UserAuthorizationStatus
 from exceptions import InvalidToken
 from schemas.auth_token import Token
 from services.payments_plans import PaymentsPlans
-from services.send_grid_persistence import SendGridPersistenceService
+from services.sendgrid_persistence import SendgridPersistenceService
 from services.subscriptions import SubscriptionService
 from services.users_email_verification import UsersEmailVerificationService
 from services.users import UsersService
@@ -35,7 +35,7 @@ def get_db():
 
 
 def get_send_grid_persistence_service(db: Session = Depends(get_db)):
-    return SendGridPersistenceService(db=db)
+    return SendgridPersistenceService(db=db)
 
 
 def get_user_persistence_service(db: Session = Depends(get_db)):
@@ -125,7 +125,7 @@ def get_plans_service(db: Session = Depends(get_db),
 
 def get_users_auth_service(db: Session = Depends(get_db), payments_plans: PaymentsPlans = Depends(get_plans_service),
                            user_persistence_service: UserPersistenceService = Depends(get_user_persistence_service),
-                           send_grid_persistence_service: SendGridPersistenceService = Depends(get_send_grid_persistence_service)):
+                           send_grid_persistence_service: SendgridPersistenceService = Depends(get_send_grid_persistence_service)):
     return UsersAuth(db=db, plans_service=payments_plans, user_persistence_service=user_persistence_service,
                      send_grid_persistence_service=send_grid_persistence_service)
 
@@ -138,7 +138,7 @@ def get_users_service(user: User = Depends(check_user_authorization),
 def get_users_email_verification_service(user: User = Depends(check_user_authentication),
                                          user_persistence_service: UserPersistenceService = Depends(
                                              get_user_persistence_service),
-                                         send_grid_persistence_service: SendGridPersistenceService = Depends(
+                                         send_grid_persistence_service: SendgridPersistenceService = Depends(
                                              get_send_grid_persistence_service)):
     return UsersEmailVerificationService(user=user, user_persistence_service=user_persistence_service,
                                          send_grid_persistence_service=send_grid_persistence_service)

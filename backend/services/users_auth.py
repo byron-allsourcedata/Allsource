@@ -4,8 +4,8 @@ from sqlalchemy.orm import Session
 
 from . import stripe_service
 from .jwt_service import get_password_hash, create_access_token, verify_password, decode_jwt_data
-from .send_grid_persistence import SendGridPersistenceService
-from .sendgrid import SendGridHandler
+from .sendgrid_persistence import SendgridPersistenceService
+from .sendgrid import SendgridHandler
 from .user_persistence_service import UserPersistenceService
 import os
 from google.auth.transport import requests as google_requests
@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 class UsersAuth:
     def __init__(self, db: Session, plans_service: PaymentsPlans, user_persistence_service: UserPersistenceService,
-                 send_grid_persistence_service: SendGridPersistenceService):
+                 send_grid_persistence_service: SendgridPersistenceService):
         self.db = db
         self.plans_service = plans_service
         self.user_persistence_service = user_persistence_service
@@ -134,14 +134,14 @@ class UsersAuth:
                     'error': 'email template not found'
                 }
             confirm_email_url = f"{os.getenv('SITE_HOST_URL')}/authentication/verify-token?token={token}&skip_pricing=true"
-            mail_object = SendGridHandler()
+            mail_object = SendgridHandler()
             mail_object.send_sign_up_mail(
                 subject="Please Verify Your Email",
                 to_emails=user_form.email,
                 template_id=template_id,
                 template_placeholder={"full_name": user_object.get("full_name"), "link": confirm_email_url},
             )
-            self.user_persistence_service.set_message_expiration_now(user_object.get('id'))
+            self.user_persistence_service.set_verified_email_sent_now(user_object.get('id'))
             logger.info("Confirmation Email Sent")
             return {
                 'is_success': True,
@@ -229,7 +229,7 @@ class UsersAuth:
     def reset_password(self, reset_password_form: ResetPasswordForm):
         if reset_password_form is not None and reset_password_form:
             db_user = self.user_persistence_service.get_user_by_email(reset_password_form.email)
-            message_expiration_time = db_user.send_message_expiration_time
+            message_expiration_time = db_user.reset_password_sent_at
             time_now = datetime.now()
             if message_expiration_time is not None:
                 if (message_expiration_time + timedelta(minutes=1)) > time_now:
@@ -245,7 +245,7 @@ class UsersAuth:
                 AutomationSystemTemplate.FORGOT_PASSWORD_TEMPLATE.value)
             if db_user:
                 confirm_email_url = f"{os.getenv('SITE_HOST_URL')}/forgot-password?token={token}"
-                mail_object = SendGridHandler()
+                mail_object = SendgridHandler()
                 mail_object.send_sign_up_mail(
                     subject="Maximize Password Reset Request",
                     to_emails=db_user.email,
@@ -253,7 +253,7 @@ class UsersAuth:
                     template_placeholder={"full_name": db_user.full_name, "link": confirm_email_url,
                                           "email": db_user.email},
                 )
-                self.user_persistence_service.set_message_expiration_now(db_user.id)
+                self.user_persistence_service.set_reset_password_sent_now(db_user.id)
                 logger.info("Confirmation Email Sent")
                 return {
                     'is_success': True,
