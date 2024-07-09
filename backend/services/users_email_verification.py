@@ -2,8 +2,9 @@ import logging
 import os
 from .sendgrid import SendGridHandler
 from .user_persistence_service import UserPersistenceService
-from backend.enums import AutomationSystemTemplate, VerificationEmail
-from backend.models.users import Users
+from enums import AutomationSystemTemplate, VerificationEmail, UpdatePasswordStatus
+from models.users import Users
+from schemas.users import UpdatePassword
 
 logging.basicConfig(
     level=logging.ERROR,
@@ -47,4 +48,14 @@ class UsersEmailVerificationService:
             }
         return {
             'status': VerificationEmail.EMAIL_NOT_VERIFIED
+        }
+
+    def update_password(self, update_data: UpdatePassword):
+        if update_data.password != update_data.confirm_password:
+            return {
+                'status': UpdatePasswordStatus.PASSWORDS_DO_NOT_MATCH
+            }
+        self.user_persistence_service.update_password(self.user.id, update_data.password)
+        return {
+            'status': UpdatePasswordStatus.PASSWORD_UPDATED_SUCCESSFULLY
         }

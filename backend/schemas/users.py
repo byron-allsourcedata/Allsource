@@ -1,7 +1,6 @@
 from typing import Optional
 from pydantic import BaseModel, Field
-from backend.enums import SignUpStatus, LoginStatus
-
+from enums import SignUpStatus, LoginStatus, BaseEnum, VerificationEmail, UpdatePasswordStatus
 
 class UserSignUpForm(BaseModel):
     full_name: str = Field(...)
@@ -27,3 +26,11 @@ class UserLoginForm(BaseModel):
 
 class ResetPassword(BaseModel):
     email: str = Field(...)
+
+
+class UpdatePassword(BaseModel):
+    email: str = Field(...)
+    confirm_password: str = Field(...)
+
+# class StatusFormResponse(BaseModel):
+#     status: Union[BaseEnum, VerificationEmail, SignUpStatus, UpdatePasswordStatus]

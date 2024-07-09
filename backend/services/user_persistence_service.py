@@ -1,8 +1,8 @@
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from backend.models.send_grid_template import SendGridTemplate
-from backend.models.users import Users
+from models.send_grid_template import SendGridTemplate
+from models.users import Users
 
 
 class UserPersistenceService:
@@ -34,3 +34,7 @@ class UserPersistenceService:
         if query:
             self.db.query(Users).filter(Users.id == user_id).update({"is_email_confirmed": True})
             self.db.commit()
+
+    def update_password(self, user_id: int, password: str):
+        self.db.query(Users).filter(Users.id == user_id).update({Users.password: password},
+                                                                synchronize_session=False)

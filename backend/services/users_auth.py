@@ -8,15 +8,15 @@ from .sendgrid import SendGridHandler
 from .user_persistence_service import UserPersistenceService
 import os
 from google.auth.transport import requests as google_requests
-from backend.services.payments_plans import PaymentsPlans
-from backend.models.users import Users
+from services.payments_plans import PaymentsPlans
+from models.users import Users
 import logging
 from google.oauth2 import id_token
-from backend.enums import SignUpStatus, StripePaymentStatusEnum, AutomationSystemTemplate, LoginStatus, BaseEnum
+from enums import SignUpStatus, StripePaymentStatusEnum, AutomationSystemTemplate, LoginStatus, BaseEnum
 from typing import Optional
 
-from backend.schemas.auth_google_token import AuthGoogleToken
-from backend.schemas.users import UserSignUpForm, UserLoginForm, ResetPassword
+from schemas.auth_google_token import AuthGoogleToken
+from schemas.users import UserSignUpForm, UserLoginForm, ResetPassword
 
 logging.basicConfig(
     level=logging.ERROR,
@@ -94,7 +94,7 @@ class UsersAuth:
         customer_id = stripe_service.create_customer(google_payload)
         user_object = self.add_user(is_without_card, customer_id=customer_id, google_payload=google_payload)
         self.user_persistence_service.update_user_parent_v2(user_object.get("user_filed_id"))
-        token = self.create_access_token(user_object)
+        token = create_access_token(user_object)
         response.update({"token": token})
         logger.info("Token created")
         self.user_persistence_service.email_confirmed(user_object.id)
@@ -187,14 +187,18 @@ class UsersAuth:
     def reset_password(self, reset_password: ResetPassword):
         if reset_password is not None and reset_password:
             db_user = self.user_persistence_service.get_user(reset_password)
+            token_info = {
+                "id": db_user.id,
+            }
+            token = create_access_token(token_info)
             if db_user:
-                confirm_email_url = f"{os.getenv('SITE_HOST_URL')}/authentication/verify-token?token={token}&skip_pricing=true"
+                confirm_email_url = f"{os.getenv('SITE_HOST_URL')}/forgot-password?token={token}"
                 mail_object = SendGridHandler()
                 mail_object.send_sign_up_mail(
-                    subject="Please Verify Your Email Address",
+                    subject="Please reset your password",
                     to_emails=db_user.email,
-                    template_id=self.get_template_id(AutomationSystemTemplate.EMAIL_VERIFICATION_TEMPLATE),
-                    template_placeholder={"Full_name": db_user.full_name, "Link": confirm_email_url},
+                    template_id=self.get_template_id(AutomationSystemTemplate.FORGOT_PASSWORD_TEMPLATE),
+                    template_placeholder={"Full_name": db_user.full_name, "Link": confirm_email_url, "email": db_user.email},
                 )
                 logger.info("Confirmation Email Sent")
                 return {

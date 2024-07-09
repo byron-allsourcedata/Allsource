@@ -2,7 +2,7 @@ import logging
 from datetime import datetime
 
 from .user_persistence_service import UserPersistenceService
-from backend.models.subscriptions import Subscription
+from models.subscriptions import Subscription
 from sqlalchemy.orm import Session
 
 ACTIVE_STATUSES = ["active", "trialing", "completed"]
