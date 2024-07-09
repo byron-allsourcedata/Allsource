@@ -2,9 +2,9 @@ from datetime import datetime, timedelta
 from passlib.context import CryptContext
 from typing import Dict, Mapping, Union
 from jose import jwt
-from backend.config.auth import AuthConfig
-from backend.exceptions import TokenError
-from backend.schemas.auth_token import Token
+from config.auth import AuthConfig
+from exceptions import TokenError
+from schemas.auth_token import Token
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 

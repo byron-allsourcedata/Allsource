@@ -1,6 +1,6 @@
 import logging
 from .user_persistence_service import UserPersistenceService
-from backend.models.users import Users
+from models.users import Users
 
 logging.basicConfig(
     level=logging.ERROR,
