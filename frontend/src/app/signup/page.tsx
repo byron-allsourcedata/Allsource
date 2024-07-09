@@ -8,6 +8,7 @@ import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import axiosInstance from '../../axios/axiosInterceptorInstance';
 import { AxiosError } from 'axios';
 import { signupStyles } from './signupStyles';
+import { showErrorToast } from '../../components/ToastNotification';
 
 const Signup: React.FC = () => {
   const router = useRouter();
@@ -107,6 +108,7 @@ const Signup: React.FC = () => {
             sessionStorage.setItem('me', JSON.stringify({ email: formValues.email }));
             router.push('/choose-plan');
           } else if (responseData.status === "EMAIL_ALREADY_EXISTS") {
+            showErrorToast('Email is associated with an account. Please login');
             router.push('/signin');
           } else if (responseData.status === "NEED_CONFIRM_EMAIL") {
             if (typeof window !== 'undefined') {
@@ -132,7 +134,7 @@ const Signup: React.FC = () => {
     setShowPassword(!showPassword);
   };
 
-  
+
 
   return (
     <>

@@ -8,47 +8,45 @@ import { styles } from './accountStyles';
 const AccountSetupPage = () => {
   const [selectedEmployees, setSelectedEmployees] = useState<number | null>(null);
 
-
-  
-  const getButtonStyles = (isSelected: boolean): SxProps<Theme> => {
+  const getButtonStyles = (isSelected: boolean): any => {
     return isSelected
-      ? { ...styles.employeeButton, ...styles.activeButton }
-      : styles.employeeButton;
+      ? { ...styles.employeeButton, backgroundColor: 'rgba(249, 189, 182, 1)', color: 'black' }
+      : { ...styles.employeeButton, color: 'black' };
   };
-  
-  const EmployeeButtons = () => {
-    const [selectedEmployees, setSelectedEmployees] = useState<number | null>(null);
-  
-    const handleEmployeeClick = (num: number) => {
-      setSelectedEmployees(num);
-    };
-}
+
+  const handleEmployeeClick = (num: number) => {
+    setSelectedEmployees(num);
+  };
+
   const ranges = [
     { min: 1, max: 10, label: '1-10' },
-    { min: 51, max: 100, label: '51-100' },
-    { min: 101, max: 250, label: '101-250' },
-    { min: 251, max: 1000, label: '251-1000' },
-    { min: 1001, max: Infinity, label: '>1k' },
+    { min: 51, max: 100, label: '11-50' },
+    { min: 101, max: 250, label: '51-100' },
+    { min: 251, max: 1000, label: '100-500' },
+    { min: 1001, max: Infinity, label: '500+' },
   ];
 
   return (
     <Box sx={styles.pageContainer}>
-      <Box sx={styles.header}>
+      <Box sx={styles.headers}>
         <Box sx={styles.logo}>
           <Image src='/logo.svg' alt='logo' height={30} width={50}/>
         </Box>
         <Box sx={styles.nav}>
           <Typography variant="body1" sx={styles.header}>Create Account</Typography>
-          <Typography variant="body1" sx={{ color: 'grey[500]' }}>Install pixel</Typography>
+          <Typography variant="body1" sx={styles.subheader}>Install pixel</Typography>
         </Box>
-        <PersonIcon />
+        <PersonIcon sx={styles.account}/>
       </Box>
       <Box sx={styles.formContainer}>
         <Typography variant="h5" component="h1" sx={styles.title}>
           Welcome Lakshmi,
         </Typography>
         <Typography variant="body1" component="h2" sx={styles.subtitle}>
-          Let's set up your account
+          Let&apos;s set up your account
+        </Typography>
+        <Typography variant="body1" component="h3" sx={styles.text}>
+          What is your organization’s name
         </Typography>
         <TextField
           fullWidth
@@ -56,33 +54,39 @@ const AccountSetupPage = () => {
           variant="outlined"
           sx={styles.formField}
         />
+        <Typography variant="body1" component="h3" sx={styles.text}>
+          Share your company website 
+        </Typography>
         <TextField
           fullWidth
           label="Enter website link"
           variant="outlined"
           sx={styles.formField}
         />
+        <Typography variant="body1" component="h3" sx={styles.text}>
+          What&apos;s your role?
+        </Typography>
         <TextField
           fullWidth
-          label="Enter website link"
+          label="Enter your role"
           variant="outlined"
           sx={styles.formField}
         />
-        <Typography variant="body1" sx={{ marginBottom: '1em' }}>
+        <Typography variant="body1" sx={styles.text}>
           How many employees work at your organization
         </Typography>
         <Box sx={styles.employeeButtons}>
-        {ranges.map((range, index) => (
-        <Button
-          key={index}
-          variant="outlined"
-          onClick={() => handleEmployeeClick(range.min)}
-          sx={getButtonStyles(selectedEmployees === range.min)}
-        >
-          {range.label}
-        </Button>
-      ))}
-    </Box>
+          {ranges.map((range, index) => (
+            <Button
+              key={index}
+              variant="outlined"
+              onClick={() => handleEmployeeClick(range.min)}
+              sx={getButtonStyles(selectedEmployees === range.min)}
+            >
+              {range.label}
+            </Button>
+          ))}
+        </Box>
         <Button
           fullWidth
           variant="contained"

@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import React from 'react';
-import { UserProvider } from '../context/UserContext'; // Укажите правильный путь к UserContext
+import { UserProvider } from '../context/UserContext';
+import ToastNotificationContainer from '../components/ToastNotification';
+import 'react-toastify/dist/ReactToastify.css';
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -20,8 +22,9 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <UserProvider>
-          {children}
+        {children}
         </UserProvider>
+        <ToastNotificationContainer />
       </body>
     </html>
   );
