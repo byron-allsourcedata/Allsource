@@ -107,7 +107,7 @@ const Signup: React.FC = () => {
             sessionStorage.setItem('me', JSON.stringify({ email: formValues.email }));
             router.push('/choose-plan');
           } else if (responseData.status === "EMAIL_ALREADY_EXISTS") {
-            router.push('/login');
+            router.push('/signin');
           } else if (responseData.status === "NEED_CONFIRM_EMAIL") {
             if (typeof window !== 'undefined') {
               localStorage.setItem('token', responseData.token);
