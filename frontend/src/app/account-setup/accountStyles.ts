@@ -9,16 +9,7 @@ export const styles: { [key: string]: SxProps<Theme> } = {
     padding: '2em',
     fontFamily: 'Nunito'
   },
-  employeeButtons: {
-    display: 'flex',
-    flexWrap: 'wrap',
-    gap: '8px',
-  },
-  employeeButton: {
-    margin: '8px',
-    padding: '16px',
-    border: '1px solid #ccc',
-  },
+
   activeButton: {
     backgroundColor: '#007BFF',
     color: '#fff',
@@ -60,29 +51,6 @@ export const styles: { [key: string]: SxProps<Theme> } = {
   },
   formField: {
     marginBottom: '1.5em',
-  },
-  employeeButtons: {
-    display: 'flex',
-    gap: '1em',
-    marginBottom: '2em',
-    flexWrap: 'wrap',
-  },
-  employeeButton: {
-    padding: '0.5em 1em',
-    borderRadius: '0.5em',
-    border: `1px solid ${grey[300]}`,
-    backgroundColor: '#fff',
-    '&:hover': {
-      backgroundColor: grey[100],
-    },
-  },
-  activeButton: {
-    backgroundColor: red[100],
-    borderColor: red[500],
-    color: red[500],
-    '&:hover': {
-      backgroundColor: red[50],
-    },
   },
   submitButton: {
     backgroundColor: red[500],

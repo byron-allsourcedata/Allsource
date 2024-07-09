@@ -10,11 +10,11 @@ const AccountSetupPage = () => {
 
 
   
-  const getButtonStyles = (isSelected: boolean): SxProps<Theme> => {
-    return isSelected
-      ? { ...styles.employeeButton, ...styles.activeButton }
-      : styles.employeeButton;
-  };
+  // const getButtonStyles = (isSelected: boolean): SxProps<Theme> => {
+  //   return isSelected
+  //     ? { ...styles.employeeButton, ...styles.activeButton }
+  //     : styles.employeeButton;
+  // };
   
   const EmployeeButtons = () => {
     const [selectedEmployees, setSelectedEmployees] = useState<number | null>(null);
@@ -45,10 +45,10 @@ const AccountSetupPage = () => {
       </Box>
       <Box sx={styles.formContainer}>
         <Typography variant="h5" component="h1" sx={styles.title}>
-          Welcome Lakshmi,
+          Welcome Lakshmi
         </Typography>
         <Typography variant="body1" component="h2" sx={styles.subtitle}>
-          Let's set up your account
+          Lets set up your account
         </Typography>
         <TextField
           fullWidth
@@ -76,8 +76,8 @@ const AccountSetupPage = () => {
         <Button
           key={index}
           variant="outlined"
-          onClick={() => handleEmployeeClick(range.min)}
-          sx={getButtonStyles(selectedEmployees === range.min)}
+          // onClick={() => handleEmployeeClick(range.min)}
+          // sx={getButtonStyles(selectedEmployees === range.min)}
         >
           {range.label}
         </Button>
