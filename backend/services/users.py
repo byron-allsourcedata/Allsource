@@ -10,5 +10,4 @@ class UsersService:
         self.user = user
         self.user_persistence_service = user_persistence_service
 
-    def get_my_info(self):
-        return {"email": self.user.email}
+

@@ -1,10 +1,12 @@
 from fastapi import APIRouter, Depends, Query
 from fastapi.params import Header
-from dependencies import get_users_auth_service, get_users_email_verification_service
+from dependencies import get_users_auth_service, get_users_email_verification_service, get_users_service, \
+    get_dashboard_service
 from schemas.auth_google_token import AuthGoogleToken
 from schemas.users import UserSignUpForm, UserSignUpFormResponse, UserLoginFormResponse, UserLoginForm, UpdatePassword, \
     BaseFormResponse, ResendVerificationEmailResponse, ResetPasswordForm, ResetPasswordResponse, UpdatePasswordResponse, \
     CheckVerificationStatusResponse
+from services.dashboard_service import DashboardService
 from services.users_auth import UsersAuth
 from services.users_email_verification import UsersEmailVerificationService
 from services.users import UsersService
@@ -14,7 +16,7 @@ router = APIRouter()
 
 
 @router.get("/me")
-def get(user: UsersService = Depends(get_users_email_verification_service)):
+def get(user: UsersEmailVerificationService = Depends(get_users_email_verification_service)):
     return user.get_my_info()
 
 
@@ -27,6 +29,9 @@ async def create_user(user_form: UserSignUpForm, users_service: UsersAuth = Depe
         raise Exception(user_data.get('error'))
     # return RedirectResponse(url=f"/sign-up?email={user_form.email}")
 
+@router.get("/dashboard")
+def get(dashboard_service: DashboardService = Depends(get_dashboard_service)):
+    return dashboard_service.get_my_info()
 
 @router.post("/login", response_model=UserLoginFormResponse)
 async def login_user(user_form: UserLoginForm, users_service: UsersAuth = Depends(get_users_auth_service)):

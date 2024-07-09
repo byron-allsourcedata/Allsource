@@ -79,3 +79,8 @@ class UsersEmailVerificationService:
             'is_success': True,
             'status': UpdatePasswordStatus.PASSWORD_UPDATED_SUCCESSFULLY
         }
+
+    def get_my_info(self):
+        return {"email": self.user.email,
+                "full_name": self.user.full_name
+                }
