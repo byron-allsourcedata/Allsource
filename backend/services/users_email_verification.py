@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 
 from .jwt_service import get_password_hash
 from .sendgrid_persistence import SendgridPersistenceService
-from .sendgrid import SendGridHandler
+from .sendgrid import SendgridHandler
 from .user_persistence_service import UserPersistenceService
 from enums import AutomationSystemTemplate, VerificationEmail, UpdatePasswordStatus
 from models.users import Users
@@ -37,7 +37,7 @@ class UsersEmailVerificationService:
                         'status': VerificationEmail.RESEND_TOO_SOON
                     }
             confirm_email_url = f"{os.getenv('SITE_HOST_URL')}/authentication/verify-token?token={token}&skip_pricing=true"
-            mail_object = SendGridHandler()
+            mail_object = SendgridHandler()
             mail_object.send_sign_up_mail(
                 subject="Please Verify Your Email",
                 to_emails=self.user.email,

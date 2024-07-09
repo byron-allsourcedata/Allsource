@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from . import stripe_service
 from .jwt_service import get_password_hash, create_access_token, verify_password, decode_jwt_data
 from .sendgrid_persistence import SendgridPersistenceService
-from .sendgrid import SendGridHandler
+from .sendgrid import SendgridHandler
 from .user_persistence_service import UserPersistenceService
 import os
 from google.auth.transport import requests as google_requests
@@ -134,7 +134,7 @@ class UsersAuth:
                     'error': 'email template not found'
                 }
             confirm_email_url = f"{os.getenv('SITE_HOST_URL')}/authentication/verify-token?token={token}&skip_pricing=true"
-            mail_object = SendGridHandler()
+            mail_object = SendgridHandler()
             mail_object.send_sign_up_mail(
                 subject="Please Verify Your Email",
                 to_emails=user_form.email,
@@ -245,7 +245,7 @@ class UsersAuth:
                 AutomationSystemTemplate.FORGOT_PASSWORD_TEMPLATE.value)
             if db_user:
                 confirm_email_url = f"{os.getenv('SITE_HOST_URL')}/forgot-password?token={token}"
-                mail_object = SendGridHandler()
+                mail_object = SendgridHandler()
                 mail_object.send_sign_up_mail(
                     subject="Maximize Password Reset Request",
                     to_emails=db_user.email,

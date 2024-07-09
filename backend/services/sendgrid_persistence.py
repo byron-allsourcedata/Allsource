@@ -1,4 +1,4 @@
-from models.sendgrid_template import SendGridTemplate
+from models.sendgrid_template import SendgridTemplate
 from sqlalchemy.orm import Session
 
 
@@ -7,6 +7,6 @@ class SendgridPersistenceService:
         self.db = db
 
     def get_template_by_alias(self, alias):
-        template = self.db.query(SendGridTemplate).filter(SendGridTemplate.alias == alias).first()
+        template = self.db.query(SendgridTemplate).filter(SendgridTemplate.alias == alias).first()
         if template:
             return template.template_id

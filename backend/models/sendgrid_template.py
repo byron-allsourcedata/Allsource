@@ -4,7 +4,7 @@ from sqlalchemy.dialects.postgresql import BIGINT, BOOLEAN, TIMESTAMP, VARCHAR
 from .base import Base, create_timestamps, update_timestamps
 
 
-class SendGridTemplate(Base):
+class SendgridTemplate(Base):
     __tablename__ = "sendgrid_templates"
 
     id = Column(BIGINT, primary_key=True, nullable=False)
@@ -16,5 +16,5 @@ class SendGridTemplate(Base):
     updated_at = Column(TIMESTAMP(precision=7), nullable=False)
 
 
-event.listen(SendGridTemplate, "before_insert", create_timestamps)
-event.listen(SendGridTemplate, "before_update", update_timestamps)
+event.listen(SendgridTemplate, "before_insert", create_timestamps)
+event.listen(SendgridTemplate, "before_update", update_timestamps)
