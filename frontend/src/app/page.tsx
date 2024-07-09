@@ -9,9 +9,6 @@ function RedirectPage() {
       if (token) {
         router.push('/dashboard');
       }
-      else {
-        router.push('/signin')
-      }
   }
 }
 
