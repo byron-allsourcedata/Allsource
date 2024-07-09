@@ -7,13 +7,6 @@ from sqlalchemy.orm import Session
 
 ACTIVE_STATUSES = ["active", "trialing", "completed"]
 
-logging.basicConfig(
-    level=logging.ERROR,
-    format='%(asctime)s %(levelname)s: %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
-)
-logger = logging.getLogger(__name__)
-
 
 class SubscriptionService:
     def __init__(self, db: Session, user_persistence_service: UserPersistenceService):

@@ -22,8 +22,7 @@ class Users(Base):
     payment_status = Column(INTEGER, default=5)
     customer_id = Column(VARCHAR)
     website = Column(VARCHAR)
-    reset_password_expiration_time = Column(DateTime)
-
+    send_message_expiration_time = Column(DateTime)
 
 
 User = Users

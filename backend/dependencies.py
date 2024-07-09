@@ -15,6 +15,7 @@ from enums import UserAuthorizationStatus
 from exceptions import InvalidToken
 from schemas.auth_token import Token
 from services.payments_plans import PaymentsPlans
+from services.send_grid_persistence import SendGridPersistenceService
 from services.subscriptions import SubscriptionService
 from services.users_email_verification import UsersEmailVerificationService
 from services.users import UsersService
@@ -22,13 +23,8 @@ from models.users import Users as User
 from services.users_auth import UsersAuth
 from services.user_persistence_service import UserPersistenceService
 
-logging.basicConfig(
-    level=logging.ERROR,
-    format='%(asctime)s %(levelname)s: %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
-)
-logger = logging.getLogger(__name__)
 
+logger = logging.getLogger(__name__)
 
 def get_db():
     db = SessionLocal()
@@ -38,8 +34,13 @@ def get_db():
         db.close()
 
 
+def get_send_grid_persistence_service(db: Session = Depends(get_db)):
+    return SendGridPersistenceService(db=db)
+
+
 def get_user_persistence_service(db: Session = Depends(get_db)):
     return UserPersistenceService(db=db)
+
 
 def check_user_subscription():
     return UserAuthorizationStatus.NEED_CHOOSE_PLAN
@@ -74,7 +75,7 @@ def parse_jwt_data(Authorization: Annotated[str, Header()]) -> Token:
 
 def check_user_authorization(Authorization: Annotated[str, Header()],
                              user_persistence_service: UserPersistenceService = Depends(
-                                          get_user_persistence_service)) -> Token:
+                                 get_user_persistence_service)) -> Token:
     user_data = parse_jwt_data(Authorization)
     user = user_persistence_service.get_user_by_id(user_data.id)
     if not user:
@@ -94,9 +95,10 @@ def check_user_authorization(Authorization: Annotated[str, Header()],
         )
     return user
 
+
 def check_user_authentication(Authorization: Annotated[str, Header()],
-                             user_persistence_service: UserPersistenceService = Depends(
-                                          get_user_persistence_service)) -> Token:
+                              user_persistence_service: UserPersistenceService = Depends(
+                                  get_user_persistence_service)) -> Token:
     user_data = parse_jwt_data(Authorization)
     user = user_persistence_service.get_user_by_id(user_data.id)
     if not user:
@@ -122,34 +124,24 @@ def get_plans_service(db: Session = Depends(get_db),
 
 
 def get_users_auth_service(db: Session = Depends(get_db), payments_plans: PaymentsPlans = Depends(get_plans_service),
-                           user_persistence_service: UserPersistenceService = Depends(get_user_persistence_service)):
-    return UsersAuth(db=db, plans_service=payments_plans, user_persistence_service=user_persistence_service)
+                           user_persistence_service: UserPersistenceService = Depends(get_user_persistence_service),
+                           send_grid_persistence_service: SendGridPersistenceService = Depends(get_send_grid_persistence_service)):
+    return UsersAuth(db=db, plans_service=payments_plans, user_persistence_service=user_persistence_service,
+                     send_grid_persistence_service=send_grid_persistence_service)
 
 
 def get_users_service(user: User = Depends(check_user_authorization),
                       user_persistence_service: UserPersistenceService = Depends(get_user_persistence_service)):
     return UsersService(user=user, user_persistence_service=user_persistence_service)
 
+
 def get_users_email_verification_service(user: User = Depends(check_user_authentication),
-                      user_persistence_service: UserPersistenceService = Depends(get_user_persistence_service)):
-    return UsersEmailVerificationService(user=user, user_persistence_service=user_persistence_service)
-
-
-def valid_user(token: str) -> User:
-    access_token = token.replace("Bearer ", "")
-    try:
-        data = jwt.decode(
-            access_token,
-            AuthConfig.secret_key,
-            algorithms=["HS256"],
-            audience="Filed-Client-Apps",
-        )
-        if datetime.utcnow() > datetime.fromtimestamp(data["exp"]):
-            raise InvalidToken
-        return Token(**data)
-    except JWTError:
-        raise InvalidToken
-
+                                         user_persistence_service: UserPersistenceService = Depends(
+                                             get_user_persistence_service),
+                                         send_grid_persistence_service: SendGridPersistenceService = Depends(
+                                             get_send_grid_persistence_service)):
+    return UsersEmailVerificationService(user=user, user_persistence_service=user_persistence_service,
+                                         send_grid_persistence_service=send_grid_persistence_service)
 
 def request_logger(r: Request):
     payload = r.body() if not r.form() else ""

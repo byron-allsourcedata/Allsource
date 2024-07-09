@@ -5,7 +5,10 @@ from jose import jwt
 from config.auth import AuthConfig
 from exceptions import TokenError
 from schemas.auth_token import Token
+import logging
 
+
+logger = logging.getLogger(__name__)
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 

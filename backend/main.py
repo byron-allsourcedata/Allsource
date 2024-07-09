@@ -3,9 +3,7 @@ import logging
 from h11._abnf import status_code
 
 from config.base import Base
-from config.database import SessionLocal
-from dependencies import request_logger, get_user_persistence_service, valid_user, get_db
-from enums import MiddleWareEnum, BaseEnum
+from dependencies import request_logger
 from routers.users import router
 from fastapi.middleware.cors import CORSMiddleware
 import traceback
