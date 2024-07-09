@@ -18,6 +18,7 @@ class VerificationEmail(Enum):
     EMAIL_VERIFIED = 'EMAIL_VERIFIED'
     EMAIL_NOT_VERIFIED = 'EMAIL_NOT_VERIFIED'
     CONFIRMATION_EMAIL_SENT = 'CONFIRMATION_EMAIL_SENT'
+    RESEND_TOO_SOON = 'RESEND_TOO_SOON'
 
 
 class UserAuthorizationStatus(Enum):
@@ -50,5 +51,12 @@ class UpdatePasswordStatus(Enum):
 
 
 class AutomationSystemTemplate(Enum):
-    EMAIL_VERIFICATION_TEMPLATE = 'd-1c7fdcd2ea9047639143db1d4bde581c'
-    FORGOT_PASSWORD_TEMPLATE = 'd-2ec6429a5648455bb1e63da81a953be4'
+    EMAIL_VERIFICATION_TEMPLATE = 'email_verification_template'
+    FORGOT_PASSWORD_TEMPLATE = 'forgot_password_template'
+
+
+class ResetPasswordTemplate(Enum):
+    SUCCESS = 'SUCCESS'
+    NOT_VALID_EMAIL = 'NOT_VALID_EMAIL'
+    RESEND_TOO_SOON = 'RESEND_TOO_SOON'
+

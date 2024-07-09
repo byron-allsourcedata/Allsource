@@ -9,13 +9,7 @@ class UserPersistenceService:
     def __init__(self, db: Session):
         self.db = db
 
-    def get_template_id(self, alias):
-        template = self.db.query(SendGridTemplate).filter(SendGridTemplate.alias == alias).first()
-        if template:
-            return template.template_id
-        return None
-
-    def get_user(self, email):
+    def get_user_by_email(self, email):
         user_object = self.db.query(Users).filter(func.lower(Users.email) == func.lower(email)).first()
         return user_object
 

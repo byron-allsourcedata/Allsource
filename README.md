@@ -23,6 +23,6 @@ To get started with the project, you will need to install several dependencies.
    
    ```bash
    cd maximiz/backend/
-   uvicorn main/:app --uds ../dev_backend.sock
+   uvicorn app.main:app --uds ../dev_backend.sock
    ```
    

@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 
 from . import stripe_service
 from .jwt_service import get_password_hash, create_access_token, verify_password, decode_jwt_data
+from .send_grid import SendGridPersistenceService
 from .sendgrid import SendGridHandler
 from .user_persistence_service import UserPersistenceService
 import os
@@ -12,11 +13,12 @@ from services.payments_plans import PaymentsPlans
 from models.users import Users
 import logging
 from google.oauth2 import id_token
-from enums import SignUpStatus, StripePaymentStatusEnum, AutomationSystemTemplate, LoginStatus, BaseEnum
+from enums import SignUpStatus, StripePaymentStatusEnum, AutomationSystemTemplate, LoginStatus, BaseEnum, \
+    ResetPasswordTemplate
 from typing import Optional
 
 from schemas.auth_google_token import AuthGoogleToken
-from schemas.users import UserSignUpForm, UserLoginForm, ResetPassword
+from schemas.users import UserSignUpForm, UserLoginForm, ResetPasswordForm
 
 logging.basicConfig(
     level=logging.ERROR,
@@ -26,10 +28,11 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 class UsersAuth:
-    def __init__(self, db: Session, plans_service: PaymentsPlans, user_persistence_service: UserPersistenceService):
+    def __init__(self, db: Session, plans_service: PaymentsPlans, user_persistence_service: UserPersistenceService, send_grid_persistence_service: SendGridPersistenceService):
         self.db = db
         self.plans_service = plans_service
         self.user_persistence_service = user_persistence_service
+        self.send_grid_persistence_service = send_grid_persistence_service
 
     def get_utc_aware_date(self):
         return datetime.now(timezone.utc).replace(microsecond=0)
@@ -55,6 +58,7 @@ class UsersAuth:
             payment_status=StripePaymentStatusEnum.PENDING.name,
             parent_id=0,
             customer_id=customer_id,
+            send_message_expiration_time=datetime.now(),
             website=user_form.image if hasattr(user_form, 'website') else None
         )
         if not is_without_card:
@@ -66,15 +70,12 @@ class UsersAuth:
         }
         return token_info
 
-    def get_template_id(self, template_type: AutomationSystemTemplate) -> str:
-        return template_type.value
-
     def create_account_google(self, auth_google_token: AuthGoogleToken):
         response = {}
-        CLIENT_ID = os.getenv("CLIENT_ID")
+        client_id = os.getenv("CLIENT_GOOGLE_ID")
         google_request = google_requests.Request()
         is_without_card = auth_google_token.is_without_card
-        idinfo = id_token.verify_oauth2_token(auth_google_token, google_request, CLIENT_ID)
+        idinfo = id_token.verify_oauth2_token(auth_google_token, google_request, client_id)
         if idinfo:
             google_payload = {
                 "email": idinfo.get("email"),
@@ -83,12 +84,14 @@ class UsersAuth:
             email = idinfo.get("email")
         else:
             return {
+                'is_success': True,
                 'status': SignUpStatus.NOT_VALID_EMAIL
             }
-        check_user_object = self.user_persistence_service.get_user(email)
+        check_user_object = self.user_persistence_service.get_user_by_email(email)
         if check_user_object is not None:
             logger.info(f"User already exists in database with email: {email}")
             return {
+                'is_success': True,
                 'status': SignUpStatus.EMAIL_ALREADY_EXISTS
             }
         customer_id = stripe_service.create_customer(google_payload)
@@ -102,6 +105,7 @@ class UsersAuth:
         logger.info(f"Set plan {user_plan.title} for new user")
         logger.info("Token created")
         return {
+            'is_success': True,
             'status': SignUpStatus.NEED_CHOOSE_PLAN,
             'token': token,
         }
@@ -109,11 +113,12 @@ class UsersAuth:
     def create_account(self, user_form: UserSignUpForm):
         response = {}
         user_form.password = get_password_hash(user_form.password)
-        check_user_object = self.user_persistence_service.get_user(user_form.email)
+        check_user_object = self.user_persistence_service.get_user_by_email(user_form.email)
         is_without_card = user_form.is_without_card
         if check_user_object is not None:
             logger.info(f"User already exists in database with email: {user_form.email}")
             return {
+                'is_success': True,
                 'status': SignUpStatus.EMAIL_ALREADY_EXISTS
             }
         customer_id = stripe_service.create_customer(user_form)
@@ -122,17 +127,24 @@ class UsersAuth:
         token = create_access_token(user_object)
         response.update({"token": token})
         logger.info("Token created")
+        template_id = self.send_grid_persistence_service.get_template_by_alias(AutomationSystemTemplate.EMAIL_VERIFICATION_TEMPLATE)
+        if not template_id:
+            return {
+                'is_success': False,
+                'error': 'email template not found'
+            }
         if is_without_card:
             confirm_email_url = f"{os.getenv('SITE_HOST_URL')}/authentication/verify-token?token={token}&skip_pricing=true"
             mail_object = SendGridHandler()
             mail_object.send_sign_up_mail(
-                subject="Please Verify Your Email Address",
+                subject="Please Verify Your Email",
                 to_emails=user_form.email,
-                template_id=self.get_template_id(AutomationSystemTemplate.EMAIL_VERIFICATION_TEMPLATE),
+                template_id=template_id,
                 template_placeholder={"Full_name": user_object.get("full_name"), "Link": confirm_email_url},
             )
             logger.info("Confirmation Email Sent")
             return {
+                'is_success': True,
                 'status': SignUpStatus.NEED_CONFIRM_EMAIL,
                 'token': token,
             }
@@ -141,6 +153,7 @@ class UsersAuth:
             logger.info(f"Set plan {user_plan.title} for new user")
         logger.info("Token created")
         return {
+            'is_success': True,
             'status': SignUpStatus.NEED_CHOOSE_PLAN,
             'token': token,
         }
@@ -148,7 +161,7 @@ class UsersAuth:
     def login_account(self, login_form: UserLoginForm):
         email = login_form.email
         password = login_form.password
-        user_object = self.user_persistence_service.get_user(email)
+        user_object = self.user_persistence_service.get_user_by_email(email)
         if user_object:
             check_password = verify_password(password, user_object.password)
             if check_password:
@@ -158,13 +171,14 @@ class UsersAuth:
                 }
                 token = create_access_token(token_info)
                 return {
+                    'is_success': True,
                     'status': LoginStatus.SUCCESS,
-                    'token': token,
-                    'email': email
+                    'token': token
                 }
             else:
                 logger.info("Password Verification Failed")
                 return {
+                    'is_success': True,
                     'status': LoginStatus.INCORRECT_PASSWORD_OR_EMAIL
                 }
 
@@ -178,32 +192,44 @@ class UsersAuth:
                 logger.info(f"Set plan {user_plan.title} for new user")
             self.user_persistence_service.email_confirmed(check_user_object.id)
             return {
+                'is_success': True,
                 'status': BaseEnum.SUCCESS
             }
         return {
+            'is_success': True,
             'status': BaseEnum.FAILURE
         }
 
-    def reset_password(self, reset_password: ResetPassword):
-        if reset_password is not None and reset_password:
-            db_user = self.user_persistence_service.get_user(reset_password)
+    def reset_password(self, reset_password_form: ResetPasswordForm):
+        if reset_password_form is not None and reset_password_form:
+            db_user = self.user_persistence_service.get_user_by_email(reset_password_form)
+            message_expiration_time = db_user.send_message_expiration_time
+            time_now = datetime.now()
+            if (message_expiration_time + timedelta(minutes=1)) > time_now:
+                return {
+                    'is_success': True,
+                    'status': ResetPasswordTemplate.RESEND_TOO_SOON
+                }
             token_info = {
                 "id": db_user.id,
             }
             token = create_access_token(token_info)
+            template_id = self.send_grid_persistence_service.get_template_by_alias(AutomationSystemTemplate.EMAIL_VERIFICATION_TEMPLATE)
             if db_user:
                 confirm_email_url = f"{os.getenv('SITE_HOST_URL')}/forgot-password?token={token}"
                 mail_object = SendGridHandler()
                 mail_object.send_sign_up_mail(
-                    subject="Please reset your password",
+                    subject="Maximize Password Reset Request",
                     to_emails=db_user.email,
-                    template_id=self.get_template_id(AutomationSystemTemplate.FORGOT_PASSWORD_TEMPLATE),
+                    template_id=template_id,
                     template_placeholder={"Full_name": db_user.full_name, "Link": confirm_email_url, "email": db_user.email},
                 )
                 logger.info("Confirmation Email Sent")
                 return {
-                    'status': BaseEnum.SUCCESS
+                    'is_success': True,
+                    'status': ResetPasswordTemplate.SUCCESS
                 }
         return {
-            'status': SignUpStatus.NOT_VALID_EMAIL
+            'is_success': True,
+            'status': ResetPasswordTemplate.NOT_VALID_EMAIL
         }
