@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Depends, Query
 from fastapi.params import Header
-from dependencies import get_users_auth_service, get_users_service, get_users_email_verification_service
-from models.users import Users
+from dependencies import get_users_auth_service, get_users_email_verification_service
 from schemas.auth_google_token import AuthGoogleToken
 from schemas.users import UserSignUpForm, UserSignUpFormResponse, UserLoginFormResponse, UserLoginForm, UpdatePassword, \
     BaseFormResponse, ResendVerificationEmailResponse, ResetPasswordForm, ResetPasswordResponse, UpdatePasswordResponse, \
@@ -15,7 +14,7 @@ router = APIRouter()
 
 
 @router.get("/me")
-def get(user: UsersService = Depends(get_users_service)):
+def get(user: UsersService = Depends(get_users_email_verification_service)):
     return user.get_my_info()
 
 

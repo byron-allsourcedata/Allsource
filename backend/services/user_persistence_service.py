@@ -1,13 +1,22 @@
+from datetime import datetime
 from sqlalchemy import func
 from sqlalchemy.orm import Session
-
-from models.send_grid_template import SendGridTemplate
 from models.users import Users
+import logging
 
+
+logger = logging.getLogger(__name__)
 
 class UserPersistenceService:
     def __init__(self, db: Session):
         self.db = db
+
+    def set_message_expiration_now(self, user_id: int):
+        send_message_expiration_time = datetime.now()
+        self.db.query(Users).filter(Users.id == user_id).update(
+            {Users.send_message_expiration_time: send_message_expiration_time},
+            synchronize_session=False)
+        self.db.commit()
 
     def get_user_by_email(self, email):
         user_object = self.db.query(Users).filter(func.lower(Users.email) == func.lower(email)).first()
@@ -22,6 +31,7 @@ class UserPersistenceService:
     def update_user_parent_v2(self, parent_id: int):
         self.db.query(Users).filter(Users.id == parent_id).update({Users.parent_id: parent_id},
                                                                   synchronize_session=False)
+        self.db.commit()
 
     def email_confirmed(self, user_id: int):
         query = self.db.query(Users).filter(Users.id == user_id)
@@ -32,3 +42,4 @@ class UserPersistenceService:
     def update_password(self, user_id: int, password: str):
         self.db.query(Users).filter(Users.id == user_id).update({Users.password: password},
                                                                 synchronize_session=False)
+        self.db.commit()

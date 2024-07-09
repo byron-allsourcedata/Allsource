@@ -3,7 +3,7 @@ import logging
 import os
 import ssl
 from typing import List, Optional
-from sendgrid import Content, ReplyTo, SendGridAPIClient
+from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Cc, From, Mail, Subject
 
 logger = logging.getLogger(__name__)
@@ -51,8 +51,9 @@ class SendGridHandler:
         message.subject = Subject(subject)
         message.template_id = template_id
         message.dynamic_template_data = {
-            "FirstName": template_placeholder.get("FirstName"),
-            "Link": template_placeholder.get("Link"),
+            "Full_name": template_placeholder.get("full_name"),
+            "Link": template_placeholder.get("link"),
+            "Email": template_placeholder.get("email")
         }
         message.is_multiple = True
         if attachedfile is not None:

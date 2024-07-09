@@ -15,7 +15,7 @@ from enums import UserAuthorizationStatus
 from exceptions import InvalidToken
 from schemas.auth_token import Token
 from services.payments_plans import PaymentsPlans
-from services.send_grid import SendGridPersistenceService
+from services.send_grid_persistence import SendGridPersistenceService
 from services.subscriptions import SubscriptionService
 from services.users_email_verification import UsersEmailVerificationService
 from services.users import UsersService
@@ -23,13 +23,8 @@ from models.users import Users as User
 from services.users_auth import UsersAuth
 from services.user_persistence_service import UserPersistenceService
 
-logging.basicConfig(
-    level=logging.ERROR,
-    format='%(asctime)s %(levelname)s: %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
-)
-logger = logging.getLogger(__name__)
 
+logger = logging.getLogger(__name__)
 
 def get_db():
     db = SessionLocal()

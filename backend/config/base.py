@@ -5,6 +5,7 @@ from dotenv import find_dotenv, load_dotenv
 
 load_dotenv()
 
+
 class Base:
     env = os.getenv("ENV", "dev")
     port = int(os.getenv("PORT", 8000))
@@ -13,5 +14,6 @@ class Base:
         f"http://{domain}",
         f"https://{domain}",
     ]
+
 
 load_dotenv(find_dotenv(f"{Base.env}.envrc"))

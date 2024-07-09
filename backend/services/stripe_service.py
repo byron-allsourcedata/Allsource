@@ -3,7 +3,6 @@ import stripe
 from config.stripe import StripeConfig
 from schemas.users import UserSignUpForm
 
-logger = logging.getLogger(__name__)
 stripe.api_key = StripeConfig.api_key
 
 

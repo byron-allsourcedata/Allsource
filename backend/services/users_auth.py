@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from . import stripe_service
 from .jwt_service import get_password_hash, create_access_token, verify_password, decode_jwt_data
-from .send_grid import SendGridPersistenceService
+from .send_grid_persistence import SendGridPersistenceService
 from .sendgrid import SendGridHandler
 from .user_persistence_service import UserPersistenceService
 import os
@@ -20,11 +20,6 @@ from typing import Optional
 from schemas.auth_google_token import AuthGoogleToken
 from schemas.users import UserSignUpForm, UserLoginForm, ResetPasswordForm
 
-logging.basicConfig(
-    level=logging.ERROR,
-    format='%(asctime)s %(levelname)s: %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
-)
 logger = logging.getLogger(__name__)
 
 
@@ -62,7 +57,6 @@ class UsersAuth:
             payment_status=StripePaymentStatusEnum.PENDING.name,
             parent_id=0,
             customer_id=customer_id,
-            send_message_expiration_time=datetime.now(),
             website=user_form.image if hasattr(user_form, 'website') else None
         )
         if not is_without_card:
@@ -131,22 +125,23 @@ class UsersAuth:
         token = create_access_token(user_object)
         response.update({"token": token})
         logger.info("Token created")
-        template_id = self.send_grid_persistence_service.get_template_by_alias(
-            AutomationSystemTemplate.EMAIL_VERIFICATION_TEMPLATE)
-        if not template_id:
-            return {
-                'is_success': False,
-                'error': 'email template not found'
-            }
         if is_without_card:
+            template_id = self.send_grid_persistence_service.get_template_by_alias(
+                AutomationSystemTemplate.EMAIL_VERIFICATION_TEMPLATE.value)
+            if not template_id:
+                return {
+                    'is_success': False,
+                    'error': 'email template not found'
+                }
             confirm_email_url = f"{os.getenv('SITE_HOST_URL')}/authentication/verify-token?token={token}&skip_pricing=true"
             mail_object = SendGridHandler()
             mail_object.send_sign_up_mail(
                 subject="Please Verify Your Email",
                 to_emails=user_form.email,
                 template_id=template_id,
-                template_placeholder={"Full_name": user_object.get("full_name"), "Link": confirm_email_url},
+                template_placeholder={"full_name": user_object.get("full_name"), "link": confirm_email_url},
             )
+            self.user_persistence_service.set_message_expiration_now(user_object.get('id'))
             logger.info("Confirmation Email Sent")
             return {
                 'is_success': True,
@@ -163,10 +158,23 @@ class UsersAuth:
             'token': token,
         }
 
+    def check_user_subscription(self, user_object):
+        # if not user_object.is_company_details_filled:
+        #     return LoginStatus.FILL_COMPANY_DETAILS
+        return {
+            'is_success': True,
+            'status': LoginStatus.NEED_CHOOSE_PLAN
+        }
+
     def login_account(self, login_form: UserLoginForm):
         email = login_form.email
         password = login_form.password
         user_object = self.user_persistence_service.get_user_by_email(email)
+        if not user_object:
+            return {
+                'is_success': True,
+                'status': LoginStatus.INCORRECT_PASSWORD_OR_EMAIL,
+            }
         if user_object:
             check_password = verify_password(password, user_object.password)
             if check_password:
@@ -175,6 +183,19 @@ class UsersAuth:
                     "id": user_object.id,
                 }
                 token = create_access_token(token_info)
+                if user_object.is_with_card:
+                    self.check_user_subscription(user_object)
+                else:
+                    if not user_object.is_email_confirmed:
+                        return {
+                            'is_success': True,
+                            'status': LoginStatus.NEED_CONFIRM_EMAIL,
+                        }
+                    if not user_object.is_company_details_filled:
+                        return {
+                            'is_success': True,
+                            'status': LoginStatus.FILL_COMPANY_DETAILS,
+                        }
                 return {
                     'is_success': True,
                     'status': LoginStatus.SUCCESS,
@@ -207,20 +228,21 @@ class UsersAuth:
 
     def reset_password(self, reset_password_form: ResetPasswordForm):
         if reset_password_form is not None and reset_password_form:
-            db_user = self.user_persistence_service.get_user_by_email(reset_password_form)
+            db_user = self.user_persistence_service.get_user_by_email(reset_password_form.email)
             message_expiration_time = db_user.send_message_expiration_time
             time_now = datetime.now()
-            if (message_expiration_time + timedelta(minutes=1)) > time_now:
-                return {
-                    'is_success': True,
-                    'status': ResetPasswordTemplate.RESEND_TOO_SOON
-                }
+            if message_expiration_time is not None:
+                if (message_expiration_time + timedelta(minutes=1)) > time_now:
+                    return {
+                        'is_success': True,
+                        'status': ResetPasswordTemplate.RESEND_TOO_SOON
+                    }
             token_info = {
                 "id": db_user.id,
             }
             token = create_access_token(token_info)
             template_id = self.send_grid_persistence_service.get_template_by_alias(
-                AutomationSystemTemplate.EMAIL_VERIFICATION_TEMPLATE)
+                AutomationSystemTemplate.FORGOT_PASSWORD_TEMPLATE.value)
             if db_user:
                 confirm_email_url = f"{os.getenv('SITE_HOST_URL')}/forgot-password?token={token}"
                 mail_object = SendGridHandler()
@@ -228,9 +250,10 @@ class UsersAuth:
                     subject="Maximize Password Reset Request",
                     to_emails=db_user.email,
                     template_id=template_id,
-                    template_placeholder={"Full_name": db_user.full_name, "Link": confirm_email_url,
+                    template_placeholder={"full_name": db_user.full_name, "link": confirm_email_url,
                                           "email": db_user.email},
                 )
+                self.user_persistence_service.set_message_expiration_now(db_user.id)
                 logger.info("Confirmation Email Sent")
                 return {
                     'is_success': True,

@@ -1,13 +1,10 @@
 import os
 
-
-from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from .base import Base
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
 
-from sqlalchemy.ext.declarative import declarative_base
 
 load_dotenv()
 

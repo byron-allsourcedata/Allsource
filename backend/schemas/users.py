@@ -30,7 +30,7 @@ class ResetPasswordForm(BaseModel):
 
 
 class UpdatePassword(BaseModel):
-    email: str = Field(...)
+    password: str = Field(...)
     confirm_password: str = Field(...)
 
 

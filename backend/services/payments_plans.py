@@ -4,20 +4,15 @@ from .subscriptions import SubscriptionService
 from .user_persistence_service import UserPersistenceService
 from models.plans import SubscriptionPlan, UserSubscriptionPlan
 from sqlalchemy.orm import Session
+import logging
 
-TRIAL_STUB_PLAN_ID = 17
-WITHOUT_CARD_PLAN_ID = 15
-
-logging.basicConfig(
-    level=logging.ERROR,
-    format='%(asctime)s %(levelname)s: %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
-)
 logger = logging.getLogger(__name__)
+WITHOUT_CARD_PLAN_ID = 15
 
 
 class PaymentsPlans:
-    def __init__(self, db: Session, subscription_service: SubscriptionService, user_persistence_service: UserPersistenceService):
+    def __init__(self, db: Session, subscription_service: SubscriptionService,
+                 user_persistence_service: UserPersistenceService):
         self.db = db
         self.subscription_service = subscription_service
         self.user_persistence_service = user_persistence_service
@@ -29,7 +24,7 @@ class PaymentsPlans:
         if user_subscription:
             user_subscription_id = user_subscription.id
         plan_object = UserSubscriptionPlan(user_id=user_id, plan_id=default_plan.id, is_trial=is_trial,
-                                               subscription_id=user_subscription_id)
+                                           subscription_id=user_subscription_id)
         self.db.add(plan_object)
         self.db.commit()
         return default_plan
@@ -37,7 +32,8 @@ class PaymentsPlans:
     def set_plan_without_card(self, user_id):
         try:
             user_subscription_id = None
-            plan_without_card = self.db.query(SubscriptionPlan).filter(SubscriptionPlan.id == WITHOUT_CARD_PLAN_ID).first()
+            plan_without_card = self.db.query(SubscriptionPlan).filter(
+                SubscriptionPlan.id == WITHOUT_CARD_PLAN_ID).first()
             user_subscription = self.subscription_service.get_subscription(user_id)
             if user_subscription:
                 user_subscription_id = user_subscription.id
