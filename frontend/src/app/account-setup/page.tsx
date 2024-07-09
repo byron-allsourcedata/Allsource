@@ -8,6 +8,7 @@ import { styles } from './accountStyles';
 const AccountSetupPage = () => {
   const [selectedEmployees, setSelectedEmployees] = useState<number | null>(null);
 
+
   const getButtonStyles = (isSelected: boolean): any => {
     return isSelected
       ? { ...styles.employeeButton, backgroundColor: 'rgba(249, 189, 182, 1)', color: 'black' }
@@ -17,7 +18,6 @@ const AccountSetupPage = () => {
   const handleEmployeeClick = (num: number) => {
     setSelectedEmployees(num);
   };
-
   const ranges = [
     { min: 1, max: 10, label: '1-10' },
     { min: 51, max: 100, label: '11-50' },
@@ -40,7 +40,7 @@ const AccountSetupPage = () => {
       </Box>
       <Box sx={styles.formContainer}>
         <Typography variant="h5" component="h1" sx={styles.title}>
-          Welcome Lakshmi,
+          Welcome Lakshmi
         </Typography>
         <Typography variant="body1" component="h2" sx={styles.subtitle}>
           Let&apos;s set up your account
