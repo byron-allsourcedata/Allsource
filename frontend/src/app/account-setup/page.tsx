@@ -1,13 +1,33 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, Button, TextField, Typography } from '@mui/material';
 import Image from 'next/image';
 import PersonIcon from '@mui/icons-material/Person';
 import { styles } from './accountStyles';
 
 const AccountSetupPage = () => {
+  const [name, setName] = useState<string | null>(null);
   const [selectedEmployees, setSelectedEmployees] = useState<number | null>(null);
 
+<<<<<<< Updated upstream
+=======
+  const getButtonStyles = (isSelected: boolean): any => {
+    return isSelected
+      ? { ...styles.employeeButton, backgroundColor: 'rgba(249, 189, 182, 1)', color: 'black' }
+      : { ...styles.employeeButton, color: 'black' };
+  };
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedMe = sessionStorage.getItem('me');
+      setName(storedMe ? JSON.parse(storedMe)?.name : null);
+    }
+  }, []);
+
+  const handleEmployeeClick = (num: number) => {
+    setSelectedEmployees(num);
+  };
+>>>>>>> Stashed changes
 
   const getButtonStyles = (isSelected: boolean): any => {
     return isSelected
@@ -40,7 +60,11 @@ const AccountSetupPage = () => {
       </Box>
       <Box sx={styles.formContainer}>
         <Typography variant="h5" component="h1" sx={styles.title}>
+<<<<<<< Updated upstream
           Welcome Lakshmi
+=======
+          Welcome {name},
+>>>>>>> Stashed changes
         </Typography>
         <Typography variant="body1" component="h2" sx={styles.subtitle}>
           Let&apos;s set up your account
