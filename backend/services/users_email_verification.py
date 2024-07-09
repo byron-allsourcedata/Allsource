@@ -3,7 +3,7 @@ import os
 from datetime import datetime, timedelta
 
 from .jwt_service import get_password_hash
-from .sendgrid_persistence import SendGridPersistenceService
+from .sendgrid_persistence import SendgridPersistenceService
 from .sendgrid import SendGridHandler
 from .user_persistence_service import UserPersistenceService
 from enums import AutomationSystemTemplate, VerificationEmail, UpdatePasswordStatus
@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 class UsersEmailVerificationService:
-    def __init__(self, user: Users, user_persistence_service: UserPersistenceService, send_grid_persistence_service: SendGridPersistenceService):
+    def __init__(self, user: Users, user_persistence_service: UserPersistenceService, send_grid_persistence_service: SendgridPersistenceService):
         self.user = user
         self.user_persistence_service = user_persistence_service
         self.send_grid_persistence_service = send_grid_persistence_service

@@ -2,7 +2,7 @@ from models.sendgrid_template import SendGridTemplate
 from sqlalchemy.orm import Session
 
 
-class SendGridPersistenceService:
+class SendgridPersistenceService:
     def __init__(self, db: Session):
         self.db = db
 

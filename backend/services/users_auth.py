@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from . import stripe_service
 from .jwt_service import get_password_hash, create_access_token, verify_password, decode_jwt_data
-from .sendgrid_persistence import SendGridPersistenceService
+from .sendgrid_persistence import SendgridPersistenceService
 from .sendgrid import SendGridHandler
 from .user_persistence_service import UserPersistenceService
 import os
@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 class UsersAuth:
     def __init__(self, db: Session, plans_service: PaymentsPlans, user_persistence_service: UserPersistenceService,
-                 send_grid_persistence_service: SendGridPersistenceService):
+                 send_grid_persistence_service: SendgridPersistenceService):
         self.db = db
         self.plans_service = plans_service
         self.user_persistence_service = user_persistence_service
