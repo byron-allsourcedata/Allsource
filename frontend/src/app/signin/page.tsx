@@ -8,6 +8,7 @@ import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import axiosInstance from '../../axios/axiosInterceptorInstance';
 import { AxiosError } from 'axios';
 import { loginStyles } from './loginStyles';
+import { showErrorToast } from '../../components/ToastNotification';
 
 const Signup: React.FC = () => {
   const router = useRouter();
@@ -77,37 +78,66 @@ const Signup: React.FC = () => {
   
     setErrors(newErrors);
   
-    if (Object.keys(newErrors).length === 0) {
-      try {
-        const response = await axiosInstance.post('api/login', formValues);
+    if (Object.keys(newErrors).length > 0) {
+      return;
+    }
   
-        if (response.status === 200) {
-          const responseData = response.data;
+    try {
+      const response = await axiosInstance.post('api/login', formValues);
   
-          if (responseData.status === "LOGIN_SUCCESSFUL") {
-            if (typeof window !== 'undefined') {
-              localStorage.setItem('token', responseData.token);
-            }
-            sessionStorage.setItem('me', JSON.stringify({ email: formValues.email }));
-            router.push('/dashboard');
-          } else if (responseData.status === "EMAIL_NOT_VERIFIED") {
-            router.push('/email_verification');
-          } else if (responseData.status === "INVALID_CREDENTIALS") {
-            setErrors({ general: 'Invalid email or password' });
-          } else {
-            console.error('Unexpected status:', responseData.status);
+      if (response.status === 200) {
+        const responseData = response.data;
+  
+        if (responseData) {
+          switch (responseData.status) {
+            case "SUCCESS":
+              if (typeof window !== 'undefined') {
+                localStorage.setItem('token', responseData.token);
+              }
+              router.push('/dashboard');
+              break;
+            
+            case "INCORRECT_PASSWORD_OR_EMAIL":
+              showErrorToast("Incorrect password or email.");
+              break;
+          
+            case "EMAIL_NOT_VERIFIED":
+              if (typeof window !== 'undefined') {
+                localStorage.setItem('token', responseData.token);
+              }
+              router.push('/email-verification');
+              break;
+          
+            case "NEED_CHOOSE_PLAN":
+              if (typeof window !== 'undefined') {
+                localStorage.setItem('token', responseData.token);
+              }
+              router.push('/choose-plan')
+              break;
+
+            case "FILL_COMPANY_DETAILS":
+              if (typeof window !== 'undefined') {
+                localStorage.setItem('token', responseData.token);
+              }
+              router.push('/account-setuo')
+              break;
+          
+            default:
+              showErrorToast('Unexpected status: Service is not available now, try agian or contact with us support@maximiz.ai');
           }
         } else {
-          console.error('Error:', response);
+          console.error('Empty response data');
         }
-      } catch (err) {
-        const error = err as AxiosError;
-        if (error.response && error.response.data) {
-          const errorData = error.response.data as { [key: string]: string };
-          setErrors(errorData);
-        } else {
-          console.error('Error:', error);
-        }
+      } else {
+        console.error('HTTP error:', response.status);
+      }
+    } catch (err) {
+      const error = err as AxiosError;
+      if (error.response && error.response.data) {
+        const errorData = error.response.data as { [key: string]: string };
+        setErrors(errorData);
+      } else {
+        console.error('Error:', error);
       }
     }
   };
