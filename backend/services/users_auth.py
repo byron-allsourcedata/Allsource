@@ -27,8 +27,10 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+
 class UsersAuth:
-    def __init__(self, db: Session, plans_service: PaymentsPlans, user_persistence_service: UserPersistenceService, send_grid_persistence_service: SendGridPersistenceService):
+    def __init__(self, db: Session, plans_service: PaymentsPlans, user_persistence_service: UserPersistenceService,
+                 send_grid_persistence_service: SendGridPersistenceService):
         self.db = db
         self.plans_service = plans_service
         self.user_persistence_service = user_persistence_service
@@ -43,9 +45,11 @@ class UsersAuth:
             date += delta
         return date.isoformat()[:-6] + "Z"
 
-    def add_user(self, is_without_card, customer_id: str, user_form: Optional[dict] = None, google_payload: Optional[dict] = None):
+    def add_user(self, is_without_card, customer_id: str, user_form: Optional[dict] = None,
+                 google_payload: Optional[dict] = None):
         user_object = Users(
-            email=user_form.email if google_payload is None or len(google_payload) == 0 else google_payload.get("email"),
+            email=user_form.email if google_payload is None or len(google_payload) == 0 else google_payload.get(
+                "email"),
             is_email_confirmed=False,
             password=user_form.password,
             is_company_details_filled=False,
@@ -127,7 +131,8 @@ class UsersAuth:
         token = create_access_token(user_object)
         response.update({"token": token})
         logger.info("Token created")
-        template_id = self.send_grid_persistence_service.get_template_by_alias(AutomationSystemTemplate.EMAIL_VERIFICATION_TEMPLATE)
+        template_id = self.send_grid_persistence_service.get_template_by_alias(
+            AutomationSystemTemplate.EMAIL_VERIFICATION_TEMPLATE)
         if not template_id:
             return {
                 'is_success': False,
@@ -214,7 +219,8 @@ class UsersAuth:
                 "id": db_user.id,
             }
             token = create_access_token(token_info)
-            template_id = self.send_grid_persistence_service.get_template_by_alias(AutomationSystemTemplate.EMAIL_VERIFICATION_TEMPLATE)
+            template_id = self.send_grid_persistence_service.get_template_by_alias(
+                AutomationSystemTemplate.EMAIL_VERIFICATION_TEMPLATE)
             if db_user:
                 confirm_email_url = f"{os.getenv('SITE_HOST_URL')}/forgot-password?token={token}"
                 mail_object = SendGridHandler()
@@ -222,7 +228,8 @@ class UsersAuth:
                     subject="Maximize Password Reset Request",
                     to_emails=db_user.email,
                     template_id=template_id,
-                    template_placeholder={"Full_name": db_user.full_name, "Link": confirm_email_url, "email": db_user.email},
+                    template_placeholder={"Full_name": db_user.full_name, "Link": confirm_email_url,
+                                          "email": db_user.email},
                 )
                 logger.info("Confirmation Email Sent")
                 return {
