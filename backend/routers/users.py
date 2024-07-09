@@ -21,7 +21,6 @@ def get(user: UsersService = Depends(get_users_service)):
 @router.post("/sign-up", response_model=UserSignUpFormResponse)
 async def create_user(user_form: UserSignUpForm, users_service: UsersAuth = Depends(get_users_auth_service)):
     user_data = users_service.create_account(user_form)
-    print(UserSignUpFormResponse(status=user_data.get('status'), token=user_data.get("token")))
     return UserSignUpFormResponse(status=user_data.get('status'), token=user_data.get("token"))
     # return RedirectResponse(url=f"/sign-up?email={user_form.email}")
 
