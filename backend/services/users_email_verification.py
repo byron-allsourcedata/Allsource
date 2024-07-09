@@ -28,7 +28,7 @@ class UsersEmailVerificationService:
                     'is_success': False,
                     'error': 'email template not found'
                 }
-            message_expiration_time = self.user.send_message_expiration_time
+            message_expiration_time = self.user.verified_email_sent_at
             time_now = datetime.now()
             if message_expiration_time is not None:
                 if (message_expiration_time + timedelta(minutes=1)) > time_now:
@@ -44,7 +44,7 @@ class UsersEmailVerificationService:
                 template_id=template_id,
                 template_placeholder={"full_name": self.user.full_name, "link": confirm_email_url},
             )
-            self.user_persistence_service.set_message_expiration_now(self.user.id)
+            self.user_persistence_service.set_verified_email_sent_now(self.user.id)
             logger.info("Confirmation Email Sent")
             return {
                 'is_success': True,

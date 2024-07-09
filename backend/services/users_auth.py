@@ -141,7 +141,7 @@ class UsersAuth:
                 template_id=template_id,
                 template_placeholder={"full_name": user_object.get("full_name"), "link": confirm_email_url},
             )
-            self.user_persistence_service.set_message_expiration_now(user_object.get('id'))
+            self.user_persistence_service.set_verified_email_sent_now(user_object.get('id'))
             logger.info("Confirmation Email Sent")
             return {
                 'is_success': True,
@@ -229,7 +229,7 @@ class UsersAuth:
     def reset_password(self, reset_password_form: ResetPasswordForm):
         if reset_password_form is not None and reset_password_form:
             db_user = self.user_persistence_service.get_user_by_email(reset_password_form.email)
-            message_expiration_time = db_user.send_message_expiration_time
+            message_expiration_time = db_user.reset_password_sent_at
             time_now = datetime.now()
             if message_expiration_time is not None:
                 if (message_expiration_time + timedelta(minutes=1)) > time_now:
@@ -253,7 +253,7 @@ class UsersAuth:
                     template_placeholder={"full_name": db_user.full_name, "link": confirm_email_url,
                                           "email": db_user.email},
                 )
-                self.user_persistence_service.set_message_expiration_now(db_user.id)
+                self.user_persistence_service.set_reset_password_sent_now(db_user.id)
                 logger.info("Confirmation Email Sent")
                 return {
                     'is_success': True,
