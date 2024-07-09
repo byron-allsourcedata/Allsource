@@ -111,7 +111,7 @@ const EmailVerificate: React.FC = () => {
           Check your inbox
         </Typography>
         <Box sx={emailStyles.icon}>
-            <Image src="./mail-icon.svg" alt="Mail Icon" width={200} height={200} />
+            <Image src="/mail-icon.svg" alt="Mail Icon" width={200} height={200} />
         </Box>
         <Box sx={emailStyles.orDivider}>
           <Box sx={{ borderBottom: '1px solid #000000', flexGrow: 1 }} />
