@@ -14,6 +14,7 @@ from fastapi import Depends, Header, Request, HTTPException, status, Query
 from enums import UserAuthorizationStatus
 from exceptions import InvalidToken
 from schemas.auth_token import Token
+from services.dashboard_service import DashboardService
 from services.payments_plans import PaymentsPlans
 from services.sendgrid_persistence import SendgridPersistenceService
 from services.subscriptions import SubscriptionService
@@ -134,6 +135,8 @@ def get_users_service(user: User = Depends(check_user_authorization),
                       user_persistence_service: UserPersistenceService = Depends(get_user_persistence_service)):
     return UsersService(user=user, user_persistence_service=user_persistence_service)
 
+def get_dashboard_service(user: User = Depends(check_user_authorization)):
+    return DashboardService(user=user)
 
 def get_users_email_verification_service(user: User = Depends(check_user_authentication),
                                          user_persistence_service: UserPersistenceService = Depends(
