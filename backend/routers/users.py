@@ -51,9 +51,8 @@ async def create_user_google(auth_google_token: AuthGoogleToken, users: UsersAut
 
 
 @router.get("/authentication/verify-token", response_model=VerifyTokenResponse)
-async def verify_token(user: UsersAuth = Depends(get_users_auth_service), token: str = Query(...),
-                       skip_pricing: bool = Query(True)):
-    result = user.verify_token(token, skip_pricing)
+async def verify_token(user: UsersAuth = Depends(get_users_auth_service), token: str = Query(...)):
+    result = user.verify_token(token)
     return VerifyTokenResponse(status=result.get('status'), token=result.get('user_token', None))
 
 

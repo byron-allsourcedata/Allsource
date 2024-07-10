@@ -168,7 +168,7 @@ class UsersAuth:
                     'is_success': False,
                     'error': 'email template not found'
                 }
-            confirm_email_url = f"{os.getenv('SITE_HOST_URL')}/authentication/verify-token?token={token}&skip_pricing=true"
+            confirm_email_url = f"{os.getenv('SITE_HOST_URL')}/authentication/verify-token?token={token}"
             mail_object = SendgridHandler()
             mail_object.send_sign_up_mail(
                 subject="Please Verify Your Email",
