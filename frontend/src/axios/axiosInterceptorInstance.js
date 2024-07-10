@@ -27,21 +27,6 @@ const navigateTo = (path) => {
 // Response interceptor
 axiosInterceptorInstance.interceptors.response.use(
   (response) => {
-    if (response.data && response.data.status) {
-      switch (response.data.status) {
-        case 'NEED_CHOOSE_PLAN':
-          navigateTo('/choose-plan');
-          break;
-        case 'NEED_CONFIRM_EMAIL':
-          navigateTo('/email_verificate');
-          break;
-        case 'FILL_COMPANY_DETAILS':
-          navigateTo('/company_details');
-          break;
-        default:
-          break;
-      }
-    }
     return response;
   },
   (error) => {
