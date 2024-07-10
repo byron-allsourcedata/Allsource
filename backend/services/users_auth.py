@@ -4,17 +4,16 @@ from sqlalchemy.orm import Session
 
 from . import stripe_service
 from .jwt_service import get_password_hash, create_access_token, verify_password, decode_jwt_data
-from .sendgrid_persistence import SendgridPersistenceService
+from persistence.sendgrid_persistence import SendgridPersistence
 from .sendgrid import SendgridHandler
-from .user_persistence_service import UserPersistenceService
+from persistence.user_persistence import UserPersistence
 import os
 from google.auth.transport import requests as google_requests
 from services.payments_plans import PaymentsPlans
 from models.users import Users
 import logging
 from google.oauth2 import id_token
-from enums import SignUpStatus, StripePaymentStatusEnum, AutomationSystemTemplate, LoginStatus, BaseEnum, \
-    ResetPasswordTemplate, VerifyToken
+from enums import SignUpStatus, StripePaymentStatusEnum, AutomationSystemTemplate, LoginStatus, ResetPasswordTemplate, VerifyToken
 from typing import Optional
 
 from schemas.auth_google_token import AuthGoogleToken
@@ -24,8 +23,8 @@ logger = logging.getLogger(__name__)
 
 
 class UsersAuth:
-    def __init__(self, db: Session, plans_service: PaymentsPlans, user_persistence_service: UserPersistenceService,
-                 send_grid_persistence_service: SendgridPersistenceService):
+    def __init__(self, db: Session, plans_service: PaymentsPlans, user_persistence_service: UserPersistence,
+                 send_grid_persistence_service: SendgridPersistence):
         self.db = db
         self.plans_service = plans_service
         self.user_persistence_service = user_persistence_service
@@ -95,8 +94,9 @@ class UsersAuth:
         token = create_access_token(user_object)
         logger.info("Token created")
         self.user_persistence_service.email_confirmed(user_object.id)
-        user_plan = self.plans_service.set_default_plan(self.db, user_object.get("user_filed_id"), True)
-        logger.info(f"Set plan {user_plan.title} for new user")
+        if user_object.is_with_card:
+            user_plan = self.plans_service.set_default_plan(user_object.get("user_filed_id"), True)
+            logger.info(f"Set plan {user_plan.title} for new user")
         logger.info("Token created")
         return {
             'status': SignUpStatus.NEED_CHOOSE_PLAN,
@@ -177,17 +177,12 @@ class UsersAuth:
                 template_placeholder={"full_name": user_object.get("full_name"), "link": confirm_email_url},
             )
             self.user_persistence_service.set_verified_email_sent_now(user_object.get('id'))
-            user_plan = self.plans_service.set_plan_without_card(user_object.get("id"), True)
-            logger.info(f"Set plan {user_plan.title} for new user")
             logger.info("Confirmation Email Sent")
             return {
                 'is_success': True,
                 'status': SignUpStatus.NEED_CONFIRM_EMAIL,
                 'token': token,
             }
-        else:
-            user_plan = self.plans_service.set_default_plan(user_object.get("user_filed_id"), False)
-            logger.info(f"Set plan {user_plan.title} for new user")
         logger.info("Token created")
         return {
             'is_success': True,
@@ -208,7 +203,7 @@ class UsersAuth:
         password = login_form.password
         user_object = self.user_persistence_service.get_user_by_email(email)
         if not user_object:
-            return {'status': LoginStatus.INCORRECT_PASSWORD_OR_EMAIL }
+            return {'status': LoginStatus.INCORRECT_PASSWORD_OR_EMAIL}
         if user_object:
             check_password = verify_password(password, user_object.password)
             if check_password:
@@ -228,13 +223,12 @@ class UsersAuth:
                     'status': LoginStatus.INCORRECT_PASSWORD_OR_EMAIL
                 }
 
-    def verify_token(self, token, skip_pricing):
+    def verify_token(self, token):
         data = decode_jwt_data(token)
         check_user_object = self.user_persistence_service.get_user_by_id(data.get('id'))
         if check_user_object:
-            if skip_pricing:
+            if check_user_object.is_with_card:
                 user_plan = self.plans_service.set_default_plan(check_user_object.id, True)
-                self.user_persistence_service.email_confirmed(check_user_object.id)
                 logger.info(f"Set plan {user_plan.title} for new user")
             self.user_persistence_service.email_confirmed(check_user_object.id)
             token_info = {

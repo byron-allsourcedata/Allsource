@@ -1,5 +1,4 @@
 import logging
-from .user_persistence_service import UserPersistenceService
 from models.users import Users
 
 logger = logging.getLogger(__name__)
