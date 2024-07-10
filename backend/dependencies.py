@@ -15,6 +15,7 @@ from exceptions import InvalidToken
 from persistence.plans_persistence import PlansPersistence
 from schemas.auth_token import Token
 from services.dashboard_service import DashboardService
+from services.payments import PaymentsService
 from services.payments_plans import PaymentsPlans
 from persistence.sendgrid_persistence import SendgridPersistence
 from services.plans import PlansService
@@ -24,6 +25,7 @@ from services.users import UsersService
 from models.users import Users as User
 from services.users_auth import UsersAuth
 from persistence.user_persistence import UserPersistence
+from services.webhook import WebhookService
 
 logger = logging.getLogger(__name__)
 
@@ -55,6 +57,14 @@ def get_user_authorization_status(user: User):
     if user.is_with_card:
         return check_user_subscription()
     else:
+        if not user.is_email_confirmed:
+            return UserAuthorizationStatus.NEED_CONFIRM_EMAIL
+        if not user.is_company_details_filled:
+            return UserAuthorizationStatus.FILL_COMPANY_DETAILS
+    return UserAuthorizationStatus.SUCCESS
+
+def get_user_subscription_authorization_status(user: User):
+    if not user.is_with_card:
         if not user.is_email_confirmed:
             return UserAuthorizationStatus.NEED_CONFIRM_EMAIL
         if not user.is_company_details_filled:
@@ -96,6 +106,24 @@ def check_user_authorization(Authorization: Annotated[str, Header()],
         )
     return user
 
+def check_user_subscription_authorization(Authorization: Annotated[str, Header()],
+                             user_persistence_service: UserPersistence = Depends(
+                                 get_user_persistence_service)) -> Token:
+    user_data = parse_jwt_data(Authorization)
+    user = user_persistence_service.get_user_by_id(user_data.id)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail='NOT_FOUND'
+        )
+    auth_status = get_user_subscription_authorization_status(user)
+    if auth_status != UserAuthorizationStatus.SUCCESS:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=auth_status.value
+        )
+    return user
+
 
 def check_user_authentication(Authorization: Annotated[str, Header()],
                               user_persistence_service: UserPersistence = Depends(
@@ -117,18 +145,18 @@ def get_subscription_service(db: Session = Depends(get_db),
     return SubscriptionService(db=db, user_persistence_service=user_persistence_service)
 
 
-def get_plans_service(db: Session = Depends(get_db),
+def get_payments_plans_service(db: Session = Depends(get_db),
                       subscription_service: SubscriptionService = Depends(get_subscription_service),
                       user_persistence_service: UserPersistence = Depends(get_user_persistence_service)):
     return PaymentsPlans(db=db, subscription_service=subscription_service,
                          user_persistence_service=user_persistence_service)
 
 
-def get_users_auth_service(db: Session = Depends(get_db), payments_plans: PaymentsPlans = Depends(get_plans_service),
+def get_users_auth_service(db: Session = Depends(get_db), payments_plans: PaymentsPlans = Depends(get_payments_plans_service),
                            user_persistence_service: UserPersistence = Depends(get_user_persistence_service),
                            send_grid_persistence_service: SendgridPersistence = Depends(
                                get_send_grid_persistence_service)):
-    return UsersAuth(db=db, plans_service=payments_plans, user_persistence_service=user_persistence_service,
+    return UsersAuth(db=db, payments_service=payments_plans, user_persistence_service=user_persistence_service,
                      send_grid_persistence_service=send_grid_persistence_service)
 
 
@@ -141,10 +169,15 @@ def get_dashboard_service(user: User = Depends(check_user_authorization)):
     return DashboardService(user=user)
 
 
-def get_plans_service(user: User = Depends(check_user_authorization),
-                      plans_persistence: PlansPersistence = Depends(get_plans_persistence)):
-    return PlansService(user=user, plans_persistence=plans_persistence)
+def get_plans_service(user: User = Depends(check_user_subscription_authorization),
+                      plans_persistence: PlansPersistence = Depends(get_plans_persistence), subscription_service: SubscriptionService = Depends(get_subscription_service)):
+    return PlansService(plans_persistence=plans_persistence, user=user, subscription_service=subscription_service)
 
+def get_webhook(plans_persistence: PlansPersistence = Depends(get_plans_persistence), subscription_service: SubscriptionService = Depends(get_subscription_service)):
+    return WebhookService(plans_persistence=plans_persistence, subscription_service=subscription_service)
+
+def get_payments_service(plans_service: PlansService = Depends(get_plans_service)):
+    return PaymentsService(plans_service=plans_service)
 
 def get_users_email_verification_service(user: User = Depends(check_user_authentication),
                                          user_persistence_service: UserPersistence = Depends(

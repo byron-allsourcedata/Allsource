@@ -1,6 +1,8 @@
 from datetime import datetime
 from sqlalchemy import func
 from sqlalchemy.orm import Session
+
+from models.plans import UserSubscriptionPlan, SubscriptionPlan
 from models.users import Users
 import logging
 
@@ -11,6 +13,8 @@ class UserPersistence:
     def __init__(self, db: Session):
         self.db = db
 
+    def user_plan_info_db(self, user_id):
+        self.db.query(UserSubscriptionPlan, SubscriptionPlan).join(SubscriptionPlan, UserSubscriptionPlan.plan_id == SubscriptionPlan.id).filter(UserSubscriptionPlan.user_id == user_id).order_by(UserSubscriptionPlan.id.desc()).first()
     def set_reset_password_sent_now(self, user_id: int):
         send_message_expiration_time = datetime.now()
         self.db.query(Users).filter(Users.id == user_id).update(

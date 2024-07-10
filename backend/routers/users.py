@@ -10,15 +10,15 @@ from services.users_auth import UsersAuth
 from services.users_email_verification import UsersEmailVerificationService
 from typing_extensions import Annotated
 
-router = APIRouter()
+router_user = APIRouter()
 
 
-@router.get("/me")
+@router_user.get("/me")
 def get(user: UsersEmailVerificationService = Depends(get_users_email_verification_service)):
     return user.get_my_info()
 
 
-@router.post("/sign-up", response_model=UserSignUpFormResponse)
+@router_user.post("/sign-up", response_model=UserSignUpFormResponse)
 async def create_user(user_form: UserSignUpForm, users_service: UsersAuth = Depends(get_users_auth_service)):
     user_data = users_service.create_account(user_form)
     if user_data.get('is_success'):
@@ -27,36 +27,36 @@ async def create_user(user_form: UserSignUpForm, users_service: UsersAuth = Depe
         raise HTTPException(status_code=500, detail=user_data.get('error'))
 
 
-@router.get("/dashboard")
+@router_user.get("/dashboard")
 def get(dashboard_service: DashboardService = Depends(get_dashboard_service)):
     return dashboard_service.get_my_info()
 
 
-@router.post("/login", response_model=UserLoginFormResponse)
+@router_user.post("/login", response_model=UserLoginFormResponse)
 async def login_user(user_form: UserLoginForm, users_service: UsersAuth = Depends(get_users_auth_service)):
     user_data = users_service.login_account(user_form)
     return UserLoginFormResponse(status=user_data.get('status'), token=user_data.get("token", None))
 
 
-@router.post("/sign-up-google", response_model=UserSignUpFormResponse)
+@router_user.post("/sign-up-google", response_model=UserSignUpFormResponse)
 async def create_user_google(auth_google_token: AuthGoogleToken, users: UsersAuth = Depends(get_users_auth_service)):
     user_data = users.create_account_google(auth_google_token)
     return UserSignUpFormResponse(status=user_data.get('status'), token=user_data.get("token", None))
 
 
-@router.post("/login-google", response_model=UserSignUpFormResponse)
+@router_user.post("/login-google", response_model=UserSignUpFormResponse)
 async def create_user_google(auth_google_token: AuthGoogleToken, users: UsersAuth = Depends(get_users_auth_service)):
     user_data = users.login_google(auth_google_token)
     return UserSignUpFormResponse(status=user_data.get('status'), token=user_data.get("token", None))
 
 
-@router.get("/authentication/verify-token", response_model=VerifyTokenResponse)
+@router_user.get("/authentication/verify-token", response_model=VerifyTokenResponse)
 async def verify_token(user: UsersAuth = Depends(get_users_auth_service), token: str = Query(...)):
     result = user.verify_token(token)
     return VerifyTokenResponse(status=result.get('status'), token=result.get('user_token', None))
 
 
-@router.post("/resend-verification-email", response_model=ResendVerificationEmailResponse)
+@router_user.post("/resend-verification-email", response_model=ResendVerificationEmailResponse)
 async def resend_verification_email(authorization: Annotated[str, Header()],
                                     user: UsersEmailVerificationService = Depends(
                                         get_users_email_verification_service)):
@@ -68,20 +68,20 @@ async def resend_verification_email(authorization: Annotated[str, Header()],
         raise HTTPException(status_code=500, detail=user_data.get('error'))
 
 
-@router.post("/reset-password", response_model=ResetPasswordResponse)
+@router_user.post("/reset-password", response_model=ResetPasswordResponse)
 async def reset_password(reset_password_form: ResetPasswordForm, user: UsersAuth = Depends(get_users_auth_service)):
     result_status = user.reset_password(reset_password_form)
     return ResetPasswordResponse(status=result_status)
 
 
-@router.post("/update-password", response_model=UpdatePasswordResponse)
+@router_user.post("/update-password", response_model=UpdatePasswordResponse)
 async def update_password(update_data: UpdatePassword,
                           user: UsersEmailVerificationService = Depends(get_users_email_verification_service)):
     result_status = user.update_password(update_data)
     return UpdatePasswordResponse(status=result_status)
 
 
-@router.get("/check-verification-status", response_model=CheckVerificationStatusResponse)
+@router_user.get("/check-verification-status", response_model=CheckVerificationStatusResponse)
 async def check_verification_status(
         user: UsersEmailVerificationService = Depends(get_users_email_verification_service)):
     result_status = user.check_verification_status()
