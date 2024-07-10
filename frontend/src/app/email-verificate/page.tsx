@@ -5,8 +5,9 @@ import { Bounce, ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Image from 'next/image';
 import { Box, Button, Typography } from '@mui/material';
-import axios from '../../axios/axiosInterceptorInstance';
+import axiosInterceptorInstance from '@/axios/axiosInterceptorInstance';
 import { emailStyles } from './emailStyles';
+import { showErrorToast } from '@/components/ToastNotification';
 
 const EmailVerificate: React.FC = () => {
   const [canResend, setCanResend] = useState(true);
@@ -53,16 +54,20 @@ const EmailVerificate: React.FC = () => {
 
   const handleResendEmail = () => {
     if (canResend) {
-      notify();
       setCanResend(false);
       setTimer(60);
-      axios.post('api/resend-verification-email', { token })
+      axiosInterceptorInstance.post('api/resend-verification-email', { token })
+      .then(response => {
+        if (response.status === 200 && response.data.status === "RESEND_TOO_SOON") {
+          showErrorToast("Resend too soon, please wait.");
+        }
+      })
     }
   };
 
   useEffect(() => {
     const interval = setInterval(() => {
-      axios.get('api/check-verification-status')
+      axiosInterceptorInstance.get('api/check-verification-status')
         .then(response => {
           if (response.status === 200 && response.data.status === "EMAIL_VERIFIED") {
             notify();
