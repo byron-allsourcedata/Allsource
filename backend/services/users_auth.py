@@ -69,7 +69,6 @@ class UsersAuth:
         return token_info
 
     def create_account_google(self, auth_google_token: AuthGoogleToken):
-        response = {}
         client_id = os.getenv("CLIENT_GOOGLE_ID")
         google_request = google_requests.Request()
         is_without_card = auth_google_token.is_without_card
@@ -96,7 +95,6 @@ class UsersAuth:
         user_object = self.add_user(is_without_card, customer_id=customer_id, google_payload=google_payload)
         self.user_persistence_service.update_user_parent_v2(user_object.get("user_filed_id"))
         token = create_access_token(user_object)
-        response.update({"token": token})
         logger.info("Token created")
         self.user_persistence_service.email_confirmed(user_object.id)
         user_plan = self.plans_service.set_default_plan(self.db, user_object.get("user_filed_id"), True)
@@ -108,8 +106,52 @@ class UsersAuth:
             'token': token,
         }
 
+    def get_user_authorization_status(self, user_object):
+        if user_object.is_with_card:
+            self.check_user_subscription(user_object)
+        else:
+            if not user_object.is_email_confirmed:
+                return {
+                    'is_success': True,
+                    'status': LoginStatus.NEED_CONFIRM_EMAIL,
+                }
+            if not user_object.is_company_details_filled:
+                return {
+                    'is_success': True,
+                    'status': LoginStatus.FILL_COMPANY_DETAILS,
+                }
+
+    def login_google(self, auth_google_token: AuthGoogleToken):
+        client_id = os.getenv("CLIENT_GOOGLE_ID")
+        google_request = google_requests.Request()
+        idinfo = id_token.verify_oauth2_token(auth_google_token, google_request, client_id)
+        if idinfo:
+            email = idinfo.get("email")
+        else:
+            return {
+                'is_success': True,
+                'status': SignUpStatus.NOT_VALID_EMAIL
+            }
+        user_object = self.user_persistence_service.get_user_by_email(email)
+        if user_object:
+            token_info = {
+                "id": user_object.id,
+            }
+            token = create_access_token(token_info)
+            self.get_user_authorization_status(user_object)
+            return {
+                'is_success': True,
+                'status': LoginStatus.SUCCESS,
+                'token': token
+            }
+        else:
+            logger.info("Password Verification Failed")
+            return {
+                'is_success': True,
+                'status': LoginStatus.INCORRECT_PASSWORD_OR_EMAIL
+            }
+
     def create_account(self, user_form: UserSignUpForm):
-        response = {}
         user_form.password = get_password_hash(user_form.password)
         check_user_object = self.user_persistence_service.get_user_by_email(user_form.email)
         is_without_card = user_form.is_without_card
@@ -123,7 +165,6 @@ class UsersAuth:
         user_object = self.add_user(is_without_card, customer_id, user_form)
         self.user_persistence_service.update_user_parent_v2(user_object.get("user_filed_id"))
         token = create_access_token(user_object)
-        response.update({"token": token})
         logger.info("Token created")
         if is_without_card:
             template_id = self.send_grid_persistence_service.get_template_by_alias(
@@ -142,6 +183,8 @@ class UsersAuth:
                 template_placeholder={"full_name": user_object.get("full_name"), "link": confirm_email_url},
             )
             self.user_persistence_service.set_verified_email_sent_now(user_object.get('id'))
+            user_plan = self.plans_service.set_plan_without_card(user_object.get("id"), True)
+            logger.info(f"Set plan {user_plan.title} for new user")
             logger.info("Confirmation Email Sent")
             return {
                 'is_success': True,
@@ -183,19 +226,7 @@ class UsersAuth:
                     "id": user_object.id,
                 }
                 token = create_access_token(token_info)
-                if user_object.is_with_card:
-                    self.check_user_subscription(user_object)
-                else:
-                    if not user_object.is_email_confirmed:
-                        return {
-                            'is_success': True,
-                            'status': LoginStatus.NEED_CONFIRM_EMAIL,
-                        }
-                    if not user_object.is_company_details_filled:
-                        return {
-                            'is_success': True,
-                            'status': LoginStatus.FILL_COMPANY_DETAILS,
-                        }
+                self.get_user_authorization_status(user_object)
                 return {
                     'is_success': True,
                     'status': LoginStatus.SUCCESS,

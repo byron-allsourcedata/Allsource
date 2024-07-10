@@ -42,9 +42,17 @@ async def login_user(user_form: UserLoginForm, users_service: UsersAuth = Depend
         raise Exception(user_data.get('error'))
 
 
-@router.post("/sign-up_google", response_model=UserSignUpFormResponse)
+@router.post("/sign-up-google", response_model=UserSignUpFormResponse)
 async def create_user_google(auth_google_token: AuthGoogleToken, users: UsersAuth = Depends(get_users_auth_service)):
     user_data = users.create_account_google(auth_google_token)
+    if user_data.get('is_success'):
+        return UserSignUpFormResponse(status=user_data.get('status'), token=user_data.get("token"))
+    else:
+        raise Exception(user_data.get('error'))
+
+@router.post("/login-google", response_model=UserSignUpFormResponse)
+async def create_user_google(auth_google_token: AuthGoogleToken, users: UsersAuth = Depends(get_users_auth_service)):
+    user_data = users.login_google(auth_google_token)
     if user_data.get('is_success'):
         return UserSignUpFormResponse(status=user_data.get('status'), token=user_data.get("token"))
     else:

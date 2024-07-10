@@ -31,14 +31,10 @@ class PaymentsPlans:
 
     def set_plan_without_card(self, user_id):
         try:
-            user_subscription_id = None
             plan_without_card = self.db.query(SubscriptionPlan).filter(
                 SubscriptionPlan.id == WITHOUT_CARD_PLAN_ID).first()
-            user_subscription = self.subscription_service.get_subscription(user_id)
-            if user_subscription:
-                user_subscription_id = user_subscription.id
             plan_object = UserSubscriptionPlan(user_id=user_id, plan_id=plan_without_card.id, is_trial=True,
-                                               subscription_id=user_subscription_id)
+                                               subscription_id=user_id)
             self.db.add(plan_object)
             self.db.commit()
             return plan_without_card

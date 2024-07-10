@@ -44,7 +44,7 @@ def get_user_persistence_service(db: Session = Depends(get_db)):
 
 
 def check_user_subscription():
-    return UserAuthorizationStatus.NEED_CHOOSE_PLAN
+    return UserAuthorizationStatus.NEED_CHOOSE_PLAN.value
 
 
 def get_user_authorization_status(user: User):
@@ -52,9 +52,9 @@ def get_user_authorization_status(user: User):
         return check_user_subscription()
     else:
         if not user.is_email_confirmed:
-            return UserAuthorizationStatus.NEED_CONFIRM_EMAIL
+            return UserAuthorizationStatus.NEED_CONFIRM_EMAIL.value
         if not user.is_company_details_filled:
-            return UserAuthorizationStatus.FILL_COMPANY_DETAILS
+            return UserAuthorizationStatus.FILL_COMPANY_DETAILS.value
     return UserAuthorizationStatus.SUCCESS
 
 
