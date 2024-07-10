@@ -43,7 +43,7 @@ const VerifyToken = () => {
   }, [token, router]);
 
   return (
-    <div>Проверка токена</div>
+    <div>Check token, please wait</div>
   );
 };
 
