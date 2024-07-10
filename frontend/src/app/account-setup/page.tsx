@@ -1,21 +1,17 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Box, Button, TextField, Typography } from '@mui/material';
 import Image from 'next/image';
 import PersonIcon from '@mui/icons-material/Person';
 import { styles } from './accountStyles';
 import { useRouter} from 'next/navigation';
+import { useUser } from '../../context/UserContext'; 
+
 
 const AccountSetupPage = () => {
-  const [name, setName] = useState<string | null>(null);
   const [selectedEmployees, setSelectedEmployees] = useState<number | null>(null);
   const router = useRouter();
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const storedMe = sessionStorage.getItem('me');
-      setName(storedMe ? JSON.parse(storedMe)?.name : null);
-    }
-  }, []);
+  const { full_name } = useUser();
 
   const handleSignOut = () => {
     localStorage.clear();
@@ -54,7 +50,7 @@ const AccountSetupPage = () => {
       </Box>
       <Box sx={styles.formContainer}>
         <Typography variant="h5" component="h1" sx={styles.title}>
-          Welcome {name},
+          Welcome {full_name},
         </Typography>
         <Typography variant="body1" component="h2" sx={styles.subtitle}>
           Let&apos;s set up your account

@@ -15,6 +15,17 @@ export const CustomToast = ({ message }: { message: string }) => (
   </div>
 );
 
+export const CustomInfoToast = ({ message }: { message: string }) => (
+  <div style={{ color: 'orange' }}>
+    <Typography style={{ fontWeight: 'bold', }}>
+      Info
+    </Typography>
+    <Typography variant="body2">
+      {message}
+    </Typography>
+  </div>
+);
+
 export const CustomErrorToast = ({ message }: { message: string }) => (
   <div style={{ color: 'red' }}>
     <Typography style={{ fontWeight: 'bold', color: 'rgba(255, 0, 0, 1)' }}>
@@ -57,6 +68,25 @@ export const showErrorToast = (message: string, options: ToastOptions = {}) => {
     style: {
       background: '#FAE5E5',
       color: '#D8000C',
+      fontFamily: 'Nunito',
+      fontSize: '16px',
+      fontWeight: 'bold'
+    },
+    theme: "light",
+    transition: Bounce,
+    icon: false,
+    ...options
+  });
+};
+
+export const showInfoToast = (message: string, options: ToastOptions = {}) => {
+  toast.info(<CustomInfoToast message={message} />, {
+    position: "top-right",
+    autoClose: 4000,
+    hideProgressBar: false,
+    closeOnClick: true,
+    draggable: true,
+    style: {
       fontFamily: 'Nunito',
       fontSize: '16px',
       fontWeight: 'bold'
