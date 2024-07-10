@@ -19,10 +19,10 @@ const VerifyToken = () => {
           if (response.data.status === 'SUCCESS' || response.data.status === 'EMAIL_ALREADY_VERIFIED') {
             if (typeof window !== 'undefined') {
               if (response.data.status === 'EMAIL_ALREADY_VERIFIED') {
-                showInfoToast('Email has already been verified.')
+                showInfoToast('Email has already been verified')
               }
               else if (response.data.status === 'SUCCESS') {
-                showInfoToast('You have successfully verified your email!')
+                showInfoToast('You have successfully verified your email')
               }
               const newToken = response.data.token;
               localStorage.removeItem('token');

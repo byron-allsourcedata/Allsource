@@ -9,15 +9,8 @@ import { useUser } from '../../context/UserContext';
 
 
 const AccountSetupPage = () => {
-  const [name, setName] = useState<string | null>(null);
   const [selectedEmployees, setSelectedEmployees] = useState<number | null>(null);
   const router = useRouter();
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const storedMe = sessionStorage.getItem('me');
-      setName(storedMe ? JSON.parse(storedMe)?.full_name : null);
-    }
-  }, []);
   const { full_name } = useUser();
 
   const handleSignOut = () => {
