@@ -29,7 +29,7 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
     return JSONResponse(
         status_code=exc.status_code,
         content={
-            'status': exc.detail['status'],
+            'status': status_code,
             'detail': {'error': traceback.format_exc()}
         }
     )
