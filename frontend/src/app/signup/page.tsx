@@ -105,7 +105,10 @@ const Signup: React.FC = () => {
             if (typeof window !== 'undefined') {
               localStorage.setItem('token', responseData.token);
             }
-            sessionStorage.setItem('me', JSON.stringify({ email: formValues.email }));
+            sessionStorage.setItem('me', JSON.stringify({ 
+              email: formValues.email, 
+              full_name: formValues.full_name 
+            }));
             router.push('/choose-plan');
           } else if (responseData.status === "EMAIL_ALREADY_EXISTS") {
             showErrorToast('Email is associated with an account. Please login');
@@ -114,7 +117,10 @@ const Signup: React.FC = () => {
             if (typeof window !== 'undefined') {
               localStorage.setItem('token', responseData.token);
             }
-            sessionStorage.setItem('me', JSON.stringify({ email: formValues.email }));
+            sessionStorage.setItem('me', JSON.stringify({ 
+              email: formValues.email, 
+              full_name: formValues.full_name 
+            }));
             router.push('/email-verificate');
           }
         }

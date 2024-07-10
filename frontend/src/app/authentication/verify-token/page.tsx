@@ -2,7 +2,8 @@
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState, Suspense } from 'react';
 import axiosInstance from '../../../axios/axiosInterceptorInstance';
-import ToastNotification from '@/components/ToastNotification';
+import { showErrorToast, showInfoToast, showToast } from '@/components/ToastNotification';
+import { Pause } from '@mui/icons-material';
 
 const VerifyToken = () => {
   const router = useRouter();
@@ -14,17 +15,26 @@ const VerifyToken = () => {
       if (token) {
         try {
           const response = await axiosInstance.get(`/api/authentication/verify-token?token=${token}`);
-          console.log(response);
 
           if (response.data.status === 'SUCCESS' || response.data.status === 'EMAIL_ALREADY_VERIFIED') {
             if (typeof window !== 'undefined') {
+              if (response.data.status === 'EMAIL_ALREADY_VERIFIED') {
+                showInfoToast('Email has already been verified.')
+              }
+              else if (response.data.status === 'SUCCESS') {
+                showInfoToast('You have successfully verified your email!')
+              }
               const newToken = response.data.token;
               localStorage.removeItem('token');
               localStorage.setItem('token', newToken);
-              router.push('/dashboard');
+
+              setTimeout(() => {
+                router.push('/dashboard');
+              }, 2500); 
             }
           }
           else if (response.data.status === 'INCORRECT_TOKEN') {
+            showErrorToast('The link is incorrect or outdated')
             const localtoken = localStorage.getItem('token')
             if (localtoken) {
               router.push('/dashboard')
@@ -32,7 +42,7 @@ const VerifyToken = () => {
             else {
               router.push('/signin')
             }
-          } 
+          }
         } catch (error) {
           console.error('Error verifying token:', error);
         }
@@ -54,3 +64,7 @@ const VerifyTokenWithSuspense = () => (
 );
 
 export default VerifyTokenWithSuspense;
+function Sleep(arg0: number) {
+  throw new Error('Function not implemented.');
+}
+
