@@ -3,7 +3,6 @@ import logging
 from h11._abnf import status_code
 
 from config.base import Base
-from dependencies import request_logger
 from routers.users import router
 from fastapi.middleware.cors import CORSMiddleware
 import traceback
@@ -11,7 +10,6 @@ from fastapi import FastAPI, Request, Depends
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
-
 
 logging.basicConfig(
     level=logging.DEBUG,
@@ -29,8 +27,20 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
     return JSONResponse(
         status_code=exc.status_code,
         content={
-            'status': status_code,
+            'status': exc.detail,
             'detail': {'error': traceback.format_exc()}
+        }
+    )
+
+
+@app.exception_handler(Exception)
+async def http_exception_handler(request: Request, exc: Exception):
+    logger.error(f"HTTP Exception: {str(exc)}\n{traceback.format_exc()}")
+    return JSONResponse(
+        status_code=500,
+        content={
+            'status': 'Internal Server Error',
+            'detail': {'error': str(exc)}
         }
     )
 
@@ -54,4 +64,4 @@ app.add_middleware(
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"]
 )
-app.include_router(router, prefix=f"/api", dependencies=[Depends(request_logger)])
+app.include_router(router, prefix=f"/api")

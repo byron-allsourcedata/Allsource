@@ -1,6 +1,7 @@
 from typing import Optional
 from pydantic import BaseModel, Field
-from enums import SignUpStatus, LoginStatus, BaseEnum, VerificationEmail, UpdatePasswordStatus, ResetPasswordTemplate
+from enums import SignUpStatus, LoginStatus, BaseEnum, VerificationEmail, UpdatePasswordStatus, ResetPasswordTemplate, \
+    VerifyToken
 
 
 class UserSignUpForm(BaseModel):
@@ -52,3 +53,8 @@ class UpdatePasswordResponse(BaseModel):
 
 class CheckVerificationStatusResponse(BaseModel):
     status: VerificationEmail
+
+
+class VerifyTokenResponse(BaseModel):
+    status: VerifyToken
+    token: Optional[str] = None

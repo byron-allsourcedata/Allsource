@@ -63,3 +63,7 @@ class ResetPasswordTemplate(Enum):
     NOT_VALID_EMAIL = 'NOT_VALID_EMAIL'
     RESEND_TOO_SOON = 'RESEND_TOO_SOON'
 
+
+class VerifyToken(Enum):
+    SUCCESS = 'SUCCESS'
+    INCORRECT_TOKEN = 'INCORRECT_TOKEN'

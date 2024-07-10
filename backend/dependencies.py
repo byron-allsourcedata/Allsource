@@ -24,8 +24,8 @@ from models.users import Users as User
 from services.users_auth import UsersAuth
 from services.user_persistence_service import UserPersistenceService
 
-
 logger = logging.getLogger(__name__)
+
 
 def get_db():
     db = SessionLocal()
@@ -44,7 +44,7 @@ def get_user_persistence_service(db: Session = Depends(get_db)):
 
 
 def check_user_subscription():
-    return UserAuthorizationStatus.NEED_CHOOSE_PLAN.value
+    return UserAuthorizationStatus.NEED_CHOOSE_PLAN
 
 
 def get_user_authorization_status(user: User):
@@ -52,9 +52,9 @@ def get_user_authorization_status(user: User):
         return check_user_subscription()
     else:
         if not user.is_email_confirmed:
-            return UserAuthorizationStatus.NEED_CONFIRM_EMAIL.value
+            return UserAuthorizationStatus.NEED_CONFIRM_EMAIL
         if not user.is_company_details_filled:
-            return UserAuthorizationStatus.FILL_COMPANY_DETAILS.value
+            return UserAuthorizationStatus.FILL_COMPANY_DETAILS
     return UserAuthorizationStatus.SUCCESS
 
 
@@ -82,17 +82,13 @@ def check_user_authorization(Authorization: Annotated[str, Header()],
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail={
-                "status": 'NOT_FOUND'
-            }
+            detail='NOT_FOUND'
         )
     auth_status = get_user_authorization_status(user)
     if auth_status != UserAuthorizationStatus.SUCCESS:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail={
-                "status": auth_status
-            }
+            detail=auth_status.value
         )
     return user
 
@@ -106,7 +102,7 @@ def check_user_authentication(Authorization: Annotated[str, Header()],
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail={
-                "status": 'NOT_FOUND'
+                'NOT_FOUND'
             }
         )
     return user
@@ -126,7 +122,8 @@ def get_plans_service(db: Session = Depends(get_db),
 
 def get_users_auth_service(db: Session = Depends(get_db), payments_plans: PaymentsPlans = Depends(get_plans_service),
                            user_persistence_service: UserPersistenceService = Depends(get_user_persistence_service),
-                           send_grid_persistence_service: SendgridPersistenceService = Depends(get_send_grid_persistence_service)):
+                           send_grid_persistence_service: SendgridPersistenceService = Depends(
+                               get_send_grid_persistence_service)):
     return UsersAuth(db=db, plans_service=payments_plans, user_persistence_service=user_persistence_service,
                      send_grid_persistence_service=send_grid_persistence_service)
 
@@ -135,8 +132,10 @@ def get_users_service(user: User = Depends(check_user_authorization),
                       user_persistence_service: UserPersistenceService = Depends(get_user_persistence_service)):
     return UsersService(user=user, user_persistence_service=user_persistence_service)
 
+
 def get_dashboard_service(user: User = Depends(check_user_authorization)):
     return DashboardService(user=user)
+
 
 def get_users_email_verification_service(user: User = Depends(check_user_authentication),
                                          user_persistence_service: UserPersistenceService = Depends(
@@ -145,11 +144,3 @@ def get_users_email_verification_service(user: User = Depends(check_user_authent
                                              get_send_grid_persistence_service)):
     return UsersEmailVerificationService(user=user, user_persistence_service=user_persistence_service,
                                          send_grid_persistence_service=send_grid_persistence_service)
-
-def request_logger(r: Request):
-    payload = r.body() if not r.form() else ""
-    if r.client is None:
-        log = f"\nclient: WHO:WHERE\n{r.method} {r.url.path}\n{payload}"
-    else:
-        log = f"\nclient: {r.client.host}:{r.client.port}\n{r.method} {r.url.path}\n{payload}"
-    logger.info(log)

@@ -47,14 +47,14 @@ def create_access_token(token: Token, expires_delta: Union[timedelta, None] = No
     else:
         expire = datetime.utcnow() + timedelta(days=AuthConfig.expire_days)
 
-        if isinstance(token, dict):
-            token_dict = token
-        else:
-            token_dict = token.__dict__
+    if isinstance(token, dict):
+        token_dict = token
+    else:
+        token_dict = token.__dict__
 
-        token_dict.update({"exp": int(expire.timestamp())})
-        encoded_jwt = jwt.encode(token_dict, AuthConfig.secret_key, AuthConfig.algorithm)
-        return encoded_jwt
+    token_dict.update({"exp": int(expire.timestamp())})
+    encoded_jwt = jwt.encode(token_dict, AuthConfig.secret_key, AuthConfig.algorithm)
+    return encoded_jwt
 
 
 def get_password_hash(password):

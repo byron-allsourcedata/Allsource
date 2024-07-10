@@ -58,25 +58,17 @@ class UsersEmailVerificationService:
 
     def check_verification_status(self):
         if self.user.is_email_confirmed:
-            return {
-                'is_success': True,
-                'status': VerificationEmail.EMAIL_VERIFIED
-            }
-        return {
-            'is_success': True,
-            'status': VerificationEmail.EMAIL_NOT_VERIFIED
-        }
+            return VerificationEmail.EMAIL_VERIFIED
+        return VerificationEmail.EMAIL_NOT_VERIFIED
 
     def update_password(self, update_data: UpdatePassword):
         if update_data.password != update_data.confirm_password:
             return {
-                'is_success': True,
                 'status': UpdatePasswordStatus.PASSWORDS_DO_NOT_MATCH
             }
         update_data.password = get_password_hash(update_data.password)
         self.user_persistence_service.update_password(self.user.id, update_data.password)
         return {
-            'is_success': True,
             'status': UpdatePasswordStatus.PASSWORD_UPDATED_SUCCESSFULLY
         }
 

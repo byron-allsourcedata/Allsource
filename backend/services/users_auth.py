@@ -14,7 +14,7 @@ from models.users import Users
 import logging
 from google.oauth2 import id_token
 from enums import SignUpStatus, StripePaymentStatusEnum, AutomationSystemTemplate, LoginStatus, BaseEnum, \
-    ResetPasswordTemplate
+    ResetPasswordTemplate, VerifyToken
 from typing import Optional
 
 from schemas.auth_google_token import AuthGoogleToken
@@ -81,14 +81,12 @@ class UsersAuth:
             email = idinfo.get("email")
         else:
             return {
-                'is_success': True,
                 'status': SignUpStatus.NOT_VALID_EMAIL
             }
         check_user_object = self.user_persistence_service.get_user_by_email(email)
         if check_user_object is not None:
             logger.info(f"User already exists in database with email: {email}")
             return {
-                'is_success': True,
                 'status': SignUpStatus.EMAIL_ALREADY_EXISTS
             }
         customer_id = stripe_service.create_customer(google_payload)
@@ -101,7 +99,6 @@ class UsersAuth:
         logger.info(f"Set plan {user_plan.title} for new user")
         logger.info("Token created")
         return {
-            'is_success': True,
             'status': SignUpStatus.NEED_CHOOSE_PLAN,
             'token': token,
         }
@@ -129,7 +126,6 @@ class UsersAuth:
             email = idinfo.get("email")
         else:
             return {
-                'is_success': True,
                 'status': SignUpStatus.NOT_VALID_EMAIL
             }
         user_object = self.user_persistence_service.get_user_by_email(email)
@@ -140,14 +136,12 @@ class UsersAuth:
             token = create_access_token(token_info)
             self.get_user_authorization_status(user_object)
             return {
-                'is_success': True,
                 'status': LoginStatus.SUCCESS,
                 'token': token
             }
         else:
             logger.info("Password Verification Failed")
             return {
-                'is_success': True,
                 'status': LoginStatus.INCORRECT_PASSWORD_OR_EMAIL
             }
 
@@ -214,10 +208,7 @@ class UsersAuth:
         password = login_form.password
         user_object = self.user_persistence_service.get_user_by_email(email)
         if not user_object:
-            return {
-                'is_success': True,
-                'status': LoginStatus.INCORRECT_PASSWORD_OR_EMAIL,
-            }
+            return {'status': LoginStatus.INCORRECT_PASSWORD_OR_EMAIL }
         if user_object:
             check_password = verify_password(password, user_object.password)
             if check_password:
@@ -228,14 +219,12 @@ class UsersAuth:
                 token = create_access_token(token_info)
                 self.get_user_authorization_status(user_object)
                 return {
-                    'is_success': True,
                     'status': LoginStatus.SUCCESS,
                     'token': token
                 }
             else:
                 logger.info("Password Verification Failed")
                 return {
-                    'is_success': True,
                     'status': LoginStatus.INCORRECT_PASSWORD_OR_EMAIL
                 }
 
@@ -248,14 +237,15 @@ class UsersAuth:
                 self.user_persistence_service.email_confirmed(check_user_object.id)
                 logger.info(f"Set plan {user_plan.title} for new user")
             self.user_persistence_service.email_confirmed(check_user_object.id)
-            return {
-                'is_success': True,
-                'status': BaseEnum.SUCCESS
+            token_info = {
+                "id": check_user_object.id,
             }
-        return {
-            'is_success': True,
-            'status': BaseEnum.FAILURE
-        }
+            user_token = create_access_token(token_info)
+            return {
+                'status': VerifyToken.SUCCESS,
+                'user_token': user_token
+            }
+        return {'status': VerifyToken.INCORRECT_TOKEN}
 
     def reset_password(self, reset_password_form: ResetPasswordForm):
         if reset_password_form is not None and reset_password_form:
@@ -264,10 +254,7 @@ class UsersAuth:
             time_now = datetime.now()
             if message_expiration_time is not None:
                 if (message_expiration_time + timedelta(minutes=1)) > time_now:
-                    return {
-                        'is_success': True,
-                        'status': ResetPasswordTemplate.RESEND_TOO_SOON
-                    }
+                    return ResetPasswordTemplate.RESEND_TOO_SOON
             token_info = {
                 "id": db_user.id,
             }
@@ -286,11 +273,5 @@ class UsersAuth:
                 )
                 self.user_persistence_service.set_reset_password_sent_now(db_user.id)
                 logger.info("Confirmation Email Sent")
-                return {
-                    'is_success': True,
-                    'status': ResetPasswordTemplate.SUCCESS
-                }
-        return {
-            'is_success': True,
-            'status': ResetPasswordTemplate.NOT_VALID_EMAIL
-        }
+                return ResetPasswordTemplate.SUCCESS
+        return ResetPasswordTemplate.NOT_VALID_EMAIL
