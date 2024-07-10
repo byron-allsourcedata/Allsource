@@ -4,10 +4,10 @@ from sqlalchemy.orm import Session
 from models.users import Users
 import logging
 
-
 logger = logging.getLogger(__name__)
 
-class UserPersistenceService:
+
+class UserPersistence:
     def __init__(self, db: Session):
         self.db = db
 

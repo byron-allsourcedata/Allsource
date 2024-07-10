@@ -6,23 +6,24 @@ from jose import jwt, JWTError
 
 from config.auth import AuthConfig
 from config.database import SessionLocal
-from contextlib import contextmanager
 from sqlalchemy.orm import Session
 from typing_extensions import Annotated
-from fastapi import Depends, Header, Request, HTTPException, status, Query
+from fastapi import Depends, Header, HTTPException, status
 
 from enums import UserAuthorizationStatus
 from exceptions import InvalidToken
+from persistence.plans_persistence import PlansPersistence
 from schemas.auth_token import Token
 from services.dashboard_service import DashboardService
 from services.payments_plans import PaymentsPlans
-from services.sendgrid_persistence import SendgridPersistenceService
+from persistence.sendgrid_persistence import SendgridPersistence
+from services.plans import PlansService
 from services.subscriptions import SubscriptionService
 from services.users_email_verification import UsersEmailVerificationService
 from services.users import UsersService
 from models.users import Users as User
 from services.users_auth import UsersAuth
-from services.user_persistence_service import UserPersistenceService
+from persistence.user_persistence import UserPersistence
 
 logger = logging.getLogger(__name__)
 
@@ -35,12 +36,15 @@ def get_db():
         db.close()
 
 
+def get_plans_persistence(db: Session = Depends(get_db)):
+    return PlansPersistence(db=db)
+
 def get_send_grid_persistence_service(db: Session = Depends(get_db)):
-    return SendgridPersistenceService(db=db)
+    return SendgridPersistence(db=db)
 
 
 def get_user_persistence_service(db: Session = Depends(get_db)):
-    return UserPersistenceService(db=db)
+    return UserPersistence(db=db)
 
 
 def check_user_subscription():
@@ -75,7 +79,7 @@ def parse_jwt_data(Authorization: Annotated[str, Header()]) -> Token:
 
 
 def check_user_authorization(Authorization: Annotated[str, Header()],
-                             user_persistence_service: UserPersistenceService = Depends(
+                             user_persistence_service: UserPersistence = Depends(
                                  get_user_persistence_service)) -> Token:
     user_data = parse_jwt_data(Authorization)
     user = user_persistence_service.get_user_by_id(user_data.id)
@@ -94,7 +98,7 @@ def check_user_authorization(Authorization: Annotated[str, Header()],
 
 
 def check_user_authentication(Authorization: Annotated[str, Header()],
-                              user_persistence_service: UserPersistenceService = Depends(
+                              user_persistence_service: UserPersistence = Depends(
                                   get_user_persistence_service)) -> Token:
     user_data = parse_jwt_data(Authorization)
     user = user_persistence_service.get_user_by_id(user_data.id)
@@ -109,27 +113,27 @@ def check_user_authentication(Authorization: Annotated[str, Header()],
 
 
 def get_subscription_service(db: Session = Depends(get_db),
-                             user_persistence_service: UserPersistenceService = Depends(get_user_persistence_service)):
+                             user_persistence_service: UserPersistence = Depends(get_user_persistence_service)):
     return SubscriptionService(db=db, user_persistence_service=user_persistence_service)
 
 
 def get_plans_service(db: Session = Depends(get_db),
                       subscription_service: SubscriptionService = Depends(get_subscription_service),
-                      user_persistence_service: UserPersistenceService = Depends(get_user_persistence_service)):
+                      user_persistence_service: UserPersistence = Depends(get_user_persistence_service)):
     return PaymentsPlans(db=db, subscription_service=subscription_service,
                          user_persistence_service=user_persistence_service)
 
 
 def get_users_auth_service(db: Session = Depends(get_db), payments_plans: PaymentsPlans = Depends(get_plans_service),
-                           user_persistence_service: UserPersistenceService = Depends(get_user_persistence_service),
-                           send_grid_persistence_service: SendgridPersistenceService = Depends(
+                           user_persistence_service: UserPersistence = Depends(get_user_persistence_service),
+                           send_grid_persistence_service: SendgridPersistence = Depends(
                                get_send_grid_persistence_service)):
     return UsersAuth(db=db, plans_service=payments_plans, user_persistence_service=user_persistence_service,
                      send_grid_persistence_service=send_grid_persistence_service)
 
 
 def get_users_service(user: User = Depends(check_user_authorization),
-                      user_persistence_service: UserPersistenceService = Depends(get_user_persistence_service)):
+                      user_persistence_service: UserPersistence = Depends(get_user_persistence_service)):
     return UsersService(user=user, user_persistence_service=user_persistence_service)
 
 
@@ -137,10 +141,15 @@ def get_dashboard_service(user: User = Depends(check_user_authorization)):
     return DashboardService(user=user)
 
 
+def get_plans_service(user: User = Depends(check_user_authorization),
+                      plans_persistence: PlansPersistence = Depends(get_plans_persistence)):
+    return PlansService(user=user, plans_persistence=plans_persistence)
+
+
 def get_users_email_verification_service(user: User = Depends(check_user_authentication),
-                                         user_persistence_service: UserPersistenceService = Depends(
+                                         user_persistence_service: UserPersistence = Depends(
                                              get_user_persistence_service),
-                                         send_grid_persistence_service: SendgridPersistenceService = Depends(
+                                         send_grid_persistence_service: SendgridPersistence = Depends(
                                              get_send_grid_persistence_service)):
     return UsersEmailVerificationService(user=user, user_persistence_service=user_persistence_service,
                                          send_grid_persistence_service=send_grid_persistence_service)

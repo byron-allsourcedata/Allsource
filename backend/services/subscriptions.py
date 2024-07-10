@@ -1,7 +1,6 @@
-import logging
 from datetime import datetime
 
-from .user_persistence_service import UserPersistenceService
+from persistence.user_persistence import UserPersistence
 from models.subscriptions import Subscription
 from sqlalchemy.orm import Session
 
@@ -9,7 +8,7 @@ ACTIVE_STATUSES = ["active", "trialing", "completed"]
 
 
 class SubscriptionService:
-    def __init__(self, db: Session, user_persistence_service: UserPersistenceService):
+    def __init__(self, db: Session, user_persistence_service: UserPersistence):
         self.db = db
         self.user_persistence_service = user_persistence_service
 
