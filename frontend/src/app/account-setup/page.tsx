@@ -12,28 +12,13 @@ const AccountSetupPage = () => {
   const [name, setName] = useState<string | null>(null);
   const [selectedEmployees, setSelectedEmployees] = useState<number | null>(null);
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState<boolean>(true);
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const storedMe = sessionStorage.getItem('me');
       setName(storedMe ? JSON.parse(storedMe)?.full_name : null);
     }
   }, []);
-  const { email, full_name } = useUser();
-
-  useEffect(() => {
-    if (full_name) {
-    console.log('null1234')
-    }
-  }, [full_name]);
-
-
- 
-  console.log(full_name)
-  
-
-
-
+  const { full_name } = useUser();
 
   const handleSignOut = () => {
     localStorage.clear();
