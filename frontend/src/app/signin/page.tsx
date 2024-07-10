@@ -218,7 +218,7 @@ const Signup: React.FC = () => {
             sx={loginStyles.submitButton}
             fullWidth
           >
-            Activate Account
+            Login
           </Button>
         </Box>
         <Typography variant="body2" sx={loginStyles.resetPassword}>
