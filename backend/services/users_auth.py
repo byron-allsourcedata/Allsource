@@ -94,9 +94,6 @@ class UsersAuth:
         token = create_access_token(user_object)
         logger.info("Token created")
         self.user_persistence_service.email_confirmed(user_object.id)
-        if user_object.is_with_card:
-            user_plan = self.payments_service.set_default_plan(user_object.get("user_filed_id"), True)
-            logger.info(f"Set plan {user_plan.title} for new user")
         logger.info("Token created")
         return {
             'status': SignUpStatus.NEED_CHOOSE_PLAN,
@@ -227,9 +224,6 @@ class UsersAuth:
         data = decode_jwt_data(token)
         check_user_object = self.user_persistence_service.get_user_by_id(data.get('id'))
         if check_user_object:
-            if check_user_object.is_with_card:
-                user_plan = self.payments_service.set_default_plan(check_user_object.id, True)
-                logger.info(f"Set plan {user_plan.title} for new user")
             self.user_persistence_service.email_confirmed(check_user_object.id)
             token_info = {
                 "id": check_user_object.id,
