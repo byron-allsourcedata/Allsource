@@ -3,11 +3,10 @@ import logging
 from h11._abnf import status_code
 
 from config.base import Base
-from routers.subscriptions import router_subscription
-from routers.users import router_user
+from routers import router
 from fastapi.middleware.cors import CORSMiddleware
 import traceback
-from fastapi import FastAPI, Request, Depends
+from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -65,5 +64,5 @@ app.add_middleware(
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"]
 )
-app.include_router(router_user)
-app.include_router(router_subscription)
+
+app.include_router(router)
