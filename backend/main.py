@@ -65,5 +65,5 @@ app.add_middleware(
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"]
 )
-app.include_router(router_user, prefix=f"/api")
-app.include_router(router_subscription, prefix=f"/api")
+app.include_router(router_user)
+app.include_router(router_subscription)
