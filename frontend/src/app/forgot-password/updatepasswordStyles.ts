@@ -1,0 +1,81 @@
+import { SxProps, Theme } from '@mui/system';
+
+export const updatepasswordStyles: { [key: string]: SxProps<Theme> } = {
+    container: {
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '50vh',
+        backgroundColor: '#ffffff',
+        width: '100%',
+        maxWidth: '31rem',
+        margin: '0 auto',
+        position: 'relative',
+        boxShadow: '0rem 2px 8px 0px #00000033',
+        borderRadius: '0.625rem',
+        border: '0.125rem solid transparent',
+        marginTop: '120px',
+        '@media (max-width: 440px)': {
+            boxShadow: '0rem 0px 0px 0px #00000033',
+            border: 'none',
+            marginTop: '3.75em',
+        },
+    },
+    logoContainer: {
+        paddingLeft: '2.5em',
+        paddingRight: '0.5em',
+    },
+    title: {
+        mb: 2,
+        fontWeight: 'bold',
+        fontSize: '28px',
+        whiteSpace: 'nowrap',
+        textAlign: 'center',
+        padding: '0em 1rem 0rem',
+        fontFamily: 'Nunito',
+    },
+    subtitle: {
+        mb: 2,
+        fontWeight: 'bold',
+        color: 'gray',
+        fontSize: '16px',
+        whiteSpace: 'nowrap',
+        textAlign: 'center',
+        padding: '0 1rem 2rem',
+        fontFamily: 'Nunito',
+    },
+    form: {
+        width: '100%',
+        maxWidth: '360px',
+        fontFamily: 'Nunito',
+        margin: '1.5em 0 1em',
+        padding: '0.5em'
+    },
+    inputLabel: {
+        fontFamily: 'Nunito',
+        fontSize: '16px',
+    },
+    submitButton: {
+        mt: 2,
+        backgroundColor: '#FFFFFF',
+        color: '#F45745',
+        '&:hover': {
+            borderColor: '#000000',
+            color: '#FFFFFF',
+            backgroundColor: '#F45745',
+        },
+        fontWeight: 'bold',
+        margin: '24px 0px 0px 0px',
+        textTransform: 'none',
+        minHeight: '3rem',
+        fontSize: '16px',
+        fontFamily: 'Nunito',
+    },
+    resetPassword: {
+        mt: 2,
+        margin: '3em 0em 0em',
+        fontFamily: 'Nunito',
+        fontSize: '16px',
+    },
+}
