@@ -268,7 +268,7 @@ class UsersAuth:
             template_id = self.send_grid_persistence_service.get_template_by_alias(
                 AutomationSystemTemplate.FORGOT_PASSWORD_TEMPLATE.value)
             if db_user:
-                confirm_email_url = f"{os.getenv('SITE_HOST_URL')}/forgot-password?token={token}"
+                confirm_email_url = f"{os.getenv('DOMAIN')}/forgot-password?token={token}"
                 mail_object = SendgridHandler()
                 mail_object.send_sign_up_mail(
                     subject="Maximize Password Reset Request",
