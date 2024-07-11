@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { Box, Button, TextField, Typography, IconButton, InputAdornment } from '@mui/material';
@@ -10,7 +10,7 @@ import { AxiosError } from 'axios';
 import { updatepasswordStyles } from './updatepasswordStyles';
 import { showErrorToast, showToast } from '../../components/ToastNotification';
 
-const Signup: React.FC = () => {
+const ForgotPassword: React.FC = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
@@ -200,4 +200,12 @@ const Signup: React.FC = () => {
   );
 };
 
-export default Signup;
+const ForgotPasswordPage = () => {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ForgotPassword />
+    </Suspense>
+  );
+};
+
+export default ForgotPasswordPage;
