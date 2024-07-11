@@ -1,15 +1,5 @@
 import logging
-from datetime import datetime
-from enums import StripePaymentStatusEnum
-from models.plans import SubscriptionPlan, UserSubscriptionPlan
-from models.users import Users, User
-from persistence.plans_persistence import PlansPersistence
-from persistence.user_persistence import UserPersistence
-from models.subscriptions import Subscription
-from sqlalchemy.orm import Session
-
 from services.subscriptions import SubscriptionService
-from utils import get_utc_aware_date_for_postgres
 
 ACTIVE_STATUSES = ["active", "trialing", "completed"]
 TRIAL_STUB_PLAN_ID = '1'
@@ -17,8 +7,7 @@ logger = logging.getLogger(__name__)
 
 
 class WebhookService:
-    def __init__(self, plans_persistence: PlansPersistence, subscription_service: SubscriptionService):
-        self.plans_persistence = plans_persistence
+    def __init__(self, subscription_service: SubscriptionService):
         self.subscription_service = subscription_service
 
     def update_payment_confirmation(self, payload):

@@ -24,7 +24,9 @@ class PaymentsService:
             mode="subscription",
             trial_period_days=trial_period,
         )
-    def create_stripe_checkout_session(self, success_url: str, cancel_url: str, customer_id: str, line_items: List[dict],
+
+    def create_stripe_checkout_session(self, success_url: str, cancel_url: str, customer_id: str,
+                                       line_items: List[dict],
                                        mode: str, trial_period_days: int):
         import stripe
         if trial_period_days != 0:
@@ -47,3 +49,6 @@ class PaymentsService:
                 payment_method_types=["card"], line_items=line_items, mode=mode
             )
         return session.url
+
+    def get_user_subscription_authorization_status(self):
+        self.plans_service.get_user_subscription_authorization_status()

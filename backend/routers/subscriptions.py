@@ -9,11 +9,13 @@ router = APIRouter()
 
 @router.get("/stripe-plans")
 async def get_subscription_plans(plans_service: PlansService = Depends(get_plans_service)):
+    plans_service.get_user_subscription_authorization_status()
     return plans_service.get_subscription_plans()
 
 
 @router.get("/session/new")
 async def create_customer_session(price_id: str, payments_service=Depends(get_payments_service)):
+    payments_service.get_user_subscription_authorization_status()
     return payments_service.create_customer_session(price_id)
 
 
