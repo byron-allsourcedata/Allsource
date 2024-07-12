@@ -50,22 +50,18 @@ class UsersAuth:
             full_name=user_form.full_name if google_payload is None or len(google_payload) == 0 else google_payload.get(
                 "full_name"),
             image=user_form.image if hasattr(user_form, 'image') else None,
-            company=user_form.image if hasattr(user_form, 'company') else None,
+            company_name=user_form.image if hasattr(user_form, 'company') else None,
             created_at=self.get_utc_aware_date_for_mssql(),
             last_login=self.get_utc_aware_date_for_mssql(),
             payment_status=StripePaymentStatusEnum.PENDING.name,
             parent_id=0,
             customer_id=customer_id,
-            website=user_form.image if hasattr(user_form, 'website') else None
         )
         if not is_without_card:
             user_object.is_with_card = True
         self.db.add(user_object)
         self.db.commit()
-        token_info = {
-            "id": user_object.id,
-        }
-        return token_info
+        return user_object
 
     def create_account_google(self, auth_google_token: AuthGoogleToken):
         client_id = os.getenv("CLIENT_GOOGLE_ID")
@@ -90,8 +86,11 @@ class UsersAuth:
             }
         customer_id = stripe_service.create_customer(google_payload)
         user_object = self.add_user(is_without_card, customer_id=customer_id, google_payload=google_payload)
-        self.user_persistence_service.update_user_parent_v2(user_object.get("user_filed_id"))
-        token = create_access_token(user_object)
+        self.user_persistence_service.update_user_parent_v2(user_object.id)
+        token_info = {
+            "id": user_object.id,
+        }
+        token = create_access_token(token_info)
         logger.info("Token created")
         self.user_persistence_service.email_confirmed(user_object.id)
         logger.info("Token created")
@@ -154,8 +153,11 @@ class UsersAuth:
             }
         customer_id = stripe_service.create_customer(user_form)
         user_object = self.add_user(is_without_card, customer_id, user_form)
-        self.user_persistence_service.update_user_parent_v2(user_object.get("user_filed_id"))
-        token = create_access_token(user_object)
+        self.user_persistence_service.update_user_parent_v2(user_object.id)
+        token_info = {
+            "id": user_object.id,
+        }
+        token = create_access_token(token_info)
         logger.info("Token created")
         if is_without_card:
             template_id = self.send_grid_persistence_service.get_template_by_alias(
@@ -165,15 +167,15 @@ class UsersAuth:
                     'is_success': False,
                     'error': 'email template not found'
                 }
-            confirm_email_url = f"{os.getenv('DOMAIN')}/authentication/verify-token?token={token}"
+            confirm_email_url = f"{os.getenv('SITE_HOST_URL')}/authentication/verify-token?token={token}"
             mail_object = SendgridHandler()
             mail_object.send_sign_up_mail(
                 subject="Please Verify Your Email",
                 to_emails=user_form.email,
                 template_id=template_id,
-                template_placeholder={"full_name": user_object.get("full_name"), "link": confirm_email_url},
+                template_placeholder={"full_name": user_object.full_name, "link": confirm_email_url},
             )
-            self.user_persistence_service.set_verified_email_sent_now(user_object.get('id'))
+            self.user_persistence_service.set_verified_email_sent_now(user_object.id)
             logger.info("Confirmation Email Sent")
             return {
                 'is_success': True,
@@ -265,7 +267,7 @@ class UsersAuth:
             template_id = self.send_grid_persistence_service.get_template_by_alias(
                 AutomationSystemTemplate.FORGOT_PASSWORD_TEMPLATE.value)
             if db_user:
-                confirm_email_url = f"{os.getenv('DOMAIN')}/forgot-password?token={token}"
+                confirm_email_url = f"{os.getenv('SITE_HOST_URL')}/forgot-password?token={token}"
                 mail_object = SendgridHandler()
                 mail_object.send_sign_up_mail(
                     subject="Maximize Password Reset Request",

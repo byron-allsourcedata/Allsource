@@ -22,4 +22,4 @@ async def create_customer_session(price_id: str, payments_service=Depends(get_pa
 @router.post("/update-subscription-webhook")
 async def update_payment_confirmation(request: fastRequest, webhook_service: WebhookService = Depends(get_webhook)):
     payload = await request.json()
-    webhook_service.update_payment_confirmation(payload)
+    return webhook_service.update_payment_confirmation(payload)

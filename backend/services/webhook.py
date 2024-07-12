@@ -16,6 +16,7 @@ class WebhookService:
         status = payload.get("data").get("object").get("status")
         is_subscription_active = status in ['active', 'trialing']
         user_data = self.subscription_service.get_userid_by_customer(customer_id)
+        print(customer_id)
         current_plan = self.subscription_service.get_current_user_plan(user_data.id)
         if current_plan is not None:
             user_plan, plan_info = current_plan
@@ -47,6 +48,5 @@ class WebhookService:
                 self.subscription_service.create_new_usp(user_data.id, user_subscription.id, request_price_id)
             else:
                 self.subscription_service.update_subscription_id(user_plan["id"], user_subscription.id)
-
             return self.subscription_service.construct_webhook_response(user_subscription)
         return payload

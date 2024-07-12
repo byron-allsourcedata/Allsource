@@ -34,24 +34,6 @@ class PlansService:
                 return UserAuthorizationStatus.FILL_COMPANY_DETAILS
         return UserAuthorizationStatus.SUCCESS
 
-    def check_user_subscription_authorization(Authorization: Annotated[str, Header()],
-                                              user_persistence_service: UserPersistence = Depends(
-                                                  get_user_persistence_service)) -> Token:
-        user = check_user_authentication(Authorization, user_persistence_service)
-        if not user:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail='NOT_FOUND'
-            )
-        auth_status = get_user_subscription_authorization_status(user)
-        if auth_status != UserAuthorizationStatus.SUCCESS:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=auth_status.value
-            )
-        return user
-
-
     def get_subscription_plans(self):
         stripe_plans = self.plans_persistence.get_stripe_plans()
         response = {"stripe_plans": []}

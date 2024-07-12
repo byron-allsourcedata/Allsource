@@ -64,6 +64,11 @@ class ResetPasswordTemplate(Enum):
     RESEND_TOO_SOON = 'RESEND_TOO_SOON'
 
 
+class CompanyInfoTemplate(Enum):
+    SUCCESS = 'SUCCESS'
+    IS_WITHOUT_CARD = 'IS_WITHOUT_CARD'
+
+
 class VerifyToken(Enum):
     SUCCESS = 'SUCCESS'
     EMAIL_ALREADY_VERIFIED = 'EMAIL_ALREADY_VERIFIED'

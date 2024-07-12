@@ -105,7 +105,6 @@ class SubscriptionService:
                 }
             }
         }
-
         return response
 
     def is_active(sub_status, end_date):
