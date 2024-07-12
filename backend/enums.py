@@ -66,4 +66,5 @@ class ResetPasswordTemplate(Enum):
 
 class VerifyToken(Enum):
     SUCCESS = 'SUCCESS'
+    EMAIL_ALREADY_VERIFIED = 'EMAIL_ALREADY_VERIFIED'
     INCORRECT_TOKEN = 'INCORRECT_TOKEN'

@@ -20,7 +20,7 @@ const ConfirmSend: React.FC = () => {
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    router.push('/login');
+    router.push('/signin');
   };
   
   return (
@@ -36,7 +36,7 @@ const ConfirmSend: React.FC = () => {
         If <strong>{email}</strong> exists, you will receive an email there shortly.
         </Typography>
         <Typography sx={confirmStyles.text}>
-         If you haven’t received an email within that timeframe, please check your spam folder or <Link href="/reset_password" sx={confirmStyles.loginLink}>try sending again.</Link>
+         If you haven’t received an email within that timeframe, please check your spam folder or <Link href="/reset-password" sx={confirmStyles.loginLink}>try sending again.</Link>
         </Typography>
 
         <Box component="form" onSubmit={handleSubmit} sx={confirmStyles.form}>

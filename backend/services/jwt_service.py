@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from passlib.context import CryptContext
+from passlib.hash import pbkdf2_sha256
 from typing import Dict, Mapping, Union
 from jose import jwt
 from config.auth import AuthConfig
@@ -9,11 +9,10 @@ import logging
 
 
 logger = logging.getLogger(__name__)
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 def verify_password(plain_password, hashed_password):
-    return pwd_context.verify(plain_password, hashed_password)
+    return pbkdf2_sha256.verify(plain_password, hashed_password)
 
 
 def decode_jwt_from_headers(headers: dict) -> Mapping:
@@ -58,4 +57,4 @@ def create_access_token(token: Token, expires_delta: Union[timedelta, None] = No
 
 
 def get_password_hash(password):
-    return pwd_context.hash(password)
+    return pbkdf2_sha256.hash(password, rounds=123, salt_size=16)

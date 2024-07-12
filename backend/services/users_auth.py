@@ -165,7 +165,7 @@ class UsersAuth:
                     'is_success': False,
                     'error': 'email template not found'
                 }
-            confirm_email_url = f"{os.getenv('SITE_HOST_URL')}/authentication/verify-token?token={token}"
+            confirm_email_url = f"{os.getenv('DOMAIN')}/authentication/verify-token?token={token}"
             mail_object = SendgridHandler()
             mail_object.send_sign_up_mail(
                 subject="Please Verify Your Email",
@@ -221,9 +221,24 @@ class UsersAuth:
                 }
 
     def verify_token(self, token):
-        data = decode_jwt_data(token)
+        try:
+            data = decode_jwt_data(token)
+        except:
+            return {'status': VerifyToken.INCORRECT_TOKEN}
         check_user_object = self.user_persistence_service.get_user_by_id(data.get('id'))
         if check_user_object:
+            if check_user_object.is_email_confirmed:
+                token_info = {
+                    "id": check_user_object.id,
+                }
+                user_token = create_access_token(token_info)
+                return {
+                    'status': VerifyToken.EMAIL_ALREADY_VERIFIED,
+                    'user_token': user_token
+                }
+            if check_user_object.is_with_card:
+                user_plan = self.plans_service.set_default_plan(check_user_object.id, True)
+                logger.info(f"Set plan {user_plan.title} for new user")
             self.user_persistence_service.email_confirmed(check_user_object.id)
             token_info = {
                 "id": check_user_object.id,
@@ -250,7 +265,7 @@ class UsersAuth:
             template_id = self.send_grid_persistence_service.get_template_by_alias(
                 AutomationSystemTemplate.FORGOT_PASSWORD_TEMPLATE.value)
             if db_user:
-                confirm_email_url = f"{os.getenv('SITE_HOST_URL')}/forgot-password?token={token}"
+                confirm_email_url = f"{os.getenv('DOMAIN')}/forgot-password?token={token}"
                 mail_object = SendgridHandler()
                 mail_object.send_sign_up_mail(
                     subject="Maximize Password Reset Request",

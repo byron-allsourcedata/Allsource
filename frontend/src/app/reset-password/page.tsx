@@ -59,7 +59,7 @@ const Signup: React.FC = () => {
 
       if (response.status === 200) {
         sessionStorage.setItem('me', JSON.stringify({ email: formValues.email }));
-        router.push('/confirm-send');
+        router.push('/reset-password/confirm-send');
       }
     } catch (err) {
       const error = err as AxiosError;
