@@ -22,7 +22,7 @@ class UserSubscriptions(Base):
     price = Column(NUMERIC(18, 2))
     price_id = Column(VARCHAR)
     user_id = Column(BIGINT)
-    transaction_id = Column(BIGINT)
+    transaction_id = Column(TEXT)
     invoice_id = Column(VARCHAR)
     invoice_link = Column(VARCHAR)
     subscription_id = Column(VARCHAR)

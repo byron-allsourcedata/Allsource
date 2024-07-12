@@ -1,9 +1,11 @@
 import logging
 from sqlalchemy.orm import Session
 
+from enums import UserAuthorizationStatus
 from models.users import Users
 from persistence.plans_persistence import PlansPersistence
-from models.plans import SubscriptionPlan
+from models.plans import SubscriptionPlan, UserSubscriptionPlan
+from services.subscriptions import SubscriptionService
 
 logger = logging.getLogger(__name__)
 TRIAL_STUB_PLAN_ID = 17
@@ -12,12 +14,46 @@ WITHOUT_CARD_PLAN_ID = 15
 
 class PlansService:
 
-    def __init__(self, user: Users, db: Session, plans_persistence: PlansPersistence):
-        self.db = db
-        self.user_persistence_service = plans_persistence
+    def __init__(self, user: Users, plans_persistence: PlansPersistence,
+                 subscription_service: SubscriptionService):
+        self.plans_persistence = plans_persistence
+        self.user = user
+        self.subscription_service = subscription_service
+
+    def get_customer_id(self):
+        return self.user.customer_id
+
+    def is_had_trial_period(self):
+        return not self.subscription_service.is_had_trial_period(self.user.id)
+
+    def get_user_subscription_authorization_status(self):
+        if not self.user.is_with_card:
+            if not self.user.is_email_confirmed:
+                return UserAuthorizationStatus.NEED_CONFIRM_EMAIL
+            if not self.user.is_company_details_filled:
+                return UserAuthorizationStatus.FILL_COMPANY_DETAILS
+        return UserAuthorizationStatus.SUCCESS
+
+    def check_user_subscription_authorization(Authorization: Annotated[str, Header()],
+                                              user_persistence_service: UserPersistence = Depends(
+                                                  get_user_persistence_service)) -> Token:
+        user = check_user_authentication(Authorization, user_persistence_service)
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail='NOT_FOUND'
+            )
+        auth_status = get_user_subscription_authorization_status(user)
+        if auth_status != UserAuthorizationStatus.SUCCESS:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=auth_status.value
+            )
+        return user
+
 
     def get_subscription_plans(self):
-        stripe_plans = self.get_stripe_plans()
+        stripe_plans = self.plans_persistence.get_stripe_plans()
         response = {"stripe_plans": []}
         for stripe_plan in stripe_plans:
             response["stripe_plans"].append(
@@ -32,6 +68,3 @@ class PlansService:
                 }
             )
         return response
-
-    def get_stripe_plans(self):
-        return self.db.query(SubscriptionPlan).filter(SubscriptionPlan.is_active == True).all()

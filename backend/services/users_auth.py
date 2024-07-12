@@ -23,10 +23,10 @@ logger = logging.getLogger(__name__)
 
 
 class UsersAuth:
-    def __init__(self, db: Session, plans_service: PaymentsPlans, user_persistence_service: UserPersistence,
+    def __init__(self, db: Session, payments_service: PaymentsPlans, user_persistence_service: UserPersistence,
                  send_grid_persistence_service: SendgridPersistence):
         self.db = db
-        self.plans_service = plans_service
+        self.payments_service = payments_service
         self.user_persistence_service = user_persistence_service
         self.send_grid_persistence_service = send_grid_persistence_service
 
