@@ -1,7 +1,6 @@
 // components/GoogleLogin.js
-
 import React, { useEffect, useState } from 'react';
-import { useGoogleLogin } from '@react-oauth/google';
+import { useGoogleOneTapLogin } from '@react-oauth/google';
 import axiosInterceptorInstance from '@/axios/axiosInterceptorInstance';
 import { useRouter } from 'next/navigation';
 import Button from '@mui/material/Button';
@@ -21,9 +20,9 @@ const GoogleLogin = () => {
     login();
   };
 
-  const login = useGoogleLogin({
+  const login = useGoogleOneTapLogin({
     onSuccess: async tokenResponse => {
-      const token = tokenResponse.access_token;
+      const token = tokenResponse;
       console.log(token)
       try {
         const response = await axiosInterceptorInstance.post('/api/sign-up-google', {
@@ -31,10 +30,10 @@ const GoogleLogin = () => {
           is_without_card: is_without_card,
         });
 
-        if (response.data.status === 'success') {
+        if (response.data.status === 'SUCCESS') {
           router.push('/dashboard');
-        } else if (response.data.status === 'need_choose_plan') {
-          // Handle case where user needs to choose a plan
+        } else if (response.data.status === 'NEED_CHOOSE_PLAN') {
+          router.push('/choose-plan');
         } else {
           console.error('Authorization failed:', response.data.status);
         }
