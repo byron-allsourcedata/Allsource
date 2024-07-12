@@ -2,5 +2,5 @@ from pydantic import BaseModel
 
 
 class AuthGoogleToken(BaseModel):
-    id: str
+    token: str
     is_without_card: bool

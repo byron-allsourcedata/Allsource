@@ -5,10 +5,11 @@ import Image from 'next/image';
 import { Box, Button, TextField, Typography, Link, IconButton, InputAdornment } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
-import axiosInstance from '../../axios/axiosInterceptorInstance';
+import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { AxiosError } from 'axios';
 import { signupStyles } from './signupStyles';
-import { showErrorToast } from '../../components/ToastNotification';
+import { showErrorToast } from '@/components/ToastNotification';
+import GoogleLogin from '@/components/GoogleLogin';
 
 const Signup: React.FC = () => {
   const router = useRouter();
@@ -152,17 +153,7 @@ const Signup: React.FC = () => {
         <Typography variant="h4" component="h1" sx={signupStyles.title}>
           Create a new account
         </Typography>
-        <Button
-          variant="contained"
-          onClick={handleGoogleSignup}
-          sx={signupStyles.googleButton}
-          disableFocusRipple
-          startIcon={
-            <Image src="/google-icon.svg" alt="Google icon" width={20} height={20} />
-          }
-        >
-          Sign in with Google
-        </Button>
+        <GoogleLogin/>
         <Box sx={signupStyles.orDivider}>
           <Box sx={{ borderBottom: '1px solid #000000', flexGrow: 1 }} />
           <Typography variant="body1" sx={signupStyles.orText}>

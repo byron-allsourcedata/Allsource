@@ -71,7 +71,10 @@ class UsersAuth:
         client_id = os.getenv("CLIENT_GOOGLE_ID")
         google_request = google_requests.Request()
         is_without_card = auth_google_token.is_without_card
-        idinfo = id_token.verify_oauth2_token(auth_google_token, google_request, client_id)
+        print(client_id)
+        print(auth_google_token.token)
+        print(google_request)
+        idinfo = id_token.verify_oauth2_token(auth_google_token.token, google_request, client_id)
         if idinfo:
             google_payload = {
                 "email": idinfo.get("email"),
@@ -121,7 +124,7 @@ class UsersAuth:
     def login_google(self, auth_google_token: AuthGoogleToken):
         client_id = os.getenv("CLIENT_GOOGLE_ID")
         google_request = google_requests.Request()
-        idinfo = id_token.verify_oauth2_token(auth_google_token, google_request, client_id)
+        idinfo = id_token.verify_oauth2_token(auth_google_token.token, google_request, client_id)
         if idinfo:
             email = idinfo.get("email")
         else:
