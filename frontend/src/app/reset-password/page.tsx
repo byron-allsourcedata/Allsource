@@ -53,7 +53,7 @@ const Signup: React.FC = () => {
     }
 
     try {
-      const response = await axiosInstance.post('api/reset-password', {
+      const response = await axiosInstance.post('reset-password', {
         email: formValues.email,
       });
 

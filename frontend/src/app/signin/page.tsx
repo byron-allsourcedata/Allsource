@@ -83,7 +83,7 @@ const Signup: React.FC = () => {
     }
   
     try {
-      const response = await axiosInstance.post('api/login', formValues);
+      const response = await axiosInstance.post('/login', formValues);
   
       if (response.status === 200) {
         const responseData = response.data;

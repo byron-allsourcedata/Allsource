@@ -14,7 +14,7 @@ const VerifyToken = () => {
     const verifyToken = async () => {
       if (token) {
         try {
-          const response = await axiosInstance.get(`/api/authentication/verify-token?token=${token}`);
+          const response = await axiosInstance.get(`/authentication/verify-token?token=${token}`);
 
           if (response.data.status === 'SUCCESS' || response.data.status === 'EMAIL_ALREADY_VERIFIED') {
             if (typeof window !== 'undefined') {

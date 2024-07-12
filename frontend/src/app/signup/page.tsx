@@ -156,7 +156,7 @@ const Signup: React.FC = () => {
         <GoogleLogin
           onSuccess={async (credentialResponse) => {
             try {
-              const response = await axiosInstance.post('/api/sign-up-google', {
+              const response = await axiosInstance.post('/sign-up-google', {
                 token: credentialResponse.credential,
                 is_without_card: isWithoutCard,
               });
@@ -164,7 +164,7 @@ const Signup: React.FC = () => {
               if (response.data.status === 'SUCCESS') {
                 if (typeof window !== 'undefined') {
                   localStorage.setItem('token', response.data.token);
-                  axiosInstance.get('/api/me')
+                  axiosInstance.get('/me')
                   .then(response => {
                     sessionStorage.setItem('me', JSON.stringify({
                       email: response.data.email,
@@ -176,7 +176,7 @@ const Signup: React.FC = () => {
               } else if (response.data.status === 'NEED_CHOOSE_PLAN') {
                 if (typeof window !== 'undefined') {
                   localStorage.setItem('token', response.data.token);
-                  axiosInstance.get('/api/me')
+                  axiosInstance.get('/me')
                   .then(response => {
                     sessionStorage.setItem('me', JSON.stringify({
                       email: response.data.email,
@@ -189,7 +189,7 @@ const Signup: React.FC = () => {
               } else if (response.data.status === 'FILL_COMPANY_DETAILS') {
                 if (typeof window !== 'undefined') {
                   localStorage.setItem('token', response.data.token);
-                  axiosInstance.get('/api/me')
+                  axiosInstance.get('/me')
                   .then(response => {
                     sessionStorage.setItem('me', JSON.stringify({
                       email: response.data.email,
