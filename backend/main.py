@@ -3,17 +3,17 @@ import logging
 from h11._abnf import status_code
 
 from config.base import Base
-from routers.users import router
+from routers import router
 from fastapi.middleware.cors import CORSMiddleware
 import traceback
-from fastapi import FastAPI, Request, Depends
+from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 logging.basicConfig(
     level=logging.DEBUG,
-    format='%(asctime)s %(levelname)s: %(message)s',
+    format='%(asctime)s.%(msecs)03d %(levelname)s: %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S'
 )
 logger = logging.getLogger(__name__)
@@ -64,4 +64,5 @@ app.add_middleware(
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"]
 )
-app.include_router(router, prefix=f"/api")
+
+app.include_router(router)

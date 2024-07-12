@@ -23,10 +23,10 @@ logger = logging.getLogger(__name__)
 
 
 class UsersAuth:
-    def __init__(self, db: Session, plans_service: PaymentsPlans, user_persistence_service: UserPersistence,
+    def __init__(self, db: Session, payments_service: PaymentsPlans, user_persistence_service: UserPersistence,
                  send_grid_persistence_service: SendgridPersistence):
         self.db = db
-        self.plans_service = plans_service
+        self.payments_service = payments_service
         self.user_persistence_service = user_persistence_service
         self.send_grid_persistence_service = send_grid_persistence_service
 
@@ -94,9 +94,6 @@ class UsersAuth:
         token = create_access_token(user_object)
         logger.info("Token created")
         self.user_persistence_service.email_confirmed(user_object.id)
-        if user_object.is_with_card:
-            user_plan = self.plans_service.set_default_plan(user_object.get("user_filed_id"), True)
-            logger.info(f"Set plan {user_plan.title} for new user")
         logger.info("Token created")
         return {
             'status': SignUpStatus.NEED_CHOOSE_PLAN,
