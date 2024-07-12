@@ -9,7 +9,7 @@ import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { AxiosError } from 'axios';
 import { signupStyles } from './signupStyles';
 import { showErrorToast } from '@/components/ToastNotification';
-import GoogleLogin from '@/components/GoogleLogin';
+import { GoogleLogin } from '@react-oauth/google';
 
 const Signup: React.FC = () => {
   const router = useRouter();
@@ -18,7 +18,7 @@ const Signup: React.FC = () => {
 
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
-  const [formValues, setFormValues] = useState({ full_name: '', email: '', password: '', is_without_card: isWithoutCard ? 'true' : 'false'});
+  const [formValues, setFormValues] = useState({ full_name: '', email: '', password: '', is_without_card: isWithoutCard ? 'true' : 'false' });
   const handleGoogleSignup = () => {
     console.log('Google signup clicked');
   };
@@ -106,9 +106,9 @@ const Signup: React.FC = () => {
             if (typeof window !== 'undefined') {
               localStorage.setItem('token', responseData.token);
             }
-            sessionStorage.setItem('me', JSON.stringify({ 
-              email: formValues.email, 
-              full_name: formValues.full_name 
+            sessionStorage.setItem('me', JSON.stringify({
+              email: formValues.email,
+              full_name: formValues.full_name
             }));
             router.push('/choose-plan');
           } else if (responseData.status === "EMAIL_ALREADY_EXISTS") {
@@ -118,9 +118,9 @@ const Signup: React.FC = () => {
             if (typeof window !== 'undefined') {
               localStorage.setItem('token', responseData.token);
             }
-            sessionStorage.setItem('me', JSON.stringify({ 
-              email: formValues.email, 
-              full_name: formValues.full_name 
+            sessionStorage.setItem('me', JSON.stringify({
+              email: formValues.email,
+              full_name: formValues.full_name
             }));
             router.push('/email-verificate');
           }
@@ -153,7 +153,64 @@ const Signup: React.FC = () => {
         <Typography variant="h4" component="h1" sx={signupStyles.title}>
           Create a new account
         </Typography>
-        <GoogleLogin/>
+        <GoogleLogin
+          onSuccess={async (credentialResponse) => {
+            try {
+              const response = await axiosInstance.post('/api/sign-up-google', {
+                token: credentialResponse.credential,
+                is_without_card: isWithoutCard,
+              });
+
+              if (response.data.status === 'SUCCESS') {
+                if (typeof window !== 'undefined') {
+                  localStorage.setItem('token', response.data.token);
+                  axiosInstance.get('/api/me')
+                  .then(response => {
+                    sessionStorage.setItem('me', JSON.stringify({
+                      email: response.data.email,
+                      full_name: response.data.full_name
+                    }));
+                  })
+                }
+                router.push('/dashboard');
+              } else if (response.data.status === 'NEED_CHOOSE_PLAN') {
+                if (typeof window !== 'undefined') {
+                  localStorage.setItem('token', response.data.token);
+                  axiosInstance.get('/api/me')
+                  .then(response => {
+                    sessionStorage.setItem('me', JSON.stringify({
+                      email: response.data.email,
+                      full_name: response.data.full_name
+                    }));
+                  })
+                }
+                
+                router.push('/choose-plan');
+              } else if (response.data.status === 'FILL_COMPANY_DETAILS') {
+                if (typeof window !== 'undefined') {
+                  localStorage.setItem('token', response.data.token);
+                  axiosInstance.get('/api/me')
+                  .then(response => {
+                    sessionStorage.setItem('me', JSON.stringify({
+                      email: response.data.email,
+                      full_name: response.data.full_name
+                    }));
+                  })
+                }
+                router.push('/account-setup');
+              } else {
+                console.error('Authorization failed:', response.data.status);
+              }
+            } catch (error) {
+              console.error('Error during Google login:', error);
+            }
+          }}
+          onError={() => {
+            console.log('Login Failed');
+          }}
+          ux_mode="popup"
+        />
+
         <Box sx={signupStyles.orDivider}>
           <Box sx={{ borderBottom: '1px solid #000000', flexGrow: 1 }} />
           <Typography variant="body1" sx={signupStyles.orText}>

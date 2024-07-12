@@ -41,11 +41,14 @@ class UsersAuth:
 
     def add_user(self, is_without_card, customer_id: str, user_form: Optional[dict] = None,
                  google_payload: Optional[dict] = None):
+        print('123453677843132456678754532455676')
+        print(is_without_card)
         user_object = Users(
             email=user_form.email if google_payload is None or len(google_payload) == 0 else google_payload.get(
                 "email"),
             is_email_confirmed=False,
-            password=user_form.password,
+            password=user_form.password if google_payload is None or len(google_payload) == 0 else google_payload.get(
+                "password"),
             is_company_details_filled=False,
             full_name=user_form.full_name if google_payload is None or len(google_payload) == 0 else google_payload.get(
                 "full_name"),
@@ -71,9 +74,6 @@ class UsersAuth:
         client_id = os.getenv("CLIENT_GOOGLE_ID")
         google_request = google_requests.Request()
         is_without_card = auth_google_token.is_without_card
-        print(client_id)
-        print(auth_google_token.token)
-        print(google_request)
         idinfo = id_token.verify_oauth2_token(auth_google_token.token, google_request, client_id)
         if idinfo:
             google_payload = {
@@ -91,15 +91,20 @@ class UsersAuth:
             return {
                 'status': SignUpStatus.EMAIL_ALREADY_EXISTS
             }
-        customer_id = stripe_service.create_customer(google_payload)
-        user_object = self.add_user(is_without_card, customer_id=customer_id, google_payload=google_payload)
+        google_payload['password'] = None
+        customer_id = stripe_service.create_customer_google(google_payload)
+        user_object = self.add_user(is_without_card=is_without_card, customer_id=customer_id,  google_payload=google_payload)
         self.user_persistence_service.update_user_parent_v2(user_object.get("user_filed_id"))
         token = create_access_token(user_object)
         logger.info("Token created")
-        self.user_persistence_service.email_confirmed(user_object.id)
-        if user_object.is_with_card:
+        self.user_persistence_service.email_confirmed(user_object.get("id"))
+        if not user_object.get("is_with_card"):
             user_plan = self.plans_service.set_default_plan(user_object.get("user_filed_id"), True)
             logger.info(f"Set plan {user_plan.title} for new user")
+            return {
+                'status': SignUpStatus.FILL_COMPANY_DETAILS,
+                'token': token,
+            }
         logger.info("Token created")
         return {
             'status': SignUpStatus.NEED_CHOOSE_PLAN,
