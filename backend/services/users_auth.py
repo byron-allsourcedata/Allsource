@@ -39,27 +39,21 @@ class UsersAuth:
             date += delta
         return date.isoformat()[:-6] + "Z"
 
-    def add_user(self, is_without_card, customer_id: str, user_form: Optional[dict] = None,
-                 google_payload: Optional[dict] = None):
-        print('123453677843132456678754532455676')
-        print(is_without_card)
+    def add_user(self, is_without_card, customer_id: str, user_form: dict):
         user_object = Users(
-            email=user_form.email if google_payload is None or len(google_payload) == 0 else google_payload.get(
-                "email"),
+            email=user_form.get("email"),
             is_email_confirmed=False,
-            password=user_form.password if google_payload is None or len(google_payload) == 0 else google_payload.get(
-                "password"),
+            password=user_form.get("password"),
             is_company_details_filled=False,
-            full_name=user_form.full_name if google_payload is None or len(google_payload) == 0 else google_payload.get(
-                "full_name"),
-            image=user_form.image if hasattr(user_form, 'image') else None,
-            company=user_form.image if hasattr(user_form, 'company') else None,
+            full_name=user_form.get("full_name"),
+            image=user_form.get("image"),
+            company=user_form.get("company"),
             created_at=self.get_utc_aware_date_for_mssql(),
             last_login=self.get_utc_aware_date_for_mssql(),
             payment_status=StripePaymentStatusEnum.PENDING.name,
             parent_id=0,
             customer_id=customer_id,
-            website=user_form.image if hasattr(user_form, 'website') else None
+            website=user_form.get("website")
         )
         if not is_without_card:
             user_object.is_with_card = True
@@ -74,32 +68,37 @@ class UsersAuth:
         client_id = os.getenv("CLIENT_GOOGLE_ID")
         google_request = google_requests.Request()
         is_without_card = auth_google_token.is_without_card
-        idinfo = id_token.verify_oauth2_token(auth_google_token.token, google_request, client_id)
+        idinfo = id_token.verify_oauth2_token(str(auth_google_token.token), google_request, client_id)
         if idinfo:
             google_payload = {
                 "email": idinfo.get("email"),
-                "full_name": f"{idinfo.get('given_name')} {idinfo.get('family_name')}"
+                "full_name": f"{idinfo.get('given_name')} {idinfo.get('family_name')}",
+                "password": None,
+                "image": None,
+                "company": None,
+                "website": None
             }
             email = idinfo.get("email")
         else:
             return {
                 'status': SignUpStatus.NOT_VALID_EMAIL
             }
+
         check_user_object = self.user_persistence_service.get_user_by_email(email)
         if check_user_object is not None:
             logger.info(f"User already exists in database with email: {email}")
             return {
                 'status': SignUpStatus.EMAIL_ALREADY_EXISTS
             }
-        google_payload['password'] = None
+
         customer_id = stripe_service.create_customer_google(google_payload)
-        user_object = self.add_user(is_without_card=is_without_card, customer_id=customer_id,  google_payload=google_payload)
-        self.user_persistence_service.update_user_parent_v2(user_object.get("user_filed_id"))
+        user_object = self.add_user(is_without_card=is_without_card, customer_id=customer_id, user_form=google_payload)
+        self.user_persistence_service.update_user_parent_v2(user_object.get("id"))
         token = create_access_token(user_object)
         logger.info("Token created")
         self.user_persistence_service.email_confirmed(user_object.get("id"))
         if not user_object.get("is_with_card"):
-            user_plan = self.plans_service.set_default_plan(user_object.get("user_filed_id"), True)
+            user_plan = self.plans_service.set_default_plan(user_object.get("id"), True)
             logger.info(f"Set plan {user_plan.title} for new user")
             return {
                 'status': SignUpStatus.FILL_COMPANY_DETAILS,
