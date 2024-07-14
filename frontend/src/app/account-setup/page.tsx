@@ -1,14 +1,17 @@
 'use client';
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState } from 'react';
 import { Box, Button, TextField, Typography } from '@mui/material';
 import Image from 'next/image';
 import PersonIcon from '@mui/icons-material/Person';
 import { styles } from './accountStyles';
-import { useRouter} from 'next/navigation';
-import { useUser } from '../../context/UserContext'; 
-
+import { useRouter } from 'next/navigation';
+import { useUser } from '../../context/UserContext';
+import axiosInterceptorInstance from '@/axios/axiosInterceptorInstance';
 
 const AccountSetupPage = () => {
+  const [organizationName, setOrganizationName] = useState('');
+  const [websiteLink, setWebsiteLink] = useState('');
+  const [role, setRole] = useState('');
   const [selectedEmployees, setSelectedEmployees] = useState<number | null>(null);
   const router = useRouter();
   const { full_name } = useUser();
@@ -28,12 +31,32 @@ const AccountSetupPage = () => {
   const handleEmployeeClick = (num: number) => {
     setSelectedEmployees(num);
   };
+
+  const handleSubmit = async () => {
+    try {
+      const response = await axiosInterceptorInstance.post('/company-info', {
+        organizationName,
+        websiteLink,
+        role,
+        employees: selectedEmployees,
+      });
+      
+      if (response.data.status === 'SUCCESS') {
+        router.push('/pixel_setup');
+      } else if (response.data.status === 'IS_WITHOUT_CARD') {
+        router.push('/card_setup');
+      }
+    } catch (error) {
+      console.error('An error occurred:', error);
+    }
+  };
+
   const ranges = [
     { min: 1, max: 10, label: '1-10' },
-    { min: 51, max: 100, label: '11-50' },
-    { min: 101, max: 250, label: '51-100' },
-    { min: 251, max: 1000, label: '100-500' },
-    { min: 1001, max: Infinity, label: '500+' },
+    { min: 11, max: 50, label: '11-50' },
+    { min: 51, max: 100, label: '51-100' },
+    { min: 101, max: 500, label: '100-500' },
+    { min: 501, max: Infinity, label: '500+' },
   ];
 
   return (
@@ -63,6 +86,8 @@ const AccountSetupPage = () => {
           label="Organization name"
           variant="outlined"
           sx={styles.formField}
+          value={organizationName}
+          onChange={(e) => setOrganizationName(e.target.value)}
         />
         <Typography variant="body1" component="h3" sx={styles.text}>
           Share your company website 
@@ -72,6 +97,8 @@ const AccountSetupPage = () => {
           label="Enter website link"
           variant="outlined"
           sx={styles.formField}
+          value={websiteLink}
+          onChange={(e) => setWebsiteLink(e.target.value)}
         />
         <Typography variant="body1" component="h3" sx={styles.text}>
           What&apos;s your role?
@@ -81,6 +108,8 @@ const AccountSetupPage = () => {
           label="Enter your role"
           variant="outlined"
           sx={styles.formField}
+          value={role}
+          onChange={(e) => setRole(e.target.value)}
         />
         <Typography variant="body1" sx={styles.text}>
           How many employees work at your organization
@@ -101,16 +130,17 @@ const AccountSetupPage = () => {
           fullWidth
           variant="contained"
           sx={styles.submitButton}
+          onClick={handleSubmit}
         >
           Next
         </Button>
       </Box>
       <Button
-          onClick={handleSignOut}
-          sx={{ widht: '5%'}}
-        >
-          Sign Out
-        </Button>
+        onClick={handleSignOut}
+        sx={{ width: '5%' }}
+      >
+        Sign Out
+      </Button>
     </Box>
   );
 };
