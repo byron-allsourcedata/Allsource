@@ -15,5 +15,5 @@ async def set_company_info(company_info: CompanyInfo,
 
 @router.get("/company-info")
 async def set_company_info(company_info_service: CompanyInfoService = Depends(get_company_info_service)):
-    result_status = company_info_service.get_status()
+    result_status = company_info_service.get_company_info()
     return CompanyInfoResponse(status=result_status)
