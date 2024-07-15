@@ -154,8 +154,8 @@ def get_payments_service(plans_service: PlansService = Depends(get_plans_service
     return PaymentsService(plans_service=plans_service)
 
 
-def get_company_info_service(db: Session = Depends(get_db), user: User = Depends(check_user_authentication)):
-    return CompanyInfoService(db=db, user=user)
+def get_company_info_service(db: Session = Depends(get_db), user: User = Depends(check_user_authentication), subscription_service: SubscriptionService = Depends(get_subscription_service)):
+    return CompanyInfoService(db=db, user=user, subscription_service=subscription_service)
 
 
 def get_users_email_verification_service(user: User = Depends(check_user_authentication),

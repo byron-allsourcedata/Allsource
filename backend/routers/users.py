@@ -83,14 +83,6 @@ async def update_password(update_data: UpdatePassword,
     result_status = user.update_password(update_data)
     return UpdatePasswordResponse(status=result_status)
 
-
-@router.post("/company-info", response_model=CompanyInfoResponse)
-async def set_company_info(company_info: CompanyInfo,
-                           company_info_service: CompanyInfoService = Depends(get_company_info_service)):
-    result_status = company_info_service.set_company_info(company_info)
-    return CompanyInfoResponse(status=result_status)
-
-
 @router.get("/check-verification-status", response_model=CheckVerificationStatusResponse)
 async def check_verification_status(
         user: UsersEmailVerificationService = Depends(get_users_email_verification_service)):
