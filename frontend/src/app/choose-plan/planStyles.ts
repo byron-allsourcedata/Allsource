@@ -10,6 +10,24 @@ export const planStyles: { [key: string]: SxProps<Theme> } = {
     justifyContent: 'center',
     padding: '2em',
   },
+  headers: {
+    display: 'flex',
+    marginTop: '10px',
+    justifyContent: 'space-between',
+    width: '100%',
+    color: 'rgba(244, 87, 69, 1)',
+  },
+  account: {
+    padding: '10px',
+    width: '1em',
+    // marginRight: '1em',
+    // marginBottom: "3.5em",
+    // marginLeft: "2em",
+    // marginTop: "2em",
+    color: 'rgba(128, 128, 128, 1)',
+    border: '1px solid rgba(184, 184, 184, 1)',
+    borderRadius: '3.27px'
+  },
   logoContainer: {
     marginBottom: '3.5em',
     marginLeft: '2em',

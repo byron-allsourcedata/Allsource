@@ -1,4 +1,6 @@
 import axios from "axios";
+import { showErrorToast } from "@/components/ToastNotification";
+import Router from 'next/router';
 
 const axiosInterceptorInstance = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_BASE_URL, // BASE URL API
@@ -19,7 +21,6 @@ axiosInterceptorInstance.interceptors.request.use(
   }
 );
 
-
 const navigateTo = (path) => {
   window.location.href = path;
 };
@@ -31,15 +32,14 @@ axiosInterceptorInstance.interceptors.response.use(
   },
   (error) => {
     if (error.response) {
-      console.log(error)
       switch (error.response.status) {
         case 401:
           // 401 error handler (Unauthorized)
           localStorage.clear();
           Router.push('/login');
           break;
-      case 403: 
-          switch(error.response.data.status){
+        case 403:
+          switch (error.response.data.status) {
             case "NEED_CONFIRM_EMAIL":
               navigateTo('/email-verificate');
               break;
@@ -52,14 +52,21 @@ axiosInterceptorInstance.interceptors.response.use(
           }
           break;
         case 500:
-          // 500 error handler (Internal Server Error)
-          Router.push('/login');
+          // Handle 500 Internal Server Error
+          showErrorToast('Internal Server Error. Please try again later.');
           break;
         // Handle other statuses if needed
         default:
-          console.error("An error occurred:", error.response.data);
+          showErrorToast(`An error occurred: ${error.response.data.message || 'Unknown error'}`);
       }
+    } else if (error.request) {
+      // The request was made but no response was received
+      showErrorToast('Network Error. Please check your internet connection.');
+    } else {
+      // Something happened in setting up the request that triggered an Error
+      showErrorToast(`Error: ${error.message}`);
     }
+
     return Promise.reject(error);
   }
 );

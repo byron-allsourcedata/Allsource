@@ -31,8 +31,10 @@ export const styles: { [key: string]: SxProps<Theme> } = {
   },
   headers: {
     display: 'flex',
-    marginTop: '10px',
     justifyContent: 'space-between',
+    alignItems: 'center',
+    marginRight: '2em',
+    marginLeft: '2em',
     width: '100%',
     color: 'rgba(244, 87, 69, 1)',
     borderBottom: `1px solid rgba(228, 228, 228, 1)`,

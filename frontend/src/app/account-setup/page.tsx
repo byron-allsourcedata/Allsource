@@ -1,21 +1,38 @@
 'use client';
 import React, { useState } from 'react';
-import { Box, Button, TextField, Typography } from '@mui/material';
+import { Box, Button, Menu, MenuItem, TextField, Typography } from '@mui/material';
 import Image from 'next/image';
 import PersonIcon from '@mui/icons-material/Person';
 import { styles } from './accountStyles';
 import { useRouter } from 'next/navigation';
 import { useUser } from '../../context/UserContext';
-import axiosInterceptorInstance from '@/axios/axiosInterceptorInstance';
+import axiosInterceptorInstance from '../../axios/axiosInterceptorInstance';
+import { showErrorToast } from '@/components/ToastNotification';
 
 const AccountSetupPage = () => {
   const [organizationName, setOrganizationName] = useState('');
   const [websiteLink, setWebsiteLink] = useState('');
   const [corporateEmail, setCorporateEmail] = useState('');
   const [selectedEmployees, setSelectedEmployees] = useState('');
-  const [errors, setErrors] = useState({ websiteLink: '', corporateEmail: '' });
+  const [errors, setErrors] = useState({ websiteLink: '', corporateEmail: '', organizationName: '', selectedEmployees: '' }); // Добавлено состояние для ошибки выбора количества работников
   const router = useRouter();
-  const { full_name } = useUser();
+  const { full_name, email } = useUser();
+
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const open = Boolean(anchorEl);
+
+  const handleProfileMenuClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleProfileMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleSettingsClick = () => {
+    handleProfileMenuClose();
+    router.push('/settings');
+  };
 
   const handleSignOut = () => {
     localStorage.clear();
@@ -29,47 +46,64 @@ const AccountSetupPage = () => {
       : { ...styles.employeeButton, color: 'black' };
   };
 
-  const handleEmployeeRangeChange = (label: any) => {
+  const handleEmployeeRangeChange = (label: string) => {
     setSelectedEmployees(label);
+    setErrors({ ...errors, selectedEmployees: '' }); // Сброс ошибки выбора количества работников при выборе
   };
 
-  const validateEmail = (email: string) => {
-    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return re.test(email);
-  };
-
-  const validateWebsite = (url: string) => {
-    const re = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/;
-    return re.test(url);
+  const validateField = (value: string, type: 'email' | 'website' | 'organizationName'): string => {
+    switch (type) {
+      case 'email':
+        const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRe.test(value) ? '' : 'Invalid email address';
+      case 'website':
+        const websiteRe = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/;
+        return websiteRe.test(value) ? '' : 'Invalid website URL';
+      case 'organizationName':
+        const orgName = value.trim();
+        return orgName ? '' : 'Organization name is required';
+      default:
+        return '';
+    }
   };
 
   const handleSubmit = async () => {
     const newErrors = {
-      websiteLink: validateWebsite(websiteLink) ? '' : 'Invalid website URL',
-      corporateEmail: validateEmail(corporateEmail) ? '' : 'Invalid email address',
+      websiteLink: validateField(websiteLink, 'website'),
+      corporateEmail: validateField(corporateEmail, 'email'),
+      organizationName: validateField(organizationName, 'organizationName'),
+      selectedEmployees: selectedEmployees ? '' : 'Please select number of employees', // Добавлена проверка выбора количества работников
     };
     setErrors(newErrors);
 
-    if (newErrors.websiteLink || newErrors.corporateEmail) {
+    if (newErrors.websiteLink || newErrors.corporateEmail || newErrors.organizationName || newErrors.selectedEmployees) {
       return;
     }
 
     try {
       const response = await axiosInterceptorInstance.post('/company-info', {
-        organization_name:organizationName,
+        organization_name: organizationName.trim(),
         company_website: websiteLink,
-        email_address:corporateEmail,
+        email_address: corporateEmail,
         employees_workers: selectedEmployees,
       });
 
-      if (response.data.status === 'SUCCESS') {
-        router.push('/pixel-setup');
-      } else if (response.data.status === 'NEED_EMAIL_VERIFIED') {
-        router.push('/email-verificate');
-      } else if (response.data.status === 'DASHBOARD_ALLOWED') {
-        router.push('/dashboard');
-      } else if (response.data.status === 'NEED_CHOOSE_PLAN') {
-        router.push('/choose-plan');
+      switch (response.data.status) {
+        case 'SUCCESS':
+          router.push('/pixel-setup');
+          break;
+        case 'NEED_EMAIL_VERIFIED':
+          router.push('/email-verificate');
+          break;
+        case 'DASHBOARD_ALLOWED':
+          router.push('/dashboard');
+          break;
+        case 'NEED_CHOOSE_PLAN':
+          router.push('/choose-plan');
+          break;
+        default:
+          console.log('Unhandled response status:', response.data.status);
+          break;
       }
     } catch (error) {
       console.error('An error occurred:', error);
@@ -88,13 +122,36 @@ const AccountSetupPage = () => {
     <Box sx={styles.pageContainer}>
       <Box sx={styles.headers}>
         <Box sx={styles.logo}>
-          <Image src='/logo.svg' alt='logo' height={30} width={50}/>
+          <Image src='/logo.svg' alt='logo' height={80} width={60} />
         </Box>
         <Box sx={styles.nav}>
           <Typography variant="body1" sx={styles.header}>Create Account</Typography>
           <Typography variant="body1" sx={styles.subheader}>Install pixel</Typography>
         </Box>
-        <PersonIcon sx={styles.account}/>
+        <Button
+          aria-controls={open ? 'profile-menu' : undefined}
+          aria-haspopup="true"
+          aria-expanded={open ? 'true' : undefined}
+          onClick={handleProfileMenuClick}
+        >
+          <PersonIcon sx={styles.account} />
+        </Button>
+        <Menu
+          id="profile-menu"
+          anchorEl={anchorEl}
+          open={open}
+          onClose={handleProfileMenuClose}
+          MenuListProps={{
+            'aria-labelledby': 'profile-menu-button',
+          }}
+        >
+          <Box sx={{ p: 2 }}>
+            <Typography variant="h6">{full_name}</Typography>
+            <Typography variant="body2" color="textSecondary">{email}</Typography>
+          </Box>
+          <MenuItem onClick={handleSettingsClick}>Settings</MenuItem>
+          <MenuItem onClick={handleSignOut}>Sign Out</MenuItem>
+        </Menu>
       </Box>
       <Box sx={styles.formContainer}>
         <Typography variant="h5" component="h1" sx={styles.title}>
@@ -113,9 +170,11 @@ const AccountSetupPage = () => {
           sx={styles.formField}
           value={organizationName}
           onChange={(e) => setOrganizationName(e.target.value)}
+          error={!!errors.organizationName}
+          helperText={errors.organizationName}
         />
         <Typography variant="body1" component="h3" sx={styles.text}>
-          Share your company website 
+          Share your company website
         </Typography>
         <TextField
           fullWidth
@@ -143,6 +202,11 @@ const AccountSetupPage = () => {
         <Typography variant="body1" sx={styles.text}>
           How many employees work at your organization
         </Typography>
+        {errors.selectedEmployees && (
+          <Typography variant="body2" color="error">
+            {errors.selectedEmployees}
+          </Typography>
+        )}
         <Box sx={styles.employeeButtons}>
           {ranges.map((range, index) => (
             <Button
@@ -164,12 +228,6 @@ const AccountSetupPage = () => {
           Next
         </Button>
       </Box>
-      <Button
-        onClick={handleSignOut}
-        sx={{ width: '5%' }}
-      >
-        Sign Out
-      </Button>
     </Box>
   );
 };
