@@ -51,20 +51,32 @@ def get_user_persistence_service(db: Session = Depends(get_db)):
     return UserPersistence(db=db)
 
 
-def check_user_subscription():
-    return UserAuthorizationStatus.NEED_CHOOSE_PLAN
+def get_subscription_service(db: Session = Depends(get_db),
+                             user_persistence_service: UserPersistence = Depends(get_user_persistence_service)):
+    return SubscriptionService(db=db, user_persistence_service=user_persistence_service)
 
 
-def get_user_authorization_status(user: User):
+def get_user_authorization_status(user: User, subscription_service):
     if user.is_with_card:
-        return check_user_subscription()
-    else:
-        if not user.is_email_confirmed:
-            return UserAuthorizationStatus.NEED_CONFIRM_EMAIL
-        if not user.company_name:
+        if user.company_name:
+            subscription_plan_exists = subscription_service.is_user_have_subscription(user.id)
+            if subscription_plan_exists:
+                subscription_plan_is_active = subscription_service.is_user_active_subscription(user.id)
+                if subscription_plan_is_active:
+                    return UserAuthorizationStatus.SUCCESS
+                else:
+                    return UserAuthorizationStatus.NEED_CHOOSE_PLAN
+            else:
+                return UserAuthorizationStatus.NEED_CHOOSE_PLAN
+        else:
             return UserAuthorizationStatus.FILL_COMPANY_DETAILS
-
-    return UserAuthorizationStatus.SUCCESS
+    else:
+        if user.is_email_confirmed:
+            if user.company_name:
+                return UserAuthorizationStatus.SUCCESS
+            else:
+                return UserAuthorizationStatus.FILL_COMPANY_DETAILS
+    return UserAuthorizationStatus.NEED_CONFIRM_EMAIL
 
 
 def parse_jwt_data(Authorization: Annotated[str, Header()]) -> Token:
@@ -85,9 +97,10 @@ def parse_jwt_data(Authorization: Annotated[str, Header()]) -> Token:
 
 def check_user_authorization(Authorization: Annotated[str, Header()],
                              user_persistence_service: UserPersistence = Depends(
-                                 get_user_persistence_service)) -> Token:
+                                 get_user_persistence_service), subscription_service: SubscriptionService = Depends(
+            get_subscription_service)) -> Token:
     user = check_user_authentication(Authorization, user_persistence_service)
-    auth_status = get_user_authorization_status(user)
+    auth_status = get_user_authorization_status(user, subscription_service)
     if auth_status != UserAuthorizationStatus.SUCCESS:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -109,11 +122,6 @@ def check_user_authentication(Authorization: Annotated[str, Header()],
             }
         )
     return user
-
-
-def get_subscription_service(db: Session = Depends(get_db),
-                             user_persistence_service: UserPersistence = Depends(get_user_persistence_service)):
-    return SubscriptionService(db=db, user_persistence_service=user_persistence_service)
 
 
 def get_payments_plans_service(db: Session = Depends(get_db),
@@ -155,7 +163,8 @@ def get_payments_service(plans_service: PlansService = Depends(get_plans_service
     return PaymentsService(plans_service=plans_service)
 
 
-def get_company_info_service(db: Session = Depends(get_db), user: User = Depends(check_user_authentication), subscription_service: SubscriptionService = Depends(get_subscription_service)):
+def get_company_info_service(db: Session = Depends(get_db), user: User = Depends(check_user_authentication),
+                             subscription_service: SubscriptionService = Depends(get_subscription_service)):
     return CompanyInfoService(db=db, user=user, subscription_service=subscription_service)
 
 
