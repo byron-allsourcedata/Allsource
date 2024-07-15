@@ -47,6 +47,9 @@ class SubscriptionService:
         self.db.query(UserSubscriptionPlan, User).join(SubscriptionPlan,
                                                                    UserSubscriptionPlan.user_id == user_id).first()
 
+    def is_user_have_subscription(self, user_id):
+        return self.db.query(UserSubscriptionPlan).filter(UserSubscriptionPlan.user_id == user_id).limit(1).scalar()
+
     def update_user_payment_status(self, user_id, is_success):
         if is_success:
             payment_state = StripePaymentStatusEnum.COMPLETE.value
