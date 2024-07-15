@@ -11,8 +11,9 @@ import axiosInterceptorInstance from '@/axios/axiosInterceptorInstance';
 const AccountSetupPage = () => {
   const [organizationName, setOrganizationName] = useState('');
   const [websiteLink, setWebsiteLink] = useState('');
-  const [role, setRole] = useState('');
-  const [selectedEmployees, setSelectedEmployees] = useState<number | null>(null);
+  const [corporateEmail, setCorporateEmail] = useState('');
+  const [selectedEmployees, setSelectedEmployees] = useState('');
+  const [errors, setErrors] = useState({ websiteLink: '', corporateEmail: '' });
   const router = useRouter();
   const { full_name } = useUser();
 
@@ -28,23 +29,47 @@ const AccountSetupPage = () => {
       : { ...styles.employeeButton, color: 'black' };
   };
 
-  const handleEmployeeClick = (num: number) => {
-    setSelectedEmployees(num);
+  const handleEmployeeRangeChange = (label: any) => {
+    setSelectedEmployees(label);
+  };
+
+  const validateEmail = (email: string) => {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email);
+  };
+
+  const validateWebsite = (url: string) => {
+    const re = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/;
+    return re.test(url);
   };
 
   const handleSubmit = async () => {
+    const newErrors = {
+      websiteLink: validateWebsite(websiteLink) ? '' : 'Invalid website URL',
+      corporateEmail: validateEmail(corporateEmail) ? '' : 'Invalid email address',
+    };
+    setErrors(newErrors);
+
+    if (newErrors.websiteLink || newErrors.corporateEmail) {
+      return;
+    }
+
     try {
       const response = await axiosInterceptorInstance.post('/company-info', {
-        organizationName,
-        websiteLink,
-        role,
-        employees: selectedEmployees,
+        organization_name:organizationName,
+        company_website: websiteLink,
+        email_address:corporateEmail,
+        employees_workers: selectedEmployees,
       });
-      
+
       if (response.data.status === 'SUCCESS') {
         router.push('/pixel_setup');
       } else if (response.data.status === 'NEED_EMAIL_VERIFIED') {
         router.push('/email-verificate');
+      } else if (response.data.status === 'DASHBOARD_ALLOWED') {
+        router.push('/dashboard');
+      } else if (response.data.status === 'NEED_CHOOSE_PLAN') {
+        router.push('/choose-plan');
       }
     } catch (error) {
       console.error('An error occurred:', error);
@@ -99,17 +124,21 @@ const AccountSetupPage = () => {
           sx={styles.formField}
           value={websiteLink}
           onChange={(e) => setWebsiteLink(e.target.value)}
+          error={!!errors.websiteLink}
+          helperText={errors.websiteLink}
         />
         <Typography variant="body1" component="h3" sx={styles.text}>
-          What&apos;s your role?
+          Enter your corporate email
         </Typography>
         <TextField
           fullWidth
-          label="Enter your role"
+          label="Enter corporate email"
           variant="outlined"
           sx={styles.formField}
-          value={role}
-          onChange={(e) => setRole(e.target.value)}
+          value={corporateEmail}
+          onChange={(e) => setCorporateEmail(e.target.value)}
+          error={!!errors.corporateEmail}
+          helperText={errors.corporateEmail}
         />
         <Typography variant="body1" sx={styles.text}>
           How many employees work at your organization
@@ -119,8 +148,8 @@ const AccountSetupPage = () => {
             <Button
               key={index}
               variant="outlined"
-              onClick={() => handleEmployeeClick(range.min)}
-              sx={getButtonStyles(selectedEmployees === range.min)}
+              onClick={() => handleEmployeeRangeChange(range.label)}
+              sx={getButtonStyles(selectedEmployees === range.label)}
             >
               {range.label}
             </Button>
