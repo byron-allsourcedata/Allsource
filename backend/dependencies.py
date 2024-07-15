@@ -59,13 +59,9 @@ def get_subscription_service(db: Session = Depends(get_db),
 def get_user_authorization_status(user: User, subscription_service):
     if user.is_with_card:
         if user.company_name:
-            subscription_plan_exists = subscription_service.is_user_have_subscription(user.id)
-            if subscription_plan_exists:
-                subscription_plan_is_active = subscription_service.is_user_active_subscription(user.id)
-                if subscription_plan_is_active:
-                    return UserAuthorizationStatus.SUCCESS
-                else:
-                    return UserAuthorizationStatus.NEED_CHOOSE_PLAN
+            subscription_plan_is_active = subscription_service.is_user_active_subscription(user.id)
+            if subscription_plan_is_active:
+                return UserAuthorizationStatus.SUCCESS
             else:
                 return UserAuthorizationStatus.NEED_CHOOSE_PLAN
         else:
