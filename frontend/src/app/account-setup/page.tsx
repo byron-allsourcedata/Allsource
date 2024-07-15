@@ -63,7 +63,7 @@ const AccountSetupPage = () => {
       });
 
       if (response.data.status === 'SUCCESS') {
-        router.push('/pixel_setup');
+        router.push('/pixel-setup');
       } else if (response.data.status === 'NEED_EMAIL_VERIFIED') {
         router.push('/email-verificate');
       } else if (response.data.status === 'DASHBOARD_ALLOWED') {
