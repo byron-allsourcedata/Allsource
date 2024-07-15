@@ -6,14 +6,17 @@ from models.users import Users
 from sqlalchemy.orm import Session
 
 from schemas.users import CompanyInfo
+from services.subscriptions import SubscriptionService
 
 logger = logging.getLogger(__name__)
 
 
 class CompanyInfoService:
-    def __init__(self, db: Session, user: Users):
+    def __init__(self, db: Session, user: Users, subscription_service: SubscriptionService):
         self.user = user
         self.db = db
+        self.subscription_service = subscription_service
+
 
     def set_company_info(self, company_info: CompanyInfo):
         result = self.check_company_info_authorization()
@@ -36,10 +39,8 @@ class CompanyInfoService:
     def check_company_info_authorization(self):
         if self.user.is_with_card:
             if self.user.company_name:
-                subscription_plan = self.db.query(UserSubscriptionPlan, Users).join(UserSubscriptionPlan,
-                                                                         UserSubscriptionPlan.user_id == Users.id).filter(
-                    UserSubscriptionPlan.user_id == self.user.id).scalar()
-                if subscription_plan:
+                subscription_plan_exists = self.subscription_service.is_user_have_subscription(self.user.id)
+                if subscription_plan_exists:
                     return CompanyInfoEnum.DASHBOARD_ALLOWED
                 return CompanyInfoEnum.NEED_CHOOSE_PLAN
             else:
