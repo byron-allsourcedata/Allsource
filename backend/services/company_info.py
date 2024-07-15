@@ -29,6 +29,8 @@ class CompanyInfoService:
             if self.user.is_with_card:
                 if self.user.company_name:
                     return CompanyInfoEnum.DASHBOARD_ALLOWED
+                else:
+                    return CompanyInfoEnum.SUCCESS
             else:
                 return CompanyInfoEnum.DASHBOARD_ALLOWED
         else:
