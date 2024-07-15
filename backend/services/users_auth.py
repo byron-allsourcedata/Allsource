@@ -13,7 +13,7 @@ from services.payments_plans import PaymentsPlans
 from models.users import Users
 import logging
 from google.oauth2 import id_token
-from enums import SignUpStatus, StripePaymentStatusEnum, AutomationSystemTemplate, LoginStatus, ResetPasswordTemplate, VerifyToken
+from enums import SignUpStatus, StripePaymentStatusEnum, AutomationSystemTemplate, LoginStatus, ResetPasswordEnum, VerifyToken
 from typing import Optional
 
 from schemas.auth_google_token import AuthGoogleToken
@@ -259,7 +259,7 @@ class UsersAuth:
             time_now = datetime.now()
             if message_expiration_time is not None:
                 if (message_expiration_time + timedelta(minutes=1)) > time_now:
-                    return ResetPasswordTemplate.RESEND_TOO_SOON
+                    return ResetPasswordEnum.RESEND_TOO_SOON
             token_info = {
                 "id": db_user.id,
             }
@@ -278,5 +278,5 @@ class UsersAuth:
                 )
                 self.user_persistence_service.set_reset_password_sent_now(db_user.id)
                 logger.info("Confirmation Email Sent")
-                return ResetPasswordTemplate.SUCCESS
-        return ResetPasswordTemplate.NOT_VALID_EMAIL
+                return ResetPasswordEnum.SUCCESS
+        return ResetPasswordEnum.NOT_VALID_EMAIL

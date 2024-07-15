@@ -1,6 +1,6 @@
 import logging
 
-from enums import CompanyInfoTemplate
+from enums import CompanyInfoEnum
 from models.users import Users
 from sqlalchemy.orm import Session
 
@@ -21,6 +21,6 @@ class CompanyInfoService:
                  Users.company_email_address: company_info.email_address, Users.employees_workers: company_info.employees_workers},
                 synchronize_session=False)
             self.db.commit()
-            return CompanyInfoTemplate.SUCCESS
+            return CompanyInfoEnum.SUCCESS
         else:
-            return CompanyInfoTemplate.IS_WITHOUT_CARD
+            return CompanyInfoEnum.IS_WITHOUT_CARD
