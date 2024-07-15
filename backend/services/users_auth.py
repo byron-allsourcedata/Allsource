@@ -85,15 +85,15 @@ class UsersAuth:
 
         customer_id = stripe_service.create_customer_google(google_payload)
         user_object = self.add_user(is_without_card=is_without_card, customer_id=customer_id, user_form=google_payload)
-        self.user_persistence_service.update_user_parent_v2(user_object.get("id"))
+        self.user_persistence_service.update_user_parent_v2(user_object.id)
         token_info = {
-            "id": user_object.get("id"),
+            "id": user_object.id,
         }
         token = create_access_token(token_info)
         logger.info("Token created")
-        self.user_persistence_service.email_confirmed(user_object.get("id"))
-        if not user_object.get("is_with_card"):
-            user_plan = self.plans_service.set_default_plan(user_object.get("id"), True)
+        self.user_persistence_service.email_confirmed(user_object.id)
+        if not user_object.is_with_card:
+            user_plan = self.plans_service.set_default_plan(user_object.id, True)
             logger.info(f"Set plan {user_plan.title} for new user")
             return {
                 'status': SignUpStatus.FILL_COMPANY_DETAILS,
@@ -128,7 +128,7 @@ class UsersAuth:
             email = idinfo.get("email")
         else:
             return {
-                'status': SignUpStatus.NOT_VALID_EMAIL
+                'status': LoginStatus.NOT_VALID_EMAIL
             }
         user_object = self.user_persistence_service.get_user_by_email(email)
         if user_object:

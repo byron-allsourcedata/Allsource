@@ -9,6 +9,7 @@ import axiosInstance from '../../axios/axiosInterceptorInstance';
 import { AxiosError } from 'axios';
 import { loginStyles } from './loginStyles';
 import { showErrorToast } from '../../components/ToastNotification';
+import { GoogleLogin } from '@react-oauth/google';
 
 const Signup: React.FC = () => {
   const router = useRouter();
@@ -158,17 +159,43 @@ const Signup: React.FC = () => {
         <Typography variant="h4" component="h1" sx={loginStyles.title}>
           Login
         </Typography>
-        <Button
-          variant="contained"
-          onClick={handleGoogleSignup}
-          sx={loginStyles.googleButton}
-          disableFocusRipple
-          startIcon={
-            <Image src="/google-icon.svg" alt="Google icon" width={20} height={20} />
-          }
-        >
-          Continue with Google
-        </Button>
+        <GoogleLogin
+          onSuccess={async (credentialResponse) => {
+            try {
+              console.log(credentialResponse.credential)
+              const response = await axiosInstance.post('/login-google', {
+                token: credentialResponse.credential,
+              });
+
+              if (response.data.status === 'SUCCESS') {
+                if (typeof window !== 'undefined') {
+                  localStorage.setItem('token', response.data.token);
+                }
+                router.push('/dashboard');
+              } else if (response.data.status === 'NEED_CHOOSE_PLAN') {
+                if (typeof window !== 'undefined') {
+                  localStorage.setItem('token', response.data.token);
+                }
+                router.push('/choose-plan');
+              } else if (response.data.status === 'FILL_COMPANY_DETAILS') {
+                if (typeof window !== 'undefined') {
+                  localStorage.setItem('token', response.data.token);
+                }
+                router.push('/account-setup');
+              } else if (response.data.status === 'INCORRECT_PASSWORD_OR_EMAIL') {
+                showErrorToast("User with this email does not exist");
+              } else {
+                console.error('Authorization failed:', response.data.status);
+              }
+            } catch (error) {
+              console.error('Error during Google login:', error);
+            }
+          }}
+          onError={() => {
+            console.log('Login Failed');
+          }}
+          ux_mode="popup"
+        />
         <Box sx={loginStyles.orDivider}>
           <Box sx={{ borderBottom: '1px solid #000000', flexGrow: 1 }} />
           <Typography variant="body1" sx={loginStyles.orText}>

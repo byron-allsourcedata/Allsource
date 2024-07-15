@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Query, HTTPException
 from fastapi.params import Header
 from dependencies import get_users_auth_service, get_users_email_verification_service, get_dashboard_service, \
     get_users_service, get_company_info_service
-from schemas.auth_google_token import AuthGoogleToken
+from schemas.auth_google_token import AuthGoogleData
 from schemas.users import UserSignUpForm, UserSignUpFormResponse, UserLoginFormResponse, UserLoginForm, UpdatePassword, \
     ResendVerificationEmailResponse, ResetPasswordForm, ResetPasswordResponse, UpdatePasswordResponse, \
     CheckVerificationStatusResponse, VerifyTokenResponse, CompanyInfo, CompanyInfoResponse
@@ -42,15 +42,15 @@ async def login_user(user_form: UserLoginForm, users_service: UsersAuth = Depend
 
 
 @router.post("/sign-up-google", response_model=UserSignUpFormResponse)
-async def create_user_google(auth_google_token: AuthGoogleToken, users: UsersAuth = Depends(get_users_auth_service)):
+async def create_user_google(auth_google_token: AuthGoogleData, users: UsersAuth = Depends(get_users_auth_service)):
     user_data = users.create_account_google(auth_google_token)
     return UserSignUpFormResponse(status=user_data.get('status'), token=user_data.get("token", None))
 
 
-@router.post("/login-google", response_model=UserSignUpFormResponse)
-async def create_user_google(auth_google_token: AuthGoogleToken, users: UsersAuth = Depends(get_users_auth_service)):
+@router.post("/login-google", response_model=UserLoginFormResponse)
+async def create_user_google(auth_google_token: AuthGoogleData, users: UsersAuth = Depends(get_users_auth_service)):
     user_data = users.login_google(auth_google_token)
-    return UserSignUpFormResponse(status=user_data.get('status'), token=user_data.get("token", None))
+    return UserLoginFormResponse(status=user_data.get('status'), token=user_data.get("token", None))
 
 
 @router.get("/authentication/verify-token", response_model=VerifyTokenResponse)
