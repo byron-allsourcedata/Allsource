@@ -39,13 +39,24 @@ class UsersAuth:
             date += delta
         return date.isoformat()[:-6] + "Z"
 
-    def add_user(self, is_without_card, customer_id: str, user_form: dict):
+    def add_user(self, is_without_card, customer_id: str, user_form):
+        if isinstance(user_form, dict):
+            email = user_form.get('email')
+            is_email_confirmed = user_form.get('is_email_confirmed', False)
+            password = user_form.get('password')
+            full_name = user_form.get('full_name')
+        else:
+            email = getattr(user_form, 'email', None)
+            is_email_confirmed = getattr(user_form, 'is_email_confirmed', False)
+            password = getattr(user_form, 'password', None)
+            full_name = getattr(user_form, 'full_name', None)
+
         user_object = Users(
-            email=user_form.get("email"),
-            is_email_confirmed=user_form.get("is_email_confirmed"),
-            password=user_form.get("password"),
+            email=email,
+            is_email_confirmed=is_email_confirmed,
+            password=password,
             is_company_details_filled=False,
-            full_name=user_form.get("full_name"),
+            full_name=full_name,
             created_at=self.get_utc_aware_date_for_mssql(),
             last_login=self.get_utc_aware_date_for_mssql(),
             payment_status=StripePaymentStatusEnum.PENDING.name,
