@@ -23,3 +23,14 @@ class CompanyInfoService:
             synchronize_session=False)
         self.db.commit()
         return CompanyInfoEnum.SUCCESS
+
+    def get_status(self):
+        if self.user.is_email_confirmed:
+            if self.user.is_with_card:
+                if self.user.company_name:
+                    return CompanyInfoEnum.DASHBOARD_ALLOWED
+            else:
+                return CompanyInfoEnum.DASHBOARD_ALLOWED
+        else:
+            return CompanyInfoEnum.NEED_EMAIL_VERIFIED
+
