@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { Box, Button, TextField, Typography, Link, IconButton, InputAdornment } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
-import axiosInstance from '../../axios/axiosInterceptorInstance';
+import axiosInterceptorInstance from '../../axios/axiosInterceptorInstance';
 import { AxiosError } from 'axios';
 import { loginStyles } from './loginStyles';
 import { showErrorToast } from '../../components/ToastNotification';
@@ -84,7 +84,7 @@ const Signup: React.FC = () => {
     }
   
     try {
-      const response = await axiosInstance.post('/login', formValues);
+      const response = await axiosInterceptorInstance.post('/login', formValues);
   
       if (response.status === 200) {
         const responseData = response.data;
@@ -162,8 +162,7 @@ const Signup: React.FC = () => {
         <GoogleLogin
           onSuccess={async (credentialResponse) => {
             try {
-              console.log(credentialResponse.credential)
-              const response = await axiosInstance.post('/login-google', {
+              const response = await axiosInterceptorInstance.post('/login-google', {
                 token: credentialResponse.credential,
               });
 

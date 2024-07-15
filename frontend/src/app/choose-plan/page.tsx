@@ -1,11 +1,11 @@
 "use client";
-import React, { Suspense } from 'react';
-import { Box, Button, Typography } from '@mui/material';
+import React, { Suspense, useState } from 'react';
+import { Box, Button, Typography, Menu, MenuItem } from '@mui/material';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-
+import PersonIcon from '@mui/icons-material/Person';
 import { planStyles } from './planStyles';
-
+import { useUser } from '../../context/UserContext'; // Assuming you have a UserContext to provide user information
 
 const PlanCard = ({ planName, price, features }: { planName: string; price: string; features: string[] }) => {
   return (
@@ -30,18 +30,35 @@ const PlanCard = ({ planName, price, features }: { planName: string; price: stri
         Talk to us
       </Button>
     </Box>
-
   );
 };
 
 const PlanPage: React.FC = () => {
   const router = useRouter();
+  const { full_name, email } = useUser(); // Assuming useUser hook provides user information
+
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const open = Boolean(anchorEl);
+
+  const handleProfileMenuClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleProfileMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleSettingsClick = () => {
+    handleProfileMenuClose();
+    router.push('/settings');
+  };
 
   const handleSignOut = () => {
     localStorage.clear();
     sessionStorage.clear();
     router.push('/signin');
   };
+
   const plans = [
     {
       planName: 'Basic Plan',
@@ -83,9 +100,36 @@ const PlanPage: React.FC = () => {
 
   return (
     <>
-      <Box sx={planStyles.logoContainer}>
-        <Image src="/logo.svg" alt="logo" height={80} width={60} />
+      <Box sx={planStyles.headers}>
+        <Box sx={planStyles.logoContainer}>
+          <Image src="/logo.svg" alt="logo" height={80} width={60} />
+        </Box>
+        <Button
+          aria-controls={open ? 'profile-menu' : undefined}
+          aria-haspopup="true"
+          aria-expanded={open ? 'true' : undefined}
+          onClick={handleProfileMenuClick}
+        >
+          <PersonIcon sx={planStyles.account} />
+        </Button>
+        <Menu
+          id="profile-menu"
+          anchorEl={anchorEl}
+          open={open}
+          onClose={handleProfileMenuClose}
+          MenuListProps={{
+            'aria-labelledby': 'profile-menu-button',
+          }}
+        >
+          <Box sx={{ p: 2 }}>
+            <Typography variant="h6">{full_name}</Typography>
+            <Typography variant="body2" color="textSecondary">{email}</Typography>
+          </Box>
+          <MenuItem onClick={handleSettingsClick}>Settings</MenuItem>
+          <MenuItem onClick={handleSignOut}>Sign Out</MenuItem>
+        </Menu>
       </Box>
+
       <Typography variant="h4" component="h1" sx={planStyles.title}>
         We’ve got a plan thats perfect for you!
       </Typography>
@@ -96,12 +140,6 @@ const PlanPage: React.FC = () => {
           </Box>
         ))}
       </Box>
-      <Button
-    onClick={handleSignOut}
-    sx={{ widht: '5%'}}
-  >
-    Sign Out
-  </Button>
     </>
   );
 };
