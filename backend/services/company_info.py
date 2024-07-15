@@ -1,6 +1,7 @@
 import logging
 
 from enums import CompanyInfoEnum
+from models.plans import UserSubscriptionPlan
 from models.users import Users
 from sqlalchemy.orm import Session
 
@@ -33,13 +34,18 @@ class CompanyInfoService:
         return self.check_company_info_authorization()
 
     def check_company_info_authorization(self):
+        if not self.user.is_with_card and not self.user.is_email_confirmed:
+            return CompanyInfoEnum.NEED_EMAIL_VERIFIED
+
+        if not self.user.company_name:
+            return CompanyInfoEnum.SUCCESS
+
         if self.user.is_with_card:
-            if self.user.company_name:
+            subscription_plan_exists = self.db.query(UserSubscriptionPlan).filter(
+                UserSubscriptionPlan.user_id == self.user.id).scalar()
+            if subscription_plan_exists:
                 return CompanyInfoEnum.DASHBOARD_ALLOWED
-            else:
-                return CompanyInfoEnum.SUCCESS
-        else:
-            if self.user.is_email_confirmed:
-                return CompanyInfoEnum.DASHBOARD_ALLOWED
-            else:
-                return CompanyInfoEnum.NEED_EMAIL_VERIFIED
+            return CompanyInfoEnum.NEED_CHOOSE_PLAN
+
+        return CompanyInfoEnum.DASHBOARD_ALLOWED
+
