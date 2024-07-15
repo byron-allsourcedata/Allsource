@@ -1,11 +1,14 @@
 from fastapi import APIRouter, Depends, Query, HTTPException
 from fastapi.params import Header
-from dependencies import get_users_auth_service, get_users_email_verification_service, get_dashboard_service
+from dependencies import get_users_auth_service, get_users_email_verification_service, get_dashboard_service, \
+    get_users_service, get_company_info_service
 from schemas.auth_google_token import AuthGoogleToken
 from schemas.users import UserSignUpForm, UserSignUpFormResponse, UserLoginFormResponse, UserLoginForm, UpdatePassword, \
     ResendVerificationEmailResponse, ResetPasswordForm, ResetPasswordResponse, UpdatePasswordResponse, \
-    CheckVerificationStatusResponse, VerifyTokenResponse
+    CheckVerificationStatusResponse, VerifyTokenResponse, CompanyInfo, CompanyInfoResponse
+from services.company_info import CompanyInfoService
 from services.dashboard_service import DashboardService
+from services.users import UsersService
 from services.users_auth import UsersAuth
 from services.users_email_verification import UsersEmailVerificationService
 from typing_extensions import Annotated
@@ -14,7 +17,7 @@ router = APIRouter()
 
 
 @router.get("/me")
-def get(user: UsersEmailVerificationService = Depends(get_users_email_verification_service)):
+def get(user: UsersService = Depends(get_users_service)):
     return user.get_my_info()
 
 
@@ -76,9 +79,16 @@ async def reset_password(reset_password_form: ResetPasswordForm, user: UsersAuth
 
 @router.post("/update-password", response_model=UpdatePasswordResponse)
 async def update_password(update_data: UpdatePassword,
-                          user: UsersEmailVerificationService = Depends(get_users_email_verification_service)):
+                          user: UsersService = Depends(get_users_service)):
     result_status = user.update_password(update_data)
     return UpdatePasswordResponse(status=result_status)
+
+
+@router.post("/company-info", response_model=CompanyInfoResponse)
+async def set_company_info(company_info: CompanyInfo,
+                           company_info_service: CompanyInfoService = Depends(get_company_info_service)):
+    result_status = company_info_service.set_company_info(company_info)
+    return CompanyInfoResponse(status=result_status)
 
 
 @router.get("/check-verification-status", response_model=CheckVerificationStatusResponse)

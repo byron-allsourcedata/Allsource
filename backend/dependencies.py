@@ -14,6 +14,7 @@ from enums import UserAuthorizationStatus
 from exceptions import InvalidToken
 from persistence.plans_persistence import PlansPersistence
 from schemas.auth_token import Token
+from services.company_info import CompanyInfoService
 from services.dashboard_service import DashboardService
 from services.payments import PaymentsService
 from services.payments_plans import PaymentsPlans
@@ -130,7 +131,7 @@ def get_users_auth_service(db: Session = Depends(get_db),
                      send_grid_persistence_service=send_grid_persistence_service)
 
 
-def get_users_service(user: User = Depends(check_user_authorization),
+def get_users_service(user: User = Depends(check_user_authentication),
                       user_persistence_service: UserPersistence = Depends(get_user_persistence_service)):
     return UsersService(user=user, user_persistence_service=user_persistence_service)
 
@@ -153,10 +154,14 @@ def get_payments_service(plans_service: PlansService = Depends(get_plans_service
     return PaymentsService(plans_service=plans_service)
 
 
+def get_company_info_service(db: Session = Depends(get_db), user: User = Depends(check_user_authentication)):
+    return CompanyInfoService(db=db, user=user)
+
+
 def get_users_email_verification_service(user: User = Depends(check_user_authentication),
                                          user_persistence_service: UserPersistence = Depends(
                                              get_user_persistence_service),
-                                         send_grid_persistence_service: SendgridPersistence = Depends(
+                                         sendgrid_persistence_service: SendgridPersistence = Depends(
                                              get_send_grid_persistence_service)):
     return UsersEmailVerificationService(user=user, user_persistence_service=user_persistence_service,
-                                         send_grid_persistence_service=send_grid_persistence_service)
+                                         send_grid_persistence_service=sendgrid_persistence_service)

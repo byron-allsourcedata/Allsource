@@ -59,10 +59,15 @@ class AutomationSystemTemplate(Enum):
     FORGOT_PASSWORD_TEMPLATE = 'forgot_password_template'
 
 
-class ResetPasswordTemplate(Enum):
+class ResetPasswordEnum(Enum):
     SUCCESS = 'SUCCESS'
     NOT_VALID_EMAIL = 'NOT_VALID_EMAIL'
     RESEND_TOO_SOON = 'RESEND_TOO_SOON'
+
+
+class CompanyInfoEnum(Enum):
+    SUCCESS = 'SUCCESS'
+    NEED_EMAIL_VERIFIED = 'NEED_EMAIL_VERIFIED'
 
 
 class VerifyToken(Enum):
