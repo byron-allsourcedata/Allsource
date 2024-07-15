@@ -131,6 +131,8 @@ class UsersAuth:
                 'status': LoginStatus.NOT_VALID_EMAIL
             }
         user_object = self.user_persistence_service.get_user_by_email(email)
+        if not user_object.is_email_confirmed:
+            self.user_persistence_service.email_confirmed(user_object.id)
         if user_object:
             token_info = {
                 "id": user_object.id,
