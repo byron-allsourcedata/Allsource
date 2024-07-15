@@ -14,7 +14,7 @@ const AccountSetupPage = () => {
   const [websiteLink, setWebsiteLink] = useState('');
   const [corporateEmail, setCorporateEmail] = useState('');
   const [selectedEmployees, setSelectedEmployees] = useState('');
-  const [errors, setErrors] = useState({ websiteLink: '', corporateEmail: '', organizationName: '', selectedEmployees: '' }); // Добавлено состояние для ошибки выбора количества работников
+  const [errors, setErrors] = useState({ websiteLink: '', corporateEmail: '', organizationName: '', selectedEmployees: '' });
   const router = useRouter();
   const { full_name, email } = useUser();
 
@@ -48,7 +48,7 @@ const AccountSetupPage = () => {
 
   const handleEmployeeRangeChange = (label: string) => {
     setSelectedEmployees(label);
-    setErrors({ ...errors, selectedEmployees: '' }); // Сброс ошибки выбора количества работников при выборе
+    setErrors({ ...errors, selectedEmployees: '' });
   };
 
   const validateField = (value: string, type: 'email' | 'website' | 'organizationName'): string => {
@@ -72,7 +72,7 @@ const AccountSetupPage = () => {
       websiteLink: validateField(websiteLink, 'website'),
       corporateEmail: validateField(corporateEmail, 'email'),
       organizationName: validateField(organizationName, 'organizationName'),
-      selectedEmployees: selectedEmployees ? '' : 'Please select number of employees', // Добавлена проверка выбора количества работников
+      selectedEmployees: selectedEmployees ? '' : 'Please select number of employees',
     };
     setErrors(newErrors);
 
