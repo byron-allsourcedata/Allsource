@@ -158,8 +158,6 @@ class UsersAuth:
                 'status': SignUpStatus.EMAIL_ALREADY_EXISTS
             }
         customer_id = stripe_service.create_customer(user_form)
-        print(user_form)
-        print(type(user_form))
         user_data = {
             "email": user_form.email,
             "full_name": user_form.full_name,
