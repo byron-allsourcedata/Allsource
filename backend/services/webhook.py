@@ -47,6 +47,5 @@ class WebhookService:
                 self.subscription_service.create_new_usp(user_data.id, user_subscription.id, request_price_id)
             else:
                 self.subscription_service.update_subscription_id(user_plan["id"], user_subscription.id)
-
             return self.subscription_service.construct_webhook_response(user_subscription)
         return payload

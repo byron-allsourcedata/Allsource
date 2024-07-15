@@ -1,7 +1,7 @@
 from typing import Optional
 from pydantic import BaseModel, Field
-from enums import SignUpStatus, LoginStatus, BaseEnum, VerificationEmail, UpdatePasswordStatus, ResetPasswordTemplate, \
-    VerifyToken
+from enums import SignUpStatus, LoginStatus, BaseEnum, VerificationEmail, UpdatePasswordStatus, ResetPasswordEnum, \
+    VerifyToken, CompanyInfoEnum
 
 
 class UserSignUpForm(BaseModel):
@@ -35,6 +35,13 @@ class UpdatePassword(BaseModel):
     confirm_password: str = Field(...)
 
 
+class CompanyInfo(BaseModel):
+    organization_name: str = Field(...)
+    company_website: str = Field(...)
+    email_address: str = Field(...)
+    employees_workers: str = Field(...)
+
+
 class BaseFormResponse(BaseModel):
     status: BaseEnum
 
@@ -44,11 +51,15 @@ class ResendVerificationEmailResponse(BaseModel):
 
 
 class ResetPasswordResponse(BaseModel):
-    status: ResetPasswordTemplate
+    status: ResetPasswordEnum
 
 
 class UpdatePasswordResponse(BaseModel):
     status: UpdatePasswordStatus
+
+
+class CompanyInfoResponse(BaseModel):
+    status: CompanyInfoEnum
 
 
 class CheckVerificationStatusResponse(BaseModel):
