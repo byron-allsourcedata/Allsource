@@ -66,7 +66,7 @@ class ResetPasswordEnum(Enum):
 
 class CompanyInfoEnum(Enum):
     SUCCESS = 'SUCCESS'
-    IS_WITHOUT_CARD = 'IS_WITHOUT_CARD'
+    NEED_EMAIL_VERIFIED = 'NEED_EMAIL_VERIFIED'
 
 
 class VerifyToken(Enum):
