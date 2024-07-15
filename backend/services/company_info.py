@@ -30,7 +30,7 @@ class CompanyInfoService:
             return result
 
     def get_company_info(self):
-        self.check_company_info_authorization()
+        return self.check_company_info_authorization()
 
     def check_company_info_authorization(self):
         if self.user.is_with_card:
