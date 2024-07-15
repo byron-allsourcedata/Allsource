@@ -89,7 +89,10 @@ class UsersAuth:
         customer_id = stripe_service.create_customer_google(google_payload)
         user_object = self.add_user(is_without_card=is_without_card, customer_id=customer_id, user_form=google_payload)
         self.user_persistence_service.update_user_parent_v2(user_object.get("id"))
-        token = create_access_token(user_object)
+        token_info = {
+            "id": user_object.get("id"),
+        }
+        token = create_access_token(token_info)
         logger.info("Token created")
         self.user_persistence_service.email_confirmed(user_object.get("id"))
         if not user_object.get("is_with_card"):
