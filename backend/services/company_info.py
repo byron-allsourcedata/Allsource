@@ -34,18 +34,20 @@ class CompanyInfoService:
         return self.check_company_info_authorization()
 
     def check_company_info_authorization(self):
-        if not self.user.is_with_card and not self.user.is_email_confirmed:
-            return CompanyInfoEnum.NEED_EMAIL_VERIFIED
-
-        if not self.user.company_name:
-            return CompanyInfoEnum.SUCCESS
-
         if self.user.is_with_card:
-            subscription_plan_exists = self.db.query(UserSubscriptionPlan).filter(
-                UserSubscriptionPlan.user_id == self.user.id).scalar()
-            if subscription_plan_exists:
-                return CompanyInfoEnum.DASHBOARD_ALLOWED
-            return CompanyInfoEnum.NEED_CHOOSE_PLAN
-
-        return CompanyInfoEnum.DASHBOARD_ALLOWED
-
+            if self.user.company_name:
+                subscription_plan = self.db.query(UserSubscriptionPlan, Users).join(UserSubscriptionPlan,
+                                                                         UserSubscriptionPlan.user_id == Users.id).filter(
+                    UserSubscriptionPlan.user_id == self.user.id).scalar()
+                if subscription_plan:
+                    return CompanyInfoEnum.DASHBOARD_ALLOWED
+                return CompanyInfoEnum.NEED_CHOOSE_PLAN
+            else:
+                return CompanyInfoEnum.SUCCESS
+        else:
+            if self.user.is_email_confirmed:
+                if self.user.company_name:
+                    return CompanyInfoEnum.DASHBOARD_ALLOWED
+                return CompanyInfoEnum.SUCCESS
+            else:
+                return CompanyInfoEnum.NEED_EMAIL_VERIFIED
