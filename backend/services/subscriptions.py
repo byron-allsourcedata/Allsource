@@ -116,6 +116,9 @@ class SubscriptionService:
         else:
             return sub_status in ACTIVE_STATUSES
 
+    def is_user_has_active_subscription(self, user_id):
+        return self.db.query(UserSubscriptionPlan).filter(UserSubscriptionPlan.user_id == user_id).limit(1).scalar()
+
     def determine_plan_name_from_price(self, product_id):
         import stripe
         product = stripe.Product.retrieve(product_id)
