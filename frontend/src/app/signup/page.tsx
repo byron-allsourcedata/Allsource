@@ -162,38 +162,17 @@ const Signup: React.FC = () => {
               if (response.data.status === 'SUCCESS') {
                 if (typeof window !== 'undefined') {
                   localStorage.setItem('token', response.data.token);
-                  axiosInstance.get('/me')
-                  .then(response => {
-                    sessionStorage.setItem('me', JSON.stringify({
-                      email: response.data.email,
-                      full_name: response.data.full_name
-                    }));
-                  })
                 }
                 router.push('/dashboard');
               } else if (response.data.status === 'NEED_CHOOSE_PLAN') {
                 if (typeof window !== 'undefined') {
                   localStorage.setItem('token', response.data.token);
-                  axiosInstance.get('/me')
-                  .then(response => {
-                    sessionStorage.setItem('me', JSON.stringify({
-                      email: response.data.email,
-                      full_name: response.data.full_name
-                    }));
-                  })
                 }
                 
                 router.push('/choose-plan');
               } else if (response.data.status === 'FILL_COMPANY_DETAILS') {
                 if (typeof window !== 'undefined') {
                   localStorage.setItem('token', response.data.token);
-                  axiosInstance.get('/me')
-                  .then(response => {
-                    sessionStorage.setItem('me', JSON.stringify({
-                      email: response.data.email,
-                      full_name: response.data.full_name
-                    }));
-                  })
                 }
                 router.push('/account-setup');
               } else {

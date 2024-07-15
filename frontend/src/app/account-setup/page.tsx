@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { Suspense, useState, useEffect } from 'react';
 import { Box, Button, Menu, MenuItem, TextField, Typography } from '@mui/material';
 import Image from 'next/image';
 import PersonIcon from '@mui/icons-material/Person';
@@ -9,7 +9,7 @@ import { useUser } from '../../context/UserContext';
 import axiosInterceptorInstance from '../../axios/axiosInterceptorInstance';
 import { showErrorToast } from '@/components/ToastNotification';
 
-const AccountSetupPage = () => {
+const AccountSetup = () => {
   const [organizationName, setOrganizationName] = useState('');
   const [websiteLink, setWebsiteLink] = useState('');
   const [corporateEmail, setCorporateEmail] = useState('');
@@ -17,6 +17,33 @@ const AccountSetupPage = () => {
   const [errors, setErrors] = useState({ websiteLink: '', corporateEmail: '', organizationName: '', selectedEmployees: '' });
   const router = useRouter();
   const { full_name, email } = useUser();
+
+  useEffect(() => {
+    const fetchCompanyInfo = async () => {
+      try {
+        const response = await axiosInterceptorInstance.get('/company-info');
+
+        const status = response.data.status;
+
+        switch (status) {
+          case "NEED_EMAIL_VERIFIED":
+            router.push('/email-verificate');
+            break;
+          case "NEED_CHOOSE_PLAN":
+            router.push('/choose-plan');
+            break;
+          case "DASHBOARD_ALLOWED":
+            router.push('/dashboard');
+            break;
+          default:
+            console.error('Unknown status:', status);
+        }
+      } catch (error) {
+        console.error('Error fetching company info:', error);
+      }
+    };
+    fetchCompanyInfo();
+  }, [router]);
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
@@ -229,6 +256,14 @@ const AccountSetupPage = () => {
         </Button>
       </Box>
     </Box>
+  );
+};
+
+const AccountSetupPage = () => {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <AccountSetup />
+    </Suspense>
   );
 };
 
