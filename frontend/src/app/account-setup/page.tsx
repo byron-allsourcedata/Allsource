@@ -90,7 +90,7 @@ const AccountSetupPage = () => {
 
       switch (response.data.status) {
         case 'SUCCESS':
-          router.push('/pixel-setup');
+          router.push('/dashboard');
           break;
         case 'NEED_EMAIL_VERIFIED':
           router.push('/email-verificate');
