@@ -9,12 +9,12 @@ class SubscriptionPlan(Base):
     __tablename__ = "subscription_plans"
 
     id = Column(Integer, primary_key=True)
-    title = Column(VARCHAR)
-    description = Column(VARCHAR)
-    interval = Column(VARCHAR)
-    stripe_price_id = Column(VARCHAR)
+    title = Column(VARCHAR(32))
+    description = Column(VARCHAR(128))
+    interval = Column(VARCHAR(16))
+    stripe_price_id = Column(VARCHAR(64))
     price = Column(NUMERIC(18, 2))
-    currency = Column(VARCHAR, default="usd")
+    currency = Column(VARCHAR(8), default="usd")
     trial_days = Column(INTEGER, default=7)
     is_default = Column(BOOLEAN, default=False)
     coupon_id = Column(VARCHAR)
