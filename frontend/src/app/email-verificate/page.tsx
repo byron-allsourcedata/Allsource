@@ -56,7 +56,7 @@ const EmailVerificate: React.FC = () => {
     if (canResend) {
       setCanResend(false);
       setTimer(60);
-      axiosInterceptorInstance.post('api/resend-verification-email', { token })
+      axiosInterceptorInstance.post('resend-verification-email', { token })
       .then(response => {
         if (response.status === 200 && response.data.status === "RESEND_TOO_SOON") {
           showErrorToast("Resend too soon, please wait.");
@@ -67,7 +67,7 @@ const EmailVerificate: React.FC = () => {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      axiosInterceptorInstance.get('api/check-verification-status')
+      axiosInterceptorInstance.get('check-verification-status')
         .then(response => {
           if (response.status === 200 && response.data.status === "EMAIL_VERIFIED") {
             notify();

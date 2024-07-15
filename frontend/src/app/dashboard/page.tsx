@@ -21,7 +21,7 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axiosInstance.get('api/dashboard');
+        const response = await axiosInstance.get('dashboard');
         setData(response.data);
       } catch (error) {
         console.error('Error fetching data:', error);

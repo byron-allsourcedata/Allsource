@@ -14,3 +14,13 @@ def create_customer(user: UserSignUpForm):
     )
     customer_id = customer.get("id")
     return customer_id
+
+
+def create_customer_google(user: dict):
+    customer = stripe.Customer.create(
+        email=user.get("email"),
+        description="User form web app signup form",
+        name=user.get("full_name")
+    )
+    customer_id = customer.get("id")
+    return customer_id

@@ -78,7 +78,7 @@ const ForgotPassword: React.FC = () => {
     }
 
     try {
-        const response = await axiosInstance.post('api/update-password', {
+        const response = await axiosInstance.post('update-password', {
           confirm_password: formValues.confirmPassword,
             password: formValues.password,
             

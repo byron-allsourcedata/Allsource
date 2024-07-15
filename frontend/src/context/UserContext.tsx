@@ -29,7 +29,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       setHasFetched(true); 
     } else if (token && !hasFetched) {
 
-      axiosInterceptorInstance.get('/api/me')
+      axiosInterceptorInstance.get('/me')
         .then(response => {
           const { email } = response.data;
           setEmail(email);
