@@ -93,8 +93,6 @@ class UsersAuth:
         logger.info("Token created")
         self.user_persistence_service.email_confirmed(user_object.id)
         if not user_object.is_with_card:
-            user_plan = self.plans_service.set_default_plan(user_object.id, True)
-            logger.info(f"Set plan {user_plan.title} for new user")
             return {
                 'status': SignUpStatus.FILL_COMPANY_DETAILS,
                 'token': token,
@@ -251,9 +249,6 @@ class UsersAuth:
                     'status': VerifyToken.EMAIL_ALREADY_VERIFIED,
                     'user_token': user_token
                 }
-            if check_user_object.is_with_card:
-                user_plan = self.plans_service.set_default_plan(check_user_object.id, True)
-                logger.info(f"Set plan {user_plan.title} for new user")
             self.user_persistence_service.email_confirmed(check_user_object.id)
             token_info = {
                 "id": check_user_object.id,
