@@ -43,8 +43,8 @@ const AccountSetupPage = () => {
       
       if (response.data.status === 'SUCCESS') {
         router.push('/pixel_setup');
-      } else if (response.data.status === 'IS_WITHOUT_CARD') {
-        router.push('/card_setup');
+      } else if (response.data.status === 'NEED_EMAIL_VERIFIED') {
+        router.push('/email-verificate');
       }
     } catch (error) {
       console.error('An error occurred:', error);

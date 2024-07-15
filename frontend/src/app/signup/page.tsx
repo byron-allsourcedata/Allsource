@@ -97,7 +97,7 @@ const Signup: React.FC = () => {
 
     if (Object.keys(newErrors).length === 0) {
       try {
-        const response = await axiosInstance.post('api/sign-up', formValues);
+        const response = await axiosInstance.post('/sign-up', formValues);
 
         if (response.status === 200) {
           const responseData = response.data;

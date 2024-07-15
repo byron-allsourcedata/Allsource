@@ -16,7 +16,7 @@ from google.oauth2 import id_token
 from enums import SignUpStatus, StripePaymentStatusEnum, AutomationSystemTemplate, LoginStatus, ResetPasswordTemplate, VerifyToken
 from typing import Optional
 
-from schemas.auth_google_token import AuthGoogleToken
+from schemas.auth_google_token import AuthGoogleData
 from schemas.users import UserSignUpForm, UserLoginForm, ResetPasswordForm
 
 logger = logging.getLogger(__name__)
@@ -42,18 +42,15 @@ class UsersAuth:
     def add_user(self, is_without_card, customer_id: str, user_form: dict):
         user_object = Users(
             email=user_form.get("email"),
-            is_email_confirmed=False,
+            is_email_confirmed=user_form.get("is_email_confirmed"),
             password=user_form.get("password"),
             is_company_details_filled=False,
             full_name=user_form.get("full_name"),
-            image=user_form.get("image"),
-            company=user_form.get("company"),
             created_at=self.get_utc_aware_date_for_mssql(),
             last_login=self.get_utc_aware_date_for_mssql(),
             payment_status=StripePaymentStatusEnum.PENDING.name,
             parent_id=0,
             customer_id=customer_id,
-            website=user_form.get("website")
         )
         if not is_without_card:
             user_object.is_with_card = True
@@ -64,7 +61,7 @@ class UsersAuth:
         }
         return token_info
 
-    def create_account_google(self, auth_google_token: AuthGoogleToken):
+    def create_account_google(self, auth_google_token: AuthGoogleData):
         client_id = os.getenv("CLIENT_GOOGLE_ID")
         google_request = google_requests.Request()
         is_without_card = auth_google_token.is_without_card
@@ -74,9 +71,7 @@ class UsersAuth:
                 "email": idinfo.get("email"),
                 "full_name": f"{idinfo.get('given_name')} {idinfo.get('family_name')}",
                 "password": None,
-                "image": None,
-                "company": None,
-                "website": None
+                "is_email_confirmed": True,
             }
             email = idinfo.get("email")
         else:
@@ -125,7 +120,7 @@ class UsersAuth:
                     'status': LoginStatus.FILL_COMPANY_DETAILS,
                 }
 
-    def login_google(self, auth_google_token: AuthGoogleToken):
+    def login_google(self, auth_google_token: AuthGoogleData):
         client_id = os.getenv("CLIENT_GOOGLE_ID")
         google_request = google_requests.Request()
         idinfo = id_token.verify_oauth2_token(auth_google_token.token, google_request, client_id)

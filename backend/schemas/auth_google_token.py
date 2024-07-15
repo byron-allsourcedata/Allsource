@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
 
-class AuthGoogleToken(BaseModel):
+class AuthGoogleData(BaseModel):
     token: str
     is_without_card: bool
