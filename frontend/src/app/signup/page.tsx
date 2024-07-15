@@ -19,9 +19,7 @@ const Signup: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [formValues, setFormValues] = useState({ full_name: '', email: '', password: '', is_without_card: isWithoutCard ? 'true' : 'false' });
-  const handleGoogleSignup = () => {
-    console.log('Google signup clicked');
-  };
+
 
   useEffect(() => {
     if (typeof window !== 'undefined') {

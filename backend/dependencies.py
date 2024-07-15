@@ -61,8 +61,9 @@ def get_user_authorization_status(user: User):
     else:
         if not user.is_email_confirmed:
             return UserAuthorizationStatus.NEED_CONFIRM_EMAIL
-        if not user.is_company_details_filled:
+        if not user.company_name:
             return UserAuthorizationStatus.FILL_COMPANY_DETAILS
+
     return UserAuthorizationStatus.SUCCESS
 
 
