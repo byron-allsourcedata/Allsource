@@ -39,24 +39,13 @@ class UsersAuth:
             date += delta
         return date.isoformat()[:-6] + "Z"
 
-    def add_user(self, is_without_card, customer_id: str, user_form):
-        if isinstance(user_form, dict):
-            email = user_form.get('email')
-            is_email_confirmed = user_form.get('is_email_confirmed', False)
-            password = user_form.get('password')
-            full_name = user_form.get('full_name')
-        else:
-            email = getattr(user_form, 'email', None)
-            is_email_confirmed = getattr(user_form, 'is_email_confirmed', False)
-            password = getattr(user_form, 'password', None)
-            full_name = getattr(user_form, 'full_name', None)
-
+    def add_user(self, is_without_card, customer_id: str, user_form: dict):
         user_object = Users(
-            email=email,
-            is_email_confirmed=is_email_confirmed,
-            password=password,
+            email=user_form.get('email'),
+            is_email_confirmed = user_form.get('is_email_confirmed', False),
+            password = user_form.get('password'),
             is_company_details_filled=False,
-            full_name=full_name,
+            full_name = user_form.get('full_name'),
             created_at=self.get_utc_aware_date_for_mssql(),
             last_login=self.get_utc_aware_date_for_mssql(),
             payment_status=StripePaymentStatusEnum.PENDING.name,
@@ -169,7 +158,14 @@ class UsersAuth:
                 'status': SignUpStatus.EMAIL_ALREADY_EXISTS
             }
         customer_id = stripe_service.create_customer(user_form)
-        user_object = self.add_user(is_without_card, customer_id, user_form)
+        print(user_form)
+        print(type(user_form))
+        user_data = {
+            "email": user_form.email,
+            "full_name": user_form.full_name,
+            "password": user_form.password,
+        }
+        user_object = self.add_user(is_without_card, customer_id, user_form=user_data)
         self.user_persistence_service.update_user_parent_v2(user_object.id)
         token_info = {
             "id": user_object.id,
