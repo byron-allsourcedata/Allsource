@@ -57,7 +57,6 @@ const PlanPage: React.FC = () => {
     try {
       const response = await axiosInterceptorInstance.get(`/subscriptions/session/new?price_id=${stripePriceId}`);
       if (response.status === 200) {
-        console.log(response)
         window.location.href = response.data.link;
       }
     } catch (error) {
