@@ -37,7 +37,7 @@ const PlanCard = ({ plan, onChoose }: { plan: any; onChoose: (stripePriceId: str
 
 const PlanPage: React.FC = () => {
   const router = useRouter();
-  const { full_name, email } = useUser(); // Assuming useUser hook provides user information
+  const { full_name, email } = useUser(); 
   const [plans, setPlans] = useState<any[]>([]);
 
   useEffect(() => {
@@ -120,7 +120,7 @@ const PlanPage: React.FC = () => {
       </Box>
 
       <Typography variant="h4" component="h1" sx={planStyles.title}>
-        We’ve got a plan that's perfect for you!
+        We&apos;ve got a plan that&apos;s perfect for you!
       </Typography>
       <Box sx={planStyles.formContainer}>
         {plans.map((plan, index) => (

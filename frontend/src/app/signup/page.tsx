@@ -20,6 +20,9 @@ const Signup: React.FC = () => {
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [formValues, setFormValues] = useState({ full_name: '', email: '', password: '', is_without_card: isWithoutCard ? 'true' : 'false' });
 
+  const navigateTo = (path: string) => {
+    window.location.href = path;
+  };
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -159,31 +162,30 @@ const Signup: React.FC = () => {
                 is_without_card: isWithoutCard,
               });
 
-              if (response.data.status === 'SUCCESS') {
-                if (typeof window !== 'undefined') {
-                  localStorage.setItem('token', response.data.token);
+              if (response.status === 200) {
+                const responseData = response.data;
+                if (responseData.token) {
+                  if (typeof window !== 'undefined') {
+                    await localStorage.setItem('token', response.data.token);
+                  }
                 }
-                router.push('/dashboard');
-              } else if (response.data.status === 'NEED_CHOOSE_PLAN') {
-                if (typeof window !== 'undefined') {
-                  localStorage.setItem('token', response.data.token);
+              } if (response.data.status === 'SUCCESS') {
+                    navigateTo('/dashboard')
+                  } else if (response.data.status === 'NEED_CHOOSE_PLAN') {
+                    router.push('/choose-plan');
+                  } else if (response.data.status === 'FILL_COMPANY_DETAILS') {
+                    navigateTo('/account-setup');
+                  } else if (response.data.status === 'EMAIL_ALREADY_EXISTS') {
+                    showErrorToast('A user with this email is already registered')
+                  } else {
+                    console.error('Authorization failed:', response.data.status);
                 }
-                
-                router.push('/choose-plan');
-              } else if (response.data.status === 'FILL_COMPANY_DETAILS') {
-                if (typeof window !== 'undefined') {
-                  localStorage.setItem('token', response.data.token);
-                }
-                router.push('/account-setup');
-              } else {
-                console.error('Authorization failed:', response.data.status);
+              } catch (error) {
+                console.error('Error during Google login:', error);
               }
-            } catch (error) {
-              console.error('Error during Google login:', error);
-            }
-          }}
+            }}
           onError={() => {
-            console.log('Login Failed');
+            showErrorToast('Login Failed');
           }}
           ux_mode="popup"
         />
