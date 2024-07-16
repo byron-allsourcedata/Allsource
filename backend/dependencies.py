@@ -131,10 +131,9 @@ def get_users_auth_service(db: Session = Depends(get_db),
                            payments_plans: PaymentsPlans = Depends(get_payments_plans_service),
                            user_persistence_service: UserPersistence = Depends(get_user_persistence_service),
                            send_grid_persistence_service: SendgridPersistence = Depends(
-                               get_send_grid_persistence_service)):
+                               get_send_grid_persistence_service), subscription_service: SubscriptionService = Depends(get_subscription_service)):
     return UsersAuth(db=db, payments_service=payments_plans, user_persistence_service=user_persistence_service,
-                     send_grid_persistence_service=send_grid_persistence_service)
-
+                     send_grid_persistence_service=send_grid_persistence_service, subscription_service=subscription_service)
 
 def get_users_service(user: User = Depends(check_user_authentication),
                       user_persistence_service: UserPersistence = Depends(get_user_persistence_service)):

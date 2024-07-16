@@ -2,6 +2,7 @@ from datetime import datetime, timedelta, timezone
 
 from sqlalchemy.orm import Session
 
+from dependencies import get_user_authorization_status
 from . import stripe_service
 from .jwt_service import get_password_hash, create_access_token, verify_password, decode_jwt_data
 from persistence.sendgrid_persistence import SendgridPersistence
@@ -18,17 +19,19 @@ from typing import Optional
 
 from schemas.auth_google_token import AuthGoogleData
 from schemas.users import UserSignUpForm, UserLoginForm, ResetPasswordForm
+from .subscriptions import SubscriptionService
 
 logger = logging.getLogger(__name__)
 
 
 class UsersAuth:
     def __init__(self, db: Session, payments_service: PaymentsPlans, user_persistence_service: UserPersistence,
-                 send_grid_persistence_service: SendgridPersistence):
+                 send_grid_persistence_service: SendgridPersistence, subscription_service: SubscriptionService):
         self.db = db
         self.payments_service = payments_service
         self.user_persistence_service = user_persistence_service
         self.send_grid_persistence_service = send_grid_persistence_service
+        self.subscription_service = subscription_service
 
     def get_utc_aware_date(self):
         return datetime.now(timezone.utc).replace(microsecond=0)
@@ -103,21 +106,6 @@ class UsersAuth:
             'token': token,
         }
 
-    def get_user_authorization_status(self, user_object):
-        if user_object.is_with_card:
-            self.check_user_subscription(user_object)
-        else:
-            if not user_object.is_email_confirmed:
-                return {
-                    'is_success': True,
-                    'status': LoginStatus.NEED_CONFIRM_EMAIL,
-                }
-            if not user_object.is_company_details_filled:
-                return {
-                    'is_success': True,
-                    'status': LoginStatus.FILL_COMPANY_DETAILS,
-                }
-
     def login_google(self, auth_google_data: AuthGoogleData):
         client_id = os.getenv("CLIENT_GOOGLE_ID")
         google_request = google_requests.Request()
@@ -140,7 +128,7 @@ class UsersAuth:
                 "id": user_object.id,
             }
             token = create_access_token(token_info)
-            self.get_user_authorization_status(user_object)
+            get_user_authorization_status(user_object, self.subscription_service)
             return {
                 'status': LoginStatus.SUCCESS,
                 'token': token
@@ -152,6 +140,18 @@ class UsersAuth:
             }
 
     def create_account(self, user_form: UserSignUpForm):
+        if not user_form.password:
+            logger.debug("The password must not be empty.")
+            return {
+                'is_success': True,
+                'status': SignUpStatus.PASSWORD_NOT_VALID
+            }
+        elif ' ' in user_form.password:
+            logger.debug("The password must not contain spaces.")
+            return {
+                'is_success': True,
+                'status': SignUpStatus.PASSWORD_NOT_VALID
+            }
         user_form.password = get_password_hash(user_form.password)
         check_user_object = self.user_persistence_service.get_user_by_email(user_form.email)
         is_without_card = user_form.is_without_card
@@ -204,14 +204,6 @@ class UsersAuth:
             'token': token,
         }
 
-    def check_user_subscription(self, user_object):
-        # if not user_object.is_company_details_filled:
-        #     return LoginStatus.FILL_COMPANY_DETAILS
-        return {
-            'is_success': True,
-            'status': LoginStatus.NEED_CHOOSE_PLAN
-        }
-
     def login_account(self, login_form: UserLoginForm):
         email = login_form.email
         password = login_form.password
@@ -226,7 +218,7 @@ class UsersAuth:
                     "id": user_object.id,
                 }
                 token = create_access_token(token_info)
-                self.get_user_authorization_status(user_object)
+                get_user_authorization_status(user_object, self.subscription_service)
                 return {
                     'status': LoginStatus.SUCCESS,
                     'token': token
