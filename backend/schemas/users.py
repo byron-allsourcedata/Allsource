@@ -19,6 +19,7 @@ class UserSignUpFormResponse(BaseModel):
 class UserLoginFormResponse(BaseModel):
     status: LoginStatus
     token: Optional[str] = None
+    stripe_payment_url: Optional[str] = None
 
 
 class UserLoginForm(BaseModel):

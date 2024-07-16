@@ -39,7 +39,7 @@ def get(dashboard_service: DashboardService = Depends(get_dashboard_service)):
 @router.post("/login", response_model=UserLoginFormResponse)
 async def login_user(user_form: UserLoginForm, users_service: UsersAuth = Depends(get_users_auth_service)):
     user_data = users_service.login_account(user_form)
-    return UserLoginFormResponse(status=user_data.get('status'), token=user_data.get("token", None))
+    return UserLoginFormResponse(status=user_data.get('status'), token=user_data.get("token", None), stripe_payment_url=user_data.get('stripe_payment_url', None))
 
 
 @router.post("/sign-up-google", response_model=UserSignUpFormResponse)
@@ -52,7 +52,7 @@ async def create_user_google(auth_google_token: AuthGoogleData, users: UsersAuth
 @router.post("/login-google", response_model=UserLoginFormResponse)
 async def create_user_google(auth_google_token: AuthGoogleData, users: UsersAuth = Depends(get_users_auth_service)):
     user_data = users.login_google(auth_google_token)
-    return UserLoginFormResponse(status=user_data.get('status'), token=user_data.get("token", None))
+    return UserLoginFormResponse(status=user_data.get('status'), token=user_data.get("token", None), stripe_payment_url=user_data.get('stripe_payment_url', None))
 
 
 @router.get("/authentication/verify-token", response_model=VerifyTokenResponse)
