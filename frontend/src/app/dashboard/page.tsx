@@ -8,9 +8,10 @@ import { useUser } from '../../context/UserContext';
 import axiosInstance from '../../axios/axiosInterceptorInstance';
 import { dashboardStyles } from './dashboardStyles';
 import dynamic from 'next/dynamic';
-import {ProgressSection} from '../../components/ProgressSection';
+import { ProgressSection } from '../../components/ProgressSection';
 import { PixelInstallation } from '../../components/PixelInstallation';
-import { Phone } from '@mui/icons-material';
+import Slider from '../../components/Slider';
+import { AxiosError } from 'axios';
 
 const Sidebar = dynamic(() => import('../../components/Sidebar'), {
   suspense: true,
@@ -66,13 +67,12 @@ const SupportSection: React.FC = () => (
   </Box>
 );
 
-
-
 const Dashboard: React.FC = () => {
   const router = useRouter();
   const { full_name, email } = useUser();
   const [data, setData] = useState<any>(null);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [showSlider, setShowSlider] = useState(false); 
   const open = Boolean(anchorEl);
 
   const handleSignOut = () => {
@@ -100,7 +100,15 @@ const Dashboard: React.FC = () => {
         const response = await axiosInstance.get('dashboard');
         setData(response.data);
       } catch (error) {
-        console.error('Error fetching data:', error);
+        if (error instanceof AxiosError && error.response?.status === 403) {
+          if (error.response.data.status === 'NEED_BOOK_CALL') {
+            setShowSlider(true);
+          } else {
+            setShowSlider(false);
+          }
+        } else {
+          console.error('Error fetching data:', error);
+        }
       }
     };
 
@@ -109,6 +117,7 @@ const Dashboard: React.FC = () => {
 
   return (
     <>
+      {showSlider && <Slider />}
       <Box sx={dashboardStyles.headers}>
         <Box sx={dashboardStyles.logoContainer}>
           <Image src='/logo.svg' alt='logo' height={80} width={60} />

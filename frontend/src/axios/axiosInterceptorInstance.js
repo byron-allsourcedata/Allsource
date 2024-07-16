@@ -50,9 +50,6 @@ axiosInterceptorInstance.interceptors.response.use(
             case "NEED_CHOOSE_PLAN":
               navigateTo("/choose-plan");
               break;
-            case "NEED_BOOK_CALL":
-              navigateTo("/dashboard-setup");
-              break;
             case "PAYMENT_NEEDED":
               navigateTo(`${response.data.stripe_payment_url}`);
               break;

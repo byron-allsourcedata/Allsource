@@ -132,7 +132,7 @@ const Signup: React.FC = () => {
               router.push('/email-verificate');
               break;
             case "NEED_BOOK_CALL":
-              router.push('/dashboard-setup')
+              router.push('/dashboard')
               break;
             case "PAYMENT_NEEDED":
               router.push(`${response.data.stripe_payment_url}`)
