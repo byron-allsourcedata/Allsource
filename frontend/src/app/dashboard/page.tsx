@@ -1,3 +1,4 @@
+// pages/dashboard.tsx
 'use client';
 import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
@@ -8,9 +9,10 @@ import { useUser } from '../../context/UserContext';
 import axiosInstance from '../../axios/axiosInterceptorInstance';
 import { dashboardStyles } from './dashboardStyles';
 import dynamic from 'next/dynamic';
-import {ProgressSection} from '../../components/ProgressSection'
-import { PixelInstallation } from '../../components/PixelInstallation'
+import {ProgressSection} from '../../components/ProgressSection';
+import { PixelInstallation } from '../../components/PixelInstallation';
 import { Phone } from '@mui/icons-material';
+import Slider from '../../components/Slider'; // Импортируем компонент Slider
 
 const Sidebar = dynamic(() => import('../../components/Sidebar'), {
   suspense: true,
@@ -109,6 +111,7 @@ const Dashboard: React.FC = () => {
 
   return (
     <>
+      <Slider /> {/* Включаем компонент Slider */}
       <Box sx={dashboardStyles.headers}>
         <Box sx={dashboardStyles.logoContainer}>
           <Image src='/logo.svg' alt='logo' height={80} width={60} />
