@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta, timezone
 
+from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
-
 from . import stripe_service
 from .jwt_service import get_password_hash, create_access_token, verify_password, decode_jwt_data
 from persistence.sendgrid_persistence import SendgridPersistence
@@ -10,25 +10,28 @@ from persistence.user_persistence import UserPersistence
 import os
 from google.auth.transport import requests as google_requests
 from services.payments_plans import PaymentsPlans
-from models.users import Users
+from models.users import Users, User
 import logging
 from google.oauth2 import id_token
-from enums import SignUpStatus, StripePaymentStatusEnum, AutomationSystemTemplate, LoginStatus, ResetPasswordEnum, VerifyToken
+from enums import SignUpStatus, StripePaymentStatusEnum, AutomationSystemTemplate, LoginStatus, ResetPasswordEnum, \
+    VerifyToken, UserAuthorizationStatus
 from typing import Optional
 
 from schemas.auth_google_token import AuthGoogleData
 from schemas.users import UserSignUpForm, UserLoginForm, ResetPasswordForm
+from .subscriptions import SubscriptionService
 
 logger = logging.getLogger(__name__)
 
 
 class UsersAuth:
     def __init__(self, db: Session, payments_service: PaymentsPlans, user_persistence_service: UserPersistence,
-                 send_grid_persistence_service: SendgridPersistence):
+                 send_grid_persistence_service: SendgridPersistence, subscription_service: SubscriptionService):
         self.db = db
         self.payments_service = payments_service
         self.user_persistence_service = user_persistence_service
         self.send_grid_persistence_service = send_grid_persistence_service
+        self.subscription_service = subscription_service
 
     def get_utc_aware_date(self):
         return datetime.now(timezone.utc).replace(microsecond=0)
@@ -103,20 +106,37 @@ class UsersAuth:
             'token': token,
         }
 
-    def get_user_authorization_status(self, user_object):
-        if user_object.is_with_card:
-            self.check_user_subscription(user_object)
+    def get_user_authorization_information(self, user: User, subscription_service: SubscriptionService):
+        if user.is_with_card:
+            if user.company_name:
+                subscription_plan_is_active = subscription_service.is_user_has_active_subscription(user.id)
+                if subscription_plan_is_active:
+
+                    return {'status': LoginStatus.SUCCESS}
+                else:
+                    return {'status': LoginStatus.NEED_CHOOSE_PLAN}
+            else:
+                return {'status': LoginStatus.FILL_COMPANY_DETAILS}
         else:
-            if not user_object.is_email_confirmed:
-                return {
-                    'is_success': True,
-                    'status': LoginStatus.NEED_CONFIRM_EMAIL,
-                }
-            if not user_object.is_company_details_filled:
-                return {
-                    'is_success': True,
-                    'status': LoginStatus.FILL_COMPANY_DETAILS,
-                }
+            if user.is_email_confirmed:
+                if user.company_name:
+                    if user.is_book_call_passed:
+                        subscription_plan_is_active = subscription_service.is_user_has_active_subscription(user.id)
+                        if subscription_plan_is_active:
+                            return {'status': LoginStatus.SUCCESS}
+                        else:
+                            if user.stripe_payment_url:
+                                return {
+                                    'status': LoginStatus.PAYMENT_NEEDED,
+                                    'stripe_payment_url': user.stripe_payment_url
+                                }
+                            else:
+                                return {'status': LoginStatus.NEED_CHOOSE_PLAN}
+                    else:
+                        return {'status': LoginStatus.NEED_BOOK_CALL}
+                else:
+                    return {'status': LoginStatus.FILL_COMPANY_DETAILS}
+        return {'status': LoginStatus.NEED_CONFIRM_EMAIL}
 
     def login_google(self, auth_google_data: AuthGoogleData):
         client_id = os.getenv("CLIENT_GOOGLE_ID")
@@ -140,7 +160,18 @@ class UsersAuth:
                 "id": user_object.id,
             }
             token = create_access_token(token_info)
-            self.get_user_authorization_status(user_object)
+            authorization_data = self.get_user_authorization_information(user_object, self.subscription_service)
+            if authorization_data['status'] == LoginStatus.PAYMENT_NEEDED:
+                return {
+                    'status': authorization_data['status'].value,
+                    'token': token,
+                    'stripe_payment_url': authorization_data['stripe_payment_url']
+                }
+            if authorization_data['status'] != UserAuthorizationStatus.SUCCESS:
+                return {
+                    'status': authorization_data['status'].value,
+                    'token': token
+                }
             return {
                 'status': LoginStatus.SUCCESS,
                 'token': token
@@ -152,6 +183,18 @@ class UsersAuth:
             }
 
     def create_account(self, user_form: UserSignUpForm):
+        if not user_form.password:
+            logger.debug("The password must not be empty.")
+            return {
+                'is_success': True,
+                'status': SignUpStatus.PASSWORD_NOT_VALID
+            }
+        elif ' ' in user_form.password:
+            logger.debug("The password must not contain spaces.")
+            return {
+                'is_success': True,
+                'status': SignUpStatus.PASSWORD_NOT_VALID
+            }
         user_form.password = get_password_hash(user_form.password)
         check_user_object = self.user_persistence_service.get_user_by_email(user_form.email)
         is_without_card = user_form.is_without_card
@@ -204,14 +247,6 @@ class UsersAuth:
             'token': token,
         }
 
-    def check_user_subscription(self, user_object):
-        # if not user_object.is_company_details_filled:
-        #     return LoginStatus.FILL_COMPANY_DETAILS
-        return {
-            'is_success': True,
-            'status': LoginStatus.NEED_CHOOSE_PLAN
-        }
-
     def login_account(self, login_form: UserLoginForm):
         email = login_form.email
         password = login_form.password
@@ -226,7 +261,18 @@ class UsersAuth:
                     "id": user_object.id,
                 }
                 token = create_access_token(token_info)
-                self.get_user_authorization_status(user_object)
+                authorization_data = self.get_user_authorization_information(user_object, self.subscription_service)
+                if authorization_data['status'] == LoginStatus.PAYMENT_NEEDED:
+                    return {
+                        'status': authorization_data['status'].value,
+                        'token': token,
+                        'stripe_payment_url': authorization_data['stripe_payment_url']
+                    }
+                if authorization_data['status'] != LoginStatus.SUCCESS:
+                    return {
+                        'status': authorization_data['status'].value,
+                        'token': token
+                    }
                 return {
                     'status': LoginStatus.SUCCESS,
                     'token': token
@@ -267,6 +313,8 @@ class UsersAuth:
     def reset_password(self, reset_password_form: ResetPasswordForm):
         if reset_password_form is not None and reset_password_form:
             db_user = self.user_persistence_service.get_user_by_email(reset_password_form.email)
+            if db_user is None:
+                return ResetPasswordEnum.SUCCESS
             message_expiration_time = db_user.reset_password_sent_at
             time_now = datetime.now()
             if message_expiration_time is not None:
