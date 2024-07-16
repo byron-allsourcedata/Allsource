@@ -313,6 +313,8 @@ class UsersAuth:
     def reset_password(self, reset_password_form: ResetPasswordForm):
         if reset_password_form is not None and reset_password_form:
             db_user = self.user_persistence_service.get_user_by_email(reset_password_form.email)
+            if db_user is None:
+                return ResetPasswordEnum.NOT_VALID_EMAIL
             message_expiration_time = db_user.reset_password_sent_at
             time_now = datetime.now()
             if message_expiration_time is not None:
