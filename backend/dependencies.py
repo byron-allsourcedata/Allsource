@@ -56,26 +56,36 @@ def get_subscription_service(db: Session = Depends(get_db),
     return SubscriptionService(db=db, user_persistence_service=user_persistence_service)
 
 
-def get_user_authorization_status(user: User, subscription_service):
+def get_user_authorization_information(user: User, subscription_service):
     if user.is_with_card:
         if user.company_name:
             subscription_plan_is_active = subscription_service.is_user_has_active_subscription(user.id)
             if subscription_plan_is_active:
-                return UserAuthorizationStatus.SUCCESS
+                return {'status': UserAuthorizationStatus.SUCCESS}
             else:
-                return UserAuthorizationStatus.NEED_CHOOSE_PLAN
+                return {'status': UserAuthorizationStatus.NEED_CHOOSE_PLAN}
         else:
-            return UserAuthorizationStatus.FILL_COMPANY_DETAILS
+            return {'status': UserAuthorizationStatus.FILL_COMPANY_DETAILS}
     else:
         if user.is_email_confirmed:
             if user.company_name:
-                if user.book_call and user.stripe_payment_url:
-                    return UserAuthorizationStatus.SUCCESS
+                if user.is_book_call_passed:
+                    subscription_plan_is_active = subscription_service.is_user_has_active_subscription(user.id)
+                    if subscription_plan_is_active:
+                        return UserAuthorizationStatus.SUCCESS
+                    else:
+                        if user.stripe_payment_url:
+                            return {
+                                'status': UserAuthorizationStatus.PAYMENT_NEEDED,
+                                'stripe_payment_url': user.stripe_payment_url
+                            }
+                        else:
+                            return {'status': UserAuthorizationStatus.NEED_CHOOSE_PLAN}
                 else:
-                    return UserAuthorizationStatus.NEED_BOOK_CALL
+                    return {'status': UserAuthorizationStatus.NEED_BOOK_CALL}
             else:
-                return UserAuthorizationStatus.FILL_COMPANY_DETAILS
-    return UserAuthorizationStatus.NEED_CONFIRM_EMAIL
+                return {'status': UserAuthorizationStatus.FILL_COMPANY_DETAILS}
+    return {'status': UserAuthorizationStatus.NEED_CONFIRM_EMAIL}
 
 
 def parse_jwt_data(Authorization: Annotated[str, Header()]) -> Token:
@@ -99,11 +109,17 @@ def check_user_authorization(Authorization: Annotated[str, Header()],
                                  get_user_persistence_service), subscription_service: SubscriptionService = Depends(
             get_subscription_service)) -> Token:
     user = check_user_authentication(Authorization, user_persistence_service)
-    auth_status = get_user_authorization_status(user, subscription_service)
-    if auth_status != UserAuthorizationStatus.SUCCESS:
+    authorization_data = get_user_authorization_information(user, subscription_service)
+    if authorization_data['status'] == UserAuthorizationStatus.PAYMENT_NEEDED:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail=auth_status.value
+            detail={'status': authorization_data['status'].value,
+                    'stripe_payment_url': authorization_data['stripe_payment_url']}
+        )
+    if authorization_data['status'] != UserAuthorizationStatus.SUCCESS:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=authorization_data['status'].value
         )
     return user
 

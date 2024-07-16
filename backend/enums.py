@@ -27,6 +27,7 @@ class UserAuthorizationStatus(Enum):
     NEED_CONFIRM_EMAIL = 'NEED_CONFIRM_EMAIL'
     FILL_COMPANY_DETAILS = 'FILL_COMPANY_DETAILS'
     NEED_BOOK_CALL = 'NEED_BOOK_CALL'
+    PAYMENT_NEEDED = 'PAYMENT_NEEDED'
 
 
 class MiddleWareEnum(Enum):
@@ -50,6 +51,7 @@ class LoginStatus(Enum):
     FILL_COMPANY_DETAILS = 'FILL_COMPANY_DETAILS'
     NOT_VALID_EMAIL = 'NOT_VALID_EMAIL'
     NEED_BOOK_CALL = 'NEED_BOOK_CALL'
+    PAYMENT_NEEDED = 'PAYMENT_NEEDED'
 
 
 class UpdatePasswordStatus(Enum):

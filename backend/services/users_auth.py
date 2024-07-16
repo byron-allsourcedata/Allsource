@@ -106,26 +106,37 @@ class UsersAuth:
             'token': token,
         }
 
-    def get_user_authorization_status(self, user: User, subscription_service: SubscriptionService):
+    def get_user_authorization_information(self, user: User, subscription_service: SubscriptionService):
         if user.is_with_card:
             if user.company_name:
                 subscription_plan_is_active = subscription_service.is_user_has_active_subscription(user.id)
                 if subscription_plan_is_active:
-                    return LoginStatus.SUCCESS
+
+                    return {'status': LoginStatus.SUCCESS}
                 else:
-                    return LoginStatus.NEED_CHOOSE_PLAN
+                    return {'status': LoginStatus.NEED_CHOOSE_PLAN}
             else:
-                return LoginStatus.FILL_COMPANY_DETAILS
+                return {'status': LoginStatus.FILL_COMPANY_DETAILS}
         else:
             if user.is_email_confirmed:
                 if user.company_name:
-                    if user.book_call and user.stripe_payment_url:
-                        return LoginStatus.SUCCESS
+                    if user.is_book_call_passed:
+                        subscription_plan_is_active = subscription_service.is_user_has_active_subscription(user.id)
+                        if subscription_plan_is_active:
+                            return {'status': LoginStatus.SUCCESS}
+                        else:
+                            if user.stripe_payment_url:
+                                return {
+                                    'status': LoginStatus.PAYMENT_NEEDED,
+                                    'stripe_payment_url': user.stripe_payment_url
+                                }
+                            else:
+                                return {'status': LoginStatus.NEED_CHOOSE_PLAN}
                     else:
-                        return LoginStatus.NEED_BOOK_CALL
+                        return {'status': LoginStatus.NEED_BOOK_CALL}
                 else:
-                    return LoginStatus.FILL_COMPANY_DETAILS
-        return LoginStatus.NEED_CONFIRM_EMAIL
+                    return {'status': LoginStatus.FILL_COMPANY_DETAILS}
+        return {'status': LoginStatus.NEED_CONFIRM_EMAIL}
 
     def login_google(self, auth_google_data: AuthGoogleData):
         client_id = os.getenv("CLIENT_GOOGLE_ID")
@@ -149,10 +160,16 @@ class UsersAuth:
                 "id": user_object.id,
             }
             token = create_access_token(token_info)
-            auth_status = self.get_user_authorization_status(user_object, self.subscription_service)
-            if auth_status != UserAuthorizationStatus.SUCCESS:
+            authorization_data = self.get_user_authorization_information(user_object, self.subscription_service)
+            if authorization_data['status'] == LoginStatus.PAYMENT_NEEDED:
                 return {
-                    'status': auth_status,
+                    'status': authorization_data['status'].value,
+                    'token': token,
+                    'stripe_payment_url': authorization_data['stripe_payment_url']
+                }
+            if authorization_data['status'] != UserAuthorizationStatus.SUCCESS:
+                return {
+                    'status': authorization_data['status'].value,
                     'token': token
                 }
             return {
@@ -244,10 +261,16 @@ class UsersAuth:
                     "id": user_object.id,
                 }
                 token = create_access_token(token_info)
-                auth_status = self.get_user_authorization_status(user_object, self.subscription_service)
-                if auth_status != UserAuthorizationStatus.SUCCESS:
+                authorization_data = self.get_user_authorization_information(user_object, self.subscription_service)
+                if authorization_data['status'] == LoginStatus.PAYMENT_NEEDED:
                     return {
-                        'status': auth_status,
+                        'status': authorization_data['status'].value,
+                        'token': token,
+                        'stripe_payment_url': authorization_data['stripe_payment_url']
+                    }
+                if authorization_data['status'] != LoginStatus.SUCCESS:
+                    return {
+                        'status': authorization_data['status'].value,
                         'token': token
                     }
                 return {

@@ -26,7 +26,7 @@ class Users(Base):
     customer_id = Column(VARCHAR)
     reset_password_sent_at = Column(DateTime)
     verified_email_sent_at = Column(DateTime)
-    book_call = Column(BOOLEAN, default=False)
+    is_book_call_passed = Column(BOOLEAN, default=False)
     stripe_payment_url = Column(VARCHAR)
 
 
