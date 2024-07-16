@@ -102,32 +102,47 @@ const Signup: React.FC = () => {
 
         if (response.status === 200) {
           const responseData = response.data;
-
-          if (responseData.status === "NEED_CHOOSE_PLAN") {
-            if (typeof window !== 'undefined') {
-              localStorage.setItem('token', responseData.token);
-            }
-            sessionStorage.setItem('me', JSON.stringify({
-              email: formValues.email,
-              full_name: formValues.full_name
-            }));
-            router.push('/choose-plan');
-          } else if (responseData.status === "EMAIL_ALREADY_EXISTS") {
-            showErrorToast('Email is associated with an account. Please login');
-            router.push('/signin');
-          } else if (responseData.status === "PASSWORD_NOT_VALID") {
-            showErrorToast('Password not valid');
-          } else if (responseData.status === "NEED_CONFIRM_EMAIL") {
-            if (typeof window !== 'undefined') {
-              localStorage.setItem('token', responseData.token);
-            }
-            sessionStorage.setItem('me', JSON.stringify({
-              email: formValues.email,
-              full_name: formValues.full_name
-            }));
-            router.push('/email-verificate');
+        
+          switch (responseData.status) {
+            case "NEED_CHOOSE_PLAN":
+              if (typeof window !== 'undefined') {
+                localStorage.setItem('token', responseData.token);
+              }
+              sessionStorage.setItem('me', JSON.stringify({
+                email: formValues.email,
+                full_name: formValues.full_name
+              }));
+              router.push('/choose-plan');
+              break;
+            case "EMAIL_ALREADY_EXISTS":
+              showErrorToast('Email is associated with an account. Please login');
+              router.push('/signin');
+              break;
+            case "PASSWORD_NOT_VALID":
+              showErrorToast('Password not valid');
+              break;
+            case "NEED_CONFIRM_EMAIL":
+              if (typeof window !== 'undefined') {
+                localStorage.setItem('token', responseData.token);
+              }
+              sessionStorage.setItem('me', JSON.stringify({
+                email: formValues.email,
+                full_name: formValues.full_name
+              }));
+              router.push('/email-verificate');
+              break;
+            case "NEED_BOOK_CALL":
+              router.push('/dashboard-setup')
+              break;
+            case "PAYMENT_NEEDED":
+              router.push(`${response.data.stripe_payment_url}`)
+              break;
+            default:
+              // Handle unexpected statuses if needed
+              break;
           }
         }
+        
       } catch (err) {
         const error = err as AxiosError;
         if (error.response && error.response.data) {

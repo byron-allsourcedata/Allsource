@@ -122,6 +122,12 @@ const Signup: React.FC = () => {
               }
               router.push('/account-setuo')
               break;
+            case "NEED_BOOK_CALL":
+              router.push('/dashboard-setup')
+              break;
+            case "PAYMENT_NEEDED":
+              router.push(`${response.data.stripe_payment_url}`)
+              break;
           
             default:
               showErrorToast('Unexpected status: Service is not available now, try agian or contact with us support@maximiz.ai');
