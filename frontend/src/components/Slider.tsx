@@ -42,7 +42,7 @@ const Slider: React.FC = () => {
         </Box>
         <Box sx={{ p: 6, display: 'flex', flexDirection: 'column', textAlign: 'center', alignItems: 'center', justifyContent: 'center' }}>
           <Typography variant="body1" gutterBottom sx={{color: '#4A4A4A', fontFamily: 'Nunito', fontWeight: '500', fontSize: '24px', lineHeight: '25.2px', marginTop: '3em' }}>
-            To activate your account, please speak with one of our onboarding specialists, and we'll get you started.
+            To activate your account, please speak with one of our onboarding specialists, and we&apos;ll get you started.
           </Typography>
           <img src="/slider-bookcall.png" alt="Setup" style={{ width: '50%', marginBottom: '1rem' }} />
           <Button variant="contained" color="primary" fullWidth sx={{ padding: '1em 12em', fontFamily: 'Nunito', fontWeight: '700', fontSize: '16px', lineHeight: '22.4px', backgroundColor: '#5052B2', textTransform: 'none' }}>
