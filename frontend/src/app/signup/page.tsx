@@ -115,6 +115,8 @@ const Signup: React.FC = () => {
           } else if (responseData.status === "EMAIL_ALREADY_EXISTS") {
             showErrorToast('Email is associated with an account. Please login');
             router.push('/signin');
+          } else if (responseData.status === "PASSWORD_NOT_VALID") {
+            showErrorToast('Password not valid');
           } else if (responseData.status === "NEED_CONFIRM_EMAIL") {
             if (typeof window !== 'undefined') {
               localStorage.setItem('token', responseData.token);

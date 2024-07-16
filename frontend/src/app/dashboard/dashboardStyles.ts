@@ -25,8 +25,8 @@ export const dashboardStyles: { [key: string]: SxProps<Theme> } = {
   headers: {
     display: 'flex',
     marginTop: '10px',
-    justifyContent: 'space-between', 
-    alignItems: 'center', 
+    justifyContent: 'space-between',
+    alignItems: 'center',
     width: '100%',
     color: 'rgba(244, 87, 69, 1)',
     borderBottom: `1px solid rgba(228, 228, 228, 1)`,
@@ -34,10 +34,6 @@ export const dashboardStyles: { [key: string]: SxProps<Theme> } = {
   account: {
     padding: '10px',
     width: '1em',
-    // marginRight: '1em',
-    // marginBottom: "3.5em",
-    // marginLeft: "2em",
-    // marginTop: "2em",
     color: 'rgba(128, 128, 128, 1)',
     border: '1px solid rgba(184, 184, 184, 1)',
     borderRadius: '3.27px'
@@ -49,10 +45,10 @@ export const dashboardStyles: { [key: string]: SxProps<Theme> } = {
   title: {
     mb: 2,
     fontWeight: 'bold',
-    fontSize: '28px',
+    fontSize: '16px',
     whiteSpace: 'nowrap',
-    textAlign: 'center',
-    padding: '1.5rem 1rem 2.5rem',
+    textAlign: 'start',
+    padding: '1.5rem 0rem 0',
     fontFamily: 'Nunito',
   },
   formContainer: {
