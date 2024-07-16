@@ -6,7 +6,7 @@ import { Box, Button, TextField, Typography, Link, IconButton, InputAdornment } 
 import { AxiosError } from 'axios';
 import axiosInstance from '../../axios/axiosInterceptorInstance';
 import { resetStyles } from './resetStyles';
-import { showErrorToast } from '@/components/ToastNotification';
+import { showToast } from '@/components/ToastNotification';
 
 
 const Signup: React.FC = () => {
@@ -58,14 +58,10 @@ const Signup: React.FC = () => {
         email: formValues.email,
       });
 
-      if (response.status === 200) {
-        if (response.data.status == 'SUCCESS') {
-          sessionStorage.setItem('me', JSON.stringify({ email: formValues.email }));
-          router.push('/reset-password/confirm-send');
-        } else if (response.data.status == 'NOT_VALID_EMAIL') {
-          showErrorToast('ПОЧТА ГОВНА ПОПРОБУЙ ДРУГУЮ')
-        }
-
+    if (response.status === 200) {
+        sessionStorage.setItem('me', JSON.stringify({ email: formValues.email }));
+        router.push('/reset-password/confirm-send');
+        showToast('If there is such an email in our system, then we have sent you a link with password recovery')
       }
     } catch (err) {
       const error = err as AxiosError;
