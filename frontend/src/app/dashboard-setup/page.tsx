@@ -1,3 +1,4 @@
+// pages/dashboard.tsx
 'use client';
 import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
@@ -11,6 +12,7 @@ import dynamic from 'next/dynamic';
 import {ProgressSection} from '../../components/ProgressSection';
 import { PixelInstallation } from '../../components/PixelInstallation';
 import { Phone } from '@mui/icons-material';
+import Slider from '../../components/Slider'; // Импортируем компонент Slider
 
 const Sidebar = dynamic(() => import('../../components/Sidebar'), {
   suspense: true,
@@ -37,8 +39,8 @@ const SupportSection: React.FC = () => (
     backgroundColor: '#fff',
     boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
     marginBottom: '2rem',
-    textAlign: 'left', 
-    width: '100%', 
+    textAlign: 'left', // Выравнивание текста слева
+    width: '100%', // Растягиваем на всю ширину
   }}>
     <Typography variant="body2" color="textSecondary" mb={2}>
       Having trouble?
@@ -109,6 +111,7 @@ const Dashboard: React.FC = () => {
 
   return (
     <>
+      <Slider />
       <Box sx={dashboardStyles.headers}>
         <Box sx={dashboardStyles.logoContainer}>
           <Image src='/logo.svg' alt='logo' height={80} width={60} />
