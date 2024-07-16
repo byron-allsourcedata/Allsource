@@ -69,7 +69,10 @@ def get_user_authorization_status(user: User, subscription_service):
     else:
         if user.is_email_confirmed:
             if user.company_name:
-                return UserAuthorizationStatus.SUCCESS
+                if user.book_call and user.stripe_payment_url:
+                    return UserAuthorizationStatus.SUCCESS
+                else:
+                    return UserAuthorizationStatus.NEED_BOOK_CALL
             else:
                 return UserAuthorizationStatus.FILL_COMPANY_DETAILS
     return UserAuthorizationStatus.NEED_CONFIRM_EMAIL

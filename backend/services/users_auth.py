@@ -1,8 +1,7 @@
 from datetime import datetime, timedelta, timezone
 
+from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
-
-from dependencies import get_user_authorization_status
 from . import stripe_service
 from .jwt_service import get_password_hash, create_access_token, verify_password, decode_jwt_data
 from persistence.sendgrid_persistence import SendgridPersistence
@@ -11,10 +10,11 @@ from persistence.user_persistence import UserPersistence
 import os
 from google.auth.transport import requests as google_requests
 from services.payments_plans import PaymentsPlans
-from models.users import Users
+from models.users import Users, User
 import logging
 from google.oauth2 import id_token
-from enums import SignUpStatus, StripePaymentStatusEnum, AutomationSystemTemplate, LoginStatus, ResetPasswordEnum, VerifyToken
+from enums import SignUpStatus, StripePaymentStatusEnum, AutomationSystemTemplate, LoginStatus, ResetPasswordEnum, \
+    VerifyToken, UserAuthorizationStatus
 from typing import Optional
 
 from schemas.auth_google_token import AuthGoogleData
@@ -106,6 +106,27 @@ class UsersAuth:
             'token': token,
         }
 
+    def get_user_authorization_status(self, user: User, subscription_service: SubscriptionService):
+        if user.is_with_card:
+            if user.company_name:
+                subscription_plan_is_active = subscription_service.is_user_has_active_subscription(user.id)
+                if subscription_plan_is_active:
+                    return LoginStatus.SUCCESS
+                else:
+                    return LoginStatus.NEED_CHOOSE_PLAN
+            else:
+                return LoginStatus.FILL_COMPANY_DETAILS
+        else:
+            if user.is_email_confirmed:
+                if user.company_name:
+                    if user.book_call and user.stripe_payment_url:
+                        return LoginStatus.SUCCESS
+                    else:
+                        return LoginStatus.NEED_BOOK_CALL
+                else:
+                    return LoginStatus.FILL_COMPANY_DETAILS
+        return LoginStatus.NEED_CONFIRM_EMAIL
+
     def login_google(self, auth_google_data: AuthGoogleData):
         client_id = os.getenv("CLIENT_GOOGLE_ID")
         google_request = google_requests.Request()
@@ -128,7 +149,12 @@ class UsersAuth:
                 "id": user_object.id,
             }
             token = create_access_token(token_info)
-            get_user_authorization_status(user_object, self.subscription_service)
+            auth_status = self.get_user_authorization_status(user_object, self.subscription_service)
+            if auth_status != UserAuthorizationStatus.SUCCESS:
+                return {
+                    'status': auth_status,
+                    'token': token
+                }
             return {
                 'status': LoginStatus.SUCCESS,
                 'token': token
@@ -218,7 +244,12 @@ class UsersAuth:
                     "id": user_object.id,
                 }
                 token = create_access_token(token_info)
-                get_user_authorization_status(user_object, self.subscription_service)
+                auth_status = self.get_user_authorization_status(user_object, self.subscription_service)
+                if auth_status != UserAuthorizationStatus.SUCCESS:
+                    return {
+                        'status': auth_status,
+                        'token': token
+                    }
                 return {
                     'status': LoginStatus.SUCCESS,
                     'token': token
