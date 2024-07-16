@@ -1,33 +1,35 @@
-"use client";
-import React, { Suspense, useState } from 'react';
+'use client';
+import React, { Suspense, useState, useEffect } from 'react';
 import { Box, Button, Typography, Menu, MenuItem } from '@mui/material';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import PersonIcon from '@mui/icons-material/Person';
 import { planStyles } from './planStyles';
 import { useUser } from '../../context/UserContext'; // Assuming you have a UserContext to provide user information
+import axiosInterceptorInstance from '@/axios/axiosInterceptorInstance';
 
-const PlanCard = ({ planName, price, features }: { planName: string; price: string; features: string[] }) => {
+const PlanCard = ({ plan, onChoose }: { plan: any; onChoose: (stripePriceId: string) => void }) => {
   return (
     <Box sx={planStyles.card}>
       <Typography variant="h6" component="div" sx={planStyles.planName}>
-        <Box component="span" sx={planStyles.planDot} /> {planName}
+        <Box component="span" sx={planStyles.planDot} /> {plan.title}
       </Typography>
       <Typography variant="h4" component="div" sx={planStyles.price}>
-        {price}
+        ${plan.price}
         <Typography variant="subtitle1" component="span" sx={planStyles.priceSub}>
           {"    "}/month
         </Typography>
       </Typography>
-      <Box sx={planStyles.features}>
-        {features.map((feature, index) => (
-          <Typography key={index} variant="body1" component="div" sx={planStyles.feature}>
-            <Image src={"/electric-bolt.png"} alt="Lightning" width={24} height={24} /> {feature}
-          </Typography>
-        ))}
-      </Box>
-      <Button variant="outlined" sx={planStyles.submitButton} fullWidth>
-        Talk to us
+      <Typography variant="body1" component="div" sx={planStyles.description}>
+        {plan.description}
+      </Typography>
+      <Button
+        variant="outlined"
+        sx={planStyles.submitButton}
+        fullWidth
+        onClick={() => onChoose(plan.stripe_price_id)}
+      >
+        Choose plan
       </Button>
     </Box>
   );
@@ -35,7 +37,32 @@ const PlanCard = ({ planName, price, features }: { planName: string; price: stri
 
 const PlanPage: React.FC = () => {
   const router = useRouter();
-  const { full_name, email } = useUser(); // Assuming useUser hook provides user information
+  const { full_name, email } = useUser(); 
+  const [plans, setPlans] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await axiosInterceptorInstance.get('/subscriptions/stripe-plans');
+        setPlans(response.data.stripe_plans);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const handleChoosePlan = async (stripePriceId: string) => {
+    try {
+      const response = await axiosInterceptorInstance.get(`/subscriptions/session/new?price_id=${stripePriceId}`);
+      if (response.status === 200) {
+        window.location.href = response.data.link;
+      }
+    } catch (error) {
+      console.error('Error choosing plan:', error);
+    }
+  };
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
@@ -58,45 +85,6 @@ const PlanPage: React.FC = () => {
     sessionStorage.clear();
     router.push('/signin');
   };
-
-  const plans = [
-    {
-      planName: 'Basic Plan',
-      price: '$99',
-      features: [
-        'Feature 1 upto 123 words',
-        'Feature 2 upto 123 words',
-        'Feature 3 upto 123 words',
-        'Feature 4 upto 123 words',
-        'Feature 5 upto 123 words',
-        'Feature 6 upto 123 words',
-      ],
-    },
-    {
-      planName: 'Standard Plan',
-      price: '$199',
-      features: [
-        'Feature 1 upto 123 words',
-        'Feature 2 upto 123 words',
-        'Feature 3 upto 123 words',
-        'Feature 4 upto 123 words',
-        'Feature 5 upto 123 words',
-        'Feature 6 upto 123 words',
-      ],
-    },
-    {
-      planName: 'Premium Plan',
-      price: '$299',
-      features: [
-        'Feature 1 upto 123 words',
-        'Feature 2 upto 123 words',
-        'Feature 3 upto 123 words',
-        'Feature 4 upto 123 words',
-        'Feature 5 upto 123 words',
-        'Feature 6 upto 123 words',
-      ],
-    },
-  ];
 
   return (
     <>
@@ -131,12 +119,12 @@ const PlanPage: React.FC = () => {
       </Box>
 
       <Typography variant="h4" component="h1" sx={planStyles.title}>
-        We’ve got a plan thats perfect for you!
+        We&apos;ve got a plan that&apos;s perfect for you!
       </Typography>
       <Box sx={planStyles.formContainer}>
         {plans.map((plan, index) => (
           <Box key={index} sx={planStyles.formWrapper}>
-            <PlanCard planName={plan.planName} price={plan.price} features={plan.features} />
+            <PlanCard plan={plan} onChoose={handleChoosePlan} />
           </Box>
         ))}
       </Box>
