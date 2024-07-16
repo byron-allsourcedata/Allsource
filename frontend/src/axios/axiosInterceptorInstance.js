@@ -51,10 +51,10 @@ axiosInterceptorInstance.interceptors.response.use(
               navigateTo("/choose-plan");
               break;
             case "NEED_BOOK_CALL":
-              router.push("/dashboard-setup");
+              navigateTo("/dashboard-setup");
               break;
             case "PAYMENT_NEEDED":
-              router.push(`${response.data.stripe_payment_url}`);
+              navigateTo(`${response.data.stripe_payment_url}`);
               break;
           }
           break;
