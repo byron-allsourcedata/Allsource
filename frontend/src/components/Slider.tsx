@@ -1,11 +1,12 @@
+"use client"
 import React, { useEffect } from 'react';
 import { Drawer, Box, Typography, Button, IconButton, Backdrop } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import { useSlider } from '../context/SliderContext'; // Импортируйте контекст
+import { useSlider } from '../context/SliderContext';
+import { PopupButton } from "react-calendly";
 
 const Slider: React.FC = () => {
-  const { showSlider, setShowSlider } = useSlider(); // Используем контекст
-
+  const { showSlider, setShowSlider } = useSlider();
   const handleClose = () => {
     sessionStorage.setItem('is_slider_opened', 'false');
     setShowSlider(false);
@@ -15,6 +16,11 @@ const Slider: React.FC = () => {
     const isSliderOpened = sessionStorage.getItem('is_slider_opened');
     setShowSlider(isSliderOpened === 'true');
   }, [setShowSlider]);
+
+ const handleOpenPopup = () => {
+    setShowPopup(true);
+  };
+
 
   return (
     <>
@@ -46,9 +52,25 @@ const Slider: React.FC = () => {
             To activate your account, please speak with one of our onboarding specialists, and we&apos;ll get you started.
           </Typography>
           <img src="/slider-bookcall.png" alt="Setup" style={{ width: '50%', marginBottom: '1rem' }} />
-          <Button variant="contained" color="primary" fullWidth sx={{ padding: '1em 12em', fontFamily: 'Nunito', fontWeight: '700', fontSize: '16px', lineHeight: '22.4px', backgroundColor: '#5052B2', textTransform: 'none' }}>
-            Talk to an expert now!
-          </Button>
+          <div id='root' className="book-call-button__wrapper">
+          <PopupButton 
+              className="book-call-button" 
+              styles={{
+                  color:'#fff',
+                  padding: '1em 12em', 
+                  fontFamily: 'Nunito', 
+                  fontWeight: '700', 
+                  fontSize: '16px', 
+                  borderRadius: '4px',
+                  lineHeight: '22.4px', 
+                  backgroundColor: '#5052B2', 
+                  textTransform: 'none'
+              }}
+              url="https://calendly.com/slava-lolly/123"
+              rootElement={typeof window !== "undefined" ? document.getElementById("root") : null}
+              text="Talk to an expert now!"
+          />
+          </div>
         </Box>
       </Drawer>
     </>

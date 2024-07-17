@@ -169,8 +169,8 @@ def get_dashboard_service(user: User = Depends(check_user_authorization)):
     return DashboardService(user=user)
 
 
-def get_pixel_installation_service(user: User = Depends(check_user_authorization)):
-    return PixelInstallationService(user=user)
+def get_pixel_installation_service(db: Session = Depends(get_db), user: User = Depends(check_user_authorization)):
+    return PixelInstallationService(db=db, user=user)
 
 
 def get_plans_service(user: User = Depends(check_user_authentication),
