@@ -163,30 +163,38 @@ const Signup: React.FC = () => {
               const response = await axiosInterceptorInstance.post('/login-google', {
                 token: credentialResponse.credential,
               });
-
-              if (response.data.status === 'SUCCESS') {
-                if (typeof window !== 'undefined') {
-                  localStorage.setItem('token', response.data.token);
-                }
-                router.push('/dashboard');
-              } else if (response.data.status === 'NEED_CHOOSE_PLAN') {
-                if (typeof window !== 'undefined') {
-                  localStorage.setItem('token', response.data.token);
-                }
-                router.push('/choose-plan');
-              } else if (response.data.status === 'FILL_COMPANY_DETAILS') {
-                if (typeof window !== 'undefined') {
-                  localStorage.setItem('token', response.data.token);
-                }
-                router.push('/account-setup');
-              } else if (response.data.status === 'INCORRECT_PASSWORD_OR_EMAIL') {
-                showErrorToast("User with this email does not exist");
-              } else {
-                console.error('Authorization failed:', response.data.status);
+            
+              if (typeof window !== 'undefined') {
+                localStorage.setItem('token', response.data.token);
+              }
+            
+              switch (response.data.status) {
+                case 'SUCCESS':
+                  router.push('/dashboard');
+                  break;
+                case 'NEED_CHOOSE_PLAN':
+                  router.push('/choose-plan');
+                  break;
+                case 'FILL_COMPANY_DETAILS':
+                  router.push('/account-setup');
+                  break;
+                case 'NEED_BOOK_CALL':
+                  router.push('/dashboard');
+                  sessionStorage.setItem('is_slider_opened', 'true')
+                  break;
+                case 'PAYMENT_NEEDED':
+                  router.push(`${response.data.stripe_payment_url}`);
+                  break;
+                case 'INCORRECT_PASSWORD_OR_EMAIL':
+                  showErrorToast("User with this email does not exist");
+                  break;
+                default:
+                  console.error('Authorization failed:', response.data.status);
               }
             } catch (error) {
               console.error('Error during Google login:', error);
             }
+            
           }}
           onError={() => {
             console.log('Login Failed');
