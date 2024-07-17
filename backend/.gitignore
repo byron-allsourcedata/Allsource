@@ -21,4 +21,4 @@ Makefile
 app/data/cities.json
 
 #User-specific stuff
-../.idea
+*.idea

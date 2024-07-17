@@ -14,6 +14,7 @@ from enums import UserAuthorizationStatus
 from exceptions import InvalidToken
 from persistence.plans_persistence import PlansPersistence
 from schemas.auth_token import Token
+from services.admin_customers import AdminCustomersService
 from services.company_info import CompanyInfoService
 from services.dashboard_service import DashboardService
 from services.payments import PaymentsService
@@ -41,6 +42,10 @@ def get_db():
 
 def get_plans_persistence(db: Session = Depends(get_db)):
     return PlansPersistence(db=db)
+
+
+def get_admin_customers_service(db: Session = Depends(get_db)):
+    return AdminCustomersService(db=db)
 
 
 def get_send_grid_persistence_service(db: Session = Depends(get_db)):
@@ -116,7 +121,7 @@ def check_user_authorization(Authorization: Annotated[str, Header()],
     if auth_status != UserAuthorizationStatus.SUCCESS:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail=auth_status.value
+            detail={'status': auth_status.value}
         )
     return user
 
@@ -147,9 +152,12 @@ def get_users_auth_service(db: Session = Depends(get_db),
                            payments_plans: PaymentsPlans = Depends(get_payments_plans_service),
                            user_persistence_service: UserPersistence = Depends(get_user_persistence_service),
                            send_grid_persistence_service: SendgridPersistence = Depends(
-                               get_send_grid_persistence_service), subscription_service: SubscriptionService = Depends(get_subscription_service)):
+                               get_send_grid_persistence_service),
+                           subscription_service: SubscriptionService = Depends(get_subscription_service)):
     return UsersAuth(db=db, payments_service=payments_plans, user_persistence_service=user_persistence_service,
-                     send_grid_persistence_service=send_grid_persistence_service, subscription_service=subscription_service)
+                     send_grid_persistence_service=send_grid_persistence_service,
+                     subscription_service=subscription_service)
+
 
 def get_users_service(user: User = Depends(check_user_authentication),
                       user_persistence_service: UserPersistence = Depends(get_user_persistence_service)):

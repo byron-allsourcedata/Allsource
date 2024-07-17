@@ -28,7 +28,7 @@ async def create_user(user_form: UserSignUpForm, users_service: UsersAuth = Depe
     if user_data.get('is_success'):
         return UserSignUpFormResponse(status=user_data.get('status'), token=user_data.get("token"))
     else:
-        raise HTTPException(status_code=500, detail=user_data.get('error'))
+        raise HTTPException(status_code=500, detail={'error': user_data.get('error')})
 
 
 @router.get("/dashboard")
@@ -70,7 +70,7 @@ async def resend_verification_email(authorization: Annotated[str, Header()],
     if user_data.get('is_success'):
         return ResendVerificationEmailResponse(status=user_data.get('status'))
     else:
-        raise HTTPException(status_code=500, detail=user_data.get('error'))
+        raise HTTPException(status_code=500, detail={'error': user_data.get('error')})
 
 
 @router.post("/reset-password", response_model=ResetPasswordResponse)

@@ -51,7 +51,7 @@ axiosInterceptorInstance.interceptors.response.use(
               navigateTo("/choose-plan");
               break;
             case "PAYMENT_NEEDED":
-              navigateTo(`${response.data.stripe_payment_url}`);
+              navigateTo(`${error.response.data.stripe_payment_url}`);
               break;
           }
           break;

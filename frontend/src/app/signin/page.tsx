@@ -88,13 +88,14 @@ const Signup: React.FC = () => {
   
       if (response.status === 200) {
         const responseData = response.data;
-  
+        if (typeof window !== 'undefined') {
+          if (responseData.token){
+            localStorage.setItem('token', responseData.token);
+          }
+        }
         if (responseData) {
           switch (responseData.status) {
             case "SUCCESS":
-              if (typeof window !== 'undefined') {
-                localStorage.setItem('token', responseData.token);
-              }
               router.push('/dashboard');
               break;
             
@@ -103,23 +104,14 @@ const Signup: React.FC = () => {
               break;
           
             case "EMAIL_NOT_VERIFIED":
-              if (typeof window !== 'undefined') {
-                localStorage.setItem('token', responseData.token);
-              }
               router.push('/email-verification');
               break;
           
             case "NEED_CHOOSE_PLAN":
-              if (typeof window !== 'undefined') {
-                localStorage.setItem('token', responseData.token);
-              }
               router.push('/choose-plan')
               break;
 
             case "FILL_COMPANY_DETAILS":
-              if (typeof window !== 'undefined') {
-                localStorage.setItem('token', responseData.token);
-              }
               router.push('/account-setuo')
               break;
             case "NEED_BOOK_CALL":

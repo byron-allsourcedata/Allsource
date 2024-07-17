@@ -23,13 +23,11 @@ app = FastAPI()
 
 @app.exception_handler(StarletteHTTPException)
 async def http_exception_handler(request: Request, exc: StarletteHTTPException):
-    logger.error(f"HTTP Exception: {exc.detail}\n{traceback.format_exc()}")
+    if exc.status_code is not None and not (exc.status_code == 403 or exc.status_code == 401):
+        logger.error(f"HTTP Exception: {exc.detail}\n{traceback.format_exc()}")
     return JSONResponse(
         status_code=exc.status_code,
-        content={
-            'status': exc.detail,
-            'detail': {'error': traceback.format_exc()}
-        }
+        content=exc.detail
     )
 
 
