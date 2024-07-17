@@ -40,8 +40,6 @@ axiosInterceptorInstance.interceptors.response.use(
           Router.push("/login");
           break;
         case 403:
-          console.log(error.response.data)
-          console.log(error.response.data.status)
           switch (error.response.data.status) {
             case "NEED_CONFIRM_EMAIL":
               navigateTo("/email-verificate");
@@ -53,7 +51,6 @@ axiosInterceptorInstance.interceptors.response.use(
               navigateTo("/choose-plan");
               break;
             case "PAYMENT_NEEDED":
-              console.log('1')
               navigateTo(`${error.response.data.stripe_payment_url}`);
               break;
           }
