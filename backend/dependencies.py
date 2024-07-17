@@ -24,6 +24,7 @@ from services.plans import PlansService
 from services.subscriptions import SubscriptionService
 from services.users_email_verification import UsersEmailVerificationService
 from services.users import UsersService
+from services.pixel_installation import PixelInstallationService
 from models.users import Users as User
 from services.users_auth import UsersAuth
 from persistence.user_persistence import UserPersistence
@@ -166,6 +167,10 @@ def get_users_service(user: User = Depends(check_user_authentication),
 
 def get_dashboard_service(user: User = Depends(check_user_authorization)):
     return DashboardService(user=user)
+
+
+def get_pixel_installation_service(user: User = Depends(check_user_authorization)):
+    return PixelInstallationService(user=user)
 
 
 def get_plans_service(user: User = Depends(check_user_authentication),

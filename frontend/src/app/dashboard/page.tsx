@@ -9,9 +9,10 @@ import axiosInstance from '../../axios/axiosInterceptorInstance';
 import { dashboardStyles } from './dashboardStyles';
 import dynamic from 'next/dynamic';
 import { ProgressSection } from '../../components/ProgressSection';
-import { PixelInstallation } from '../../components/PixelInstallation';
+import PixelInstallation  from '../../components/PixelInstallation';
 import Slider from '../../components/Slider';
 import { AxiosError } from 'axios';
+import { SliderProvider } from '../../context/SliderContext';
 
 const Sidebar = dynamic(() => import('../../components/Sidebar'), {
   suspense: true,
@@ -102,6 +103,7 @@ const Dashboard: React.FC = () => {
       } catch (error) {
         if (error instanceof AxiosError && error.response?.status === 403) {
           if (error.response.data.status === 'NEED_BOOK_CALL') {
+            sessionStorage.setItem('is_slider_opened', 'true');
             setShowSlider(true);
           } else {
             setShowSlider(false);
@@ -113,11 +115,14 @@ const Dashboard: React.FC = () => {
     };
 
     fetchData();
-  }, [router]);
+  }, [setShowSlider]);
+
+
 
   return (
     <>
-      {showSlider && <Slider />}
+    <SliderProvider>
+      <Slider />
       <Box sx={dashboardStyles.headers}>
         <Box sx={dashboardStyles.logoContainer}>
           <Image src='/logo.svg' alt='logo' height={80} width={60} />
@@ -170,6 +175,7 @@ const Dashboard: React.FC = () => {
           </Grid>
         </Grid>
       </Grid>
+      </SliderProvider>
     </>
   );
 };

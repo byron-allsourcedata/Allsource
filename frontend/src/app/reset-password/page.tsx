@@ -6,7 +6,7 @@ import { Box, Button, TextField, Typography, Link, IconButton, InputAdornment } 
 import { AxiosError } from 'axios';
 import axiosInstance from '../../axios/axiosInterceptorInstance';
 import { resetStyles } from './resetStyles';
-import { showToast } from '@/components/ToastNotification';
+import { showToast } from '../../components/ToastNotification';
 
 
 const Signup: React.FC = () => {

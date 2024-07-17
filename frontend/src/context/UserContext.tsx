@@ -50,7 +50,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
 
   return (
     <UserContext.Provider value={{ email, full_name }}>
-      {children}
+    {children}
     </UserContext.Provider>
   );
 };

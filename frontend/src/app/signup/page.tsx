@@ -5,10 +5,10 @@ import Image from 'next/image';
 import { Box, Button, TextField, Typography, Link, IconButton, InputAdornment } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
-import axiosInstance from '@/axios/axiosInterceptorInstance';
+import axiosInstance from '../../axios/axiosInterceptorInstance';
 import { AxiosError } from 'axios';
 import { signupStyles } from './signupStyles';
-import { showErrorToast } from '@/components/ToastNotification';
+import { showErrorToast } from '../../components/ToastNotification';
 import { GoogleLogin } from '@react-oauth/google';
 
 const Signup: React.FC = () => {
