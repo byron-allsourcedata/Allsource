@@ -99,15 +99,15 @@ const Signup: React.FC = () => {
     if (Object.keys(newErrors).length === 0) {
       try {
         const response = await axiosInstance.post('/sign-up', formValues);
-
         if (response.status === 200) {
           const responseData = response.data;
-        
+          if (typeof window !== 'undefined') {
+            if (responseData.token){
+              localStorage.setItem('token', responseData.token);
+            }
+          }
           switch (responseData.status) {
             case "NEED_CHOOSE_PLAN":
-              if (typeof window !== 'undefined') {
-                localStorage.setItem('token', responseData.token);
-              }
               sessionStorage.setItem('me', JSON.stringify({
                 email: formValues.email,
                 full_name: formValues.full_name
@@ -122,9 +122,6 @@ const Signup: React.FC = () => {
               showErrorToast('Password not valid');
               break;
             case "NEED_CONFIRM_EMAIL":
-              if (typeof window !== 'undefined') {
-                localStorage.setItem('token', responseData.token);
-              }
               sessionStorage.setItem('me', JSON.stringify({
                 email: formValues.email,
                 full_name: formValues.full_name
