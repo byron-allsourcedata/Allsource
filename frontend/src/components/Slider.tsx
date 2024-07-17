@@ -1,26 +1,27 @@
-// components/Slider.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { Drawer, Box, Typography, Button, IconButton, Backdrop } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import { useSlider } from '../context/SliderContext'; // Импортируйте контекст
 
 const Slider: React.FC = () => {
-  const [open, setOpen] = useState(true);
+  const { showSlider, setShowSlider } = useSlider(); // Используем контекст
 
   const handleClose = () => {
-    setOpen(false);
-    setTimeout(() => setOpen(true), 1000);
+    sessionStorage.setItem('is_slider_opened', 'false');
+    setShowSlider(false);
   };
 
   useEffect(() => {
-    setOpen(true);
-  }, []);
+    const isSliderOpened = sessionStorage.getItem('is_slider_opened');
+    setShowSlider(isSliderOpened === 'true');
+  }, [setShowSlider]);
 
   return (
     <>
-      <Backdrop open={open} sx={{ zIndex: 1200, color: '#fff' }} />
+      <Backdrop open={showSlider} sx={{ zIndex: 1200, color: '#fff' }} />
       <Drawer
         anchor="right"
-        open={open}
+        open={showSlider}
         variant="persistent"
         PaperProps={{
           sx: {

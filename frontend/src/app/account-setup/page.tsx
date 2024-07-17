@@ -6,8 +6,8 @@ import PersonIcon from '@mui/icons-material/Person';
 import { styles } from './accountStyles';
 import { useRouter } from 'next/navigation';
 import { useUser } from '../../context/UserContext';
-import axiosInterceptorInstance from '../../axios/axiosInterceptorInstance';
-import { showErrorToast } from '@/components/ToastNotification';
+import axiosInterceptorInstance from '../../axios/axiosInterceptorInstance'; 
+import { showErrorToast } from '../../components/ToastNotification';
 
 const AccountSetup = () => {
   const [organizationName, setOrganizationName] = useState('');
