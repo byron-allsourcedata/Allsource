@@ -74,6 +74,7 @@ const Dashboard: React.FC = () => {
   const [data, setData] = useState<any>(null);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [showSlider, setShowSlider] = useState(false); 
+  const [isLoading, setIsLoading] = useState(true);
   const open = Boolean(anchorEl);
 
   const handleSignOut = () => {
@@ -100,6 +101,12 @@ const Dashboard: React.FC = () => {
       try {
         const response = await axiosInstance.get('dashboard');
         setData(response.data);
+        if (response.data.status === 'NEED_BOOK_CALL') {
+          sessionStorage.setItem('is_slider_opened', 'true');
+          setShowSlider(true);
+        } else {
+          setShowSlider(false);
+        }
       } catch (error) {
         if (error instanceof AxiosError && error.response?.status === 403) {
           if (error.response.data.status === 'NEED_BOOK_CALL') {
@@ -111,18 +118,20 @@ const Dashboard: React.FC = () => {
         } else {
           console.error('Error fetching data:', error);
         }
+      } finally {
+        setIsLoading(false);
       }
     };
 
     fetchData();
   }, [setShowSlider]);
 
-
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <>
-    <SliderProvider>
-      <Slider />
       <Box sx={dashboardStyles.headers}>
         <Box sx={dashboardStyles.logoContainer}>
           <Image src='/logo.svg' alt='logo' height={80} width={60} />
@@ -175,15 +184,17 @@ const Dashboard: React.FC = () => {
           </Grid>
         </Grid>
       </Grid>
-      </SliderProvider>
+      {showSlider && <Slider />}
     </>
   );
 };
 
-const DashboardPage = () => {
+const DashboardPage: React.FC = () => {
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <Dashboard />
+      <SliderProvider>
+        <Dashboard />
+      </SliderProvider>
     </Suspense>
   );
 };
