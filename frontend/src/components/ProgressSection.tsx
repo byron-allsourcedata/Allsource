@@ -3,7 +3,8 @@ import Image from "next/image";
 
 
 export const ProgressSection: React.FC = () => (
-    <Box sx={{ padding: '1rem', border: '1px solid #e4e4e4', borderRadius: '8px', backgroundColor: '#fff', boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)', marginBottom: '2rem' }}>
+  <Box sx={{ display: "flex", justifyContent: 'center', alignItems: 'center' }}>
+    <Box sx={{ width: '50%', padding: '2rem', marginTop: '2em', border: '1px solid #e4e4e4', borderRadius: '8px', backgroundColor: '#fff', boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)', marginBottom: '2rem' }}>
       <Typography variant="h6" component="div" mb={2}>
         Activation steps
       </Typography>
@@ -37,6 +38,7 @@ export const ProgressSection: React.FC = () => (
           <ListItemText primary="Connect Meta ads" />
     </ListItem>
       </List>
+    </Box>
     </Box>
   );
   
