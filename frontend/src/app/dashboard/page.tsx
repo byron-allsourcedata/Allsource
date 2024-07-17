@@ -74,7 +74,7 @@ const Dashboard: React.FC = () => {
   const [data, setData] = useState<any>(null);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [showSlider, setShowSlider] = useState(false); 
-  const [isLoading, setIsLoading] = useState(true); // Добавление состояния загрузки
+  const [isLoading, setIsLoading] = useState(true);
   const open = Boolean(anchorEl);
 
   const handleSignOut = () => {
@@ -119,7 +119,7 @@ const Dashboard: React.FC = () => {
           console.error('Error fetching data:', error);
         }
       } finally {
-        setIsLoading(false); // Установка состояния загрузки в false после завершения запроса
+        setIsLoading(false);
       }
     };
 
@@ -127,7 +127,7 @@ const Dashboard: React.FC = () => {
   }, [setShowSlider]);
 
   if (isLoading) {
-    return <div>Loading...</div>; // Индикатор загрузки
+    return <div>Loading...</div>;
   }
 
   return (
