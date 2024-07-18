@@ -3,7 +3,7 @@ import logging
 import os
 from sqlalchemy.orm import Session
 from models.users import Users
-from schemas.install_pixel import PixelInstallationRequest
+from schemas.pixel_installation import PixelInstallationRequest
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +17,7 @@ class PixelInstallationService:
         return {"email": self.user.email,
                 "full_name": self.user.full_name}
 
-    def pixel_installed(self, pixel_installation_request: PixelInstallationRequest):
+    def set_pixel_installed(self, pixel_installation_request: PixelInstallationRequest):
         if pixel_installation_request is not None:
             self.db.query(Users).filter(Users.data_provider_id == pixel_installation_request.client_id).update(
                 {Users.is_pixel_installed: True},

@@ -28,7 +28,7 @@ class Users(Base):
     verified_email_sent_at = Column(DateTime)
     is_book_call_passed = Column(BOOLEAN, default=False)
     stripe_payment_url = Column(VARCHAR)
-    data_provider_id = Column(VARCHAR(32))
+    data_provider_id = Column(VARCHAR(64))
     is_pixel_installed = Column(BOOLEAN, default=False)
 
 
