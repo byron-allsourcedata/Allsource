@@ -17,11 +17,6 @@ const Slider: React.FC = () => {
     setShowSlider(isSliderOpened === 'true');
   }, [setShowSlider]);
 
- const handleOpenPopup = () => {
-    setShowPopup(true);
-  };
-
-
   return (
     <>
       <Backdrop open={showSlider} sx={{ zIndex: 1200, color: '#fff' }} />
