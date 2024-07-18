@@ -47,7 +47,7 @@ const Slider: React.FC = () => {
             To activate your account, please speak with one of our onboarding specialists, and we&apos;ll get you started.
           </Typography>
           <img src="/slider-bookcall.png" alt="Setup" style={{ width: '50%', marginBottom: '1rem' }} />
-          <div id='root' className="book-call-button__wrapper">
+          <div id='calendly-popup-wrapper' className="book-call-button__wrapper">
           <PopupButton 
               className="book-call-button" 
               styles={{
@@ -62,7 +62,7 @@ const Slider: React.FC = () => {
                   textTransform: 'none'
               }}
               url="https://calendly.com/slava-lolly/123"
-              rootElement={typeof window !== "undefined" ? document.getElementById("root") : null}
+              rootElement={document.getElementById("calendly-popup-wrapper")!}
               text="Talk to an expert now!"
           />
           </div>
