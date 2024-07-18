@@ -35,39 +35,37 @@ const VerifyPixelIntegration: React.FC = () => (
 const SupportSection: React.FC = () => (
   <Box sx={{alignItems: 'flex-end'}}>
   <Box sx={{
-    padding: '1em 0em 1em 0em',
+    padding: '1em 0em 1em 1em',
     borderRadius: '8px',
     backgroundColor: '#fff',
     boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
     marginBottom: '0rem',
     textAlign: 'left',
-    width: '81%',
+    width: '80%',
     position: 'absolute',
     bottom: 0,
 
   }}>
-    <Typography variant="body2" color="textSecondary" mb={2}>
+    <Typography variant="body2" color="textSecondary" mb={2} sx={{padding:'1em 0em 0.5em 1em', fontFamily: 'Nunito', fontSize: '14px',fontWeight: '700', lineHeight: '19.1px', textAlign: 'left', color:'rgba(28, 28, 28, 1)'}}>
       Having trouble?
     </Typography>
-    <Grid container spacing={2} alignItems="self-start" justifyItems='flex-start'>
-      <Grid item xs={6}>
+    <Grid container spacing={2} alignItems="self-start" justifyContent='flex-start' sx={{rowGap: '24px', display: 'flex'}} >
         <Button variant="outlined" sx={{
           border: 'none',
           color: 'rgba(80, 82, 178, 1)',
+          gap: '4px',
         }}>
           Schedule a call with us
           <Image src={'/headphones.svg'} alt='headphones' width={20} height={20} />
         </Button>
-      </Grid>
-      <Grid item xs={6}>
         <Button variant="outlined" sx={{
           border: 'none',
           color: 'rgba(80, 82, 178, 1)',
+          gap: '4px',
         }}>
           Send this to my developer
           <Image src={'/telegram.svg'} alt='headphones' width={20} height={20} />
         </Button>
-      </Grid>
     </Grid>
   </Box>
   </Box>
