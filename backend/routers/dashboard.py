@@ -6,6 +6,6 @@ from services.dashboard import DashboardService
 router = APIRouter()
 
 
-@router.get("/")
+@router.get("")
 def get(dashboard_service: DashboardService = Depends(get_dashboard_service)):
     return dashboard_service.get_my_info()
