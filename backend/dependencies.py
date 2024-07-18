@@ -96,7 +96,7 @@ def get_user_authorization_status(user: User, subscription_service):
     status = get_user_authorization_status_without_pixel(user, subscription_service)
     if status == UserAuthorizationStatus.SUCCESS and not user.is_pixel_installed:
         return UserAuthorizationStatus.PIXEL_INSTALLATION_NEEDED
-    return UserAuthorizationStatus.SUCCESS
+    return status
 
 
 def parse_jwt_data(Authorization: Annotated[str, Header()]) -> Token:
