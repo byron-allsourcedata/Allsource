@@ -124,24 +124,18 @@ class SubscriptionService:
         return product.name
 
     def create_subscription_from_webhook(self, user_id, stripe_payload: dict):
-
         start_date_timestamp = stripe_payload.get("data").get("object").get("current_period_start")
-        end_date_timestamo = stripe_payload.get("data").get("object").get("current_period_end")
+        end_date_timestamp = stripe_payload.get("data").get("object").get("current_period_end")
         start_date = datetime.utcfromtimestamp(start_date_timestamp).isoformat() + "Z"
-        end_date = datetime.utcfromtimestamp(end_date_timestamo).isoformat() + "Z"
-
+        end_date = datetime.utcfromtimestamp(end_date_timestamp).isoformat() + "Z"
         created_by_id = user_id
         created_at = get_utc_aware_date_for_postgres()
-
         currency = stripe_payload.get("data").get("object").get("currency")
         price = int(stripe_payload.get("data").get("object").get("plan").get("amount_decimal")) / 100
         price_id = stripe_payload.get("data").get("object").get("plan").get("id")
         status = stripe_payload.get("data").get("object").get("status")
-
-        plan_interval = stripe_payload.get("data").get("object").get("plan").get("interval")
         plan_type = self.determine_plan_name_from_price(
             stripe_payload.get("data").get("object").get("plan").get("product"))
-
         payment_platform_subscription_id = stripe_payload.get("data").get("object").get("id")
         plan_name = f"Trial of {plan_type} at ${price}"
         transaction_id = stripe_payload.get("id")
@@ -166,24 +160,15 @@ class SubscriptionService:
         return add_subscription_obj
 
     def create_subscription_from_free_trail(self, user_id):
-
         plan_type = 'FreeTrail'
         price = '0'
         status = 'trialing'
-        start_date = datetime.utcnow()
-        end_date = start_date + timedelta(days=7)
-
-        start_date_str = start_date.isoformat() + "Z"
-        end_date_str = end_date.isoformat() + "Z"
-
         created_by_id = user_id
         created_at = get_utc_aware_date_for_postgres()
         plan_name = f"Trial of {plan_type} at ${price}"
         add_subscription_obj = Subscription(
             user_id=created_by_id,
             plan_name=plan_name,
-            plan_start=start_date_str,
-            plan_end=end_date_str,
             price=price,
             updated_at=created_at,
             updated_by=created_by_id,
