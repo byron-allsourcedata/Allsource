@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from routers import subscriptions, users, company_info, pixel_installation, admin_customers, s3
+from routers import subscriptions, users, company_info, pixel_installation, admin_customers
 
 router = APIRouter()
 
