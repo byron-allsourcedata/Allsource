@@ -45,10 +45,6 @@ def get_plans_persistence(db: Session = Depends(get_db)):
     return PlansPersistence(db=db)
 
 
-def get_admin_customers_service(db: Session = Depends(get_db)):
-    return AdminCustomersService(db=db)
-
-
 def get_send_grid_persistence_service(db: Session = Depends(get_db)):
     return SendgridPersistence(db=db)
 
@@ -57,9 +53,18 @@ def get_user_persistence_service(db: Session = Depends(get_db)):
     return UserPersistence(db=db)
 
 
+# def get_s3_service(db: Session = Depends(get_db)):
+#     return S3Service(db=db)
+
+
 def get_subscription_service(db: Session = Depends(get_db),
                              user_persistence_service: UserPersistence = Depends(get_user_persistence_service)):
     return SubscriptionService(db=db, user_persistence_service=user_persistence_service)
+
+
+def get_admin_customers_service(db: Session = Depends(get_db),
+                                subscription_service: SubscriptionService = Depends(get_subscription_service)):
+    return AdminCustomersService(db=db, subscription_service=subscription_service)
 
 
 def get_user_authorization_status(user: User, subscription_service):

@@ -14,7 +14,6 @@ class WebhookService:
         customer_id = payload.get("data").get("object").get("customer")
         request_price_id = payload.get("data").get("object").get("plan").get("id")
         status = payload.get("data").get("object").get("status")
-        is_trial = status == "trialing"
         is_subscription_active = status in ['active', 'trialing']
         user_data = self.subscription_service.get_userid_by_customer(customer_id)
         current_plan = self.subscription_service.get_current_user_plan(user_data.id)
@@ -40,12 +39,12 @@ class WebhookService:
         if update_payment_status_of_user:
             logger.info(f"updated the payment status of user to completed {user_data.email}")
             user_subscription = self.subscription_service.create_subscription_from_webhook(user_id=user_data.id,
-                                                                                           stripe_payload=payload, is_trial=is_trial)
+                                                                                           stripe_payload=payload)
             if user_subscription:
                 logger.info("New subscription created")
 
             if (plan_info["stripe_price_id"] != request_price_id):
-                self.subscription_service.create_new_usp(user_data.id, user_subscription.id, request_price_id, is_trial)
+                self.subscription_service.create_new_usp(user_data.id, user_subscription.id, request_price_id)
             else:
                 self.subscription_service.update_subscription_id(user_plan["id"], user_subscription.id)
             return self.subscription_service.construct_webhook_response(user_subscription)
