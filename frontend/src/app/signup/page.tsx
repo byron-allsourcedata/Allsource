@@ -102,7 +102,7 @@ const Signup: React.FC = () => {
         if (response.status === 200) {
           const responseData = response.data;
           if (typeof window !== 'undefined') {
-            if (responseData.token){
+            if (responseData.token && responseData.token !== null){
               localStorage.setItem('token', responseData.token);
             }
           }
