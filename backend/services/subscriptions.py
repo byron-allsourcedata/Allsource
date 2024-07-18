@@ -26,6 +26,7 @@ class SubscriptionService:
 
     def get_userid_by_customer(self, customer_id):
         return self.db.query(User).filter(User.customer_id == customer_id).first()
+
     def get_current_user_plan(self, user_id):
         result = self.user_persistence_service.user_plan_info_db(user_id)
 
@@ -42,10 +43,9 @@ class SubscriptionService:
         else:
             return None
 
-
     def is_had_trial_period(self, user_id):
         self.db.query(UserSubscriptionPlan, User).join(SubscriptionPlan,
-                                                                   UserSubscriptionPlan.user_id == user_id).first()
+                                                       UserSubscriptionPlan.user_id == user_id).first()
 
     def is_user_have_subscription(self, user_id):
         return self.db.query(UserSubscriptionPlan).filter(UserSubscriptionPlan.user_id == user_id).limit(1).scalar()
@@ -124,7 +124,7 @@ class SubscriptionService:
         product = stripe.Product.retrieve(product_id)
         return product.name
 
-    def create_subscription_from_webhook(self, user_id, stripe_payload: dict):
+    def create_subscription_from_webhook(self, user_id, stripe_payload: dict, is_trial):
 
         start_date_timestamp = stripe_payload.get("data").get("object").get("current_period_start")
         end_date_timestamo = stripe_payload.get("data").get("object").get("current_period_end")
@@ -144,7 +144,10 @@ class SubscriptionService:
             stripe_payload.get("data").get("object").get("plan").get("product"))
 
         payment_platform_subscription_id = stripe_payload.get("data").get("object").get("id")
-        plan_name = f"{plan_type} (at ${price} / {plan_interval})"
+        if not is_trial:
+            plan_name = f"{plan_type} (at ${price} / {plan_interval})"
+        else:
+            plan_name = f"Trial of {plan_type} at ${price}"
         transaction_id = stripe_payload.get("id")
         add_subscription_obj = Subscription(
             user_id=created_by_id,
@@ -166,13 +169,13 @@ class SubscriptionService:
         self.db.commit()
         return add_subscription_obj
 
-    def create_new_usp(self, user_id, subscription_id, stripe_price_id):
+    def create_new_usp(self, user_id, subscription_id, stripe_price_id, is_trial):
         plan_info = self.db.query(SubscriptionPlan).filter(SubscriptionPlan.stripe_price_id == stripe_price_id).first()
-        usp_object = UserSubscriptionPlan(user_id=user_id, plan_id=plan_info.id, subscription_id=subscription_id)
+        usp_object = UserSubscriptionPlan(user_id=user_id, plan_id=plan_info.id, subscription_id=subscription_id,
+                                          is_trial=is_trial)
         self.db.add(usp_object)
         self.db.commit()
         return usp_object
-
 
     def update_subscription_id(self, usp_id, subscription_id):
         self.db.query(UserSubscriptionPlan) \

@@ -123,7 +123,10 @@ class UsersAuth:
                     if user.is_book_call_passed:
                         subscription_plan_is_active = subscription_service.is_user_has_active_subscription(user.id)
                         if subscription_plan_is_active:
-                            return {'status': LoginStatus.SUCCESS}
+                            if user.is_pixel_installed:
+                                return {'status': LoginStatus.SUCCESS }
+                            else:
+                                return {'status': LoginStatus.PIXEL_INSTALLATION_NEEDED }
                         else:
                             if user.stripe_payment_url:
                                 return {
