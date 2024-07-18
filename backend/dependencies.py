@@ -52,11 +52,6 @@ def get_send_grid_persistence_service(db: Session = Depends(get_db)):
 def get_user_persistence_service(db: Session = Depends(get_db)):
     return UserPersistence(db=db)
 
-
-# def get_s3_service(db: Session = Depends(get_db)):
-#     return S3Service(db=db)
-
-
 def get_subscription_service(db: Session = Depends(get_db),
                              user_persistence_service: UserPersistence = Depends(get_user_persistence_service)):
     return SubscriptionService(db=db, user_persistence_service=user_persistence_service)
