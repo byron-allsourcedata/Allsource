@@ -13,7 +13,7 @@ const sidebarStyles = {
         fontWeight: '500',
         backgroundColor: 'rgba(255, 255, 255, 1)',
         borderRight: '1px solid rgba(228, 228, 228, 1)',
-        maxHeight: '100vh',
+        height: '90vh',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'start',
@@ -23,8 +23,8 @@ const sidebarStyles = {
         paddingTop: '0 !important',
         paddingBottom: '4em !important', 
         '& .MuiListItem-root': {
-            paddingBottom: '1.5em',
-            paddingTop: '1.5em',
+            paddingBottom: '2em',
+            paddingTop: '2em',
             '&:hover': {
                 backgroundColor: '#e0e0e0',
             },

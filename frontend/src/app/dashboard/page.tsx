@@ -1,31 +1,37 @@
-'use client';
+"use client";
+import { Box, Grid, Typography, Button, Menu, MenuItem } from '@mui/material';
+import Image from 'next/image';
+import dynamic from 'next/dynamic';
 import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
-import { Box, Button, Typography, Menu, MenuItem, Grid } from '@mui/material';
-import PersonIcon from '@mui/icons-material/Person';
 import { useUser } from '../../context/UserContext';
 import axiosInstance from '../../axios/axiosInterceptorInstance';
-import { dashboardStyles } from './dashboardStyles';
-import dynamic from 'next/dynamic';
-import { ProgressSection } from '../../components/ProgressSection';
-import PixelInstallation  from '../../components/PixelInstallation';
-import Slider from '../../components/Slider';
 import { AxiosError } from 'axios';
+import { dashboardStyles } from './dashboardStyles';
+import { ProgressSection } from '../../components/ProgressSection';
+import PixelInstallation from '../../components/PixelInstallation';
+import Slider from '../../components/Slider';
 import { SliderProvider } from '../../context/SliderContext';
+import PersonIcon from '@mui/icons-material/Person';
+import ManualPopup from '../../components/ManualPopup';
 
 const Sidebar = dynamic(() => import('../../components/Sidebar'), {
   suspense: true,
 });
 
 const VerifyPixelIntegration: React.FC = () => (
-  <Box sx={{ padding: '1rem', border: '1px solid #e4e4e4', borderRadius: '8px', backgroundColor: '#fff', boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)', marginBottom: '2rem' }}>
-    <Typography variant="h6" component="div" mb={2}>
+  <Box sx={{ padding: '1.1rem', border: '1px solid #e4e4e4', borderRadius: '8px', backgroundColor: '#fff', boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)', marginBottom: '2rem' }}>
+    <Typography variant="h6" component="div" mb={2} sx={{fontFamily: 'Nunito', fontWeight: '700', lineHeight: '21.82px', textAlign: 'left',}}>
       2. Verify pixel integration on your website
     </Typography>
-    <Box display="flex" alignItems="center">
-      <input type="text" placeholder="https://yourdomain.com" style={{ flexGrow: 1, padding: '0.5rem', border: '1px solid #e4e4e4', borderRadius: '4px' }} />
-      <Button variant="contained" color="primary" sx={{ ml: 2 }}>
+    <Box display="flex" alignItems="center" justifyContent="space-between">
+      <input type="text" placeholder="https://yourdomain.com" style={{ padding: '0.5rem 3em 0.5em 1em', width:'50%', border: '1px solid #e4e4e4', borderRadius: '4px', fontFamily: 'Nunito',
+fontSize: '16px',
+fontWeight: '600',
+lineHeight: '22.4px',
+textAlign: 'left'
+ }} />
+      <Button  sx={{ ml: 2, border: '1px solid rgba(80, 82, 178, 1)', textTransform: 'none', background: '#fff', color:'rgba(80, 82, 178, 1)', fontFamily: 'Nunito', padding: '0.75em 1.5em',  }}>
         Test
       </Button>
     </Box>
@@ -33,38 +39,44 @@ const VerifyPixelIntegration: React.FC = () => (
 );
 
 const SupportSection: React.FC = () => (
+  <Box sx={{alignItems: 'flex-end'}}>
   <Box sx={{
-    padding: '1rem',
+    padding: '1em 0em 1em 1em',
     borderRadius: '8px',
     backgroundColor: '#fff',
     boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
-    marginBottom: '2rem',
-    textAlign: 'left', 
-    width: '100%', 
+    textAlign: 'left',
+    width: '80%',
+    position: 'absolute',
+    bottom: 0,
+    marginBottom: '1em'
   }}>
-    <Typography variant="body2" color="textSecondary" mb={2}>
+    <Typography variant="body2" color="textSecondary" mb={2} sx={{padding:'1em 0em 1.5em 1em', fontFamily: 'Nunito', fontSize: '14px',fontWeight: '700', lineHeight: '19.1px', textAlign: 'left', color:'rgba(28, 28, 28, 1)'}}>
       Having trouble?
     </Typography>
-    <Grid container spacing={2} alignItems="center">
-      <Grid item xs={6}>
-        <Button variant="outlined" sx={{
-          border: 'none',
-          color: 'rgba(80, 82, 178, 1)', 
-        }}>
-          Schedule a call with us
-          <Image src={'/headphones.svg'} alt='headphones' width={20} height={20}/>
-        </Button>
-      </Grid>
-      <Grid item xs={6}>
-        <Button variant="outlined" sx={{
+    <Grid container spacing={2} alignItems="self-start" justifyContent='flex-start' sx={{rowGap: '24px', display: 'flex'}} >
+        <Button  sx={{
           border: 'none',
           color: 'rgba(80, 82, 178, 1)',
+          gap: '8px',
+          textTransform: 'none',
+          marginRight: '2em',
+          marginLeft: '1.5em'
+        }}>
+          Schedule a call with us
+          <Image src={'/headphones.svg'} alt='headphones' width={20} height={20} />
+        </Button>
+        <Button sx={{
+          border: 'none',
+          color: 'rgba(80, 82, 178, 1)',
+          gap: '4px',
+          textTransform: 'none'
         }}>
           Send this to my developer
-          <Image src={'/telegram.svg'} alt='headphones' width={20} height={20}  />
+          <Image src={'/telegram.svg'} alt='headphones' width={20} height={20} />
         </Button>
-      </Grid>
     </Grid>
+  </Box>
   </Box>
 );
 
@@ -73,7 +85,7 @@ const Dashboard: React.FC = () => {
   const { full_name, email } = useUser();
   const [data, setData] = useState<any>(null);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [showSlider, setShowSlider] = useState(false); 
+  const [showSlider, setShowSlider] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const open = Boolean(anchorEl);
 
@@ -161,27 +173,27 @@ const Dashboard: React.FC = () => {
           <MenuItem onClick={handleSignOut}>Sign Out</MenuItem>
         </Menu>
       </Box>
-      <Grid container>
-        <Grid item xs={12} md={3} sx={{ padding: '0px' }}>
+      <Grid container width='100%'>
+        <Grid item xs={12} md={2} sx={{ padding: '0px' }}>
           <Sidebar />
         </Grid>
-        <Grid item xs={12} md={9}>
-          <Typography variant="h4" component="h1" sx={dashboardStyles.title}>
-            Let’s Get Started!
-          </Typography>
-          <Typography variant="body2" color="textSecondary" mb={4}>
-            Install our pixel on your website to start capturing anonymous visitor data on your store.
-          </Typography>
+        <Grid item xs={12} md={10}>
           <Grid container spacing={2}>
-            <Grid item xs={12} md={6}>
+            <Grid item xs={12} md={8}>
+              <Typography variant="h4" component="h1" sx={dashboardStyles.title}>
+                Let’s Get Started!
+              </Typography>
+              <Typography variant="body2" color="textSecondary" mb={4}>
+                Install our pixel on your website to start capturing anonymous visitor data on your store.
+              </Typography>
               <PixelInstallation />
-              <VerifyPixelIntegration /> 
-              <SupportSection />
+              <VerifyPixelIntegration />
             </Grid>
             <Grid item xs={12} md={4}>
               <ProgressSection />
             </Grid>
           </Grid>
+          <SupportSection />
         </Grid>
       </Grid>
       {showSlider && <Slider />}
