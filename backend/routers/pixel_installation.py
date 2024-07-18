@@ -1,16 +1,21 @@
 from fastapi import APIRouter, Depends
+
+from schemas.pixel_installation import PixelInstallationRequest
 from services.pixel_installation import PixelInstallationService
 from dependencies import get_pixel_installation_service
 
 
 router = APIRouter()
 
-
 @router.get("/manually")
 async def manual(manual: PixelInstallationService = Depends(get_pixel_installation_service)):
-    result_status = manual.get_my_info()
+    result_status = manual.get_manual()
     return result_status
 
+@router.post("/pixel_installed")
+async def manual(pixel_installation_request: PixelInstallationRequest, manual: PixelInstallationService = Depends(get_pixel_installation_service)):
+    result_status = manual.set_pixel_installed(pixel_installation_request)
+    return result_status
 
 @router.get("/google-tag")
 async def google_tag(google_tag: PixelInstallationService = Depends(get_pixel_installation_service)):
