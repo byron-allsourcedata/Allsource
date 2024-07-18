@@ -52,6 +52,7 @@ def get_send_grid_persistence_service(db: Session = Depends(get_db)):
 def get_user_persistence_service(db: Session = Depends(get_db)):
     return UserPersistence(db=db)
 
+
 def get_subscription_service(db: Session = Depends(get_db),
                              user_persistence_service: UserPersistence = Depends(get_user_persistence_service)):
     return SubscriptionService(db=db, user_persistence_service=user_persistence_service)
@@ -62,7 +63,7 @@ def get_admin_customers_service(db: Session = Depends(get_db),
     return AdminCustomersService(db=db, subscription_service=subscription_service)
 
 
-def get_user_authorization_status(user: User, subscription_service):
+def get_user_authorization_status_without_pixel(user: User, subscription_service):
     if user.is_with_card:
         if user.company_name:
             subscription_plan_is_active = subscription_service.is_user_has_active_subscription(user.id)
@@ -78,10 +79,7 @@ def get_user_authorization_status(user: User, subscription_service):
                 if user.is_book_call_passed:
                     subscription_plan_is_active = subscription_service.is_user_has_active_subscription(user.id)
                     if subscription_plan_is_active:
-                        if user.is_pixel_installed:
-                            return UserAuthorizationStatus.SUCCESS
-                        else:
-                            return UserAuthorizationStatus.PIXEL_INSTALLATION_NEEDED
+                        return UserAuthorizationStatus.SUCCESS
                     else:
                         if user.stripe_payment_url:
                             return UserAuthorizationStatus.PAYMENT_NEEDED
@@ -92,6 +90,13 @@ def get_user_authorization_status(user: User, subscription_service):
             else:
                 return UserAuthorizationStatus.FILL_COMPANY_DETAILS
     return UserAuthorizationStatus.NEED_CONFIRM_EMAIL
+
+
+def get_user_authorization_status(user: User, subscription_service):
+    status = get_user_authorization_status_without_pixel(user, subscription_service)
+    if status == UserAuthorizationStatus.SUCCESS and not user.is_pixel_installed:
+        return UserAuthorizationStatus.PIXEL_INSTALLATION_NEEDED
+    return UserAuthorizationStatus.SUCCESS
 
 
 def parse_jwt_data(Authorization: Annotated[str, Header()]) -> Token:
@@ -129,6 +134,24 @@ def check_user_authorization(Authorization: Annotated[str, Header()],
         )
     return user
 
+def check_user_authorization_without_pixel(Authorization: Annotated[str, Header()],
+                             user_persistence_service: UserPersistence = Depends(
+                                 get_user_persistence_service), subscription_service: SubscriptionService = Depends(
+            get_subscription_service)) -> Token:
+    user = check_user_authentication(Authorization, user_persistence_service)
+    auth_status = get_user_authorization_status(user, subscription_service)
+    if auth_status == UserAuthorizationStatus.PAYMENT_NEEDED:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={'status': auth_status.value,
+                    'stripe_payment_url': user.stripe_payment_url}
+        )
+    if auth_status != UserAuthorizationStatus.SUCCESS and auth_status != UserAuthorizationStatus.PIXEL_INSTALLATION_NEEDED:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={'status': auth_status.value}
+        )
+    return user
 
 def check_user_authentication(Authorization: Annotated[str, Header()],
                               user_persistence_service: UserPersistence = Depends(
@@ -172,7 +195,7 @@ def get_dashboard_service(user: User = Depends(check_user_authorization)):
     return DashboardService(user=user)
 
 
-def get_pixel_installation_service(db: Session = Depends(get_db), user: User = Depends(check_user_authorization)):
+def get_pixel_installation_service(db: Session = Depends(get_db), user: User = Depends(check_user_authorization_without_pixel)):
     return PixelInstallationService(db=db, user=user)
 
 

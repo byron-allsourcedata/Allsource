@@ -2,11 +2,7 @@ import hashlib
 import logging
 import os
 from sqlalchemy.orm import Session
-
-from models.subscriptions import UserSubscriptions
 from models.users import Users
-from datetime import datetime, timedelta
-from schemas.pixel_installation import PixelInstallationRequest
 
 logger = logging.getLogger(__name__)
 
@@ -20,23 +16,6 @@ class PixelInstallationService:
         return {"email": self.user.email,
                 "full_name": self.user.full_name}
 
-    def set_pixel_installed(self, pixel_installation_request: PixelInstallationRequest):
-        if self.user.is_pixel_installed:
-            start_date = datetime.utcnow()
-            end_date = start_date + timedelta(days=7)
-            start_date_str = start_date.isoformat() + "Z"
-            end_date_str = end_date.isoformat() + "Z"
-            self.db.query(Users).join(UserSubscriptions, UserSubscriptions.user_id == Users.id).filter(
-                Users.data_provider_id == pixel_installation_request.client_id).update(
-                {UserSubscriptions.plan_start: start_date_str, UserSubscriptions.plan_end: end_date_str},
-                synchronize_session=False)
-            self.db.commit()
-        if pixel_installation_request is not None:
-            self.db.query(Users).filter(Users.data_provider_id == pixel_installation_request.client_id).update(
-                {Users.is_pixel_installed: True},
-                synchronize_session=False)
-            self.db.commit()
-        return "OK"
 
     def get_manual(self):
         client_id = self.user.data_provider_id
