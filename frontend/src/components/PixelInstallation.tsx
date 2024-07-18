@@ -51,9 +51,8 @@ const PixelInstallation: React.FC = () => {
 
   const handleOpen = async () => {
     try {
-      // const response = await axiosInterceptorInstance.get('/pixel-install/getPixelCode'); 
-      // setPixelCode(response.data.pixelCode);
-      setPixelCode('')
+      const response = await axiosInterceptorInstance.get('/install-pixel/manually'); 
+      setPixelCode(response.data.script);
       setOpen(true);
     } catch (error) {
       console.error('Error fetching pixel code:', error);
