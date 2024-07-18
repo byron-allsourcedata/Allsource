@@ -2,7 +2,7 @@ import { Typography, Box, Button, LinearProgress, List, ListItemIcon, ListItemTe
 import Image from "next/image";
 import { styled } from "@mui/material/styles";
 
-// Стиль для кнопок
+
 const CustomButton = styled(Button)(({ theme }) => ({
   width: '100%',
   height: '68.25px',
@@ -22,7 +22,7 @@ const CustomButton = styled(Button)(({ theme }) => ({
   color: 'rgba(74, 74, 74, 1)',
 }));
 
-// Стиль для ListItemIcon
+
 const CustomListItemIcon = styled(ListItemIcon)(({ theme }) => ({
   paddingLeft: '0.5em',
 }));

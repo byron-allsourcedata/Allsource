@@ -20,13 +20,18 @@ const Sidebar = dynamic(() => import('../../components/Sidebar'), {
 });
 
 const VerifyPixelIntegration: React.FC = () => (
-  <Box sx={{ padding: '1rem', border: '1px solid #e4e4e4', borderRadius: '8px', backgroundColor: '#fff', boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)', marginBottom: '2rem' }}>
-    <Typography variant="h6" component="div" mb={2}>
+  <Box sx={{ padding: '1.1rem', border: '1px solid #e4e4e4', borderRadius: '8px', backgroundColor: '#fff', boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)', marginBottom: '2rem' }}>
+    <Typography variant="h6" component="div" mb={2} sx={{fontFamily: 'Nunito', fontWeight: '700', lineHeight: '21.82px', textAlign: 'left',}}>
       2. Verify pixel integration on your website
     </Typography>
     <Box display="flex" alignItems="center" justifyContent="space-between">
-      <input type="text" placeholder="https://yourdomain.com" style={{ padding: '0.5rem', width:'50%', border: '1px solid #e4e4e4', borderRadius: '4px' }} />
-      <Button variant="contained" color="primary" sx={{ ml: 2, border: '1px solid rgba(80, 82, 178, 1)', textTransform: 'none', background: '#fff', color:'rgba(80, 82, 178, 1)' }}>
+      <input type="text" placeholder="https://yourdomain.com" style={{ padding: '0.5rem 3em 0.5em 1em', width:'50%', border: '1px solid #e4e4e4', borderRadius: '4px', fontFamily: 'Nunito',
+fontSize: '16px',
+fontWeight: '600',
+lineHeight: '22.4px',
+textAlign: 'left'
+ }} />
+      <Button  sx={{ ml: 2, border: '1px solid rgba(80, 82, 178, 1)', textTransform: 'none', background: '#fff', color:'rgba(80, 82, 178, 1)', fontFamily: 'Nunito', padding: '0.75em 1.5em',  }}>
         Test
       </Button>
     </Box>
@@ -40,29 +45,32 @@ const SupportSection: React.FC = () => (
     borderRadius: '8px',
     backgroundColor: '#fff',
     boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
-    marginBottom: '0rem',
     textAlign: 'left',
     width: '80%',
     position: 'absolute',
     bottom: 0,
-
+    marginBottom: '1em'
   }}>
-    <Typography variant="body2" color="textSecondary" mb={2} sx={{padding:'1em 0em 0.5em 1em', fontFamily: 'Nunito', fontSize: '14px',fontWeight: '700', lineHeight: '19.1px', textAlign: 'left', color:'rgba(28, 28, 28, 1)'}}>
+    <Typography variant="body2" color="textSecondary" mb={2} sx={{padding:'1em 0em 1.5em 1em', fontFamily: 'Nunito', fontSize: '14px',fontWeight: '700', lineHeight: '19.1px', textAlign: 'left', color:'rgba(28, 28, 28, 1)'}}>
       Having trouble?
     </Typography>
     <Grid container spacing={2} alignItems="self-start" justifyContent='flex-start' sx={{rowGap: '24px', display: 'flex'}} >
-        <Button variant="outlined" sx={{
+        <Button  sx={{
           border: 'none',
           color: 'rgba(80, 82, 178, 1)',
-          gap: '4px',
+          gap: '8px',
+          textTransform: 'none',
+          marginRight: '2em',
+          marginLeft: '1.5em'
         }}>
           Schedule a call with us
           <Image src={'/headphones.svg'} alt='headphones' width={20} height={20} />
         </Button>
-        <Button variant="outlined" sx={{
+        <Button sx={{
           border: 'none',
           color: 'rgba(80, 82, 178, 1)',
           gap: '4px',
+          textTransform: 'none'
         }}>
           Send this to my developer
           <Image src={'/telegram.svg'} alt='headphones' width={20} height={20} />
