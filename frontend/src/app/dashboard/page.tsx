@@ -13,6 +13,7 @@ import PixelInstallation from '../../components/PixelInstallation';
 import Slider from '../../components/Slider';
 import { SliderProvider } from '../../context/SliderContext';
 import PersonIcon from '@mui/icons-material/Person';
+import ManualPopup from '../../components/ManualPopup';
 
 const Sidebar = dynamic(() => import('../../components/Sidebar'), {
   suspense: true,

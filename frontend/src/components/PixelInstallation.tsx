@@ -3,7 +3,9 @@ import Image from "next/image";
 import axiosInterceptorInstance from "../axios/axiosInterceptorInstance";
 import { AxiosError } from "axios";
 import { useSlider } from '../context/SliderContext';
-import React from "react";
+import React, { useState } from "react";
+import ManualPopup from '../components/ManualPopup';
+
 
 const PixelInstallation: React.FC = () => {
   const { setShowSlider } = useSlider();
@@ -44,6 +46,23 @@ const PixelInstallation: React.FC = () => {
     }
   };
 
+  const [open, setOpen] = useState(false);
+  const [pixelCode, setPixelCode] = useState('');
+
+  const handleOpen = async () => {
+    try {
+      // const response = await axiosInterceptorInstance.get('/pixel-install/getPixelCode'); 
+      // setPixelCode(response.data.pixelCode);
+      setPixelCode('')
+      setOpen(true);
+    } catch (error) {
+      console.error('Error fetching pixel code:', error);
+    }
+  };
+
+  const handleClose = () => setOpen(false);
+
+
   const installCMS = async () => {
     try {
       const response = await axiosInterceptorInstance.get('/install-pixel/cms');
@@ -72,10 +91,11 @@ const PixelInstallation: React.FC = () => {
       </Typography>
       <Grid container spacing={2}>
         <Grid item xs={12} md={4}>
-          <Button variant="outlined" fullWidth onClick={installManually} sx={buttonStyles}>
+          <Button variant="outlined" fullWidth onClick={handleOpen} sx={buttonStyles}>
             <Image src={'/install_manually.svg'} alt="Install Manually" width={32} height={32} />
             <Typography sx={typographyStyles}>Install Manually</Typography>
           </Button>
+          <ManualPopup open={open} handleClose={handleClose} pixelCode={pixelCode} />
         </Grid>
         <Grid item xs={12} md={4} width={700}>
           <Button variant="outlined" fullWidth onClick={installGoogleTag} sx={buttonGoogle}>
