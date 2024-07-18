@@ -2,19 +2,29 @@ from sqlalchemy import func
 from config.stripe import StripeConfig
 from typing import List
 from sqlalchemy.orm import Session
+
+from models.plans import SubscriptionPlan
 from models.users import Users
 import logging
+
+from services.subscriptions import SubscriptionService
+
 logger = logging.getLogger(__name__)
 
 
 class AdminCustomersService:
 
-    def __init__(self, db: Session):
+    def __init__(self, db: Session, subscription_service: SubscriptionService):
         self.db = db
+        self.subscription_service = subscription_service
 
     def get_user_by_email(self, email):
         user_object = self.db.query(Users).filter(func.lower(Users.email) == func.lower(email)).first()
         return user_object
+
+    def get_default_plan(self):
+        default_plan = self.db.query(SubscriptionPlan).filter(SubscriptionPlan.is_default == True).first()
+        return default_plan
 
     def update_book_call(self, user_id, url):
         self.db.query(Users).filter(Users.id == user_id).update(
@@ -42,9 +52,14 @@ class AdminCustomersService:
         )
         return {"link": session.url}
 
-    def confirmation_customer(self, email):
+    def confirmation_customer(self, email, free_trail):
         user_data = self.get_user_by_email(email)
-        link = self.create_customer_session('price_1PawltRw2DIFYsXevEeOw6dt', user_data.customer_id)['link']
+        link = ''
+        if free_trail:
+            self.subscription_service.update_user_payment_status(user_id=user_data.id, is_success=True)
+            user_subscription = self.subscription_service.create_subscription_from_free_trail(user_id=user_data.id)
+            self.subscription_service.create_new_usp_free_trail(user_data.id, user_subscription.id)
+        else:
+            link = self.create_customer_session(self.get_default_plan.stripe_price_id, user_data.customer_id)['link']
         self.update_book_call(user_data.id, link)
         return 'OK'
-

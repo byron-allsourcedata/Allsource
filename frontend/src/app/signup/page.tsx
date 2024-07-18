@@ -171,12 +171,15 @@ const Signup: React.FC = () => {
         <GoogleLogin
           onSuccess={async (credentialResponse) => {
             try {
-              const response = await axiosInstance.post('/login-google', {
+              const response = await axiosInstance.post('/sign-up-google', {
                 token: credentialResponse.credential,
               });
             
+              const responseData = response.data;
               if (typeof window !== 'undefined') {
-                localStorage.setItem('token', response.data.token);
+                if (responseData.token && responseData.token !== null){
+                  localStorage.setItem('token', responseData.token);
+                }
               }
             
               switch (response.data.status) {

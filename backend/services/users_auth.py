@@ -1,6 +1,4 @@
 from datetime import datetime, timedelta, timezone
-
-from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 from . import stripe_service
 from .jwt_service import get_password_hash, create_access_token, verify_password, decode_jwt_data
@@ -15,8 +13,10 @@ import logging
 from google.oauth2 import id_token
 from enums import SignUpStatus, StripePaymentStatusEnum, AutomationSystemTemplate, LoginStatus, ResetPasswordEnum, \
     VerifyToken, UserAuthorizationStatus
-from typing import Optional
-
+from models.subscriptions import UserSubscriptions
+from models.users import Users
+from datetime import datetime, timedelta
+from schemas.pixel_installation import PixelInstallationRequest
 from schemas.auth_google_token import AuthGoogleData
 from schemas.users import UserSignUpForm, UserLoginForm, ResetPasswordForm
 from .subscriptions import SubscriptionService
@@ -35,6 +35,24 @@ class UsersAuth:
 
     def get_utc_aware_date(self):
         return datetime.now(timezone.utc).replace(microsecond=0)
+
+    def set_pixel_installed(self, pixel_installation_request: PixelInstallationRequest):
+        if pixel_installation_request is not None:
+            user = self.db.query(Users).filter(Users.data_provider_id == pixel_installation_request.client_id).first()
+            if user and not user.is_pixel_installed:
+                start_date = datetime.utcnow()
+                end_date = start_date + timedelta(days=7)
+                start_date_str = start_date.isoformat() + "Z"
+                end_date_str = end_date.isoformat() + "Z"
+                self.db.query(Users).join(UserSubscriptions, UserSubscriptions.user_id == Users.id).filter(
+                    Users.data_provider_id == pixel_installation_request.client_id).update(
+                    {UserSubscriptions.plan_start: start_date_str, UserSubscriptions.plan_end: end_date_str},
+                    synchronize_session=False)
+                self.db.query(Users).filter(Users.data_provider_id == pixel_installation_request.client_id).update(
+                    {Users.is_pixel_installed: True},
+                    synchronize_session=False)
+                self.db.commit()
+        return "OK"
 
     def get_utc_aware_date_for_mssql(self, delta: timedelta = timedelta(seconds=0)):
         date = self.get_utc_aware_date()
@@ -123,7 +141,10 @@ class UsersAuth:
                     if user.is_book_call_passed:
                         subscription_plan_is_active = subscription_service.is_user_has_active_subscription(user.id)
                         if subscription_plan_is_active:
-                            return {'status': LoginStatus.SUCCESS}
+                            if user.is_pixel_installed:
+                                return {'status': LoginStatus.SUCCESS }
+                            else:
+                                return {'status': LoginStatus.PIXEL_INSTALLATION_NEEDED }
                         else:
                             if user.stripe_payment_url:
                                 return {

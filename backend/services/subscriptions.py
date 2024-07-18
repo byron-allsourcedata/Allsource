@@ -1,12 +1,11 @@
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from enums import StripePaymentStatusEnum
 from models.plans import SubscriptionPlan, UserSubscriptionPlan
 from models.users import Users, User
 from persistence.user_persistence import UserPersistence
 from models.subscriptions import Subscription
 from sqlalchemy.orm import Session
-
 from utils import get_utc_aware_date_for_postgres
 
 ACTIVE_STATUSES = ["active", "trialing", "completed"]
@@ -26,6 +25,7 @@ class SubscriptionService:
 
     def get_userid_by_customer(self, customer_id):
         return self.db.query(User).filter(User.customer_id == customer_id).first()
+
     def get_current_user_plan(self, user_id):
         result = self.user_persistence_service.user_plan_info_db(user_id)
 
@@ -42,10 +42,9 @@ class SubscriptionService:
         else:
             return None
 
-
     def is_had_trial_period(self, user_id):
         self.db.query(UserSubscriptionPlan, User).join(SubscriptionPlan,
-                                                                   UserSubscriptionPlan.user_id == user_id).first()
+                                                       UserSubscriptionPlan.user_id == user_id).first()
 
     def is_user_have_subscription(self, user_id):
         return self.db.query(UserSubscriptionPlan).filter(UserSubscriptionPlan.user_id == user_id).limit(1).scalar()
@@ -125,26 +124,20 @@ class SubscriptionService:
         return product.name
 
     def create_subscription_from_webhook(self, user_id, stripe_payload: dict):
-
         start_date_timestamp = stripe_payload.get("data").get("object").get("current_period_start")
-        end_date_timestamo = stripe_payload.get("data").get("object").get("current_period_end")
+        end_date_timestamp = stripe_payload.get("data").get("object").get("current_period_end")
         start_date = datetime.utcfromtimestamp(start_date_timestamp).isoformat() + "Z"
-        end_date = datetime.utcfromtimestamp(end_date_timestamo).isoformat() + "Z"
-
+        end_date = datetime.utcfromtimestamp(end_date_timestamp).isoformat() + "Z"
         created_by_id = user_id
         created_at = get_utc_aware_date_for_postgres()
-
         currency = stripe_payload.get("data").get("object").get("currency")
         price = int(stripe_payload.get("data").get("object").get("plan").get("amount_decimal")) / 100
         price_id = stripe_payload.get("data").get("object").get("plan").get("id")
         status = stripe_payload.get("data").get("object").get("status")
-
-        plan_interval = stripe_payload.get("data").get("object").get("plan").get("interval")
         plan_type = self.determine_plan_name_from_price(
             stripe_payload.get("data").get("object").get("plan").get("product"))
-
         payment_platform_subscription_id = stripe_payload.get("data").get("object").get("id")
-        plan_name = f"{plan_type} (at ${price} / {plan_interval})"
+        plan_name = f"Trial of {plan_type} at ${price}"
         transaction_id = stripe_payload.get("id")
         add_subscription_obj = Subscription(
             user_id=created_by_id,
@@ -166,13 +159,40 @@ class SubscriptionService:
         self.db.commit()
         return add_subscription_obj
 
-    def create_new_usp(self, user_id, subscription_id, stripe_price_id):
-        plan_info = self.db.query(SubscriptionPlan).filter(SubscriptionPlan.stripe_price_id == stripe_price_id).first()
-        usp_object = UserSubscriptionPlan(user_id=user_id, plan_id=plan_info.id, subscription_id=subscription_id)
+    def create_subscription_from_free_trail(self, user_id):
+        plan_type = 'FreeTrail'
+        price = '0'
+        status = 'trialing'
+        created_by_id = user_id
+        created_at = get_utc_aware_date_for_postgres()
+        plan_name = f"Trial of {plan_type} at ${price}"
+        add_subscription_obj = Subscription(
+            user_id=created_by_id,
+            plan_name=plan_name,
+            price=price,
+            updated_at=created_at,
+            updated_by=created_by_id,
+            created_at=created_at,
+            created_by=created_by_id,
+            status=status,
+        )
+        self.db.add(add_subscription_obj)
+        self.db.commit()
+        return add_subscription_obj
+
+    def create_new_usp_free_trail(self, user_id, subscription_id):
+        plan_info = self.db.query(SubscriptionPlan).filter(SubscriptionPlan.is_free_trail == True).first()
+        usp_object = UserSubscriptionPlan(user_id=user_id, plan_id=plan_info.id, subscription_id=subscription_id, )
         self.db.add(usp_object)
         self.db.commit()
         return usp_object
 
+    def create_new_usp(self, user_id, subscription_id, stripe_price_id):
+        plan_info = self.db.query(SubscriptionPlan).filter(SubscriptionPlan.stripe_price_id == stripe_price_id).first()
+        usp_object = UserSubscriptionPlan(user_id=user_id, plan_id=plan_info.id, subscription_id=subscription_id,)
+        self.db.add(usp_object)
+        self.db.commit()
+        return usp_object
 
     def update_subscription_id(self, usp_id, subscription_id):
         self.db.query(UserSubscriptionPlan) \
