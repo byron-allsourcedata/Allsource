@@ -62,7 +62,8 @@ const Slider: React.FC = () => {
                   borderRadius: '4px',
                   lineHeight: '22.4px', 
                   backgroundColor: '#5052B2', 
-                  textTransform: 'none'
+                  textTransform: 'none',
+                  cursor: 'pointer',
               }}
               url="https://calendly.com/slava-lolly/123"
               rootElement={document.getElementById("calendly-popup-wrapper")!}
