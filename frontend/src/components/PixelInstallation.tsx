@@ -5,6 +5,8 @@ import { AxiosError } from "axios";
 import { useSlider } from '../context/SliderContext';
 import React, { useState } from "react";
 import ManualPopup from '../components/ManualPopup';
+import GoogleTagPopup from '../components/GoogleTagPopup';
+import CRMPopup from "./CMSPopup";
 
 
 const PixelInstallation: React.FC = () => {
@@ -13,6 +15,8 @@ const PixelInstallation: React.FC = () => {
   const installManually = async () => {
     try {
       const response = await axiosInterceptorInstance.get('/install-pixel/manually');
+      setPixelCode(response.data);
+      setOpen(true);
     } catch (error) {
       if (error instanceof AxiosError && error.response?.status === 403) {
         if (error.response.data.status === 'NEED_BOOK_CALL') {
@@ -30,7 +34,9 @@ const PixelInstallation: React.FC = () => {
 
   const installGoogleTag = async () => {
     try {
-      const response = await axiosInterceptorInstance.get('/install-pixel/google-tag');
+      const response = await axiosInterceptorInstance.get('/install-pixel/manually');
+      setGoogleCode(response.data);
+      setGoogleOpen(true);
     } catch (error) {
       if (error instanceof AxiosError && error.response?.status === 403) {
         if (error.response.data.status === 'NEED_BOOK_CALL') {
@@ -46,25 +52,23 @@ const PixelInstallation: React.FC = () => {
     }
   };
 
-  const [open, setOpen] = useState(false);
+  const [openmanually, setOpen] = useState(false);
   const [pixelCode, setPixelCode] = useState('');
+  const [opengoogle, setGoogleOpen] = useState(false);
+  const [googleCode, setGoogleCode] = useState('');
+  const [opencrm, setCMSOpen] = useState(false);
 
-  const handleOpen = async () => {
-    try {
-      const response = await axiosInterceptorInstance.get('/install-pixel/manually'); 
-      setPixelCode(response.data.script);
-      setOpen(true);
-    } catch (error) {
-      console.error('Error fetching pixel code:', error);
-    }
-  };
 
-  const handleClose = () => setOpen(false);
+
+  const handleManualClose = () => setOpen(false);
+  const handleGoogleClose = () => setGoogleOpen(false);
+  const handleCRMClose = () => setCMSOpen(false);
 
 
   const installCMS = async () => {
     try {
       const response = await axiosInterceptorInstance.get('/install-pixel/cms');
+      setCMSOpen(true);
     } catch (error) {
       if (error instanceof AxiosError && error.response?.status === 403) {
         if (error.response.data.status === 'NEED_BOOK_CALL') {
@@ -90,17 +94,18 @@ const PixelInstallation: React.FC = () => {
       </Typography>
       <Grid container spacing={2}>
         <Grid item xs={12} md={4}>
-          <Button variant="outlined" fullWidth onClick={handleOpen} sx={buttonStyles}>
+          <Button variant="outlined" fullWidth onClick={installManually} sx={buttonStyles}>
             <Image src={'/install_manually.svg'} alt="Install Manually" width={36} height={36} />
             <Typography sx={typographyStyles}>Install Manually</Typography>
           </Button>
-          <ManualPopup open={open} handleClose={handleClose} pixelCode={pixelCode} />
+          <ManualPopup open={openmanually} handleClose={handleManualClose} pixelCode={pixelCode} />
         </Grid>
         <Grid item xs={12} md={4} width={700}>
           <Button variant="outlined" fullWidth onClick={installGoogleTag} sx={buttonGoogle}>
             <Image src={'/install_gtm.svg'} alt="Install on Google Tag Manager" width={28} height={28} />
             <Typography sx={typographyGoogle}>Install on Google Tag Manager</Typography>
           </Button>
+          <GoogleTagPopup open={opengoogle} handleClose={handleGoogleClose} pixelCode={googleCode} />
         </Grid>
         <Grid item xs={12} md={4}>
           <Button variant="outlined" fullWidth onClick={installCMS} sx={buttonStyles}>
@@ -110,6 +115,7 @@ const PixelInstallation: React.FC = () => {
             </Box>
             <Typography sx={typographyStyles}>Install on CMS</Typography>
           </Button>
+          <CRMPopup open={opencrm} handleClose={handleCRMClose} />
         </Grid>
       </Grid>
     </Box>

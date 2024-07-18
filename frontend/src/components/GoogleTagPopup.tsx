@@ -62,7 +62,7 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode }) => {
       <Box sx={style}>
         <Box display="flex" justifyContent="space-between" sx={{ width: '100%', paddingBottom: '1em' }}>
           <Typography variant="h6" component="h2" sx={{ fontFamily: 'Nunito', fontSize: '14', fontWeight: '700', lineHeight: '19.1px', textAlign: 'left', color: 'rgba(28, 28, 28, 1)' }}>
-            Install Manually
+          Install with Tag Manager
           </Typography>
           <IconButton onClick={handleClose}>
             <CloseIcon />
@@ -72,7 +72,7 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode }) => {
         <Box sx={{ flex: 1, overflowY: 'auto' }}>
           <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', padding: '2em 0em 0em 0em', justifyContent: 'start' }}>
             <Image src='/1.svg' alt='1' width={28} height={28} />
-            <Typography sx={maintext}>Copy the pixel code</Typography>
+            <Typography sx={maintext}>Copy the verification tag</Typography>
           </Box>
           <Box
             component="pre"
@@ -85,7 +85,7 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode }) => {
               border: '1px solid rgba(228, 228, 228, 1)',
               borderRadius: '10px',
               marginLeft: '3em',
-              maxHeight: '30em',  
+              maxHeight: '20em',  
               overflowY: 'auto',    
             }}
           >
@@ -99,14 +99,24 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode }) => {
           </Box>
           <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', padding: '2em 0em 0em 0em', justifyContent: 'start' }}>
             <Image src='/2.svg' alt='2' width={28} height={28} />
-            <Typography sx={maintext}>Paste the pixel in your website</Typography>
+            <Typography sx={maintext}>Log into your Google Tag Manager</Typography>
           </Box>
-          <Typography sx={subtext}>Paste the above pixel in the header of your website. The header script starts with &lt;head&gt; and ends with &lt;/head&gt;.</Typography>
+          <Typography sx={subtext}>Log into to google tag manager and select the website container</Typography>
           <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', padding: '2em 0em 0em 0em', justifyContent: 'start' }}>
             <Image src='/3.svg' alt='3' width={28} height={28} />
-            <Typography sx={maintext}>Verify Your Pixel</Typography>
+            <Typography sx={maintext}>Create a new tag</Typography>
           </Box>
-          <Typography sx={subtext}>Once the pixel is pasted in your website, wait for 10-15 mins and verify your pixel.</Typography>
+          <Typography sx={subtext}>Create a new custom HTML tag and  enter a name for your tag</Typography>
+          <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', padding: '2em 0em 0em 0em', justifyContent: 'start' }}>
+            <Image src='/4.svg' alt='4' width={28} height={28} />
+            <Typography sx={maintext}>Paste the code in HTML Container</Typography>
+          </Box>
+          <Typography sx={subtext}>Paste the code in HTML container and click on advanced settings drop-down and select Once per page under Tag firing options and click on create tag</Typography>
+          <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', padding: '2em 0em 0em 0em', justifyContent: 'start' }}>
+            <Image src='/5.svg' alt='5' width={28} height={28} />
+            <Typography sx={maintext}>Review and Verify</Typography>
+          </Box>
+          <Typography sx={subtext}>Review your tags in tag manager and verify the pixel installation.</Typography>
         </Box>
         <Box display="flex" justifyContent="flex-end" mt={3} sx={{ position: 'absolute', bottom: '8px', right: '8px' }}>
           <Button variant="outlined" sx={{ mr: 2, backgroundColor: 'rgba(255, 255, 255, 1)', color: 'rgba(80, 82, 178, 1)', textTransform: 'none', padding: '1em 2em', border: '1px solid rgba(80, 82, 178, 1)' }}>
