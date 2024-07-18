@@ -6,6 +6,6 @@ router = APIRouter()
 
 
 @router.get("/confirm_customer")
-async def verify_token(admin_customers_service: AdminCustomersService = Depends(get_admin_customers_service), mail: str = Query(...)):
-    return admin_customers_service.confirmation_customer(mail)
+async def verify_token(admin_customers_service: AdminCustomersService = Depends(get_admin_customers_service), mail: str = Query(...), free_trail: bool= Query(...)):
+    return admin_customers_service.confirmation_customer(mail, free_trail)
 

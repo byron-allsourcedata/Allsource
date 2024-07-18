@@ -45,10 +45,6 @@ def get_plans_persistence(db: Session = Depends(get_db)):
     return PlansPersistence(db=db)
 
 
-def get_admin_customers_service(db: Session = Depends(get_db)):
-    return AdminCustomersService(db=db)
-
-
 def get_send_grid_persistence_service(db: Session = Depends(get_db)):
     return SendgridPersistence(db=db)
 
@@ -56,10 +52,14 @@ def get_send_grid_persistence_service(db: Session = Depends(get_db)):
 def get_user_persistence_service(db: Session = Depends(get_db)):
     return UserPersistence(db=db)
 
-
 def get_subscription_service(db: Session = Depends(get_db),
                              user_persistence_service: UserPersistence = Depends(get_user_persistence_service)):
     return SubscriptionService(db=db, user_persistence_service=user_persistence_service)
+
+
+def get_admin_customers_service(db: Session = Depends(get_db),
+                                subscription_service: SubscriptionService = Depends(get_subscription_service)):
+    return AdminCustomersService(db=db, subscription_service=subscription_service)
 
 
 def get_user_authorization_status(user: User, subscription_service):
@@ -78,7 +78,10 @@ def get_user_authorization_status(user: User, subscription_service):
                 if user.is_book_call_passed:
                     subscription_plan_is_active = subscription_service.is_user_has_active_subscription(user.id)
                     if subscription_plan_is_active:
-                        return UserAuthorizationStatus.SUCCESS
+                        if user.is_pixel_installed:
+                            return UserAuthorizationStatus.SUCCESS
+                        else:
+                            return UserAuthorizationStatus.PIXEL_INSTALLATION_NEEDED
                     else:
                         if user.stripe_payment_url:
                             return UserAuthorizationStatus.PAYMENT_NEEDED
