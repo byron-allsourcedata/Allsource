@@ -184,20 +184,20 @@ const Signup: React.FC = () => {
             
               switch (response.data.status) {
                 case 'SUCCESS':
-                  router.push('/dashboard');
+                  navigateTo('/dashboard');
                   break;
                 case 'NEED_CHOOSE_PLAN':
-                  router.push('/choose-plan');
+                  navigateTo('/choose-plan');
                   break;
                 case 'FILL_COMPANY_DETAILS':
-                  router.push('/account-setup');
+                  navigateTo('/account-setup');
                   break;
                 case 'NEED_BOOK_CALL':
-                  router.push('/dashboard');
+                  navigateTo('/dashboard');
                   sessionStorage.setItem('is_slider_opened', 'true')
                   break;
                 case 'PAYMENT_NEEDED':
-                  router.push(`${response.data.stripe_payment_url}`);
+                  navigateTo(`${response.data.stripe_payment_url}`);
                   break;
                 case 'INCORRECT_PASSWORD_OR_EMAIL':
                   showErrorToast("User with this email does not exist");

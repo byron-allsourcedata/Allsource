@@ -31,11 +31,6 @@ async def create_user(user_form: UserSignUpForm, users_service: UsersAuth = Depe
         raise HTTPException(status_code=500, detail={'error': user_data.get('error')})
 
 
-@router.get("/dashboard")
-def get(dashboard_service: DashboardService = Depends(get_dashboard_service)):
-    return dashboard_service.get_my_info()
-
-
 @router.post("/login", response_model=UserLoginFormResponse)
 async def login_user(user_form: UserLoginForm, users_service: UsersAuth = Depends(get_users_auth_service)):
     user_data = users_service.login_account(user_form)

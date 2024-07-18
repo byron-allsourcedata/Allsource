@@ -21,7 +21,6 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   useEffect(() => {
     const token = localStorage.getItem('token');
     const storedMe = sessionStorage.getItem('me');
-
     if (storedMe)  {
       const storedData = JSON.parse(storedMe);
       setEmail(storedData.email);
@@ -33,7 +32,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
         .then(response => {
           const { email } = response.data;
           setEmail(email);
-          setHasFetched(true); // Set a flag to avoid repeated requests
+          setHasFetched(true);
           setFullName(response.data.full_name);
           sessionStorage.setItem('me', JSON.stringify({ 
             email: response.data.email, 
