@@ -23,9 +23,9 @@ const VerifyPixelIntegration: React.FC = () => (
     <Typography variant="h6" component="div" mb={2}>
       2. Verify pixel integration on your website
     </Typography>
-    <Box display="flex" alignItems="center">
-      <input type="text" placeholder="https://yourdomain.com" style={{ flexGrow: 1, padding: '0.5rem', border: '1px solid #e4e4e4', borderRadius: '4px' }} />
-      <Button variant="contained" color="primary" sx={{ ml: 2 }}>
+    <Box display="flex" alignItems="center" justifyContent="space-between">
+      <input type="text" placeholder="https://yourdomain.com" style={{ padding: '0.5rem', width:'50%', border: '1px solid #e4e4e4', borderRadius: '4px' }} />
+      <Button variant="contained" color="primary" sx={{ ml: 2, border: '1px solid rgba(80, 82, 178, 1)', textTransform: 'none', background: '#fff', color:'rgba(80, 82, 178, 1)' }}>
         Test
       </Button>
     </Box>
@@ -33,19 +33,23 @@ const VerifyPixelIntegration: React.FC = () => (
 );
 
 const SupportSection: React.FC = () => (
+  <Box sx={{alignItems: 'flex-end'}}>
   <Box sx={{
-    padding: '1rem',
+    padding: '1em 0em 1em 0em',
     borderRadius: '8px',
     backgroundColor: '#fff',
     boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
-    marginBottom: '2rem',
+    marginBottom: '0rem',
     textAlign: 'left',
-    width: '100%',
+    width: '81%',
+    position: 'absolute',
+    bottom: 0,
+
   }}>
     <Typography variant="body2" color="textSecondary" mb={2}>
       Having trouble?
     </Typography>
-    <Grid container spacing={2} alignItems="center">
+    <Grid container spacing={2} alignItems="self-start" justifyItems='flex-start'>
       <Grid item xs={6}>
         <Button variant="outlined" sx={{
           border: 'none',
@@ -65,6 +69,7 @@ const SupportSection: React.FC = () => (
         </Button>
       </Grid>
     </Grid>
+  </Box>
   </Box>
 );
 
@@ -161,13 +166,13 @@ const Dashboard: React.FC = () => {
           <MenuItem onClick={handleSignOut}>Sign Out</MenuItem>
         </Menu>
       </Box>
-      <Grid container>
+      <Grid container width='100%'>
         <Grid item xs={12} md={2} sx={{ padding: '0px' }}>
           <Sidebar />
         </Grid>
         <Grid item xs={12} md={10}>
           <Grid container spacing={2}>
-            <Grid item xs={12} md={6}>
+            <Grid item xs={12} md={8}>
               <Typography variant="h4" component="h1" sx={dashboardStyles.title}>
                 Let’s Get Started!
               </Typography>
@@ -177,7 +182,7 @@ const Dashboard: React.FC = () => {
               <PixelInstallation />
               <VerifyPixelIntegration />
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid item xs={12} md={4}>
               <ProgressSection />
             </Grid>
           </Grid>

@@ -63,7 +63,7 @@ const PixelInstallation: React.FC = () => {
   };
 
   return (
-    <Box sx={{ width: '100%',padding: '0.5rem', border: '1px solid #e4e4e4', borderRadius: '8px', backgroundColor: 'rgba(247, 247, 247, 1)', boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)', marginBottom: '2rem' }}>
+    <Box sx={{ padding: '0.5rem', border: '1px solid #e4e4e4', borderRadius: '8px', backgroundColor: 'rgba(247, 247, 247, 1)', boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)', marginBottom: '2rem' }}>
       <Typography variant="h6" component="div" mb={2}>
         1. Pixel Installation
       </Typography>
@@ -114,7 +114,7 @@ const buttonGoogle = {
   display: "flex",
   flexDirection: 'column',
   alignItems: 'self-start',
-  padding: '1em 2em 1.5em 1em', // увеличиваем правую часть padding
+  padding: '1em 2em 1.5em 1em', 
   borderColor: 'rgba(228, 228, 228, 1)',
   border: '1px solid rgba(228, 228, 228, 1)',
   width: '100%', 
