@@ -175,8 +175,11 @@ const Signup: React.FC = () => {
                 token: credentialResponse.credential,
               });
             
+              const responseData = response.data;
               if (typeof window !== 'undefined') {
-                localStorage.setItem('token', response.data.token);
+                if (responseData.token && responseData.token !== null){
+                  localStorage.setItem('token', responseData.token);
+                }
               }
             
               switch (response.data.status) {
