@@ -181,7 +181,7 @@ class SubscriptionService:
         return add_subscription_obj
 
     def create_new_usp_free_trail(self, user_id, subscription_id):
-        plan_info = self.db.query(SubscriptionPlan).filter(SubscriptionPlan.is_free_trail == True).first()
+        plan_info = self.db.query(SubscriptionPlan).filter(SubscriptionPlan.is_free_trial == True).first()
         usp_object = UserSubscriptionPlan(user_id=user_id, plan_id=plan_info.id, subscription_id=subscription_id, )
         self.db.add(usp_object)
         self.db.commit()

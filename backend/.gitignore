@@ -22,3 +22,5 @@ app/data/cities.json
 
 #User-specific stuff
 *.idea
+
+tmp/*
