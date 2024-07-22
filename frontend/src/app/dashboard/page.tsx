@@ -13,7 +13,8 @@ import PixelInstallation from '../../components/PixelInstallation';
 import Slider from '../../components/Slider';
 import { SliderProvider } from '../../context/SliderContext';
 import PersonIcon from '@mui/icons-material/Person';
-import ManualPopup from '../../components/ManualPopup';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
 const Sidebar = dynamic(() => import('../../components/Sidebar'), {
   suspense: true,
@@ -21,17 +22,18 @@ const Sidebar = dynamic(() => import('../../components/Sidebar'), {
 
 const VerifyPixelIntegration: React.FC = () => (
   <Box sx={{ padding: '1.1rem', border: '1px solid #e4e4e4', borderRadius: '8px', backgroundColor: '#fff', boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)', marginBottom: '2rem' }}>
-    <Typography variant="h6" component="div" mb={2} sx={{fontFamily: 'Nunito', fontWeight: '700', lineHeight: '21.82px', textAlign: 'left',}}>
+    <Typography variant="h6" component="div" mb={2} sx={{ fontFamily: 'Nunito', fontWeight: '700', lineHeight: '21.82px', textAlign: 'left' }}>
       2. Verify pixel integration on your website
     </Typography>
     <Box display="flex" alignItems="center" justifyContent="space-between">
-      <input type="text" placeholder="https://yourdomain.com" style={{ padding: '0.5rem 3em 0.5em 1em', width:'50%', border: '1px solid #e4e4e4', borderRadius: '4px', fontFamily: 'Nunito',
-fontSize: '16px',
-fontWeight: '600',
-lineHeight: '22.4px',
-textAlign: 'left'
- }} />
-      <Button  sx={{ ml: 2, border: '1px solid rgba(80, 82, 178, 1)', textTransform: 'none', background: '#fff', color:'rgba(80, 82, 178, 1)', fontFamily: 'Nunito', padding: '0.75em 1.5em',  }}>
+      <input type="text" placeholder="https://yourdomain.com" style={{
+        padding: '0.5rem 3em 0.5em 1em', width: '50%', border: '1px solid #e4e4e4', borderRadius: '4px', fontFamily: 'Nunito',
+        fontSize: '16px',
+        fontWeight: '600',
+        lineHeight: '22.4px',
+        textAlign: 'left'
+      }} />
+      <Button sx={{ ml: 2, border: '1px solid rgba(80, 82, 178, 1)', textTransform: 'none', background: '#fff', color: 'rgba(80, 82, 178, 1)', fontFamily: 'Nunito', padding: '0.75em 1.5em', }}>
         Test
       </Button>
     </Box>
@@ -39,23 +41,23 @@ textAlign: 'left'
 );
 
 const SupportSection: React.FC = () => (
-  <Box sx={{alignItems: 'flex-end'}}>
-  <Box sx={{
-    padding: '1em 0em 1em 1em',
-    borderRadius: '8px',
-    backgroundColor: '#fff',
-    boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
-    textAlign: 'left',
-    width: '80%',
-    position: 'absolute',
-    bottom: 0,
-    marginBottom: '1em'
-  }}>
-    <Typography variant="body2" color="textSecondary" mb={2} sx={{padding:'1em 0em 1.5em 1em', fontFamily: 'Nunito', fontSize: '14px',fontWeight: '700', lineHeight: '19.1px', textAlign: 'left', color:'rgba(28, 28, 28, 1)'}}>
-      Having trouble?
-    </Typography>
-    <Grid container spacing={2} alignItems="self-start" justifyContent='flex-start' sx={{rowGap: '24px', display: 'flex'}} >
-        <Button  sx={{
+  <Box sx={{ alignItems: 'flex-end' }}>
+    <Box sx={{
+      padding: '1em 0em 1em 1em',
+      borderRadius: '8px',
+      backgroundColor: '#fff',
+      boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
+      textAlign: 'left',
+      width: '80%',
+      position: 'absolute',
+      bottom: 0,
+      marginBottom: '1em'
+    }}>
+      <Typography variant="body2" color="textSecondary" mb={2} sx={{ padding: '1em 0em 1.5em 1em', fontFamily: 'Nunito', fontSize: '14px', fontWeight: '700', lineHeight: '19.1px', textAlign: 'left', color: 'rgba(28, 28, 28, 1)' }}>
+        Having trouble?
+      </Typography>
+      <Grid container spacing={2} alignItems="self-start" justifyContent='flex-start' sx={{ rowGap: '24px', display: 'flex' }} >
+        <Button sx={{
           border: 'none',
           color: 'rgba(80, 82, 178, 1)',
           gap: '8px',
@@ -75,8 +77,8 @@ const SupportSection: React.FC = () => (
           Send this to my developer
           <Image src={'/telegram.svg'} alt='headphones' width={20} height={20} />
         </Button>
-    </Grid>
-  </Box>
+      </Grid>
+    </Box>
   </Box>
 );
 
@@ -85,9 +87,12 @@ const Dashboard: React.FC = () => {
   const { full_name, email } = useUser();
   const [data, setData] = useState<any>(null);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [dropdownEl, setDropdownEl] = useState<null | HTMLElement>(null);
   const [showSlider, setShowSlider] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [trial, setTrial] = useState(false);
   const open = Boolean(anchorEl);
+  const dropdownOpen = Boolean(dropdownEl);
 
   const handleSignOut = () => {
     localStorage.clear();
@@ -103,12 +108,25 @@ const Dashboard: React.FC = () => {
     setAnchorEl(null);
   };
 
+  const handleDropdownClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setDropdownEl(event.currentTarget);
+  };
+
+  const handleDropdownClose = () => {
+    setDropdownEl(null);
+  };
+
   const handleSettingsClick = () => {
     handleProfileMenuClose();
     router.push('/settings');
   };
 
   useEffect(() => {
+    const storedMe = sessionStorage.getItem('me');
+    if (storedMe) {
+      const { trial } = JSON.parse(storedMe);
+      setTrial(trial);
+    }
     const fetchData = async () => {
       try {
         const response = await axiosInstance.get('dashboard');
@@ -148,30 +166,70 @@ const Dashboard: React.FC = () => {
         <Box sx={dashboardStyles.logoContainer}>
           <Image src='/logo.svg' alt='logo' height={80} width={60} />
         </Box>
-        <Button
-          aria-controls={open ? 'profile-menu' : undefined}
-          aria-haspopup="true"
-          aria-expanded={open ? 'true' : undefined}
-          onClick={handleProfileMenuClick}
-        >
-          <PersonIcon sx={dashboardStyles.account} />
-        </Button>
-        <Menu
-          id="profile-menu"
-          anchorEl={anchorEl}
-          open={open}
-          onClose={handleProfileMenuClose}
-          MenuListProps={{
-            'aria-labelledby': 'profile-menu-button',
-          }}
-        >
-          <Box sx={{ p: 2 }}>
-            <Typography variant="h6">{full_name}</Typography>
-            <Typography variant="body2" color="textSecondary">{email}</Typography>
-          </Box>
-          <MenuItem onClick={handleSettingsClick}>Settings</MenuItem>
-          <MenuItem onClick={handleSignOut}>Sign Out</MenuItem>
-        </Menu>
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          {trial && (
+            <Box sx={{
+              display: 'flex',
+              alignItems: 'center',
+              padding: '8px 10px',
+              backgroundColor: 'rgba(238, 238, 238, 1)',
+              borderRadius: '3.27px',
+              fontFamily: 'Nunito',
+              lineHeight: '19.1px',
+              letterSpacing: '-0.02em',
+              textAlign: 'left',
+              color: 'rgba(0, 0, 0, 1)',
+              fontSize: '14px',
+              fontWeight: 500,
+              marginRight: '2em'
+            }}>
+              <Typography sx={{ marginRight: '5px' }}>Trial Pending</Typography>
+              <AccessTimeIcon />
+            </Box>
+          )}
+          <Button
+            aria-controls={dropdownOpen ? 'account-dropdown' : undefined}
+            aria-haspopup="true"
+            aria-expanded={dropdownOpen ? 'true' : undefined}
+            onClick={handleDropdownClick}
+            sx={{ marginRight: '2em', textTransform: 'none', color: 'rgba(128, 128, 128, 1)', border: '1px solid rgba(184, 184, 184, 1)', borderRadius: '3.27px', padding: '10px' }}
+          >
+            Account Name
+            <ExpandMoreIcon />
+          </Button>
+          <Menu
+            id="account-dropdown"
+            anchorEl={dropdownEl}
+            open={dropdownOpen}
+            onClose={handleDropdownClose}
+          >
+            {/* TODO ELEMENTS MENU */}
+          </Menu>
+          <Button
+            aria-controls={open ? 'profile-menu' : undefined}
+            aria-haspopup="true"
+            aria-expanded={open ? 'true' : undefined}
+            onClick={handleProfileMenuClick}
+          >
+            <PersonIcon sx={dashboardStyles.account} />
+          </Button>
+          <Menu
+            id="profile-menu"
+            anchorEl={anchorEl}
+            open={open}
+            onClose={handleProfileMenuClose}
+            MenuListProps={{
+              'aria-labelledby': 'profile-menu-button',
+            }}
+          >
+            <Box sx={{ p: 2 }}>
+              <Typography variant="h6">{full_name}</Typography>
+              <Typography variant="body2" color="textSecondary">{email}</Typography>
+            </Box>
+            <MenuItem onClick={handleSettingsClick}>Settings</MenuItem>
+            <MenuItem onClick={handleSignOut}>Sign Out</MenuItem>
+          </Menu>
+        </Box>
       </Box>
       <Grid container width='100%'>
         <Grid item xs={12} md={2} sx={{ padding: '0px' }}>
