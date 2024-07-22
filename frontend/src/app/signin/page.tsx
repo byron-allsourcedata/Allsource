@@ -138,7 +138,9 @@ const Signup: React.FC = () => {
               break;
 
             default:
-              showErrorToast('Unexpected status: Service is not available now, try agian or contact with us support@maximiz.ai');
+              get_me()
+              router.push('/dashboard')
+              break;
           }
         } else {
           console.error('Empty response data');
@@ -211,7 +213,12 @@ const Signup: React.FC = () => {
                 case 'INCORRECT_PASSWORD_OR_EMAIL':
                   showErrorToast("User with this email does not exist");
                   break;
+                  case "PIXEL_INSTALLATION_NEEDED":
+                    get_me()
+                    router.push('/dashboard')
+                    break;
                 default:
+                  router.push('/dashboard')
                   console.error('Authorization failed:', response.data.status);
               }
             } catch (error) {

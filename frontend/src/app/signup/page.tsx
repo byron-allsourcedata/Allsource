@@ -145,7 +145,8 @@ const Signup: React.FC = () => {
               router.push('/dashboard');
               break;
             default:
-              // Handle unexpected statuses if needed
+              get_me()
+              router.push('/dahboard')
               break;
           }
         }
@@ -217,8 +218,14 @@ const Signup: React.FC = () => {
                 case 'INCORRECT_PASSWORD_OR_EMAIL':
                   showErrorToast("User with this email does not exist");
                   break;
+                case "PIXEL_INSTALLATION_NEEDED":
+                  get_me()
+                  router.push('/dashboard');
+                  break;
                 default:
-                  console.error('Authorization failed:', response.data.status);
+                  get_me()
+                  router.push('/dahboard')
+                  break;
               }
             } catch (error) {
               console.error('Error during Google login:', error);
