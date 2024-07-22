@@ -27,13 +27,14 @@ const Signup: React.FC = () => {
   
   const get_me = async () => {
     try {
-      console.log(0);
       const response = await axiosInstance.get('/me');
       const responseData = response.data;
   
       sessionStorage.setItem('me', JSON.stringify({
-        email: responseData.email,
-        full_name: responseData.full_name,
+        email: responseData.user_info.email,
+        full_name: responseData.user_info.full_name,
+        trial: responseData.user_plan.is_trial,
+        days_left: responseData.user_plan.plan_end
       }));
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -122,7 +123,6 @@ const Signup: React.FC = () => {
               localStorage.setItem('token', responseData.token);
             }
           }
-          console.log(responseData.status)
           switch (responseData.status) {
             case "NEED_CHOOSE_PLAN":
               get_me()

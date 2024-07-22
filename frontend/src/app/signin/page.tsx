@@ -109,6 +109,7 @@ const Signup: React.FC = () => {
           switch (responseData.status) {
 
             case "SUCCESS":
+              get_me()
               router.push('/dashboard');
               break;
 
@@ -117,25 +118,32 @@ const Signup: React.FC = () => {
               break;
 
             case "NEED_CONFIRM_EMAIL":
+              get_me()
               router.push('/email-verificate');
               break;
 
             case "NEED_CHOOSE_PLAN":
+              get_me()
               router.push('/choose-plan')
               break;
 
             case "FILL_COMPANY_DETAILS":
+              get_me()
               router.push('/account-setup')
               break;
+
             case "NEED_BOOK_CALL":
+              get_me()
               router.push('/dashboard')
               break;
 
             case "PAYMENT_NEEDED":
+              get_me()
               router.push(`${response.data.stripe_payment_url}`)
               break;
 
             case "PIXEL_INSTALLATION_NEEDED":
+              get_me()
               router.push('/dashboard')
               break;
 
