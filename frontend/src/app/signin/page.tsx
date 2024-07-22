@@ -25,9 +25,9 @@ const Signup: React.FC = () => {
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [formValues, setFormValues] = useState({ email: '', password: '' });
 
-  const handleGoogleSignup = () => {
-    console.log('Google login clicked');
-  };
+  const navigateTo = (path: string) => {
+    window.location.href = path;
+  }; 
 
   const validateField = (name: string, value: string) => {
     const newErrors: { [key: string]: string } = { ...errors };
@@ -60,8 +60,10 @@ const Signup: React.FC = () => {
     axiosInterceptorInstance.get('/me')
       .then(response => {
         sessionStorage.setItem('me', JSON.stringify({
-          email: response.data.email,
-          full_name: response.data.full_name
+          email: response.data.user_info.email,
+          full_name: response.data.user_info.full_name,
+          trial: response.data.user_plan.is_trial,
+          days_left: response.data.user_plan.plan_end
         }));
       })
   }
@@ -107,7 +109,6 @@ const Signup: React.FC = () => {
           switch (responseData.status) {
 
             case "SUCCESS":
-              get_me
               router.push('/dashboard');
               break;
 
@@ -115,32 +116,26 @@ const Signup: React.FC = () => {
               showErrorToast("Incorrect password or email.");
               break;
 
-            case "EMAIL_NOT_VERIFIED":
-              get_me
-              router.push('/email-verification');
+            case "NEED_CONFIRM_EMAIL":
+              router.push('/email-verificate');
               break;
 
             case "NEED_CHOOSE_PLAN":
-              get_me
               router.push('/choose-plan')
               break;
 
             case "FILL_COMPANY_DETAILS":
-              get_me
-              router.push('/account-setuo')
+              router.push('/account-setup')
               break;
             case "NEED_BOOK_CALL":
-              get_me
               router.push('/dashboard')
               break;
 
             case "PAYMENT_NEEDED":
-              get_me
               router.push(`${response.data.stripe_payment_url}`)
               break;
 
             case "PIXEL_INSTALLATION_NEEDED":
-              get_me
               router.push('/dashboard')
               break;
 

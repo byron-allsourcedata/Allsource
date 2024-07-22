@@ -21,24 +21,29 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   useEffect(() => {
     const token = localStorage.getItem('token');
     const storedMe = sessionStorage.getItem('me');
-    if (storedMe)  {
+    if (storedMe) {
       const storedData = JSON.parse(storedMe);
       setEmail(storedData.email);
       setFullName(storedData.full_name);
-      setHasFetched(true); 
+      setHasFetched(true);
     } else if (token && !hasFetched) {
 
       axiosInterceptorInstance.get('/me')
         .then(response => {
-          const { email } = response.data;
-          setEmail(email);
-          setHasFetched(true);
-          setFullName(response.data.full_name);
-          sessionStorage.setItem('me', JSON.stringify({ 
-            email: response.data.email, 
-            full_name: response.data.full_name 
+          const userInfo = response.data.user_info;
+          const userPlan = response.data.user_plan;
+
+          setEmail(userInfo.email);
+          setFullName(userInfo.full_name);
+          
+          sessionStorage.setItem('me', JSON.stringify({
+            email: userInfo.email,
+            full_name: userInfo.full_name,
+            trial: userPlan.trial,
+            days_left: userPlan.plan_end
           }));
-          setHasFetched(true); 
+
+          setHasFetched(true);
         })
         .catch(error => {
           console.error('Error loading data:', error);
@@ -49,7 +54,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
 
   return (
     <UserContext.Provider value={{ email, full_name }}>
-    {children}
+      {children}
     </UserContext.Provider>
   );
 };

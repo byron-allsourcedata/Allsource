@@ -122,6 +122,7 @@ const Signup: React.FC = () => {
               localStorage.setItem('token', responseData.token);
             }
           }
+          console.log(responseData.status)
           switch (responseData.status) {
             case "NEED_CHOOSE_PLAN":
               get_me()
@@ -152,7 +153,7 @@ const Signup: React.FC = () => {
               break;
             case "PIXEL_INSTALLATION_NEEDED":
               get_me()
-              router.push('/email-verificate');
+              router.push('/dashboard');
               break;
             default:
               // Handle unexpected statuses if needed

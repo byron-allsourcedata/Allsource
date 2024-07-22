@@ -22,6 +22,9 @@ class UsersService:
         self.user_persistence_service.update_password(self.user.id, update_data.password)
         return UpdatePasswordStatus.PASSWORD_UPDATED_SUCCESSFULLY
 
+    def get_info_plan(self):
+        return self.user_persistence_service.get_user_plan(self.user.id)
+
     def get_my_info(self):
         return {"email": self.user.email,
                 "full_name": self.user.full_name

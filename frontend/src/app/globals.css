@@ -3,3 +3,6 @@
 body {
   font-family: 'Nunito', sans-serif;
 }
+::-ms-reveal {
+  display: none;
+}
