@@ -21,7 +21,7 @@ const style = {
 
 const maintext = {
   fontFamily: 'Nunito',
-  fontSize: '16',
+  fontSize: '16px',
   fontWeight: '600',
   lineHeight: '19.6px',
   textAlign: 'left',
@@ -31,7 +31,7 @@ const maintext = {
 
 const subtext = {
   fontFamily: 'Nunito',
-  fontSize: '14',
+  fontSize: '14px',
   fontWeight: '400',
   lineHeight: '16.8px',
   textAlign: 'left',
@@ -61,7 +61,7 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode }) => {
     >
       <Box sx={style}>
         <Box display="flex" justifyContent="space-between" sx={{ width: '100%', paddingBottom: '1em' }}>
-          <Typography variant="h6" component="h2" sx={{ fontFamily: 'Nunito', fontSize: '14', fontWeight: '700', lineHeight: '19.1px', textAlign: 'left', color: 'rgba(28, 28, 28, 1)' }}>
+          <Typography variant="h6" component="h2" sx={{ fontFamily: 'Nunito', fontSize: '14px', fontWeight: '700', lineHeight: '19.1px', textAlign: 'left', color: 'rgba(28, 28, 28, 1)' }}>
             Install Manually
           </Typography>
           <IconButton onClick={handleClose}>
@@ -69,7 +69,7 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode }) => {
           </IconButton>
         </Box>
         <Divider />
-        <Box sx={{ flex: 1, overflowY: 'auto' }}>
+        <Box sx={{ flex: 1, overflowY: 'auto', paddingBottom: '60px' }}>
           <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', padding: '2em 0em 0em 0em', justifyContent: 'start' }}>
             <Image src='/1.svg' alt='1' width={28} height={28} />
             <Typography sx={maintext}>Copy the pixel code</Typography>
@@ -85,13 +85,13 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode }) => {
               border: '1px solid rgba(228, 228, 228, 1)',
               borderRadius: '10px',
               marginLeft: '3em',
-              maxHeight: '30em',  
-              overflowY: 'auto',    
+              maxHeight: '30em',
+              overflowY: 'auto',
             }}
           >
             <IconButton
               onClick={handleCopy}
-              sx={{ position: 'fixed', right: '30px', top: '400' }}
+              sx={{ position: 'absolute', right: '10px', top: '10px' }}
             >
               <ContentCopyIcon />
             </IconButton>
@@ -108,15 +108,14 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode }) => {
           </Box>
           <Typography sx={subtext}>Once the pixel is pasted in your website, wait for 10-15 mins and verify your pixel.</Typography>
         </Box>
-        <Box display="flex" justifyContent="flex-end" mt={3} sx={{ position: 'absolute', bottom: '8px', right: '8px' }}>
+        <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-end', paddingTop: '1em' }}>
           <Button variant="outlined" sx={{ mr: 2, backgroundColor: 'rgba(255, 255, 255, 1)', color: 'rgba(80, 82, 178, 1)', textTransform: 'none', padding: '1em 2em', border: '1px solid rgba(80, 82, 178, 1)' }}>
             Contact support
           </Button>
-          <Button variant="contained" onClick={handleClose} sx={{ mr: 2, backgroundColor: 'rgba(80, 82, 178, 1)', fontFamily: "Nunito", textTransform: 'none', padding: '1em 3em' }}>
+          <Button variant="contained" onClick={handleClose} sx={{ backgroundColor: 'rgba(80, 82, 178, 1)', fontFamily: "Nunito", textTransform: 'none', padding: '1em 3em' }}>
             Next
           </Button>
         </Box>
-        <Divider sx={{ position: 'absolute', bottom: '5em', width: '94.5%' }} />
       </Box>
     </Modal>
   );

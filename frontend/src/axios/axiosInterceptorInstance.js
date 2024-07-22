@@ -69,7 +69,7 @@ axiosInterceptorInstance.interceptors.response.use(
       }
     } else if (error.request) {
       // The request was made but no response was received
-      showErrorToast("Network Error. Please check your internet connection.");
+      showErrorToast('Unexpected status: Service is not available now, try again or contact with us support@maximiz.ai');
     } else {
       // Something happened in setting up the request that triggered an Error
       showErrorToast(`Error: ${error.message}`);

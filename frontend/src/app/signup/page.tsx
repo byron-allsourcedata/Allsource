@@ -10,6 +10,7 @@ import { AxiosError } from 'axios';
 import { signupStyles } from './signupStyles';
 import { showErrorToast } from '../../components/ToastNotification';
 import { GoogleLogin } from '@react-oauth/google';
+import { fetchUserData } from '@/services/meService';
 
 const Signup: React.FC = () => {
   const router = useRouter();
@@ -20,8 +21,13 @@ const Signup: React.FC = () => {
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [formValues, setFormValues] = useState({ full_name: '', email: '', password: '', is_without_card: isWithoutCard ? 'true' : 'false' });
 
+
   const navigateTo = (path: string) => {
     window.location.href = path;
+  }; 
+  
+  const get_me = async () => {
+    const userData = await fetchUserData();
   };
 
   useEffect(() => {
@@ -102,16 +108,13 @@ const Signup: React.FC = () => {
         if (response.status === 200) {
           const responseData = response.data;
           if (typeof window !== 'undefined') {
-            if (responseData.token && responseData.token !== null){
+            if (responseData.token && responseData.token !== null) {
               localStorage.setItem('token', responseData.token);
             }
           }
           switch (responseData.status) {
             case "NEED_CHOOSE_PLAN":
-              sessionStorage.setItem('me', JSON.stringify({
-                email: formValues.email,
-                full_name: formValues.full_name
-              }));
+              get_me()
               router.push('/choose-plan');
               break;
             case "EMAIL_ALREADY_EXISTS":
@@ -122,24 +125,31 @@ const Signup: React.FC = () => {
               showErrorToast('Password not valid');
               break;
             case "NEED_CONFIRM_EMAIL":
-              sessionStorage.setItem('me', JSON.stringify({
-                email: formValues.email,
-                full_name: formValues.full_name
-              }));
-              router.push('/email-verificate');
+              get_me()
+              navigateTo('/email-verificate');
               break;
             case "NEED_BOOK_CALL":
+              get_me()
               router.push('/dashboard')
               break;
             case "PAYMENT_NEEDED":
+              get_me()
               router.push(`${response.data.stripe_payment_url}`)
+              break;
+            case "FILL_COMPANY_DETAILS":
+              get_me()
+              router.push("/account-setup")
+              break;
+            case "PIXEL_INSTALLATION_NEEDED":
+              get_me()
+              router.push('/dashboard');
               break;
             default:
               // Handle unexpected statuses if needed
               break;
           }
         }
-        
+
       } catch (err) {
         const error = err as AxiosError;
         if (error.response && error.response.data) {
@@ -174,30 +184,35 @@ const Signup: React.FC = () => {
               const response = await axiosInstance.post('/sign-up-google', {
                 token: credentialResponse.credential,
               });
-            
+
               const responseData = response.data;
               if (typeof window !== 'undefined') {
-                if (responseData.token && responseData.token !== null){
+                if (responseData.token && responseData.token !== null) {
                   localStorage.setItem('token', responseData.token);
                 }
               }
-            
+
               switch (response.data.status) {
                 case 'SUCCESS':
-                  navigateTo('/dashboard');
+                  get_me()
+                  router.push('/dashboard');
                   break;
                 case 'NEED_CHOOSE_PLAN':
-                  navigateTo('/choose-plan');
+                  get_me()
+                  router.push('/choose-plan');
                   break;
                 case 'FILL_COMPANY_DETAILS':
+                  get_me()
                   navigateTo('/account-setup');
                   break;
                 case 'NEED_BOOK_CALL':
-                  navigateTo('/dashboard');
+                  get_me()
+                  router.push('/dashboard');
                   sessionStorage.setItem('is_slider_opened', 'true')
                   break;
                 case 'PAYMENT_NEEDED':
-                  navigateTo(`${response.data.stripe_payment_url}`);
+                  get_me()
+                  router.push(`${response.data.stripe_payment_url}`);
                   break;
                 case 'INCORRECT_PASSWORD_OR_EMAIL':
                   showErrorToast("User with this email does not exist");

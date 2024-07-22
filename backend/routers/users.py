@@ -17,8 +17,16 @@ router = APIRouter()
 
 
 @router.get("/me")
-def get(user: UsersService = Depends(get_users_service)):
-    return user.get_my_info()
+def get_me(user_service: UsersService = Depends(get_users_service)):
+    plan = user_service.get_info_plan()
+
+    if not user_service.user.is_book_call_passed:
+        plan["is_trial"] = True
+
+    return {
+        "user_info": user_service.get_my_info(),
+        "user_plan": plan,
+    }
 
 
 @router.post("/sign-up", response_model=UserSignUpFormResponse)
@@ -86,6 +94,7 @@ async def update_password(update_data: UpdatePassword,
                           user: UsersService = Depends(get_users_service)):
     result_status = user.update_password(update_data)
     return UpdatePasswordResponse(status=result_status)
+
 
 @router.get("/check-verification-status", response_model=CheckVerificationStatusResponse)
 async def check_verification_status(

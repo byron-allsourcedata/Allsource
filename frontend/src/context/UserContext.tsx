@@ -1,6 +1,6 @@
 'use client';
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import axiosInterceptorInstance from '../axios/axiosInterceptorInstance';
+import { fetchUserData } from '../services/meService';
 
 interface UserContextType {
   email: string | null;
@@ -21,35 +21,25 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   useEffect(() => {
     const token = localStorage.getItem('token');
     const storedMe = sessionStorage.getItem('me');
-    if (storedMe)  {
+    if (storedMe) {
       const storedData = JSON.parse(storedMe);
       setEmail(storedData.email);
       setFullName(storedData.full_name);
-      setHasFetched(true); 
+      setHasFetched(true);
     } else if (token && !hasFetched) {
-
-      axiosInterceptorInstance.get('/me')
-        .then(response => {
-          const { email } = response.data;
-          setEmail(email);
-          setHasFetched(true);
-          setFullName(response.data.full_name);
-          sessionStorage.setItem('me', JSON.stringify({ 
-            email: response.data.email, 
-            full_name: response.data.full_name 
-          }));
-          setHasFetched(true); 
-        })
-        .catch(error => {
-          console.error('Error loading data:', error);
-          setHasFetched(true);
-        });
+      fetchUserData().then(userData => {
+        if (userData) {
+          setEmail(userData.email);
+          setFullName(userData.full_name);
+        }
+        setHasFetched(true);
+      });
     }
   }, [hasFetched]);
 
   return (
     <UserContext.Provider value={{ email, full_name }}>
-    {children}
+      {children}
     </UserContext.Provider>
   );
 };
