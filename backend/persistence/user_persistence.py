@@ -34,17 +34,21 @@ class UserPersistence:
         self.db.commit()
 
     def get_user_plan(self, user_id: int):
-        user_plan = self.db.query(UserSubscriptionPlan).filter(
-            UserSubscriptionPlan.user_id == user_id
+        user_plan = self.db.query(
+            UserSubscriptionPlan.is_trial,
+            UserSubscriptions.plan_end
+        ).join(
+            UserSubscriptions,
+            UserSubscriptionPlan.subscription_id == UserSubscriptions.id
+        ).filter(
+            UserSubscriptionPlan.user_id == user_id,
+            UserSubscriptions.is_cancelled == 'false'
         ).first()
+
         if user_plan:
-            user_subscription = self.db.query(UserSubscriptions).filter(
-                UserSubscriptions.id == user_plan.subscription_id,
-                UserSubscriptions.is_cancelled == 'false'
-            ).first()
             return {
                 "is_trial": user_plan.is_trial,
-                "plan_end": user_subscription.plan_end if user_subscription else None
+                "plan_end": user_plan.plan_end
             }
         else:
             return {

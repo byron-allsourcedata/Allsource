@@ -39,7 +39,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
           sessionStorage.setItem('me', JSON.stringify({
             email: userInfo.email,
             full_name: userInfo.full_name,
-            trial: userPlan.trial,
+            trial: userPlan.is_trial,
             days_left: userPlan.plan_end
           }));
 
