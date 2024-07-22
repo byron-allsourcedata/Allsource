@@ -112,7 +112,7 @@ const Signup: React.FC = () => {
               break;
 
             case "FILL_COMPANY_DETAILS":
-              router.push('/account-setuo')
+              router.push('/account-setup')
               break;
             case "NEED_BOOK_CALL":
               router.push('/dashboard')
