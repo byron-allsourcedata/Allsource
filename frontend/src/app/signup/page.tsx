@@ -10,6 +10,7 @@ import { AxiosError } from 'axios';
 import { signupStyles } from './signupStyles';
 import { showErrorToast } from '../../components/ToastNotification';
 import { GoogleLogin } from '@react-oauth/google';
+import { fetchUserData } from '@/services/meService';
 
 const Signup: React.FC = () => {
   const router = useRouter();
@@ -26,19 +27,7 @@ const Signup: React.FC = () => {
   }; 
   
   const get_me = async () => {
-    try {
-      const response = await axiosInstance.get('/me');
-      const responseData = response.data;
-  
-      sessionStorage.setItem('me', JSON.stringify({
-        email: responseData.user_info.email,
-        full_name: responseData.user_info.full_name,
-        trial: responseData.user_plan.is_trial,
-        days_left: responseData.user_plan.plan_end
-      }));
-    } catch (error) {
-      console.error('Error fetching data:', error);
-    }
+    const userData = await fetchUserData();
   };
 
   useEffect(() => {

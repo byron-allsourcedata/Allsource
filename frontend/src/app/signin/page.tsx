@@ -10,6 +10,7 @@ import { AxiosError } from 'axios';
 import { loginStyles } from './loginStyles';
 import { showErrorToast } from '../../components/ToastNotification';
 import { GoogleLogin } from '@react-oauth/google';
+import { fetchUserData } from '@/services/meService';
 
 const Signup: React.FC = () => {
   const router = useRouter();
@@ -25,9 +26,6 @@ const Signup: React.FC = () => {
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [formValues, setFormValues] = useState({ email: '', password: '' });
 
-  const navigateTo = (path: string) => {
-    window.location.href = path;
-  }; 
 
   const validateField = (name: string, value: string) => {
     const newErrors: { [key: string]: string } = { ...errors };
@@ -56,17 +54,9 @@ const Signup: React.FC = () => {
     setErrors(newErrors);
   };
 
-  const get_me = () => {
-    axiosInterceptorInstance.get('/me')
-      .then(response => {
-        sessionStorage.setItem('me', JSON.stringify({
-          email: response.data.user_info.email,
-          full_name: response.data.user_info.full_name,
-          trial: response.data.user_plan.is_trial,
-          days_left: response.data.user_plan.plan_end
-        }));
-      })
-  }
+  const get_me = async () => {
+    const userData = await fetchUserData();
+  };
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
