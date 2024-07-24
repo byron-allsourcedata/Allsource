@@ -27,6 +27,7 @@ logging.basicConfig(level=logging.INFO)
 BUCKET_NAME = 'trovo-coop-shakespeare'
 FILES_PATH = 'outgoing/cookie_sync/resolved'
 
+
 def create_sts_client(key_id, key_secret):
     return boto3.client('sts', aws_access_key_id=key_id, aws_secret_access_key=key_secret, region_name='us-west-2')
 
@@ -113,18 +114,12 @@ def process_files(sts_client, session):
                         aws_session_token=credentials['SessionToken'])
 
     bucket = s3.Bucket(BUCKET_NAME)
-    files = bucket.objects.filter(Prefix=FILES_PATH)
     if last_processed_file:
-        file_found = False
+        files = bucket.objects.filter(Prefix=FILES_PATH, Marker=last_processed_file)
     else:
-        file_found = True
+        files = bucket.objects.filter(Prefix=FILES_PATH)
     for file in files:
-        if last_processed_file or file.key.startswith(last_processed_file):
-            if file.key == last_processed_file:
-                file_found = True
-        if file_found:
-            process_file(bucket, file.key, session)
-        return last_processed_file
+        process_file(bucket, file.key, session)
 
 
 def main():
