@@ -24,6 +24,8 @@ from dotenv import load_dotenv
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
 
+BUCKET_NAME = 'trovo-coop-shakespeare'
+FILE_PATH = 'outgoing/cookie_sync/resolved'
 
 def create_sts_client(key_id, key_secret):
     return boto3.client('sts', aws_access_key_id=key_id, aws_secret_access_key=key_secret, region_name='us-west-2')
@@ -99,8 +101,8 @@ def process_file(bucket, file, session):
             file.write(last_processed_file)
 
 
-def process_files(bucket, file_path, last_processed_file, session):
-    files = bucket.objects.filter(Prefix=file_path)
+def process_files(bucket, last_processed_file, session):
+    files = bucket.objects.filter(Prefix=FILE_PATH)
     files_with_dates = []
     for file in files:
         file_date = get_date_from_filename(file.key)
@@ -133,9 +135,7 @@ def main():
                         aws_secret_access_key=credentials['SecretAccessKey'],
                         aws_session_token=credentials['SessionToken'])
 
-    bucket_name = 'trovo-coop-shakespeare'
-    file_path = 'outgoing/cookie_sync/resolved'
-    bucket = s3.Bucket(bucket_name)
+    bucket = s3.Bucket(BUCKET_NAME)
 
     engine = create_engine(
         f'postgresql://{os.getenv('POSTGRESQL_LOGIN')}:{os.getenv('POSTGRESQL_PASSWORD')}@{os.getenv('POSTGRESQL_HOST')}/{os.getenv('POSTGRESQL_NAME')}')
@@ -145,7 +145,7 @@ def main():
     logging.info("Started")
 
     while True:
-        process_files(bucket, file_path, last_processed_file, session)
+        process_files(bucket, last_processed_file, session)
         logging.info('Sleeping for 10 minutes...')
         time.sleep(60 * 10)
 
