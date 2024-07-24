@@ -61,41 +61,44 @@ def process_file(bucket, file, session):
                         FiveXFiveUser.up_id == str(up_id).lower()).first()
                     if five_x_five_user:
                         logging.info(f"UP_ID {up_id} found in table")
-                        lead = Lead(
-                            first_name=five_x_five_user.first_name,
-                            mobile_phone=five_x_five_user.personal_phone,
-                            business_email=five_x_five_user.business_email,
-                            last_name=five_x_five_user.last_name,
-                            up_id=str(up_id),
-                            trovo_id=str(table['TROVO_ID'][i]).lower(),
-                            partner_id=str(table['PARTNER_ID'][i]).lower(),
-                            partner_uid=str(table['PARTNER_UID'][i]).lower(),
-                            sha256_lower_case=str(table['SHA256_LOWER_CASE'][i]).lower(),
-                            ip=str(table['IP'][i]).lower(),
-                            json_headers=str(table['JSON_HEADERS'][i]).lower()
-                        )
-                        session.add(lead)
+                        lead_exists = session.query(Lead).filter(
+                            Lead.up_id == str(up_id).lower()).first()
+                        if not lead_exists:
+                            lead = Lead(
+                                first_name=five_x_five_user.first_name,
+                                mobile_phone=five_x_five_user.personal_phone,
+                                business_email=five_x_five_user.business_email,
+                                last_name=five_x_five_user.last_name,
+                                up_id=str(up_id),
+                                trovo_id=str(table['TROVO_ID'][i]).lower(),
+                                partner_id=str(table['PARTNER_ID'][i]).lower(),
+                                partner_uid=str(table['PARTNER_UID'][i]).lower(),
+                                sha256_lower_case=str(table['SHA256_LOWER_CASE'][i]).lower(),
+                                ip=str(table['IP'][i]).lower(),
+                                json_headers=str(table['JSON_HEADERS'][i]).lower()
+                            )
+                            session.add(lead)
+                            session.commit()
+                            partner_uid_decoded = urllib.parse.unquote(str(table['PARTNER_UID'][i]).lower())
+                            partner_uid_dict = json.loads(partner_uid_decoded)
+                            partner_uid_client_id = partner_uid_dict.get('client_id')
+                            user = session.query(Users).filter(
+                                Users.data_provider_id == str(partner_uid_client_id)).first()
+                            if user:
+                                lead_id = lead.id
+                                lead_user = LeadUser(lead_id=lead_id, user_id=user.id)
+                                session.add(lead_user)
+                                session.commit()
+                        visited_at = table['EVENT_DATE'][i].as_py().isoformat()
+                        json_data = json.loads(str(table['JSON_HEADERS'][i].as_py()))
+                        referer = json_data.get('Referer', '')
+                        if referer:
+                            referer = referer[0]
+                        lead_visit = LeadVisits(leads_users_id=lead_exists.id, visited_at=visited_at,
+                                                referer=referer)
+                        session.add(lead_visit)
                         session.commit()
-                        partner_uid_decoded = urllib.parse.unquote(str(table['PARTNER_UID'][i]).lower())
-                        partner_uid_dict = json.loads(partner_uid_decoded)
-                        partner_uid_client_id = partner_uid_dict.get('client_id')
-                        user = session.query(Users).filter(
-                            Users.data_provider_id == str(partner_uid_client_id)).first()
-                        if user:
-                            lead_id = lead.id
-                            lead_user = LeadUser(lead_id=lead_id, user_id=user.id)
-                            session.add(lead_user)
-                            session.commit()
-                            visited_at = table['EVENT_DATE'][i].as_py().isoformat()
-                            json_data = json.loads(str(table['JSON_HEADERS'][i].as_py()))
-                            referer = json_data.get('Referer', '')
-                            if referer:
-                                referer = referer[0]
-                            lead_visit = LeadVisits(leads_users_id=lead_user.id, visited_at=visited_at,
-                                                    referer=referer)
-                            session.add(lead_visit)
-                            session.commit()
-                            logging.info(f"Processed UP_ID {up_id}")
+                        logging.info(f"Processed UP_ID {up_id}")
         last_processed_file = file
         logging.info(f"write last processed file {file}")
         with open("tmp/last_processed_file.txt", "w") as file:
