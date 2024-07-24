@@ -4,7 +4,6 @@ from enums import VerifyToken
 from persistence.user_persistence import UserPersistence
 from .jwt_service import decode_jwt_data
 
-
 class SseEventsService:
     def __init__(self, user_persistence_service: UserPersistence):
         self.user_persistence_service = user_persistence_service
@@ -22,33 +21,34 @@ class SseEventsService:
             }
         return {'status': VerifyToken.INCORRECT_TOKEN}
 
-    async def init_sse_events(self, token):
+    def init_sse_events(self, token):
         result = self.verify_token(token)
         if result['status'] == VerifyToken.SUCCESS:
             queue_name = f'sse_events_{str(result["user"].id)}'
 
-            rmq_conn = await RabbitMQConnectionSingleton.get_connection()
-            channel = await rmq_conn.channel()
+            rmq_conn = RabbitMQConnectionSingleton.get_connection()
+            channel = rmq_conn.channel()
 
-            queue = await channel.declare_queue(
-                name=queue_name,
+            queue = channel.queue_declare(
+                queue=queue_name,
                 auto_delete=True,
                 exclusive=True
             )
 
             try:
-                async with queue.iterator() as queue_iter:
-                    async for message in queue_iter:
-                        message_json = json.dumps(json.loads(message.body))
-                        await message.ack()
-                        yield message_json
-                print('Some strange place executed')
+                for method_frame, properties, body in channel.consume(queue_name):
+                    message_json = json.loads(body)
+                    channel.basic_ack(method_frame.delivery_tag)
+                    yield json.dumps(message_json)
+                    channel.close()
             except Exception as err:
+                channel.close()
                 print('SSE Exception')
                 raise Exception("Error occurred") from err
             finally:
                 try:
                     print('SSE finally')
-                    await channel.close()
+                    channel.close()
                 except Exception as close_err:
+                    channel.close()
                     print(f"Error closing channel: {close_err}")
