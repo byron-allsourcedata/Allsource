@@ -119,7 +119,7 @@ def process_files(sts_client, session):
     else:
         file_found = True
     for file in files:
-        if not last_processed_file or file.key.startswith(last_processed_file):
+        if last_processed_file or file.key.startswith(last_processed_file):
             if file.key == last_processed_file:
                 file_found = True
         if file_found:
