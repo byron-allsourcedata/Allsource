@@ -126,10 +126,10 @@ def process_files(sts_client, session):
         file_found = True
     for file_key, file_date in sorted_files:
         if not last_processed_file or file_key.startswith(last_processed_file):
-            if file_found:
-                process_file(bucket, file_key, session)
             if file_key == last_processed_file:
                 file_found = True
+        if file_found:
+            process_file(bucket, file_key, session)
     return last_processed_file
 
 
