@@ -25,7 +25,7 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO)
 
 BUCKET_NAME = 'trovo-coop-shakespeare'
-FILE_PATH = 'outgoing/cookie_sync/resolved'
+FILES_PATH = 'outgoing/cookie_sync/resolved'
 
 def create_sts_client(key_id, key_secret):
     return boto3.client('sts', aws_access_key_id=key_id, aws_secret_access_key=key_secret, region_name='us-west-2')
@@ -102,7 +102,7 @@ def process_file(bucket, file, session):
 
 
 def process_files(bucket, last_processed_file, session):
-    files = bucket.objects.filter(Prefix=FILE_PATH)
+    files = bucket.objects.filter(Prefix=FILES_PATH)
     files_with_dates = []
     for file in files:
         file_date = get_date_from_filename(file.key)
