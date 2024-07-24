@@ -86,9 +86,12 @@ def process_file(bucket, file, session):
                         user = session.query(Users).filter(
                             Users.data_provider_id == str(partner_uid_client_id)).first()
                         if user:
-                            lead_user = LeadUser(lead_id=lead_id, user_id=user.id)
-                            session.add(lead_user)
-                            session.commit()
+                            existing_lead_user = session.query(LeadUser).filter_by(lead_id=lead_id,
+                                                                                   user_id=user.id).first()
+                            if not existing_lead_user:
+                                lead_user = LeadUser(lead_id=lead_id, user_id=user.id)
+                                session.add(lead_user)
+                                session.commit()
                         visited_at = table['EVENT_DATE'][i].as_py().isoformat()
                         json_data = json.loads(str(table['JSON_HEADERS'][i].as_py()))
                         referer = json_data.get('Referer', '')
