@@ -101,7 +101,18 @@ def process_file(bucket, file, session):
             file.write(last_processed_file)
 
 
-def process_files(bucket, last_processed_file, session):
+def process_files(sts_client, session):
+    try:
+        with open("tmp/last_processed_file.txt", "r") as file:
+            last_processed_file = file.read().strip()
+    except FileNotFoundError:
+        last_processed_file = None
+    credentials = assume_role(os.getenv('S3_ROLE_ARN'), sts_client)
+    s3 = boto3.resource('s3', region_name='us-west-2', aws_access_key_id=credentials['AccessKeyId'],
+                        aws_secret_access_key=credentials['SecretAccessKey'],
+                        aws_session_token=credentials['SessionToken'])
+
+    bucket = s3.Bucket(BUCKET_NAME)
     files = bucket.objects.filter(Prefix=FILES_PATH)
     files_with_dates = []
     for file in files:
@@ -123,29 +134,14 @@ def process_files(bucket, last_processed_file, session):
 
 
 def main():
-    try:
-        with open("tmp/last_processed_file.txt", "r") as file:
-            last_processed_file = file.read().strip()
-    except FileNotFoundError:
-        last_processed_file = None
-
     sts_client = create_sts_client(os.getenv('S3_KEY_ID'), os.getenv('S3_KEY_SECRET'))
-    credentials = assume_role(os.getenv('S3_ROLE_ARN'), sts_client)
-    s3 = boto3.resource('s3', region_name='us-west-2', aws_access_key_id=credentials['AccessKeyId'],
-                        aws_secret_access_key=credentials['SecretAccessKey'],
-                        aws_session_token=credentials['SessionToken'])
-
-    bucket = s3.Bucket(BUCKET_NAME)
-
     engine = create_engine(
         f'postgresql://{os.getenv('POSTGRESQL_LOGIN')}:{os.getenv('POSTGRESQL_PASSWORD')}@{os.getenv('POSTGRESQL_HOST')}/{os.getenv('POSTGRESQL_NAME')}')
     Session = sessionmaker(bind=engine)
     session = Session()
-
     logging.info("Started")
-
     while True:
-        process_files(bucket, last_processed_file, session)
+        process_files(sts_client, session)
         logging.info('Sleeping for 10 minutes...')
         time.sleep(60 * 10)
 
