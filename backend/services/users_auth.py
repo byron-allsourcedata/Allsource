@@ -44,10 +44,10 @@ class UsersAuth:
                 end_date = start_date + timedelta(days=7)
                 start_date_str = start_date.isoformat() + "Z"
                 end_date_str = end_date.isoformat() + "Z"
-                self.db.query(Users).join(UserSubscriptions, UserSubscriptions.user_id == Users.id).filter(
-                    Users.data_provider_id == pixel_installation_request.client_id).update(
+                self.db.query(UserSubscriptions).filter(UserSubscriptions.user_id == user.id).update(
                     {UserSubscriptions.plan_start: start_date_str, UserSubscriptions.plan_end: end_date_str},
-                    synchronize_session=False)
+                    synchronize_session=False
+                )
                 self.db.query(Users).filter(Users.data_provider_id == pixel_installation_request.client_id).update(
                     {Users.is_pixel_installed: True},
                     synchronize_session=False)
@@ -63,10 +63,10 @@ class UsersAuth:
     def add_user(self, is_without_card, customer_id: str, user_form: dict):
         user_object = Users(
             email=user_form.get('email'),
-            is_email_confirmed = user_form.get('is_email_confirmed', False),
-            password = user_form.get('password'),
+            is_email_confirmed=user_form.get('is_email_confirmed', False),
+            password=user_form.get('password'),
             is_company_details_filled=False,
-            full_name = user_form.get('full_name'),
+            full_name=user_form.get('full_name'),
             created_at=self.get_utc_aware_date_for_mssql(),
             last_login=self.get_utc_aware_date_for_mssql(),
             payment_status=StripePaymentStatusEnum.PENDING.name,
@@ -142,9 +142,9 @@ class UsersAuth:
                         subscription_plan_is_active = subscription_service.is_user_has_active_subscription(user.id)
                         if subscription_plan_is_active:
                             if user.is_pixel_installed:
-                                return {'status': LoginStatus.SUCCESS }
+                                return {'status': LoginStatus.SUCCESS}
                             else:
-                                return {'status': LoginStatus.PIXEL_INSTALLATION_NEEDED }
+                                return {'status': LoginStatus.PIXEL_INSTALLATION_NEEDED}
                         else:
                             if user.stripe_payment_url:
                                 return {
