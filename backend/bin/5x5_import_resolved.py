@@ -114,23 +114,17 @@ def process_files(sts_client, session):
 
     bucket = s3.Bucket(BUCKET_NAME)
     files = bucket.objects.filter(Prefix=FILES_PATH)
-    files_with_dates = []
-    for file in files:
-        file_date = get_date_from_filename(file.key)
-        if file_date:
-            files_with_dates.append((file.key, file_date))
-    sorted_files = sorted(files_with_dates, key=lambda x: x[1])
     if last_processed_file:
         file_found = False
     else:
         file_found = True
-    for file_key, file_date in sorted_files:
-        if not last_processed_file or file_key.startswith(last_processed_file):
-            if file_key == last_processed_file:
+    for file in files:
+        if not last_processed_file or file.key.startswith(last_processed_file):
+            if file.key == last_processed_file:
                 file_found = True
         if file_found:
-            process_file(bucket, file_key, session)
-    return last_processed_file
+            process_file(bucket, file.key, session)
+        return last_processed_file
 
 
 def main():
