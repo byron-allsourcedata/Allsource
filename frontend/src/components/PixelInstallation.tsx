@@ -57,6 +57,7 @@ const PixelInstallation: React.FC = () => {
   const [pixelCode, setPixelCode] = useState('');
   const [opengoogle, setGoogleOpen] = useState(false);
   const [googleCode, setGoogleCode] = useState('');
+  const [cmsCode, setCmsCode] = useState('');
   const [opencrm, setCMSOpen] = useState(false);
 
 
@@ -69,6 +70,7 @@ const PixelInstallation: React.FC = () => {
   const installCMS = async () => {
     try {
       const response = await axiosInterceptorInstance.get('/install-pixel/cms');
+      setCmsCode(response.data);
       setCMSOpen(true);
     } catch (error) {
       if (error instanceof AxiosError && error.response?.status === 403) {
@@ -115,7 +117,7 @@ const PixelInstallation: React.FC = () => {
             </Box>
             <Typography sx={typographyStyles}>Install on CMS</Typography>
           </Button>
-          <CRMPopup open={opencrm} handleClose={handleCRMClose} />
+          <CRMPopup open={opencrm} handleClose={handleCRMClose} pixelCode={cmsCode} />
         </Grid>
       </Grid>
     </Box>

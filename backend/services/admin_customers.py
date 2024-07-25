@@ -2,8 +2,9 @@ from sqlalchemy import func
 from config.stripe import StripeConfig
 from typing import List
 from sqlalchemy.orm import Session
-
+from datetime import datetime, timedelta, timezone
 from models.plans import SubscriptionPlan
+from models.subscriptions import UserSubscriptions
 from models.users import Users
 import logging
 
@@ -21,6 +22,14 @@ class AdminCustomersService:
     def get_user_by_email(self, email):
         user_object = self.db.query(Users).filter(func.lower(Users.email) == func.lower(email)).first()
         return user_object
+
+    def get_user_subscription(self, user_id):
+        user_subscription = self.db.query(UserSubscriptions).filter(UserSubscriptions.user_id == user_id).first()
+        return user_subscription
+
+    def get_free_trail_plan(self):
+        free_trail_plan = self.db.query(SubscriptionPlan).filter(SubscriptionPlan.is_free_trail == True).first()
+        return free_trail_plan
 
     def get_default_plan(self):
         default_plan = self.db.query(SubscriptionPlan).filter(SubscriptionPlan.is_default == True).first()
@@ -52,8 +61,19 @@ class AdminCustomersService:
         )
         return {"link": session.url}
 
-    def confirmation_customer(self, email, free_trail):
-        user_data = self.get_user_by_email(email)
+    def set_user_subscription(self, user_id, plan_start, plan_end):
+        (
+            self.db.query(UserSubscriptions)
+            .filter(Users.id == user_id)
+            .update(
+                {UserSubscriptions.plan_start: plan_start, UserSubscriptions.plan_end: plan_end},
+                synchronize_session=False,
+            )
+        )
+        self.db.commit()
+
+    def confirmation_customer(self, mail, free_trail):
+        user_data = self.get_user_by_email(mail)
         link = ''
         if free_trail:
             self.subscription_service.update_user_payment_status(user_id=user_data.id, is_success=True)
@@ -62,4 +82,39 @@ class AdminCustomersService:
         else:
             link = self.create_customer_session(self.get_default_plan().stripe_price_id, user_data.customer_id)['link']
         self.update_book_call(user_data.id, link)
+
         return user_data
+
+
+    def set_pixel_installed(self, mail):
+        (
+            self.db.query(Users)
+            .filter(Users.email == mail)
+            .update(
+                {Users.is_pixel_installed: True},
+                synchronize_session=False,
+            )
+        )
+        self.db.commit()
+
+    def pixel_code_passed(self, mail):
+        user_data = self.get_user_by_email(mail)
+        if user_data:
+            if not user_data.is_pixel_installed:
+                self.set_pixel_installed(mail)
+                user_subscription = self.get_user_subscription(user_data.id)
+                if not user_subscription.plan_start and not user_subscription.plan_end:
+                    free_trail_plan = self.get_free_trail_plan()
+                    start_date = datetime.utcnow()
+                    end_date = start_date + timedelta(days=free_trail_plan.trial_days)
+                    start_date_str = start_date.isoformat() + "Z"
+                    end_date_str = end_date.isoformat() + "Z"
+                    self.set_user_subscription(user_data.id, start_date_str, end_date_str)
+                    return 'OK'
+                else:
+                    return 'The time of the plan is already set'
+            else:
+                return 'pixel is installed'
+        else:
+            return 'Undefined user'
+
