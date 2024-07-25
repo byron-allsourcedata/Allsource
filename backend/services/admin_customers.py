@@ -28,7 +28,7 @@ class AdminCustomersService:
         return user_subscription
 
     def get_free_trail_plan(self):
-        free_trail_plan = self.db.query(SubscriptionPlan).filter(SubscriptionPlan.is_free_trail == True).first()
+        free_trail_plan = self.db.query(SubscriptionPlan).filter(SubscriptionPlan.is_free_trial == True).first()
         return free_trail_plan
 
     def get_default_plan(self):
@@ -75,7 +75,7 @@ class AdminCustomersService:
     def confirmation_customer(self, mail, free_trial):
         user_data = self.get_user_by_email(mail)
         link = ''
-        if free_trail:
+        if free_trial:
             self.subscription_service.update_user_payment_status(user_id=user_data.id, is_success=True)
             user_subscription = self.subscription_service.create_subscription_from_free_trial(user_id=user_data.id)
             self.subscription_service.create_new_usp_free_trial(user_data.id, user_subscription.id)
