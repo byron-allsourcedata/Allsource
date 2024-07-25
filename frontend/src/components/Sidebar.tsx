@@ -2,11 +2,21 @@
 import React from 'react';
 import { Box, List, ListItem, ListItemIcon, ListItemText, Divider, LinearProgress, Typography } from '@mui/material';
 import { useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation'; 
+import SpaceDashboardIcon from '@mui/icons-material/SpaceDashboard';
+import LeadsIcon from '@mui/icons-material/People';
+import CategoryIcon from '@mui/icons-material/Category';
+import IntegrationsIcon from '@mui/icons-material/IntegrationInstructions';
+import AnalyticsIcon from '@mui/icons-material/Analytics';
+import FeaturedPlayListIcon from '@mui/icons-material/FeaturedPlayList';
+import RuleFolderIcon from '@mui/icons-material/RuleFolder';
+import AccountBoxIcon from '@mui/icons-material/AccountBox';
+import SettingsIcon from '@mui/icons-material/Settings';
 import Image from 'next/image';
 
 const sidebarStyles = {
     container: {
-        width: '16em',
+        width: '14em',
         flexShrink: 0,
         fontFamily: 'Nunito',
         fontSize: '14px',
@@ -72,6 +82,13 @@ const sidebarStyles = {
         marginBottom: '2em',
         boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
     },
+    activeItem: {
+        borderLeft: '4px solid rgba(80, 82, 178, 1)',
+        color: 'rgba(80, 82, 178, 1)',
+        '& .MuiSvgIcon-root': {
+            color: 'rgba(80, 82, 178, 1)',
+        },
+    },
 };
 
 const SetupSection: React.FC = () => (
@@ -91,68 +108,71 @@ const SetupSection: React.FC = () => (
 
 const Sidebar: React.FC = () => {
     const router = useRouter();
+    const pathname = usePathname();
 
     const handleNavigation = (path: string) => {
         router.push(path);
     };
 
+    const isActive = (path: string) => pathname === path;
+
     return (
         <Box sx={sidebarStyles.container}>
             <List sx={sidebarStyles.menu}>
-                <ListItem button onClick={() => handleNavigation('/dashboard')}>
+                <ListItem button onClick={() => handleNavigation('/dashboard')} sx={isActive('/dashboard') ? sidebarStyles.activeItem : {}}>
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
-                        <Image src="/Vector1.svg" alt="Dashboard" width={20} height={20} />
+                        <SpaceDashboardIcon />
                     </ListItemIcon>
                     <ListItemText primary="Dashboard" />
                 </ListItem>
-                <ListItem button>
+                <ListItem button onClick={() => handleNavigation('/leads')} sx={isActive('/leads') ? sidebarStyles.activeItem : {}}>
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
-                        <Image src="/Vector2.svg" alt="Leads" width={20} height={20} />
+                        <LeadsIcon />
                     </ListItemIcon>
                     <ListItemText primary="Leads" />
                 </ListItem>
-                <ListItem button>
+                <ListItem button onClick={() => handleNavigation('/audience')} sx={isActive('/audience') ? sidebarStyles.activeItem : {}}>
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
-                        <Image src="/Vector8.svg" alt="Audience" width={20} height={20} />
+                        <CategoryIcon />
                     </ListItemIcon>
                     <ListItemText primary="Audience" />
                 </ListItem>
-                <ListItem button>
+                <ListItem button onClick={() => handleNavigation('/integrations')} sx={isActive('/integrations') ? sidebarStyles.activeItem : {}}>
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
-                        <Image src="/Vector3.svg" alt="Integrations" width={20} height={20} />
+                        <IntegrationsIcon />
                     </ListItemIcon>
                     <ListItemText primary="Integrations" />
                 </ListItem>
-                <ListItem button>
+                <ListItem button onClick={() => handleNavigation('/analytics')} sx={isActive('/analytics') ? sidebarStyles.activeItem : {}}>
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
-                        <Image src="/Vector4.svg" alt="Analytics" width={20} height={20} />
+                        <AnalyticsIcon />
                     </ListItemIcon>
                     <ListItemText primary="Analytics" />
                 </ListItem>
-                <ListItem button>
+                <ListItem button onClick={() => handleNavigation('/suppressions')} sx={isActive('/suppressions') ? sidebarStyles.activeItem : {}}>
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
-                        <Image src="/Vector5.svg" alt="Suppressions" width={20} height={20} />
+                        <FeaturedPlayListIcon />
                     </ListItemIcon>
                     <ListItemText primary="Suppressions" />
                 </ListItem>
-                <ListItem button>
+                <ListItem button onClick={() => handleNavigation('/rules')} sx={isActive('/rules') ? sidebarStyles.activeItem : {}}>
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
-                        <Image src="/Vector6.svg" alt="Rules" width={20} height={20} />
+                        <RuleFolderIcon />
                     </ListItemIcon>
                     <ListItemText primary="Rules" />
                 </ListItem>
-                <ListItem button>
+                <ListItem button onClick={() => handleNavigation('/partners')} sx={isActive('/partners') ? sidebarStyles.activeItem : {}}>
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
-                        <Image src="/Vector7.svg" alt="Partners" width={20} height={20} />
+                        <AccountBoxIcon />
                     </ListItemIcon>
                     <ListItemText primary="Partners" />
                 </ListItem>
             </List>
             <SetupSection />
             <Box sx={sidebarStyles.settings}>
-                <ListItem button onClick={() => handleNavigation('/settings')}>
+                <ListItem button onClick={() => handleNavigation('/settings')} sx={isActive('/settings') ? sidebarStyles.activeItem : {}}>
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
-                        <Image src={'/Vector10.svg'} alt="Settings" width={20} height={20} />
+                        <SettingsIcon />
                     </ListItemIcon>
                     <ListItemText primary="Settings" />
                 </ListItem>

@@ -28,5 +28,5 @@ async def google_tag(google_tag: PixelInstallationService = Depends(get_pixel_in
 
 @router.get("/cms")
 async def cms(cms: PixelInstallationService = Depends(get_pixel_installation_service)):
-    result_status = cms.get_my_info()
+    result_status = cms.get_manual()
     return result_status

@@ -1,10 +1,11 @@
 'use client';
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import axiosInterceptorInstance from '../axios/axiosInterceptorInstance';
+import { fetchUserData } from '../services/meService';
 
 interface UserContextType {
   email: string | null;
   full_name: string | null;
+  daysDifference: number | null;
 }
 
 interface UserProviderProps {
@@ -17,39 +18,42 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   const [email, setEmail] = useState<string | null>(null);
   const [full_name, setFullName] = useState<string | null>(null);
   const [hasFetched, setHasFetched] = useState<boolean>(false);
+  const [daysDifference, setDaysDifference] = useState<number | null>(null);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
     const storedMe = sessionStorage.getItem('me');
-    if (storedMe)  {
+    if (storedMe) {
       const storedData = JSON.parse(storedMe);
       setEmail(storedData.email);
       setFullName(storedData.full_name);
-      setHasFetched(true); 
-    } else if (token && !hasFetched) {
+      const endDate = new Date(storedData.plan_end);
+      const currentDate = new Date();
 
-      axiosInterceptorInstance.get('/me')
-        .then(response => {
-          const { email } = response.data;
-          setEmail(email);
-          setHasFetched(true);
-          setFullName(response.data.full_name);
-          sessionStorage.setItem('me', JSON.stringify({ 
-            email: response.data.email, 
-            full_name: response.data.full_name 
-          }));
-          setHasFetched(true); 
-        })
-        .catch(error => {
-          console.error('Error loading data:', error);
-          setHasFetched(true);
-        });
+      // Calculate the difference in days
+      const timeDifference = endDate.getTime() - currentDate.getTime();
+      const daysDifference = Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
+
+      // Update the state with the calculated days difference
+      setDaysDifference(daysDifference);
+      setHasFetched(true);
+    } else if (token && !hasFetched) {
+      fetchUserData().then(userData => {
+        if (userData) {
+          setEmail(userData.email);
+          setFullName(userData.full_name);
+        }
+        setHasFetched(true);
+      });
+    }
+    if (token) {
+
     }
   }, [hasFetched]);
 
   return (
-    <UserContext.Provider value={{ email, full_name }}>
-    {children}
+    <UserContext.Provider value={{ email, full_name, daysDifference}}>
+      {children}
     </UserContext.Provider>
   );
 };

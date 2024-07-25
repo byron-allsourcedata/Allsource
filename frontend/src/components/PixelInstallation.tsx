@@ -7,6 +7,7 @@ import React, { useState } from "react";
 import ManualPopup from '../components/ManualPopup';
 import GoogleTagPopup from '../components/GoogleTagPopup';
 import CRMPopup from "./CMSPopup";
+import {  useTrial } from "@/context/TrialProvider";
 
 
 const PixelInstallation: React.FC = () => {
@@ -56,6 +57,7 @@ const PixelInstallation: React.FC = () => {
   const [pixelCode, setPixelCode] = useState('');
   const [opengoogle, setGoogleOpen] = useState(false);
   const [googleCode, setGoogleCode] = useState('');
+  const [cmsCode, setCmsCode] = useState('');
   const [opencrm, setCMSOpen] = useState(false);
 
 
@@ -68,6 +70,7 @@ const PixelInstallation: React.FC = () => {
   const installCMS = async () => {
     try {
       const response = await axiosInterceptorInstance.get('/install-pixel/cms');
+      setCmsCode(response.data);
       setCMSOpen(true);
     } catch (error) {
       if (error instanceof AxiosError && error.response?.status === 403) {
@@ -110,12 +113,11 @@ const PixelInstallation: React.FC = () => {
         <Grid item xs={12} md={4}>
           <Button variant="outlined" fullWidth onClick={installCMS} sx={buttonStyles}>
             <Box>
-              <Image src={'/install_cms1.svg'} alt="Install on CMS" width={28} height={28} />
               <Image src={'/install_cms2.svg'} alt="Install on CMS" width={28} height={28} />
             </Box>
             <Typography sx={typographyStyles}>Install on CMS</Typography>
           </Button>
-          <CRMPopup open={opencrm} handleClose={handleCRMClose} />
+          <CRMPopup open={opencrm} handleClose={handleCRMClose} pixelCode={cmsCode} />
         </Grid>
       </Grid>
     </Box>

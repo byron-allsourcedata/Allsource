@@ -1,6 +1,6 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import { useRouter} from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Box, Button, TextField, Typography, Link, IconButton, InputAdornment } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
@@ -10,6 +10,7 @@ import { AxiosError } from 'axios';
 import { loginStyles } from './loginStyles';
 import { showErrorToast } from '../../components/ToastNotification';
 import { GoogleLogin } from '@react-oauth/google';
+import { fetchUserData } from '@/services/meService';
 
 const Signup: React.FC = () => {
   const router = useRouter();
@@ -24,10 +25,7 @@ const Signup: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [formValues, setFormValues] = useState({ email: '', password: '' });
-  
-  const handleGoogleSignup = () => {
-    console.log('Google login clicked');
-  };
+
 
   const validateField = (name: string, value: string) => {
     const newErrors: { [key: string]: string } = { ...errors };
@@ -56,6 +54,10 @@ const Signup: React.FC = () => {
     setErrors(newErrors);
   };
 
+  const get_me = async () => {
+    const userData = await fetchUserData();
+  };
+
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
     setFormValues({
@@ -68,61 +70,77 @@ const Signup: React.FC = () => {
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     const newErrors: { [key: string]: string } = {};
-  
+
     if (!formValues.email) {
       newErrors.email = 'Email address is required';
     }
-  
+
     if (!formValues.password) {
       newErrors.password = 'Password is required';
     }
-  
+
     setErrors(newErrors);
-  
+
     if (Object.keys(newErrors).length > 0) {
       return;
     }
-  
+
     try {
       const response = await axiosInterceptorInstance.post('/login', formValues);
-  
+
       if (response.status === 200) {
         const responseData = response.data;
         if (typeof window !== 'undefined') {
-          if (responseData.token && responseData.token !== null){
+          if (responseData.token && responseData.token !== null) {
             localStorage.setItem('token', responseData.token);
           }
         }
         if (responseData) {
           switch (responseData.status) {
+
             case "SUCCESS":
+              get_me()
               router.push('/dashboard');
               break;
-            
+
             case "INCORRECT_PASSWORD_OR_EMAIL":
               showErrorToast("Incorrect password or email.");
               break;
-          
-            case "EMAIL_NOT_VERIFIED":
-              router.push('/email-verification');
+
+            case "NEED_CONFIRM_EMAIL":
+              get_me()
+              router.push('/email-verificate');
               break;
-          
+
             case "NEED_CHOOSE_PLAN":
+              get_me()
               router.push('/choose-plan')
               break;
 
             case "FILL_COMPANY_DETAILS":
-              router.push('/account-setuo')
+              get_me()
+              router.push('/account-setup')
               break;
+
             case "NEED_BOOK_CALL":
+              get_me()
               router.push('/dashboard')
               break;
+
             case "PAYMENT_NEEDED":
+              get_me()
               router.push(`${response.data.stripe_payment_url}`)
               break;
-          
+
+            case "PIXEL_INSTALLATION_NEEDED":
+              get_me()
+              router.push('/dashboard')
+              break;
+
             default:
-              showErrorToast('Unexpected status: Service is not available now, try agian or contact with us support@maximiz.ai');
+              get_me()
+              router.push('/dashboard')
+              break;
           }
         } else {
           console.error('Empty response data');
@@ -145,7 +163,7 @@ const Signup: React.FC = () => {
     setShowPassword(!showPassword);
   };
 
-  
+
 
   return (
     <>
@@ -165,38 +183,48 @@ const Signup: React.FC = () => {
               });
               const responseData = response.data;
               if (typeof window !== 'undefined') {
-                if (responseData.token && responseData.token !== null){
+                if (responseData.token && responseData.token !== null) {
                   localStorage.setItem('token', responseData.token);
                 }
               }
-            
+
               switch (response.data.status) {
                 case 'SUCCESS':
+                  get_me()
                   router.push('/dashboard');
                   break;
                 case 'NEED_CHOOSE_PLAN':
+                  get_me()
                   router.push('/choose-plan');
                   break;
                 case 'FILL_COMPANY_DETAILS':
+                  get_me()
                   router.push('/account-setup');
                   break;
                 case 'NEED_BOOK_CALL':
-                  router.push('/dashboard');
+                  get_me()
                   sessionStorage.setItem('is_slider_opened', 'true')
+                  router.push('/dashboard');
                   break;
                 case 'PAYMENT_NEEDED':
+                  get_me()
                   router.push(`${response.data.stripe_payment_url}`);
                   break;
                 case 'INCORRECT_PASSWORD_OR_EMAIL':
                   showErrorToast("User with this email does not exist");
                   break;
+                  case "PIXEL_INSTALLATION_NEEDED":
+                    get_me()
+                    router.push('/dashboard')
+                    break;
                 default:
+                  router.push('/dashboard')
                   console.error('Authorization failed:', response.data.status);
               }
             } catch (error) {
               console.error('Error during Google login:', error);
             }
-            
+
           }}
           onError={() => {
             console.log('Login Failed');
@@ -259,7 +287,7 @@ const Signup: React.FC = () => {
           <Link href="/reset-password" sx={loginStyles.loginLink}>
             Reset password
           </Link>
-          </Typography>
+        </Typography>
         <Typography variant="body2" sx={loginStyles.loginText}>
           No account?{' '}
           <Link href="/signup" sx={loginStyles.loginLink}>

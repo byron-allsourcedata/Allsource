@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from routers import subscriptions, users, company_info, pixel_installation, admin_customers, dashboard
+from routers import subscriptions, users, company_info, pixel_installation, admin_customers, dashboard, sse_events
 
 router = APIRouter()
 
@@ -9,3 +9,4 @@ router.include_router(users.router)
 router.include_router(admin_customers.router, prefix='/admin')
 router.include_router(pixel_installation.router, prefix='/install-pixel')
 router.include_router(dashboard.router, prefix='/dashboard')
+router.include_router(sse_events.router)
