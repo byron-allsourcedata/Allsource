@@ -17,6 +17,11 @@ const SSEContext = createContext<SSEContextType | undefined>(undefined);
 
 export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
   const [data, setData] = useState<Data | null>(null);
+  const url = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+
+  if (!url) {
+    throw new Error("NEXT_PUBLIC_GOOGLE_CLIENT_ID is not defined");
+  }
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -24,7 +29,7 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
       console.error('Token not found');
       return;
     }
-    const evtSource = new EventSource(`http://localhost:8000/event-source?token=${token}`);
+    const evtSource = new EventSource(`${url}event-source?token=${token}`);
     evtSource.onmessage = (event) => {
       if (event.data) {
         setData(JSON.parse(event.data));
