@@ -141,7 +141,7 @@ const StyledOrderedList = ({ children }: { children: React.ReactNode }) => {
             <StyledOrderedListItem>Paste the code into the Header or Footer box and click the “Save Changes” button.</StyledOrderedListItem>
         </StyledOrderedList>
         <CenteredImage>
-          <StyledImage src="/install_cms3.svg" alt="Install on CMS" />
+          <StyledImage src="/install_cms3.png" alt="Install on CMS" />
         </CenteredImage>
         </Box>
         <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'flex-end', gap: '1em', width: '100%', paddingTop: '1em' }}>
