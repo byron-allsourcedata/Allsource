@@ -2,7 +2,7 @@ from sqlalchemy import func
 from config.stripe import StripeConfig
 from typing import List
 from sqlalchemy.orm import Session
-
+from datetime import datetime, timedelta, timezone
 from models.plans import SubscriptionPlan
 from models.subscriptions import UserSubscriptions
 from models.users import Users
@@ -103,11 +103,15 @@ class AdminCustomersService:
                 user_subscription = self.get_user_subscription(user_data.id)
                 if not user_subscription.plan_start and not user_subscription.plan_end:
                     free_trail_plan = self.get_free_trail_plan()
-                    self.set_user_subscription(user_data.id, free_trail_plan.plan_start, free_trail_plan.plan_end)
+                    start_date = datetime.utcnow()
+                    end_date = start_date + timedelta(days=free_trail_plan.trial_days)
+                    start_date_str = start_date.isoformat() + "Z"
+                    end_date_str = end_date.isoformat() + "Z"
+                    self.set_user_subscription(user_data.id, start_date_str, end_date_str)
                     return 'OK'
                 else:
                     return 'The time of the plan is already set'
             else:
-                return 'pixel is not installed'
+                return 'pixel is installed'
         else:
             return 'Undefined user'
