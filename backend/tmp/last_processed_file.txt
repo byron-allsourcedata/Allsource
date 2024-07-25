@@ -1,0 +1,1 @@
+outgoing/cookie_sync/resolved/y=2024/m=06/d=26/h=19/m=27_0_0_0.snappy.parquet
