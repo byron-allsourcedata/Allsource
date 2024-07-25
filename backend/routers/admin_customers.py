@@ -30,15 +30,3 @@ async def verify_token(admin_customers_service: AdminCustomersService = Depends(
 async def confirm_pixel():
     # Implementation here
     pass
-
-@router.get("/test")
-async def test(admin_customers_service: AdminCustomersService = Depends(get_admin_customers_service), mail: str = Query(...)):
-    user = admin_customers_service.confirmation_customer(mail, free_trail=True)
-    queue_name = 'sse_events_112'
-
-    # await publish_rabbitmq_message(
-    #     queue_name=queue_name,
-    #     message_body={'hello': 1235}
-    # )
-
-    return 'OK'
