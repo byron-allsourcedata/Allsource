@@ -30,3 +30,9 @@ async def verify_token(admin_customers_service: AdminCustomersService = Depends(
 async def confirm_pixel():
     # Implementation here
     pass
+
+@router.get("/pixel_code_passed")
+async def verify_token(admin_customers_service: AdminCustomersService = Depends(get_admin_customers_service), mail: str = Query(...)):
+    return admin_customers_service.pixel_code_passed(mail)
+
+
