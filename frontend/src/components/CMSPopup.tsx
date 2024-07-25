@@ -75,13 +75,15 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode }) => {
     navigator.clipboard.writeText(pixelCode);
     alert('Copied to clipboard');
   };
-    const StyledOrderedListItem = ({ children }) => {
-    return <StyledLi>{children}</StyledLi>;
-  };
+const StyledOrderedListItem: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  return <StyledLi>{children}</StyledLi>;
+};
 
-  const StyledOrderedList = ({ children }) => {
-    return <StyledOl>{children}</StyledOl>;
-  };
+
+const StyledOrderedList = ({ children }: { children: React.ReactNode }) => {
+  return <StyledOl>{children}</StyledOl>;
+};
+
   return (
     <Modal
       open={open}
