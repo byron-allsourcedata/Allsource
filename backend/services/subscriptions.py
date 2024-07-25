@@ -159,7 +159,7 @@ class SubscriptionService:
         self.db.commit()
         return add_subscription_obj
 
-    def create_subscription_from_free_trail(self, user_id):
+    def create_subscription_from_free_trial(self, user_id):
         plan_type = 'FreeTrail'
         price = '0'
         status = 'trialing'
@@ -180,7 +180,7 @@ class SubscriptionService:
         self.db.commit()
         return add_subscription_obj
 
-    def create_new_usp_free_trail(self, user_id, subscription_id):
+    def create_new_usp_free_trial(self, user_id, subscription_id):
         plan_info = self.db.query(SubscriptionPlan).filter(SubscriptionPlan.is_free_trial == True).first()
         usp_object = UserSubscriptionPlan(user_id=user_id, plan_id=plan_info.id, subscription_id=subscription_id, )
         self.db.add(usp_object)
