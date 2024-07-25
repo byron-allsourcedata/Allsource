@@ -28,7 +28,7 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
     evtSource.onmessage = (event) => {
       if (event.data) {
         setData(JSON.parse(event.data));
-        console.log(event.data);
+        window.location.reload();
       }
     };
 

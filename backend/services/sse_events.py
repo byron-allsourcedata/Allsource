@@ -27,13 +27,9 @@ class SseEventsService:
         if result['status'] == VerifyToken.SUCCESS:
             queue_name = f'sse_events_{str(result["user"].id)}'
 
-            print(0)
             rmq_connection = RabbitMQConnection()
-            print(1)
             connection = await rmq_connection.connect()
-            print(2)
             channel = await connection.channel()
-            print(3)
             queue = await channel.declare_queue(
                 name=queue_name,
                 auto_delete=True

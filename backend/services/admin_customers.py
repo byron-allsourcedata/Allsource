@@ -62,4 +62,4 @@ class AdminCustomersService:
         else:
             link = self.create_customer_session(self.get_default_plan().stripe_price_id, user_data.customer_id)['link']
         self.update_book_call(user_data.id, link)
-        return 'OK'
+        return user_data
