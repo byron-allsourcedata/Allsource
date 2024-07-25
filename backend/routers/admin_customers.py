@@ -9,3 +9,7 @@ router = APIRouter()
 async def verify_token(admin_customers_service: AdminCustomersService = Depends(get_admin_customers_service), mail: str = Query(...), free_trail: bool= Query(...)):
     return admin_customers_service.confirmation_customer(mail, free_trail)
 
+@router.get("/pixel_code_passed")
+async def verify_token(admin_customers_service: AdminCustomersService = Depends(get_admin_customers_service), mail: str = Query(...)):
+    return admin_customers_service.pixel_code_passed(mail)
+
