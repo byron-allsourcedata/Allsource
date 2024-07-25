@@ -14,7 +14,7 @@ export const fetchUserData = async () => {
         email: userInfo.email,
         full_name: userInfo.full_name,
         trial: userPlan.is_trial,
-        days_left: userPlan.plan_end
+        plan_end: userPlan.plan_end
       }));
 
       return {

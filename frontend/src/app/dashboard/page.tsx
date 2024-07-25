@@ -13,8 +13,9 @@ import PixelInstallation from '../../components/PixelInstallation';
 import Slider from '../../components/Slider';
 import { SliderProvider } from '../../context/SliderContext';
 import PersonIcon from '@mui/icons-material/Person';
-import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import TrialStatus from '../../components/TrialLabel';
+import { useTrial } from '../../context/TrialProvider';
 
 const Sidebar = dynamic(() => import('../../components/Sidebar'), {
   suspense: true,
@@ -85,12 +86,12 @@ const SupportSection: React.FC = () => (
 const Dashboard: React.FC = () => {
   const router = useRouter();
   const { full_name, email } = useUser();
+  const { setTrial, setDaysLeft } = useTrial();
   const [data, setData] = useState<any>(null);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [dropdownEl, setDropdownEl] = useState<null | HTMLElement>(null);
   const [showSlider, setShowSlider] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [trial, setTrial] = useState(false);
   const open = Boolean(anchorEl);
   const dropdownOpen = Boolean(dropdownEl);
 
@@ -124,8 +125,9 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     const storedMe = sessionStorage.getItem('me');
     if (storedMe) {
-      const { trial } = JSON.parse(storedMe);
+      const { trial, days_left } = JSON.parse(storedMe);
       setTrial(trial);
+      setDaysLeft(days_left);
     }
     const fetchData = async () => {
       try {
@@ -154,7 +156,7 @@ const Dashboard: React.FC = () => {
     };
 
     fetchData();
-  }, [setShowSlider]);
+  }, [setShowSlider, setTrial, setDaysLeft]);
 
   if (isLoading) {
     return <div>Loading...</div>;
@@ -167,26 +169,7 @@ const Dashboard: React.FC = () => {
           <Image src='/logo.svg' alt='logo' height={80} width={60} />
         </Box>
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          {trial && (
-            <Box sx={{
-              display: 'flex',
-              alignItems: 'center',
-              padding: '8px 10px',
-              backgroundColor: 'rgba(238, 238, 238, 1)',
-              borderRadius: '3.27px',
-              fontFamily: 'Nunito',
-              lineHeight: '19.1px',
-              letterSpacing: '-0.02em',
-              textAlign: 'left',
-              color: 'rgba(0, 0, 0, 1)',
-              fontSize: '14px',
-              fontWeight: 500,
-              marginRight: '2em'
-            }}>
-              <Typography sx={{ marginRight: '5px' }}>Trial Pending</Typography>
-              <AccessTimeIcon />
-            </Box>
-          )}
+          <TrialStatus />
           <Button
             aria-controls={dropdownOpen ? 'account-dropdown' : undefined}
             aria-haspopup="true"
@@ -194,7 +177,13 @@ const Dashboard: React.FC = () => {
             onClick={handleDropdownClick}
             sx={{ marginRight: '2em', textTransform: 'none', color: 'rgba(128, 128, 128, 1)', border: '1px solid rgba(184, 184, 184, 1)', borderRadius: '3.27px', padding: '10px' }}
           >
-            Account Name
+            <Typography sx={{
+              marginRight: '0.5em',
+              fontFamily: 'Nunito',
+              lineHeight: '19.1px',
+              letterSpacing: '-0.02em',
+              textAlign: 'left',
+            }}> Account Name </Typography>
             <ExpandMoreIcon />
           </Button>
           <Menu
@@ -203,6 +192,12 @@ const Dashboard: React.FC = () => {
             open={dropdownOpen}
             onClose={handleDropdownClose}
           >
+            <Box sx={{ p: 2 }}>
+              <Typography variant="h6">{full_name}</Typography>
+              <Typography variant="body2" color="textSecondary">{email}</Typography>
+            </Box>
+            <MenuItem onClick={handleSettingsClick}>Settings</MenuItem>
+            <MenuItem onClick={handleSignOut}>Sign Out</MenuItem>
             {/* TODO ELEMENTS MENU */}
           </Menu>
           <Button

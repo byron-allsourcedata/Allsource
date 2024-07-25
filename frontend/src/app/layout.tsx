@@ -6,6 +6,8 @@ import { UserProvider } from '../context/UserContext';
 import ToastNotificationContainer from '../components/ToastNotification';
 import 'react-toastify/dist/ReactToastify.css';
 import { GoogleOAuthProvider } from '@react-oauth/google';
+import { TrialProvider } from '../context/TrialProvider';
+import { SSEProvider } from '../context/SSEContext';
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -26,17 +28,21 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    
+
     <html lang="en">
       <body className={inter.className}>
-      <GoogleOAuthProvider clientId={googleClientId as string}>
-        <UserProvider>
-        {children}
-        </UserProvider>
+        <GoogleOAuthProvider clientId={googleClientId as string}>
+          <SSEProvider>
+            <TrialProvider>
+              <UserProvider>
+                {children}
+              </UserProvider>
+            </TrialProvider>
+          </SSEProvider>
         </GoogleOAuthProvider>
         <ToastNotificationContainer />
       </body>
     </html>
-    
+
   );
 }
