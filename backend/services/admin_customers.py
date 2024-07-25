@@ -72,13 +72,13 @@ class AdminCustomersService:
         )
         self.db.commit()
 
-    def confirmation_customer(self, mail, free_trail):
+    def confirmation_customer(self, mail, free_trial):
         user_data = self.get_user_by_email(mail)
         link = ''
         if free_trail:
             self.subscription_service.update_user_payment_status(user_id=user_data.id, is_success=True)
-            user_subscription = self.subscription_service.create_subscription_from_free_trail(user_id=user_data.id)
-            self.subscription_service.create_new_usp_free_trail(user_data.id, user_subscription.id)
+            user_subscription = self.subscription_service.create_subscription_from_free_trial(user_id=user_data.id)
+            self.subscription_service.create_new_usp_free_trial(user_data.id, user_subscription.id)
         else:
             link = self.create_customer_session(self.get_default_plan().stripe_price_id, user_data.customer_id)['link']
         self.update_book_call(user_data.id, link)

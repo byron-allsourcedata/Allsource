@@ -21,7 +21,7 @@ class SubscriptionPlan(Base):
     created_at = Column(TIMESTAMP(precision=6))
     updated_at = Column(TIMESTAMP(precision=6))
     is_active = Column(BOOLEAN, default=False)
-    is_free_trail = Column(BOOLEAN, default=False)
+    is_free_trial = Column(BOOLEAN, default=False)
 
 
 class UserSubscriptionPlan(Base):
