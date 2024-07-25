@@ -1,6 +1,8 @@
 import tempfile
 import time
 import re
+import traceback
+
 import boto3
 import pyarrow.parquet as pq
 import logging
@@ -61,8 +63,9 @@ def process_file(bucket, file, session):
                         FiveXFiveUser.up_id == str(up_id).lower()).first()
                     if five_x_five_user:
                         logging.info(f"UP_ID {up_id} found in table")
-                        lead_id = session.query(Lead.id).filter(
-                            Lead.up_id == str(up_id).lower()).first()
+                        lead_id = session.query(Lead.id).filter(Lead.up_id == str(up_id).lower()).first()
+                        if lead_id is not None:
+                            lead_id = lead_id[0]
                         if not lead_id:
                             lead = Lead(
                                 first_name=five_x_five_user.first_name,
@@ -87,7 +90,7 @@ def process_file(bucket, file, session):
                             Users.data_provider_id == str(partner_uid_client_id)).first()
                         if user:
                             existing_lead_user = session.query(LeadUser).filter_by(lead_id=lead_id,
-                                                                                   user_id=user.id).first()
+                                                                                   user_id=str(user.id)).first()
                             if not existing_lead_user:
                                 lead_user = LeadUser(lead_id=lead_id, user_id=user.id)
                                 session.add(lead_user)
@@ -131,14 +134,21 @@ def process_files(sts_client, session):
 def main():
     sts_client = create_sts_client(os.getenv('S3_KEY_ID'), os.getenv('S3_KEY_SECRET'))
     engine = create_engine(
-        f'postgresql://{os.getenv('POSTGRESQL_LOGIN')}:{os.getenv('POSTGRESQL_PASSWORD')}@{os.getenv('POSTGRESQL_HOST')}/{os.getenv('POSTGRESQL_NAME')}')
+        f'postgresql://{os.getenv('DB_USERNAME')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}')
     Session = sessionmaker(bind=engine)
     session = Session()
     logging.info("Started")
-    while True:
-        process_files(sts_client, session)
-        logging.info('Sleeping for 10 minutes...')
-        time.sleep(60 * 10)
+    try:
+        while True:
+            process_files(sts_client, session)
+            logging.info('Sleeping for 10 minutes...')
+            time.sleep(60 * 10)
+    except Exception as e:
+        logging.error(f"An error occurred: {str(e)}")
+        traceback.print_exc()
+    finally:
+        session.close()
+        logging.info("Connection to the database closed")
 
 
 main()
