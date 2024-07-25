@@ -7,6 +7,7 @@ import React, { useState } from "react";
 import ManualPopup from '../components/ManualPopup';
 import GoogleTagPopup from '../components/GoogleTagPopup';
 import CRMPopup from "./CMSPopup";
+import {  useTrial } from "@/context/TrialProvider";
 
 
 const PixelInstallation: React.FC = () => {
@@ -110,7 +111,6 @@ const PixelInstallation: React.FC = () => {
         <Grid item xs={12} md={4}>
           <Button variant="outlined" fullWidth onClick={installCMS} sx={buttonStyles}>
             <Box>
-              <Image src={'/install_cms1.svg'} alt="Install on CMS" width={28} height={28} />
               <Image src={'/install_cms2.svg'} alt="Install on CMS" width={28} height={28} />
             </Box>
             <Typography sx={typographyStyles}>Install on CMS</Typography>

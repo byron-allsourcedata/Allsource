@@ -19,6 +19,7 @@ router = APIRouter()
 @router.get("/me")
 def get_me(user_service: UsersService = Depends(get_users_service)):
     plan = user_service.get_info_plan()
+    print(plan)
 
     if not user_service.user.is_book_call_passed:
         plan["is_trial"] = True

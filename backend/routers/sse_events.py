@@ -8,4 +8,5 @@ router = APIRouter()
 
 @router.get("/event-source")
 def get_sse(sse_service: SseEventsService = Depends(get_sse_events_service), token: str = Query(...)):
+    print('Work')
     return EventSourceResponse(sse_service.init_sse_events(token))

@@ -5,6 +5,7 @@ import { fetchUserData } from '../services/meService';
 interface UserContextType {
   email: string | null;
   full_name: string | null;
+  daysDifference: number | null;
 }
 
 interface UserProviderProps {
@@ -17,6 +18,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   const [email, setEmail] = useState<string | null>(null);
   const [full_name, setFullName] = useState<string | null>(null);
   const [hasFetched, setHasFetched] = useState<boolean>(false);
+  const [daysDifference, setDaysDifference] = useState<number | null>(null);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -25,6 +27,15 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       const storedData = JSON.parse(storedMe);
       setEmail(storedData.email);
       setFullName(storedData.full_name);
+      const endDate = new Date(storedData.plan_end);
+      const currentDate = new Date();
+
+      // Calculate the difference in days
+      const timeDifference = endDate.getTime() - currentDate.getTime();
+      const daysDifference = Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
+
+      // Update the state with the calculated days difference
+      setDaysDifference(daysDifference);
       setHasFetched(true);
     } else if (token && !hasFetched) {
       fetchUserData().then(userData => {
@@ -35,10 +46,13 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
         setHasFetched(true);
       });
     }
+    if (token) {
+
+    }
   }, [hasFetched]);
 
   return (
-    <UserContext.Provider value={{ email, full_name }}>
+    <UserContext.Provider value={{ email, full_name, daysDifference}}>
       {children}
     </UserContext.Provider>
   );
