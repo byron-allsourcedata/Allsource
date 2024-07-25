@@ -6,6 +6,7 @@ from config.rmq_connection import publish_rabbitmq_message, RabbitMQConnection
 router = APIRouter()
 
 @router.get("/confirm_customer")
+
 async def verify_token(admin_customers_service: AdminCustomersService = Depends(get_admin_customers_service), mail: str = Query(...), free_trial: bool = Query(...)):
     user = admin_customers_service.confirmation_customer(mail, free_trial)
     queue_name = f'sse_events_{str(user.id)}'
@@ -51,5 +52,4 @@ async def verify_token(admin_customers_service: AdminCustomersService = Depends(
         await rabbitmq_connection.close()
 
     return admin_customers_service.pixel_code_passed(mail)
-
 

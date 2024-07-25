@@ -72,8 +72,8 @@ class AdminCustomersService:
         )
         self.db.commit()
 
-    def confirmation_customer(self, mail, free_trial):
-        user_data = self.get_user_by_email(mail)
+    def confirmation_customer(self, email, free_trial):
+        user_data = self.get_user_by_email(email)
         link = ''
         if free_trial:
             self.subscription_service.update_user_payment_status(user_id=user_data.id, is_success=True)
