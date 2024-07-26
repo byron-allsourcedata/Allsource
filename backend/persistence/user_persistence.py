@@ -44,9 +44,6 @@ class UserPersistence:
             UserSubscriptionPlan.user_id == user_id,
             UserSubscriptions.is_cancelled == 'false'
         ).first()
-
-        print(user_plan)
-
         if user_plan:
             return {
                 "is_trial": user_plan.is_trial,

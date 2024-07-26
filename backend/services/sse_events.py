@@ -1,8 +1,13 @@
 import json
+import logging
+
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 from enums import VerifyToken
 from persistence.user_persistence import UserPersistence
 from .jwt_service import decode_jwt_data
+
+
+logger = logging.getLogger(__name__)
 
 class SseEventsService:
 
@@ -42,7 +47,7 @@ class SseEventsService:
                         await message.ack()
                         yield message_json
             except Exception as err:
-                print('SSE Exception:', err)
+                logger.debug('SSE Exception:', err)
             finally:
-                print('SSE finally')
+                logger.debug('SSE finally')
                 await rmq_connection.close()

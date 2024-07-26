@@ -72,7 +72,7 @@ class AdminCustomersService:
         )
         self.db.commit()
 
-    def confirmation_customer(self, email, free_trial):
+    def confirmation_customer(self, email, free_trial=None):
         user_data = self.get_user_by_email(email)
         link = ''
         if free_trial:
@@ -110,11 +110,5 @@ class AdminCustomersService:
                     start_date_str = start_date.isoformat() + "Z"
                     end_date_str = end_date.isoformat() + "Z"
                     self.set_user_subscription(user_data.id, start_date_str, end_date_str)
-                    return 'OK'
-                else:
-                    return 'The time of the plan is already set'
-            else:
-                return 'pixel is installed'
-        else:
-            return 'Undefined user'
+        return user_data
 

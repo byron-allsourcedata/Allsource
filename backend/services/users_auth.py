@@ -85,9 +85,13 @@ class UsersAuth:
         is_without_card = auth_google_data.is_without_card
         idinfo = id_token.verify_oauth2_token(str(auth_google_data.token), google_request, client_id)
         if idinfo:
+            full_name = idinfo.get('given_name')
+            family_name = idinfo.get('family_name')
+            if family_name and family_name != 'None':
+                full_name = ' '.join(filter(None, [full_name, family_name]))
             google_payload = {
                 "email": idinfo.get("email"),
-                "full_name": f"{idinfo.get('given_name')} {idinfo.get('family_name')}",
+                "full_name": full_name,
                 "password": None,
                 "is_email_confirmed": True,
             }
