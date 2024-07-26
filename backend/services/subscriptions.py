@@ -26,6 +26,17 @@ class SubscriptionService:
     def get_userid_by_customer(self, customer_id):
         return self.db.query(User).filter(User.customer_id == customer_id).first()
 
+    def check_duplicate_errors(self, start_date_timestamp, end_date_timestamp, user_id):
+        duplicate = self.db.query(Subscription).filter(
+            Subscription.user_id == user_id,
+            Subscription.plan_start == start_date_timestamp,
+            Subscription.plan_end == end_date_timestamp
+        ).first()
+        if duplicate is not None:
+            return True
+        else:
+            return False
+
     def get_current_user_plan(self, user_id):
         result = self.user_persistence_service.user_plan_info_db(user_id)
 
@@ -54,19 +65,12 @@ class SubscriptionService:
             payment_state = StripePaymentStatusEnum.COMPLETE.value
         else:
             payment_state = StripePaymentStatusEnum.FAILED.value
-        result = (
-            self.db.query(Users)
-            .filter(Users.id == user_id)
-            .update(
+            self.db.query(Users).filter(Users.id == user_id).update(
                 {Users.payment_status: payment_state},
-                synchronize_session=False,
+                synchronize_session=False
             )
-        )
         self.db.commit()
-
-        if not result:
-            return False
-        return True
+        return payment_state
 
     def save_payment_details_in_stripe(self, customer_id):
         import stripe
@@ -189,7 +193,7 @@ class SubscriptionService:
 
     def create_new_usp(self, user_id, subscription_id, stripe_price_id):
         plan_info = self.db.query(SubscriptionPlan).filter(SubscriptionPlan.stripe_price_id == stripe_price_id).first()
-        usp_object = UserSubscriptionPlan(user_id=user_id, plan_id=plan_info.id, subscription_id=subscription_id,)
+        usp_object = UserSubscriptionPlan(user_id=user_id, plan_id=plan_info.id, subscription_id=subscription_id, )
         self.db.add(usp_object)
         self.db.commit()
         return usp_object
