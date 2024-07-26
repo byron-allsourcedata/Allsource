@@ -1,5 +1,6 @@
 import logging
 from services.subscriptions import SubscriptionService
+from datetime import datetime
 
 ACTIVE_STATUSES = ["active", "trialing", "completed"]
 TRIAL_STUB_PLAN_ID = '1'
@@ -11,12 +12,12 @@ class WebhookService:
         self.subscription_service = subscription_service
 
     def update_payment_confirmation(self, payload):
-        start_date_timestamp = payload.get("data").get("object").get("current_period_start")
-        end_date_timestamp = payload.get("data").get("object").get("current_period_end")
+        stripe_request_created_timestamp = payload.get("created")
+        stripe_request_created_at = datetime.utcfromtimestamp(stripe_request_created_timestamp).isoformat() + "Z"
         customer_id = payload.get("data").get("object").get("customer")
         user_data = self.subscription_service.get_userid_by_customer(customer_id)
-        if self.subscription_service.check_duplicate_errors(start_date_timestamp, end_date_timestamp, user_data.id):
-            return
+        if self.subscription_service.check_duplicate_send(stripe_request_created_at, user_data.id):
+            return payload
         request_price_id = payload.get("data").get("object").get("plan").get("id")
         status = payload.get("data").get("object").get("status")
         is_subscription_active = status in ['active', 'trialing']
@@ -37,19 +38,15 @@ class WebhookService:
         """
         Logic for existing or new subscription, credits and credit usage
         """
-        update_payment_status_of_user = self.subscription_service.update_user_payment_status(user_id=user_data.id,
-                                                                                             is_success=is_subscription_active)
+        self.subscription_service.update_user_payment_status(user_id=user_data.id, is_success=is_subscription_active)
+        logger.info(f"updated the payment status of user to completed {user_data.email}")
+        user_subscription = self.subscription_service.create_subscription_from_webhook(user_id=user_data.id,
+                                                                                       stripe_payload=payload)
+        if user_subscription:
+            logger.info("New subscription created")
 
-        if update_payment_status_of_user:
-            logger.info(f"updated the payment status of user to completed {user_data.email}")
-            user_subscription = self.subscription_service.create_subscription_from_webhook(user_id=user_data.id,
-                                                                                           stripe_payload=payload)
-            if user_subscription:
-                logger.info("New subscription created")
-
-            if (plan_info["stripe_price_id"] != request_price_id):
-                self.subscription_service.create_new_usp(user_data.id, user_subscription.id, request_price_id)
-            else:
-                self.subscription_service.update_subscription_id(user_plan["id"], user_subscription.id)
-            return self.subscription_service.construct_webhook_response(user_subscription)
-        return payload
+        if (plan_info["stripe_price_id"] != request_price_id):
+            self.subscription_service.create_new_usp(user_data.id, user_subscription.id, request_price_id)
+        else:
+            self.subscription_service.update_subscription_id(user_plan["id"], user_subscription.id)
+        return self.subscription_service.construct_webhook_response(user_subscription)

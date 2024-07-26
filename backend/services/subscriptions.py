@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from enums import StripePaymentStatusEnum
 from models.plans import SubscriptionPlan, UserSubscriptionPlan
 from models.users import Users, User
@@ -26,16 +26,17 @@ class SubscriptionService:
     def get_userid_by_customer(self, customer_id):
         return self.db.query(User).filter(User.customer_id == customer_id).first()
 
-    def check_duplicate_errors(self, start_date_timestamp, end_date_timestamp, user_id):
-        duplicate = self.db.query(Subscription).filter(
-            Subscription.user_id == user_id,
-            Subscription.plan_start == start_date_timestamp,
-            Subscription.plan_end == end_date_timestamp
+    def check_duplicate_send(self, stripe_request_created_at, user_id):
+        subscription_data = self.db.query(Subscription).filter(
+            Subscription.user_id == user_id
         ).first()
-        if duplicate is not None:
-            return True
-        else:
-            return False
+        if subscription_data:
+            stripe_request_created_at_dt = datetime.fromisoformat(stripe_request_created_at.replace('Z', ''))
+            subscription_stripe_request_created_at = subscription_data.stripe_request_created_at.replace(tzinfo=None)
+            if stripe_request_created_at_dt < subscription_stripe_request_created_at:
+                return True
+            else:
+                return False
     def get_current_user_plan(self, user_id):
         result = self.user_persistence_service.user_plan_info_db(user_id)
 
@@ -64,12 +65,11 @@ class SubscriptionService:
             payment_state = StripePaymentStatusEnum.COMPLETE.value
         else:
             payment_state = StripePaymentStatusEnum.FAILED.value
-            self.db.query(Users).filter(Users.id == user_id).update(
-                {Users.payment_status: payment_state},
-                synchronize_session=False
-            )
+        self.db.query(Users).filter(Users.id == user_id).update(
+            {Users.payment_status: payment_state},
+            synchronize_session=False
+        )
         self.db.commit()
-        return True
 
     def save_payment_details_in_stripe(self, customer_id):
         import stripe
@@ -128,6 +128,8 @@ class SubscriptionService:
 
     def create_subscription_from_webhook(self, user_id, stripe_payload: dict):
         start_date_timestamp = stripe_payload.get("data").get("object").get("current_period_start")
+        stripe_request_created_timestamp = stripe_payload.get("created")
+        stripe_request_created_at = datetime.utcfromtimestamp(stripe_request_created_timestamp).isoformat() + "Z"
         end_date_timestamp = stripe_payload.get("data").get("object").get("current_period_end")
         start_date = datetime.utcfromtimestamp(start_date_timestamp).isoformat() + "Z"
         end_date = datetime.utcfromtimestamp(end_date_timestamp).isoformat() + "Z"
@@ -140,7 +142,7 @@ class SubscriptionService:
         plan_type = self.determine_plan_name_from_price(
             stripe_payload.get("data").get("object").get("plan").get("product"))
         payment_platform_subscription_id = stripe_payload.get("data").get("object").get("id")
-        plan_name = f"Trial of {plan_type} at ${price}"
+        plan_name = f"{plan_type} at ${price}"
         transaction_id = stripe_payload.get("id")
         add_subscription_obj = Subscription(
             user_id=created_by_id,
@@ -157,6 +159,7 @@ class SubscriptionService:
             created_at=created_at,
             created_by=created_by_id,
             status=status,
+            stripe_request_created_at=stripe_request_created_at
         )
         self.db.add(add_subscription_obj)
         self.db.commit()
@@ -168,7 +171,7 @@ class SubscriptionService:
         status = 'trialing'
         created_by_id = user_id
         created_at = get_utc_aware_date_for_postgres()
-        plan_name = f"Trial of {plan_type} at ${price}"
+        plan_name = f"{plan_type} at ${price}"
         add_subscription_obj = Subscription(
             user_id=created_by_id,
             plan_name=plan_name,
