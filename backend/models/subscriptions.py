@@ -29,6 +29,7 @@ class UserSubscriptions(Base):
     is_cancelled = Column(BOOLEAN, default=False)
     canceled_on = Column(TIMESTAMP(precision=7))
     reason_of_cancel = Column(TEXT)
+    stripe_request_created_at = Column(TIMESTAMP(precision=7))
 
 
 Subscription = UserSubscriptions
