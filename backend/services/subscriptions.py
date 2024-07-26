@@ -185,14 +185,14 @@ class SubscriptionService:
 
     def create_new_usp_free_trial(self, user_id, subscription_id):
         plan_info = self.db.query(SubscriptionPlan).filter(SubscriptionPlan.is_free_trial == True).first()
-        usp_object = UserSubscriptionPlan(user_id=user_id, plan_id=plan_info.id, subscription_id=subscription_id, )
+        usp_object = UserSubscriptionPlan(user_id=user_id, plan_id=plan_info.id, subscription_id=subscription_id, is_trial=True)
         self.db.add(usp_object)
         self.db.commit()
         return usp_object
 
     def create_new_usp(self, user_id, subscription_id, stripe_price_id):
         plan_info = self.db.query(SubscriptionPlan).filter(SubscriptionPlan.stripe_price_id == stripe_price_id).first()
-        usp_object = UserSubscriptionPlan(user_id=user_id, plan_id=plan_info.id, subscription_id=subscription_id, )
+        usp_object = UserSubscriptionPlan(user_id=user_id, plan_id=plan_info.id, subscription_id=subscription_id)
         self.db.add(usp_object)
         self.db.commit()
         return usp_object
