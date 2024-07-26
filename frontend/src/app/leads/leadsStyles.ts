@@ -1,6 +1,6 @@
 import { SxProps, Theme } from '@mui/system';
 
-export const dashboardStyles: { [key: string]: SxProps<Theme> } = {
+export const leadsStyles: { [key: string]: SxProps<Theme> } = {
   container: {
     display: 'flex',
     flexDirection: 'column',
@@ -43,9 +43,10 @@ export const dashboardStyles: { [key: string]: SxProps<Theme> } = {
     paddingRight: '0.5em',
   },
   title: {
-    mb: 2,
+    mt: 2,
+    mb: 3,
     fontWeight: 'bold',
-    fontSize: '16px',
+    fontSize: '18px',
     whiteSpace: 'nowrap',
     textAlign: 'start',
     padding: '1.5rem 0rem 0',
