@@ -36,7 +36,6 @@ class SubscriptionService:
             return True
         else:
             return False
-
     def get_current_user_plan(self, user_id):
         result = self.user_persistence_service.user_plan_info_db(user_id)
 
@@ -70,7 +69,7 @@ class SubscriptionService:
                 synchronize_session=False
             )
         self.db.commit()
-        return payment_state
+        return True
 
     def save_payment_details_in_stripe(self, customer_id):
         import stripe
