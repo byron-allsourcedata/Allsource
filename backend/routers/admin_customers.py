@@ -5,8 +5,10 @@ from config.rmq_connection import publish_rabbitmq_message, RabbitMQConnection
 
 router = APIRouter()
 
+
 @router.get("/confirm_customer")
-async def verify_token(admin_customers_service: AdminCustomersService = Depends(get_admin_customers_service), mail: str = Query(...), free_trial: bool = Query(...)):
+async def verify_token(admin_customers_service: AdminCustomersService = Depends(get_admin_customers_service),
+                       mail: str = Query(...), free_trial: bool = Query(...)):
     user = admin_customers_service.confirmation_customer(mail, free_trial)
     queue_name = f'sse_events_{str(user.id)}'
 
@@ -26,14 +28,10 @@ async def verify_token(admin_customers_service: AdminCustomersService = Depends(
 
     return "OK"
 
-@router.get("/confirm_pixel_installation")
-async def confirm_pixel():
-    # Implementation here
-    pass
-
 @router.get("/pixel_code_passed")
-async def verify_token(admin_customers_service: AdminCustomersService = Depends(get_admin_customers_service), mail: str = Query(...)):
-    user = admin_customers_service.confirmation_customer(mail)
+async def verify_token(admin_customers_service: AdminCustomersService = Depends(get_admin_customers_service),
+                       mail: str = Query(...)):
+    user = admin_customers_service.pixel_code_passed(mail)
     queue_name = f'sse_events_{str(user.id)}'
 
     rabbitmq_connection = RabbitMQConnection()
@@ -50,6 +48,4 @@ async def verify_token(admin_customers_service: AdminCustomersService = Depends(
     finally:
         await rabbitmq_connection.close()
 
-    return admin_customers_service.pixel_code_passed(mail)
-
-
+    return 'OK'

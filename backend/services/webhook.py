@@ -11,11 +11,15 @@ class WebhookService:
         self.subscription_service = subscription_service
 
     def update_payment_confirmation(self, payload):
+        start_date_timestamp = payload.get("data").get("object").get("current_period_start")
+        end_date_timestamp = payload.get("data").get("object").get("current_period_end")
         customer_id = payload.get("data").get("object").get("customer")
+        user_data = self.subscription_service.get_userid_by_customer(customer_id)
+        if self.subscription_service.check_duplicate_errors(start_date_timestamp, end_date_timestamp, user_data.id):
+            return
         request_price_id = payload.get("data").get("object").get("plan").get("id")
         status = payload.get("data").get("object").get("status")
         is_subscription_active = status in ['active', 'trialing']
-        user_data = self.subscription_service.get_userid_by_customer(customer_id)
         current_plan = self.subscription_service.get_current_user_plan(user_data.id)
         if current_plan is not None:
             user_plan, plan_info = current_plan

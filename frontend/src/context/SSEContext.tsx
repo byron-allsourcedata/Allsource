@@ -17,10 +17,11 @@ const SSEContext = createContext<SSEContextType | undefined>(undefined);
 
 export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
   const [data, setData] = useState<Data | null>(null);
-  const url = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+
+  const url = process.env.NEXT_PUBLIC_API_BASE_URL;
 
   if (!url) {
-    throw new Error("NEXT_PUBLIC_GOOGLE_CLIENT_ID is not defined");
+    throw new Error("NEXT_PUBLIC_API_BASE_URL is not defined");
   }
 
   useEffect(() => {
