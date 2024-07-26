@@ -134,7 +134,7 @@ def process_files(sts_client, session):
 def main():
     sts_client = create_sts_client(os.getenv('S3_KEY_ID'), os.getenv('S3_KEY_SECRET'))
     engine = create_engine(
-        f'postgresql://{os.getenv('DB_USERNAME')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}')
+        f"postgresql://{os.getenv('DB_USERNAME')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}")
     Session = sessionmaker(bind=engine)
     session = Session()
     logging.info("Started")
