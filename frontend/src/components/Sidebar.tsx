@@ -16,17 +16,22 @@ import Image from 'next/image';
 
 const sidebarStyles = {
     container: {
-        width: '14em',
+        width: '100%',
         flexShrink: 0,
         fontFamily: 'Nunito',
         fontSize: '14px',
         fontWeight: '500',
         backgroundColor: 'rgba(255, 255, 255, 1)',
         borderRight: '1px solid rgba(228, 228, 228, 1)',
+        marginRight: '10em',
         height: '90vh',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'start',
+        '@media (min-width: 1500px)': {
+        width:'70%'
+
+    },
     },
     menu: {
         alignItems: 'center',
@@ -71,11 +76,11 @@ const sidebarStyles = {
     },
     setupSection: {
         padding: '1rem',
-        maxWidth: '9em',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
-        marginLeft: '1.5em',
+        marginLeft: '0.5em',
+        marginRight: '0.5em',
         border: '1px solid #e4e4e4',
         borderRadius: '8px',
         backgroundColor: '#fff',
@@ -117,7 +122,7 @@ const Sidebar: React.FC = () => {
     const isActive = (path: string) => pathname === path;
 
     return (
-        <Box sx={sidebarStyles.container}>
+        <Box sx={sidebarStyles.container} >
             <List sx={sidebarStyles.menu}>
                 <ListItem button onClick={() => handleNavigation('/dashboard')} sx={isActive('/dashboard') ? sidebarStyles.activeItem : {}}>
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>

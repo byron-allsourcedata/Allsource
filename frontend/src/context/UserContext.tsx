@@ -28,7 +28,10 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       setEmail(storedData.email);
       setFullName(storedData.full_name);
       const endDate = new Date(storedData.plan_end);
-      const currentDate = new Date();
+      if (storedData.plan_end == null) {
+        setDaysDifference(null);
+      } else {
+        const currentDate = new Date();
 
       // Calculate the difference in days
       const timeDifference = endDate.getTime() - currentDate.getTime();
@@ -36,6 +39,8 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
 
       // Update the state with the calculated days difference
       setDaysDifference(daysDifference);
+      }
+      
       setHasFetched(true);
     } else if (token && !hasFetched) {
       fetchUserData().then(userData => {

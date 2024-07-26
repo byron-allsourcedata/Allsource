@@ -95,7 +95,7 @@ const PixelInstallation: React.FC = () => {
       <Typography variant="body2" color="textSecondary" mb={2}>
         Select how you would like to install the pixel
       </Typography>
-      <Grid container spacing={2}>
+      <Grid container spacing={2} md={12}>
         <Grid item xs={12} md={4}>
           <Button variant="outlined" fullWidth onClick={installManually} sx={buttonStyles}>
             <Image src={'/install_manually.svg'} alt="Install Manually" width={36} height={36} />
@@ -167,7 +167,7 @@ const typographyGoogle = {
   fontWeight: '450',
   lineHeight: '19.6px',
   color: 'rgba(74, 74, 74, 1)',
-  textWrap: 'nowrap',
+  textWrap: 'wrap',
   paddingTop: '1.5em',
   paddingBottom: '0.25em',
 };

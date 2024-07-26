@@ -16,6 +16,7 @@ import PersonIcon from '@mui/icons-material/Person';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import TrialStatus from '../../components/TrialLabel';
 import { useTrial } from '../../context/TrialProvider';
+import StarsCard from '../../components/StatsCard'
 
 const Sidebar = dynamic(() => import('../../components/Sidebar'), {
   suspense: true,
@@ -94,6 +95,7 @@ const Dashboard: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const open = Boolean(anchorEl);
   const dropdownOpen = Boolean(dropdownEl);
+  const [showCharts, setShowCharts] = useState(false);
 
   const handleSignOut = () => {
     localStorage.clear();
@@ -133,6 +135,9 @@ const Dashboard: React.FC = () => {
       try {
         const response = await axiosInstance.get('dashboard');
         setData(response.data);
+        if (response.status === 200) {
+          setShowCharts(true); // Set to true if response is 200
+        }
         if (response.data.status === 'NEED_BOOK_CALL') {
           sessionStorage.setItem('is_slider_opened', 'true');
           setShowSlider(true);
@@ -230,25 +235,67 @@ const Dashboard: React.FC = () => {
         <Grid item xs={12} md={2} sx={{ padding: '0px' }}>
           <Sidebar />
         </Grid>
-        <Grid item xs={12} md={10}>
-          <Grid container spacing={2}>
-            <Grid item xs={12} md={8}>
-              <Typography variant="h4" component="h1" sx={dashboardStyles.title}>
-                Let’s Get Started!
-              </Typography>
-              <Typography variant="body2" color="textSecondary" mb={4}>
-                Install our pixel on your website to start capturing anonymous visitor data on your store.
-              </Typography>
-              <PixelInstallation />
-              <VerifyPixelIntegration />
+              {showCharts ? (
+                <>
+                  <Grid item xs={12} md={8}>
+                    <Grid container spacing={2} sx={{ marginTop: '2em', display: 'flex', flexDirection: 'column' }}>
+                      <Typography variant="h4" component="h1" sx={dashboardStyles.title}>
+                        Dashboard
+                      </Typography>
+                      <Grid item xs={12} md={12} sx={{ display: 'flex', justifyContent: 'space-around', flexDirection: 'row', gap: '1em' }}>
+                        <Grid item xs={3}>
+                          <StarsCard value={23120} />
+                        </Grid>
+                        <Grid item xs={3}>
+                          <StarsCard value={23120} />
+                        </Grid>
+                        <Grid item xs={3}>
+                          <StarsCard value={23120} />
+                        </Grid>
+                        <Grid item xs={3}>
+                          <StarsCard value={23120} />
+                        </Grid>
+                      </Grid>
+                      <Grid container spacing={2} sx={{ marginTop: '2em', alignItems: 'center', display: 'flex', justifyContent: 'center' }}>
+                        {/* Top Row */}
+                        <Grid item xs={4} md={6}>
+                          <Image src="/graphic1.png" alt="Image 1" layout="responsive" width={100} height={100} />
+                        </Grid>
+                        <Grid item xs={4} md={6}>
+                          <Image src="/graphic2.png" alt="Image 2" layout="responsive" width={100} height={100} />
+                        </Grid>
+                        {/* Bottom Row */}
+                        <Grid item xs={4} md={6}>
+                          <Image src="/graphic3.png" alt="Image 3" layout="responsive" width={100} height={100} />
+                        </Grid>
+                        <Grid item xs={4} md={6}>
+                          <Image src="/graphic1.png" alt="Image 4" layout="responsive" width={100} height={100} />
+                        </Grid>
+                      </Grid>
+                    </Grid>
+                  </Grid>
+                </>
+              ) : (
+                <Grid item xs={12} md={10}>
+                  <Grid container spacing={2}>
+                    <Grid item xs={12} md={8}>
+                      <Typography variant="h4" component="h1" sx={dashboardStyles.title}>
+                        Let’s Get Started!
+                      </Typography>
+                      <Typography variant="body2" color="textSecondary" mb={4}>
+                        Install our pixel on your website to start capturing anonymous visitor data on your store.
+                      </Typography>
+                      <PixelInstallation />
+                      <VerifyPixelIntegration />
+                    </Grid>
+                    <Grid item xs={12} md={4}>
+                      <ProgressSection />
+                    </Grid>
+                  </Grid>
+                  <SupportSection />
+                </Grid>
+              )}
             </Grid>
-            <Grid item xs={12} md={4}>
-              <ProgressSection />
-            </Grid>
-          </Grid>
-          <SupportSection />
-        </Grid>
-      </Grid>
       {showSlider && <Slider />}
     </>
   );

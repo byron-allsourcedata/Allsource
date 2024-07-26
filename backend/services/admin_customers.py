@@ -27,9 +27,9 @@ class AdminCustomersService:
         user_subscription = self.db.query(UserSubscriptions).filter(UserSubscriptions.user_id == user_id).first()
         return user_subscription
 
-    def get_free_trail_plan(self):
-        free_trail_plan = self.db.query(SubscriptionPlan).filter(SubscriptionPlan.is_free_trial == True).first()
-        return free_trail_plan
+    def get_free_trial_plan(self):
+        free_trial_plan = self.db.query(SubscriptionPlan).filter(SubscriptionPlan.is_free_trial == True).first()
+        return free_trial_plan
 
     def get_default_plan(self):
         default_plan = self.db.query(SubscriptionPlan).filter(SubscriptionPlan.is_default == True).first()
@@ -72,8 +72,8 @@ class AdminCustomersService:
         )
         self.db.commit()
 
-    def confirmation_customer(self, mail, free_trial):
-        user_data = self.get_user_by_email(mail)
+    def confirmation_customer(self, email, free_trial=None):
+        user_data = self.get_user_by_email(email)
         link = ''
         if free_trial:
             self.subscription_service.update_user_payment_status(user_id=user_data.id, is_success=True)
@@ -104,17 +104,10 @@ class AdminCustomersService:
                 self.set_pixel_installed(mail)
                 user_subscription = self.get_user_subscription(user_data.id)
                 if not user_subscription.plan_start and not user_subscription.plan_end:
-                    free_trail_plan = self.get_free_trail_plan()
+                    free_trial_plan = self.get_free_trial_plan()
                     start_date = datetime.utcnow()
-                    end_date = start_date + timedelta(days=free_trail_plan.trial_days)
+                    end_date = start_date + timedelta(days=free_trial_plan.trial_days)
                     start_date_str = start_date.isoformat() + "Z"
                     end_date_str = end_date.isoformat() + "Z"
                     self.set_user_subscription(user_data.id, start_date_str, end_date_str)
-                    return 'OK'
-                else:
-                    return 'The time of the plan is already set'
-            else:
-                return 'pixel is installed'
-        else:
-            return 'Undefined user'
-
+        return user_data
