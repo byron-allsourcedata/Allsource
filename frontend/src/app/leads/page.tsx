@@ -13,6 +13,7 @@ import { SliderProvider } from '../../context/SliderContext';
 import PersonIcon from '@mui/icons-material/Person';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import TrialStatus from '@/components/TrialLabel';
+import AccountButton from '@/components/AccountButton';
 
 const Sidebar = dynamic(() => import('../../components/Sidebar'), {
   suspense: true,
@@ -118,36 +119,7 @@ const Dashboard: React.FC = () => {
             </Box>
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <TrialStatus />
-          <Button
-            aria-controls={dropdownOpen ? 'account-dropdown' : undefined}
-            aria-haspopup="true"
-            aria-expanded={dropdownOpen ? 'true' : undefined}
-            onClick={handleDropdownClick}
-            sx={{ marginRight: '2em', textTransform: 'none', color: 'rgba(128, 128, 128, 1)', border: '1px solid rgba(184, 184, 184, 1)', borderRadius: '3.27px', padding: '10px' }}
-          >
-            <Typography sx={{
-              marginRight: '0.5em',
-              fontFamily: 'Nunito',
-              lineHeight: '19.1px',
-              letterSpacing: '-0.02em',
-              textAlign: 'left',
-            }}> Account Name </Typography>
-            <ExpandMoreIcon />
-          </Button>
-          <Menu
-            id="account-dropdown"
-            anchorEl={dropdownEl}
-            open={dropdownOpen}
-            onClose={handleDropdownClose}
-          >
-            <Box sx={{ p: 2 }}>
-              <Typography variant="h6">{full_name}</Typography>
-              <Typography variant="body2" color="textSecondary">{email}</Typography>
-            </Box>
-            <MenuItem onClick={handleSettingsClick}>Settings</MenuItem>
-            <MenuItem onClick={handleSignOut}>Sign Out</MenuItem>
-            {/* TODO ELEMENTS MENU */}
-          </Menu>
+          <AccountButton />
           <Button
             aria-controls={open ? 'profile-menu' : undefined}
             aria-haspopup="true"
