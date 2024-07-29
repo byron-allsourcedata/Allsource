@@ -42,14 +42,14 @@ const VerifyPixelIntegration: React.FC = () => {
   useEffect(() => {
     setInputValue(website || '');
   }, [website]);
-
+  
   const handleButtonClick = () => {
     const url = inputValue;
 
     if (url) {
-      // Проверяем, есть ли в URL уже параметры
+      // Check if the URL already has parameters
       const hasQuery = url.includes('?');
-      // Добавляем параметр в зависимости от наличия других параметров
+      // Add a parameter depending on the availability of other parameters
       const newUrl = url + (hasQuery ? '&' : '?') + 'vge=true';
 
       window.location.href = newUrl;

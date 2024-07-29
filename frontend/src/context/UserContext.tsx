@@ -30,7 +30,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       const storedData = JSON.parse(storedMe);
       setEmail(storedData.email);
       setFullName(storedData.full_name);
-      setWebsite(storedData.website);
+      setWebsite(storedData.company_website);
 
       const endDate = new Date(storedData.plan_end);
       if (storedData.plan_end == null) {
@@ -52,7 +52,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
         if (userData) {
           setEmail(userData.email);
           setFullName(userData.full_name);
-          setWebsite(userData.website);
+          setWebsite(userData.company_website);
         }
         setHasFetched(true);
       });
