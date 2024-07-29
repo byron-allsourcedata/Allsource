@@ -67,7 +67,7 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axiosInstance.get('dashboard');
+        const response = await axiosInstance.get('/leads');
         setData(response.data.items || []);
         setStatus(response.data.status || null);
       } catch (error) {
@@ -161,7 +161,7 @@ const Dashboard: React.FC = () => {
                 {status === 'PIXEL_INSTALLATION_NEEDED' ? (
                   <Box sx={centerContainerStyles}>
                     <Typography variant="h5" sx={{ mb: 2 }}>
-                      Pixel Integration isn`&apos;`t completed yet!
+                      Pixel Integration isn&apos;t completed yet!
                     </Typography>
                     <Image src='/pixel_installation_needed.svg' alt='Need Pixel Install' height={200} width={300} />
                     <Typography variant="body1" color="textSecondary" sx={{ mt: 2 }}>

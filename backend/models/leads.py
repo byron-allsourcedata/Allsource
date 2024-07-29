@@ -17,4 +17,3 @@ class Lead(Base):
     partner_uid = Column(VARCHAR)
     sha256_lower_case = Column(VARCHAR)
     ip = Column(VARCHAR)
-    json_headers = Column(VARCHAR)
