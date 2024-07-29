@@ -126,7 +126,7 @@ def process_file(bucket, file, session):
                             session.merge(leads_locations)
                             session.commit()
                             lead_user = LeadUser(lead_id=lead_id, user_id=user.id)
-                            session.add(lead_user)
+                            session.merge(lead_user)
                             session.commit()
                             leads_users_id = lead_user.id
                             visited_at = table['EVENT_DATE'][i].as_py().isoformat()
