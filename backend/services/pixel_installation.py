@@ -42,7 +42,7 @@ class PixelInstallationService:
                 document.getElementById('pixel-container').appendChild(script);
 
                 if (location.href.includes("vge=true")) {{
-                    fetch('{os.getenv('SITE_URL')}/install-pixel/pixel_installed', {{
+                    fetch('{os.getenv('API_SITE_HOST_URL')}/install-pixel/pixel_installed', {{
                         method: 'POST',
                         headers: {{
                             'Content-Type': 'application/json'
