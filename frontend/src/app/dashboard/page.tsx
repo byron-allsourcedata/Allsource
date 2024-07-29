@@ -23,25 +23,104 @@ const Sidebar = dynamic(() => import('../../components/Sidebar'), {
   suspense: true,
 });
 
-const VerifyPixelIntegration: React.FC = () => (
-  <Box sx={{ padding: '1.1rem', border: '1px solid #e4e4e4', borderRadius: '8px', backgroundColor: '#fff', boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)', marginBottom: '2rem' }}>
-    <Typography variant="h6" component="div" mb={2} sx={{ fontFamily: 'Nunito', fontWeight: '700', lineHeight: '21.82px', textAlign: 'left' }}>
-      2. Verify pixel integration on your website
-    </Typography>
-    <Box display="flex" alignItems="center" justifyContent="space-between">
-      <input type="text" placeholder="https://yourdomain.com" style={{
-        padding: '0.5rem 3em 0.5em 1em', width: '50%', border: '1px solid #e4e4e4', borderRadius: '4px', fontFamily: 'Nunito',
-        fontSize: '16px',
-        fontWeight: '600',
-        lineHeight: '22.4px',
-        textAlign: 'left'
-      }} />
-      <Button sx={{ ml: 2, border: '1px solid rgba(80, 82, 178, 1)', textTransform: 'none', background: '#fff', color: 'rgba(80, 82, 178, 1)', fontFamily: 'Nunito', padding: '0.75em 1.5em', }}>
-        Test
-      </Button>
+const handleButtonClick = () => {
+  const input = document.getElementById('urlInput') as HTMLInputElement | null;
+  const url = input?.value;
+
+  if (url) {
+    const hasQuery = url.includes('?');
+    const newUrl = url + (hasQuery ? '&' : '?') + 'vge=true';
+
+    window.location.href = newUrl;
+  }
+};
+
+const VerifyPixelIntegration: React.FC = () => {
+  const { website } = useUser();
+  const [inputValue, setInputValue] = useState<string>(website || '');
+
+  useEffect(() => {
+    setInputValue(website || '');
+  }, [website]);
+  
+  const handleButtonClick = () => {
+    const url = inputValue;
+
+    if (url) {
+      // Check if the URL already has parameters
+      const hasQuery = url.includes('?');
+      // Add a parameter depending on the availability of other parameters
+      const newUrl = url + (hasQuery ? '&' : '?') + 'vge=true';
+
+      window.location.href = newUrl;
+    }
+  };
+
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setInputValue(event.target.value);
+  };
+
+  return (
+    <Box
+      sx={{
+        padding: '1.1rem',
+        border: '1px solid #e4e4e4',
+        borderRadius: '8px',
+        backgroundColor: '#fff',
+        boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
+        marginBottom: '2rem'
+      }}
+    >
+      <Typography
+        variant="h6"
+        component="div"
+        mb={2}
+        sx={{
+          fontFamily: 'Nunito',
+          fontWeight: '700',
+          lineHeight: '21.82px',
+          textAlign: 'left'
+        }}
+      >
+        2. Verify pixel integration on your website
+      </Typography>
+      <Box display="flex" alignItems="center" justifyContent="space-between">
+        <input
+          id="urlInput"
+          type="text"
+          value={inputValue}
+          onChange={handleInputChange}
+          placeholder="https://yourdomain.com"
+          style={{
+            padding: '0.5rem 3em 0.5em 1em',
+            width: '50%',
+            border: '1px solid #e4e4e4',
+            borderRadius: '4px',
+            fontFamily: 'Nunito',
+            fontSize: '16px',
+            fontWeight: '600',
+            lineHeight: '22.4px',
+            textAlign: 'left'
+          }}
+        />
+        <Button
+          onClick={handleButtonClick}
+          sx={{
+            ml: 2,
+            border: '1px solid rgba(80, 82, 178, 1)',
+            textTransform: 'none',
+            background: '#fff',
+            color: 'rgba(80, 82, 178, 1)',
+            fontFamily: 'Nunito',
+            padding: '0.75em 1.5em',
+          }}
+        >
+          Test
+        </Button>
+      </Box>
     </Box>
-  </Box>
-);
+  );
+};
 
 const SupportSection: React.FC = () => (
   <Box sx={{ alignItems: 'flex-end' }}>
