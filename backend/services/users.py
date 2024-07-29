@@ -27,5 +27,6 @@ class UsersService:
 
     def get_my_info(self):
         return {"email": self.user.email,
-                "full_name": self.user.full_name
+                "full_name": self.user.full_name,
+                "website": self.user.company_website
                 }

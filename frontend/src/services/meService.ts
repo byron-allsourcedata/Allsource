@@ -13,6 +13,7 @@ export const fetchUserData = async () => {
       sessionStorage.setItem('me', JSON.stringify({
         email: userInfo.email,
         full_name: userInfo.full_name,
+        website: userInfo.website,
         trial: userPlan.is_trial,
         plan_end: userPlan.plan_end
       }));
@@ -20,6 +21,7 @@ export const fetchUserData = async () => {
       return {
         email: userInfo.email,
         full_name: userInfo.full_name,
+        website: userInfo.website,
         trial: userPlan.is_trial,
         days_left: userPlan.plan_end
       };
