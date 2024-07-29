@@ -32,6 +32,7 @@ class PixelInstallationService:
                 const puid = {{
                     client_id: clientId,
                     purpose: 'website',
+                    current_page: window.location.href,
                     partner: 'Maximiz'
                 }};
                 const encodedPuid = encodeURIComponent(JSON.stringify(puid));
