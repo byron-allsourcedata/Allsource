@@ -20,7 +20,7 @@ const Sidebar = dynamic(() => import('../../components/Sidebar'), {
 });
 
 
-const Dashboard: React.FC = () => {
+const Leads: React.FC = () => {
   const router = useRouter();
   const { full_name, email } = useUser();
   const [data, setData] = useState<any[]>([]);
@@ -68,8 +68,12 @@ const Dashboard: React.FC = () => {
     const fetchData = async () => {
       try {
         const response = await axiosInstance.get('/leads');
-        setData(response.data.items || []);
-        setStatus(response.data.status || null);
+        console.log(response.data);
+  
+        // Проверяем, что данные - это массив и извлекаем первый элемент
+        const [leads, meta] = response.data;
+        setData(Array.isArray(leads) ? leads : []);
+        setStatus(meta.status || null);
       } catch (error) {
         if (error instanceof AxiosError && error.response?.status === 403) {
           if (error.response.data.status === 'NEED_BOOK_CALL') {
@@ -87,9 +91,10 @@ const Dashboard: React.FC = () => {
         setIsLoading(false);
       }
     };
-
+  
     fetchData();
   }, [setShowSlider]);
+  
 
   if (isLoading) {
     return <div>Loading...</div>;
@@ -118,33 +123,33 @@ const Dashboard: React.FC = () => {
               <Image src='/logo.svg' alt='logo' height={80} width={60} />
             </Box>
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <TrialStatus />
-          <AccountButton />
-          <Button
-            aria-controls={open ? 'profile-menu' : undefined}
-            aria-haspopup="true"
-            aria-expanded={open ? 'true' : undefined}
-            onClick={handleProfileMenuClick}
-          >
-            <PersonIcon sx={leadsStyles.account} />
-          </Button>
-          <Menu
-            id="profile-menu"
-            anchorEl={anchorEl}
-            open={open}
-            onClose={handleProfileMenuClose}
-            MenuListProps={{
-              'aria-labelledby': 'profile-menu-button',
-            }}
-          >
-            <Box sx={{ p: 2 }}>
-              <Typography variant="h6">{full_name}</Typography>
-              <Typography variant="body2" color="textSecondary">{email}</Typography>
+              <TrialStatus />
+              <AccountButton />
+              <Button
+                aria-controls={open ? 'profile-menu' : undefined}
+                aria-haspopup="true"
+                aria-expanded={open ? 'true' : undefined}
+                onClick={handleProfileMenuClick}
+              >
+                <PersonIcon sx={leadsStyles.account} />
+              </Button>
+              <Menu
+                id="profile-menu"
+                anchorEl={anchorEl}
+                open={open}
+                onClose={handleProfileMenuClose}
+                MenuListProps={{
+                  'aria-labelledby': 'profile-menu-button',
+                }}
+              >
+                <Box sx={{ p: 2 }}>
+                  <Typography variant="h6">{full_name}</Typography>
+                  <Typography variant="body2" color="textSecondary">{email}</Typography>
+                </Box>
+                <MenuItem onClick={handleSettingsClick}>Settings</MenuItem>
+                <MenuItem onClick={handleSignOut}>Sign Out</MenuItem>
+              </Menu>
             </Box>
-            <MenuItem onClick={handleSettingsClick}>Settings</MenuItem>
-            <MenuItem onClick={handleSignOut}>Sign Out</MenuItem>
-          </Menu>
-        </Box>
           </Box>
         </Box>
 
@@ -201,17 +206,18 @@ const Dashboard: React.FC = () => {
                           <TableBody>
                             {data.map((row, index) => (
                               <TableRow key={index}>
-                                <TableCell>{row.name}</TableCell>
-                                <TableCell>{row.email}</TableCell>
-                                <TableCell>{row.phoneNumber}</TableCell>
-                                <TableCell>{row.visitedDate}</TableCell>
-                                <TableCell>{row.visitedTime}</TableCell>
-                                <TableCell>{row.leadFunnel}</TableCell>
-                                <TableCell>{row.recurringVisits}</TableCell>
-                                <TableCell>{row.status}</TableCell>
+                                <TableCell>{row.first_name}</TableCell>
+                                <TableCell>{row.business_email || 'N/A'}</TableCell> 
+                                <TableCell>{row.mobile_phone}</TableCell>
+                                <TableCell>{row.visitedDate || 'N/A'}</TableCell> 
+                                <TableCell>{row.visitedTime || 'N/A'}</TableCell> 
+                                <TableCell>{row.leadFunnel || 'N/A'}</TableCell>
+                                <TableCell>{row.recurringVisits || 'N/A'}</TableCell> 
+                                <TableCell>{row.status || 'N/A'}</TableCell>
                               </TableRow>
                             ))}
                           </TableBody>
+
                         </Table>
                       </TableContainer>
                     </Grid>
@@ -227,14 +233,14 @@ const Dashboard: React.FC = () => {
   );
 };
 
-const DashboardPage: React.FC = () => {
+const LeadsPage: React.FC = () => {
   return (
     <Suspense fallback={<div>Loading...</div>}>
       <SliderProvider>
-        <Dashboard />
+        <Leads />
       </SliderProvider>
     </Suspense>
   );
 };
 
-export default DashboardPage;
+export default LeadsPage;

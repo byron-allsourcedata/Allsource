@@ -5,7 +5,7 @@ import logging
 
 logging.basicConfig(level=logging.INFO)
 aio_pika_logger = logging.getLogger('aio_pika')
-aio_pika_logger.setLevel(logging.DEBUG)
+aio_pika_logger.setLevel(logging.WARNING)
 
 
 class RabbitMQConnection:
