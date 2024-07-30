@@ -10,6 +10,7 @@ export const leadsStyles: { [key: string]: SxProps<Theme> } = {
     backgroundColor: '#ffffff',
     width: '100%',
     maxWidth: '25rem',
+    maxHeight: '100vh',
     margin: '0 auto',
     position: 'relative',
     boxShadow: '0rem 0.2em 0.8em 0px #00000033',
@@ -43,8 +44,7 @@ export const leadsStyles: { [key: string]: SxProps<Theme> } = {
     paddingRight: '0.5em',
   },
   title: {
-    mt: 2,
-    mb: 3,
+    mt: 1,
     fontWeight: 'bold',
     fontSize: '18px',
     whiteSpace: 'nowrap',

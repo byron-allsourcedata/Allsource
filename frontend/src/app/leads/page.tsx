@@ -1,5 +1,5 @@
 "use client";
-import { Box, Grid, Typography, Button, Menu, MenuItem, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
+import { Box, Grid, Typography, Button, Menu, MenuItem, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Checkbox, TablePagination } from '@mui/material';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
 import React, { useState, useEffect, Suspense } from 'react';
@@ -11,7 +11,6 @@ import { leadsStyles } from './leadsStyles';
 import Slider from '../../components/Slider';
 import { SliderProvider } from '../../context/SliderContext';
 import PersonIcon from '@mui/icons-material/Person';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import TrialStatus from '@/components/TrialLabel';
 import AccountButton from '@/components/AccountButton';
 
@@ -19,11 +18,11 @@ const Sidebar = dynamic(() => import('../../components/Sidebar'), {
   suspense: true,
 });
 
-
 const Leads: React.FC = () => {
   const router = useRouter();
   const { full_name, email } = useUser();
   const [data, setData] = useState<any[]>([]);
+  const [count_leads, setCount] = useState<number | null>(null);
   const [status, setStatus] = useState<string | null>(null);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [showSlider, setShowSlider] = useState(false);
@@ -31,6 +30,9 @@ const Leads: React.FC = () => {
   const open = Boolean(anchorEl);
   const [dropdownEl, setDropdownEl] = useState<null | HTMLElement>(null);
   const dropdownOpen = Boolean(dropdownEl);
+  const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(15);
 
   const handleSignOut = () => {
     localStorage.clear();
@@ -55,7 +57,6 @@ const Leads: React.FC = () => {
     router.push('/settings');
   };
 
-
   const handleDropdownClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     setDropdownEl(event.currentTarget);
   };
@@ -64,15 +65,34 @@ const Leads: React.FC = () => {
     setDropdownEl(null);
   };
 
+  const handleSelectRow = (id: number) => {
+    setSelectedRows((prevSelectedRows) => {
+      const newSelectedRows = new Set(prevSelectedRows);
+      if (newSelectedRows.has(id)) {
+        newSelectedRows.delete(id);
+      } else {
+        newSelectedRows.add(id);
+      }
+      return newSelectedRows;
+    });
+  };
+
+  const handleChangePage = (event: unknown, newPage: number) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axiosInstance.get('/leads');
-        console.log(response.data);
-  
-        // Проверяем, что данные - это массив и извлекаем первый элемент
+        const response = await axiosInstance.get(`/leads?page=${page + 1}&per_page=15`);
         const [leads, meta] = response.data;
         setData(Array.isArray(leads) ? leads : []);
+        setCount(meta || 0);
         setStatus(meta.status || null);
       } catch (error) {
         if (error instanceof AxiosError && error.response?.status === 403) {
@@ -91,10 +111,9 @@ const Leads: React.FC = () => {
         setIsLoading(false);
       }
     };
-  
+
     fetchData();
-  }, [setShowSlider]);
-  
+  }, [setShowSlider, page, rowsPerPage]);
 
   if (isLoading) {
     return <div>Loading...</div>;
@@ -160,7 +179,7 @@ const Leads: React.FC = () => {
             </Grid>
             <Grid item xs={12} md={10} sx={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
               <Typography variant="h4" component="h1" sx={leadsStyles.title}>
-                Leads
+                Leads ({count_leads})
               </Typography>
               <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', padding: 2 }}>
                 {status === 'PIXEL_INSTALLATION_NEEDED' ? (
@@ -187,12 +206,26 @@ const Leads: React.FC = () => {
                     </Typography>
                   </Box>
                 ) : (
-                  <Grid container spacing={2} sx={{ flex: 1 }}>
+                  <Grid container spacing={1} sx={{ flex: 1 }}>
                     <Grid item xs={12}>
                       <TableContainer component={Paper}>
                         <Table sx={{ minWidth: 850 }} aria-label="leads table">
                           <TableHead>
                             <TableRow>
+                              <TableCell padding="checkbox">
+                                <Checkbox
+                                  color="primary"
+                                  indeterminate={selectedRows.size > 0 && selectedRows.size < data.length}
+                                  checked={data.length > 0 && selectedRows.size === data.length}
+                                  onChange={() => {
+                                    if (selectedRows.size === data.length) {
+                                      setSelectedRows(new Set());
+                                    } else {
+                                      setSelectedRows(new Set(data.map((row) => row.id)));
+                                    }
+                                  }}
+                                />
+                              </TableCell>
                               <TableCell>Name</TableCell>
                               <TableCell>Email</TableCell>
                               <TableCell>Phone number</TableCell>
@@ -204,22 +237,39 @@ const Leads: React.FC = () => {
                             </TableRow>
                           </TableHead>
                           <TableBody>
-                            {data.map((row, index) => (
-                              <TableRow key={index}>
-                                <TableCell>{row.first_name}</TableCell>
-                                <TableCell>{row.business_email || 'N/A'}</TableCell> 
+                            {data.map((row) => (
+                              <TableRow
+                                key={row.id}
+                                selected={selectedRows.has(row.id)}
+                                onClick={() => handleSelectRow(row.id)}
+                              >
+                                <TableCell padding="checkbox">
+                                  <Checkbox
+                                    color="primary"
+                                    checked={selectedRows.has(row.id)}
+                                  />
+                                </TableCell>
+                                <TableCell>{row.first_name} {row.last_name}</TableCell>
+                                <TableCell>{row.business_email || 'N/A'}</TableCell>
                                 <TableCell>{row.mobile_phone}</TableCell>
-                                <TableCell>{row.visitedDate || 'N/A'}</TableCell> 
-                                <TableCell>{row.visitedTime || 'N/A'}</TableCell> 
+                                <TableCell>{row.visitedDate || 'N/A'}</TableCell>
+                                <TableCell>{row.visitedTime || 'N/A'}</TableCell>
                                 <TableCell>{row.leadFunnel || 'N/A'}</TableCell>
-                                <TableCell>{row.recurringVisits || 'N/A'}</TableCell> 
+                                <TableCell>{row.recurringVisits || 'N/A'}</TableCell>
                                 <TableCell>{row.status || 'N/A'}</TableCell>
                               </TableRow>
                             ))}
                           </TableBody>
-
                         </Table>
                       </TableContainer>
+                      {/* <TablePagination
+                        component="div"
+                        count={2}
+                        page={page}
+                        onPageChange={handleChangePage}
+                        rowsPerPage={rowsPerPage}
+                        onRowsPerPageChange={handleChangeRowsPerPage}
+                      /> */}
                     </Grid>
                   </Grid>
                 )}
