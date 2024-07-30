@@ -44,21 +44,11 @@ class PixelInstallationService:
                 pixelScript.src = pixelUrl;
                 pixelContainer.appendChild(pixelScript);
                 if (location.href.includes("vge=true")) {{
-                    fetch('{os.getenv('API_SITE_HOST_URL')}/install-pixel/pixel_installed', {{
-                        method: 'POST',
-                        headers: {{
-                            'Content-Type': 'application/json'
-                        }},
-                        body: JSON.stringify({{
-                            'client_id': clientId
-                        }})
-                    }});
-
                     function showPopup() {{
                         const popup = document.createElement("div");
                         popup.classList.add("popup");
                         popup.style.position = "fixed";
-                        popup.style.top = "7rem";
+                        popup.style.top = "1rem";
                         popup.style.right = "1rem";
                         popup.style.backgroundColor = "#fff";
                         popup.style.color = "#4d505a";
@@ -68,6 +58,8 @@ class PixelInstallationService:
                         popup.style.height = "auto";
                         popup.style.border = "1px solid #ccc";
                         popup.style.width = "400px";
+                        popup.style.z-index: 999 !important;
+                        popup.style.padding: 1rem;
                         popup.innerHTML = `
                             <div style="text-align:center;padding-bottom:24px;">
                                 <img src="https://dev.maximiz.ai/logo.svg" style="height:36px;width:auto;">
