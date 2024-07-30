@@ -17,7 +17,7 @@ from persistence.plans_persistence import PlansPersistence
 from schemas.auth_token import Token
 from services.admin_customers import AdminCustomersService
 from services.company_info import CompanyInfoService
-from services.dashboard_service import DashboardService
+from services.dashboard import DashboardService
 from services.leads import LeadsService
 from services.payments import PaymentsService
 from services.payments_plans import PaymentsPlans

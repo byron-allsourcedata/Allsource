@@ -1,8 +1,13 @@
 from fastapi import APIRouter, Depends
+
+from enums import PixelStatus
 from schemas.pixel_installation import PixelInstallationRequest
+from schemas.users import PixelFormResponse
 from services.pixel_installation import PixelInstallationService
 from dependencies import get_pixel_installation_service, get_users_auth_service
-from services.users_auth import UsersAuth
+from services.admin_customers import AdminCustomersService
+from dependencies import get_admin_customers_service
+from config.rmq_connection import publish_rabbitmq_message, RabbitMQConnection
 
 router = APIRouter()
 
@@ -13,11 +18,28 @@ async def manual(manual: PixelInstallationService = Depends(get_pixel_installati
     return result_status
 
 
-@router.post("/pixel_installed")
+@router.post("/check_pixel_installed", response_model=PixelFormResponse)
 async def manual(pixel_installation_request: PixelInstallationRequest,
-                 users_service: UsersAuth = Depends(get_users_auth_service)):
-    result_status = users_service.set_pixel_installed(pixel_installation_request)
-    return result_status
+                 pixel_installation_service: PixelInstallationService = Depends(get_pixel_installation_service)):
+    user_id = pixel_installation_service.check_pixel_installed(pixel_installation_request.url)
+    if user_id:
+        queue_name = f'sse_events_{str(user_id)}'
+
+        rabbitmq_connection = RabbitMQConnection()
+        connection = await rabbitmq_connection.connect()
+
+        try:
+            await publish_rabbitmq_message(
+                connection=connection,
+                queue_name=queue_name,
+                message_body={'status': PixelStatus.PIXEL_CODE_INSTALLED}
+            )
+        except:
+            await rabbitmq_connection.close()
+        finally:
+            await rabbitmq_connection.close()
+            return PixelFormResponse(status=PixelStatus.PIXEL_CODE_INSTALLED)
+    return PixelFormResponse(status=PixelStatus.PARSE_FAILED)
 
 
 @router.get("/google-tag")
