@@ -14,7 +14,8 @@ class Base:
         f"http://{domain}",
         f"https://{domain}",
         'https://www.officialwatches.com/',
-        'https://www.maximiz.ai/'
+        'https://www.maximiz.ai/',
+        'https://www.lolly.com/'
     ]
 
 
