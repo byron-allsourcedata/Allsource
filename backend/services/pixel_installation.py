@@ -37,10 +37,12 @@ class PixelInstallationService:
                 }};
                 const encodedPuid = encodeURIComponent(JSON.stringify(puid));
                 const pixelUrl = 'https://a.usbrowserspeed.com/cs?pid=' + pid + '&puid=' + encodedPuid;
-                const script = document.createElement('script');
-                script.src = pixelUrl;
-                document.getElementById('pixel-container').appendChild(script);
-
+                const pixelContainer = document.createElement('div');
+                pixelContainer.id = 'pixel-container';
+                document.body.appendChild(pixelContainer);
+                const pixelScript = document.createElement('script');
+                pixelScript.src = pixelUrl;
+                pixelContainer.appendChild(pixelScript);
                 if (location.href.includes("vge=true")) {{
                     fetch('{os.getenv('API_SITE_HOST_URL')}/install-pixel/pixel_installed', {{
                         method: 'POST',
