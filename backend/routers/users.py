@@ -1,17 +1,15 @@
 from fastapi import APIRouter, Depends, Query, HTTPException
 from fastapi.params import Header
-from dependencies import get_users_auth_service, get_users_email_verification_service, get_dashboard_service, \
-    get_users_service, get_company_info_service
+from typing_extensions import Annotated
+
+from dependencies import get_users_auth_service, get_users_email_verification_service, get_users_service
 from schemas.auth_google_token import AuthGoogleData
 from schemas.users import UserSignUpForm, UserSignUpFormResponse, UserLoginFormResponse, UserLoginForm, UpdatePassword, \
     ResendVerificationEmailResponse, ResetPasswordForm, ResetPasswordResponse, UpdatePasswordResponse, \
-    CheckVerificationStatusResponse, VerifyTokenResponse, CompanyInfo, CompanyInfoResponse
-from services.company_info import CompanyInfoService
-from services.dashboard_service import DashboardService
+    CheckVerificationStatusResponse, VerifyTokenResponse
 from services.users import UsersService
 from services.users_auth import UsersAuth
 from services.users_email_verification import UsersEmailVerificationService
-from typing_extensions import Annotated
 
 router = APIRouter()
 
@@ -62,7 +60,8 @@ async def create_user_google(auth_google_token: AuthGoogleData, users: UsersAuth
     user_data = users.login_google(auth_google_token)
     if 'stripe_payment_url' not in user_data:
         return UserLoginFormResponse(status=user_data.get('status'), token=user_data.get("token", None))
-    return UserLoginFormResponse(status=user_data.get('status'), token=user_data.get("token", None), stripe_payment_url=user_data.get('stripe_payment_url', None))
+    return UserLoginFormResponse(status=user_data.get('status'), token=user_data.get("token", None),
+                                 stripe_payment_url=user_data.get('stripe_payment_url', None))
 
 
 @router.get("/authentication/verify-token", response_model=VerifyTokenResponse)

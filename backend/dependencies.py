@@ -16,7 +16,7 @@ from persistence.plans_persistence import PlansPersistence
 from schemas.auth_token import Token
 from services.admin_customers import AdminCustomersService
 from services.company_info import CompanyInfoService
-from services.dashboard_service import DashboardService
+from services.dashboard import DashboardService
 from services.payments import PaymentsService
 from services.payments_plans import PaymentsPlans
 from persistence.sendgrid_persistence import SendgridPersistence
@@ -135,10 +135,12 @@ def check_user_authorization(Authorization: Annotated[str, Header()],
         )
     return user
 
+
 def check_user_authorization_without_pixel(Authorization: Annotated[str, Header()],
-                             user_persistence_service: UserPersistence = Depends(
-                                 get_user_persistence_service), subscription_service: SubscriptionService = Depends(
-            get_subscription_service)) -> Token:
+                                           user_persistence_service: UserPersistence = Depends(
+                                               get_user_persistence_service),
+                                           subscription_service: SubscriptionService = Depends(
+                                               get_subscription_service)) -> Token:
     user = check_user_authentication(Authorization, user_persistence_service)
     auth_status = get_user_authorization_status(user, subscription_service)
     if auth_status == UserAuthorizationStatus.PAYMENT_NEEDED:
@@ -153,6 +155,7 @@ def check_user_authorization_without_pixel(Authorization: Annotated[str, Header(
             detail={'status': auth_status.value}
         )
     return user
+
 
 def check_user_authentication(Authorization: Annotated[str, Header()],
                               user_persistence_service: UserPersistence = Depends(
@@ -200,7 +203,8 @@ def get_dashboard_service(user: User = Depends(check_user_authorization)):
     return DashboardService(user=user)
 
 
-def get_pixel_installation_service(db: Session = Depends(get_db), user: User = Depends(check_user_authorization_without_pixel)):
+def get_pixel_installation_service(db: Session = Depends(get_db),
+                                   user: User = Depends(check_user_authorization_without_pixel)):
     return PixelInstallationService(db=db, user=user)
 
 
