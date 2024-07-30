@@ -47,7 +47,9 @@ class PixelInstallationService:
                 pixelScript.src = pixelUrl;
                 pixelContainer.appendChild(pixelScript);
                 if (location.href.includes("vge=true")) {{
-                    function showPopup() {{
+                    showPopup();
+                }}
+                function showPopup() {{
                         const popup = document.createElement("div");
                         popup.classList.add("popup");
                         popup.style.position = "fixed";
@@ -83,9 +85,7 @@ class PixelInstallationService:
                         popup.addEventListener("click", () => {{
                             popup.remove();
                         }});
-                    }}  
-                    document.addEventListener("DOMContentLoaded", showPopup);
-                }}
+                    }}
             </script>
         '''
         return script
