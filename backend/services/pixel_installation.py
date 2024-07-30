@@ -58,8 +58,8 @@ class PixelInstallationService:
                         popup.style.height = "auto";
                         popup.style.border = "1px solid #ccc";
                         popup.style.width = "400px";
-                        popup.style.z-index: 999 !important;
-                        popup.style.padding: 1rem;
+                        popup.style.zIndex = "999";
+                        popup.style.padding = "1rem";
                         popup.innerHTML = `
                             <div style="text-align:center;padding-bottom:24px;">
                                 <img src="https://dev.maximiz.ai/logo.svg" style="height:36px;width:auto;">
