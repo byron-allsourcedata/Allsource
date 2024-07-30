@@ -16,7 +16,7 @@ import Image from 'next/image';
 
 const sidebarStyles = {
     container: {
-        width: '100%',
+        width: '80%',
         flexShrink: 0,
         fontFamily: 'Nunito',
         fontSize: '14px',

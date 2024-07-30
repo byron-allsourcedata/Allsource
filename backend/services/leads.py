@@ -7,5 +7,5 @@ class LeadsService:
         self.leads_persistence_service = leads_persistence_service
         self.user = user
 
-    def get_leads(self, page):
-        return self.leads_persistence_service.get_user_leads(self.user.id, page=page)
+    def get_leads(self, page, per_page):
+        return self.leads_persistence_service.get_user_leads(self.user.id, page=page, per_page=per_page)

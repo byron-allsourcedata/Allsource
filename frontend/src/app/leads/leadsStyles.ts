@@ -23,6 +23,10 @@ export const leadsStyles: { [key: string]: SxProps<Theme> } = {
       marginTop: '3.75em',
     },
   },
+  table_array: {
+    fontFamily: 'Nunito', fontSize:'14px',borderRight: '1px solid rgba(235, 235, 235, 1)' 
+  }
+  ,
   headers: {
     display: 'flex',
     marginTop: '10px',

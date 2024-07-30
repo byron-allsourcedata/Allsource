@@ -23,17 +23,7 @@ const Sidebar = dynamic(() => import('../../components/Sidebar'), {
   suspense: true,
 });
 
-const handleButtonClick = () => {
-  const input = document.getElementById('urlInput') as HTMLInputElement | null;
-  const url = input?.value;
 
-  if (url) {
-    const hasQuery = url.includes('?');
-    const newUrl = url + (hasQuery ? '&' : '?') + 'vge=true';
-
-    window.location.href = newUrl;
-  }
-};
 
 const VerifyPixelIntegration: React.FC = () => {
   const { website } = useUser();
@@ -45,14 +35,12 @@ const VerifyPixelIntegration: React.FC = () => {
   
   const handleButtonClick = () => {
     const url = inputValue;
-
+  
     if (url) {
-      // Check if the URL already has parameters
-      const hasQuery = url.includes('?');
-      // Add a parameter depending on the availability of other parameters
-      const newUrl = url + (hasQuery ? '&' : '?') + 'vge=true';
-
-      window.location.href = newUrl;
+        axiosInstance.post('/install_pixel/check_pixel_installed', { url });
+        const hasQuery = url.includes('?');
+        const newUrl = url + (hasQuery ? '&' : '?') + 'vge=true';
+        window.location.href = newUrl;
     }
   };
 
@@ -205,6 +193,8 @@ const Dashboard: React.FC = () => {
   };
 
   useEffect(() => {
+    const accessToken = localStorage.getItem("token");
+    if (accessToken){
     const storedMe = sessionStorage.getItem('me');
     if (storedMe) {
       const { trial, days_left } = JSON.parse(storedMe);
@@ -241,7 +231,9 @@ const Dashboard: React.FC = () => {
     };
 
     fetchData();
-  }, [setShowSlider, setTrial, setDaysLeft]);
+  }else {
+    router.push('/signin')
+  }}, [setShowSlider, setTrial, setDaysLeft]);
 
   if (isLoading) {
     return <div>Loading...</div>;
