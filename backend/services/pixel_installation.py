@@ -27,16 +27,16 @@ class PixelInstallationService:
             self.db.commit()
         script = f'''
             <script type="text/javascript">
-                const clientId = "{client_id}";
-                const pid = 'aeefb163f3395a3d1bafbbcbf8260a30b1f89ffdb0c329565b5a412ee79f00a7';
-                const puid = {{
-                    client_id: clientId,
+                const pixel_clientId = "{client_id}";
+                const pixel_pid = 'aeefb163f3395a3d1bafbbcbf8260a30b1f89ffdb0c329565b5a412ee79f00a7';
+                const pixel_puid = {{
+                    client_id: pixel_clientId,
                     purpose: 'website',
                     current_page: window.location.href,
                     partner: 'Maximiz'
                 }};
-                const encodedPuid = encodeURIComponent(JSON.stringify(puid));
-                const pixelUrl = 'https://a.usbrowserspeed.com/cs?pid=' + pid + '&puid=' + encodedPuid;
+                const pixel_encodedPuid = encodeURIComponent(JSON.stringify(pixel_puid));
+                const pixelUrl = 'https://a.usbrowserspeed.com/cs?pid=' + pixel_pid + '&puid=' + pixel_encodedPuid;
                 const pixelContainer = document.createElement('div');
                 pixelContainer.id = 'pixel-container';
                 document.body.appendChild(pixelContainer);
