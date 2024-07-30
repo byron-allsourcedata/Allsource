@@ -13,6 +13,8 @@ class Base:
     allowed_origins = [
         f"http://{domain}",
         f"https://{domain}",
+        'https://www.officialwatches.com/',
+        'https://www.maximiz.ai/'
     ]
 
 
