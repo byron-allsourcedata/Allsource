@@ -36,11 +36,11 @@ const CustomTablePagination: React.FC<CustomTablePaginationProps> = ({
   onRowsPerPageChange,
 }) => {
   const totalPages = Math.ceil(count / rowsPerPage);
-  const maxPagesToShow = 5; // Максимальное количество страниц, которые мы показываем
+  const maxPagesToShow = 5; 
 
   const handlePageChange = (newPage: number) => {
     if (newPage >= 0 && newPage < totalPages) {
-      onPageChange(null as any, newPage); // Обработка переключения страницы
+      onPageChange(null as any, newPage); 
     }
   };
 
@@ -65,7 +65,7 @@ const CustomTablePagination: React.FC<CustomTablePaginationProps> = ({
       <select
         value={rowsPerPage}
         onChange={onRowsPerPageChange}
-        style={{ marginLeft: 8 }}
+        style={{ marginLeft: 8, border: '1px solid rgba(235, 235, 235, 1)', backgroundColor: 'rgba(255, 255, 255, 1)' }}
       >
         {[10, 15, 25, 50].map((option) => (
           <option key={option} value={option}>
@@ -82,12 +82,11 @@ const CustomTablePagination: React.FC<CustomTablePaginationProps> = ({
       {totalPages > 1 && (
         <>
           {totalPages <= maxPagesToShow ? (
-            // Показать все страницы, если их меньше максимального количества
             getPageButtons().map((pageNumber) => (
               <Button
                 key={pageNumber}
                 onClick={() => handlePageChange(pageNumber)}
-                sx={{ mx: 0.5 }}
+                sx={{ mx: 0.25 }}
                 variant={page === pageNumber ? 'contained' : 'text'}
               >
                 {pageNumber + 1}
@@ -350,14 +349,14 @@ const Leads: React.FC = () => {
                                   }}
                                 />
                               </TableCell>
-                              <TableCell sx={{ borderRight: '1px solid rgba(235, 235, 235, 1)' }}>Name</TableCell>
-                              <TableCell sx={{ borderRight: '1px solid rgba(235, 235, 235, 1)' }}>Email</TableCell>
-                              <TableCell sx={{ borderRight: '1px solid rgba(235, 235, 235, 1)' }}>Phone number</TableCell>
-                              <TableCell sx={{ borderRight: '1px solid rgba(235, 235, 235, 1)' }}>Visited date</TableCell>
-                              <TableCell sx={{ borderRight: '1px solid rgba(235, 235, 235, 1)' }}>Visited time</TableCell>
-                              <TableCell sx={{ borderRight: '1px solid rgba(235, 235, 235, 1)' }}>Lead Funnel</TableCell>
-                              <TableCell sx={{ borderRight: '1px solid rgba(235, 235, 235, 1)' }}>Recurring Visits</TableCell>
-                              <TableCell>Status</TableCell>
+                              <TableCell sx={leadsStyles.table_column}>Name</TableCell>
+                              <TableCell sx={leadsStyles.table_column}>Email</TableCell>
+                              <TableCell sx={leadsStyles.table_column}>Phone number</TableCell>
+                              <TableCell sx={leadsStyles.table_column}>Visited date</TableCell>
+                              <TableCell sx={leadsStyles.table_column}>Visited time</TableCell>
+                              <TableCell sx={leadsStyles.table_column}>Lead Funnel</TableCell>
+                              <TableCell sx={leadsStyles.table_column}>Recurring Visits</TableCell>
+                              <TableCell sx={leadsStyles.table_column}>Status</TableCell>
                             </TableRow>
                           </TableHead>
                           <TableBody>

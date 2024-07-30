@@ -24,7 +24,14 @@ export const leadsStyles: { [key: string]: SxProps<Theme> } = {
     },
   },
   table_array: {
-    fontFamily: 'Nunito', fontSize:'14px',borderRight: '1px solid rgba(235, 235, 235, 1)' 
+    fontFamily: 'Nunito', fontSize: '14px', borderRight: '1px solid rgba(235, 235, 235, 1)', fontWeight: '400',
+    lineHeight: '19.6px',
+    textAlign: 'left',
+  },
+  table_column: {
+    fontFamily: 'Nunito', fontSize: '14px', borderRight: '1px solid rgba(235, 235, 235, 1)', fontWeight: '700',
+    lineHeight: '19.6px',
+    textAlign: 'left',
   }
   ,
   headers: {
