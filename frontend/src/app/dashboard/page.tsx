@@ -40,7 +40,7 @@ const VerifyPixelIntegration: React.FC = () => {
         axiosInstance.post('/install-pixel/check-pixel-installed', { url });
         const hasQuery = url.includes('?');
         const newUrl = url + (hasQuery ? '&' : '?') + 'vge=true';
-        window.location.href = newUrl;
+        window.open(newUrl, '_blank');
     }
   };
 
