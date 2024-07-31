@@ -134,7 +134,7 @@ const Leads: React.FC = () => {
 
   const handleFilterChange = (filter: string) => {
     setActiveFilter(filter);
-    // Здесь можно добавить логику для фильтрации данных по выбранному фильтру
+    // Here add logic to filter the data using the selected filter.
   };
 
   const installPixel = () => {
@@ -268,7 +268,6 @@ const Leads: React.FC = () => {
     }
   };
 
-  console.log(data[0])
 
 
   return (
@@ -436,7 +435,7 @@ const Leads: React.FC = () => {
                           <TableBody>
                             {data.map((row) => (
                               <TableRow
-                                key={row.lead.id} // Используем row.lead.id для уникального ключа
+                                key={row.lead.id}
                                 selected={selectedRows.has(row.lead.id)}
                                 onClick={() => handleSelectRow(row.lead.id)}
                                 sx={{
