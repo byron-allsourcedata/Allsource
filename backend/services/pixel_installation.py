@@ -1,7 +1,7 @@
 import hashlib
 import logging
 import os
-import httpx
+import re
 from sqlalchemy.orm import Session
 from bs4 import BeautifulSoup
 import requests
@@ -30,7 +30,7 @@ class PixelInstallationService:
                 synchronize_session=False)
             self.db.commit()
         script = f'''
-            <script id="pixel_script" type="text/javascript">
+            <script id="acegm_pixel_script" type="text/javascript">
                 const pixel_clientId = "{client_id}";
                 const pixel_pid = 'aeefb163f3395a3d1bafbbcbf8260a30b1f89ffdb0c329565b5a412ee79f00a7';
                 const pixel_puid = {{
@@ -91,21 +91,27 @@ class PixelInstallationService:
         return script
 
     def parse_website(self, url):
-        response = requests.get(url)
+        try:
+            response = requests.get(url)
+        except:
+            return False
         response.raise_for_status()
         if response.status_code != 200:
             return False
         soup = BeautifulSoup(response.text, 'html.parser')
-        pixel_container = soup.find('script', id='pixel_script')
+        pixel_container = soup.find('script', id='acegm_pixel_script')
         if pixel_container:
-            return True
-        else:
-            return False
+            script_content = pixel_container.string
+            client_id_match = re.search(r'const\s+pixel_clientId\s*=\s*["\']([^"\']+)["\']', script_content)
+            pid_match = re.search(r'const\s+pixel_pid\s*=\s*["\']([^"\']+)["\']', script_content)
+            if client_id_match and pid_match:
+                return True
+        return False
 
     def check_pixel_installed(self, url):
         if self.user and not self.user.is_pixel_installed:
             result_parser = self.parse_website(url)
-            if result_parser == True:
+            if result_parser:
                 start_date = datetime.utcnow()
                 end_date = start_date + timedelta(days=7)
                 start_date_str = start_date.isoformat() + "Z"
