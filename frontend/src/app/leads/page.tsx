@@ -36,11 +36,11 @@ const CustomTablePagination: React.FC<CustomTablePaginationProps> = ({
   onRowsPerPageChange,
 }) => {
   const totalPages = Math.ceil(count / rowsPerPage);
-  const maxPagesToShow = 5; 
+  const maxPagesToShow = 3;
 
   const handlePageChange = (newPage: number) => {
     if (newPage >= 0 && newPage < totalPages) {
-      onPageChange(null as any, newPage); 
+      onPageChange(null as any, newPage);
     }
   };
 
@@ -81,39 +81,20 @@ const CustomTablePagination: React.FC<CustomTablePaginationProps> = ({
       </Button>
       {totalPages > 1 && (
         <>
-          {totalPages <= maxPagesToShow ? (
-            getPageButtons().map((pageNumber) => (
-              <Button
-                key={pageNumber}
-                onClick={() => handlePageChange(pageNumber)}
-                variant={page === pageNumber ? 'contained' : 'text'}
-                sx={{
-                  backgroundColor: page === pageNumber ? 'transparent' : 'rgba(255, 255, 255, 1)', // Убираем цвет фона для активной страницы
-                  border: page === pageNumber ? '2px solid rgba(0, 0, 0, 0.5)' : '1px solid rgba(235, 235, 235, 1)', // Добавляем обводку для активной страницы
-                  color: page === pageNumber ? 'rgba(0, 0, 0, 0.8)' : 'inherit', // Меняем цвет текста для активной страницы
-                }}
-              >
-                {pageNumber + 1}
-              </Button>
-            ))
-          ) : (
-            <>
-              {page > 0 && <Button onClick={() => handlePageChange(0)}>1</Button>}
-              {page > 1 && <Typography variant="body2" sx={{ mx: 1 }}>...</Typography>}
-              {getPageButtons().map((pageNumber) => (
-                <Button
-                  key={pageNumber}
-                  onClick={() => handlePageChange(pageNumber)}
-                  sx={{ mx: 0.5 }}
-                  variant={page === pageNumber ? 'contained' : 'text'}
-                >
-                  {pageNumber + 1}
-                </Button>
-              ))}
-              {totalPages - page > 2 && <Typography variant="body2" sx={{ mx: 1 }}>...</Typography>}
-              {page < totalPages - 1 && <Button onClick={() => handlePageChange(totalPages - 1)}>{totalPages}</Button>}
-            </>
-          )}
+          {page > 1 && <Button onClick={() => handlePageChange(0)} sx={leadsStyles.page_number}>1</Button>}
+          {page > 2 && <Typography variant="body2" sx={{ mx: 1 }}>...</Typography>}
+          {getPageButtons().map((pageNumber) => (
+            <Button
+              key={pageNumber}
+              onClick={() => handlePageChange(pageNumber)}
+              sx={{ mx: 0.5, ...leadsStyles.page_number }}
+              variant={page === pageNumber ? 'contained' : 'text'}
+            >
+              {pageNumber + 1}
+            </Button>
+          ))}
+          {totalPages - page > 3 && <Typography variant="body2" sx={{ mx: 1 }}>...</Typography>}
+          {page < totalPages - 1 && <Button onClick={() => handlePageChange(totalPages - 1)} sx={leadsStyles.page_number}>{totalPages}</Button>}
         </>
       )}
       <Button
@@ -167,14 +148,6 @@ const Leads: React.FC = () => {
     router.push('/settings');
   };
 
-  const handleDropdownClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-    setDropdownEl(event.currentTarget);
-  };
-
-  const handleDropdownClose = () => {
-    setDropdownEl(null);
-  };
-
   const handleSelectRow = (id: number) => {
     setSelectedRows((prevSelectedRows) => {
       const newSelectedRows = new Set(prevSelectedRows);
@@ -187,13 +160,23 @@ const Leads: React.FC = () => {
     });
   };
 
+
   const handleChangePage = (event: unknown, newPage: number) => {
     setPage(newPage);
   };
 
+  const handleSelectAllClick = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.checked) {
+      const newSelecteds = data.map((row) => row.lead.id);
+      setSelectedRows(new Set(newSelecteds));
+      return;
+    }
+    setSelectedRows(new Set());
+  };
+  
   const handleChangeRowsPerPage = (event: React.ChangeEvent<{ value: unknown }>) => {
     setRowsPerPage(parseInt(event.target.value as string, 10));
-    setPage(0); // Reset page to 0 when rowsPerPage changes
+    setPage(0);
   };
 
   useEffect(() => {
@@ -202,7 +185,7 @@ const Leads: React.FC = () => {
       const fetchData = async () => {
         try {
           const response = await axiosInstance.get(`/leads?page=${page + 1}&per_page=${rowsPerPage}`);
-          const [leads, count, max_page ] = response.data;
+          const [leads, count, max_page] = response.data;
           setData(Array.isArray(leads) ? leads : []);
           setCount(count || 0);
           setMaxpage(max_page || 0);
@@ -248,6 +231,39 @@ const Leads: React.FC = () => {
     textAlign: 'center',
     flex: 1,
   };
+
+  const getStatusStyle = (funnel: any) => {
+    switch (funnel) {
+      case 'Visitor':
+        return {
+          background: 'rgba(235, 243, 254, 1)',
+          color: 'rgba(20, 110, 246, 1)',
+        };
+      case 'Converted':
+        return {
+          background: 'rgba(244, 252, 238, 1)',
+          color: 'rgba(110, 193, 37, 1)',
+        };
+      case 'Added to cart':
+        return {
+          background: 'rgba(241, 241, 249, 1)',
+          color: 'rgba(80, 82, 178, 1)',
+        };
+      case 'Cart abandoned':
+        return {
+          background: 'rgba(254, 238, 236, 1)',
+          color: 'rgba(244, 87, 69, 1)',
+        };
+      default:
+        return {
+          background: 'transparent',
+          color: 'inherit',
+        };
+    }
+  };
+
+  console.log(data[0])
+
 
   return (
     <>
@@ -341,16 +357,10 @@ const Leads: React.FC = () => {
                             <TableRow>
                               <TableCell padding="checkbox" sx={{ borderRight: '1px solid rgba(235, 235, 235, 1)' }}>
                                 <Checkbox
-                                  color="primary"
                                   indeterminate={selectedRows.size > 0 && selectedRows.size < data.length}
                                   checked={data.length > 0 && selectedRows.size === data.length}
-                                  onChange={() => {
-                                    if (selectedRows.size === data.length) {
-                                      setSelectedRows(new Set());
-                                    } else {
-                                      setSelectedRows(new Set(data.map((row) => row.id)));
-                                    }
-                                  }}
+                                  onChange={handleSelectAllClick}
+                                  color="primary"
                                 />
                               </TableCell>
                               <TableCell sx={leadsStyles.table_column}>Name</TableCell>
@@ -359,8 +369,14 @@ const Leads: React.FC = () => {
                               <TableCell sx={leadsStyles.table_column}>Visited date</TableCell>
                               <TableCell sx={leadsStyles.table_column}>Visited time</TableCell>
                               <TableCell sx={leadsStyles.table_column}>Lead Funnel</TableCell>
-                              <TableCell sx={leadsStyles.table_column}>Recurring Visits</TableCell>
                               <TableCell sx={leadsStyles.table_column}>Status</TableCell>
+                              <TableCell sx={leadsStyles.table_column}>Time Spent</TableCell>
+                              <TableCell sx={leadsStyles.table_column}>No of Visits</TableCell>
+                              <TableCell sx={leadsStyles.table_column}>No of Page Visits</TableCell>
+                              <TableCell sx={leadsStyles.table_column}>Age</TableCell>
+                              <TableCell sx={leadsStyles.table_column}>Gender</TableCell>
+                              <TableCell sx={leadsStyles.table_column}>State</TableCell>
+                              <TableCell sx={leadsStyles.table_column}>City</TableCell>
                             </TableRow>
                           </TableHead>
                           <TableBody>
@@ -372,30 +388,41 @@ const Leads: React.FC = () => {
                               >
                                 <TableCell padding="checkbox" sx={{ borderRight: '1px solid rgba(235, 235, 235, 1)' }}>
                                   <Checkbox
+                                    checked={selectedRows.has(row.lead.id)}
+                                    onChange={() => handleSelectRow(row.lead.id)}
                                     color="primary"
-                                    checked={selectedRows.has(row.id)}
                                   />
                                 </TableCell>
-                                <TableCell sx={leadsStyles.table_array}>{row.first_name} {row.last_name}</TableCell>
-                                <TableCell sx={leadsStyles.table_array}>{row.business_email || 'N/A'}</TableCell>
-                                <TableCell sx={leadsStyles.table_array}>{row.mobile_phone}</TableCell>
-                                <TableCell sx={leadsStyles.table_array}>{row.visitedDate || 'N/A'}</TableCell>
-                                <TableCell sx={leadsStyles.table_array}>{row.visitedTime || 'N/A'}</TableCell>
-                                <TableCell sx={leadsStyles.table_array}>{row.leadFunnel || 'N/A'}</TableCell>
-                                <TableCell sx={leadsStyles.table_array}>{row.recurringVisits || 'N/A'}</TableCell>
-                                <TableCell>{row.status || 'N/A'}</TableCell>
+                                <TableCell sx={leadsStyles.table_array}>{row.lead.first_name} {row.lead.last_name}</TableCell>
+                                <TableCell sx={leadsStyles.table_array}>{row.lead.business_email || 'N/A'}</TableCell>
+                                <TableCell sx={leadsStyles.table_array_phone}>{row.lead.mobile_phone || 'N/A'}</TableCell>
+                                <TableCell sx={leadsStyles.table_array}>{row.last_visited_date || 'N/A'}</TableCell>
+                                <TableCell sx={leadsStyles.table_array}>{row.last_visited_time || 'N/A'}</TableCell>
+                                <TableCell sx={leadsStyles.table_array_status} style={getStatusStyle(row.funnel)}>
+                                  {row.funnel || 'N/A'}
+                                </TableCell>
+                                <TableCell sx={leadsStyles.table_array}>{row.status || 'N/A'}</TableCell>
+                                <TableCell sx={leadsStyles.table_array}>{row.lead.time_spent || 'N/A'}</TableCell>
+                                <TableCell sx={leadsStyles.table_array}>{row.lead.no_of_visits || 'N/A'}</TableCell>
+                                <TableCell sx={leadsStyles.table_array}>{row.lead.no_of_page_visits || 'N/A'}</TableCell>
+                                <TableCell sx={leadsStyles.table_array}>
+                                  {row.lead.age_min && row.lead.age_max ? `${row.lead.age_min} - ${row.lead.age_max}` : 'N/A'}
+                                </TableCell>
+                                <TableCell sx={leadsStyles.table_array}>{row.lead.gender || 'N/A'}</TableCell>
+                                <TableCell sx={leadsStyles.table_array}>{row.state || 'N/A'}</TableCell>
+                                <TableCell sx={leadsStyles.table_array}>{row.city || 'N/A'}</TableCell>
                               </TableRow>
                             ))}
                           </TableBody>
                         </Table>
                       </TableContainer>
-                            <CustomTablePagination
-                              count={count_leads ?? 0}
-                              page={page}
-                              rowsPerPage={rowsPerPage}
-                              onPageChange={handleChangePage}
-                              onRowsPerPageChange={handleChangeRowsPerPage}
-                            />
+                      <CustomTablePagination
+                        count={count_leads ?? 0}
+                        page={page}
+                        rowsPerPage={rowsPerPage}
+                        onPageChange={handleChangePage}
+                        onRowsPerPageChange={handleChangeRowsPerPage}
+                      />
                     </Grid>
                   </Grid>
                 )}

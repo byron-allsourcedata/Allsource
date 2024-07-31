@@ -33,11 +33,27 @@ export const leadsStyles: { [key: string]: SxProps<Theme> } = {
     fontFamily: 'Nunito', fontSize: '14px', borderRight: '1px solid rgba(235, 235, 235, 1)', fontWeight: '400',
     lineHeight: '19.6px',
     textAlign: 'left',
+    textWrap: 'nowrap'
+  },
+  table_array_status: {
+    fontFamily: 'Nunito', fontSize: '14px', border: '1px solid rgba(235, 235, 235, 1)', fontWeight: '400',
+    lineHeight: '19.6px',
+    textAlign: 'left',
+    textWrap: 'nowrap',
+    background: 'rgba(235, 243, 254, 1)',
+    color: 'rgba(20, 110, 246, 1)',
+  },
+  table_array_phone: {
+    fontFamily: 'Nunito', fontSize: '14px', borderRight: '1px solid rgba(235, 235, 235, 1)', fontWeight: '400',
+    lineHeight: '19.6px',
+    textAlign: 'left',
+    textWrap: 'wrap',
   },
   table_column: {
     fontFamily: 'Nunito', fontSize: '14px', borderRight: '1px solid rgba(235, 235, 235, 1)', fontWeight: '700',
     lineHeight: '19.6px',
     textAlign: 'left',
+    textWrap: 'nowrap'
   }
   ,
   headers: {
