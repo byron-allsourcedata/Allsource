@@ -37,7 +37,6 @@ const VerifyPixelIntegration: React.FC = () => {
     let url = inputValue.trim();
   
     if (url) {
-        // Проверяем, начинается ли URL с http:// или https://
         if (!/^https?:\/\//i.test(url)) {
             url = 'http://' + url;
         }

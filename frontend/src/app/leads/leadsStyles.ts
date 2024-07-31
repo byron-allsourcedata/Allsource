@@ -72,18 +72,26 @@ export const leadsStyles: { [key: string]: SxProps<Theme> } = {
     border: '1px solid rgba(184, 184, 184, 1)',
     borderRadius: '3.27px'
   },
+  subtitle: {
+    fontWeight: 'bold',
+    fontSize: '16px',
+    whiteSpace: 'nowrap',
+    textAlign: 'start',
+    marginTop: '1.5rem',
+    fontFamily: 'Nunito',
+  },
   logoContainer: {
     paddingLeft: '2.5em',
     paddingRight: '0.5em',
   },
   title: {
-    mt: 1,
     fontWeight: 'bold',
     fontSize: '18px',
     whiteSpace: 'nowrap',
     textAlign: 'start',
     padding: '1.5rem 0rem 0',
     fontFamily: 'Nunito',
+    mr: '1em'
   },
   formContainer: {
     display: 'grid',
