@@ -105,8 +105,7 @@ class PixelInstallationService:
             client_id_match = re.search(r'const\s+pixel_clientId\s*=\s*["\']([^"\']+)["\']', script_content)
             if client_id_match:
                 pixel_client_id = client_id_match.group(1)
-                hash_client_id = hashlib.sha256((str(self.user.id) + os.getenv('SECRET_SALT')).encode()).hexdigest()
-                if hash_client_id == pixel_client_id:
+                if self.user.data_provider_id == pixel_client_id:
                     return True
         return False
 
