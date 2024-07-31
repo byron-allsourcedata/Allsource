@@ -111,19 +111,21 @@ class PixelInstallationService:
         return False
 
     def check_pixel_installed(self, url):
-        if self.user and not self.user.is_pixel_installed:
-            result_parser = self.parse_website(url)
-            if result_parser:
-                start_date = datetime.utcnow()
-                end_date = start_date + timedelta(days=7)
-                start_date_str = start_date.isoformat() + "Z"
-                end_date_str = end_date.isoformat() + "Z"
-                self.db.query(UserSubscriptions).filter(UserSubscriptions.user_id == self.user.id).update(
-                    {UserSubscriptions.plan_start: start_date_str, UserSubscriptions.plan_end: end_date_str},
-                    synchronize_session=False
-                )
-                self.db.query(Users).filter(Users.id == self.user.id).update(
-                    {Users.is_pixel_installed: True},
-                    synchronize_session=False)
-                self.db.commit()
-                return self.user.id
+        result = {'success': False}
+        result_parser = self.parse_website(url)
+        if result_parser:
+            start_date = datetime.utcnow()
+            end_date = start_date + timedelta(days=7)
+            start_date_str = start_date.isoformat() + "Z"
+            end_date_str = end_date.isoformat() + "Z"
+            self.db.query(UserSubscriptions).filter(UserSubscriptions.user_id == self.user.id).update(
+                {UserSubscriptions.plan_start: start_date_str, UserSubscriptions.plan_end: end_date_str},
+                synchronize_session=False
+            )
+            self.db.query(Users).filter(Users.id == self.user.id).update(
+                {Users.is_pixel_installed: True},
+                synchronize_session=False)
+            self.db.commit()
+            result['success'] = True
+        result['user_id'] = self.user.id
+        return result
