@@ -34,15 +34,21 @@ const VerifyPixelIntegration: React.FC = () => {
   }, [website]);
   
   const handleButtonClick = () => {
-    const url = inputValue;
+    let url = inputValue.trim();
   
     if (url) {
-        axiosInstance.post('/install-pixel/check-pixel-installed', { url });
+        if (!/^https?:\/\//i.test(url)) {
+            url = 'http://' + url;
+        }
+        
+        axiosInstance.post('/install-pixel/check-pixel-installed', { url })
+
         const hasQuery = url.includes('?');
         const newUrl = url + (hasQuery ? '&' : '?') + 'vge=true';
         window.open(newUrl, '_blank');
     }
-  };
+};
+
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setInputValue(event.target.value);

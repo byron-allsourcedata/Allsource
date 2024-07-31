@@ -33,11 +33,27 @@ export const leadsStyles: { [key: string]: SxProps<Theme> } = {
     fontFamily: 'Nunito', fontSize: '14px', borderRight: '1px solid rgba(235, 235, 235, 1)', fontWeight: '400',
     lineHeight: '19.6px',
     textAlign: 'left',
+    textWrap: 'nowrap'
+  },
+  table_array_status: {
+    fontFamily: 'Nunito', fontSize: '14px', border: '1px solid rgba(235, 235, 235, 1)', fontWeight: '400',
+    lineHeight: '19.6px',
+    textAlign: 'left',
+    textWrap: 'nowrap',
+    background: 'rgba(235, 243, 254, 1)',
+    color: 'rgba(20, 110, 246, 1)',
+  },
+  table_array_phone: {
+    fontFamily: 'Nunito', fontSize: '14px', borderRight: '1px solid rgba(235, 235, 235, 1)', fontWeight: '400',
+    lineHeight: '19.6px',
+    textAlign: 'left',
+    textWrap: 'wrap',
   },
   table_column: {
     fontFamily: 'Nunito', fontSize: '14px', borderRight: '1px solid rgba(235, 235, 235, 1)', fontWeight: '700',
     lineHeight: '19.6px',
     textAlign: 'left',
+    textWrap: 'nowrap'
   }
   ,
   headers: {
@@ -56,18 +72,26 @@ export const leadsStyles: { [key: string]: SxProps<Theme> } = {
     border: '1px solid rgba(184, 184, 184, 1)',
     borderRadius: '3.27px'
   },
+  subtitle: {
+    fontWeight: 'bold',
+    fontSize: '16px',
+    whiteSpace: 'nowrap',
+    textAlign: 'start',
+    marginTop: '1.5rem',
+    fontFamily: 'Nunito',
+  },
   logoContainer: {
     paddingLeft: '2.5em',
     paddingRight: '0.5em',
   },
   title: {
-    mt: 1,
     fontWeight: 'bold',
     fontSize: '18px',
     whiteSpace: 'nowrap',
     textAlign: 'start',
     padding: '1.5rem 0rem 0',
     fontFamily: 'Nunito',
+    mr: '1em'
   },
   formContainer: {
     display: 'grid',
