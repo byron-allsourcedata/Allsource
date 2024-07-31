@@ -4,9 +4,7 @@ from enums import PixelStatus
 from schemas.pixel_installation import PixelInstallationRequest
 from schemas.users import PixelFormResponse
 from services.pixel_installation import PixelInstallationService
-from dependencies import get_pixel_installation_service, get_users_auth_service
-from services.admin_customers import AdminCustomersService
-from dependencies import get_admin_customers_service
+from dependencies import get_pixel_installation_service
 from config.rmq_connection import publish_rabbitmq_message, RabbitMQConnection
 
 router = APIRouter()
@@ -22,24 +20,24 @@ async def manual(manual: PixelInstallationService = Depends(get_pixel_installati
 async def manual(pixel_installation_request: PixelInstallationRequest,
                  pixel_installation_service: PixelInstallationService = Depends(get_pixel_installation_service)):
     user_id = pixel_installation_service.check_pixel_installed(pixel_installation_request.url)
+    queue_name = f'sse_events_{str(user_id)}'
+    rabbitmq_connection = RabbitMQConnection()
+    connection = await rabbitmq_connection.connect()
     if user_id:
-        queue_name = f'sse_events_{str(user_id)}'
-
-        rabbitmq_connection = RabbitMQConnection()
-        connection = await rabbitmq_connection.connect()
-
-        try:
-            await publish_rabbitmq_message(
-                connection=connection,
-                queue_name=queue_name,
-                message_body={'status': PixelStatus.PIXEL_CODE_INSTALLED}
-            )
-        except:
-            await rabbitmq_connection.close()
-        finally:
-            await rabbitmq_connection.close()
-            return PixelFormResponse(status=PixelStatus.PIXEL_CODE_INSTALLED)
-    return PixelFormResponse(status=PixelStatus.PARSE_FAILED)
+        status = PixelStatus.PIXEL_CODE_INSTALLED
+    else:
+        status = PixelStatus.PIXEL_CODE_PARSE_FAILED
+    try:
+        await publish_rabbitmq_message(
+            connection=connection,
+            queue_name=queue_name,
+            message_body={'status': status}
+        )
+    except:
+        await rabbitmq_connection.close()
+    finally:
+        await rabbitmq_connection.close()
+    return PixelFormResponse(status=status)
 
 
 @router.get("/google-tag")
