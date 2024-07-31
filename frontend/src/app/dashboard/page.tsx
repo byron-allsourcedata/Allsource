@@ -37,7 +37,7 @@ const VerifyPixelIntegration: React.FC = () => {
     const url = inputValue;
   
     if (url) {
-        axiosInstance.post('/install_pixel/check_pixel_installed', { url });
+        axiosInstance.post('/install-pixel/check-pixel-installed', { url });
         const hasQuery = url.includes('?');
         const newUrl = url + (hasQuery ? '&' : '?') + 'vge=true';
         window.location.href = newUrl;
