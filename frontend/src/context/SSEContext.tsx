@@ -1,5 +1,6 @@
 "use client";
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { showErrorToast } from '@/components/ToastNotification';
 
 interface Data {
   num: number;
@@ -33,8 +34,14 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
     const evtSource = new EventSource(`${url}event-source?token=${token}`);
     evtSource.onmessage = (event) => {
       if (event.data) {
-        setData(JSON.parse(event.data));
-        window.location.reload();
+        const data = JSON.parse(event.data);
+        if (data.status === "PIXEL_CODE_PARSE_FAILED") {
+          showErrorToast("Could not find pixel code on your site")
+        }
+        else {
+          setData(data);
+          window.location.reload();
+        }
       }
     };
 

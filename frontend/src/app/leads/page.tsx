@@ -86,8 +86,12 @@ const CustomTablePagination: React.FC<CustomTablePaginationProps> = ({
               <Button
                 key={pageNumber}
                 onClick={() => handlePageChange(pageNumber)}
-                sx={{ mx: 0.25 }}
                 variant={page === pageNumber ? 'contained' : 'text'}
+                sx={{
+                  backgroundColor: page === pageNumber ? 'transparent' : 'rgba(255, 255, 255, 1)', // Убираем цвет фона для активной страницы
+                  border: page === pageNumber ? '2px solid rgba(0, 0, 0, 0.5)' : '1px solid rgba(235, 235, 235, 1)', // Добавляем обводку для активной страницы
+                  color: page === pageNumber ? 'rgba(0, 0, 0, 0.8)' : 'inherit', // Меняем цвет текста для активной страницы
+                }}
               >
                 {pageNumber + 1}
               </Button>
@@ -306,7 +310,7 @@ const Leads: React.FC = () => {
                     <Button
                       variant="contained"
                       onClick={installPixel}
-                      sx={{ backgroundColor: 'rgb(82, 178, 1)', fontFamily: "Nunito", textTransform: 'none', padding: '1em 3em', fontSize: '16px', mt: 3 }}
+                      sx={{ backgroundColor: 'rgba(80, 82, 178, 1)', fontFamily: "Nunito", textTransform: 'none', padding: '1em 3em', fontSize: '16px', mt: 3 }}
                     >
                       Setup Pixel
                     </Button>
