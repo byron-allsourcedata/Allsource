@@ -198,7 +198,7 @@ def get_users_service(user: User = Depends(check_user_authentication),
     return UsersService(user=user, user_persistence_service=user_persistence_service)
 
 
-def get_leads_service(user: User = Depends(check_user_authentication),
+def get_leads_service(user: User = Depends(check_user_authorization),
                       leads_persistence_service: LeadsPersistence = Depends(get_leads_persistence)):
     return LeadsService(user=user, leads_persistence_service=leads_persistence_service)
 

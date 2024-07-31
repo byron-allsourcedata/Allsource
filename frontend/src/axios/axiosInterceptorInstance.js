@@ -1,10 +1,11 @@
+"use client";
 import axios from "axios";
 import { showErrorToast } from "@/components/ToastNotification";
-import Router from "next/router";
 
 const axiosInterceptorInstance = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_BASE_URL, // BASE URL API
 });
+
 
 // Request interceptor
 axiosInterceptorInstance.interceptors.request.use(
@@ -14,7 +15,7 @@ axiosInterceptorInstance.interceptors.request.use(
     if (accessToken) {
       if (config.headers)
         config.headers.Authorization = `Bearer ${accessToken}`;
-    }
+    } 
     return config;
   },
   (error) => {
@@ -37,7 +38,7 @@ axiosInterceptorInstance.interceptors.response.use(
         case 401:
           // 401 error handler (Unauthorized)
           localStorage.clear();
-          Router.push("/login");
+          navigateTo.push("/login");
           break;
         case 403:
           switch (error.response.data.status) {

@@ -23,6 +23,23 @@ export const leadsStyles: { [key: string]: SxProps<Theme> } = {
       marginTop: '3.75em',
     },
   },
+  page_number: {
+    backgroundColor: 'rgba(255, 255, 255, 1)',
+    color: 'rgba(80, 82, 178, 1)',
+    
+  },
+
+  table_array: {
+    fontFamily: 'Nunito', fontSize: '14px', borderRight: '1px solid rgba(235, 235, 235, 1)', fontWeight: '400',
+    lineHeight: '19.6px',
+    textAlign: 'left',
+  },
+  table_column: {
+    fontFamily: 'Nunito', fontSize: '14px', borderRight: '1px solid rgba(235, 235, 235, 1)', fontWeight: '700',
+    lineHeight: '19.6px',
+    textAlign: 'left',
+  }
+  ,
   headers: {
     display: 'flex',
     marginTop: '10px',
