@@ -13,7 +13,7 @@ class Audience(Base):
     name = Column(VARCHAR)
     user_id = Column(Integer)
     type = Column(VARCHAR)
-    created_at = Column(TIMESTAMP(precision=7), nullable=False)
+    created_at = Column(TIMESTAMP, nullable=False)
 
 
 event.listen(Audience, "before_insert", create_timestamps)
