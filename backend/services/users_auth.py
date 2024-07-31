@@ -1,24 +1,24 @@
-from datetime import datetime, timedelta, timezone
-from sqlalchemy.orm import Session
-from . import stripe_service
-from .jwt_service import get_password_hash, create_access_token, verify_password, decode_jwt_data
-from persistence.sendgrid_persistence import SendgridPersistence
-from .sendgrid import SendgridHandler
-from persistence.user_persistence import UserPersistence
-import os
-from google.auth.transport import requests as google_requests
-from services.payments_plans import PaymentsPlans
-from models.users import Users, User
 import logging
+import os
+from datetime import datetime, timedelta
+from datetime import timezone
+
+from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token
+from sqlalchemy.orm import Session
+
 from enums import SignUpStatus, StripePaymentStatusEnum, AutomationSystemTemplate, LoginStatus, ResetPasswordEnum, \
     VerifyToken, UserAuthorizationStatus
-from models.subscriptions import UserSubscriptions
+from models.users import User
 from models.users import Users
-from datetime import datetime, timedelta
-from schemas.pixel_installation import PixelInstallationRequest
+from persistence.sendgrid_persistence import SendgridPersistence
+from persistence.user_persistence import UserPersistence
 from schemas.auth_google_token import AuthGoogleData
 from schemas.users import UserSignUpForm, UserLoginForm, ResetPasswordForm
+from services.payments_plans import PaymentsPlans
+from . import stripe_service
+from .jwt_service import get_password_hash, create_access_token, verify_password, decode_jwt_data
+from .sendgrid import SendgridHandler
 from .subscriptions import SubscriptionService
 
 logger = logging.getLogger(__name__)
@@ -35,24 +35,6 @@ class UsersAuth:
 
     def get_utc_aware_date(self):
         return datetime.now(timezone.utc).replace(microsecond=0)
-
-    def set_pixel_installed(self, pixel_installation_request: PixelInstallationRequest):
-        if pixel_installation_request is not None:
-            user = self.db.query(Users).filter(Users.data_provider_id == pixel_installation_request.client_id).first()
-            if user and not user.is_pixel_installed:
-                start_date = datetime.utcnow()
-                end_date = start_date + timedelta(days=7)
-                start_date_str = start_date.isoformat() + "Z"
-                end_date_str = end_date.isoformat() + "Z"
-                self.db.query(UserSubscriptions).filter(UserSubscriptions.user_id == user.id).update(
-                    {UserSubscriptions.plan_start: start_date_str, UserSubscriptions.plan_end: end_date_str},
-                    synchronize_session=False
-                )
-                self.db.query(Users).filter(Users.data_provider_id == pixel_installation_request.client_id).update(
-                    {Users.is_pixel_installed: True},
-                    synchronize_session=False)
-                self.db.commit()
-        return "OK"
 
     def get_utc_aware_date_for_mssql(self, delta: timedelta = timedelta(seconds=0)):
         date = self.get_utc_aware_date()
