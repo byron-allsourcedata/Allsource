@@ -16,7 +16,7 @@ async def manual(manual: PixelInstallationService = Depends(get_pixel_installati
     return result_status
 
 
-@router.post("/check_pixel_installed", response_model=PixelFormResponse)
+@router.post("/check-pixel-installed", response_model=PixelFormResponse)
 async def manual(pixel_installation_request: PixelInstallationRequest,
                  pixel_installation_service: PixelInstallationService = Depends(get_pixel_installation_service)):
     user_id = pixel_installation_service.check_pixel_installed(pixel_installation_request.url)
