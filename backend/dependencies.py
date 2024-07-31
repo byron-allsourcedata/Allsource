@@ -12,6 +12,7 @@ from fastapi import Depends, Header, HTTPException, status
 
 from enums import UserAuthorizationStatus
 from exceptions import InvalidToken
+from persistence.audience_persistence import AudiencePersistence
 from persistence.leads_persistence import LeadsPersistence
 from persistence.plans_persistence import PlansPersistence
 from schemas.auth_token import Token
@@ -57,6 +58,10 @@ def get_send_grid_persistence_service(db: Session = Depends(get_db)):
 
 
 def get_user_persistence_service(db: Session = Depends(get_db)):
+    return UserPersistence(db=db)
+
+
+def get_audience_persistence(db: Session = Depends(get_db)):
     return UserPersistence(db=db)
 
 
@@ -141,10 +146,12 @@ def check_user_authorization(Authorization: Annotated[str, Header()],
         )
     return user
 
+
 def check_user_authorization_without_pixel(Authorization: Annotated[str, Header()],
-                             user_persistence_service: UserPersistence = Depends(
-                                 get_user_persistence_service), subscription_service: SubscriptionService = Depends(
-            get_subscription_service)) -> Token:
+                                           user_persistence_service: UserPersistence = Depends(
+                                               get_user_persistence_service),
+                                           subscription_service: SubscriptionService = Depends(
+                                               get_subscription_service)) -> Token:
     user = check_user_authentication(Authorization, user_persistence_service)
     auth_status = get_user_authorization_status(user, subscription_service)
     if auth_status == UserAuthorizationStatus.PAYMENT_NEEDED:
@@ -159,6 +166,7 @@ def check_user_authorization_without_pixel(Authorization: Annotated[str, Header(
             detail={'status': auth_status.value}
         )
     return user
+
 
 def check_user_authentication(Authorization: Annotated[str, Header()],
                               user_persistence_service: UserPersistence = Depends(
@@ -203,6 +211,11 @@ def get_leads_service(user: User = Depends(check_user_authorization),
     return LeadsService(user=user, leads_persistence_service=leads_persistence_service)
 
 
+def get_audience_service(user: User = Depends(check_user_authorization),
+                         audience_persistence_service: AudiencePersistence = Depends(get_audience_persistence)):
+    return LeadsService(user=user, audience_persistence_service=audience_persistence_service)
+
+
 def get_sse_events_service(user_persistence_service: UserPersistence = Depends(get_user_persistence_service)):
     return SseEventsService(user_persistence_service=user_persistence_service)
 
@@ -211,7 +224,8 @@ def get_dashboard_service(user: User = Depends(check_user_authorization)):
     return DashboardService(user=user)
 
 
-def get_pixel_installation_service(db: Session = Depends(get_db), user: User = Depends(check_user_authorization_without_pixel)):
+def get_pixel_installation_service(db: Session = Depends(get_db),
+                                   user: User = Depends(check_user_authorization_without_pixel)):
     return PixelInstallationService(db=db, user=user)
 
 

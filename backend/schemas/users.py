@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 from pydantic import BaseModel, Field
 from enums import SignUpStatus, LoginStatus, BaseEnum, VerificationEmail, UpdatePasswordStatus, ResetPasswordEnum, \
     VerifyToken, CompanyInfoEnum, PixelStatus
@@ -38,6 +38,11 @@ class ResetPasswordForm(BaseModel):
 class UpdatePassword(BaseModel):
     password: str = Field(...)
     confirm_password: str = Field(...)
+
+
+class AudienceRequest(BaseModel):
+    leads_ids: List[int]
+    audience_name: str
 
 
 class CompanyInfo(BaseModel):
