@@ -14,6 +14,9 @@ import PersonIcon from '@mui/icons-material/Person';
 import TrialStatus from '@/components/TrialLabel';
 import AccountButton from '@/components/AccountButton';
 import { ChevronLeft, ChevronRight } from '@mui/icons-material';
+import DownloadIcon from '@mui/icons-material/Download';
+import DateRangeIcon from '@mui/icons-material/DateRange';
+import FilterListIcon from '@mui/icons-material/FilterList';
 
 const Sidebar = dynamic(() => import('../../components/Sidebar'), {
   suspense: true,
@@ -336,57 +339,109 @@ const Leads: React.FC = () => {
               <Sidebar />
             </Grid>
             <Grid item xs={12} md={10} sx={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-              <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', mt: 1, }}>
-                <Typography variant="h4" component="h1" sx={leadsStyles.title}>
-                  Leads ({count_leads})
-                </Typography>
-                <Button
-                  onClick={() => handleFilterChange('all')}
-                  sx={{
-                    color: activeFilter === 'all' ? 'rgba(80, 82, 178, 1)' : 'rgba(89, 89, 89, 1)',
-                    borderBottom: activeFilter === 'all' ? '2px solid rgba(80, 82, 178, 1)' : '0px solid transparent',
-                    textTransform: 'none',
-                    mr: '1em',
-                    mt: '1em',
-                    pb: '1.5em',
-                    maxHeight: '3em',
-                    borderRadius: '0px'
-                  }}
-                >
-                  <Typography variant="body2" sx={leadsStyles.subtitle}>All</Typography>
-                </Button>
-                <Button
-                  onClick={() => handleFilterChange('new_customers')}
-                  sx={{
-                    mt: '1em',
-                    color: activeFilter === 'new_customers' ? 'rgba(80, 82, 178, 1)' : 'rgba(89, 89, 89, 1)',
-                    borderBottom: activeFilter === 'new_customers' ? '2px solid rgba(80, 82, 178, 1)' : '0px solid transparent',
-                    textTransform: 'none',
-                    mr: '1em',
-                    pb: '1.5em',
-                    maxHeight: '3em',
-                    borderRadius: '0px'
-                  }}
-                >
-                  <Typography variant="body2" sx={leadsStyles.subtitle}>New Customers</Typography>
-                </Button>
-                <Button
-                  onClick={() => handleFilterChange('existing_customers')}
-                  sx={{
-                    maxHeight: '3em',
-                    color: activeFilter === 'existing_customers' ? 'rgba(80, 82, 178, 1)' : 'rgba(89, 89, 89, 1)',
-                    borderBottom: activeFilter === 'existing_customers' ? '2px solid rgba(80, 82, 178, 1)' : '0px solid transparent',
-                    textTransform: 'none',
-                    mr: '1em',
-                    mt: '1em',
-                    pb: '1.5em',
-                    borderRadius: '0px'
-                  }}
-                >
-                  <Typography variant="body2" sx={leadsStyles.subtitle}>Existing Customers</Typography>
-                </Button>
-              </Box>
+              <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', mt: 1, }}>
+                  <Typography variant="h4" component="h1" sx={leadsStyles.title}>
+                    Leads ({count_leads})
+                  </Typography>
+                  <Button
+                    onClick={() => handleFilterChange('all')}
+                    sx={{
+                      color: activeFilter === 'all' ? 'rgba(80, 82, 178, 1)' : 'rgba(89, 89, 89, 1)',
+                      borderBottom: activeFilter === 'all' ? '2px solid rgba(80, 82, 178, 1)' : '0px solid transparent',
+                      textTransform: 'none',
+                      mr: '1em',
+                      mt: '1em',
+                      pb: '1.5em',
+                      maxHeight: '3em',
+                      borderRadius: '0px'
+                    }}
+                  >
+                    <Typography variant="body2" sx={leadsStyles.subtitle}>All</Typography>
+                  </Button>
+                  <Button
+                    onClick={() => handleFilterChange('new_customers')}
+                    sx={{
+                      mt: '1em',
+                      color: activeFilter === 'new_customers' ? 'rgba(80, 82, 178, 1)' : 'rgba(89, 89, 89, 1)',
+                      borderBottom: activeFilter === 'new_customers' ? '2px solid rgba(80, 82, 178, 1)' : '0px solid transparent',
+                      textTransform: 'none',
+                      mr: '1em',
+                      pb: '1.5em',
+                      maxHeight: '3em',
+                      borderRadius: '0px'
+                    }}
+                  >
+                    <Typography variant="body2" sx={leadsStyles.subtitle}>New Customers</Typography>
+                  </Button>
+                  <Button
+                    onClick={() => handleFilterChange('existing_customers')}
+                    sx={{
+                      maxHeight: '3em',
+                      color: activeFilter === 'existing_customers' ? 'rgba(80, 82, 178, 1)' : 'rgba(89, 89, 89, 1)',
+                      borderBottom: activeFilter === 'existing_customers' ? '2px solid rgba(80, 82, 178, 1)' : '0px solid transparent',
+                      textTransform: 'none',
+                      mr: '1em',
+                      mt: '1em',
+                      pb: '1.5em',
+                      borderRadius: '0px'
+                    }}
+                  >
+                    <Typography variant="body2" sx={leadsStyles.subtitle}>Existing Customers</Typography>
+                  </Button>
+                </Box>
+                <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', mt: 1, }}>
+                  <Button
+                    aria-haspopup="true"
+                    sx={{
+                      marginRight: '1.5em',
+                      textTransform: 'none',
+                      color: selectedRows.size === 0 ? 'rgba(128, 128, 128, 1)' : 'rgba(80, 82, 178, 1)',
+                      border: '1px solid rgba(80, 82, 178, 1)',
+                      borderRadius: '4px',
+                      padding: '10px',
+                      mt: 1.25,
+                      opacity: selectedRows.size === 0 ? 0.4 : 1,
+                    }}
+                    disabled={selectedRows.size === 0}
+                  >
+                    <Typography sx={{
+                      marginRight: '0.5em',
+                      fontFamily: 'Nunito',
+                      lineHeight: '19.1px',
+                      textSize: '16px',
+                      textAlign: 'left',
+                    }}>
+                      Build Audience List
+                    </Typography>
+                  </Button>
+                  <Button
+                    aria-controls={dropdownOpen ? 'account-dropdown' : undefined}
+                    aria-haspopup="true"
+                    aria-expanded={dropdownOpen ? 'true' : undefined}
+                    sx={{ marginRight: '1.5em', textTransform: 'none', color: 'rgba(128, 128, 128, 1)', border: '1px solid rgba(184, 184, 184, 1)', borderRadius: '4px', padding: '0.5em', mt: 1.25 }}
+                  >
+                    <DownloadIcon fontSize='medium' />
+                  </Button>
+                  <Button
+                    aria-controls={dropdownOpen ? 'account-dropdown' : undefined}
+                    aria-haspopup="true"
+                    aria-expanded={dropdownOpen ? 'true' : undefined}
+                    sx={{ marginRight: '1.5em', textTransform: 'none', color: 'rgba(128, 128, 128, 1)', border: '1px solid rgba(184, 184, 184, 1)', borderRadius: '4px', padding: '0.5em', mt: 1.25 }}
+                  >
+                    <FilterListIcon fontSize='medium' />
+                  </Button>
+                  <Button
+                    aria-controls={dropdownOpen ? 'account-dropdown' : undefined}
+                    aria-haspopup="true"
+                    aria-expanded={dropdownOpen ? 'true' : undefined}
+                    sx={{ marginRight: '1.5em', textTransform: 'none', color: 'rgba(128, 128, 128, 1)', border: '1px solid rgba(184, 184, 184, 1)', borderRadius: '4px', padding: '0.5em', mt: 1.25 }}
+                  >
+                    <DateRangeIcon fontSize='medium' />
+                  </Button>
 
+                </Box>
+              </Box>
               <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', padding: 2 }}>
                 {status === 'PIXEL_INSTALLATION_NEEDED' ? (
                   <Box sx={centerContainerStyles}>
