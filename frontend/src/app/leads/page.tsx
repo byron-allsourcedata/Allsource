@@ -76,8 +76,16 @@ const CustomTablePagination: React.FC<CustomTablePaginationProps> = ({
       <Button
         onClick={(e) => handlePageChange(page - 1)}
         disabled={page === 0}
+        sx={{
+          minWidth: '30px',
+          minHeight: '30px',
+        }}
       >
-        <ChevronLeft />
+        <ChevronLeft
+          sx={{
+            border: page === 0 ? 'none' : '1px solid rgba(235, 235, 235, 1)',
+            borderRadius: '4px'
+          }} />
       </Button>
       {totalPages > 1 && (
         <>
@@ -87,7 +95,12 @@ const CustomTablePagination: React.FC<CustomTablePaginationProps> = ({
             <Button
               key={pageNumber}
               onClick={() => handlePageChange(pageNumber)}
-              sx={{ mx: 0.5, ...leadsStyles.page_number }}
+              sx={{
+                mx: 0.5, ...leadsStyles.page_number, border: page === pageNumber ? '1px solid rgba(80, 82, 178, 1)' : 'none', color: page === pageNumber ? 'rgba(80, 82, 178, 1)' : 'rgba(122, 122, 122, 1)',
+                minWidth: '30px',
+                minHeight: '30px',
+                padding: 0
+              }}
               variant={page === pageNumber ? 'contained' : 'text'}
             >
               {pageNumber + 1}
@@ -100,8 +113,15 @@ const CustomTablePagination: React.FC<CustomTablePaginationProps> = ({
       <Button
         onClick={(e) => handlePageChange(page + 1)}
         disabled={page >= totalPages - 1}
+        sx={{
+          minWidth: '30px',
+          minHeight: '30px',
+        }}
       >
-        <ChevronRight />
+        <ChevronRight sx={{
+          border: page >= totalPages - 1 ? 'none' : '1px solid rgba(235, 235, 235, 1)',
+          borderRadius: '4px'
+        }} />
       </Button>
     </Box>
   );
@@ -134,7 +154,7 @@ const Leads: React.FC = () => {
 
   const handleFilterChange = (filter: string) => {
     setActiveFilter(filter);
-    // Here add logic to filter the data using the selected filter.
+    setPage(0); // Сбросить на первую страницу
   };
 
   const installPixel = () => {
@@ -190,7 +210,7 @@ const Leads: React.FC = () => {
     if (accessToken) {
       const fetchData = async () => {
         try {
-          const response = await axiosInstance.get(`/leads?page=${page + 1}&per_page=${rowsPerPage}`);
+          const response = await axiosInstance.get(`/leads?page=${page + 1}&per_page=${rowsPerPage}&filter=${activeFilter}`);
           const [leads, count, max_page] = response.data;
           setData(Array.isArray(leads) ? leads : []);
           setCount(count || 0);
@@ -218,7 +238,8 @@ const Leads: React.FC = () => {
     } else {
       router.push('/signin')
     }
-  }, [setShowSlider, page, rowsPerPage]);
+  }, [setShowSlider, page, rowsPerPage, activeFilter]);
+
 
   if (isLoading) {
     return <div>Loading...</div>;
@@ -315,15 +336,15 @@ const Leads: React.FC = () => {
               <Sidebar />
             </Grid>
             <Grid item xs={12} md={10} sx={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-              <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', mt: 1,}}>
+              <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', mt: 1, }}>
                 <Typography variant="h4" component="h1" sx={leadsStyles.title}>
                   Leads ({count_leads})
                 </Typography>
                 <Button
-                  onClick={() => handleFilterChange('All')}
+                  onClick={() => handleFilterChange('all')}
                   sx={{
-                    color: activeFilter === 'All' ? 'rgba(80, 82, 178, 1)' : 'rgba(89, 89, 89, 1)',
-                    borderBottom: activeFilter === 'All' ? '2px solid rgba(80, 82, 178, 1)' : '0px solid transparent',
+                    color: activeFilter === 'all' ? 'rgba(80, 82, 178, 1)' : 'rgba(89, 89, 89, 1)',
+                    borderBottom: activeFilter === 'all' ? '2px solid rgba(80, 82, 178, 1)' : '0px solid transparent',
                     textTransform: 'none',
                     mr: '1em',
                     mt: '1em',
@@ -335,11 +356,11 @@ const Leads: React.FC = () => {
                   <Typography variant="body2" sx={leadsStyles.subtitle}>All</Typography>
                 </Button>
                 <Button
-                  onClick={() => handleFilterChange('New Customers')}
+                  onClick={() => handleFilterChange('new customers')}
                   sx={{
                     mt: '1em',
-                    color: activeFilter === 'New Customers' ? 'rgba(80, 82, 178, 1)' : 'rgba(89, 89, 89, 1)',
-                    borderBottom: activeFilter === 'New Customers' ? '2px solid rgba(80, 82, 178, 1)' : '0px solid transparent',
+                    color: activeFilter === 'new customers' ? 'rgba(80, 82, 178, 1)' : 'rgba(89, 89, 89, 1)',
+                    borderBottom: activeFilter === 'new customers' ? '2px solid rgba(80, 82, 178, 1)' : '0px solid transparent',
                     textTransform: 'none',
                     mr: '1em',
                     pb: '1.5em',
@@ -350,11 +371,11 @@ const Leads: React.FC = () => {
                   <Typography variant="body2" sx={leadsStyles.subtitle}>New Customers</Typography>
                 </Button>
                 <Button
-                  onClick={() => handleFilterChange('Existing Customers')}
+                  onClick={() => handleFilterChange('existing customers')}
                   sx={{
                     maxHeight: '3em',
-                    color: activeFilter === 'Existing Customers' ? 'rgba(80, 82, 178, 1)' : 'rgba(89, 89, 89, 1)',
-                    borderBottom: activeFilter === 'Existing Customers' ? '2px solid rgba(80, 82, 178, 1)' : '0px solid transparent',
+                    color: activeFilter === 'existing customers' ? 'rgba(80, 82, 178, 1)' : 'rgba(89, 89, 89, 1)',
+                    borderBottom: activeFilter === 'existing customers' ? '2px solid rgba(80, 82, 178, 1)' : '0px solid transparent',
                     textTransform: 'none',
                     mr: '1em',
                     mt: '1em',
