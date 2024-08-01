@@ -17,6 +17,7 @@ from persistence.leads_persistence import LeadsPersistence
 from persistence.plans_persistence import PlansPersistence
 from schemas.auth_token import Token
 from services.admin_customers import AdminCustomersService
+from services.audience import AudienceService
 from services.company_info import CompanyInfoService
 from services.dashboard import DashboardService
 from services.leads import LeadsService
@@ -62,7 +63,7 @@ def get_user_persistence_service(db: Session = Depends(get_db)):
 
 
 def get_audience_persistence(db: Session = Depends(get_db)):
-    return UserPersistence(db=db)
+    return AudiencePersistence(db=db)
 
 
 def get_subscription_service(db: Session = Depends(get_db),
@@ -213,7 +214,7 @@ def get_leads_service(user: User = Depends(check_user_authorization),
 
 def get_audience_service(user: User = Depends(check_user_authorization),
                          audience_persistence_service: AudiencePersistence = Depends(get_audience_persistence)):
-    return LeadsService(user=user, audience_persistence_service=audience_persistence_service)
+    return AudienceService(user=user, audience_persistence_service=audience_persistence_service)
 
 
 def get_sse_events_service(user_persistence_service: UserPersistence = Depends(get_user_persistence_service)):

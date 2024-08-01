@@ -1,11 +1,13 @@
 import math
+from datetime import datetime
+
 from sqlalchemy.orm import Session
 
+from enums import AudienceInfoEnum
 from models.audience import Audience
 from models.audience_leads import AudienceLeads
 from models.leads import Lead
 from models.leads_users import LeadUser
-from models.plans import SubscriptionPlan, UserSubscriptionPlan
 
 
 class AudiencePersistence:
@@ -31,8 +33,10 @@ class AudiencePersistence:
             .filter(LeadUser.user_id == user_id, LeadUser.lead_id.in_(leads_ids))
             .all()
         )
-        if lead_users:
-            audience = Audience(name=audience_name, user_id=user_id, type='leads')
+        if lead_users and audience_name:
+            start_date = datetime.utcnow()
+            start_date_str = start_date.isoformat() + "Z"
+            audience = Audience(name=audience_name, user_id=user_id, type='leads', created_at=start_date_str)
             self.db.add(audience)
             self.db.commit()
             for lead_user in lead_users:
@@ -40,6 +44,49 @@ class AudiencePersistence:
                 self.db.add(audience_lead)
 
             self.db.commit()
-            return audience.id
+            return AudienceInfoEnum.AUDIENCE_CREATED
         else:
-            return None
+            return AudienceInfoEnum.AUDIENCE_NOT_FOUND
+
+    def put_user_audience(self, user_id, leads_ids, remove_ids, audience_id, new_audience_name):
+        if audience_id:
+            audience = self.db.query(Audience).filter(Audience.user_id == user_id, Audience.id == audience_id).first()
+            if audience:
+                if leads_ids:
+                    lead_users = self.db.query(LeadUser).filter(LeadUser.user_id == user_id,
+                                                                LeadUser.lead_id.in_(leads_ids)).all()
+                    lead_ids_set = {lead_user.lead_id for lead_user in lead_users}
+
+                    audience_leads = self.db.query(AudienceLeads).filter(AudienceLeads.audience_id == audience.id).all()
+                    audience_lead_ids_set = {audience_lead.lead_id for audience_lead in audience_leads}
+                    new_leads = lead_ids_set - audience_lead_ids_set
+                    for lead_id in new_leads:
+                        audience_lead = AudienceLeads(audience_id=audience.id, lead_id=lead_id)
+                        self.db.add(audience_lead)
+
+                if remove_ids:
+                    leads_to_remove = self.db.query(LeadUser).filter(LeadUser.user_id == user_id,
+                                                                     LeadUser.lead_id.in_(remove_ids)).all()
+                    leads_to_remove_ids = {lead_user.lead_id for lead_user in leads_to_remove}
+
+                    audience_leads_to_delete = self.db.query(AudienceLeads).filter(
+                        AudienceLeads.audience_id == audience.id,
+                        AudienceLeads.lead_id.in_(
+                            leads_to_remove_ids)).all()
+                    for audience_lead in audience_leads_to_delete:
+                        self.db.delete(audience_lead)
+
+                if new_audience_name:
+                    audience.name = new_audience_name
+
+                self.db.commit()
+                return AudienceInfoEnum.AUDIENCE_UPDATED
+        return AudienceInfoEnum.AUDIENCE_NOT_FOUND
+
+    def delete_user_audience(self, user_id, audience_id):
+        audience = self.db.query(Audience).filter(Audience.user_id == user_id, Audience.id == audience_id).first()
+        if audience:
+            self.db.delete(audience)
+            self.db.commit()
+            return AudienceInfoEnum.AUDIENCE_DELETED
+        return AudienceInfoEnum.AUDIENCE_NOT_FOUND

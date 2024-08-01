@@ -16,62 +16,56 @@ class LeadsPersistence:
     def __init__(self, db: Session):
         self.db = db
 
-    def get_user_leads(self, user_id, page: int, per_page: int):
-        LeadUserAlias = aliased(LeadUser)
-        LeadsLocationsAlias = aliased(LeadsLocations)
-        LocationsAlias = aliased(Locations)
+    def get_user_leads_by_status(self, user_id, page: int, per_page: int, filter=None):
+        lead_user_alias = aliased(LeadUser)
+        leads_locations_alias = aliased(LeadsLocations)
+        locations_alias = aliased(Locations)
 
         subquery = (
             self.db.query(
                 LeadVisits.leads_users_id,
                 func.max(LeadVisits.visited_at).label('last_visited_at')
             )
-                .group_by(LeadVisits.leads_users_id)
-                .subquery()
+            .group_by(LeadVisits.leads_users_id)
+            .subquery()
         )
 
         query = (
             self.db.query(
                 Lead,
-                LeadUserAlias.status,
-                LeadUserAlias.funnel,
-                LocationsAlias.state,
-                LocationsAlias.city,
+                lead_user_alias.status,
+                lead_user_alias.funnel,
+                locations_alias.state,
+                locations_alias.city,
                 subquery.c.last_visited_at
             )
-                .join(LeadUserAlias, Lead.id == LeadUserAlias.lead_id)
-                .join(LeadsLocationsAlias, Lead.id == LeadsLocationsAlias.lead_id)
-                .join(LocationsAlias, LeadsLocationsAlias.location_id == LocationsAlias.id)
-                .outerjoin(subquery, LeadUserAlias.id == subquery.c.leads_users_id)
-                .filter(LeadUserAlias.user_id == user_id)
+            .join(lead_user_alias, Lead.id == lead_user_alias.lead_id)
+            .join(leads_locations_alias, Lead.id == leads_locations_alias.lead_id)
+            .join(locations_alias, leads_locations_alias.location_id == locations_alias.id)
+            .outerjoin(subquery, lead_user_alias.id == subquery.c.leads_users_id)
+            .filter(lead_user_alias.user_id == user_id)
         )
+        if filter == 'new_customers':
+            query = query.filter(lead_user_alias.status == 'New')
+        elif filter == 'existing_customers':
+            query = query.filter(lead_user_alias.status == 'Existing')
 
         offset = (page - 1) * per_page
-
         leads = query.limit(per_page).offset(offset).all()
-
-        count = (
-            self.db.query(Lead)
-                .join(LeadUser, Lead.id == LeadUser.lead_id)
-                .filter(LeadUser.user_id == user_id)
-                .count()
-        )
-
+        count = query.count()
         max_page = math.ceil(count / per_page)
 
-        leads_list = []
-        for lead, status, funnel, state, city, last_visited_at in leads:
-            last_visited_date = last_visited_at.strftime('%d.%m.%Y') if last_visited_at else 'N/A'
-            last_visited_time = last_visited_at.strftime('%H:%M') if last_visited_at else 'N/A'
-            lead_dict = {
+        leads_list = [
+            {
                 'lead': lead,
                 'status': status,
                 'funnel': funnel,
                 'state': state,
                 'city': city,
-                'last_visited_date': last_visited_date,
-                'last_visited_time': last_visited_time
+                'last_visited_date': last_visited_at.strftime('%d.%m.%Y') if last_visited_at else 'N/A',
+                'last_visited_time': last_visited_at.strftime('%H:%M') if last_visited_at else 'N/A'
             }
-            leads_list.append(lead_dict)
+            for lead, status, funnel, state, city, last_visited_at in leads
+        ]
 
         return leads_list, count, max_page
