@@ -85,10 +85,8 @@ class CompanyInfoEnum(Enum):
 
 
 class AudienceInfoEnum(Enum):
-    AUDIENCE_CREATED = "AUDIENCE_CREATED"
-    AUDIENCE_UPDATED = "AUDIENCE_UPDATED"
-    AUDIENCE_DELETED = "AUDIENCE_DELETED"
-    AUDIENCE_NOT_FOUND = "AUDIENCE_NOT_FOUND"
+    SUCCESS = "SUCCESS"
+    NOT_FOUND = "NOT_FOUND"
 
 
 class VerifyToken(Enum):

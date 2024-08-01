@@ -44,9 +44,9 @@ class AudiencePersistence:
                 self.db.add(audience_lead)
 
             self.db.commit()
-            return AudienceInfoEnum.AUDIENCE_CREATED
+            return AudienceInfoEnum.SUCCESS
         else:
-            return AudienceInfoEnum.AUDIENCE_NOT_FOUND
+            return AudienceInfoEnum.NOT_FOUND
 
     def put_user_audience(self, user_id, leads_ids, remove_ids, audience_id, new_audience_name):
         if audience_id:
@@ -80,13 +80,13 @@ class AudiencePersistence:
                     audience.name = new_audience_name
 
                 self.db.commit()
-                return AudienceInfoEnum.AUDIENCE_UPDATED
-        return AudienceInfoEnum.AUDIENCE_NOT_FOUND
+                return AudienceInfoEnum.SUCCESS
+        return AudienceInfoEnum.NOT_FOUND
 
     def delete_user_audience(self, user_id, audience_id):
         audience = self.db.query(Audience).filter(Audience.user_id == user_id, Audience.id == audience_id).first()
         if audience:
             self.db.delete(audience)
             self.db.commit()
-            return AudienceInfoEnum.AUDIENCE_DELETED
-        return AudienceInfoEnum.AUDIENCE_NOT_FOUND
+            return AudienceInfoEnum.SUCCESS
+        return AudienceInfoEnum.NOT_FOUND
