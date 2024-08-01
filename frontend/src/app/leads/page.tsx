@@ -17,6 +17,8 @@ import { ChevronLeft, ChevronRight } from '@mui/icons-material';
 import DownloadIcon from '@mui/icons-material/Download';
 import DateRangeIcon from '@mui/icons-material/DateRange';
 import FilterListIcon from '@mui/icons-material/FilterList';
+import CalendarPopup from '../../components/CalendarPopup';
+
 
 const Sidebar = dynamic(() => import('../../components/Sidebar'), {
   suspense: true,
@@ -148,6 +150,32 @@ const Leads: React.FC = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(15);
   const [activeFilter, setActiveFilter] = useState<string>('all');
+  const [calendarAnchorEl, setCalendarAnchorEl] = useState<null | HTMLElement>(null);
+  const [selectedDates, setSelectedDates] = useState<{ start: Date | null; end: Date | null }>({ start: null, end: null });
+  const isCalendarOpen = Boolean(calendarAnchorEl);
+  const [formattedDates, setFormattedDates] = useState<string>('');
+
+
+  const handleCalendarClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setCalendarAnchorEl(event.currentTarget);
+  };
+
+  const handleCalendarClose = () => {
+    setCalendarAnchorEl(null);
+  };
+
+  const handleDateChange = (dates: { start: Date | null; end: Date | null }) => {
+    setSelectedDates(dates);
+    const { start, end } = dates;
+    if (start && end) {
+      setFormattedDates(`${start.toLocaleDateString()} - ${end.toLocaleDateString()}`);
+    } else if (start) {
+      setFormattedDates(`${start.toLocaleDateString()}`);
+    } else {
+      setFormattedDates('No dates selected');
+    }
+  };
+
 
   const handleSignOut = () => {
     localStorage.clear();
@@ -157,7 +185,7 @@ const Leads: React.FC = () => {
 
   const handleFilterChange = (filter: string) => {
     setActiveFilter(filter);
-    setPage(0); // Сбросить на первую страницу
+    setPage(0);
   };
 
   const installPixel = () => {
@@ -242,6 +270,12 @@ const Leads: React.FC = () => {
       router.push('/signin')
     }
   }, [setShowSlider, page, rowsPerPage, activeFilter]);
+
+  // useEffect(() => {
+  //   if (selectedDate) {
+  //     // Тут код для обработки данных
+  //   }
+  // }, [selectedDate]);
 
 
   if (isLoading) {
@@ -432,14 +466,18 @@ const Leads: React.FC = () => {
                     <FilterListIcon fontSize='medium' />
                   </Button>
                   <Button
-                    aria-controls={dropdownOpen ? 'account-dropdown' : undefined}
+                    aria-controls={isCalendarOpen ? 'calendar-popup' : undefined}
                     aria-haspopup="true"
-                    aria-expanded={dropdownOpen ? 'true' : undefined}
+                    aria-expanded={isCalendarOpen ? 'true' : undefined}
+                    onClick={handleCalendarClick}
                     sx={{ marginRight: '1.5em', textTransform: 'none', color: 'rgba(128, 128, 128, 1)', border: '1px solid rgba(184, 184, 184, 1)', borderRadius: '4px', padding: '0.5em', mt: 1.25 }}
                   >
                     <DateRangeIcon fontSize='medium' />
+                    <Typography variant="body1" sx={{ fontFamily: 'Nunito',fontSize: '14px', fontWeight: '600', lineHeight: '19.6px', textAlign: 'left'
+ }}>
+                      {formattedDates}
+                    </Typography>
                   </Button>
-
                 </Box>
               </Box>
               <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', padding: 2 }}>
@@ -582,6 +620,12 @@ const Leads: React.FC = () => {
                 {showSlider && <Slider />}
               </Box>
             </Grid>
+            <CalendarPopup
+              anchorEl={calendarAnchorEl}
+              open={isCalendarOpen}
+              onClose={handleCalendarClose}
+              onDateChange={handleDateChange}
+            />
           </Grid>
         </Box>
       </Box>

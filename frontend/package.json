@@ -9,15 +9,16 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@emotion/react": "^11.11.4",
-    "@emotion/styled": "^11.11.5",
+    "@emotion/react": "^11.13.0",
+    "@emotion/styled": "^11.13.0",
     "@mui/icons-material": "^5.15.20",
     "@mui/lab": "^5.0.0-alpha.173",
-    "@mui/material": "^5.15.21",
+    "@mui/material": "^5.16.6",
     "@next/font": "^14.2.4",
     "@react-oauth/google": "^0.12.1",
     "axios": "^1.7.2",
     "date-fns": "^3.6.0",
+    "dayjs": "^1.11.12",
     "fuse.js": "^7.0.0",
     "google-one-tap": "^1.0.6",
     "jwt-decode": "^4.0.0",
@@ -25,6 +26,7 @@
     "npm": "^10.8.1",
     "react": "^18",
     "react-calendly": "^4.3.1",
+    "react-datepicker": "^7.3.0",
     "react-dom": "^18",
     "react-toastify": "^10.0.5",
     "styled-components": "^6.1.12"
