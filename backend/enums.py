@@ -85,7 +85,6 @@ class CompanyInfoEnum(Enum):
 
 
 class AudienceInfoEnum(Enum):
-    SUCCESS = "SUCCESS"
     AUDIENCE_CREATED = "AUDIENCE_CREATED"
     AUDIENCE_UPDATED = "AUDIENCE_UPDATED"
     AUDIENCE_DELETED = "AUDIENCE_DELETED"
