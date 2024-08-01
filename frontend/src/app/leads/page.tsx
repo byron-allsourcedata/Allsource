@@ -144,7 +144,7 @@ const Leads: React.FC = () => {
   const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(15);
-  const [activeFilter, setActiveFilter] = useState<string>('All');
+  const [activeFilter, setActiveFilter] = useState<string>('all');
 
   const handleSignOut = () => {
     localStorage.clear();
@@ -356,11 +356,11 @@ const Leads: React.FC = () => {
                   <Typography variant="body2" sx={leadsStyles.subtitle}>All</Typography>
                 </Button>
                 <Button
-                  onClick={() => handleFilterChange('new customers')}
+                  onClick={() => handleFilterChange('new_customers')}
                   sx={{
                     mt: '1em',
-                    color: activeFilter === 'new customers' ? 'rgba(80, 82, 178, 1)' : 'rgba(89, 89, 89, 1)',
-                    borderBottom: activeFilter === 'new customers' ? '2px solid rgba(80, 82, 178, 1)' : '0px solid transparent',
+                    color: activeFilter === 'new_customers' ? 'rgba(80, 82, 178, 1)' : 'rgba(89, 89, 89, 1)',
+                    borderBottom: activeFilter === 'new_customers' ? '2px solid rgba(80, 82, 178, 1)' : '0px solid transparent',
                     textTransform: 'none',
                     mr: '1em',
                     pb: '1.5em',
@@ -371,11 +371,11 @@ const Leads: React.FC = () => {
                   <Typography variant="body2" sx={leadsStyles.subtitle}>New Customers</Typography>
                 </Button>
                 <Button
-                  onClick={() => handleFilterChange('existing customers')}
+                  onClick={() => handleFilterChange('existing_customers')}
                   sx={{
                     maxHeight: '3em',
-                    color: activeFilter === 'existing customers' ? 'rgba(80, 82, 178, 1)' : 'rgba(89, 89, 89, 1)',
-                    borderBottom: activeFilter === 'existing customers' ? '2px solid rgba(80, 82, 178, 1)' : '0px solid transparent',
+                    color: activeFilter === 'existing_customers' ? 'rgba(80, 82, 178, 1)' : 'rgba(89, 89, 89, 1)',
+                    borderBottom: activeFilter === 'existing_customers' ? '2px solid rgba(80, 82, 178, 1)' : '0px solid transparent',
                     textTransform: 'none',
                     mr: '1em',
                     mt: '1em',
