@@ -36,20 +36,19 @@ class AudiencePersistence:
         if not audience_name or not audience_name.strip():
             return {'status': AudienceInfoEnum.NOT_VALID_NAME}
         audience_name = audience_name.strip()
-        if lead_users and audience_name:
-            start_date = datetime.utcnow()
-            start_date_str = start_date.isoformat() + "Z"
-            audience = Audience(name=audience_name, user_id=user_id, type='leads', created_at=start_date_str)
-            self.db.add(audience)
-            self.db.commit()
-            for lead_user in lead_users:
-                audience_lead = AudienceLeads(audience_id=audience.id, lead_id=lead_user.lead_id)
-                self.db.add(audience_lead)
-
-            self.db.commit()
-            return {'id': audience.id, 'status': AudienceInfoEnum.SUCCESS}
-        else:
+        if not lead_users:
             return {'status': AudienceInfoEnum.NOT_FOUND}
+        start_date = datetime.utcnow()
+        start_date_str = start_date.isoformat() + "Z"
+        audience = Audience(name=audience_name, user_id=user_id, type='leads', created_at=start_date_str)
+        self.db.add(audience)
+        self.db.commit()
+        for lead_user in lead_users:
+            audience_lead = AudienceLeads(audience_id=audience.id, lead_id=lead_user.lead_id)
+            self.db.add(audience_lead)
+
+        self.db.commit()
+        return {'id': audience.id, 'status': AudienceInfoEnum.SUCCESS}
 
     def put_user_audience(self, user_id, leads_ids, remove_ids, audience_id, new_audience_name):
         if audience_id:
