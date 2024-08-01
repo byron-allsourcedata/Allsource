@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from pydantic import BaseModel
 
@@ -7,6 +7,7 @@ from enums import AudienceInfoEnum
 
 class AudienceInfoResponse(BaseModel):
     status: AudienceInfoEnum
+    id: Optional[int] = None
 
 
 class AudienceRequest(BaseModel):

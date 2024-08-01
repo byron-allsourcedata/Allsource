@@ -18,8 +18,8 @@ async def get_audience(page: int = Query(1, alias="page", ge=1, description="Pag
 @router.post("", response_model=AudienceInfoResponse)
 async def post_audience(audience_request: AudienceRequest,
                         audience_service: AudienceService = Depends(get_audience_service)):
-    return AudienceInfoResponse(
-        status=audience_service.post_audience(audience_request.leads_ids, audience_request.audience_name))
+    result = audience_service.post_audience(audience_request.leads_ids, audience_request.new_audience_name)
+    return AudienceInfoResponse(id=result.get('id'), status=result['status'])
 
 
 @router.put("", response_model=AudienceInfoResponse)

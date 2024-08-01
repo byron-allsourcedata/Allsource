@@ -87,6 +87,7 @@ class CompanyInfoEnum(Enum):
 class AudienceInfoEnum(Enum):
     SUCCESS = "SUCCESS"
     NOT_FOUND = "NOT_FOUND"
+    NOT_VALID_NAME = 'NOT_VALID_NAME'
 
 
 class VerifyToken(Enum):
