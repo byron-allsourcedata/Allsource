@@ -18,6 +18,7 @@ import DownloadIcon from '@mui/icons-material/Download';
 import DateRangeIcon from '@mui/icons-material/DateRange';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import CalendarPopup from '../../components/CalendarPopup';
+import FilterPopup from '@/components/FiltersSlider';
 
 
 const Sidebar = dynamic(() => import('../../components/Sidebar'), {
@@ -154,6 +155,15 @@ const Leads: React.FC = () => {
   const [selectedDates, setSelectedDates] = useState<{ start: Date | null; end: Date | null }>({ start: null, end: null });
   const isCalendarOpen = Boolean(calendarAnchorEl);
   const [formattedDates, setFormattedDates] = useState<string>('');
+  const [filterPopupOpen, setFilterPopupOpen] = useState(false);
+
+  const handleFilterPopupOpen = () => {
+    setFilterPopupOpen(true);
+  };
+
+  const handleFilterPopupClose = () => {
+    setFilterPopupOpen(false);
+  };
 
 
   const handleCalendarClick = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -458,6 +468,7 @@ const Leads: React.FC = () => {
                     <DownloadIcon fontSize='medium' />
                   </Button>
                   <Button
+                    onClick={handleFilterPopupOpen}
                     aria-controls={dropdownOpen ? 'account-dropdown' : undefined}
                     aria-haspopup="true"
                     aria-expanded={dropdownOpen ? 'true' : undefined}
@@ -473,8 +484,7 @@ const Leads: React.FC = () => {
                     sx={{ marginRight: '1.5em', textTransform: 'none', color: 'rgba(128, 128, 128, 1)', border: '1px solid rgba(184, 184, 184, 1)', borderRadius: '4px', padding: '0.5em', mt: 1.25 }}
                   >
                     <DateRangeIcon fontSize='medium' />
-                    <Typography variant="body1" sx={{ fontFamily: 'Nunito',fontSize: '14px', fontWeight: '600', lineHeight: '19.6px', textAlign: 'left'
- }}>
+                    <Typography variant="body1" sx={{ fontFamily: 'Nunito', fontSize: '14px', fontWeight: '600', lineHeight: '19.6px', textAlign: 'left' }}>
                       {formattedDates}
                     </Typography>
                   </Button>
@@ -620,6 +630,7 @@ const Leads: React.FC = () => {
                 {showSlider && <Slider />}
               </Box>
             </Grid>
+            <FilterPopup open={filterPopupOpen} onClose={handleFilterPopupClose} />
             <CalendarPopup
               anchorEl={calendarAnchorEl}
               open={isCalendarOpen}

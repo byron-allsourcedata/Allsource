@@ -1,37 +1,36 @@
-"use client"
-import React, { useEffect } from 'react';
-import { Drawer, Box, Typography, Button, IconButton, Backdrop } from '@mui/material';
+import React from 'react';
+import { Drawer, Box, Typography, Button, IconButton, Backdrop, TextField, InputAdornment } from '@mui/material';
+import SearchIcon from '@mui/icons-material/Search';
 import CloseIcon from '@mui/icons-material/Close';
-import { useSlider } from '../context/SliderContext';
 
-const Slider: React.FC = () => {
-  const { showSlider, setShowSlider } = useSlider();
-  const handleClose = () => {
-    sessionStorage.setItem('is_slider_opened', 'false');
-    setShowSlider(false);
+interface FilterPopupProps {
+  open: boolean;
+  onClose: () => void;
+}
+
+const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose }) => {
+  const [selectedButton, setSelectedButton] = React.useState<string | null>(null);
+
+  const handleButtonClick = (label: string) => {
+    setSelectedButton(label);
   };
-
-  useEffect(() => {
-    const isSliderOpened = sessionStorage.getItem('is_slider_opened');
-    setShowSlider(isSliderOpened === 'true');
-  }, [setShowSlider]);
 
   return (
     <>
-      <Backdrop open={showSlider} sx={{ zIndex: 1200, color: '#fff' }} />
+      <Backdrop open={open} sx={{ zIndex: 1200, color: '#fff' }} />
       <Drawer
         anchor="right"
-        open={showSlider}
-        variant="persistent"
+        open={open}
+        onClose={onClose}
         PaperProps={{
           sx: {
             width: '40%',
             position: 'fixed',
-            zIndex: 1301, 
+            zIndex: 1301,
             top: 0,
             bottom: 0,
-            '@media (max-width: 600px)': { 
-              width: '100%', 
+            '@media (max-width: 600px)': {
+              width: '100%',
             }
           },
         }}
@@ -40,18 +39,58 @@ const Slider: React.FC = () => {
           <Typography variant="h6" sx={{ textAlign: 'center', color: '#4A4A4A', fontFamily: 'Nunito', fontWeight: '600', fontSize: '22px', lineHeight: '25.2px' }}>
             Filter Search
           </Typography>
-          <IconButton onClick={handleClose}>
+          <IconButton onClick={onClose}>
             <CloseIcon />
           </IconButton>
         </Box>
-        <Box sx={{ p: 6, display: 'flex', flexDirection: 'column', textAlign: 'center', alignItems: 'center', justifyContent: 'center' }}>
-          <Typography variant="body1" gutterBottom sx={{color: '#4A4A4A', fontFamily: 'Nunito', fontWeight: '500', fontSize: '24px', lineHeight: '25.2px', marginTop: '3em' }}>
-            To activate your account, please speak with one of our onboarding specialists, and we&apos;ll get you started.
-          </Typography>
+        <Box sx={{ p: 3, display: 'flex', flexDirection: 'column', alignItems: 'center', }}>
+          <TextField
+            placeholder="Search people"
+            variant="outlined"
+            fullWidth
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Button sx={{ textTransform: 'none', textDecoration: 'none' }}>
+                    <SearchIcon sx={{ color: 'rgba(101, 101, 101, 1)' }} fontSize='medium' />
+                  </Button>
+                </InputAdornment>
+              ),
+            }}
+            sx={{ mb: 2 }}
+          />
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+            {['Abandon Checkout leads in last 30 days', 'Converters in last 30 days', 'Non Converters in last 30 days', 'Add to cart leads in last 30 days'].map((label) => (
+              <Button
+                key={label}
+                onClick={() => handleButtonClick(label)}
+                sx={{
+                  width: 'calc(50% - 10px)',
+                  height: '33px',
+                  textTransform: 'none',
+                  padding: '8px 0px 0px 0px',
+                  gap: '10px',
+                  textAlign: 'center',
+                  borderRadius: '4px',
+                  border: '1px solid rgba(220, 220, 239, 1)',
+                  backgroundColor: selectedButton === label ? 'rgba(219, 219, 240, 1)' : '#fff',
+                  color: '#000',
+                  fontFamily: 'Nunito',
+                  opacity: 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                {label}
+              </Button>
+            ))}
+          </Box>
+
         </Box>
       </Drawer>
     </>
   );
 };
 
-export default Slider;
+export default FilterPopup;
