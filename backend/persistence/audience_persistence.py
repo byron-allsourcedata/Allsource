@@ -33,7 +33,7 @@ class AudiencePersistence:
             .filter(LeadUser.user_id == user_id, LeadUser.lead_id.in_(leads_ids))
             .all()
         )
-        if audience_name or not audience_name.strip():
+        if not audience_name or not audience_name.strip():
             return {'status': AudienceInfoEnum.NOT_VALID_NAME}
         audience_name = audience_name.strip()
         if lead_users and audience_name:
