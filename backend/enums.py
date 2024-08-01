@@ -84,6 +84,12 @@ class CompanyInfoEnum(Enum):
     DASHBOARD_ALLOWED = 'DASHBOARD_ALLOWED'
 
 
+class AudienceInfoEnum(Enum):
+    SUCCESS = "SUCCESS"
+    NOT_FOUND = "NOT_FOUND"
+    NOT_VALID_NAME = 'NOT_VALID_NAME'
+
+
 class VerifyToken(Enum):
     SUCCESS = 'SUCCESS'
     EMAIL_ALREADY_VERIFIED = 'EMAIL_ALREADY_VERIFIED'
