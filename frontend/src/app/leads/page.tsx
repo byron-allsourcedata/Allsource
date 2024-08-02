@@ -139,6 +139,7 @@ const Leads: React.FC = () => {
   const { full_name, email } = useUser();
   const [data, setData] = useState<any[]>([]);
   const [count_leads, setCount] = useState<number | null>(null);
+  const [appliedDates, setAppliedDates] = useState<{ start: Date | null; end: Date | null }>({ start: null, end: null });
   const [max_page, setMaxpage] = useState<number | null>(null);
   const [status, setStatus] = useState<string | null>(null);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -184,6 +185,12 @@ const Leads: React.FC = () => {
     } else {
       setFormattedDates('No dates selected');
     }
+  };
+
+  const handleApply = (dates: { start: Date | null; end: Date | null }) => {
+    setAppliedDates(dates);
+    setCalendarAnchorEl(null);
+    handleCalendarClose();
   };
 
 
@@ -251,7 +258,11 @@ const Leads: React.FC = () => {
     if (accessToken) {
       const fetchData = async () => {
         try {
-          const response = await axiosInstance.get(`/leads?page=${page + 1}&per_page=${rowsPerPage}&filter=${activeFilter}`);
+          const { start, end } = appliedDates;
+          const startEpoch = start ? Math.floor(start.getTime() / 1000) : null;
+          const endEpoch = end ? Math.floor(end.getTime() / 1000) : (start ? Math.floor(start.getTime() / 1000) : null);
+
+          const response = await axiosInstance.get(`/leads?page=${page + 1}&per_page=${rowsPerPage}&filter=${activeFilter}&from_date=${startEpoch}&to_date=${endEpoch}`);
           const [leads, count, max_page] = response.data;
           setData(Array.isArray(leads) ? leads : []);
           setCount(count || 0);
@@ -277,15 +288,10 @@ const Leads: React.FC = () => {
 
       fetchData();
     } else {
-      router.push('/signin')
+      router.push('/signin');
     }
-  }, [setShowSlider, page, rowsPerPage, activeFilter]);
+  }, [setShowSlider, page, rowsPerPage, activeFilter, appliedDates]);
 
-  // useEffect(() => {
-  //   if (selectedDate) {
-  //     // Тут код для обработки данных
-  //   }
-  // }, [selectedDate]);
 
 
   if (isLoading) {
@@ -636,6 +642,7 @@ const Leads: React.FC = () => {
               open={isCalendarOpen}
               onClose={handleCalendarClose}
               onDateChange={handleDateChange}
+              onApply={handleApply}
             />
           </Grid>
         </Box>
