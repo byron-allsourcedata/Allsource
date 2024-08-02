@@ -12,6 +12,6 @@ class AudienceInfoResponse(BaseModel):
 
 class AudienceRequest(BaseModel):
     leads_ids: List[int] = None
-    audience_id: str = None
+    audience_ids: str = None
     new_audience_name: str = None
     remove_leads_ids: List[int] = None

@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from enums import AudienceInfoEnum
 from models.audience import Audience
 from models.audience_leads import AudienceLeads
-from models.leads import Lead
+from sqlalchemy import func
 from models.leads_users import LeadUser
 
 
@@ -16,9 +16,7 @@ class AudiencePersistence:
 
     def get_user_audience(self, user_id, page: int, per_page: int):
         query = (
-            self.db.query(Lead)
-            .join(AudienceLeads, Lead.id == AudienceLeads.lead_id)
-            .join(Audience, Audience.id == AudienceLeads.audience_id)
+            self.db.query(Audience)
             .filter(Audience.user_id == user_id)
         )
         offset = (page - 1) * per_page
@@ -26,6 +24,28 @@ class AudiencePersistence:
         count = query.count()
         max_page = math.ceil(count / per_page) if per_page > 0 else 1
         return audience, count, max_page
+
+    def get_user_audience_list(self, user_id):
+        audience_counts = (
+            self.db.query(
+                Audience.id,
+                Audience.name,
+                func.count(AudienceLeads.id).label('leads_count')
+            )
+            .outerjoin(AudienceLeads, AudienceLeads.audience_id == Audience.id)
+            .filter(Audience.user_id == user_id)
+            .group_by(Audience.id)
+            .all()
+        )
+        audience_list = [
+            {
+                'audience_name': audience.name,
+                'leads_count': audience.leads_count
+            }
+            for audience in audience_counts
+        ]
+
+        return audience_list
 
     def post_user_audience(self, user_id, leads_ids, audience_name):
         lead_users = (

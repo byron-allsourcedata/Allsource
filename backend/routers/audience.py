@@ -15,6 +15,11 @@ async def get_audience(page: int = Query(1, alias="page", ge=1, description="Pag
     return audience_service.get_audience(page, per_page)
 
 
+@router.get("/list")
+async def get_user_audience_list(audience_service: AudienceService = Depends(get_audience_service)):
+    return audience_service.get_user_audience_list()
+
+
 @router.post("", response_model=AudienceInfoResponse)
 async def post_audience(audience_request: AudienceRequest,
                         audience_service: AudienceService = Depends(get_audience_service)):
@@ -27,10 +32,10 @@ async def put_audience(audience_request: AudienceRequest,
                        audience_service: AudienceService = Depends(get_audience_service)):
     return AudienceInfoResponse(
         status=audience_service.put_audience(audience_request.leads_ids, audience_request.remove_leads_ids,
-                                             audience_request.audience_id, audience_request.new_audience_name))
+                                             audience_request.audience_ids, audience_request.new_audience_name))
 
 
 @router.delete("", response_model=AudienceInfoResponse)
 async def delete_audience(audience_request: AudienceRequest,
                           audience_service: AudienceService = Depends(get_audience_service)):
-    return AudienceInfoResponse(status=audience_service.delete_audience(audience_request.audience_id))
+    return AudienceInfoResponse(status=audience_service.delete_audience(audience_request.audience_ids))
