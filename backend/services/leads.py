@@ -7,7 +7,15 @@ class LeadsService:
         self.leads_persistence_service = leads_persistence_service
         self.user = user
 
-    def get_leads(self, page, per_page, filter):
-        return self.leads_persistence_service.get_user_leads_by_status(self.user.id, page=page, per_page=per_page,
-                                                                           filter=filter)
-
+    def get_leads(self, page, per_page, status, from_date, to_date, regions, page_visits, average_time_spent,
+                  lead_funnel, emails, recurring_visits):
+        return self.leads_persistence_service.get_user_leads(self.user.id, page=page, per_page=per_page,
+                                                             status=status, from_date=from_date,
+                                                             to_date=to_date,
+                                                             regions=regions,
+                                                             page_visits=page_visits,
+                                                             average_time_spent=average_time_spent,
+                                                             lead_funnel=lead_funnel,
+                                                             emails=emails,
+                                                             recurring_visits=recurring_visits
+                                                             )

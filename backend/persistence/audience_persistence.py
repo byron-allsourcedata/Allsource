@@ -16,9 +16,7 @@ class AudiencePersistence:
 
     def get_user_audience(self, user_id, page: int, per_page: int):
         query = (
-            self.db.query(Lead)
-            .join(AudienceLeads, Lead.id == AudienceLeads.lead_id)
-            .join(Audience, Audience.id == AudienceLeads.audience_id)
+            self.db.query(Audience)
             .filter(Audience.user_id == user_id)
         )
         offset = (page - 1) * per_page
@@ -26,6 +24,20 @@ class AudiencePersistence:
         count = query.count()
         max_page = math.ceil(count / per_page) if per_page > 0 else 1
         return audience, count, max_page
+
+    def get_user_audience_list(self, user_id):
+        audience = (
+            self.db.query(Audience)
+            .filter(Audience.user_id == user_id)
+            .all()
+        )
+        count = (
+            self.db.query(AudienceLeads)
+            .join(Audience, Audience.id == AudienceLeads.audience_id)
+            .filter(Audience.user_id == user_id)
+            .count()
+        )
+        return audience, count
 
     def post_user_audience(self, user_id, leads_ids, audience_name):
         lead_users = (
