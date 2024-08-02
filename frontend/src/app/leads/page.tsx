@@ -19,6 +19,7 @@ import DateRangeIcon from '@mui/icons-material/DateRange';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import CalendarPopup from '../../components/CalendarPopup';
 import FilterPopup from '@/components/FiltersSlider';
+import AudiencePopup from '@/components/AudienceSlider';
 
 
 const Sidebar = dynamic(() => import('../../components/Sidebar'), {
@@ -157,6 +158,7 @@ const Leads: React.FC = () => {
   const isCalendarOpen = Boolean(calendarAnchorEl);
   const [formattedDates, setFormattedDates] = useState<string>('');
   const [filterPopupOpen, setFilterPopupOpen] = useState(false);
+  const [audiencePopupOpen, setAudiencePopupOpen] = useState(false);
 
   const handleFilterPopupOpen = () => {
     setFilterPopupOpen(true);
@@ -164,6 +166,14 @@ const Leads: React.FC = () => {
 
   const handleFilterPopupClose = () => {
     setFilterPopupOpen(false);
+  };
+
+  const handleAudiencePopupOpen = () => {
+    setAudiencePopupOpen(true);
+  };
+
+  const handleAudiencePopupClose = () => {
+    setAudiencePopupOpen(false);
   };
 
 
@@ -262,7 +272,7 @@ const Leads: React.FC = () => {
           const startEpoch = start ? Math.floor(start.getTime() / 1000) : null;
           const endEpoch = end ? Math.floor(end.getTime() / 1000) : (start ? Math.floor(start.getTime() / 1000) : null);
 
-          let url = `/leads?page=${page + 1}&per_page=${rowsPerPage}&filter=${activeFilter}`;
+          let url = `/leads?page=${page + 1}&per_page=${rowsPerPage}&status=${activeFilter}`;
           if (startEpoch !== null && endEpoch !== null) {
             url += `&from_date=${startEpoch}&to_date=${endEpoch}`;
           }
@@ -446,7 +456,8 @@ const Leads: React.FC = () => {
                   </Button>
                 </Box>
                 <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', mt: 1, }}>
-                  <Button
+                  <Button 
+                    onClick={handleAudiencePopupOpen}
                     aria-haspopup="true"
                     sx={{
                       marginRight: '1.5em',
@@ -642,6 +653,7 @@ const Leads: React.FC = () => {
               </Box>
             </Grid>
             <FilterPopup open={filterPopupOpen} onClose={handleFilterPopupClose} />
+            <AudiencePopup open={audiencePopupOpen} onClose={handleAudiencePopupClose} />
             <CalendarPopup
               anchorEl={calendarAnchorEl}
               open={isCalendarOpen}
