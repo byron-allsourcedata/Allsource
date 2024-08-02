@@ -123,7 +123,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                     audience_ids: audienceIds,
                 };
                 const response = await axiosInstance.put('/audience', requestBody);
-                showToast(`Succesfully add leads in audiences list`)
+                showToast(`Successfully added leads in audiences list`)
             }
             onClose();
         } catch (error) {
