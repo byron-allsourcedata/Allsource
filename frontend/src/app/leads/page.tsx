@@ -292,11 +292,6 @@ const Leads: React.FC = () => {
     }
   }, [setShowSlider, page, rowsPerPage, activeFilter, appliedDates]);
 
-  useEffect(() => {
-    if (formattedDates) {
-      console.log(formattedDates)
-    }
-  }, [formattedDates]);
 
 
   if (isLoading) {
