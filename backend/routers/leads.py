@@ -21,12 +21,12 @@ async def get_leads(
         recurring_visits: int = Query(None, description="Minimum number of recurring visits"),
         leads_service: LeadsService = Depends(get_leads_service)
 ):
-    return leads_service.get_user_leads_by_filter(
+    return leads_service.get_leads(
         page=page,
         per_page=per_page,
         status=status,
-        date_start=from_date,
-        date_end=to_date,
+        from_date=from_date,
+        to_date=to_date,
         regions=regions,
         page_visits=page_visits,
         average_time_spent=average_time_spent,

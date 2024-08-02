@@ -653,7 +653,7 @@ const Leads: React.FC = () => {
               </Box>
             </Grid>
             <FilterPopup open={filterPopupOpen} onClose={handleFilterPopupClose} />
-            <AudiencePopup open={audiencePopupOpen} onClose={handleAudiencePopupClose} />
+            <AudiencePopup open={audiencePopupOpen} onClose={handleAudiencePopupClose} selectedLeads={Array.from(selectedRows)} />
             <CalendarPopup
               anchorEl={calendarAnchorEl}
               open={isCalendarOpen}

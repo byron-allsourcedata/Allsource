@@ -4,23 +4,26 @@ import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import CloseIcon from '@mui/icons-material/Close';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
+import { showToast } from './ToastNotification';
 
 interface AudiencePopupProps {
     open: boolean;
     onClose: () => void;
+    selectedLeads: number[];
 }
 
 interface ListItem {
+    audience_id: number;
     audience_name: string;
     leads_count: number;
 }
 
-const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose }) => {
+const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLeads }) => {
     const [selectedOption, setSelectedOption] = useState<string | null>(null);
     const [isFormOpen, setIsFormOpen] = useState<boolean>(false);
     const [isExistingListsOpen, setIsExistingListsOpen] = useState<boolean>(false);
     const [listItems, setListItems] = useState<ListItem[]>([]);
-    const [checkedItems, setCheckedItems] = useState<Set<string>>(new Set());
+    const [checkedItems, setCheckedItems] = useState<Set<number>>(new Set());
     const [listName, setListName] = useState<string>('');
 
     useEffect(() => {
@@ -35,6 +38,25 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose }) => {
         fetchListItems();
     }, []);
 
+    const fetchListItems = async () => {
+        try {
+            const response = await axiosInstance.get('/audience/list');
+            setListItems(response.data);
+        } catch (error) {
+            console.error('Error fetching list items:', error);
+        }
+    };
+
+    useEffect(() => {
+        fetchListItems();
+    }, []);
+
+    useEffect(() => {
+        if (open) {
+            fetchListItems();
+        }
+    }, [open]);
+
     const handleRadioChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const value = event.target.value;
         setSelectedOption(value);
@@ -43,7 +65,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose }) => {
             setIsExistingListsOpen(false);
         } else if (value === 'existing') {
             setIsExistingListsOpen(true);
-            setIsFormOpen(false); 
+            setIsFormOpen(false);
         }
     };
 
@@ -55,13 +77,13 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose }) => {
         setIsExistingListsOpen(!isExistingListsOpen);
     };
 
-    const handleCheckboxChange = (audience_name: string) => {
+    const handleCheckboxChange = (audience_id: number) => {
         setCheckedItems(prev => {
             const newCheckedItems = new Set(prev);
-            if (newCheckedItems.has(audience_name)) {
-                newCheckedItems.delete(audience_name);
+            if (newCheckedItems.has(audience_id)) {
+                newCheckedItems.delete(audience_id);
             } else {
-                newCheckedItems.add(audience_name);
+                newCheckedItems.add(audience_id);
             }
             return newCheckedItems;
         });
@@ -82,6 +104,31 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose }) => {
             return true;
         }
         return false;
+    };
+
+
+    const handleSave = async () => {
+        try {
+            if (selectedOption === 'create') {
+                const requestBody = {
+                    leads_ids: selectedLeads,
+                    new_audience_name: listName,
+                };
+                const response = await axiosInstance.post('/audience', requestBody);
+                showToast(`Succesfully add new Audience List - ${listName} `)
+            } else if (selectedOption === 'existing') {
+                const audienceIds = Array.from(checkedItems);
+                const requestBody = {
+                    leads_ids: selectedLeads,
+                    audience_ids: audienceIds,
+                };
+                const response = await axiosInstance.put('/audience', requestBody);
+                showToast(`Succesfully add leads in audiences list`)
+            }
+            onClose();
+        } catch (error) {
+            console.error('Error saving audience list:', error);
+        }
     };
 
     return (
@@ -161,11 +208,11 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose }) => {
                         </Box>
                         <Collapse in={isExistingListsOpen} sx={{ width: '100%' }}>
                             <Box sx={{ width: '100%', pt: 1 }}>
-                                {listItems.map(({ audience_name, leads_count }) => (
-                                    <Box key={audience_name} sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                                {listItems.map(({ audience_id, audience_name, leads_count }) => (
+                                    <Box key={audience_id} sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                                         <Checkbox
-                                            checked={checkedItems.has(audience_name)}
-                                            onChange={() => handleCheckboxChange(audience_name)}
+                                            checked={checkedItems.has(audience_id)}
+                                            onChange={() => handleCheckboxChange(audience_id)}
                                         />
                                         <Typography sx={{ ml: 1 }}>{audience_name} ({leads_count})</Typography>
                                     </Box>
@@ -177,7 +224,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose }) => {
                         <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-end', paddingTop: '1em' }}>
                             <Button
                                 variant="contained"
-                                onClick={() => console.log('Save clicked')}
+                                onClick={handleSave}
                                 disabled={isSaveButtonDisabled()}
                                 sx={{
                                     backgroundColor: 'rgba(80, 82, 178, 1)',
@@ -185,11 +232,10 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose }) => {
                                     fontSize: '16px',
                                     textTransform: 'none',
                                     padding: '1em 2.5em',
-                                    position: 'fixed',
-                                    bottom: 25,
-                                    right: 15,
-                                    margin: '0 auto',
-                                    opacity: isSaveButtonDisabled() ? 0.8 : 1,
+                                    '&:hover': {
+                                        backgroundColor: '#2124A1'
+                                    },
+                                    borderRadius: '8px',
                                 }}
                             >
                                 Save
