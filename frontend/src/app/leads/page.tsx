@@ -262,7 +262,7 @@ const Leads: React.FC = () => {
           const startEpoch = start ? Math.floor(start.getTime() / 1000) : null;
           const endEpoch = end ? Math.floor(end.getTime() / 1000) : (start ? Math.floor(start.getTime() / 1000) : null);
 
-          const response = await axiosInstance.get(`/leads?page=${page + 1}&per_page=${rowsPerPage}&filter=${activeFilter}&start_date=${startEpoch}&end_date=${endEpoch}`);
+          const response = await axiosInstance.get(`/leads?page=${page + 1}&per_page=${rowsPerPage}&filter=${activeFilter}&from_date=${startEpoch}&to_date=${endEpoch}`);
           const [leads, count, max_page] = response.data;
           setData(Array.isArray(leads) ? leads : []);
           setCount(count || 0);
