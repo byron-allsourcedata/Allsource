@@ -305,7 +305,7 @@ const Leads: React.FC = () => {
     } else {
       router.push('/signin');
     }
-  }, [setShowSlider, page, rowsPerPage, activeFilter, appliedDates]);
+  }, [setShowSlider, page, rowsPerPage, activeFilter, appliedDates, router]);
 
 
 
