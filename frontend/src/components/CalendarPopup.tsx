@@ -11,9 +11,10 @@ interface CalendarPopupProps {
     open: boolean;
     onClose: () => void;
     onDateChange: (dates: { start: Date | null; end: Date | null }) => void;
+    onApply: (dates: { start: Date | null; end: Date | null }) => void;
 }
 
-const CalendarPopup: React.FC<CalendarPopupProps> = ({ anchorEl, open, onClose, onDateChange }) => {
+const CalendarPopup: React.FC<CalendarPopupProps> = ({ anchorEl, open, onClose, onDateChange, onApply }) => {
     const [startDate, setStartDate] = useState<Date | null>(null);
     const [endDate, setEndDate] = useState<Date | null>(null);
 
@@ -54,7 +55,7 @@ const CalendarPopup: React.FC<CalendarPopupProps> = ({ anchorEl, open, onClose, 
     };
 
     const handleApply = () => {
-        onDateChange({ start: startDate, end: endDate });
+        onApply({ start: startDate, end: endDate });
         onClose();
     };
 
