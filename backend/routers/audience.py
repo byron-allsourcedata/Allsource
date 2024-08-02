@@ -31,8 +31,8 @@ async def post_audience(audience_request: AudienceRequest,
 async def put_audience(audience_request: AudienceRequest,
                        audience_service: AudienceService = Depends(get_audience_service)):
     return AudienceInfoResponse(
-        status=audience_service.put_audience(audience_request.leads_ids, audience_request.remove_leads_ids,
-                                             audience_request.audience_ids, audience_request.new_audience_name))
+        status=audience_service.put_audience(leads_ids=audience_request.leads_ids, remove_leads_ids=audience_request.remove_leads_ids,
+                                             audience_ids=audience_request.audience_ids, new_audience_name=audience_request.new_audience_name))
 
 
 @router.delete("", response_model=AudienceInfoResponse)
