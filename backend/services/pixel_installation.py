@@ -30,7 +30,7 @@ class PixelInstallationService:
                 synchronize_session=False)
             self.db.commit()
         script = f'''
-            <script id="acegm_pixel_script" type="text/javascript">
+            <script id="acegm_pixel_script" type="text/javascript" defer="defer">
                 const pixel_clientId = "{client_id}";
                 const pixel_pid = 'aeefb163f3395a3d1bafbbcbf8260a30b1f89ffdb0c329565b5a412ee79f00a7';
                 const pixel_puid = {{
