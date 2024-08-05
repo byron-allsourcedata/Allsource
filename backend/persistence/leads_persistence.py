@@ -1,5 +1,8 @@
 import logging
 import math
+import io
+import csv
+
 from datetime import datetime, timedelta
 
 import pytz
@@ -91,3 +94,52 @@ class LeadsPersistence:
         ]
 
         return leads_list, count, max_page
+
+    def download_leads(self, leads_ids):
+        if len(leads_ids) == 0:
+            return None
+
+        output = io.StringIO()
+        writer = csv.writer(output)
+        writer.writerow(
+            ['First Name', 'Last Name', 'Gender', 'Mobile Phone', 'IP', 'Company Name', 'Company City', 'Company State',
+             'Company Zip', 'Business Email', 'Time spent', 'No of visits',
+             'No of page visits', 'Age min', 'Age_max', 'Company domain', 'Company phone', 'Company sic',
+             'Company address', 'Company revenue', 'Company employee count'])
+        for lead_id in leads_ids:
+            lead_data = self.get_lead_data(lead_id)
+
+            if lead_data:
+                relevant_data = [
+                    lead_data.first_name if lead_data.first_name is not None else 'None',
+                    lead_data.last_name if lead_data.last_name is not None else 'None',
+                    lead_data.gender if lead_data.gender is not None else 'None',
+                    lead_data.mobile_phone if lead_data.mobile_phone is not None else 'None',
+                    lead_data.ip if lead_data.ip is not None else 'None',
+                    lead_data.company_name if lead_data.company_name is not None else 'None',
+                    lead_data.company_city if lead_data.company_city is not None else 'None',
+                    lead_data.company_state if lead_data.company_state is not None else 'None',
+                    lead_data.company_zip if lead_data.company_zip is not None else 'None',
+                    lead_data.business_email if lead_data.business_email is not None else 'None',
+                    lead_data.time_spent if lead_data.time_spent is not None else 'None',
+                    lead_data.no_of_visits if lead_data.no_of_visits is not None else 'None',
+                    lead_data.no_of_page_visits if lead_data.no_of_page_visits is not None else 'None',
+                    lead_data.age_min if lead_data.age_min is not None else 'None',
+                    lead_data.age_max if lead_data.age_max is not None else 'None',
+                    lead_data.company_domain if lead_data.company_domain is not None else 'None',
+                    lead_data.company_phone if lead_data.company_phone is not None else 'None',
+                    lead_data.company_sic if lead_data.company_sic is not None else 'None',
+                    lead_data.company_address if lead_data.company_address is not None else 'None',
+                    lead_data.company_revenue if lead_data.company_revenue is not None else 'None',
+                    lead_data.company_employee_count if lead_data.company_employee_count is not None else 'None',
+                ]
+                writer.writerow(relevant_data)
+
+        output.seek(0)
+        return output
+
+    def get_lead_data(self, lead_id):
+        lead = self.db.query(Lead).filter(Lead.id == lead_id).first()
+        if lead:
+            return lead
+        return None

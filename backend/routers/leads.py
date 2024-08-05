@@ -1,5 +1,9 @@
 from fastapi import APIRouter, Depends, Query
+from starlette.responses import StreamingResponse
+
 from dependencies import get_leads_service
+from enums import BaseEnum
+from schemas.leads import LeadsRequest
 from schemas.users import CompanyInfo, CompanyInfoResponse
 from services.leads import LeadsService
 
@@ -34,3 +38,13 @@ async def get_leads(
         emails=emails,
         recurring_visits=recurring_visits
     )
+
+
+@router.post("/download_leads")
+async def download_leads(leads_request: LeadsRequest,
+                         leads_service: LeadsService = Depends(get_leads_service)):
+    result = leads_service.download_leads(leads_request.leads_ids)
+    if result:
+        return StreamingResponse(result, media_type="text/csv",
+                                 headers={"Content-Disposition": "attachment; filename=data.csv"})
+    return BaseEnum.FAILURE
