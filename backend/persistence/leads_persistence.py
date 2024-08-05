@@ -24,7 +24,7 @@ class LeadsPersistence:
         self.db = db
 
     def filter_leads(self, page, per_page, status, from_date, to_date, regions, page_visits, average_time_spent,
-                  lead_funnel, emails, recurring_visits):
+                     lead_funnel, emails, recurring_visits):
         if from_date and to_date:
             start_date = datetime.fromtimestamp(from_date, tz=pytz.UTC)
             end_date = datetime.fromtimestamp(to_date, tz=pytz.UTC)
@@ -89,3 +89,37 @@ class LeadsPersistence:
                                                     LeadUser.lead_id.in_(leads_ids)).all()
         lead_ids_set = {lead_user.lead_id for lead_user in lead_users}
         return lead_ids_set
+
+    def get_full_user_leads_by_ids(self, user_id, leads_ids):
+        lead_users = (
+            self.db.query(
+                Lead.first_name,
+                Lead.last_name,
+                Lead.gender,
+                Lead.mobile_phone,
+                Lead.ip,
+                Lead.company_name,
+                Lead.company_city,
+                Lead.company_state,
+                Lead.company_zip,
+                Lead.business_email,
+                Lead.time_spent,
+                Lead.no_of_visits,
+                Lead.no_of_page_visits,
+                Lead.age_min,
+                Lead.age_max,
+                Lead.company_domain,
+                Lead.company_phone,
+                Lead.company_sic,
+                Lead.company_address,
+                Lead.company_revenue,
+                Lead.company_employee_count
+            )
+            .join(LeadUser, LeadUser.lead_id == Lead.id)
+            .filter(
+                LeadUser.user_id == user_id,
+                LeadUser.lead_id.in_(leads_ids)
+            )
+            .all()
+        )
+        return lead_users

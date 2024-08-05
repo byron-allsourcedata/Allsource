@@ -20,6 +20,7 @@ from models.leads_locations import LeadsLocations
 from models.leads_users import LeadUser
 from models.locations import Locations
 
+
 class LeadsService:
     def __init__(self, leads_persistence_service: LeadsPersistence, user: Users):
         self.leads_persistence_service = leads_persistence_service
@@ -27,8 +28,9 @@ class LeadsService:
 
     def get_leads(self, page, per_page, status, from_date, to_date, regions, page_visits, average_time_spent,
                   lead_funnel, emails, recurring_visits):
-        leads_list, count, max_page = self.leads_persistence_service.filter_leads(page, per_page, status, from_date, to_date, regions, page_visits, average_time_spent,
-                  lead_funnel, emails, recurring_visits)
+        leads, count, max_page = self.leads_persistence_service.filter_leads(page, per_page, status, from_date, to_date,
+                                                                             regions, page_visits, average_time_spent,
+                                                                             lead_funnel, emails, recurring_visits)
         leads_list = [
             {
                 'lead': lead,
@@ -47,7 +49,9 @@ class LeadsService:
     def download_leads(self, leads_ids):
         if len(leads_ids) == 0:
             return None
-        user_leads_ids = self.leads_persistence_service.get_user_leads_ids(self.user_id, leads_ids)
+        leads_data = self.leads_persistence_service.get_full_user_leads_by_ids(self.user.id, leads_ids)
+        if len(leads_data) == 0:
+            return None
         output = io.StringIO()
         writer = csv.writer(output)
         writer.writerow(
@@ -55,8 +59,7 @@ class LeadsService:
              'Company Zip', 'Business Email', 'Time spent', 'No of visits',
              'No of page visits', 'Age min', 'Age_max', 'Company domain', 'Company phone', 'Company sic',
              'Company address', 'Company revenue', 'Company employee count'])
-        for lead_id in user_leads_ids:
-            lead_data = self.leads_persistence_service.get_lead_data(lead_id)
+        for lead_data in leads_data:
             if lead_data:
                 relevant_data = [
                     lead_data.first_name if lead_data.first_name is not None else 'None',
@@ -85,4 +88,3 @@ class LeadsService:
 
         output.seek(0)
         return output
-
