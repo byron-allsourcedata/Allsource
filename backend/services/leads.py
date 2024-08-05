@@ -1,24 +1,8 @@
 import csv
+import io
 
 from models.users import Users
 from persistence.leads_persistence import LeadsPersistence
-import logging
-import math
-import io
-import csv
-
-from datetime import datetime, timedelta
-
-import pytz
-from sqlalchemy import and_, or_
-from sqlalchemy.orm import Session
-from sqlalchemy.sql import func
-
-from models.lead_visits import LeadVisits
-from models.leads import Lead
-from models.leads_locations import LeadsLocations
-from models.leads_users import LeadUser
-from models.locations import Locations
 
 
 class LeadsService:
@@ -28,7 +12,7 @@ class LeadsService:
 
     def get_leads(self, page, per_page, status, from_date, to_date, regions, page_visits, average_time_spent,
                   lead_funnel, emails, recurring_visits):
-        leads, count, max_page = self.leads_persistence_service.filter_leads(page, per_page, status, from_date, to_date,
+        leads, count, max_page = self.leads_persistence_service.filter_leads(user, page, per_page, status, from_date, to_date,
                                                                              regions, page_visits, average_time_spent,
                                                                              lead_funnel, emails, recurring_visits)
         leads_list = [

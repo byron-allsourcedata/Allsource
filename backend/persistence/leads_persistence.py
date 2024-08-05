@@ -23,13 +23,8 @@ class LeadsPersistence:
     def __init__(self, db: Session):
         self.db = db
 
-    def filter_leads(self, page, per_page, status, from_date, to_date, regions, page_visits, average_time_spent,
+    def filter_leads(self, user, page, per_page, status, from_date, to_date, regions, page_visits, average_time_spent,
                      lead_funnel, emails, recurring_visits):
-        if from_date and to_date:
-            start_date = datetime.fromtimestamp(from_date, tz=pytz.UTC)
-            end_date = datetime.fromtimestamp(to_date, tz=pytz.UTC)
-            if start_date == end_date:
-                end_date += timedelta(days=1)
         subquery = (
             self.db.query(
                 LeadVisits.leads_users_id,
@@ -51,9 +46,13 @@ class LeadsPersistence:
             .join(LeadsLocations, Lead.id == LeadsLocations.lead_id)
             .join(Locations, LeadsLocations.location_id == Locations.id)
             .outerjoin(subquery, LeadUser.id == subquery.c.leads_users_id)
-            .filter(LeadUser.user_id == self.user_id)
+            .filter(LeadUser.user_id == user.id)
         )
         if from_date and to_date:
+            start_date = datetime.fromtimestamp(from_date, tz=pytz.UTC)
+            end_date = datetime.fromtimestamp(to_date, tz=pytz.UTC)
+            if start_date == end_date:
+                end_date += timedelta(days=1)
             query = query.filter(
                 and_(
                     subquery.c.last_visited_at >= start_date,
@@ -84,7 +83,7 @@ class LeadsPersistence:
             return lead
         return None
 
-    def get_user_leads_ids(self, user_id, leads_ids):
+    def get_ids_user_leads_ids(self, user_id, leads_ids):
         lead_users = self.db.query(LeadUser).filter(LeadUser.user_id == user_id,
                                                     LeadUser.lead_id.in_(leads_ids)).all()
         lead_ids_set = {lead_user.lead_id for lead_user in lead_users}
