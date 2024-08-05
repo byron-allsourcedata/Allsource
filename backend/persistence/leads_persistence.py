@@ -1,13 +1,17 @@
-from sqlalchemy.orm import Session, aliased
-from sqlalchemy.sql import func, desc
-import math
-
-from models.leads import Lead
-from models.leads_users import LeadUser
-from models.leads_locations import LeadsLocations
-from models.locations import Locations
-from models.lead_visits import LeadVisits
 import logging
+import math
+from datetime import datetime, timedelta
+
+import pytz
+from sqlalchemy import and_, or_
+from sqlalchemy.orm import Session
+from sqlalchemy.sql import func
+
+from models.lead_visits import LeadVisits
+from models.leads import Lead
+from models.leads_locations import LeadsLocations
+from models.leads_users import LeadUser
+from models.locations import Locations
 
 logger = logging.getLogger(__name__)
 
@@ -16,11 +20,14 @@ class LeadsPersistence:
     def __init__(self, db: Session):
         self.db = db
 
-    def get_user_leads_by_status(self, user_id, page: int, per_page: int, filter=None):
-        lead_user_alias = aliased(LeadUser)
-        leads_locations_alias = aliased(LeadsLocations)
-        locations_alias = aliased(Locations)
-
+    def get_user_leads(self, user_id, page: int, per_page: int, status, from_date=None, to_date=None, regions=None,
+                       page_visits=None,
+                       average_time_spent=None, lead_funnel=None, emails=None, recurring_visits=None):
+        if from_date and to_date:
+            start_date = datetime.fromtimestamp(from_date, tz=pytz.UTC)
+            end_date = datetime.fromtimestamp(to_date, tz=pytz.UTC)
+            if start_date == end_date:
+                end_date += timedelta(days=1)
         subquery = (
             self.db.query(
                 LeadVisits.leads_users_id,
@@ -33,22 +40,37 @@ class LeadsPersistence:
         query = (
             self.db.query(
                 Lead,
-                lead_user_alias.status,
-                lead_user_alias.funnel,
-                locations_alias.state,
-                locations_alias.city,
+                LeadUser.status,
+                LeadUser.funnel,
+                Locations.state,
+                Locations.city,
                 subquery.c.last_visited_at
             )
-            .join(lead_user_alias, Lead.id == lead_user_alias.lead_id)
-            .join(leads_locations_alias, Lead.id == leads_locations_alias.lead_id)
-            .join(locations_alias, leads_locations_alias.location_id == locations_alias.id)
-            .outerjoin(subquery, lead_user_alias.id == subquery.c.leads_users_id)
-            .filter(lead_user_alias.user_id == user_id)
+            .join(LeadUser, Lead.id == LeadUser.lead_id)
+            .join(LeadsLocations, Lead.id == LeadsLocations.lead_id)
+            .join(Locations, LeadsLocations.location_id == Locations.id)
+            .outerjoin(subquery, LeadUser.id == subquery.c.leads_users_id)
+            .filter(LeadUser.user_id == user_id)
         )
-        if filter == 'new_customers':
-            query = query.filter(lead_user_alias.status == 'New')
-        elif filter == 'existing_customers':
-            query = query.filter(lead_user_alias.status == 'Existing')
+        if from_date and to_date:
+            query = query.filter(
+                and_(
+                    subquery.c.last_visited_at >= start_date,
+                    subquery.c.last_visited_at <= end_date
+                )
+            )
+        if regions:
+            query = query.filter(
+                Locations.city.in_(regions)
+            )
+        if emails:
+            email_filters = [Lead.business_email.like(f"%{email}") for email in emails]
+            query = query.filter(or_(*email_filters))
+
+        if status == 'new_customers':
+            query = query.filter(LeadUser.status == 'New')
+        elif status == 'existing_customers':
+            query = query.filter(LeadUser.status == 'Existing')
 
         offset = (page - 1) * per_page
         leads = query.limit(per_page).offset(offset).all()
