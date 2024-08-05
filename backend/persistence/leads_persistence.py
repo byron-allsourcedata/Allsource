@@ -95,10 +95,10 @@ class LeadsPersistence:
 
         return leads_list, count, max_page
 
-    def download_leads(self, leads_ids):
+    def download_leads(self, leads_ids, user_id):
         if len(leads_ids) == 0:
             return None
-
+        user_leads_ids = self.get_user_leads_ids(user_id, leads_ids)
         output = io.StringIO()
         writer = csv.writer(output)
         writer.writerow(
@@ -106,7 +106,7 @@ class LeadsPersistence:
              'Company Zip', 'Business Email', 'Time spent', 'No of visits',
              'No of page visits', 'Age min', 'Age_max', 'Company domain', 'Company phone', 'Company sic',
              'Company address', 'Company revenue', 'Company employee count'])
-        for lead_id in leads_ids:
+        for lead_id in user_leads_ids:
             lead_data = self.get_lead_data(lead_id)
 
             if lead_data:
@@ -143,3 +143,9 @@ class LeadsPersistence:
         if lead:
             return lead
         return None
+
+    def get_user_leads_ids(self, user_id, leads_ids):
+        lead_users = self.db.query(LeadUser).filter(LeadUser.user_id == user_id,
+                                                    LeadUser.lead_id.in_(leads_ids)).all()
+        lead_ids_set = {lead_user.lead_id for lead_user in lead_users}
+        return lead_ids_set

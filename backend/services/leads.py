@@ -21,5 +21,5 @@ class LeadsService:
                                                              )
 
     def download_leads(self, leads_ids):
-        return self.leads_persistence_service.download_leads(leads_ids)
+        return self.leads_persistence_service.download_leads(leads_ids, self.user.id)
 
