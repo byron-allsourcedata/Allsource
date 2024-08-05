@@ -45,7 +45,7 @@ export const TrialProvider: React.FC<TrialProviderProps> = ({ children }) => {
         console.error('Failed to parse sessionStorage item "me":', error);
       }
     }
-  }, []);
+  }, [trial]);
 
   
 

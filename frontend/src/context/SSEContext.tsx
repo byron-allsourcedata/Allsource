@@ -54,7 +54,7 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
       console.log('Closing EventSource');
       evtSource.close();
     };
-  }, []);
+  }, [url]);
 
   return (
     <SSEContext.Provider value={{ data }}>

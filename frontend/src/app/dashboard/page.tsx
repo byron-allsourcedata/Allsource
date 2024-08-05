@@ -239,7 +239,7 @@ const Dashboard: React.FC = () => {
     fetchData();
   }else {
     router.push('/signin')
-  }}, [setShowSlider, setTrial, setDaysLeft]);
+  }}, [setShowSlider, setTrial, setDaysLeft, router]);
 
   if (isLoading) {
     return <div>Loading...</div>;
