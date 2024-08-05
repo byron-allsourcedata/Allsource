@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer
+from sqlalchemy import Column, Integer, Text
 from sqlalchemy.dialects.postgresql import TIMESTAMP, VARCHAR
 from .base import Base
 
@@ -9,4 +9,4 @@ class LeadVisits(Base):
     id = Column(Integer, primary_key=True)
     leads_users_id = Column(VARCHAR)
     visited_at = Column(TIMESTAMP(precision=7))
-    referer = Column(VARCHAR)
+    page = Column(Text)

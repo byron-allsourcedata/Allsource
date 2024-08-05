@@ -70,6 +70,7 @@ def process_file(bucket, file, session):
                         partner_uid_decoded = urllib.parse.unquote(str(table['PARTNER_UID'][i]).lower())
                         partner_uid_dict = json.loads(partner_uid_decoded)
                         partner_uid_client_id = partner_uid_dict.get('client_id')
+                        page = partner_uid_dict.get('current_page')
                         user = session.query(Users).filter(
                             Users.data_provider_id == str(partner_uid_client_id)).first()
                         if not user:
@@ -136,13 +137,9 @@ def process_file(bucket, file, session):
                             session.commit()
                         leads_users_id = lead_user.id
                         visited_at = table['EVENT_DATE'][i].as_py().isoformat()
-                        json_data = json.loads(str(table['JSON_HEADERS'][i].as_py()))
-                        referer = json_data.get('Referer', '')
-                        if referer:
-                            referer = referer[0]
                         lead_visit = insert(LeadVisits).values(
                             leads_users_id=leads_users_id, visited_at=visited_at,
-                            referer=referer
+                            page=page
                         ).on_conflict_do_nothing()
                         session.execute(lead_visit)
                         session.commit()
