@@ -8,5 +8,5 @@ class LeadUser(Base):
     id = Column(Integer, primary_key=True)
     lead_id = Column(Integer)
     user_id = Column(Integer)
-    status = Column(VARCHAR)
-    funnel = Column(VARCHAR)
+    status = Column(VARCHAR, default='New', nullable=False)
+    funnel = Column(VARCHAR, default='Visitor', nullable=False)
