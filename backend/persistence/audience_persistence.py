@@ -48,7 +48,7 @@ class AudiencePersistence:
 
         return audience_list
 
-    def post_user_audience(self, user_id, leads_ids, audience_name):
+    def create_user_audience(self, user_id, leads_ids, audience_name):
         lead_users = (
             self.db.query(LeadUser)
             .filter(LeadUser.user_id == user_id, LeadUser.lead_id.in_(leads_ids))
@@ -71,7 +71,7 @@ class AudiencePersistence:
         self.db.commit()
         return {'id': audience.id, 'status': AudienceInfoEnum.SUCCESS}
 
-    def put_user_audience(self, user_id, leads_ids, remove_ids, audience_id, new_audience_name):
+    def change_user_audience(self, user_id, leads_ids, remove_ids, audience_id, new_audience_name):
         if audience_id:
             audience = self.db.query(Audience).filter(Audience.user_id == user_id, Audience.id == audience_id).first()
             if audience:
