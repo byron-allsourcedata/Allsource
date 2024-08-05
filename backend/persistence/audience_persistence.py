@@ -38,7 +38,8 @@ class AudiencePersistence:
             .all()
         )
         audience_list = [
-            {   'audience_id': audience.id,
+            {
+                'audience_id': audience.id,
                 'audience_name': audience.name,
                 'leads_count': audience.leads_count
             }
