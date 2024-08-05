@@ -13,6 +13,7 @@ class Audience(Base):
     name = Column(VARCHAR)
     user_id = Column(Integer)
     type = Column(VARCHAR)
+    status = Column(VARCHAR, default='New', nullable=False)
     created_at = Column(TIMESTAMP, nullable=False)
 
 
