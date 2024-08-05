@@ -6,7 +6,6 @@ import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider, DatePicker, TimePicker } from '@mui/x-date-pickers';
-import { Chip } from '@mui/material';
 import dayjs from 'dayjs';
 
 
@@ -18,17 +17,69 @@ interface FilterPopupProps {
 const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose }) => {
   const [selectedButton, setSelectedButton] = useState<string | null>(null);
   const [isVisitedDateOpen, setIsVisitedDateOpen] = useState(false);
+  const [isVisitedPageOpen, setIsVisitedPageOpen] = useState(false);
+  const [isTimeSpentOpen, setIsTimeSpentOpen] = useState(false);
   const [isVisitedTimeOpen, setIsVisitedTimeOpen] = useState(false);
   const [isRegionOpen, setIsRegionOpen] = useState(false);
-  const [filter1, setFilter1] = useState('');
-  const [filter2, setFilter2] = useState('');
+  const [isLeadFunnel, setIsLeadFunnel] = useState(false);
+  const [emails, setEmails] = useState('');
+  const [region, setRegions] = useState('');
   const [selectedDateRange, setSelectedDateRange] = useState<string | null>(null);
   const [selectedTimeRange, setSelectedTimeRange] = useState<string | null>(null);
   const [selectedTags, setSelectedTags] = useState<{ [key: string]: string[] }>({
     visitedDate: [],
     visitedTime: [],
     region: [],
+    pageVisits: [],
+    timeSpents: []
   });
+  const [regions, setTags] = useState<string[]>([]);
+  const [selectedButtons, setSelectedButtons] = useState<string[]>([]);
+
+
+  const handleAddTag = (e: { key: string; }) => {
+    if (e.key === 'Enter' && region.trim()) {
+      setTags([...regions, region.trim()]);
+      setRegions('');
+    }
+  };
+
+
+  const getButtonStyle = (label: string) => {
+    switch (label) {
+      case 'Visitor':
+        return {
+          background: 'rgba(235, 243, 254, 1)',
+          color: 'rgba(20, 110, 246, 1)',
+        };
+      case 'Converted':
+        return {
+          background: 'rgba(244, 252, 238, 1)',
+          color: 'rgba(110, 193, 37, 1)',
+        };
+      case 'Added to cart':
+        return {
+          background: 'rgba(241, 241, 249, 1)',
+          color: 'rgba(80, 82, 178, 1)',
+        };
+      case 'Cart abandoned':
+        return {
+          background: 'rgba(254, 238, 236, 1)',
+          color: 'rgba(244, 87, 69, 1)',
+        };
+      default:
+        return {};
+    }
+  };
+
+
+  const handleButtonLeadFunnelClick = (label: string) => {
+    setSelectedButtons(prev =>
+      prev.includes(label)
+        ? prev.filter(item => item !== label)
+        : [...prev, label]
+    );
+  };
 
   const addTag = (category: string, tag: string) => {
     setSelectedTags((prevTags) => {
@@ -46,7 +97,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose }) => {
   const removeTag = (category: string, tag: string) => {
     setSelectedTags((prevTags) => {
       const updatedTags = prevTags[category].filter(t => t !== tag);
-  
+
       // Clear date range if the tag is related to date
       if (category === 'visitedDate') {
         if (updatedTags.length === 0) {
@@ -54,7 +105,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose }) => {
           setSelectedDateRange(null); // Clear the displayed date range
         }
       }
-  
+
       // Clear time range if the tag is related to time
       if (category === 'visitedTime') {
         if (updatedTags.length === 0) {
@@ -62,7 +113,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose }) => {
           setSelectedTimeRange(null); // Clear the displayed time range
         }
       }
-  
+
       // Update checkbox states if necessary
       if (category === 'visitedDate') {
         const tagMap: { [key: string]: string } = {
@@ -71,7 +122,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose }) => {
           'Last 6 months': 'last6Months',
           'All time': 'allTime',
         };
-  
+
         const filterName = tagMap[tag];
         if (filterName) {
           setCheckedFilters((prevFilters) => ({
@@ -80,7 +131,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose }) => {
           }));
         }
       }
-  
+
       if (category === 'visitedTime') {
         const tagMapTime: { [key: string]: string } = {
           'Morning 12AM - 11AM': 'morning',
@@ -88,7 +139,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose }) => {
           'Evening 5PM - 9PM': 'evening',
           'All day': 'all_day',
         };
-  
+
         const filterName = tagMapTime[tag];
         if (filterName) {
           setCheckedFiltersTime((prevFiltersTime) => ({
@@ -97,12 +148,12 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose }) => {
           }));
         }
       }
-  
+
       return { ...prevTags, [category]: updatedTags };
     });
   };
-  
-  
+
+
 
 
   interface TagMap {
@@ -178,15 +229,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose }) => {
     setSelectedButton(label);
   };
 
-  const handleApplyFilters = () => {
-    const filters = {
-      button: selectedButton,
-      filter1,
-      filter2,
-    };
-    // Send filters to the backend
-    console.log('Filters:', filters);
-  };
 
   ///// Date
   const [dateRange, setDateRange] = useState({
@@ -202,30 +244,30 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose }) => {
 
   const handleCheckboxChange = (event: { target: { name: any; checked: any; }; }) => {
     const { name, checked } = event.target;
-  
+
     setCheckedFilters((prevFilters) => {
       const newFilters = {
         ...prevFilters,
         [name]: checked,
       };
-  
+
       const tagMap: { [key: string]: string } = {
         lastWeek: 'Last week',
         last30Days: 'Last 30 days',
         last6Months: 'Last 6 months',
         allTime: 'All time',
       };
-  
+
       if (checked) {
         addTag('visitedDate', tagMap[name]);
       } else {
         removeTag('visitedDate', tagMap[name]);
       }
-  
+
       return newFilters;
     });
   };
-  
+
 
 
   const handleDateChange = (name: string) => (newValue: any) => {
@@ -262,26 +304,24 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose }) => {
 
   const handleCheckboxChangeTime = (event: { target: { name: any; checked: any; }; }) => {
     const { name, checked } = event.target;
-  
+
     setCheckedFiltersTime((prevFiltersTime) => {
       const newFiltersTime = {
         ...prevFiltersTime,
         [name]: checked,
       };
-  
+
       const tagMapTime: { [key: string]: string } = {
         morning: 'Morning 12AM - 11AM',
         afternoon: 'Afternoon 11AM - 5PM',
         evening: 'Evening 5PM - 9PM',
         all_day: 'All day',
       };
-  
       if (checked) {
         addTag('visitedTime', tagMapTime[name]);
       } else {
         removeTag('visitedTime', tagMapTime[name]);
       }
-  
       return newFiltersTime;
     });
   };
@@ -306,6 +346,102 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose }) => {
 
       return updatedRange;
     });
+  };
+
+  ////Page
+  const [checkedFiltersPageVisits, setCheckedFiltersPageVisits] = useState({
+    page: false,
+    two_page: false,
+    three_page: false,
+    more_three: false,
+  });
+
+  const handleCheckboxChangePageVisits = (event: { target: { name: any; checked: any; }; }) => {
+    const { name, checked } = event.target;
+
+    setCheckedFiltersPageVisits((prevFilters) => {
+      const newFilters = {
+        ...prevFilters,
+        [name]: checked,
+      };
+
+      const tagMap: { [key: string]: string } = {
+        page: '1 page',
+        two_page: '2 pages',
+        three_page: '3 pages',
+        more_three: 'More than 3 pages',
+      };
+
+      if (checked) {
+        addTag('pageVisits', tagMap[name]);
+      } else {
+        removeTag('pageVisits', tagMap[name]);
+      }
+
+      return newFilters;
+    });
+  };
+
+
+
+  ////time spent
+  const [checkedFiltersTimeSpent, setCheckedFiltersTimeSpent] = useState({
+    under_10: false,
+    over_10: false,
+    over_30: false,
+    over_60: false,
+  });
+
+  const handleCheckboxChangeTimeSpent = (event: { target: { name: any; checked: any; }; }) => {
+    const { name, checked } = event.target;
+
+    setCheckedFiltersTimeSpent((prevFilters) => {
+      const newFilters = {
+        ...prevFilters,
+        [name]: checked,
+      };
+
+      const tagMap: { [key: string]: string } = {
+        under_10: 'under 10 secs',
+        over_10: '10-30 secs',
+        over_30: '30-60 secs',
+        over_60: 'Over 60 secs',
+      };
+
+      if (checked) {
+        addTag('timeSpents', tagMap[name]);
+      } else {
+        removeTag('timeSpents', tagMap[name]);
+      }
+
+      return newFilters;
+    });
+  };
+
+
+  const handleApplyFilters = () => {
+    const filters = {
+      button: selectedButton,
+      filter1: emails,
+      region,
+      dateRange: {
+        fromDate: dateRange.fromDate ? dayjs(dateRange.fromDate).format('YYYY-MM-DD') : null,
+        toDate: dateRange.toDate ? dayjs(dateRange.toDate).format('YYYY-MM-DD') : null,
+      },
+      timeRange: {
+        fromTime: timeRange.fromTime ? dayjs(timeRange.fromTime).format('HH:mm:ss') : null,
+        toTime: timeRange.toTime ? dayjs(timeRange.toTime).format('HH:mm:ss') : null,
+      },
+      checkedFilters, // Object with the state of checkboxes for dates
+      checkedFiltersTime, // Object with the state of checkboxes for time
+      checkedFiltersPageVisits, // Object with the state of checkboxes for page visits
+      regions, // Object with the state of checkboxes for regions
+      checkedFiltersTimeSpent, // Object with the state of checkboxes for spent time
+      selectedButtons, // Array of selected buttons for leads funnel
+    };
+
+
+    console.log('Filters:', filters);
   };
 
   return (
@@ -406,7 +542,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose }) => {
               <Divider sx={{ mb: 2 }} />
               <Box sx={{ display: 'flex', flexDirection: 'rows', gap: 10, justifyContent: 'start' }}>
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                <FormControlLabel
+                  <FormControlLabel
                     control={<Checkbox checked={checkedFilters.lastWeek} onChange={handleCheckboxChange} name="lastWeek" />}
                     label="Last week"
                   />
@@ -523,6 +659,15 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose }) => {
               <Typography sx={{ flexGrow: 1, color: 'rgba(74, 74, 74, 1)', fontFamily: 'Nunito', fontWeight: '600', fontSize: '16px', lineHeight: '25.2px' }}>
                 Region
               </Typography>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '8px', mb: 2 }}>
+                {regions.map((tag, index) => (
+                  <CustomChip
+                    key={index}
+                    label={tag}
+                    onDelete={() => setTags(regions.filter((_, i) => i !== index))}
+                  />
+                ))}
+              </Box>
               <IconButton onClick={() => setIsRegionOpen(!isRegionOpen)} aria-label="toggle-content">
                 {isRegionOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
               </IconButton>
@@ -530,13 +675,149 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose }) => {
             <Collapse in={isRegionOpen}>
               <Divider sx={{ mb: 2 }} />
               <TextField
-                placeholder="Filter 2"
+                placeholder="Region"
                 variant="outlined"
                 fullWidth
-                value={filter2}
-                onChange={(e) => setFilter2(e.target.value)}
+                value={region}
+                onChange={(e) => setRegions(e.target.value)}
+                onKeyDown={handleAddTag}
                 sx={{ mb: 2 }}
               />
+            </Collapse>
+          </Box>
+          {/* Page visits */}
+          <Box sx={{ width: '95%', mb: 2, mt: 2, padding: '1em', border: '1px solid rgba(228, 228, 228, 1)', borderRadius: '4px' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', mb: 0 }}>
+              <Typography sx={{ flexGrow: 1, color: 'rgba(74, 74, 74, 1)', fontFamily: 'Nunito', fontWeight: '600', fontSize: '16px', lineHeight: '25.2px' }}>
+                Page visits
+              </Typography>
+              {selectedTags.pageVisits.map((tag, index) => (
+                <CustomChip
+                  key={index}
+                  label={tag}
+                  onDelete={() => removeTag('pageVisits', tag)}
+                />
+              ))}
+              <IconButton onClick={() => setIsVisitedPageOpen(!isVisitedPageOpen)} aria-label="toggle-content">
+                {isVisitedPageOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+              </IconButton>
+            </Box>
+            <Collapse in={isVisitedPageOpen}>
+              <Divider sx={{ mb: 2 }} />
+              <Box sx={{ display: 'flex', flexDirection: 'rows', gap: 10, justifyContent: 'start' }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                  <FormControlLabel
+                    control={<Checkbox checked={checkedFiltersPageVisits.page} onChange={handleCheckboxChangePageVisits} name="page" />}
+                    label="1 page"
+                  />
+                  <FormControlLabel
+                    control={<Checkbox checked={checkedFiltersPageVisits.two_page} onChange={handleCheckboxChangePageVisits} name="two_page" />}
+                    label="2 pages"
+                  />
+                </Box>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                  <FormControlLabel
+                    control={<Checkbox checked={checkedFiltersPageVisits.three_page} onChange={handleCheckboxChangePageVisits} name="three_page" />}
+                    label="3 pages"
+                  />
+                  <FormControlLabel
+                    control={<Checkbox checked={checkedFiltersPageVisits.more_three} onChange={handleCheckboxChangePageVisits} name="more_three" />}
+                    label="More than 3 pages"
+                  />
+                </Box>
+              </Box>
+            </Collapse>
+          </Box>
+          {/* Average time spent */}
+          <Box sx={{ width: '95%', mb: 2, mt: 2, padding: '1em', border: '1px solid rgba(228, 228, 228, 1)', borderRadius: '4px' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', mb: 0 }}>
+              <Typography sx={{ flexGrow: 1, color: 'rgba(74, 74, 74, 1)', fontFamily: 'Nunito', fontWeight: '600', fontSize: '16px', lineHeight: '25.2px' }}>
+                Average time spent
+              </Typography>
+              {selectedTags.timeSpents.map((tag, index) => (
+                <CustomChip
+                  key={index}
+                  label={tag}
+                  onDelete={() => removeTag('timeSpents', tag)}
+                />
+              ))}
+              <IconButton onClick={() => setIsTimeSpentOpen(!isTimeSpentOpen)} aria-label="toggle-content">
+                {isTimeSpentOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+              </IconButton>
+            </Box>
+            <Collapse in={isTimeSpentOpen}>
+              <Divider sx={{ mb: 2 }} />
+              <Box sx={{ display: 'flex', flexDirection: 'rows', gap: 10, justifyContent: 'start' }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                  <FormControlLabel
+                    control={<Checkbox checked={checkedFiltersTimeSpent.under_10} onChange={handleCheckboxChangeTimeSpent} name="under_10" />}
+                    label="under 10 secs"
+                  />
+                  <FormControlLabel
+                    control={<Checkbox checked={checkedFiltersTimeSpent.over_10} onChange={handleCheckboxChangeTimeSpent} name="over_10" />}
+                    label="10-30 secs"
+                  />
+                </Box>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                  <FormControlLabel
+                    control={<Checkbox checked={checkedFiltersTimeSpent.over_30} onChange={handleCheckboxChangeTimeSpent} name="over_30" />}
+                    label="30-60 secs"
+                  />
+                  <FormControlLabel
+                    control={<Checkbox checked={checkedFiltersTimeSpent.over_60} onChange={handleCheckboxChangeTimeSpent} name="over_60" />}
+                    label="Over 60 secs"
+                  />
+                </Box>
+              </Box>
+            </Collapse>
+          </Box>
+          {/* Lead Funnel */}
+          <Box sx={{ width: '95%', mb: 2, mt: 2, padding: '1em', border: '1px solid rgba(228, 228, 228, 1)', borderRadius: '4px' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', mb: 0 }}>
+              <Typography sx={{ flexGrow: 1, color: 'rgba(74, 74, 74, 1)', fontFamily: 'Nunito', fontWeight: '600', fontSize: '16px', lineHeight: '25.2px' }}>
+                Lead Funnel
+              </Typography>
+              {selectedButtons.map(label => (
+                <CustomChip
+                  key={label}
+                  label={label}
+                  onDelete={() => handleButtonLeadFunnelClick(label)}
+                />
+              ))}
+              <IconButton onClick={() => setIsLeadFunnel(!isLeadFunnel)} aria-label="toggle-content">
+                {isLeadFunnel ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+              </IconButton>
+            </Box>
+            <Collapse in={isLeadFunnel}>
+              <Divider sx={{ mb: 2 }} />
+              <Box sx={{ display: 'flex', flexDirection: 'rows', gap: 3 }}>
+                {['Converted', 'Visitor', 'Added to cart', 'Cart abandoned'].map((label) => (
+                  <Button
+                    key={label}
+                    onClick={() => handleButtonLeadFunnelClick(label)}
+                    sx={{
+                      width: 'calc(50% - 5px)',
+                      height: '2em',
+                      textTransform: 'none',
+                      padding: '1.25em',
+                      gap: '10px',
+                      textAlign: 'center',
+                      borderRadius: '4px',
+                      border: '1px solid rgba(220, 220, 239, 1)',
+                      backgroundColor: selectedButton === label ? 'rgba(219, 219, 240, 1)' : getButtonStyle(label).background,
+                      color: selectedButton === label ? '#000' : getButtonStyle(label).color,
+                      fontFamily: 'Nunito',
+                      opacity: 1,
+                      display: 'flex',
+                      alignItems: 'center',
+                      textWrap: 'nowrap',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    {label}
+                  </Button>
+                ))}
+              </Box>
             </Collapse>
           </Box>
           <Button
