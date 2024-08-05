@@ -35,6 +35,15 @@ interface CustomTablePaginationProps {
   onRowsPerPageChange: (event: React.ChangeEvent<{ value: unknown }>) => void;
 }
 
+interface FetchDataParams {
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+  page: number;
+  rowsPerPage: number;
+  activeFilter: string;
+  appliedDates: { start: Date | null; end: Date | null };
+}
+
 const CustomTablePagination: React.FC<CustomTablePaginationProps> = ({
   count,
   page,
@@ -140,8 +149,10 @@ const Leads: React.FC = () => {
   const { full_name, email } = useUser();
   const [data, setData] = useState<any[]>([]);
   const [count_leads, setCount] = useState<number | null>(null);
+  const [order, setOrder] = useState<'asc' | 'desc' | undefined>(undefined);
+  const [orderBy, setOrderBy] = useState<string | undefined>(undefined);
   const [appliedDates, setAppliedDates] = useState<{ start: Date | null; end: Date | null }>({ start: null, end: null });
-  const [max_page, setMaxpage] = useState<number | null>(null);
+  const [maxPage, setMaxPage] = useState<number>(0);
   const [status, setStatus] = useState<string | null>(null);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [showSlider, setShowSlider] = useState(false);
@@ -176,6 +187,11 @@ const Leads: React.FC = () => {
     setAudiencePopupOpen(false);
   };
 
+  const handleSortRequest = (property: string) => {
+    const isAsc = orderBy === property && order === 'asc';
+    setOrder(isAsc ? 'desc' : 'asc');
+    setOrderBy(property);
+  };
 
   const handleCalendarClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     setCalendarAnchorEl(event.currentTarget);
@@ -233,7 +249,6 @@ const Leads: React.FC = () => {
       setLoading(false);
     }
   };
-
 
 
   const handleSignOut = () => {
@@ -295,49 +310,53 @@ const Leads: React.FC = () => {
     setPage(0);
   };
 
-  useEffect(() => {
-    const accessToken = localStorage.getItem("token");
-    if (accessToken) {
-      const fetchData = async () => {
-        try {
-          const { start, end } = appliedDates;
-          const startEpoch = start ? Math.floor(start.getTime() / 1000) : null;
-          const endEpoch = end ? Math.floor(end.getTime() / 1000) : (start ? Math.floor(start.getTime() / 1000) : null);
+  const fetchData = async ({ sortBy, sortOrder, page, rowsPerPage, activeFilter, appliedDates }: FetchDataParams) => {
+    try {
+      const accessToken = localStorage.getItem("token");
+      if (!accessToken) {
+        router.push('/signin');
+        return;
+      }
 
-          let url = `/leads?page=${page + 1}&per_page=${rowsPerPage}&status=${activeFilter}`;
-          if (startEpoch !== null && endEpoch !== null) {
-            url += `&from_date=${startEpoch}&to_date=${endEpoch}`;
-          }
+      const { start, end } = appliedDates;
+      const startEpoch = start ? Math.floor(start.getTime() / 1000) : null;
+      const endEpoch = end ? Math.floor(end.getTime() / 1000) : (start ? Math.floor(start.getTime() / 1000) : null);
 
-          const response = await axiosInstance.get(url);
-          const [leads, count, max_page] = response.data;
-          setData(Array.isArray(leads) ? leads : []);
-          setCount(count || 0);
-          setMaxpage(max_page || 0);
-          setStatus(response.data.status);
-        } catch (error) {
-          if (error instanceof AxiosError && error.response?.status === 403) {
-            if (error.response.data.status === 'NEED_BOOK_CALL') {
-              sessionStorage.setItem('is_slider_opened', 'true');
-              setShowSlider(true);
-            } else if (error.response.data.status === 'PIXEL_INSTALLATION_NEEDED') {
-              setStatus(error.response.data.status || null);
-            } else {
-              setShowSlider(false);
-            }
-          } else {
-            console.error('Error fetching data:', error);
-          }
-        } finally {
-          setIsLoading(false);
+      let url = `/leads?page=${page + 1}&per_page=${rowsPerPage}&status=${activeFilter}`;
+      if (startEpoch !== null && endEpoch !== null) {
+        url += `&from_date=${startEpoch}&to_date=${endEpoch}`;
+      }
+      if (sortBy) {
+        url += `&sort_by=${sortBy}&sort_order=${sortOrder}`;
+      }
+
+      const response = await axiosInstance.get(url);
+      const [leads, count, max_page] = response.data;
+      setData(Array.isArray(leads) ? leads : []);
+      setCount(count || 0);
+      max_page(max_page || 0);
+      setStatus(response.data.status);
+    } catch (error) {
+      if (error instanceof AxiosError && error.response?.status === 403) {
+        if (error.response.data.status === 'NEED_BOOK_CALL') {
+          sessionStorage.setItem('is_slider_opened', 'true');
+          setShowSlider(true);
+        } else if (error.response.data.status === 'PIXEL_INSTALLATION_NEEDED') {
+          setStatus(error.response.data.status || null);
+        } else {
+          setShowSlider(false);
         }
-      };
-
-      fetchData();
-    } else {
-      router.push('/signin');
+      } else {
+        console.error('Error fetching data:', error);
+      }
+    } finally {
+      setIsLoading(false);
     }
-  }, [setShowSlider, page, rowsPerPage, activeFilter, appliedDates, router]);
+  };
+
+  useEffect(() => {
+    fetchData({ sortBy: orderBy, sortOrder: order, page, rowsPerPage, activeFilter, appliedDates });
+  }, [orderBy, order, page, rowsPerPage, activeFilter, appliedDates]);
 
 
 
@@ -662,10 +681,10 @@ const Leads: React.FC = () => {
                                 overflowY: 'auto'
                               }}
                           >
-                            <Table sx={{minWidth: 850}} aria-label="leads table">
+                            <Table sx={{ minWidth: 850 }} aria-label="leads table">
                               <TableHead>
                                 <TableRow>
-                                  <TableCell padding="checkbox" sx={{borderRight: '1px solid rgba(235, 235, 235, 1)'}}>
+                                  <TableCell padding="checkbox" sx={{ borderRight: '1px solid rgba(235, 235, 235, 1)' }}>
                                     <Checkbox
                                         indeterminate={selectedRows.size > 0 && selectedRows.size < data.length}
                                         checked={data.length > 0 && selectedRows.size === data.length}
@@ -673,34 +692,61 @@ const Leads: React.FC = () => {
                                         color="primary"
                                     />
                                   </TableCell>
-                                  <TableCell sx={leadsStyles.table_column}>Name</TableCell>
-                                  <TableCell sx={leadsStyles.table_column}>Email</TableCell>
-                                  <TableCell sx={leadsStyles.table_column}>Phone number</TableCell>
-                                  <TableCell sx={leadsStyles.table_column}>Visited date</TableCell>
-                                  <TableCell sx={leadsStyles.table_column}>Visited time</TableCell>
-                                  <TableCell sx={leadsStyles.table_column}>Lead Funnel</TableCell>
-                                  <TableCell sx={leadsStyles.table_column}>Status</TableCell>
-                                  <TableCell sx={leadsStyles.table_column}>Time Spent</TableCell>
-                                  <TableCell sx={leadsStyles.table_column}>No of Visits</TableCell>
-                                  <TableCell sx={leadsStyles.table_column}>No of Page Visits</TableCell>
-                                  <TableCell sx={leadsStyles.table_column}>Age</TableCell>
-                                  <TableCell sx={leadsStyles.table_column}>Gender</TableCell>
-                                  <TableCell sx={leadsStyles.table_column}>State</TableCell>
-                                  <TableCell sx={leadsStyles.table_column}>City</TableCell>
+                                  <TableCell sx={leadsStyles.table_column} onClick={() => handleSortRequest('name')} style={{ cursor: 'pointer' }}>
+                                    Name {orderBy === 'name' ? (order === 'asc' ? '🔼' : '🔽') : ''}
+                                  </TableCell>
+                                  <TableCell sx={leadsStyles.table_column} onClick={() => handleSortRequest('business_email')} style={{ cursor: 'pointer' }}>
+                                    Email {orderBy === 'business_email' ? (order === 'asc' ? '🔼' : '🔽') : ''}
+                                  </TableCell>
+                                  <TableCell sx={leadsStyles.table_column} onClick={() => handleSortRequest('mobile_phone')} style={{ cursor: 'pointer' }}>
+                                    Phone number {orderBy === 'mobile_phone' ? (order === 'asc' ? '🔼' : '🔽') : ''}
+                                  </TableCell>
+                                  <TableCell sx={leadsStyles.table_column} onClick={() => handleSortRequest('last_visited_date')} style={{ cursor: 'pointer' }}>
+                                    Visited date {orderBy === 'last_visited_date' ? (order === 'asc' ? '🔼' : '🔽') : ''}
+                                  </TableCell>
+                                  <TableCell sx={leadsStyles.table_column}>
+                                    Visited time
+                                  </TableCell>
+                                  <TableCell sx={leadsStyles.table_column} onClick={() => handleSortRequest('funnel')} style={{ cursor: 'pointer' }}>
+                                    Lead Funnel {orderBy === 'funnel' ? (order === 'asc' ? '🔼' : '🔽') : ''}
+                                  </TableCell>
+                                  <TableCell sx={leadsStyles.table_column} onClick={() => handleSortRequest('status')} style={{ cursor: 'pointer' }}>
+                                    Status {orderBy === 'status' ? (order === 'asc' ? '🔼' : '🔽') : ''}
+                                  </TableCell>
+                                  <TableCell sx={leadsStyles.table_column} onClick={() => handleSortRequest('time_spent')} style={{ cursor: 'pointer' }}>
+                                    Time Spent {orderBy === 'time_spent' ? (order === 'asc' ? '🔼' : '🔽') : ''}
+                                  </TableCell>
+                                  <TableCell sx={leadsStyles.table_column} onClick={() => handleSortRequest('no_of_visits')} style={{ cursor: 'pointer' }}>
+                                    No of Visits {orderBy === 'no_of_visits' ? (order === 'asc' ? '🔼' : '🔽') : ''}
+                                  </TableCell>
+                                  <TableCell sx={leadsStyles.table_column} onClick={() => handleSortRequest('no_of_page_visits')} style={{ cursor: 'pointer' }}>
+                                    No of Page Visits {orderBy === 'no_of_page_visits' ? (order === 'asc' ? '🔼' : '🔽') : ''}
+                                  </TableCell>
+                                  <TableCell sx={leadsStyles.table_column}>
+                                    Age
+                                  </TableCell>
+                                  <TableCell sx={leadsStyles.table_column} onClick={() => handleSortRequest('gender')} style={{ cursor: 'pointer' }}>
+                                    Gender {orderBy === 'gender' ? (order === 'asc' ? '🔼' : '🔽') : ''}
+                                  </TableCell>
+                                  <TableCell sx={leadsStyles.table_column} onClick={() => handleSortRequest('state')} style={{ cursor: 'pointer' }}>
+                                    State {orderBy === 'state' ? (order === 'asc' ? '🔼' : '🔽') : ''}
+                                  </TableCell>
+                                  <TableCell sx={leadsStyles.table_column} onClick={() => handleSortRequest('city')} style={{ cursor: 'pointer' }}>
+                                    City {orderBy === 'city' ? (order === 'asc' ? '🔼' : '🔽') : ''}
+                                  </TableCell>
                                 </TableRow>
                               </TableHead>
                               <TableBody>
                                 {data.map((row) => (
                                     <TableRow
-                                        key={row.lead.id}
-                                        selected={selectedRows.has(row.lead.id)}
-                                        onClick={() => handleSelectRow(row.lead.id)}
+                                        key={row.id}
+                                        selected={selectedRows.has(row.id)}
+                                        onClick={() => handleSelectRow(row.id)}
                                         sx={{
-                                          backgroundColor: selectedRows.has(row.lead.id) ? 'rgba(235, 243, 254, 1)' : 'inherit',
+                                          backgroundColor: selectedRows.has(row.id) ? 'rgba(235, 243, 254, 1)' : 'inherit',
                                         }}
                                     >
-                                      <TableCell padding="checkbox"
-                                                 sx={{borderRight: '1px solid rgba(235, 235, 235, 1)'}}>
+                                      <TableCell padding="checkbox" sx={{ borderRight: '1px solid rgba(235, 235, 235, 1)' }}>
                                         <div
                                             onClick={(e) => {
                                               e.stopPropagation();
@@ -713,16 +759,11 @@ const Leads: React.FC = () => {
                                           />
                                         </div>
                                       </TableCell>
-                                      <TableCell
-                                          sx={leadsStyles.table_array}>{row.lead.first_name} {row.lead.last_name}</TableCell>
-                                      <TableCell
-                                          sx={leadsStyles.table_array}>{row.lead.business_email || 'N/A'}</TableCell>
-                                      <TableCell
-                                          sx={leadsStyles.table_array_phone}>{row.lead.mobile_phone || 'N/A'}</TableCell>
-                                      <TableCell
-                                          sx={leadsStyles.table_array}>{row.last_visited_date || 'N/A'}</TableCell>
-                                      <TableCell
-                                          sx={leadsStyles.table_array}>{row.last_visited_time || 'N/A'}</TableCell>
+                                      <TableCell sx={leadsStyles.table_array}>{row.lead.first_name} {row.lead.last_name}</TableCell>
+                                      <TableCell sx={leadsStyles.table_array}>{row.lead.business_email || 'N/A'}</TableCell>
+                                      <TableCell sx={leadsStyles.table_array_phone}>{row.lead.mobile_phone || 'N/A'}</TableCell>
+                                      <TableCell sx={leadsStyles.table_array}>{row.last_visited_date || 'N/A'}</TableCell>
+                                      <TableCell sx={leadsStyles.table_array}>{row.last_visited_time || 'N/A'}</TableCell>
                                       <TableCell sx={leadsStyles.table_column}>
                                         <Box
                                             sx={{
@@ -743,10 +784,8 @@ const Leads: React.FC = () => {
                                       </TableCell>
                                       <TableCell sx={leadsStyles.table_array}>{row.status || 'N/A'}</TableCell>
                                       <TableCell sx={leadsStyles.table_array}>{row.lead.time_spent || 'N/A'}</TableCell>
-                                      <TableCell
-                                          sx={leadsStyles.table_array}>{row.lead.no_of_visits || 'N/A'}</TableCell>
-                                      <TableCell
-                                          sx={leadsStyles.table_array}>{row.lead.no_of_page_visits || 'N/A'}</TableCell>
+                                      <TableCell sx={leadsStyles.table_array}>{row.lead.no_of_visits || 'N/A'}</TableCell>
+                                      <TableCell sx={leadsStyles.table_array}>{row.lead.no_of_page_visits || 'N/A'}</TableCell>
                                       <TableCell sx={leadsStyles.table_array}>
                                         {row.lead.age_min && row.lead.age_max ? `${row.lead.age_min} - ${row.lead.age_max}` : 'N/A'}
                                       </TableCell>

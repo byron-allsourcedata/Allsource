@@ -11,10 +11,10 @@ class LeadsService:
         self.user = user
 
     def get_leads(self, page, per_page, status, from_date, to_date, regions, page_visits, average_time_spent,
-                  lead_funnel, emails, recurring_visits):
+                  lead_funnel, emails, recurring_visits, sort_by, sort_order):
         leads, count, max_page = self.leads_persistence_service.filter_leads(self.user, page, per_page, status, from_date, to_date,
                                                                              regions, page_visits, average_time_spent,
-                                                                             lead_funnel, emails, recurring_visits)
+                                                                             lead_funnel, emails, recurring_visits, sort_by, sort_order)
         leads_list = [
             {
                 'lead': lead,
