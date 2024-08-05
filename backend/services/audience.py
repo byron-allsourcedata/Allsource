@@ -19,11 +19,11 @@ class AudienceService:
         return self.audience_persistence_service.get_user_audience_list(self.user.id)
 
     def post_audience(self, leads_ids, audience_name):
-        return self.audience_persistence_service.post_user_audience(self.user.id, leads_ids, audience_name)
+        return self.audience_persistence_service.create_user_audience(self.user.id, leads_ids, audience_name)
 
     def put_audience(self, leads_ids, remove_leads_ids, audience_ids, new_audience_name):
         for audience_id in audience_ids:
-            self.audience_persistence_service.put_user_audience(self.user.id, leads_ids, remove_leads_ids,
+            self.audience_persistence_service.change_user_audience(self.user.id, leads_ids, remove_leads_ids,
                                                                 audience_id, new_audience_name)
         return AudienceInfoEnum.SUCCESS
 
