@@ -12,7 +12,7 @@ class LeadsService:
 
     def get_leads(self, page, per_page, status, from_date, to_date, regions, page_visits, average_time_spent,
                   lead_funnel, emails, recurring_visits):
-        leads, count, max_page = self.leads_persistence_service.filter_leads(user, page, per_page, status, from_date, to_date,
+        leads, count, max_page = self.leads_persistence_service.filter_leads(self.user, page, per_page, status, from_date, to_date,
                                                                              regions, page_visits, average_time_spent,
                                                                              lead_funnel, emails, recurring_visits)
         leads_list = [
