@@ -23,9 +23,13 @@ async def get_leads(
         lead_funnel: str = Query(None, description="Lead funnel stage"),
         emails: str = Query(None, description="Comma-separated list of emails"),
         recurring_visits: int = Query(None, description="Minimum number of recurring visits"),
+        sort_by: str = Query(None, description="Field"),
+        sort_order: str = Query(None, description="Field to sort by: 'asc' or 'desc'"),
         leads_service: LeadsService = Depends(get_leads_service)
 ):
     return leads_service.get_leads(
+        sort_by=sort_by,
+        sort_order=sort_order,
         page=page,
         per_page=per_page,
         status=status,

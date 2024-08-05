@@ -6,7 +6,7 @@ import csv
 from datetime import datetime, timedelta
 
 import pytz
-from sqlalchemy import and_, or_
+from sqlalchemy import and_, or_, desc, asc
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import func
 
@@ -24,7 +24,7 @@ class LeadsPersistence:
         self.db = db
 
     def filter_leads(self, user, page, per_page, status, from_date, to_date, regions, page_visits, average_time_spent,
-                     lead_funnel, emails, recurring_visits):
+                     lead_funnel, emails, recurring_visits, sort_by, sort_order):
         subquery = (
             self.db.query(
                 LeadVisits.leads_users_id,
@@ -48,6 +48,29 @@ class LeadsPersistence:
             .outerjoin(subquery, LeadUser.id == subquery.c.leads_users_id)
             .filter(LeadUser.user_id == user.id)
         )
+        sort_options = {
+            'name': Lead.first_name,
+            'business_email': Lead.business_email,
+            'mobile_phone': Lead.mobile_phone,
+            'time_spent': Lead.time_spent,
+            'no_of_visits': Lead.no_of_visits,
+            'no_of_page_visits': Lead.no_of_page_visits,
+            'gender': Lead.gender,
+            'last_visited_date': subquery.c.last_visited_at,
+            'status': LeadUser.status,
+            'funnel': LeadUser.funnel,
+            'state': Locations.state,
+            'city': Locations.city,
+
+        }
+        if sort_by:
+            sort_column = sort_options[sort_by]
+            if sort_order == 'asc':
+                query = query.order_by(asc(sort_column))
+            elif sort_order == 'desc':
+                query = query.order_by(desc(sort_column))
+            else:
+                query = query.order_by(desc(subquery.c.last_visited_at))
         if from_date and to_date:
             start_date = datetime.fromtimestamp(from_date, tz=pytz.UTC)
             end_date = datetime.fromtimestamp(to_date, tz=pytz.UTC)
