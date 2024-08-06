@@ -13,9 +13,10 @@ import axiosInstance from '@/axios/axiosInterceptorInstance';
 interface FilterPopupProps {
   open: boolean;
   onClose: () => void;
+  onApply: (filters: any) => void;
 }
 
-const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose }) => {
+const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => {
   const [selectedButton, setSelectedButton] = useState<string | null>(null);
   const [isVisitedDateOpen, setIsVisitedDateOpen] = useState(false);
   const [isVisitedPageOpen, setIsVisitedPageOpen] = useState(false);
@@ -41,7 +42,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose }) => {
   const [emails, setEmails] = useState<string[]>([]);
   const [selectedFunnels, setSelectedFunnels] = useState<string[]>([]);
   const [selectedStatus, setSelectedStatus] = useState<string[]>([]);
-
 
   const handleAddTag = (e: { key: string; }) => {
     if (e.key === 'Enter' && region.trim()) {
@@ -489,26 +489,25 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose }) => {
   };
 
 
-  const handleApplyFilters = async () => {
+  const handleFilters = () => {
+    // Ваша функция для сбора фильтров
     const filterDates = getFilterDates();
     const isButtonChecked = Object.values(checkedFilters).some(value => value);
 
-    // Combine date and time
     const fromDateTime = isButtonChecked
       ? (checkedFilters.lastWeek && filterDates.lastWeek.from) ||
-      (checkedFilters.last30Days && filterDates.last30Days.from) ||
-      (checkedFilters.last6Months && filterDates.last6Months.from) ||
-      (checkedFilters.allTime && filterDates.allTime.from)
+        (checkedFilters.last30Days && filterDates.last30Days.from) ||
+        (checkedFilters.last6Months && filterDates.last6Months.from) ||
+        (checkedFilters.allTime && filterDates.allTime.from)
       : dateRange.fromDate ? dayjs(dateRange.fromDate).startOf('day').unix() : null;
 
     const toDateTime = isButtonChecked
       ? (checkedFilters.lastWeek && filterDates.lastWeek.to) ||
-      (checkedFilters.last30Days && filterDates.last30Days.to) ||
-      (checkedFilters.last6Months && filterDates.last6Months.to) ||
-      (checkedFilters.allTime && filterDates.allTime.to)
+        (checkedFilters.last30Days && filterDates.last30Days.to) ||
+        (checkedFilters.last6Months && filterDates.last6Months.to) ||
+        (checkedFilters.allTime && filterDates.allTime.to)
       : dateRange.toDate ? dayjs(dateRange.toDate).endOf('day').unix() : null;
 
-    // Combine with time range if provided
     const fromDateTimeWithTime = fromDateTime && timeRange.fromTime
       ? dayjs.unix(fromDateTime).hour(dayjs(timeRange.fromTime).hour()).minute(dayjs(timeRange.fromTime).minute()).unix()
       : fromDateTime;
@@ -523,63 +522,26 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose }) => {
         fromDate: fromDateTimeWithTime,
         toDate: toDateTimeWithTime,
       },
-      checkedFilters, // Объект со статусами чекбоксов для дат
-      checkedFiltersTime, // Объект со статусами чекбоксов для времени
-      checkedFiltersPageVisits, // Объект со статусами чекбоксов для посещений страниц
-      regions, // Объект со статусами чекбоксов для регионов
-      checkedFiltersTimeSpent, // Объект со статусами чекбоксов для времени, проведенного на сайте
-      selectedFunnels, // Массив выбранных кнопок для воронки лидов
-      emails, // Объект со статусами чекбоксов для email
-      selectedStatus, // Массив выбранных кнопок для статуса лидов
-      selectedValue, // Повторные визиты
+      checkedFilters,
+      checkedFiltersTime,
+      checkedFiltersPageVisits,
+      regions,
+      checkedFiltersTimeSpent,
+      selectedFunnels,
+      emails,
+      selectedStatus,
+      selectedValue,
     };
 
-    const queryParams = new URLSearchParams();
-
-    // Фильтрация по дате
-    if (filters.dateRange.fromDate) queryParams.append('from_date', filters.dateRange.fromDate);
-    if (filters.dateRange.toDate) queryParams.append('to_date', filters.dateRange.toDate);
-
-    if (filters.selectedStatus && filters.selectedStatus.length > 0) queryParams.append('status', filters.selectedStatus.join(','));
-
-
-    if (filters.regions && filters.regions.length > 0) queryParams.append('regions', filters.regions.join(','));
-
-
-    if (filters.emails && filters.emails.length > 0) queryParams.append('emails', filters.emails.join(','));
-
-
-    if (filters.selectedFunnels && filters.selectedFunnels.length > 0) queryParams.append('lead_funnel', filters.selectedFunnels.join(','));
-
-
-    // Object.keys(filters.checkedFilters).forEach(key => {
-    //   if (filters.checkedFilters[key]) queryParams.append(key, filters.checkedFilters[key]);
-    // });
-
-    // Object.keys(filters.checkedFiltersTime).forEach(key => {
-    //   if (filters.checkedFiltersTime[key]) queryParams.append(key, filters.checkedFiltersTime[key]);
-    // });
-
-    // Object.keys(filters.checkedFiltersPageVisits).forEach(key => {
-    //   if (filters.checkedFiltersPageVisits[key]) queryParams.append(key, filters.checkedFiltersPageVisits[key]);
-    // });
-
-    // Object.keys(filters.checkedFiltersTimeSpent).forEach(key => {
-    //   if (filters.checkedFiltersTimeSpent[key]) queryParams.append(key, filters.checkedFiltersTimeSpent[key]);
-    // });
-
-    // if (filters.selectedValue) queryParams.append('recurring_visits', filters.selectedValue);
-
-    // URL запроса
-    const url = `/leads?${queryParams.toString()}`;
-
-    try {
-      const response = await axiosInstance.get(url);
-      console.log('Filtered leads:', response.data);
-    } catch (error) {
-      console.error('Error fetching filtered leads:', error);
-    }
+    return filters;
   };
+
+  const handleApply = () => {
+    const filters = handleFilters(); // Собираем фильтры
+    onApply(filters); // Передаем фильтры в функцию обработки фильтров
+    onClose(); // Закрываем фильтр после применения
+  };
+  
 
   return (
     <>
@@ -1092,7 +1054,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose }) => {
         >
           <Button
             variant="contained"
-            onClick={handleApplyFilters}
+            onClick={handleApply}
             sx={{
               backgroundColor: 'rgba(80, 82, 178, 1)',
               fontFamily: 'Nunito',
