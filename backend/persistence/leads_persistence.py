@@ -84,7 +84,7 @@ class LeadsPersistence:
             )
         if regions:
             query = query.filter(
-                Locations.city.in_(regions)
+                Locations.city.in_([regions])
             )
         if emails:
             email_filters = [Lead.business_email.like(f"%{email}") for email in emails]

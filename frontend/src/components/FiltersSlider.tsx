@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Drawer, Box, Typography, Button, IconButton, Backdrop, TextField, InputAdornment, Collapse, Divider, FormControlLabel, Checkbox } from '@mui/material';
+import { Drawer, Box, Typography, Button, IconButton, Backdrop, TextField, InputAdornment, Collapse, Divider, FormControlLabel, Checkbox, RadioGroup, Radio } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import CloseIcon from '@mui/icons-material/Close';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
@@ -7,6 +7,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider, DatePicker, TimePicker } from '@mui/x-date-pickers';
 import dayjs from 'dayjs';
+import axiosInstance from '@/axios/axiosInterceptorInstance';
 
 
 interface FilterPopupProps {
@@ -22,7 +23,10 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose }) => {
   const [isVisitedTimeOpen, setIsVisitedTimeOpen] = useState(false);
   const [isRegionOpen, setIsRegionOpen] = useState(false);
   const [isLeadFunnel, setIsLeadFunnel] = useState(false);
-  const [emails, setEmails] = useState('');
+  const [isEmailOpen, setIsEmailOpen] = useState(false);
+  const [isStatus, setIsStatus] = useState(false);
+  const [isRecurringVisits, setIsRecurringVisits] = useState(false);
+  const [email, setEmail] = useState('');
   const [region, setRegions] = useState('');
   const [selectedDateRange, setSelectedDateRange] = useState<string | null>(null);
   const [selectedTimeRange, setSelectedTimeRange] = useState<string | null>(null);
@@ -34,7 +38,9 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose }) => {
     timeSpents: []
   });
   const [regions, setTags] = useState<string[]>([]);
-  const [selectedButtons, setSelectedButtons] = useState<string[]>([]);
+  const [emails, setEmails] = useState<string[]>([]);
+  const [selectedFunnels, setSelectedFunnels] = useState<string[]>([]);
+  const [selectedStatus, setSelectedStatus] = useState<string[]>([]);
 
 
   const handleAddTag = (e: { key: string; }) => {
@@ -42,6 +48,23 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose }) => {
       setTags([...regions, region.trim()]);
       setRegions('');
     }
+  };
+
+  const handleAddTagEmails = (e: { key: string; }) => {
+    if (e.key === 'Enter' && email.trim()) {
+      setEmails([...emails, email.trim()]);
+      setEmail('');
+    }
+  };
+
+  const [selectedValue, setSelectedValue] = useState('');
+
+  const handleChangeRecurringVisits = (event: { target: { value: React.SetStateAction<string>; }; }) => {
+    setSelectedValue(event.target.value);
+  };
+
+  const handleDeleteRecurringVisits = () => {
+    setSelectedValue('');
   };
 
 
@@ -67,6 +90,22 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose }) => {
           background: 'rgba(254, 238, 236, 1)',
           color: 'rgba(244, 87, 69, 1)',
         };
+      case 'New':
+        return {
+          background: 'rgba(254, 243, 205, 1)',
+          color: 'rgba(250, 203, 36, 1)',
+        };
+      case 'Existing':
+        return {
+          background: 'rgba(228, 247, 212, 1)',
+          color: 'rgba(110, 193, 37, 1)',
+        };
+      case 'All':
+        return {
+          background: 'rgba(228, 228, 228, 1)',
+          color: 'rgba(74, 74, 74, 1)',
+        };
+
       default:
         return {};
     }
@@ -74,7 +113,15 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose }) => {
 
 
   const handleButtonLeadFunnelClick = (label: string) => {
-    setSelectedButtons(prev =>
+    setSelectedFunnels(prev =>
+      prev.includes(label)
+        ? prev.filter(item => item !== label)
+        : [...prev, label]
+    );
+  };
+
+  const handleButtonStatusClick = (label: string) => {
+    setSelectedStatus(prev =>
       prev.includes(label)
         ? prev.filter(item => item !== label)
         : [...prev, label]
@@ -419,29 +466,119 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose }) => {
   };
 
 
-  const handleApplyFilters = () => {
+  const getFilterDates = () => {
+    const today = dayjs();
+    return {
+      lastWeek: {
+        from: today.subtract(1, 'week').startOf('day').unix(),
+        to: today.endOf('day').unix(),
+      },
+      last30Days: {
+        from: today.subtract(30, 'day').startOf('day').unix(),
+        to: today.endOf('day').unix(),
+      },
+      last6Months: {
+        from: today.subtract(6, 'month').startOf('day').unix(),
+        to: today.endOf('day').unix(),
+      },
+      allTime: {
+        from: null,
+        to: today.endOf('day').unix(),
+      },
+    };
+  };
+
+
+  const handleApplyFilters = async () => {
+    const filterDates = getFilterDates();
+    const isButtonChecked = Object.values(checkedFilters).some(value => value);
+
+    // Combine date and time
+    const fromDateTime = isButtonChecked
+      ? (checkedFilters.lastWeek && filterDates.lastWeek.from) ||
+      (checkedFilters.last30Days && filterDates.last30Days.from) ||
+      (checkedFilters.last6Months && filterDates.last6Months.from) ||
+      (checkedFilters.allTime && filterDates.allTime.from)
+      : dateRange.fromDate ? dayjs(dateRange.fromDate).startOf('day').unix() : null;
+
+    const toDateTime = isButtonChecked
+      ? (checkedFilters.lastWeek && filterDates.lastWeek.to) ||
+      (checkedFilters.last30Days && filterDates.last30Days.to) ||
+      (checkedFilters.last6Months && filterDates.last6Months.to) ||
+      (checkedFilters.allTime && filterDates.allTime.to)
+      : dateRange.toDate ? dayjs(dateRange.toDate).endOf('day').unix() : null;
+
+    // Combine with time range if provided
+    const fromDateTimeWithTime = fromDateTime && timeRange.fromTime
+      ? dayjs.unix(fromDateTime).hour(dayjs(timeRange.fromTime).hour()).minute(dayjs(timeRange.fromTime).minute()).unix()
+      : fromDateTime;
+
+    const toDateTimeWithTime = toDateTime && timeRange.toTime
+      ? dayjs.unix(toDateTime).hour(dayjs(timeRange.toTime).hour()).minute(dayjs(timeRange.toTime).minute()).unix()
+      : toDateTime;
+
     const filters = {
       button: selectedButton,
-      filter1: emails,
-      region,
       dateRange: {
-        fromDate: dateRange.fromDate ? dayjs(dateRange.fromDate).format('YYYY-MM-DD') : null,
-        toDate: dateRange.toDate ? dayjs(dateRange.toDate).format('YYYY-MM-DD') : null,
+        fromDate: fromDateTimeWithTime,
+        toDate: toDateTimeWithTime,
       },
-      timeRange: {
-        fromTime: timeRange.fromTime ? dayjs(timeRange.fromTime).format('HH:mm:ss') : null,
-        toTime: timeRange.toTime ? dayjs(timeRange.toTime).format('HH:mm:ss') : null,
-      },
-      checkedFilters, // Object with the state of checkboxes for dates
-      checkedFiltersTime, // Object with the state of checkboxes for time
-      checkedFiltersPageVisits, // Object with the state of checkboxes for page visits
-      regions, // Object with the state of checkboxes for regions
-      checkedFiltersTimeSpent, // Object with the state of checkboxes for spent time
-      selectedButtons, // Array of selected buttons for leads funnel
+      checkedFilters, // Объект со статусами чекбоксов для дат
+      checkedFiltersTime, // Объект со статусами чекбоксов для времени
+      checkedFiltersPageVisits, // Объект со статусами чекбоксов для посещений страниц
+      regions, // Объект со статусами чекбоксов для регионов
+      checkedFiltersTimeSpent, // Объект со статусами чекбоксов для времени, проведенного на сайте
+      selectedFunnels, // Массив выбранных кнопок для воронки лидов
+      emails, // Объект со статусами чекбоксов для email
+      selectedStatus, // Массив выбранных кнопок для статуса лидов
+      selectedValue, // Повторные визиты
     };
 
+    const queryParams = new URLSearchParams();
 
-    console.log('Filters:', filters);
+    // Фильтрация по дате
+    if (filters.dateRange.fromDate) queryParams.append('from_date', filters.dateRange.fromDate);
+    if (filters.dateRange.toDate) queryParams.append('to_date', filters.dateRange.toDate);
+
+    if (filters.selectedStatus && filters.selectedStatus.length > 0) queryParams.append('status', filters.selectedStatus.join(','));
+
+
+    if (filters.regions && filters.regions.length > 0) queryParams.append('regions', filters.regions.join(','));
+
+
+    if (filters.emails && filters.emails.length > 0) queryParams.append('emails', filters.emails.join(','));
+
+
+    if (filters.selectedFunnels && filters.selectedFunnels.length > 0) queryParams.append('lead_funnel', filters.selectedFunnels.join(','));
+
+
+    // Object.keys(filters.checkedFilters).forEach(key => {
+    //   if (filters.checkedFilters[key]) queryParams.append(key, filters.checkedFilters[key]);
+    // });
+
+    // Object.keys(filters.checkedFiltersTime).forEach(key => {
+    //   if (filters.checkedFiltersTime[key]) queryParams.append(key, filters.checkedFiltersTime[key]);
+    // });
+
+    // Object.keys(filters.checkedFiltersPageVisits).forEach(key => {
+    //   if (filters.checkedFiltersPageVisits[key]) queryParams.append(key, filters.checkedFiltersPageVisits[key]);
+    // });
+
+    // Object.keys(filters.checkedFiltersTimeSpent).forEach(key => {
+    //   if (filters.checkedFiltersTimeSpent[key]) queryParams.append(key, filters.checkedFiltersTimeSpent[key]);
+    // });
+
+    // if (filters.selectedValue) queryParams.append('recurring_visits', filters.selectedValue);
+
+    // URL запроса
+    const url = `/leads?${queryParams.toString()}`;
+
+    try {
+      const response = await axiosInstance.get(url);
+      console.log('Filtered leads:', response.data);
+    } catch (error) {
+      console.error('Error fetching filtered leads:', error);
+    }
   };
 
   return (
@@ -518,7 +655,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose }) => {
           {/* Visited date */}
           <Box sx={{ width: '95%', mb: 2, mt: 2, padding: '1em', border: '1px solid rgba(228, 228, 228, 1)', borderRadius: '4px' }}>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', mb: 0 }}>
-              <Typography sx={{ flexGrow: 1, color: 'rgba(74, 74, 74, 1)', fontFamily: 'Nunito', fontWeight: '600', fontSize: '16px', lineHeight: '25.2px' }}>
+              <Typography sx={{ flexGrow: 1, color: 'rgba(74, 74, 74, 1)', fontFamily: 'Nunito', fontWeight: '500', fontSize: '16px', lineHeight: '25.2px' }}>
                 Visited date
               </Typography>
               {selectedTags.visitedDate.map((tag, index) => (
@@ -588,7 +725,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose }) => {
           {/* Visited time */}
           <Box sx={{ width: '95%', mb: 2, border: '1px solid rgba(228, 228, 228, 1)', padding: '1em' }}>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-              <Typography sx={{ flexGrow: 1, color: 'rgba(74, 74, 74, 1)', fontFamily: 'Nunito', fontWeight: '600', fontSize: '16px', lineHeight: '25.2px' }}>
+              <Typography sx={{ flexGrow: 1, color: 'rgba(74, 74, 74, 1)', fontFamily: 'Nunito', fontWeight: '500', fontSize: '16px', lineHeight: '25.2px' }}>
                 Visited time
               </Typography>
               {selectedTags.visitedTime.map((tag, index) => (
@@ -656,7 +793,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose }) => {
           {/* Region */}
           <Box sx={{ width: '95%', mb: 2, border: '1px solid rgba(228, 228, 228, 1)', padding: '1em' }}>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-              <Typography sx={{ flexGrow: 1, color: 'rgba(74, 74, 74, 1)', fontFamily: 'Nunito', fontWeight: '600', fontSize: '16px', lineHeight: '25.2px' }}>
+              <Typography sx={{ flexGrow: 1, color: 'rgba(74, 74, 74, 1)', fontFamily: 'Nunito', fontWeight: '500', fontSize: '16px', lineHeight: '25.2px' }}>
                 Region
               </Typography>
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '8px', mb: 2 }}>
@@ -688,7 +825,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose }) => {
           {/* Page visits */}
           <Box sx={{ width: '95%', mb: 2, mt: 2, padding: '1em', border: '1px solid rgba(228, 228, 228, 1)', borderRadius: '4px' }}>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', mb: 0 }}>
-              <Typography sx={{ flexGrow: 1, color: 'rgba(74, 74, 74, 1)', fontFamily: 'Nunito', fontWeight: '600', fontSize: '16px', lineHeight: '25.2px' }}>
+              <Typography sx={{ flexGrow: 1, color: 'rgba(74, 74, 74, 1)', fontFamily: 'Nunito', fontWeight: '500', fontSize: '16px', lineHeight: '25.2px' }}>
                 Page visits
               </Typography>
               {selectedTags.pageVisits.map((tag, index) => (
@@ -731,7 +868,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose }) => {
           {/* Average time spent */}
           <Box sx={{ width: '95%', mb: 2, mt: 2, padding: '1em', border: '1px solid rgba(228, 228, 228, 1)', borderRadius: '4px' }}>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', mb: 0 }}>
-              <Typography sx={{ flexGrow: 1, color: 'rgba(74, 74, 74, 1)', fontFamily: 'Nunito', fontWeight: '600', fontSize: '16px', lineHeight: '25.2px' }}>
+              <Typography sx={{ flexGrow: 1, color: 'rgba(74, 74, 74, 1)', fontFamily: 'Nunito', fontWeight: '500', fontSize: '16px', lineHeight: '25.2px' }}>
                 Average time spent
               </Typography>
               {selectedTags.timeSpents.map((tag, index) => (
@@ -774,10 +911,10 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose }) => {
           {/* Lead Funnel */}
           <Box sx={{ width: '95%', mb: 2, mt: 2, padding: '1em', border: '1px solid rgba(228, 228, 228, 1)', borderRadius: '4px' }}>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', mb: 0 }}>
-              <Typography sx={{ flexGrow: 1, color: 'rgba(74, 74, 74, 1)', fontFamily: 'Nunito', fontWeight: '600', fontSize: '16px', lineHeight: '25.2px' }}>
+              <Typography sx={{ flexGrow: 1, color: 'rgba(74, 74, 74, 1)', fontFamily: 'Nunito', fontWeight: '500', fontSize: '16px', lineHeight: '25.2px' }}>
                 Lead Funnel
               </Typography>
-              {selectedButtons.map(label => (
+              {selectedFunnels.map(label => (
                 <CustomChip
                   key={label}
                   label={label}
@@ -820,13 +957,151 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose }) => {
               </Box>
             </Collapse>
           </Box>
+          {/* Emails */}
+          <Box sx={{ width: '95%', mb: 2, border: '1px solid rgba(228, 228, 228, 1)', padding: '1em' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+              <Typography sx={{ flexGrow: 1, color: 'rgba(74, 74, 74, 1)', fontFamily: 'Nunito', fontWeight: '500', fontSize: '16px', lineHeight: '25.2px' }}>
+                Emails
+              </Typography>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '8px', mb: 2 }}>
+                {emails.map((tag, index) => (
+                  <CustomChip
+                    key={index}
+                    label={tag}
+                    onDelete={() => setEmails(emails.filter((_, i) => i !== index))}
+                  />
+                ))}
+              </Box>
+              <IconButton onClick={() => setIsEmailOpen(!isEmailOpen)} aria-label="toggle-content">
+                {isEmailOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+              </IconButton>
+            </Box>
+            <Collapse in={isEmailOpen}>
+              <Divider sx={{ mb: 2 }} />
+              <Typography sx={{ color: 'rgba(74, 74, 74, 1)', fontFamily: 'Nunito', fontWeight: '400', fontSize: '16px', lineHeight: '25.2px' }}>
+                Email type
+              </Typography>
+              <TextField
+                placeholder="Email types"
+                variant="outlined"
+                fullWidth
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                onKeyDown={handleAddTagEmails}
+                sx={{ mb: 2 }}
+              />
+            </Collapse>
+          </Box>
+          {/* Status */}
+          <Box sx={{ width: '95%', mb: 2, mt: 2, padding: '1em', border: '1px solid rgba(228, 228, 228, 1)', borderRadius: '4px' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', mb: 0 }}>
+              <Typography sx={{ flexGrow: 1, color: 'rgba(74, 74, 74, 1)', fontFamily: 'Nunito', fontWeight: '500', fontSize: '16px', lineHeight: '25.2px' }}>
+                Status
+              </Typography>
+              {selectedStatus.map(label => (
+                <CustomChip
+                  key={label}
+                  label={label}
+                  onDelete={() => handleButtonStatusClick(label)}
+                />
+              ))}
+              <IconButton onClick={() => setIsStatus(!isStatus)} aria-label="toggle-content">
+                {isStatus ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+              </IconButton>
+            </Box>
+            <Collapse in={isStatus}>
+              <Divider sx={{ mb: 2 }} />
+              <Box sx={{ display: 'flex', flexDirection: 'rows', gap: 3 }}>
+                {['New', 'Existing', 'All'].map((label) => (
+                  <Button
+                    key={label}
+                    onClick={() => handleButtonStatusClick(label)}
+                    sx={{
+                      width: 'calc(25% - 5px)',
+                      height: '2em',
+                      textTransform: 'none',
+                      padding: '1.25em',
+                      gap: '10px',
+                      textAlign: 'center',
+                      borderRadius: '4px',
+                      border: '1px solid rgba(220, 220, 239, 1)',
+                      backgroundColor: selectedButton === label ? 'rgba(219, 219, 240, 1)' : getButtonStyle(label).background,
+                      color: selectedButton === label ? '#000' : getButtonStyle(label).color,
+                      fontFamily: 'Nunito',
+                      opacity: 1,
+                      display: 'flex',
+                      alignItems: 'center',
+                      textWrap: 'nowrap',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    {label}
+                  </Button>
+                ))}
+              </Box>
+            </Collapse>
+          </Box>
+          {/* Recurring Visits */}
+          <Box sx={{ width: '95%', mb: 2, mt: 2, padding: '1em', border: '1px solid rgba(228, 228, 228, 1)', borderRadius: '4px' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', mb: 0 }}>
+              <Typography sx={{ flexGrow: 1, color: 'rgba(74, 74, 74, 1)', fontFamily: 'Nunito', fontWeight: '500', fontSize: '16px', lineHeight: '25.2px' }}>
+                Recurring Visists
+              </Typography>
+              {selectedValue && (
+                <CustomChip
+                  label={selectedValue}
+                  onDelete={handleDeleteRecurringVisits}
+                />
+              )}
+              <IconButton onClick={() => setIsRecurringVisits(!isRecurringVisits)} aria-label="toggle-content">
+                {isRecurringVisits ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+              </IconButton>
+            </Box>
+            <Collapse in={isRecurringVisits}>
+              <Divider sx={{ mb: 2 }} />
+              <RadioGroup value={selectedValue} onChange={handleChangeRecurringVisits} row>
+                <Box sx={{ display: 'flex', justifyContent: 'start', gap: 3 }}>
+                  {['1', '2', '3', '4', '4+'].map((label) => (
+                    <FormControlLabel
+                      key={label}
+                      control={<Radio value={label} />}
+                      label={label}
+                      sx={{
+                        display: 'flex',
+                        color: 'rgba(74, 74, 74, 1)',
+                        alignItems: 'center',
+                        fontFamily: 'Nunito',
+                        fontWeight: '600',
+                        fontSize: '16px',
+                        lineHeight: '25.2px'
+                      }}
+                    />
+                  ))}
+                </Box>
+              </RadioGroup>
+            </Collapse>
+          </Box>
+        </Box>
+        <Box
+          sx={{
+            marginBottom: '2em',
+            marginRight: '2em',
+            display: 'flex',
+            justifyContent: 'end',
+          }}
+        >
           <Button
             variant="contained"
-            color="primary"
             onClick={handleApplyFilters}
-            sx={{ mt: 3, width: '100%' }}
+            sx={{
+              backgroundColor: 'rgba(80, 82, 178, 1)',
+              fontFamily: 'Nunito',
+              fontSize: '16px',
+              textTransform: 'none',
+              padding: '1em 2.5em',
+            }}
           >
-            Apply Filters
+            Apply
           </Button>
         </Box>
       </Drawer>
