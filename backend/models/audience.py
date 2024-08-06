@@ -15,6 +15,7 @@ class Audience(Base):
     type = Column(VARCHAR)
     status = Column(VARCHAR, default='New', nullable=False)
     created_at = Column(TIMESTAMP, nullable=False)
+    exported_on = Column(TIMESTAMP, nullable=True)
 
 
 event.listen(Audience, "before_insert", create_timestamps)
