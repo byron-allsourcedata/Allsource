@@ -61,7 +61,7 @@ class LeadsPersistence:
             'funnel': LeadUser.funnel,
             'state': Locations.state,
             'city': Locations.city,
-
+            'age': Lead.age_min
         }
         if sort_by:
             sort_column = sort_options[sort_by]

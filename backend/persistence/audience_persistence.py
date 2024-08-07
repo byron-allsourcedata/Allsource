@@ -1,12 +1,13 @@
 import math
 from datetime import datetime
 
+from sqlalchemy import desc, asc
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from enums import AudienceInfoEnum
 from models.audience import Audience
 from models.audience_leads import AudienceLeads
-from sqlalchemy import func
 from models.leads_users import LeadUser
 
 
@@ -14,16 +15,37 @@ class AudiencePersistence:
     def __init__(self, db: Session):
         self.db = db
 
-    def get_user_audience(self, user_id, page: int, per_page: int):
+    def get_filter_user_audience(self, user_id: int, page: int, per_page: int, sort_by, sort_order):
         query = (
-            self.db.query(Audience)
+            self.db.query(Audience, func.count(AudienceLeads.id).label('leads_count'))
+            .outerjoin(AudienceLeads, AudienceLeads.audience_id == Audience.id)
             .filter(Audience.user_id == user_id)
+            .group_by(Audience.id)
         )
+
+        sort_options = {
+            'list_name': Audience.name,
+            'no_of_leads': 'leads_count',
+            'created_by': Audience.type,
+            'created_date': Audience.created_at,
+            'status': Audience.status,
+            'exported_on': Audience.exported_on,
+        }
+        if sort_by:
+            sort_column = sort_options[sort_by]
+            if sort_order == 'asc':
+                query = query.order_by(asc(sort_column))
+            elif sort_order == 'desc':
+                query = query.order_by(desc(sort_column))
+            else:
+                query = query.order_by(desc(Audience.created_at))
+
         offset = (page - 1) * per_page
-        audience = query.limit(per_page).offset(offset).all()
+        audience_data = query.limit(per_page).offset(offset).all()
         count = query.count()
         max_page = math.ceil(count / per_page) if per_page > 0 else 1
-        return audience, count, max_page
+
+        return audience_data, count, max_page
 
     def get_user_audience_list(self, user_id):
         audience_counts = (
@@ -61,7 +83,7 @@ class AudiencePersistence:
             return {'status': AudienceInfoEnum.NOT_FOUND}
         start_date = datetime.utcnow()
         start_date_str = start_date.isoformat() + "Z"
-        audience = Audience(name=audience_name, user_id=user_id, type='leads', created_at=start_date_str)
+        audience = Audience(name=audience_name, user_id=user_id, type='Leads', created_at=start_date_str)
         self.db.add(audience)
         self.db.commit()
         for lead_user in lead_users:
