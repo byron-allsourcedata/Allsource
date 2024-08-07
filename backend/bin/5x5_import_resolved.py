@@ -38,6 +38,7 @@ LAST_PROCESSED_FILE_PATH = 'tmp/last_processed_file_resolved.txt'
 def create_sts_client(key_id, key_secret):
     return boto3.client('sts', aws_access_key_id=key_id, aws_secret_access_key=key_secret, region_name='us-west-2')
 
+
 def assume_role(role_arn, sts_client):
     credentials = sts_client.assume_role(RoleArn=role_arn, RoleSessionName="create-use-assume-role-scenario")[
         'Credentials']
@@ -56,8 +57,8 @@ def process_file(bucket, file, session):
             for i in range(len(table)):
                 up_id = table['UP_ID'][i]
                 if not up_id.is_valid and str(up_id) == 'None':
-                    up_id = session.query(FiveXFiveHems.up_id).join(
-                        Lead, Lead.sha256_lower_case == FiveXFiveHems.sha256_lc_hem).filter(Lead.sha256_lower_case == str(table['SHA256_LOWER_CASE'][i]).lower()).first()
+                    up_id = session.query(FiveXFiveHems.up_id).filter(
+                        FiveXFiveHems.sha256_lc_hem == str(table['SHA256_LOWER_CASE'][i]).lower()).first()
                     if up_id is None:
                         continue
                 five_x_five_user = session.query(FiveXFiveUser).filter(
