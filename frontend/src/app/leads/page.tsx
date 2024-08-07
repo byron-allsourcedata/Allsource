@@ -810,10 +810,6 @@ const Leads: React.FC = () => {
                                                                     sx={leadsStyles.table_array}>{row.last_visited_time || 'N/A'}</TableCell>
                                                                 <TableCell
                                                                     sx={leadsStyles.table_column}
-                                                                    style={{
-                                                                        backgroundColor: getStatusStyle(row.funnel).background,
-                                                                        color: getStatusStyle(row.funnel).color
-                                                                    }}
                                                                 >
                                                                     <Box
                                                                         sx={{
@@ -824,6 +820,8 @@ const Leads: React.FC = () => {
                                                                             fontSize: '14px',
                                                                             fontWeight: '400',
                                                                             lineHeight: '19.6px',
+                                                                            backgroundColor: getStatusStyle(row.funnel).background,
+                                                                            color: getStatusStyle(row.funnel).color,
                                                                             justifyContent: 'center',
                                                                         }}
                                                                     >
