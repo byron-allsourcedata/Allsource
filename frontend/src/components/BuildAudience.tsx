@@ -11,6 +11,7 @@ import {
     Collapse,
     Button,
 } from '@mui/material';
+import axiosInstance from '../axios/axiosInterceptorInstance';
 import CloseIcon from '@mui/icons-material/Close';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -65,8 +66,7 @@ const BuildAudience: React.FC<BuildAudienceProps> = ({ open, onClose }) => {
         };
 
         try {
-            // Uncomment when ready to use axios
-            // const response = await axiosInstance.post(`/audience`, filters);
+            const response = await axiosInstance.post(`/audiences`, filters);
             onClose();
         } catch (error) {
             console.error('Error applying filters:', error);
