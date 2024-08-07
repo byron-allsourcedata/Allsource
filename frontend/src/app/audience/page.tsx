@@ -15,7 +15,6 @@ import {
     TableRow,
     Paper,
     Checkbox,
-    TablePagination
 } from '@mui/material';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
@@ -23,20 +22,21 @@ import {useRouter} from 'next/navigation';
 import {useUser} from '../../context/UserContext';
 import axiosInstance from '../../axios/axiosInterceptorInstance';
 import {AxiosError} from 'axios';
-import {leadsStyles} from './leadsStyles';
+import {audienceStyles} from './audienceStyles';
 import Slider from '../../components/Slider';
 import {SliderProvider} from '../../context/SliderContext';
 import PersonIcon from '@mui/icons-material/Person';
 import TrialStatus from '@/components/TrialLabel';
 import AccountButton from '@/components/AccountButton';
 import {ChevronLeft, ChevronRight} from '@mui/icons-material';
-import DownloadIcon from '@mui/icons-material/Download';
-import DateRangeIcon from '@mui/icons-material/DateRange';
 import FilterListIcon from '@mui/icons-material/FilterList';
-import CalendarPopup from '../../components/CalendarPopup';
 import FilterPopup from '@/components/FiltersSlider';
-import AudiencePopup from '@/components/AudienceSlider';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import SendIcon from '@mui/icons-material/Send';
+import Swal from 'sweetalert2';
 import SwapVertIcon from '@mui/icons-material/SwapVert';
+import BuildAudience from "@/components/BuildAudience";
 
 
 const Sidebar = dynamic(() => import('../../components/Sidebar'), {
@@ -126,14 +126,14 @@ const CustomTablePagination: React.FC<CustomTablePaginationProps> = ({
             </Button>
             {totalPages > 1 && (
                 <>
-                    {page > 1 && <Button onClick={() => handlePageChange(0)} sx={leadsStyles.page_number}>1</Button>}
+                    {page > 1 && <Button onClick={() => handlePageChange(0)} sx={audienceStyles.page_number}>1</Button>}
                     {page > 2 && <Typography variant="body2" sx={{mx: 1}}>...</Typography>}
                     {getPageButtons().map((pageNumber) => (
                         <Button
                             key={pageNumber}
                             onClick={() => handlePageChange(pageNumber)}
                             sx={{
-                                mx: 0.5, ...leadsStyles.page_number,
+                                mx: 0.5, ...audienceStyles.page_number,
                                 border: page === pageNumber ? '1px solid rgba(80, 82, 178, 1)' : 'none',
                                 color: page === pageNumber ? 'rgba(80, 82, 178, 1)' : 'rgba(122, 122, 122, 1)',
                                 minWidth: '30px',
@@ -147,7 +147,7 @@ const CustomTablePagination: React.FC<CustomTablePaginationProps> = ({
                     ))}
                     {totalPages - page > 3 && <Typography variant="body2" sx={{mx: 1}}>...</Typography>}
                     {page < totalPages - 1 && <Button onClick={() => handlePageChange(totalPages - 1)}
-                                                      sx={leadsStyles.page_number}>{totalPages}</Button>}
+                                                      sx={audienceStyles.page_number}>{totalPages}</Button>}
                 </>
             )}
             <Button
@@ -168,13 +168,13 @@ const CustomTablePagination: React.FC<CustomTablePaginationProps> = ({
 };
 
 
-const Leads: React.FC = () => {
+const Audience: React.FC = () => {
     const router = useRouter();
     const {full_name, email} = useUser();
     const [data, setData] = useState<any[]>([]);
     const [count_leads, setCount] = useState<number | null>(null);
     const [order, setOrder] = useState<'asc' | 'desc' | undefined>(undefined);
-    const [orderBy, setOrderBy] = useState('last_visited_date');
+    const [orderBy, setOrderBy] = useState('created_date');
     const [appliedDates, setAppliedDates] = useState<{ start: Date | null; end: Date | null }>({
         start: null,
         end: null
@@ -192,15 +192,10 @@ const Leads: React.FC = () => {
     const [rowsPerPage, setRowsPerPage] = useState(15);
     const [activeFilter, setActiveFilter] = useState<string>('all');
     const [calendarAnchorEl, setCalendarAnchorEl] = useState<null | HTMLElement>(null);
-    const [selectedDates, setSelectedDates] = useState<{ start: Date | null; end: Date | null }>({
-        start: null,
-        end: null
-    });
-    const isCalendarOpen = Boolean(calendarAnchorEl);
-    const [formattedDates, setFormattedDates] = useState<string>('');
     const [filterPopupOpen, setFilterPopupOpen] = useState(false);
     const [audiencePopupOpen, setAudiencePopupOpen] = useState(false);
     const [loading, setLoading] = useState(false);
+
     const handleFilterPopupOpen = () => {
         setFilterPopupOpen(true);
     };
@@ -223,72 +218,10 @@ const Leads: React.FC = () => {
         setOrderBy(property);
     };
 
-    const handleCalendarClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-        setCalendarAnchorEl(event.currentTarget);
-    };
-
-    const handleCalendarClose = () => {
-        setCalendarAnchorEl(null);
-    };
-
-    const handleDateChange = (dates: { start: Date | null; end: Date | null }) => {
-        setSelectedDates(dates);
-        const {start, end} = dates;
-        if (start && end) {
-            setFormattedDates(`${start.toLocaleDateString()} - ${end.toLocaleDateString()}`);
-        } else if (start) {
-            setFormattedDates(`${start.toLocaleDateString()}`);
-        } else {
-            setFormattedDates('No dates selected');
-        }
-    };
-
-    const handleApply = (dates: { start: Date | null; end: Date | null }) => {
-        setAppliedDates(dates);
-        setCalendarAnchorEl(null);
-        handleCalendarClose();
-    };
-
-    const handleDownload = async () => {
-        const selectedRowsArray = Array.from(selectedRows);
-        const requestBody = {
-            leads_ids: selectedRowsArray
-        };
-        setLoading(true);
-        try {
-            const response = await axiosInstance.post('/leads/download_leads', requestBody, {
-                responseType: 'blob'
-            });
-
-            if (response.status === 200) {
-                const url = window.URL.createObjectURL(new Blob([response.data]));
-                const link = document.createElement('a');
-                link.href = url;
-                link.setAttribute('download', 'data.csv');
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                window.URL.revokeObjectURL(url);
-            } else {
-                console.error('Error downloading file:', response.statusText);
-            }
-        } catch (error) {
-            console.error('Error during the download process:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-
     const handleSignOut = () => {
         localStorage.clear();
         sessionStorage.clear();
         router.push('/signin');
-    };
-
-    const handleFilterChange = (filter: string) => {
-        setActiveFilter(filter);
-        setPage(0);
     };
 
     const installPixel = () => {
@@ -302,6 +235,105 @@ const Leads: React.FC = () => {
     const handleProfileMenuClose = () => {
         setAnchorEl(null);
     };
+
+    const handleEdit = async (row_id: number | string) => {
+        if (row_id === null) {
+            return;
+        }
+        const {value: newAudienceName} = await Swal.fire({
+            title: 'Edit Audience Name',
+            input: 'text',
+            inputLabel: 'Enter the new audience name',
+            inputPlaceholder: 'New audience name',
+            showCancelButton: true,
+            confirmButtonText: 'Save',
+            cancelButtonText: 'Cancel',
+            inputValidator: (value) => {
+                if (!value) {
+                    return 'You need to write something!';
+                }
+            },
+            customClass: {
+                popup: 'animated-popup'
+            }
+        });
+        if (newAudienceName) {
+            const requestBody = {
+                audience_ids: [row_id],
+                new_audience_name: newAudienceName
+            };
+            setLoading(true);
+            try {
+                const response = await axiosInstance.put('/audience', requestBody, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+                setData((prevData) =>
+                    prevData.map(row =>
+                        row.id === row_id ? {...row, name: newAudienceName} : row
+                    )
+                );
+            } catch (error) {
+                console.error('Error:', error);
+            } finally {
+                setLoading(false);
+            }
+        }
+    };
+
+    const handleDelete = async (row_id: number | string) => {
+        const confirmDelete = await Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to undo this action!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, delete!',
+            cancelButtonText: 'Cancel'
+        });
+
+        if (!confirmDelete.isConfirmed) {
+            return;
+        }
+        if (row_id === null) {
+            return
+        }
+        let requestBody = null;
+        let selectedRowsArray: (number | string)[] | null = null;
+
+        if (selectedRows.size !== 0) {
+            selectedRowsArray = Array.from(selectedRows);
+            requestBody = {
+                audience_ids: selectedRowsArray
+            };
+        } else {
+            requestBody = {
+                audience_ids: [row_id]
+            };
+        }
+        setLoading(true);
+        try {
+            const response = await axiosInstance.delete('/audience', {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                data: requestBody,
+            });
+
+            if (selectedRowsArray) {
+                setData((prevData) => prevData.filter(row => !selectedRowsArray.includes(row.id)));
+                setSelectedRows(new Set());
+            } else {
+                setData((prevData) => prevData.filter(row => row.id !== row_id));
+            }
+
+        } catch (error) {
+            console.error('Error:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
 
     const handleSettingsClick = () => {
         handleProfileMenuClose();
@@ -327,7 +359,7 @@ const Leads: React.FC = () => {
 
     const handleSelectAllClick = (event: React.ChangeEvent<HTMLInputElement>) => {
         if (event.target.checked) {
-            const newSelecteds = data.map((row) => row.lead.id);
+            const newSelecteds = data.map((row) => row.id);
             setSelectedRows(new Set(newSelecteds));
             return;
         }
@@ -343,7 +375,7 @@ const Leads: React.FC = () => {
         try {
             const accessToken = localStorage.getItem("token");
             if (!accessToken) {
-                router.push('/signin');
+                router.push('/sign-in');
                 return;
             }
 
@@ -351,10 +383,7 @@ const Leads: React.FC = () => {
             const startEpoch = start ? Math.floor(start.getTime() / 1000) : null;
             const endEpoch = end ? Math.floor(end.getTime() / 1000) : (start ? Math.floor(start.getTime() / 1000) : null);
 
-            let url = `/leads?page=${page + 1}&per_page=${rowsPerPage}&status=${activeFilter}`;
-            if (startEpoch !== null && endEpoch !== null) {
-                url += `&from_date=${startEpoch}&to_date=${endEpoch}`;
-            }
+            let url = `/audience?page=${page + 1}&per_page=${rowsPerPage}`;
             if (sortBy) {
                 url += `&sort_by=${sortBy}&sort_order=${sortOrder}`;
             }
@@ -408,25 +437,15 @@ const Leads: React.FC = () => {
 
     const getStatusStyle = (funnel: any) => {
         switch (funnel) {
-            case 'Visitor':
+            case 'New':
                 return {
-                    background: 'rgba(235, 243, 254, 1)',
-                    color: 'rgba(20, 110, 246, 1)',
+                    background: '#FEF3CD',
+                    color: '#D8B707',
                 };
-            case 'Converted':
+            case 'Exported':
                 return {
-                    background: 'rgba(244, 252, 238, 1)',
-                    color: 'rgba(110, 193, 37, 1)',
-                };
-            case 'Added to cart':
-                return {
-                    background: 'rgba(241, 241, 249, 1)',
-                    color: 'rgba(80, 82, 178, 1)',
-                };
-            case 'Cart abandoned':
-                return {
-                    background: 'rgba(254, 238, 236, 1)',
-                    color: 'rgba(244, 87, 69, 1)',
+                    background: '#EAF8DD',
+                    color: '#6EC125',
                 };
             default:
                 return {
@@ -480,8 +499,8 @@ const Leads: React.FC = () => {
                     backgroundColor: 'white',
                     borderBottom: '1px solid rgba(235, 235, 235, 1)'
                 }}>
-                    <Box sx={leadsStyles.headers}>
-                        <Box sx={leadsStyles.logoContainer}>
+                    <Box sx={audienceStyles.headers}>
+                        <Box sx={audienceStyles.logoContainer}>
                             <Image src='/logo.svg' alt='logo' height={80} width={60}/>
                         </Box>
                         <Box sx={{display: 'flex', alignItems: 'center'}}>
@@ -493,7 +512,7 @@ const Leads: React.FC = () => {
                                 aria-expanded={open ? 'true' : undefined}
                                 onClick={handleProfileMenuClick}
                             >
-                                <PersonIcon sx={leadsStyles.account}/>
+                                <PersonIcon sx={audienceStyles.account}/>
                             </Button>
                             <Menu
                                 id="profile-menu"
@@ -526,60 +545,39 @@ const Leads: React.FC = () => {
                                     display: 'flex',
                                     flexDirection: 'row',
                                     alignItems: 'center',
-                                    justifyContent: 'space-between'
+                                    justifyContent: 'end',
                                 }}>
-                                <Box sx={{display: 'flex', flexDirection: 'row', alignItems: 'center', mt: 1,}}>
-                                    <Typography variant="h4" component="h1" sx={leadsStyles.title}>
-                                        Leads ({count_leads})
-                                    </Typography>
+                                <Box sx={{display: 'flex', mt: 1,}}>
                                     <Button
-                                        onClick={() => handleFilterChange('all')}
+                                        onClick={handleFilterPopupOpen}
+                                        aria-controls={dropdownOpen ? 'account-dropdown' : undefined}
+                                        aria-haspopup="true"
+                                        aria-expanded={dropdownOpen ? 'true' : undefined}
                                         sx={{
-                                            color: activeFilter === 'all' ? 'rgba(80, 82, 178, 1)' : 'rgba(89, 89, 89, 1)',
-                                            borderBottom: activeFilter === 'all' ? '2px solid rgba(80, 82, 178, 1)' : '0px solid transparent',
+                                            marginRight: '1.5em',
                                             textTransform: 'none',
-                                            mr: '1em',
-                                            mt: '1em',
-                                            pb: '1.5em',
-                                            maxHeight: '3em',
-                                            borderRadius: '0px'
+                                            color: 'rgba(128, 128, 128, 1)',
+                                            border: '1px solid rgba(184, 184, 184, 1)',
+                                            borderRadius: '4px',
+                                            padding: '0.5em',
+                                            mt: 1.25
                                         }}
                                     >
-                                        <Typography variant="body2" sx={leadsStyles.subtitle}>All</Typography>
+                                        <FilterListIcon fontSize='medium'/>
                                     </Button>
+
                                     <Button
-                                        onClick={() => handleFilterChange('new_customers')}
                                         sx={{
-                                            mt: '1em',
-                                            color: activeFilter === 'new_customers' ? 'rgba(80, 82, 178, 1)' : 'rgba(89, 89, 89, 1)',
-                                            borderBottom: activeFilter === 'new_customers' ? '2px solid rgba(80, 82, 178, 1)' : '0px solid transparent',
+                                            marginRight: '1.5em',
                                             textTransform: 'none',
-                                            mr: '1em',
-                                            pb: '1.5em',
-                                            maxHeight: '3em',
-                                            borderRadius: '0px'
-                                        }}
-                                    >
-                                        <Typography variant="body2" sx={leadsStyles.subtitle}>New Customers</Typography>
+                                            color: 'rgba(128, 128, 128, 1)',
+                                            border: '1px solid rgba(184, 184, 184, 1)',
+                                            borderRadius: '4px',
+                                            padding: '0.5em',
+                                            mt: 1.25
+                                        }}>
+                                        <SendIcon fontSize='medium'/>
                                     </Button>
-                                    <Button
-                                        onClick={() => handleFilterChange('existing_customers')}
-                                        sx={{
-                                            maxHeight: '3em',
-                                            color: activeFilter === 'existing_customers' ? 'rgba(80, 82, 178, 1)' : 'rgba(89, 89, 89, 1)',
-                                            borderBottom: activeFilter === 'existing_customers' ? '2px solid rgba(80, 82, 178, 1)' : '0px solid transparent',
-                                            textTransform: 'none',
-                                            mr: '1em',
-                                            mt: '1em',
-                                            pb: '1.5em',
-                                            borderRadius: '0px'
-                                        }}
-                                    >
-                                        <Typography variant="body2" sx={leadsStyles.subtitle}>Existing
-                                            Customers</Typography>
-                                    </Button>
-                                </Box>
-                                <Box sx={{display: 'flex', flexDirection: 'row', alignItems: 'center', mt: 1,}}>
                                     <Button
                                         onClick={handleAudiencePopupOpen}
                                         aria-haspopup="true"
@@ -602,68 +600,7 @@ const Leads: React.FC = () => {
                                             textSize: '16px',
                                             textAlign: 'left',
                                         }}>
-                                            Build Audience List
-                                        </Typography>
-                                    </Button>
-                                    <Button
-                                        aria-controls={dropdownOpen ? 'account-dropdown' : undefined}
-                                        aria-haspopup="true"
-                                        aria-expanded={dropdownOpen ? 'true' : undefined}
-                                        sx={{
-                                            marginRight: '1.5em',
-                                            textTransform: 'none',
-                                            color: 'rgba(128, 128, 128, 1)',
-                                            border: '1px solid rgba(184, 184, 184, 1)',
-                                            borderRadius: '4px',
-                                            padding: '0.5em',
-                                            mt: 1.25
-                                        }}
-                                        onClick={handleDownload}
-                                        disabled={selectedRows.size === 0}
-                                    >
-                                        <DownloadIcon fontSize='medium'/>
-                                    </Button>
-                                    <Button
-                                        onClick={handleFilterPopupOpen}
-                                        aria-controls={dropdownOpen ? 'account-dropdown' : undefined}
-                                        aria-haspopup="true"
-                                        aria-expanded={dropdownOpen ? 'true' : undefined}
-                                        sx={{
-                                            marginRight: '1.5em',
-                                            textTransform: 'none',
-                                            color: 'rgba(128, 128, 128, 1)',
-                                            border: '1px solid rgba(184, 184, 184, 1)',
-                                            borderRadius: '4px',
-                                            padding: '0.5em',
-                                            mt: 1.25
-                                        }}
-                                    >
-                                        <FilterListIcon fontSize='medium'/>
-                                    </Button>
-                                    <Button
-                                        aria-controls={isCalendarOpen ? 'calendar-popup' : undefined}
-                                        aria-haspopup="true"
-                                        aria-expanded={isCalendarOpen ? 'true' : undefined}
-                                        onClick={handleCalendarClick}
-                                        sx={{
-                                            marginRight: '1.5em',
-                                            textTransform: 'none',
-                                            color: 'rgba(128, 128, 128, 1)',
-                                            border: '1px solid rgba(184, 184, 184, 1)',
-                                            borderRadius: '4px',
-                                            padding: '0.5em',
-                                            mt: 1.25
-                                        }}
-                                    >
-                                        <DateRangeIcon fontSize='medium'/>
-                                        <Typography variant="body1" sx={{
-                                            fontFamily: 'Nunito',
-                                            fontSize: '14px',
-                                            fontWeight: '600',
-                                            lineHeight: '19.6px',
-                                            textAlign: 'left'
-                                        }}>
-                                            {formattedDates}
+                                            Build Audience
                                         </Typography>
                                     </Button>
                                 </Box>
@@ -715,7 +652,7 @@ const Leads: React.FC = () => {
                                                     overflowY: 'auto'
                                                 }}
                                             >
-                                                <Table sx={{minWidth: 850}} aria-label="leads table">
+                                                <Table sx={{minWidth: 850}} aria-label="Audience table">
                                                     <TableHead>
                                                         <TableRow>
                                                             <TableCell padding="checkbox"
@@ -727,98 +664,47 @@ const Leads: React.FC = () => {
                                                                     color="primary"
                                                                 />
                                                             </TableCell>
-                                                            <TableCell sx={leadsStyles.table_column}
-                                                                       onClick={() => handleSortRequest('name')}
+                                                            <TableCell sx={audienceStyles.table_column}
+                                                                       onClick={() => handleSortRequest('list_name')}
                                                                        style={{cursor: 'pointer'}}>
-                                                                Name {orderBy === 'name' ?
-                                                                <SwapVertIcon fontSize="small"
-                                                                              sx={{transform: order === 'asc' ? 'rotate(0deg)' : 'rotate(180deg)'}}/> : ''}
+                                                                List Name {orderBy === 'list_name' ?
+                                                                <SwapVertIcon fontSize="small"/> : ''}
                                                             </TableCell>
-                                                            <TableCell sx={leadsStyles.table_column}
-                                                                       onClick={() => handleSortRequest('business_email')}
+                                                            <TableCell sx={audienceStyles.table_column}
+                                                                       onClick={() => handleSortRequest('no_of_leads')}
                                                                        style={{cursor: 'pointer'}}>
-                                                                Email {orderBy === 'business_email' ?
-                                                                <SwapVertIcon fontSize="small"
-                                                                              sx={{transform: order === 'asc' ? 'rotate(0deg)' : 'rotate(180deg)'}}/> : ''}
+                                                                No: of leads {orderBy === 'no_of_leads' ?
+                                                                <SwapVertIcon fontSize="small"/> : ''}
                                                             </TableCell>
-                                                            <TableCell sx={leadsStyles.table_column}
-                                                                       onClick={() => handleSortRequest('mobile_phone')}
+                                                            <TableCell sx={audienceStyles.table_column}
+                                                                       onClick={() => handleSortRequest('created_by')}
                                                                        style={{cursor: 'pointer'}}>
-                                                                Phone number {orderBy === 'mobile_phone' ?
-                                                                <SwapVertIcon fontSize="small"
-                                                                              sx={{transform: order === 'asc' ? 'rotate(0deg)' : 'rotate(180deg)'}}/> : ''}
+                                                                Created by {orderBy === 'created_by' ?
+                                                                <SwapVertIcon fontSize="small"/> : ''}
                                                             </TableCell>
-                                                            <TableCell sx={leadsStyles.table_column}
-                                                                       onClick={() => handleSortRequest('last_visited_date')}
+                                                            <TableCell sx={audienceStyles.table_column}
+                                                                       onClick={() => handleSortRequest('created_date')}
                                                                        style={{cursor: 'pointer'}}>
-                                                                Visited date {orderBy === 'last_visited_date' ?
-                                                                <SwapVertIcon fontSize="small"
-                                                                              sx={{transform: order === 'asc' ? 'rotate(0deg)' : 'rotate(180deg)'}}/> : ''}
+                                                                Created date {orderBy === 'created_date' ?
+                                                                <SwapVertIcon fontSize="small"/> : ''}
                                                             </TableCell>
-                                                            <TableCell sx={leadsStyles.table_column}>
-                                                                Visited time
+                                                            <TableCell sx={audienceStyles.table_column}>
+                                                                Platform
                                                             </TableCell>
-                                                            <TableCell sx={leadsStyles.table_column}
-                                                                       onClick={() => handleSortRequest('funnel')}
-                                                                       style={{cursor: 'pointer'}}>
-                                                                Lead Funnel {orderBy === 'funnel' ?
-                                                                <SwapVertIcon fontSize="small"
-                                                                              sx={{transform: order === 'asc' ? 'rotate(0deg)' : 'rotate(180deg)'}}/> : ''}
-                                                            </TableCell>
-                                                            <TableCell sx={leadsStyles.table_column}
+                                                            <TableCell sx={audienceStyles.table_column}
                                                                        onClick={() => handleSortRequest('status')}
                                                                        style={{cursor: 'pointer'}}>
                                                                 Status {orderBy === 'status' ?
-                                                                <SwapVertIcon fontSize="small"
-                                                                              sx={{transform: order === 'asc' ? 'rotate(0deg)' : 'rotate(180deg)'}}/> : ''}
+                                                                <SwapVertIcon fontSize="small"/> : ''}
                                                             </TableCell>
-                                                            <TableCell sx={leadsStyles.table_column}
-                                                                       onClick={() => handleSortRequest('time_spent')}
+                                                            <TableCell sx={audienceStyles.table_column}
+                                                                       onClick={() => handleSortRequest('exported_on')}
                                                                        style={{cursor: 'pointer'}}>
-                                                                Time Spent {orderBy === 'time_spent' ?
-                                                                <SwapVertIcon fontSize="small"
-                                                                              sx={{transform: order === 'asc' ? 'rotate(0deg)' : 'rotate(180deg)'}}/> : ''}
+                                                                Exported on {orderBy === 'exported_on' ?
+                                                                <SwapVertIcon fontSize="small"/> : ''}
                                                             </TableCell>
-                                                            <TableCell sx={leadsStyles.table_column}
-                                                                       onClick={() => handleSortRequest('no_of_visits')}
-                                                                       style={{cursor: 'pointer'}}>
-                                                                No of Visits {orderBy === 'no_of_visits' ?
-                                                                <SwapVertIcon fontSize="small"
-                                                                              sx={{transform: order === 'asc' ? 'rotate(0deg)' : 'rotate(180deg)'}}/> : ''}
-                                                            </TableCell>
-                                                            <TableCell sx={leadsStyles.table_column}
-                                                                       onClick={() => handleSortRequest('no_of_page_visits')}
-                                                                       style={{cursor: 'pointer'}}>
-                                                                No of Page Visits {orderBy === 'no_of_page_visits' ?
-                                                                <SwapVertIcon fontSize="small"
-                                                                              sx={{transform: order === 'asc' ? 'rotate(0deg)' : 'rotate(180deg)'}}/> : ''}
-                                                            </TableCell>
-                                                            <TableCell sx={leadsStyles.table_column}
-                                                                       onClick={() => handleSortRequest('age')}
-                                                                       style={{cursor: 'pointer'}}>
-                                                                Age {orderBy === 'age' ? <SwapVertIcon fontSize="small"
-                                                                                                       sx={{transform: order === 'asc' ? 'rotate(0deg)' : 'rotate(180deg)'}}/> : ''}
-                                                            </TableCell>
-                                                            <TableCell sx={leadsStyles.table_column}
-                                                                       onClick={() => handleSortRequest('gender')}
-                                                                       style={{cursor: 'pointer'}}>
-                                                                Gender {orderBy === 'gender' ?
-                                                                <SwapVertIcon fontSize="small"
-                                                                              sx={{transform: order === 'asc' ? 'rotate(0deg)' : 'rotate(180deg)'}}/> : ''}
-                                                            </TableCell>
-                                                            <TableCell sx={leadsStyles.table_column}
-                                                                       onClick={() => handleSortRequest('state')}
-                                                                       style={{cursor: 'pointer'}}>
-                                                                State {orderBy === 'state' ?
-                                                                <SwapVertIcon fontSize="small"
-                                                                              sx={{transform: order === 'asc' ? 'rotate(0deg)' : 'rotate(180deg)'}}/> : ''}
-                                                            </TableCell>
-                                                            <TableCell sx={leadsStyles.table_column}
-                                                                       onClick={() => handleSortRequest('city')}
-                                                                       style={{cursor: 'pointer'}}>
-                                                                City {orderBy === 'city' ?
-                                                                <SwapVertIcon fontSize="small"
-                                                                              sx={{transform: order === 'asc' ? 'rotate(0deg)' : 'rotate(180deg)'}}/> : ''}
+                                                            <TableCell sx={audienceStyles.table_column}>
+                                                                Action
                                                             </TableCell>
 
                                                         </TableRow>
@@ -838,33 +724,33 @@ const Leads: React.FC = () => {
                                                                     <div
                                                                         onClick={(e) => {
                                                                             e.stopPropagation();
-                                                                            handleSelectRow(row.lead.id);
+                                                                            handleSelectRow(row.id);
                                                                         }}
                                                                     >
                                                                         <Checkbox
-                                                                            checked={selectedRows.has(row.lead.id)}
+                                                                            checked={selectedRows.has(row.id)}
                                                                             color="primary"
                                                                         />
                                                                     </div>
                                                                 </TableCell>
                                                                 <TableCell
-                                                                    sx={leadsStyles.table_array}>{row.lead.first_name} {row.lead.last_name}</TableCell>
+                                                                    sx={audienceStyles.table_column}>{row.name}</TableCell>
                                                                 <TableCell
-                                                                    sx={leadsStyles.table_array}>{row.lead.business_email || 'N/A'}</TableCell>
+                                                                    sx={audienceStyles.table_column}>{row.leads_count || 'N/A'}</TableCell>
                                                                 <TableCell
-                                                                    sx={leadsStyles.table_array_phone}>{row.lead.mobile_phone || 'N/A'}</TableCell>
+                                                                    sx={audienceStyles.table_column}>{row.type || 'N/A'}</TableCell>
                                                                 <TableCell
-                                                                    sx={leadsStyles.table_array}>{row.last_visited_date || 'N/A'}</TableCell>
+                                                                    sx={audienceStyles.table_column}>{row.created_at || 'N/A'}</TableCell>
                                                                 <TableCell
-                                                                    sx={leadsStyles.table_array}>{row.last_visited_time || 'N/A'}</TableCell>
-                                                                <TableCell sx={leadsStyles.table_column}>
+                                                                    sx={audienceStyles.table_column}>{row.platform || 'N/A'}</TableCell>
+                                                                <TableCell sx={audienceStyles.table_column}>
                                                                     <Box
                                                                         sx={{
                                                                             display: 'flex',
                                                                             padding: '4px 8px',
                                                                             borderRadius: '4px',
-                                                                            backgroundColor: getStatusStyle(row.funnel).background,
-                                                                            color: getStatusStyle(row.funnel).color,
+                                                                            backgroundColor: getStatusStyle(row.status).background,
+                                                                            color: getStatusStyle(row.status).color,
                                                                             fontFamily: 'Nunito',
                                                                             fontSize: '14px',
                                                                             fontWeight: '400',
@@ -872,26 +758,40 @@ const Leads: React.FC = () => {
                                                                             justifyContent: 'center',
                                                                         }}
                                                                     >
-                                                                        {row.funnel || 'N/A'}
+                                                                        {row.status || 'N/A'}
                                                                     </Box>
                                                                 </TableCell>
                                                                 <TableCell
-                                                                    sx={leadsStyles.table_array}>{row.status || 'N/A'}</TableCell>
-                                                                <TableCell
-                                                                    sx={leadsStyles.table_array}>{row.lead.time_spent || 'N/A'}</TableCell>
-                                                                <TableCell
-                                                                    sx={leadsStyles.table_array}>{row.lead.no_of_visits || 'N/A'}</TableCell>
-                                                                <TableCell
-                                                                    sx={leadsStyles.table_array}>{row.lead.no_of_page_visits || 'N/A'}</TableCell>
-                                                                <TableCell sx={leadsStyles.table_array}>
-                                                                    {row.lead.age_min && row.lead.age_max ? `${row.lead.age_min} - ${row.lead.age_max}` : 'N/A'}
+                                                                    sx={audienceStyles.table_column}>{row.exported_on || 'N/A'}</TableCell>
+                                                                <TableCell sx={audienceStyles.table_column}>
+                                                                    <div style={{
+                                                                        display: 'flex',
+                                                                        alignItems: 'center',
+                                                                        justifyContent: 'center'
+                                                                    }}>
+                                                                        <EditIcon
+                                                                            fontSize="small"
+                                                                            style={{
+                                                                                cursor: 'pointer',
+                                                                                marginRight: '8px'
+                                                                            }}
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation();
+                                                                                handleEdit(row.id);
+                                                                            }}
+                                                                            sx={{color: '#969696'}}
+                                                                        />
+                                                                        <DeleteIcon
+                                                                            fontSize="small"
+                                                                            style={{cursor: 'pointer'}}
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation();
+                                                                                handleDelete(row.id);
+                                                                            }}
+                                                                            sx={{color: '#E76758'}}
+                                                                        />
+                                                                    </div>
                                                                 </TableCell>
-                                                                <TableCell
-                                                                    sx={leadsStyles.table_array}>{row.lead.gender || 'N/A'}</TableCell>
-                                                                <TableCell
-                                                                    sx={leadsStyles.table_array}>{row.state || 'N/A'}</TableCell>
-                                                                <TableCell
-                                                                    sx={leadsStyles.table_array}>{row.city || 'N/A'}</TableCell>
                                                             </TableRow>
                                                         ))}
                                                     </TableBody>
@@ -910,16 +810,8 @@ const Leads: React.FC = () => {
                                 {showSlider && <Slider/>}
                             </Box>
                         </Grid>
+                        <BuildAudience open={audiencePopupOpen} onClose={handleAudiencePopupClose}/>
                         <FilterPopup open={filterPopupOpen} onClose={handleFilterPopupClose}/>
-                        <AudiencePopup open={audiencePopupOpen} onClose={handleAudiencePopupClose}
-                                       selectedLeads={Array.from(selectedRows)}/>
-                        <CalendarPopup
-                            anchorEl={calendarAnchorEl}
-                            open={isCalendarOpen}
-                            onClose={handleCalendarClose}
-                            onDateChange={handleDateChange}
-                            onApply={handleApply}
-                        />
                     </Grid>
                 </Box>
             </Box>
@@ -927,14 +819,14 @@ const Leads: React.FC = () => {
     );
 };
 
-const LeadsPage: React.FC = () => {
+const AudiencePage: React.FC = () => {
     return (
         <Suspense fallback={<div>Loading...</div>}>
             <SliderProvider>
-                <Leads/>
+                <Audience/>
             </SliderProvider>
         </Suspense>
     );
 };
 
-export default LeadsPage;
+export default AudiencePage;
