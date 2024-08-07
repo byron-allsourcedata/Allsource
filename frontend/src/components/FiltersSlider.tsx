@@ -7,7 +7,6 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider, DatePicker, TimePicker } from '@mui/x-date-pickers';
 import dayjs from 'dayjs';
-import axiosInstance from '@/axios/axiosInterceptorInstance';
 
 
 interface FilterPopupProps {
@@ -283,7 +282,41 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
 
 
   const handleButtonClick = (label: string) => {
+    let funnel = '';
+    switch (label) {
+      case 'Abandon Checkout leads in last 30 days':
+        funnel = 'cart_abandoned';
+        break;
+      case 'Converters in last 30 days':
+        funnel = 'converted';
+        break;
+      case 'Non Converters in last 30 days':
+        funnel = 'visits';
+        break;
+      case 'Add to cart leads in last 30 days':
+        funnel = 'added_to_cart';
+        break;
+      default:
+        funnel = '';
+    }
+  
+    const now = dayjs();
+    const fromDate = now.subtract(30, 'days').startOf('day').unix();
+    const toDate = now.endOf('day').unix();
+  
+    const newFilters = {
+      button: label,
+      dateRange: {
+        fromDate,
+        toDate,
+      },
+      selectedFunnels: [funnel],
+      // Добавьте остальные параметры фильтров, если необходимо
+    };
+  
     setSelectedButton(label);
+    onApply(newFilters); // Передаем фильтры в функцию обработки фильтров
+    onClose(); // Закрыть попап после применения фильтров
   };
 
 
@@ -500,32 +533,31 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
 
 
   const handleFilters = () => {
-    // Ваша функция для сбора фильтров
     const filterDates = getFilterDates();
     const isButtonChecked = Object.values(checkedFilters).some(value => value);
-
+  
     const fromDateTime = isButtonChecked
       ? (checkedFilters.lastWeek && filterDates.lastWeek.from) ||
       (checkedFilters.last30Days && filterDates.last30Days.from) ||
       (checkedFilters.last6Months && filterDates.last6Months.from) ||
       (checkedFilters.allTime && filterDates.allTime.from)
       : dateRange.fromDate ? dayjs(dateRange.fromDate).startOf('day').unix() : null;
-
+  
     const toDateTime = isButtonChecked
       ? (checkedFilters.lastWeek && filterDates.lastWeek.to) ||
       (checkedFilters.last30Days && filterDates.last30Days.to) ||
       (checkedFilters.last6Months && filterDates.last6Months.to) ||
       (checkedFilters.allTime && filterDates.allTime.to)
       : dateRange.toDate ? dayjs(dateRange.toDate).endOf('day').unix() : null;
-
+  
     const fromDateTimeWithTime = fromDateTime && timeRange.fromTime
       ? dayjs.unix(fromDateTime).hour(dayjs(timeRange.fromTime).hour()).minute(dayjs(timeRange.fromTime).minute()).unix()
       : fromDateTime;
-
+  
     const toDateTimeWithTime = toDateTime && timeRange.toTime
       ? dayjs.unix(toDateTime).hour(dayjs(timeRange.toTime).hour()).minute(dayjs(timeRange.toTime).minute()).unix()
       : toDateTime;
-
+  
     const filters = {
       button: selectedButton,
       dateRange: {
@@ -542,9 +574,10 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
       selectedStatus,
       selectedValue,
     };
-
+  
     return filters;
   };
+  
 
   const handleApply = () => {
     const filters = handleFilters(); // Собираем фильтры

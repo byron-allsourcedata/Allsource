@@ -22,6 +22,7 @@ import FilterPopup from '@/components/FiltersSlider';
 import AudiencePopup from '@/components/AudienceSlider';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
+import dayjs from 'dayjs';
 
 
 const Sidebar = dynamic(() => import('../../components/Sidebar'), {
@@ -334,22 +335,22 @@ const Leads: React.FC = () => {
       
 
   const handleApplyFilters = async (filters: {
-    dateRange: { fromDate: { toString: () => string; }; toDate: { toString: () => string; }; };
+    dateRange: { fromDate: number | null; toDate: number | null };
     selectedStatus: string[];
     regions: string[];
     emails: string[];
     selectedFunnels: string[];
   }) => {
     const queryParams = new URLSearchParams();
-    const newSelectedFilters: { label: string; value: string; }[] = [];
-
+    const newSelectedFilters: { label: string; value: string }[] = [];
+  
     if (filters.dateRange.fromDate) {
       queryParams.append('from_date', filters.dateRange.fromDate.toString());
-      newSelectedFilters.push({ label: 'From Date', value: filters.dateRange.fromDate.toString() });
+      newSelectedFilters.push({ label: 'From Date', value: dayjs.unix(filters.dateRange.fromDate).format('YYYY-MM-DD') });
     }
     if (filters.dateRange.toDate) {
       queryParams.append('to_date', filters.dateRange.toDate.toString());
-      newSelectedFilters.push({ label: 'To Date', value: filters.dateRange.toDate.toString() });
+      newSelectedFilters.push({ label: 'To Date', value: dayjs.unix(filters.dateRange.toDate).format('YYYY-MM-DD') });
     }
     if (filters.selectedStatus && filters.selectedStatus.length > 0) {
       queryParams.append('status', filters.selectedStatus.join(','));
@@ -367,23 +368,24 @@ const Leads: React.FC = () => {
       queryParams.append('lead_funnel', filters.selectedFunnels.join(','));
       newSelectedFilters.push({ label: 'Funnels', value: filters.selectedFunnels.join(', ') });
     }
+  
     setSelectedFilters(newSelectedFilters);
-    if (filters.selectedStatus.length > 0) {
+    if (filters.selectedStatus && filters.selectedStatus.length > 0) {
       setActiveFilter(filters.selectedStatus[0]);
     } else {
       setActiveFilter('all');
     }
-
+  
     const url = `/leads?${queryParams.toString()}`;
+  
     try {
       const response = await axiosInstance.get(url);
       const [leads, count, max_page] = response.data;
-
+  
       setData(Array.isArray(leads) ? leads : []);
       setCount(count || 0);
       setMaxPage(max_page || 0);
       setStatus(response.data.status);
-
     } catch (error) {
       console.error('Error fetching filtered leads:', error);
     }
@@ -407,23 +409,22 @@ const Leads: React.FC = () => {
     }
   };
 
-  const handleDeleteFilter = (filterToDelete: { label: string; value: string; }) => {
+  const handleDeleteFilter = (filterToDelete: { label: string; value: string }) => {
     const updatedFilters = selectedFilters.filter(filter => filter.label !== filterToDelete.label);
-
+  
     setSelectedFilters(updatedFilters);
-
+  
     const newFilters = {
       dateRange: {
-        fromDate: updatedFilters.find(f => f.label === 'From Date')?.value || '',
-        toDate: updatedFilters.find(f => f.label === 'To Date')?.value || ''
+        fromDate: updatedFilters.find(f => f.label === 'From Date') ? Number(updatedFilters.find(f => f.label === 'From Date')!.value) : null,
+        toDate: updatedFilters.find(f => f.label === 'To Date') ? Number(updatedFilters.find(f => f.label === 'To Date')!.value) : null
       },
       selectedStatus: updatedFilters.find(f => f.label === 'Status') ? updatedFilters.find(f => f.label === 'Status')!.value.split(', ') : [],
       regions: updatedFilters.find(f => f.label === 'Regions') ? updatedFilters.find(f => f.label === 'Regions')!.value.split(', ') : [],
       emails: updatedFilters.find(f => f.label === 'Emails') ? updatedFilters.find(f => f.label === 'Emails')!.value.split(', ') : [],
       selectedFunnels: updatedFilters.find(f => f.label === 'Funnels') ? updatedFilters.find(f => f.label === 'Funnels')!.value.split(', ') : []
     };
-
-    
+  
     handleApplyFilters(newFilters);
   };
 

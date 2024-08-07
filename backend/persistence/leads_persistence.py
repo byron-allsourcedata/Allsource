@@ -95,6 +95,10 @@ class LeadsPersistence:
         elif status == 'existing_customers':
             query = query.filter(LeadUser.status == 'Existing')
 
+        if lead_funnel:
+            funnel_list = lead_funnel.split(',')
+            query = query.filter(LeadUser.funnel.in_(funnel_list))
+
         offset = (page - 1) * per_page
         leads = query.limit(per_page).offset(offset).all()
         count = query.count()
