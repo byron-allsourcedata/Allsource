@@ -9,15 +9,12 @@ import {
     Chip,
     InputAdornment,
     Collapse,
-    FormControlLabel,
-    Checkbox,
     Button,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import SearchIcon from '@mui/icons-material/Search';
-import axiosInstance from '../axios/axiosInterceptorInstance';
 
 interface BuildAudienceProps {
     open: boolean;
@@ -30,6 +27,7 @@ const BuildAudience: React.FC<BuildAudienceProps> = ({ open, onClose }) => {
     const [ages, setAges] = useState<string[]>([]);
     const [genders, setGenders] = useState<string[]>([]);
     const [netWorths, setNetWorths] = useState<string[]>([]);
+    const [notInExistingLists, setNotInExistingLists] = useState<string[]>([]);
     const [interestList, setInterestList] = useState<string[]>([]);
     const [isRegionOpen, setIsRegionOpen] = useState<boolean>(false);
     const [isProfessionOpen, setIsProfessionOpen] = useState<boolean>(false);
@@ -38,7 +36,6 @@ const BuildAudience: React.FC<BuildAudienceProps> = ({ open, onClose }) => {
     const [isNetWorthOpen, setIsNetWorthOpen] = useState<boolean>(false);
     const [isInterestsOpen, setIsInterestsOpen] = useState<boolean>(false);
     const [isNotInExistingListsOpen, setIsNotInExistingListsOpen] = useState<boolean>(false);
-    const [notInExistingLists, setNotInExistingLists] = useState<boolean>(false);
 
     const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement>, setter: React.Dispatch<React.SetStateAction<string[]>>, currentTags: string[]) => {
         if (e.key === 'Enter') {
@@ -317,7 +314,7 @@ const BuildAudience: React.FC<BuildAudienceProps> = ({ open, onClose }) => {
                         placeholder="Interest"
                         variant="outlined"
                         fullWidth
-                        onKeyDown={(e) => handleAddTag(e as React.KeyboardEvent<HTMLInputElement>, setInterestList, interestList)} // Use type assertion here
+                        onKeyDown={(e) => handleAddTag(e as React.KeyboardEvent<HTMLInputElement>, setInterestList, interestList)}
                         sx={{ mb: 2 }}
                         InputProps={{
                             endAdornment: (
@@ -336,25 +333,25 @@ const BuildAudience: React.FC<BuildAudienceProps> = ({ open, onClose }) => {
                         Not in Existing Lists
                     </Typography>
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '8px', mb: 2 }}>
-                        {interestList.map((tag, index) => (
+                        {notInExistingLists.map((tag, index) => (
                             <Chip
                                 key={index}
                                 label={tag}
-                                onDelete={() => removeTag(tag, setIsNotInExistingListsOpen, interestList)}
+                                onDelete={() => removeTag(tag, setNotInExistingLists, notInExistingLists)}
                             />
                         ))}
                     </Box>
-                    <IconButton onClick={() => setIsInterestsOpen(!isInterestsOpen)} aria-label="toggle-content">
-                        {isInterestsOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                    <IconButton onClick={() => setIsNotInExistingListsOpen(!isNotInExistingListsOpen)} aria-label="toggle-content">
+                        {isNotInExistingListsOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
                     </IconButton>
                 </Box>
-                <Collapse in={isInterestsOpen}>
+                <Collapse in={isNotInExistingListsOpen}>
                     <Divider sx={{ mb: 2 }} />
                     <TextField
-                        placeholder="Interest"
+                        placeholder="Add new item"
                         variant="outlined"
                         fullWidth
-                        onKeyDown={(e) => handleAddTag(e as React.KeyboardEvent<HTMLInputElement>, setInterestList, interestList)} // Use type assertion here
+                        onKeyDown={(e) => handleAddTag(e as React.KeyboardEvent<HTMLInputElement>, setNotInExistingLists, notInExistingLists)} // Use type assertion here
                         sx={{ mb: 2 }}
                         InputProps={{
                             endAdornment: (
@@ -366,6 +363,7 @@ const BuildAudience: React.FC<BuildAudienceProps> = ({ open, onClose }) => {
                     />
                 </Collapse>
             </Box>
+
             <Button
                 variant="contained"
                 color="primary"
