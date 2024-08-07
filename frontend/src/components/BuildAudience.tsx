@@ -25,17 +25,11 @@ interface BuildAudienceProps {
 }
 
 const BuildAudience: React.FC<BuildAudienceProps> = ({ open, onClose }) => {
-    const [region, setRegion] = useState<string>('');
     const [regions, setRegions] = useState<string[]>([]);
-    const [profession, setProfession] = useState<string>('');
     const [professions, setProfessions] = useState<string[]>([]);
-    const [age, setAge] = useState<string>('');
     const [ages, setAges] = useState<string[]>([]);
-    const [gender, setGender] = useState<string>('');
     const [genders, setGenders] = useState<string[]>([]);
-    const [netWorth, setNetWorth] = useState<string>('');
     const [netWorths, setNetWorths] = useState<string[]>([]);
-    const [interests, setInterests] = useState<string>('');
     const [interestList, setInterestList] = useState<string[]>([]);
     const [isRegionOpen, setIsRegionOpen] = useState<boolean>(false);
     const [isProfessionOpen, setIsProfessionOpen] = useState<boolean>(false);
@@ -43,6 +37,7 @@ const BuildAudience: React.FC<BuildAudienceProps> = ({ open, onClose }) => {
     const [isGenderOpen, setIsGenderOpen] = useState<boolean>(false);
     const [isNetWorthOpen, setIsNetWorthOpen] = useState<boolean>(false);
     const [isInterestsOpen, setIsInterestsOpen] = useState<boolean>(false);
+    const [isNotInExistingListsOpen, setIsNotInExistingListsOpen] = useState<boolean>(false);
     const [notInExistingLists, setNotInExistingLists] = useState<boolean>(false);
 
     const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement>, setter: React.Dispatch<React.SetStateAction<string[]>>, currentTags: string[]) => {
@@ -108,7 +103,6 @@ const BuildAudience: React.FC<BuildAudienceProps> = ({ open, onClose }) => {
                 </IconButton>
             </Box>
 
-            {/* Location Section */}
             <Box sx={{ width: '95%', mb: 2, border: '1px solid rgba(228, 228, 228, 1)', padding: '1em' }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
                     <Typography sx={{ flexGrow: 1, color: 'rgba(74, 74, 74, 1)', fontFamily: 'Nunito', fontWeight: '600', fontSize: '16px', lineHeight: '25.2px' }}>
@@ -133,7 +127,6 @@ const BuildAudience: React.FC<BuildAudienceProps> = ({ open, onClose }) => {
                         placeholder="Region"
                         variant="outlined"
                         fullWidth
-                        onChange={(e) => setRegion(e.target.value)}
                         onKeyDown={(e) => handleAddTag(e as React.KeyboardEvent<HTMLInputElement>, setRegions, regions)} // Use type assertion here
                         sx={{ mb: 2 }}
                         InputProps={{
@@ -172,7 +165,6 @@ const BuildAudience: React.FC<BuildAudienceProps> = ({ open, onClose }) => {
                         placeholder="Profession"
                         variant="outlined"
                         fullWidth
-                        onChange={(e) => setProfession(e.target.value)}
                         onKeyDown={(e) => handleAddTag(e as React.KeyboardEvent<HTMLInputElement>, setProfessions, professions)} // Use type assertion here
                         sx={{ mb: 2 }}
                         InputProps={{
@@ -211,7 +203,6 @@ const BuildAudience: React.FC<BuildAudienceProps> = ({ open, onClose }) => {
                         placeholder="Age"
                         variant="outlined"
                         fullWidth
-                        onChange={(e) => setAge(e.target.value)}
                         onKeyDown={(e) => handleAddTag(e as React.KeyboardEvent<HTMLInputElement>, setAges, ages)} // Use type assertion here
                         sx={{ mb: 2 }}
                         InputProps={{
@@ -250,7 +241,6 @@ const BuildAudience: React.FC<BuildAudienceProps> = ({ open, onClose }) => {
                         placeholder="Gender"
                         variant="outlined"
                         fullWidth
-                        onChange={(e) => setGender(e.target.value)}
                         onKeyDown={(e) => handleAddTag(e as React.KeyboardEvent<HTMLInputElement>, setGenders, genders)} // Use type assertion here
                         sx={{ mb: 2 }}
                         InputProps={{
@@ -289,7 +279,6 @@ const BuildAudience: React.FC<BuildAudienceProps> = ({ open, onClose }) => {
                         placeholder="Net Worth"
                         variant="outlined"
                         fullWidth
-                        onChange={(e) => setNetWorth(e.target.value)}
                         onKeyDown={(e) => handleAddTag(e as React.KeyboardEvent<HTMLInputElement>, setNetWorths, netWorths)} // Use type assertion here
                         sx={{ mb: 2 }}
                         InputProps={{
@@ -328,7 +317,6 @@ const BuildAudience: React.FC<BuildAudienceProps> = ({ open, onClose }) => {
                         placeholder="Interest"
                         variant="outlined"
                         fullWidth
-                        onChange={(e) => setInterests(e.target.value)}
                         onKeyDown={(e) => handleAddTag(e as React.KeyboardEvent<HTMLInputElement>, setInterestList, interestList)} // Use type assertion here
                         sx={{ mb: 2 }}
                         InputProps={{
@@ -342,12 +330,41 @@ const BuildAudience: React.FC<BuildAudienceProps> = ({ open, onClose }) => {
                 </Collapse>
             </Box>
 
-            {/* Not in Existing Lists */}
             <Box sx={{ width: '95%', mb: 2, border: '1px solid rgba(228, 228, 228, 1)', padding: '1em' }}>
-                <FormControlLabel
-                    control={<Checkbox checked={notInExistingLists} onChange={(e) => setNotInExistingLists(e.target.checked)} />}
-                    label="Not in existing lists"
-                />
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                    <Typography sx={{ flexGrow: 1, color: 'rgba(74, 74, 74, 1)', fontFamily: 'Nunito', fontWeight: '600', fontSize: '16px', lineHeight: '25.2px' }}>
+                        Not in Existing Lists
+                    </Typography>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '8px', mb: 2 }}>
+                        {interestList.map((tag, index) => (
+                            <Chip
+                                key={index}
+                                label={tag}
+                                onDelete={() => removeTag(tag, setIsNotInExistingListsOpen, interestList)}
+                            />
+                        ))}
+                    </Box>
+                    <IconButton onClick={() => setIsInterestsOpen(!isInterestsOpen)} aria-label="toggle-content">
+                        {isInterestsOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                    </IconButton>
+                </Box>
+                <Collapse in={isInterestsOpen}>
+                    <Divider sx={{ mb: 2 }} />
+                    <TextField
+                        placeholder="Interest"
+                        variant="outlined"
+                        fullWidth
+                        onKeyDown={(e) => handleAddTag(e as React.KeyboardEvent<HTMLInputElement>, setInterestList, interestList)} // Use type assertion here
+                        sx={{ mb: 2 }}
+                        InputProps={{
+                            endAdornment: (
+                                <InputAdornment position="end">
+                                    <SearchIcon />
+                                </InputAdornment>
+                            ),
+                        }}
+                    />
+                </Collapse>
             </Box>
             <Button
                 variant="contained"
