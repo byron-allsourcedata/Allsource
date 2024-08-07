@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect, Suspense } from 'react';
-import { Box, Grid, Typography, Button, Menu, MenuItem, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Checkbox, TablePagination } from '@mui/material';
+import { Box, Grid, Typography, Button, Menu, MenuItem, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Checkbox, TablePagination, Chip } from '@mui/material';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
@@ -171,6 +171,8 @@ const Leads: React.FC = () => {
   const [filterPopupOpen, setFilterPopupOpen] = useState(false);
   const [audiencePopupOpen, setAudiencePopupOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [selectedFilters, setSelectedFilters] = useState<{ label: string, value: string }[]>([]);
+
   const handleFilterPopupOpen = () => {
     setFilterPopupOpen(true);
   };
@@ -259,6 +261,7 @@ const Leads: React.FC = () => {
 
   const handleFilterChange = (filter: string) => {
     setActiveFilter(filter);
+    setSelectedFilters([]);
     setPage(0);
   };
 
@@ -317,11 +320,11 @@ const Leads: React.FC = () => {
         router.push('/signin');
         return;
       }
-  
+
       const { start, end } = appliedDates;
       const startEpoch = start ? Math.floor(start.getTime() / 1000) : null;
       const endEpoch = end ? Math.floor(end.getTime() / 1000) : (start ? Math.floor(start.getTime() / 1000) : null);
-  
+
       let url = `/leads?page=${page + 1}&per_page=${rowsPerPage}&status=${activeFilter}`;
       if (startEpoch !== null && endEpoch !== null) {
         url += `&from_date=${startEpoch}&to_date=${endEpoch}`;
@@ -329,7 +332,7 @@ const Leads: React.FC = () => {
       if (sortBy) {
         url += `&sort_by=${sortBy}&sort_order=${sortOrder}`;
       }
-  
+
       const response = await axiosInstance.get(url);
       const [leads, count, max_page] = response.data;
 
@@ -355,18 +358,48 @@ const Leads: React.FC = () => {
     }
   };
 
-  const handleApplyFilters = async (filters: { dateRange: { fromDate: { toString: () => string; }; toDate: { toString: () => string; }; }; selectedStatus: any[]; regions: any[]; emails: any[]; selectedFunnels: any[]; }) => {
+  const handleApplyFilters = async (filters: {
+    dateRange: { fromDate: { toString: () => string; }; toDate: { toString: () => string; }; };
+    selectedStatus: string[];
+    regions: string[];
+    emails: string[];
+    selectedFunnels: string[];
+  }) => {
     const queryParams = new URLSearchParams();
-  
-    if (filters.dateRange.fromDate) queryParams.append('from_date', filters.dateRange.fromDate.toString());
-    if (filters.dateRange.toDate) queryParams.append('to_date', filters.dateRange.toDate.toString());
-    if (filters.selectedStatus && filters.selectedStatus.length > 0) queryParams.append('status', filters.selectedStatus.join(','));
-    if (filters.regions && filters.regions.length > 0) queryParams.append('regions', filters.regions.join(','));
-    if (filters.emails && filters.emails.length > 0) queryParams.append('emails', filters.emails.join(','));
-    if (filters.selectedFunnels && filters.selectedFunnels.length > 0) queryParams.append('lead_funnel', filters.selectedFunnels.join(','));
-  
+    const newSelectedFilters: { label: string; value: string; }[] = [];
+
+    if (filters.dateRange.fromDate) {
+      queryParams.append('from_date', filters.dateRange.fromDate.toString());
+      newSelectedFilters.push({ label: 'From Date', value: filters.dateRange.fromDate.toString() });
+    }
+    if (filters.dateRange.toDate) {
+      queryParams.append('to_date', filters.dateRange.toDate.toString());
+      newSelectedFilters.push({ label: 'To Date', value: filters.dateRange.toDate.toString() });
+    }
+    if (filters.selectedStatus && filters.selectedStatus.length > 0) {
+      queryParams.append('status', filters.selectedStatus.join(','));
+      newSelectedFilters.push({ label: 'Status', value: filters.selectedStatus.join(', ') });
+    }
+    if (filters.regions && filters.regions.length > 0) {
+      queryParams.append('regions', filters.regions.join(','));
+      newSelectedFilters.push({ label: 'Regions', value: filters.regions.join(', ') });
+    }
+    if (filters.emails && filters.emails.length > 0) {
+      queryParams.append('emails', filters.emails.join(','));
+      newSelectedFilters.push({ label: 'Emails', value: filters.emails.join(', ') });
+    }
+    if (filters.selectedFunnels && filters.selectedFunnels.length > 0) {
+      queryParams.append('lead_funnel', filters.selectedFunnels.join(','));
+      newSelectedFilters.push({ label: 'Funnels', value: filters.selectedFunnels.join(', ') });
+    }
+    setSelectedFilters(newSelectedFilters);
+    if (filters.selectedStatus.length > 0) {
+      setActiveFilter(filters.selectedStatus[0]);
+    } else {
+      setActiveFilter('all');
+    }
+
     const url = `/leads?${queryParams.toString()}`;
-  
     try {
       const response = await axiosInstance.get(url);
       const [leads, count, max_page] = response.data;
@@ -375,11 +408,52 @@ const Leads: React.FC = () => {
       setCount(count || 0);
       setMaxPage(max_page || 0);
       setStatus(response.data.status);
+
     } catch (error) {
       console.error('Error fetching filtered leads:', error);
     }
   };
   
+
+  const handleResetFilters = async () => {
+    const url = `/leads`;
+
+    try {
+      const response = await axiosInstance.get(url);
+      const [leads, count, max_page] = response.data;
+
+      setData(Array.isArray(leads) ? leads : []);
+      setCount(count || 0);
+      setMaxPage(max_page || 0);
+      setStatus(response.data.status);
+      setSelectedFilters([]);
+    } catch (error) {
+      console.error('Error fetching leads:', error);
+    }
+  };
+
+  const handleDeleteFilter = (filterToDelete: { label: string; value: string; }) => {
+    const updatedFilters = selectedFilters.filter(filter => filter.label !== filterToDelete.label);
+
+    // Обновляем состояние selectedFilters
+    setSelectedFilters(updatedFilters);
+
+    // Обновляем состояния для каждого типа фильтра
+    const newFilters = {
+      dateRange: {
+        fromDate: updatedFilters.find(f => f.label === 'From Date')?.value || '',
+        toDate: updatedFilters.find(f => f.label === 'To Date')?.value || ''
+      },
+      selectedStatus: updatedFilters.find(f => f.label === 'Status') ? updatedFilters.find(f => f.label === 'Status')!.value.split(', ') : [],
+      regions: updatedFilters.find(f => f.label === 'Regions') ? updatedFilters.find(f => f.label === 'Regions')!.value.split(', ') : [],
+      emails: updatedFilters.find(f => f.label === 'Emails') ? updatedFilters.find(f => f.label === 'Emails')!.value.split(', ') : [],
+      selectedFunnels: updatedFilters.find(f => f.label === 'Funnels') ? updatedFilters.find(f => f.label === 'Funnels')!.value.split(', ') : []
+    };
+
+    // Вызываем функцию handleApplyFilters с новыми фильтрами
+    handleApplyFilters(newFilters);
+  };
+
   useEffect(() => {
     fetchData({ sortBy: orderBy, sortOrder: order, page, rowsPerPage, activeFilter, appliedDates });
   }, [orderBy, order, page, rowsPerPage, activeFilter, appliedDates]);
@@ -661,6 +735,24 @@ const Leads: React.FC = () => {
                   </Button>
                 </Box>
               </Box>
+              <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, mt: 2 }}>
+                {selectedFilters.length > 0 && (
+                  <Chip
+                    label="Reset all"
+                    onDelete={handleResetFilters}
+                    sx={{ backgroundColor: 'rgba(255, 255, 255, 1)', color: 'rgba(80, 82, 178, 1)', border: '1px solid rgba(220, 220, 239, 1)', borderRadius: '3px' }}
+                  />
+                )}
+                {selectedFilters.map(filter => (
+                  <Chip
+                    key={filter.label}
+                    label={`${filter.label}: ${filter.value}`}
+                    onDelete={() => handleDeleteFilter(filter)}
+                    sx={{ borderRadius: '3px', border: '1px solid rgba(220, 220, 239, 1)', backgroundColor: 'rgba(229, 229, 229, 1)', color: 'rgba(123, 123, 123, 1)' }}
+                  />
+                ))}
+              </Box>
+
               <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', padding: 2 }}>
                 {status === 'PIXEL_INSTALLATION_NEEDED' ? (
                   <Box sx={centerContainerStyles}>

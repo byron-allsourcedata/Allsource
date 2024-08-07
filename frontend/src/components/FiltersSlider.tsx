@@ -120,13 +120,23 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
     );
   };
 
+  // Status button
   const handleButtonStatusClick = (label: string) => {
+    const mappedStatus = statusMapping[label];
     setSelectedStatus(prev =>
-      prev.includes(label)
-        ? prev.filter(item => item !== label)
-        : [...prev, label]
+      prev.includes(mappedStatus)
+        ? prev.filter(item => item !== mappedStatus)
+        : [...prev, mappedStatus]
     );
   };
+
+  const statusMapping: Record<string, string> = {
+    New: 'new_customers',
+    Existing: 'existing_customers',
+    All: 'all_customers',
+  };
+  
+
 
   const addTag = (category: string, tag: string) => {
     setSelectedTags((prevTags) => {
@@ -496,16 +506,16 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
 
     const fromDateTime = isButtonChecked
       ? (checkedFilters.lastWeek && filterDates.lastWeek.from) ||
-        (checkedFilters.last30Days && filterDates.last30Days.from) ||
-        (checkedFilters.last6Months && filterDates.last6Months.from) ||
-        (checkedFilters.allTime && filterDates.allTime.from)
+      (checkedFilters.last30Days && filterDates.last30Days.from) ||
+      (checkedFilters.last6Months && filterDates.last6Months.from) ||
+      (checkedFilters.allTime && filterDates.allTime.from)
       : dateRange.fromDate ? dayjs(dateRange.fromDate).startOf('day').unix() : null;
 
     const toDateTime = isButtonChecked
       ? (checkedFilters.lastWeek && filterDates.lastWeek.to) ||
-        (checkedFilters.last30Days && filterDates.last30Days.to) ||
-        (checkedFilters.last6Months && filterDates.last6Months.to) ||
-        (checkedFilters.allTime && filterDates.allTime.to)
+      (checkedFilters.last30Days && filterDates.last30Days.to) ||
+      (checkedFilters.last6Months && filterDates.last6Months.to) ||
+      (checkedFilters.allTime && filterDates.allTime.to)
       : dateRange.toDate ? dayjs(dateRange.toDate).endOf('day').unix() : null;
 
     const fromDateTimeWithTime = fromDateTime && timeRange.fromTime
@@ -541,7 +551,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
     onApply(filters); // Передаем фильтры в функцию обработки фильтров
     onClose(); // Закрываем фильтр после применения
   };
-  
+
 
   return (
     <>
@@ -960,13 +970,16 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
               <Typography sx={{ flexGrow: 1, color: 'rgba(74, 74, 74, 1)', fontFamily: 'Nunito', fontWeight: '500', fontSize: '16px', lineHeight: '25.2px' }}>
                 Status
               </Typography>
-              {selectedStatus.map(label => (
-                <CustomChip
-                  key={label}
-                  label={label}
-                  onDelete={() => handleButtonStatusClick(label)}
-                />
-              ))}
+              {selectedStatus.map(mappedLabel => {
+                const originalLabel = Object.keys(statusMapping).find(key => statusMapping[key] === mappedLabel) as keyof typeof statusMapping;
+                return (
+                  <CustomChip
+                    key={mappedLabel}
+                    label={originalLabel}
+                    onDelete={() => handleButtonStatusClick(originalLabel)}
+                  />
+                );
+              })}
               <IconButton onClick={() => setIsStatus(!isStatus)} aria-label="toggle-content">
                 {isStatus ? <ExpandLessIcon /> : <ExpandMoreIcon />}
               </IconButton>
@@ -987,8 +1000,8 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                       textAlign: 'center',
                       borderRadius: '4px',
                       border: '1px solid rgba(220, 220, 239, 1)',
-                      backgroundColor: selectedButton === label ? 'rgba(219, 219, 240, 1)' : getButtonStyle(label).background,
-                      color: selectedButton === label ? '#000' : getButtonStyle(label).color,
+                      backgroundColor: selectedStatus.includes(statusMapping[label]) ? 'rgba(219, 219, 240, 1)' : getButtonStyle(label).background,
+                      color: selectedStatus.includes(statusMapping[label]) ? '#000' : getButtonStyle(label).color,
                       fontFamily: 'Nunito',
                       opacity: 1,
                       display: 'flex',
@@ -1001,6 +1014,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                   </Button>
                 ))}
               </Box>
+
             </Collapse>
           </Box>
           {/* Recurring Visits */}
