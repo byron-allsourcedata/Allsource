@@ -10,6 +10,7 @@ import {
     Table,
     TableBody,
     TableCell,
+    IconButton,
     TableContainer,
     TableHead,
     TableRow,
@@ -35,8 +36,9 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SendIcon from '@mui/icons-material/Send';
 import Swal from 'sweetalert2';
-import SwapVertIcon from '@mui/icons-material/SwapVert';
 import BuildAudience from "@/components/BuildAudience";
+import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
+import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 
 
 const Sidebar = dynamic(() => import('../../components/Sidebar'), {
@@ -556,11 +558,11 @@ const Audience: React.FC = () => {
                                         sx={{
                                             marginRight: '1.5em',
                                             textTransform: 'none',
-                                            color: 'rgba(128, 128, 128, 1)',
                                             border: '1px solid rgba(184, 184, 184, 1)',
                                             borderRadius: '4px',
                                             padding: '0.5em',
-                                            mt: 1.25
+                                            mt: 1.25,
+                                            color: '#5052B2'
                                         }}
                                     >
                                         <FilterListIcon fontSize='medium'/>
@@ -570,11 +572,11 @@ const Audience: React.FC = () => {
                                         sx={{
                                             marginRight: '1.5em',
                                             textTransform: 'none',
-                                            color: 'rgba(128, 128, 128, 1)',
                                             border: '1px solid rgba(184, 184, 184, 1)',
                                             borderRadius: '4px',
                                             padding: '0.5em',
-                                            mt: 1.25
+                                            mt: 1.25,
+                                            color: '#5052B2'
                                         }}>
                                         <SendIcon fontSize='medium'/>
                                     </Button>
@@ -589,9 +591,7 @@ const Audience: React.FC = () => {
                                             borderRadius: '4px',
                                             padding: '10px',
                                             mt: 1.25,
-                                            opacity: selectedRows.size === 0 ? 0.4 : 1,
                                         }}
-                                        disabled={selectedRows.size === 0}
                                     >
                                         <Typography sx={{
                                             marginRight: '0.5em',
@@ -599,6 +599,7 @@ const Audience: React.FC = () => {
                                             lineHeight: '19.1px',
                                             textSize: '16px',
                                             textAlign: 'left',
+                                            color: '#5052B2'
                                         }}>
                                             Build Audience
                                         </Typography>
@@ -655,8 +656,10 @@ const Audience: React.FC = () => {
                                                 <Table sx={{minWidth: 850}} aria-label="Audience table">
                                                     <TableHead>
                                                         <TableRow>
-                                                            <TableCell padding="checkbox"
-                                                                       sx={{borderRight: '1px solid rgba(235, 235, 235, 1)'}}>
+                                                            <TableCell
+                                                                padding="checkbox"
+                                                                sx={{borderRight: '1px solid rgba(235, 235, 235, 1)'}}
+                                                            >
                                                                 <Checkbox
                                                                     indeterminate={selectedRows.size > 0 && selectedRows.size < data.length}
                                                                     checked={data.length > 0 && selectedRows.size === data.length}
@@ -664,51 +667,41 @@ const Audience: React.FC = () => {
                                                                     color="primary"
                                                                 />
                                                             </TableCell>
-                                                            <TableCell sx={audienceStyles.table_column}
-                                                                       onClick={() => handleSortRequest('list_name')}
-                                                                       style={{cursor: 'pointer'}}>
-                                                                List Name {orderBy === 'list_name' ?
-                                                                <SwapVertIcon fontSize="small"/> : ''}
-                                                            </TableCell>
-                                                            <TableCell sx={audienceStyles.table_column}
-                                                                       onClick={() => handleSortRequest('no_of_leads')}
-                                                                       style={{cursor: 'pointer'}}>
-                                                                No: of leads {orderBy === 'no_of_leads' ?
-                                                                <SwapVertIcon fontSize="small"/> : ''}
-                                                            </TableCell>
-                                                            <TableCell sx={audienceStyles.table_column}
-                                                                       onClick={() => handleSortRequest('created_by')}
-                                                                       style={{cursor: 'pointer'}}>
-                                                                Created by {orderBy === 'created_by' ?
-                                                                <SwapVertIcon fontSize="small"/> : ''}
-                                                            </TableCell>
-                                                            <TableCell sx={audienceStyles.table_column}
-                                                                       onClick={() => handleSortRequest('created_date')}
-                                                                       style={{cursor: 'pointer'}}>
-                                                                Created date {orderBy === 'created_date' ?
-                                                                <SwapVertIcon fontSize="small"/> : ''}
-                                                            </TableCell>
-                                                            <TableCell sx={audienceStyles.table_column}>
-                                                                Platform
-                                                            </TableCell>
-                                                            <TableCell sx={audienceStyles.table_column}
-                                                                       onClick={() => handleSortRequest('status')}
-                                                                       style={{cursor: 'pointer'}}>
-                                                                Status {orderBy === 'status' ?
-                                                                <SwapVertIcon fontSize="small"/> : ''}
-                                                            </TableCell>
-                                                            <TableCell sx={audienceStyles.table_column}
-                                                                       onClick={() => handleSortRequest('exported_on')}
-                                                                       style={{cursor: 'pointer'}}>
-                                                                Exported on {orderBy === 'exported_on' ?
-                                                                <SwapVertIcon fontSize="small"/> : ''}
-                                                            </TableCell>
-                                                            <TableCell sx={audienceStyles.table_column}>
-                                                                Action
-                                                            </TableCell>
-
+                                                            {[
+                                                                {key: 'list_name', label: 'List Name'},
+                                                                {key: 'no_of_leads', label: 'No: of leads'},
+                                                                {key: 'created_by', label: 'Created by'},
+                                                                {key: 'created_date', label: 'Created date'},
+                                                                {key: 'platform', label: 'Platform', sortable: false},
+                                                                {key: 'status', label: 'Status'},
+                                                                {key: 'exported_on', label: 'Exported on'},
+                                                                {key: 'actions', label: 'Actions', sortable: false},
+                                                            ].map(({key, label, sortable = true}) => (
+                                                                <TableCell
+                                                                    key={key}
+                                                                    sx={audienceStyles.table_column}
+                                                                    onClick={sortable ? () => handleSortRequest(key) : undefined}
+                                                                    style={{cursor: sortable ? 'pointer' : 'default'}}
+                                                                >
+                                                                    <Box sx={{display: 'flex', alignItems: 'center'}}>
+                                                                        <Typography variant="body2">{label}</Typography>
+                                                                        {sortable && orderBy === key && (
+                                                                            <IconButton size="small" sx={{ml: 1}}>
+                                                                                {order === 'asc' ? (
+                                                                                    <ArrowUpwardIcon
+                                                                                        fontSize="inherit"/>
+                                                                                ) : (
+                                                                                    <ArrowDownwardIcon
+                                                                                        fontSize="inherit"/>
+                                                                                )}
+                                                                            </IconButton>
+                                                                        )}
+                                                                    </Box>
+                                                                </TableCell>
+                                                            ))}
                                                         </TableRow>
                                                     </TableHead>
+
                                                     <TableBody>
                                                         {data.map((row) => (
                                                             <TableRow
@@ -719,8 +712,10 @@ const Audience: React.FC = () => {
                                                                     backgroundColor: selectedRows.has(row.id) ? 'rgba(235, 243, 254, 1)' : 'inherit',
                                                                 }}
                                                             >
-                                                                <TableCell padding="checkbox"
-                                                                           sx={{borderRight: '1px solid rgba(235, 235, 235, 1)'}}>
+                                                                <TableCell
+                                                                    padding="checkbox"
+                                                                    sx={{borderRight: '1px solid rgba(235, 235, 235, 1)'}}
+                                                                >
                                                                     <div
                                                                         onClick={(e) => {
                                                                             e.stopPropagation();
@@ -743,19 +738,21 @@ const Audience: React.FC = () => {
                                                                     sx={audienceStyles.table_column}>{row.created_at || 'N/A'}</TableCell>
                                                                 <TableCell
                                                                     sx={audienceStyles.table_column}>{row.platform || 'N/A'}</TableCell>
-                                                                <TableCell sx={audienceStyles.table_column}>
+                                                                <TableCell
+                                                                    sx={audienceStyles.table_column}
+                                                                >
                                                                     <Box
                                                                         sx={{
                                                                             display: 'flex',
                                                                             padding: '4px 8px',
                                                                             borderRadius: '4px',
-                                                                            backgroundColor: getStatusStyle(row.status).background,
-                                                                            color: getStatusStyle(row.status).color,
                                                                             fontFamily: 'Nunito',
                                                                             fontSize: '14px',
                                                                             fontWeight: '400',
                                                                             lineHeight: '19.6px',
                                                                             justifyContent: 'center',
+                                                                            backgroundColor: getStatusStyle(row.status).background,
+                                                                            color: getStatusStyle(row.status).color
                                                                         }}
                                                                     >
                                                                         {row.status || 'N/A'}
@@ -796,6 +793,7 @@ const Audience: React.FC = () => {
                                                         ))}
                                                     </TableBody>
                                                 </Table>
+
                                             </TableContainer>
                                             <CustomTablePagination
                                                 count={count_leads ?? 0}

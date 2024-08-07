@@ -15,7 +15,7 @@ import {
     TableRow,
     Paper,
     Checkbox,
-    TablePagination
+    IconButton
 } from '@mui/material';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
@@ -36,7 +36,8 @@ import FilterListIcon from '@mui/icons-material/FilterList';
 import CalendarPopup from '../../components/CalendarPopup';
 import FilterPopup from '@/components/FiltersSlider';
 import AudiencePopup from '@/components/AudienceSlider';
-import SwapVertIcon from '@mui/icons-material/SwapVert';
+import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
+import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 
 
 const Sidebar = dynamic(() => import('../../components/Sidebar'), {
@@ -718,8 +719,10 @@ const Leads: React.FC = () => {
                                                 <Table sx={{minWidth: 850}} aria-label="leads table">
                                                     <TableHead>
                                                         <TableRow>
-                                                            <TableCell padding="checkbox"
-                                                                       sx={{borderRight: '1px solid rgba(235, 235, 235, 1)'}}>
+                                                            <TableCell
+                                                                padding="checkbox"
+                                                                sx={{borderRight: '1px solid rgba(235, 235, 235, 1)'}}
+                                                            >
                                                                 <Checkbox
                                                                     indeterminate={selectedRows.size > 0 && selectedRows.size < data.length}
                                                                     checked={data.length > 0 && selectedRows.size === data.length}
@@ -727,110 +730,58 @@ const Leads: React.FC = () => {
                                                                     color="primary"
                                                                 />
                                                             </TableCell>
-                                                            <TableCell sx={leadsStyles.table_column}
-                                                                       onClick={() => handleSortRequest('name')}
-                                                                       style={{cursor: 'pointer'}}>
-                                                                Name {orderBy === 'name' ?
-                                                                <SwapVertIcon fontSize="small"
-                                                                              sx={{transform: order === 'asc' ? 'rotate(0deg)' : 'rotate(180deg)'}}/> : ''}
-                                                            </TableCell>
-                                                            <TableCell sx={leadsStyles.table_column}
-                                                                       onClick={() => handleSortRequest('business_email')}
-                                                                       style={{cursor: 'pointer'}}>
-                                                                Email {orderBy === 'business_email' ?
-                                                                <SwapVertIcon fontSize="small"
-                                                                              sx={{transform: order === 'asc' ? 'rotate(0deg)' : 'rotate(180deg)'}}/> : ''}
-                                                            </TableCell>
-                                                            <TableCell sx={leadsStyles.table_column}
-                                                                       onClick={() => handleSortRequest('mobile_phone')}
-                                                                       style={{cursor: 'pointer'}}>
-                                                                Phone number {orderBy === 'mobile_phone' ?
-                                                                <SwapVertIcon fontSize="small"
-                                                                              sx={{transform: order === 'asc' ? 'rotate(0deg)' : 'rotate(180deg)'}}/> : ''}
-                                                            </TableCell>
-                                                            <TableCell sx={leadsStyles.table_column}
-                                                                       onClick={() => handleSortRequest('last_visited_date')}
-                                                                       style={{cursor: 'pointer'}}>
-                                                                Visited date {orderBy === 'last_visited_date' ?
-                                                                <SwapVertIcon fontSize="small"
-                                                                              sx={{transform: order === 'asc' ? 'rotate(0deg)' : 'rotate(180deg)'}}/> : ''}
-                                                            </TableCell>
-                                                            <TableCell sx={leadsStyles.table_column}>
-                                                                Visited time
-                                                            </TableCell>
-                                                            <TableCell sx={leadsStyles.table_column}
-                                                                       onClick={() => handleSortRequest('funnel')}
-                                                                       style={{cursor: 'pointer'}}>
-                                                                Lead Funnel {orderBy === 'funnel' ?
-                                                                <SwapVertIcon fontSize="small"
-                                                                              sx={{transform: order === 'asc' ? 'rotate(0deg)' : 'rotate(180deg)'}}/> : ''}
-                                                            </TableCell>
-                                                            <TableCell sx={leadsStyles.table_column}
-                                                                       onClick={() => handleSortRequest('status')}
-                                                                       style={{cursor: 'pointer'}}>
-                                                                Status {orderBy === 'status' ?
-                                                                <SwapVertIcon fontSize="small"
-                                                                              sx={{transform: order === 'asc' ? 'rotate(0deg)' : 'rotate(180deg)'}}/> : ''}
-                                                            </TableCell>
-                                                            <TableCell sx={leadsStyles.table_column}
-                                                                       onClick={() => handleSortRequest('time_spent')}
-                                                                       style={{cursor: 'pointer'}}>
-                                                                Time Spent {orderBy === 'time_spent' ?
-                                                                <SwapVertIcon fontSize="small"
-                                                                              sx={{transform: order === 'asc' ? 'rotate(0deg)' : 'rotate(180deg)'}}/> : ''}
-                                                            </TableCell>
-                                                            <TableCell sx={leadsStyles.table_column}
-                                                                       onClick={() => handleSortRequest('no_of_visits')}
-                                                                       style={{cursor: 'pointer'}}>
-                                                                No of Visits {orderBy === 'no_of_visits' ?
-                                                                <SwapVertIcon fontSize="small"
-                                                                              sx={{transform: order === 'asc' ? 'rotate(0deg)' : 'rotate(180deg)'}}/> : ''}
-                                                            </TableCell>
-                                                            <TableCell sx={leadsStyles.table_column}
-                                                                       onClick={() => handleSortRequest('no_of_page_visits')}
-                                                                       style={{cursor: 'pointer'}}>
-                                                                No of Page Visits {orderBy === 'no_of_page_visits' ?
-                                                                <SwapVertIcon fontSize="small"
-                                                                              sx={{transform: order === 'asc' ? 'rotate(0deg)' : 'rotate(180deg)'}}/> : ''}
-                                                            </TableCell>
-                                                            <TableCell sx={leadsStyles.table_column}
-                                                                       onClick={() => handleSortRequest('age')}
-                                                                       style={{cursor: 'pointer'}}>
-                                                                Age {orderBy === 'age' ? <SwapVertIcon fontSize="small"
-                                                                                                       sx={{transform: order === 'asc' ? 'rotate(0deg)' : 'rotate(180deg)'}}/> : ''}
-                                                            </TableCell>
-                                                            <TableCell sx={leadsStyles.table_column}
-                                                                       onClick={() => handleSortRequest('gender')}
-                                                                       style={{cursor: 'pointer'}}>
-                                                                Gender {orderBy === 'gender' ?
-                                                                <SwapVertIcon fontSize="small"
-                                                                              sx={{transform: order === 'asc' ? 'rotate(0deg)' : 'rotate(180deg)'}}/> : ''}
-                                                            </TableCell>
-                                                            <TableCell sx={leadsStyles.table_column}
-                                                                       onClick={() => handleSortRequest('state')}
-                                                                       style={{cursor: 'pointer'}}>
-                                                                State {orderBy === 'state' ?
-                                                                <SwapVertIcon fontSize="small"
-                                                                              sx={{transform: order === 'asc' ? 'rotate(0deg)' : 'rotate(180deg)'}}/> : ''}
-                                                            </TableCell>
-                                                            <TableCell sx={leadsStyles.table_column}
-                                                                       onClick={() => handleSortRequest('city')}
-                                                                       style={{cursor: 'pointer'}}>
-                                                                City {orderBy === 'city' ?
-                                                                <SwapVertIcon fontSize="small"
-                                                                              sx={{transform: order === 'asc' ? 'rotate(0deg)' : 'rotate(180deg)'}}/> : ''}
-                                                            </TableCell>
-
+                                                            {[
+                                                                {key: 'name', label: 'Name'},
+                                                                {key: 'business_email', label: 'Email'},
+                                                                {key: 'mobile_phone', label: 'Phone number'},
+                                                                {key: 'last_visited_date', label: 'Visited date'},
+                                                                {
+                                                                    key: 'last_visited_time',
+                                                                    label: 'Visited time',
+                                                                    sortable: false
+                                                                },
+                                                                {key: 'funnel', label: 'Lead Funnel'},
+                                                                {key: 'status', label: 'Status'},
+                                                                {key: 'time_spent', label: 'Time Spent'},
+                                                                {key: 'no_of_visits', label: 'No of Visits'},
+                                                                {key: 'no_of_page_visits', label: 'No of Page Visits'},
+                                                                {key: 'age', label: 'Age'},
+                                                                {key: 'gender', label: 'Gender'},
+                                                                {key: 'state', label: 'State'},
+                                                                {key: 'city', label: 'City'},
+                                                            ].map(({key, label, sortable = true}) => (
+                                                                <TableCell
+                                                                    key={key}
+                                                                    sx={leadsStyles.table_column}
+                                                                    onClick={sortable ? () => handleSortRequest(key) : undefined}
+                                                                    style={{cursor: sortable ? 'pointer' : 'default'}}
+                                                                >
+                                                                    <Box sx={{display: 'flex', alignItems: 'center'}}>
+                                                                        <Typography variant="body2">{label}</Typography>
+                                                                        {sortable && orderBy === key && (
+                                                                            <IconButton size="small" sx={{ml: 1}}>
+                                                                                {order === 'asc' ? (
+                                                                                    <ArrowUpwardIcon
+                                                                                        fontSize="inherit"/>
+                                                                                ) : (
+                                                                                    <ArrowDownwardIcon
+                                                                                        fontSize="inherit"/>
+                                                                                )}
+                                                                            </IconButton>
+                                                                        )}
+                                                                    </Box>
+                                                                </TableCell>
+                                                            ))}
                                                         </TableRow>
                                                     </TableHead>
                                                     <TableBody>
                                                         {data.map((row) => (
                                                             <TableRow
-                                                                key={row.id}
-                                                                selected={selectedRows.has(row.id)}
-                                                                onClick={() => handleSelectRow(row.id)}
+                                                                key={row.lead.id}
+                                                                selected={selectedRows.has(row.lead.id)}
+                                                                onClick={() => handleSelectRow(row.lead.id)}
                                                                 sx={{
-                                                                    backgroundColor: selectedRows.has(row.id) ? 'rgba(235, 243, 254, 1)' : 'inherit',
+                                                                    backgroundColor: selectedRows.has(row.lead.id) ? 'rgba(235, 243, 254, 1)' : 'inherit',
                                                                 }}
                                                             >
                                                                 <TableCell padding="checkbox"
@@ -857,18 +808,20 @@ const Leads: React.FC = () => {
                                                                     sx={leadsStyles.table_array}>{row.last_visited_date || 'N/A'}</TableCell>
                                                                 <TableCell
                                                                     sx={leadsStyles.table_array}>{row.last_visited_time || 'N/A'}</TableCell>
-                                                                <TableCell sx={leadsStyles.table_column}>
+                                                                <TableCell
+                                                                    sx={leadsStyles.table_column}
+                                                                >
                                                                     <Box
                                                                         sx={{
                                                                             display: 'flex',
                                                                             padding: '4px 8px',
                                                                             borderRadius: '4px',
-                                                                            backgroundColor: getStatusStyle(row.funnel).background,
-                                                                            color: getStatusStyle(row.funnel).color,
                                                                             fontFamily: 'Nunito',
                                                                             fontSize: '14px',
                                                                             fontWeight: '400',
                                                                             lineHeight: '19.6px',
+                                                                            backgroundColor: getStatusStyle(row.funnel).background,
+                                                                            color: getStatusStyle(row.funnel).color,
                                                                             justifyContent: 'center',
                                                                         }}
                                                                     >
