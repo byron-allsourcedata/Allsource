@@ -777,11 +777,11 @@ const Leads: React.FC = () => {
                                                     <TableBody>
                                                         {data.map((row) => (
                                                             <TableRow
-                                                                key={row.id}
-                                                                selected={selectedRows.has(row.id)}
-                                                                onClick={() => handleSelectRow(row.id)}
+                                                                key={row.lead.id}
+                                                                selected={selectedRows.has(row.lead.id)}
+                                                                onClick={() => handleSelectRow(row.lead.id)}
                                                                 sx={{
-                                                                    backgroundColor: selectedRows.has(row.id) ? 'rgba(235, 243, 254, 1)' : 'inherit',
+                                                                    backgroundColor: selectedRows.has(row.lead.id) ? 'rgba(235, 243, 254, 1)' : 'inherit',
                                                                 }}
                                                             >
                                                                 <TableCell padding="checkbox"
@@ -789,11 +789,11 @@ const Leads: React.FC = () => {
                                                                     <div
                                                                         onClick={(e) => {
                                                                             e.stopPropagation();
-                                                                            handleSelectRow(row.id);
+                                                                            handleSelectRow(row.lead.id);
                                                                         }}
                                                                     >
                                                                         <Checkbox
-                                                                            checked={selectedRows.has(row.id)}
+                                                                            checked={selectedRows.has(row.lead.id)}
                                                                             color="primary"
                                                                         />
                                                                     </div>
