@@ -45,7 +45,7 @@ const TableHeader = () => {
               <TableCell style={{textAlign: 'center'}}>Joined date</TableCell>
               <TableCell style={{textAlign: 'center'}}>Partner accounts</TableCell>
               <TableCell style={{textAlign: 'center'}}>Revenue</TableCell>
-              <TableCell style={{textAlign: 'center'}}>Commission%</TableCell>
+              <TableCell style={{textAlign: 'center'}}>Commission</TableCell>
               <TableCell style={{textAlign: 'center'}}>Client accounts</TableCell>
               <TableCell style={{textAlign: 'center'}}>Status</TableCell>
               <TableCell style={{textAlign: 'center'}}>Actions</TableCell>
@@ -68,8 +68,9 @@ const TableBodyReseller: React.FC<TableBodyResellerProps> = ({ data }) => {
           <TableCell style={{textAlign: 'center'}}>{row.revenue}</TableCell>
           <TableCell style={{textAlign: 'center'}}>{row.commission}</TableCell>
           <TableCell style={{textAlign: 'center'}}>{row.clientAccounts}</TableCell>
-          <TableCell>
-            <Button variant='text' size="small" sx={{ fontWeight: 600, backgroundColor: '#EAF8DD', color: '#6EC125'}}>
+          <TableCell sx={{ textAlign: 'center' }}>
+            <Button 
+            variant='text' size="small" sx={{ fontWeight: 600, backgroundColor: '#EAF8DD', color: '#6EC125' }}>
               {row.status}
             </Button>
           </TableCell>
@@ -159,7 +160,7 @@ const Reseller: React.FC = () => {
               </Typography>
               <Button variant="contained" 
               size='large'
-                sx={{ marginRight: '1.5em', 
+                sx={{ marginRight: '4em', 
                       backgroundColor: 'rgba(80, 82, 178, 1)', 
                       fontFamily: "Nunito", textTransform: 'none', 
                       fontWeight: 'bold', 
@@ -168,9 +169,9 @@ const Reseller: React.FC = () => {
                   Add Reseller
               </Button>
             </Box>
-            <Grid sx={{ marginRight: '1.5em'}} mt={4}>
-            <TableContainer component={Paper} >
-              <Table aria-label="simple table">
+            <Grid sx={{ marginRight: '4em'}} xs={12} mt={4}>
+            <TableContainer component={Paper}>
+              <Table aria-label="simple table" >
                 <TableHeader />
                 <TableBodyReseller data={data} />
               </Table>
