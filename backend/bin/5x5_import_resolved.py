@@ -57,7 +57,7 @@ def process_file(bucket, file, session):
                 up_id = table['UP_ID'][i]
                 if not up_id.is_valid and str(up_id) == 'None':
                     up_id = session.query(FiveXFiveHems.up_id).join(
-                        Lead, Lead.sha256_lower_case == FiveXFiveHems.sha256_lc_hem).first()
+                        Lead, Lead.sha256_lower_case == FiveXFiveHems.sha256_lc_hem).filter(Lead.sha256_lower_case == str(table['SHA256_LOWER_CASE'][i]).lower()).first()
                     if up_id is None:
                         continue
                 five_x_five_user = session.query(FiveXFiveUser).filter(
@@ -95,11 +95,11 @@ def process_file(bucket, file, session):
                             company_employee_count=five_x_five_user.company_employee_count,
                             last_name=five_x_five_user.last_name,
                             up_id=str(up_id),
-                            trovo_id=str(table['TROVO_ID'][i]).lower(),
-                            partner_id=str(table['PARTNER_ID'][i]).lower(),
-                            partner_uid=str(table['PARTNER_UID'][i]).lower(),
-                            sha256_lower_case=str(table['SHA256_LOWER_CASE'][i]).lower(),
-                            ip=str(table['IP'][i]).lower(),
+                            trovo_id=str(table['TROVO_ID'][i]),
+                            partner_id=str(table['PARTNER_ID'][i]),
+                            partner_uid=str(table['PARTNER_UID'][i]),
+                            sha256_lower_case=str(table['SHA256_LOWER_CASE'][i]),
+                            ip=str(table['IP'][i]),
                             age_min=None,
                             age_max=None,
                             gender=five_x_five_user.gender
