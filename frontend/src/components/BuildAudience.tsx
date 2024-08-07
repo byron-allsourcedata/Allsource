@@ -55,23 +55,24 @@ const BuildAudience: React.FC<BuildAudienceProps> = ({ open, onClose }) => {
     };
 
     const handleApplyFilters = async () => {
-        const filters = {
-            ...(regions.length > 0 && { regions }),
-            ...(professions.length > 0 && { professions }),
-            ...(ages.length > 0 && { ages }),
-            ...(genders.length > 0 && { genders }),
-            ...(netWorths.length > 0 && { netWorths }),
-            ...(interestList.length > 0 && { interestList }),
-            ...(notInExistingLists.length > 0 && { notInExistingLists }),
-        };
-
         try {
-            const response = await axiosInstance.post(`/audiences`, filters);
+            const queryParams = new URLSearchParams({
+                ...(regions.length > 0 && { regions: regions.join(',') }),
+                ...(professions.length > 0 && { professions: professions.join(',') }),
+                ...(ages.length > 0 && { ages: ages.join(',') }),
+                ...(genders.length > 0 && { genders: genders.join(',') }),
+                ...(netWorths.length > 0 && { net_worths: netWorths.join(',') }),
+                ...(interestList.length > 0 && { interest_list: interestList.join(',') }),
+                ...(notInExistingLists.length > 0 && { not_in_existing_lists: notInExistingLists.join(',') }),
+            });
+
+            const response = await axiosInstance.get(`/audience/leads?${queryParams.toString()}`);
             onClose();
         } catch (error) {
             console.error('Error applying filters:', error);
         }
     };
+
 
 
     return (

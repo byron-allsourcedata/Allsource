@@ -47,3 +47,16 @@ class AudienceService:
         for audience_id in audience_ids:
             self.audience_persistence_service.delete_user_audience(self.user.id, audience_id)
         return AudienceInfoEnum.SUCCESS
+
+    def get_leads_for_build_an_audience(self, regions, professions, ages, genders, net_worths,
+                                        interest_list, not_in_existing_lists):
+        leads_data = self.audience_persistence_service.get_filter_user_leads(self.user.id,
+                                                                             regions=regions,
+                                                                             professions=professions,
+                                                                             ages=ages,
+                                                                             genders=genders,
+                                                                             net_worths=net_worths,
+                                                                             interest_list=interest_list,
+                                                                             not_in_existing_lists=not_in_existing_lists
+                                                                             )
+        return leads_data

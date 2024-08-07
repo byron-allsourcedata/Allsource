@@ -31,4 +31,6 @@ class FiveXFiveUser(Base):
     company_zip = Column(VARCHAR)
     company_linkedin_url = Column(VARCHAR)
     company_revenue = Column(VARCHAR)
-    company_employee_count = Column(VARCHAR)
+    company_employee_count = Column(VARCHAR),
+    net_worth = Column(VARCHAR)
+    job_title = Column(VARCHAR)

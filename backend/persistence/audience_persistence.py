@@ -1,14 +1,18 @@
 import math
 from datetime import datetime
 
-from sqlalchemy import desc, asc
+from sqlalchemy import desc, asc, Integer
 from sqlalchemy import func
 from sqlalchemy.orm import Session
-
+from sqlalchemy import or_, and_
 from enums import AudienceInfoEnum
 from models.audience import Audience
 from models.audience_leads import AudienceLeads
+from models.leads import Lead
+from models.leads_locations import LeadsLocations
 from models.leads_users import LeadUser
+from models.locations import Locations
+from typing import List
 
 
 class AudiencePersistence:
@@ -135,3 +139,77 @@ class AudiencePersistence:
             self.db.commit()
             return AudienceInfoEnum.SUCCESS
         return AudienceInfoEnum.NOT_FOUND
+
+    def parse_age_filters(self, age_str: str):
+        filters = []
+        for part in age_str.split(','):
+            if '-' in part:
+                start, end = map(int, part.split('-'))
+                filters.append(and_(Lead.age_min <= end, Lead.age_max >= start))
+            else:
+                age = int(part)
+                filters.append(and_(Lead.age_min <= age, Lead.age_max >= age))
+        return filters
+
+    def parse_net_worth_filters(self, net_worth_str: str):
+        filters = []
+        for part in net_worth_str.split(','):
+            part = part.strip()
+            if '-' in part:
+                if '$' in part:
+                    part = part.replace('$', '').replace(',', '')
+                start, end = map(int, part.split('-'))
+                filters.append(and_(
+                    func.regexp_replace(Lead.net_worth, '[\$,]', '', 'g').cast(Integer) >= start,
+                    func.regexp_replace(Lead.net_worth, '[\$,]', '', 'g').cast(Integer) <= end
+                ))
+            else:
+                if '$' in part:
+                    part = part.replace('$', '').replace(',', '')
+                value = int(part)
+                filters.append(and_(
+                    func.regexp_replace(Lead.net_worth, '[\$,]', '', 'g').cast(Integer) >= value,
+                    func.regexp_replace(Lead.net_worth, '[\$,]', '', 'g').cast(Integer) <= value
+                ))
+        return filters
+
+    def normalize_profession(self, profession: str) -> str:
+        return profession.lower().replace(" ", "-")
+
+    def get_filter_user_leads(self, user_id: int, regions: List[str], professions: List[str],
+                              ages: str, genders: List[str], net_worths: List[int],
+                              interest_list: List[str], not_in_existing_lists: List[str]):
+        query = (
+            self.db.query(Lead)
+            .join(LeadUser, LeadUser.lead_id == Lead.id)
+            .join(LeadsLocations, LeadsLocations.lead_id == Lead.id)
+            .join(Locations, LeadsLocations.location_id == Locations.id)
+            .filter(LeadUser.user_id == user_id)
+        )
+
+        if not_in_existing_lists:
+            audience_subquery = (
+                self.db.query(Audience.lead_id)
+                .filter(Audience.name.in_(not_in_existing_lists))
+            )
+            query = query.filter(Lead.id.notin_(audience_subquery))
+        if regions:
+            query = query.filter(Locations.city.in_(regions))
+        if professions:
+            normalized_professions = [self.normalize_profession(p) for p in professions]
+            profession_filters = []
+            for profession in normalized_professions:
+                profession_filters.append(Lead.job_title.ilike(f"%{profession.replace('-', ' ')}%"))
+
+            query = query.filter(or_(*profession_filters))
+        if ages:
+            age_filters = self.parse_age_filters(ages)
+            query = query.filter(or_(*age_filters))
+        if genders:
+            query = query.filter(Lead.gender.in_(genders))
+        if net_worths:
+            net_worth_filters = self.parse_net_worth_filters(net_worths)
+            query = query.filter(or_(*net_worth_filters))
+
+        audience_data = query.all()
+        return audience_data

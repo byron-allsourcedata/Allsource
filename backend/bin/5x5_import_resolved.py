@@ -26,6 +26,8 @@ from models.leads_users import LeadUser
 from models.users import Users
 from dotenv import load_dotenv
 from sqlalchemy.dialects.postgresql import insert
+from collections import defaultdict
+from datetime import datetime
 
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
@@ -103,7 +105,9 @@ def process_file(bucket, file, session):
                             ip=str(table['IP'][i]),
                             age_min=None,
                             age_max=None,
-                            gender=five_x_five_user.gender
+                            gender=five_x_five_user.gender,
+                            net_worth=five_x_five_user.net_worth,
+                            job_title=five_x_five_user.job_title
                         )
                         if age_range:
                             if 'and older' in age_range:
@@ -157,6 +161,38 @@ def process_file(bucket, file, session):
         logging.info(f"write last processed file {file}")
         with open(LAST_PROCESSED_FILE_PATH, "w") as file:
             file.write(last_processed_file)
+
+
+def check_visitors(bucket, files):
+    all_visitors_per_day = defaultdict(lambda: {'unique_visitors': set(), 'views': 0, 'null_uids': 0})
+
+    for file in files:
+        obj = bucket.Object(file.key)
+        file_data = obj.get()['Body'].read()
+
+        if file.key.endswith('.snappy.parquet'):
+            with tempfile.NamedTemporaryFile() as temp_file:
+                temp_file.write(file_data)
+                temp_file.seek(0)
+                table = pq.read_table(temp_file.name)
+
+                for i in range(len(table)):
+                    event_date = table['EVENT_DATE'][i].as_py().date()
+                    up_id = table['UP_ID'][i]
+
+                    all_visitors_per_day[event_date]['views'] += 1
+
+                    if not up_id.is_valid:
+                        all_visitors_per_day[event_date]['null_uids'] += 1
+                    else:
+                        all_visitors_per_day[event_date]['unique_visitors'].add(up_id)
+
+    for date, data in all_visitors_per_day.items():
+        num_visitors = len(data['unique_visitors'])
+        num_null_uids = data['null_uids']
+        num_views = data['views']
+        print(
+            f"Date: {date}, Number of unique visitors: {num_visitors}, Number of views: {num_views}, Number of null UIDs: {num_null_uids}")
 
 
 def process_files(sts_client, session):
