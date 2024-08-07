@@ -558,11 +558,11 @@ const Audience: React.FC = () => {
                                         sx={{
                                             marginRight: '1.5em',
                                             textTransform: 'none',
-                                            color: 'rgba(128, 128, 128, 1)',
                                             border: '1px solid rgba(184, 184, 184, 1)',
                                             borderRadius: '4px',
                                             padding: '0.5em',
-                                            mt: 1.25
+                                            mt: 1.25,
+                                            color: '#5052B2'
                                         }}
                                     >
                                         <FilterListIcon fontSize='medium'/>
@@ -572,11 +572,11 @@ const Audience: React.FC = () => {
                                         sx={{
                                             marginRight: '1.5em',
                                             textTransform: 'none',
-                                            color: 'rgba(128, 128, 128, 1)',
                                             border: '1px solid rgba(184, 184, 184, 1)',
                                             borderRadius: '4px',
                                             padding: '0.5em',
-                                            mt: 1.25
+                                            mt: 1.25,
+                                            color: '#5052B2'
                                         }}>
                                         <SendIcon fontSize='medium'/>
                                     </Button>
@@ -591,9 +591,7 @@ const Audience: React.FC = () => {
                                             borderRadius: '4px',
                                             padding: '10px',
                                             mt: 1.25,
-                                            opacity: selectedRows.size === 0 ? 0.4 : 1,
                                         }}
-                                        disabled={selectedRows.size === 0}
                                     >
                                         <Typography sx={{
                                             marginRight: '0.5em',
@@ -601,6 +599,7 @@ const Audience: React.FC = () => {
                                             lineHeight: '19.1px',
                                             textSize: '16px',
                                             textAlign: 'left',
+                                            color: '#5052B2'
                                         }}>
                                             Build Audience
                                         </Typography>
@@ -676,7 +675,7 @@ const Audience: React.FC = () => {
                                                                 {key: 'platform', label: 'Platform', sortable: false},
                                                                 {key: 'status', label: 'Status'},
                                                                 {key: 'exported_on', label: 'Exported on'},
-                                                                {key: 'actions', label: 'Actions', sortable: false},  // Добавляем заголовок для колонки Actions
+                                                                {key: 'actions', label: 'Actions', sortable: false},
                                                             ].map(({key, label, sortable = true}) => (
                                                                 <TableCell
                                                                     key={key}
@@ -741,10 +740,6 @@ const Audience: React.FC = () => {
                                                                     sx={audienceStyles.table_column}>{row.platform || 'N/A'}</TableCell>
                                                                 <TableCell
                                                                     sx={audienceStyles.table_column}
-                                                                    style={{
-                                                                        backgroundColor: getStatusStyle(row.status).background,
-                                                                        color: getStatusStyle(row.status).color
-                                                                    }}
                                                                 >
                                                                     <Box
                                                                         sx={{
@@ -756,6 +751,8 @@ const Audience: React.FC = () => {
                                                                             fontWeight: '400',
                                                                             lineHeight: '19.6px',
                                                                             justifyContent: 'center',
+                                                                            backgroundColor: getStatusStyle(row.status).background,
+                                                                            color: getStatusStyle(row.status).color
                                                                         }}
                                                                     >
                                                                         {row.status || 'N/A'}
