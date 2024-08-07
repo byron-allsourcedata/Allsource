@@ -56,13 +56,13 @@ const BuildAudience: React.FC<BuildAudienceProps> = ({ open, onClose }) => {
 
     const handleApplyFilters = async () => {
         const filters = {
-            regions,
-            professions,
-            ages,
-            genders,
-            netWorths,
-            interestList,
-            notInExistingLists,
+            ...(regions.length > 0 && { regions }),
+            ...(professions.length > 0 && { professions }),
+            ...(ages.length > 0 && { ages }),
+            ...(genders.length > 0 && { genders }),
+            ...(netWorths.length > 0 && { netWorths }),
+            ...(interestList.length > 0 && { interestList }),
+            ...(notInExistingLists.length > 0 && { notInExistingLists }),
         };
 
         try {
@@ -72,6 +72,7 @@ const BuildAudience: React.FC<BuildAudienceProps> = ({ open, onClose }) => {
             console.error('Error applying filters:', error);
         }
     };
+
 
     return (
         <Drawer
