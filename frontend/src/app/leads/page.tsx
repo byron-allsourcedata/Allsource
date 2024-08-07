@@ -331,13 +331,7 @@ const Leads: React.FC = () => {
     }
   };
 
-    const handleSortRequest = (property: string) => {
-        const isAsc = orderBy === property && order === 'asc';
-        setOrder(isAsc ? 'desc' : 'asc');
-        setOrderBy(property);
-    };     
-
-
+      
 
   const handleApplyFilters = async (filters: {
     dateRange: { fromDate: { toString: () => string; }; toDate: { toString: () => string; }; };
