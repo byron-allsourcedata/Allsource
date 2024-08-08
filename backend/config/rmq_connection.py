@@ -1,6 +1,12 @@
 import os
 from aio_pika import connect, Message, DeliveryMode, Connection
 import json
+import logging
+
+logger = logging.getLogger(__name__)
+
+aio_pika_logger = logging.getLogger('aio_pika')
+aio_pika_logger.setLevel(logging.WARNING)
 
 
 class RabbitMQConnection:
@@ -32,7 +38,8 @@ async def publish_rabbitmq_message(connection: Connection, queue_name: str, mess
           body=json_data
         )
         await channel.default_exchange.publish(message, routing_key=queue_name)
-    except:
+    except Exception as e:
+        logger.error(e)
         await channel.close()
     finally:
         await channel.close()

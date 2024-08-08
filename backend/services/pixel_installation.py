@@ -1,8 +1,13 @@
 import hashlib
 import logging
 import os
+import re
 from sqlalchemy.orm import Session
+from bs4 import BeautifulSoup
+import requests
+from models.subscriptions import UserSubscriptions
 from models.users import Users
+from datetime import datetime, timedelta
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +21,6 @@ class PixelInstallationService:
         return {"email": self.user.email,
                 "full_name": self.user.full_name}
 
-
     def get_manual(self):
         client_id = self.user.data_provider_id
         if client_id is None:
@@ -26,37 +30,30 @@ class PixelInstallationService:
                 synchronize_session=False)
             self.db.commit()
         script = f'''
-            <script type="text/javascript">
-                const clientId = "{client_id}";
-                const pid = 'aeefb163f3395a3d1bafbbcbf8260a30b1f89ffdb0c329565b5a412ee79f00a7';
-                const puid = {{
-                    client_id: clientId,
+            <script id="acegm_pixel_script" type="text/javascript" defer="defer">
+                const pixel_clientId = "{client_id}";
+                const pixel_pid = 'aeefb163f3395a3d1bafbbcbf8260a30b1f89ffdb0c329565b5a412ee79f00a7';
+                const pixel_puid = {{
+                    client_id: pixel_clientId,
                     purpose: 'website',
                     current_page: window.location.href,
-                    partner: 'Maximiz'
                 }};
-                const encodedPuid = encodeURIComponent(JSON.stringify(puid));
-                const pixelUrl = 'https://a.usbrowserspeed.com/cs?pid=' + pid + '&puid=' + encodedPuid;
-                const script = document.createElement('script');
-                script.src = pixelUrl;
-                document.getElementById('pixel-container').appendChild(script);
-
+                const pixel_encodedPuid = encodeURIComponent(JSON.stringify(pixel_puid));
+                const pixelUrl = 'https://a.usbrowserspeed.com/cs?pid=' + pixel_pid + '&puid=' + pixel_encodedPuid;
+                const pixelContainer = document.createElement('div');
+                pixelContainer.id = 'pixel-container';
+                document.body.appendChild(pixelContainer);
+                const pixelScript = document.createElement('script');
+                pixelScript.src = pixelUrl;
+                pixelContainer.appendChild(pixelScript);
                 if (location.href.includes("vge=true")) {{
-                    fetch('{os.getenv('API_SITE_HOST_URL')}/install-pixel/pixel_installed', {{
-                        method: 'POST',
-                        headers: {{
-                            'Content-Type': 'application/json'
-                        }},
-                        body: JSON.stringify({{
-                            'client_id': clientId
-                        }})
-                    }});
-
-                    function showPopup() {{
+                    showPopup();
+                }}
+                function showPopup() {{
                         const popup = document.createElement("div");
                         popup.classList.add("popup");
                         popup.style.position = "fixed";
-                        popup.style.top = "7rem";
+                        popup.style.top = "1rem";
                         popup.style.right = "1rem";
                         popup.style.backgroundColor = "#fff";
                         popup.style.color = "#4d505a";
@@ -66,6 +63,8 @@ class PixelInstallationService:
                         popup.style.height = "auto";
                         popup.style.border = "1px solid #ccc";
                         popup.style.width = "400px";
+                        popup.style.zIndex = "999";
+                        popup.style.padding = "1rem";
                         popup.innerHTML = `
                             <div style="text-align:center;padding-bottom:24px;">
                                 <img src="https://dev.maximiz.ai/logo.svg" style="height:36px;width:auto;">
@@ -87,8 +86,45 @@ class PixelInstallationService:
                             popup.remove();
                         }});
                     }}
-                    window.addEventListener("load", showPopup);
-                }}
             </script>
         '''
         return script
+
+    def parse_website(self, url):
+        try:
+            response = requests.get(url)
+        except:
+            return False
+        response.raise_for_status()
+        if response.status_code != 200:
+            return False
+        soup = BeautifulSoup(response.text, 'html.parser')
+        pixel_container = soup.find('script', id='acegm_pixel_script')
+        if pixel_container:
+            script_content = pixel_container.string
+            client_id_match = re.search(r'const\s+pixel_clientId\s*=\s*["\']([^"\']+)["\']', script_content)
+            if client_id_match:
+                pixel_client_id = client_id_match.group(1)
+                if self.user.data_provider_id == pixel_client_id:
+                    return True
+        return False
+
+    def check_pixel_installed(self, url):
+        result = {'success': False}
+        result_parser = self.parse_website(url)
+        if result_parser:
+            start_date = datetime.utcnow()
+            end_date = start_date + timedelta(days=7)
+            start_date_str = start_date.isoformat() + "Z"
+            end_date_str = end_date.isoformat() + "Z"
+            self.db.query(UserSubscriptions).filter(UserSubscriptions.user_id == self.user.id).update(
+                {UserSubscriptions.plan_start: start_date_str, UserSubscriptions.plan_end: end_date_str},
+                synchronize_session=False
+            )
+            self.db.query(Users).filter(Users.id == self.user.id).update(
+                {Users.is_pixel_installed: True},
+                synchronize_session=False)
+            self.db.commit()
+            result['success'] = True
+        result['user_id'] = self.user.id
+        return result

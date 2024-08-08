@@ -12,11 +12,15 @@ from fastapi import Depends, Header, HTTPException, status
 
 from enums import UserAuthorizationStatus
 from exceptions import InvalidToken
+from persistence.audience_persistence import AudiencePersistence
+from persistence.leads_persistence import LeadsPersistence
 from persistence.plans_persistence import PlansPersistence
 from schemas.auth_token import Token
 from services.admin_customers import AdminCustomersService
+from services.audience import AudienceService
 from services.company_info import CompanyInfoService
 from services.dashboard import DashboardService
+from services.leads import LeadsService
 from services.payments import PaymentsService
 from services.payments_plans import PaymentsPlans
 from persistence.sendgrid_persistence import SendgridPersistence
@@ -46,12 +50,20 @@ def get_plans_persistence(db: Session = Depends(get_db)):
     return PlansPersistence(db=db)
 
 
+def get_leads_persistence(db: Session = Depends(get_db)):
+    return LeadsPersistence(db=db)
+
+
 def get_send_grid_persistence_service(db: Session = Depends(get_db)):
     return SendgridPersistence(db=db)
 
 
 def get_user_persistence_service(db: Session = Depends(get_db)):
     return UserPersistence(db=db)
+
+
+def get_audience_persistence(db: Session = Depends(get_db)):
+    return AudiencePersistence(db=db)
 
 
 def get_subscription_service(db: Session = Depends(get_db),
@@ -193,6 +205,16 @@ def get_users_auth_service(db: Session = Depends(get_db),
 def get_users_service(user: User = Depends(check_user_authentication),
                       user_persistence_service: UserPersistence = Depends(get_user_persistence_service)):
     return UsersService(user=user, user_persistence_service=user_persistence_service)
+
+
+def get_leads_service(user: User = Depends(check_user_authorization),
+                      leads_persistence_service: LeadsPersistence = Depends(get_leads_persistence)):
+    return LeadsService(user=user, leads_persistence_service=leads_persistence_service)
+
+
+def get_audience_service(user: User = Depends(check_user_authorization),
+                         audience_persistence_service: AudiencePersistence = Depends(get_audience_persistence)):
+    return AudienceService(user=user, audience_persistence_service=audience_persistence_service)
 
 
 def get_sse_events_service(user_persistence_service: UserPersistence = Depends(get_user_persistence_service)):

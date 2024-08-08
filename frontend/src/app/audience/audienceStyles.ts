@@ -1,6 +1,6 @@
 import { SxProps, Theme } from '@mui/system';
 
-export const leadsStyles: { [key: string]: SxProps<Theme> } = {
+export const audienceStyles: { [key: string]: SxProps<Theme> } = {
   container: {
     display: 'flex',
     flexDirection: 'column',

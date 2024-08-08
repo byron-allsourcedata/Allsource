@@ -1,7 +1,9 @@
-from typing import Optional
+from typing import Optional, List
+
 from pydantic import BaseModel, Field
+
 from enums import SignUpStatus, LoginStatus, BaseEnum, VerificationEmail, UpdatePasswordStatus, ResetPasswordEnum, \
-    VerifyToken, CompanyInfoEnum
+    VerifyToken, CompanyInfoEnum, PixelStatus
 
 
 class UserSignUpForm(BaseModel):
@@ -20,6 +22,10 @@ class UserLoginFormResponse(BaseModel):
     status: LoginStatus
     token: Optional[str] = None
     stripe_payment_url: Optional[str] = None
+
+
+class PixelFormResponse(BaseModel):
+    status: PixelStatus
 
 
 class UserLoginForm(BaseModel):
