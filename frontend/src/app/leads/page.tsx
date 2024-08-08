@@ -23,6 +23,7 @@ import AudiencePopup from '@/components/AudienceSlider';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import dayjs from 'dayjs';
+import PopupDetails from '@/components/AccountDetails';
 
 
 const Sidebar = dynamic(() => import('../../components/Sidebar'), {
@@ -182,8 +183,20 @@ const Leads: React.FC = () => {
     const [audiencePopupOpen, setAudiencePopupOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const [selectedFilters, setSelectedFilters] = useState<{ label: string, value: string }[]>([]);
-    
-    
+
+    const [openPopup, setOpenPopup] = React.useState(false);
+    const [popupData, setPopupData] = React.useState<any>(null);
+
+    const handleOpenPopup = (row: any) => {
+        setPopupData(row);
+        setOpenPopup(true);
+    };
+
+    const handleClosePopup = () => {
+        setOpenPopup(false);
+    };
+
+
     interface FilterParams {
         dateRange: {
             fromDate: number | null;
@@ -194,8 +207,6 @@ const Leads: React.FC = () => {
         emails: string[];
         selectedFunnels: string[];
     }
-    
-    // Определите состояние с правильным типом
     const [filterParams, setFilterParams] = useState<FilterParams>({
         dateRange: { fromDate: null, toDate: null },
         selectedStatus: [],
@@ -251,6 +262,7 @@ const Leads: React.FC = () => {
         setCalendarAnchorEl(null);
         handleCalendarClose();
     };
+
 
     const handleSignOut = () => {
         localStorage.clear();
@@ -312,7 +324,10 @@ const Leads: React.FC = () => {
             page: 0,
             rowsPerPage: parseInt(event.target.value as string, 10),
             activeFilter,
-            appliedDates
+            appliedDates: {
+                start: filterParams.dateRange.fromDate ? dayjs.unix(filterParams.dateRange.fromDate).toDate() : null,
+                end: filterParams.dateRange.toDate ? dayjs.unix(filterParams.dateRange.toDate).toDate() : null,
+            }
         });
     };
 
@@ -324,10 +339,10 @@ const Leads: React.FC = () => {
                 router.push('/signin');
                 return;
             }
-    
+
             const startEpoch = appliedDates.start ? Math.floor(appliedDates.start.getTime() / 1000) : null;
             const endEpoch = appliedDates.end ? Math.floor(appliedDates.end.getTime() / 1000) : null;
-    
+
             let url = `/leads?page=${page + 1}&per_page=${rowsPerPage}&status=${activeFilter}`;
             if (startEpoch !== null && endEpoch !== null) {
                 url += `&from_date=${startEpoch}&to_date=${endEpoch}`;
@@ -335,7 +350,7 @@ const Leads: React.FC = () => {
             if (sortBy) {
                 url += `&sort_by=${sortBy}&sort_order=${sortOrder}`;
             }
-    
+
             // Include other filter parameters if necessary
             // Обработка "Regions"
             if (selectedFilters.some(filter => filter.label === 'Regions')) {
@@ -344,7 +359,7 @@ const Leads: React.FC = () => {
                     url += `&regions=${encodeURIComponent(regions.join(','))}`;
                 }
             }
-    
+
             // Обработка "Emails"
             if (selectedFilters.some(filter => filter.label === 'Emails')) {
                 const emails = selectedFilters.find(filter => filter.label === 'Emails')?.value.split(', ') || [];
@@ -352,7 +367,25 @@ const Leads: React.FC = () => {
                     url += `&emails=${encodeURIComponent(emails.join(','))}`;
                 }
             }
-    
+
+            // Обработка "From Date"
+            if (selectedFilters.some(filter => filter.label === 'From Date')) {
+                const fromDate = selectedFilters.find(filter => filter.label === 'From Date')?.value || '';
+                if (fromDate) {
+                    const fromDateEpoch = Math.floor(new Date(fromDate).getTime() / 1000);
+                    url += `&from_date=${fromDateEpoch}`;
+                }
+            }
+
+            // Обработка "To Date"
+            if (selectedFilters.some(filter => filter.label === 'To Date')) {
+                const toDate = selectedFilters.find(filter => filter.label === 'To Date')?.value || '';
+                if (toDate) {
+                    const toDateEpoch = Math.floor(new Date(toDate).getTime() / 1000);
+                    url += `&to_date=${toDateEpoch}`;
+                }
+            }
+
             // Обработка "Funnels"
             if (selectedFilters.some(filter => filter.label === 'Funnels')) {
                 const funnels = selectedFilters.find(filter => filter.label === 'Funnels')?.value.split(', ') || [];
@@ -360,10 +393,10 @@ const Leads: React.FC = () => {
                     url += `&lead_funnel=${encodeURIComponent(funnels.join(','))}`;
                 }
             }
-    
+
             const response = await axiosInstance.get(url);
             const [leads, count, max_page] = response.data;
-    
+
             setData(Array.isArray(leads) ? leads : []);
             setCount(count || 0);
             setMaxPage(max_page || 0);
@@ -385,12 +418,11 @@ const Leads: React.FC = () => {
             setIsLoading(false);
         }
     };
-    
+
 
     const handleApplyFilters = (filters: FilterParams) => {
-        console.log(filters)
         const newSelectedFilters: { label: string; value: string }[] = [];
-    
+
         if (filters.dateRange.fromDate) {
             newSelectedFilters.push({ label: 'From Date', value: dayjs.unix(filters.dateRange.fromDate).format('YYYY-MM-DD') });
         }
@@ -409,13 +441,13 @@ const Leads: React.FC = () => {
         if (filters.selectedFunnels && filters.selectedFunnels.length > 0) {
             newSelectedFilters.push({ label: 'Funnels', value: filters.selectedFunnels.join(', ') });
         }
-    
+        console.log(newSelectedFilters)
         setSelectedFilters(newSelectedFilters);
-        setActiveFilter(filters.selectedStatus.length > 0 ? filters.selectedStatus[0] : 'all');
+        setActiveFilter(filters.selectedStatus?.length > 0 ? filters.selectedStatus[0] : 'all');
         setFilterParams(filters);
     };
-    
-    
+
+
     const handleResetFilters = async () => {
         const url = `/leads`;
 
@@ -453,6 +485,7 @@ const Leads: React.FC = () => {
     };
 
     useEffect(() => {
+        // Вызов fetchData после обновления appliedDates
         fetchData({
             sortBy: orderBy,
             sortOrder: order,
@@ -460,11 +493,12 @@ const Leads: React.FC = () => {
             rowsPerPage,
             activeFilter,
             appliedDates: {
-                start: filterParams.dateRange.fromDate ? dayjs.unix(filterParams.dateRange.fromDate).toDate() : null,
-                end: filterParams.dateRange.toDate ? dayjs.unix(filterParams.dateRange.toDate).toDate() : null,
+                start: appliedDates.start,
+                end: appliedDates.end,
             }
         });
-    }, [filterParams, orderBy, order, page, rowsPerPage, activeFilter]);
+    }, [appliedDates, orderBy, order, page, rowsPerPage, activeFilter, filterParams]); // следим за appliedDates отдельно
+
 
 
 
@@ -555,7 +589,10 @@ const Leads: React.FC = () => {
             page: newPage,
             rowsPerPage,
             activeFilter,
-            appliedDates
+            appliedDates: {
+                start: filterParams.dateRange.fromDate ? dayjs.unix(filterParams.dateRange.fromDate).toDate() : null,
+                end: filterParams.dateRange.toDate ? dayjs.unix(filterParams.dateRange.toDate).toDate() : null,
+            }
         });
     };
 
@@ -938,7 +975,11 @@ const Leads: React.FC = () => {
                                                                     </div>
                                                                 </TableCell>
                                                                 <TableCell
-                                                                    sx={leadsStyles.table_array}>{row.lead.first_name} {row.lead.last_name}</TableCell>
+                                                                    sx={{ ...leadsStyles.table_array, cursor: 'pointer' }} onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        handleOpenPopup(row);
+
+                                                                    }}>{row.lead.first_name} {row.lead.last_name}</TableCell>
                                                                 <TableCell
                                                                     sx={leadsStyles.table_array}>{row.lead.business_email || 'N/A'}</TableCell>
                                                                 <TableCell
@@ -1002,6 +1043,9 @@ const Leads: React.FC = () => {
                                 {showSlider && <Slider />}
                             </Box>
                         </Grid>
+                        <PopupDetails open={openPopup}
+                            onClose={handleClosePopup}
+                            rowData={popupData} />
                         <FilterPopup open={filterPopupOpen} onClose={handleFilterPopupClose} onApply={handleApplyFilters} />
                         <AudiencePopup open={audiencePopupOpen} onClose={handleAudiencePopupClose}
                             selectedLeads={Array.from(selectedRows)} />
