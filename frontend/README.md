@@ -6,7 +6,7 @@ Follow the steps below to get started with setting up and running the project.
 
 Make sure you have the following installed on your machine:
 
-- [Node.js](https://nodejs.org/) (Recommended: the latest LTS version)
+- [Node.js](https://nodejs.org/) (Recommended: the latest LTS version) This project use Node js version 21.7.3.
 - [npm](https://www.npmjs.com/) (Node Package Manager, comes with Node.js). This project use npm version 10.5.0.
 - Alternatively, you can use [yarn](https://yarnpkg.com/), [pnpm](https://pnpm.io/), or [bun](https://bun.sh/).
 
