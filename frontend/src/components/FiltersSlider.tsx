@@ -285,16 +285,16 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
     let funnel = '';
     switch (label) {
       case 'Abandon Checkout leads in last 30 days':
-        funnel = 'cart_abandoned';
+        funnel = 'Cart abandoned';
         break;
       case 'Converters in last 30 days':
-        funnel = 'converted';
+        funnel = 'Converted';
         break;
       case 'Non Converters in last 30 days':
-        funnel = 'visits';
+        funnel = 'Visitor';
         break;
       case 'Add to cart leads in last 30 days':
-        funnel = 'added_to_cart';
+        funnel = 'Added to cart';
         break;
       default:
         funnel = '';
