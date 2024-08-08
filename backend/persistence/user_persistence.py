@@ -65,6 +65,12 @@ class UserPersistence:
             return user
         return None
 
+    def get_user_id(self, user_id):
+        user = self.db.query(Users).filter(Users.id == user_id).first()
+        if user:
+            return user.id
+        return None
+
     def update_user_parent_v2(self, parent_id: int):
         self.db.query(Users).filter(Users.id == parent_id).update({Users.parent_id: parent_id},
                                                                   synchronize_session=False)

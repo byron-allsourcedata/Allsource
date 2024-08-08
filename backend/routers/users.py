@@ -60,7 +60,8 @@ async def create_user_google(auth_google_token: AuthGoogleData, users: UsersAuth
     user_data = users.login_google(auth_google_token)
     if 'stripe_payment_url' not in user_data:
         return UserLoginFormResponse(status=user_data.get('status'), token=user_data.get("token", None))
-    return UserLoginFormResponse(status=user_data.get('status'), token=user_data.get("token", None), stripe_payment_url=user_data.get('stripe_payment_url', None))
+    return UserLoginFormResponse(status=user_data.get('status'), token=user_data.get("token", None),
+                                 stripe_payment_url=user_data.get('stripe_payment_url', None))
 
 
 @router.get("/authentication/verify-token", response_model=VerifyTokenResponse)
