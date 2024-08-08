@@ -19,6 +19,8 @@ async def get_audience(page: int = Query(1, alias="page", ge=1, description="Pag
 
 @router.get("/leads")
 async def get_leads(
+        page: int = Query(1, alias="page", ge=1, description="Page number"),
+        per_page: int = Query(15, alias="per_page", ge=1, le=100, description="Items per page"),
         regions: Optional[List[str]] = Query(None),
         professions: Optional[List[str]] = Query(None),
         ages: Optional[List[int]] = Query(None),
@@ -27,7 +29,8 @@ async def get_leads(
         interest_list: Optional[List[str]] = Query(None),
         not_in_existing_lists: Optional[List[str]] = Query(None),
         audience_service: AudienceService = Depends(get_audience_service)):
-    return audience_service.get_leads_for_build_an_audience(regions=regions, professions=professions,
+    return audience_service.get_leads_for_build_an_audience(page=page, per_page=per_page,
+                                                            regions=regions, professions=professions,
                                                             ages=ages,
                                                             genders=genders, net_worths=net_worths,
                                                             interest_list=interest_list,

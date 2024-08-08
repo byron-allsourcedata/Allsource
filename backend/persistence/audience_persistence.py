@@ -160,31 +160,40 @@ class AudiencePersistence:
                     part = part.replace('$', '').replace(',', '')
                 start, end = map(int, part.split('-'))
                 filters.append(and_(
-                    func.regexp_replace(Lead.net_worth, '[\$,]', '', 'g').cast(Integer) >= start,
-                    func.regexp_replace(Lead.net_worth, '[\$,]', '', 'g').cast(Integer) <= end
+                    func.regexp_replace(Lead.net_worth, r'[\$,]', '', 'g').cast(Integer) >= start,
+                    func.regexp_replace(Lead.net_worth, r'[\$,]', '', 'g').cast(Integer) <= end
                 ))
             else:
                 if '$' in part:
                     part = part.replace('$', '').replace(',', '')
                 value = int(part)
                 filters.append(and_(
-                    func.regexp_replace(Lead.net_worth, '[\$,]', '', 'g').cast(Integer) >= value,
-                    func.regexp_replace(Lead.net_worth, '[\$,]', '', 'g').cast(Integer) <= value
+                    func.regexp_replace(Lead.net_worth, r'[\$,]', '', 'g').cast(Integer) >= value,
+                    func.regexp_replace(Lead.net_worth, r'[\$,]', '', 'g').cast(Integer) <= value
                 ))
         return filters
 
     def normalize_profession(self, profession: str) -> str:
         return profession.lower().replace(" ", "-")
 
-    def get_filter_user_leads(self, user_id: int, regions: List[str], professions: List[str],
+    def get_filter_user_leads(self, page, per_page, regions: List[str], professions: List[str],
                               ages: str, genders: List[str], net_worths: List[int],
                               interest_list: List[str], not_in_existing_lists: List[str]):
         query = (
-            self.db.query(Lead)
-            .join(LeadUser, LeadUser.lead_id == Lead.id)
+            self.db.query(
+                Lead.id,
+                Lead.first_name,
+                Lead.last_name,
+                Lead.business_email,
+                Lead.gender,
+                Lead.age_min,
+                Lead.age_max,
+                Lead.job_title,
+                Locations.state,
+                Locations.city,
+            )
             .join(LeadsLocations, LeadsLocations.lead_id == Lead.id)
             .join(Locations, LeadsLocations.location_id == Locations.id)
-            .filter(LeadUser.user_id == user_id)
         )
 
         if not_in_existing_lists:
@@ -211,5 +220,8 @@ class AudiencePersistence:
             net_worth_filters = self.parse_net_worth_filters(net_worths)
             query = query.filter(or_(*net_worth_filters))
 
-        audience_data = query.all()
-        return audience_data
+        offset = (page - 1) * per_page
+        leads_data = query.limit(per_page).offset(offset).all()
+        count = query.count()
+        max_page = math.ceil(count / per_page) if per_page > 0 else 1
+        return leads_data, count, max_page
