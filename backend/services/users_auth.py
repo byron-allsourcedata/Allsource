@@ -297,18 +297,18 @@ class UsersAuth:
             return {'status': VerifyToken.INCORRECT_TOKEN}
         check_user_object = self.user_persistence_service.get_user_by_id(data.get('id'))
         if check_user_object:
-            if check_user_object.is_email_confirmed:
+            if check_user_object.get('is_email_confirmed'):
                 token_info = {
-                    "id": check_user_object.id,
+                    "id": check_user_object.get('id'),
                 }
                 user_token = create_access_token(token_info)
                 return {
                     'status': VerifyToken.EMAIL_ALREADY_VERIFIED,
                     'user_token': user_token
                 }
-            self.user_persistence_service.email_confirmed(check_user_object.id)
+            self.user_persistence_service.email_confirmed(check_user_object.get('id'))
             token_info = {
-                "id": check_user_object.id,
+                "id": check_user_object.get('id'),
             }
             user_token = create_access_token(token_info)
             return {

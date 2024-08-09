@@ -25,7 +25,7 @@ class LeadsPersistence:
     def __init__(self, db: Session):
         self.db = db
 
-    def filter_leads(self, user, page, per_page, status, from_date, to_date, regions, page_visits, average_time_spent,
+    def filter_leads(self, user_id, page, per_page, status, from_date, to_date, regions, page_visits, average_time_spent,
                      lead_funnel, emails, recurring_visits, sort_by, sort_order):
         subquery = (
             self.db.query(
@@ -48,7 +48,7 @@ class LeadsPersistence:
             .join(LeadsLocations, Lead.id == LeadsLocations.lead_id)
             .join(Locations, LeadsLocations.location_id == Locations.id)
             .outerjoin(subquery, LeadUser.id == subquery.c.leads_users_id)
-            .filter(LeadUser.user_id == user.id)
+            .filter(LeadUser.user_id == user_id)
         )
         sort_options = {
             'name': Lead.first_name,

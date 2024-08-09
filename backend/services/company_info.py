@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 class CompanyInfoService:
-    def __init__(self, db: Session, user: Users, subscription_service: SubscriptionService):
+    def __init__(self, db: Session, user, subscription_service: SubscriptionService):
         self.user = user
         self.db = db
         self.subscription_service = subscription_service
@@ -21,9 +21,9 @@ class CompanyInfoService:
     def set_company_info(self, company_info: CompanyInfo):
         result = self.check_company_info_authorization()
         if result == CompanyInfoEnum.SUCCESS:
-            if not self.user.is_with_card and not self.user.is_email_confirmed:
+            if not self.user.get('is_with_card') and not self.user.get('is_email_confirmed'):
                 return CompanyInfoEnum.NEED_EMAIL_VERIFIED
-            self.db.query(Users).filter(Users.id == self.user.id).update(
+            self.db.query(Users).filter(Users.id == self.user.get('id')).update(
                 {Users.company_name: company_info.organization_name, Users.company_website: company_info.company_website,
                  Users.company_email_address: company_info.email_address,
                  Users.employees_workers: company_info.employees_workers},
@@ -37,17 +37,17 @@ class CompanyInfoService:
         return self.check_company_info_authorization()
 
     def check_company_info_authorization(self):
-        if self.user.is_with_card:
-            if self.user.company_name:
-                subscription_plan_exists = self.subscription_service.is_user_have_subscription(self.user.id)
+        if self.user.get('is_with_card'):
+            if self.user.get('company_name'):
+                subscription_plan_exists = self.subscription_service.is_user_have_subscription(self.user.get('id'))
                 if subscription_plan_exists:
                     return CompanyInfoEnum.DASHBOARD_ALLOWED
                 return CompanyInfoEnum.NEED_CHOOSE_PLAN
             else:
                 return CompanyInfoEnum.SUCCESS
         else:
-            if self.user.is_email_confirmed:
-                if self.user.company_name:
+            if self.user.get('is_email_confirmed'):
+                if self.user.get('company_name'):
                     return CompanyInfoEnum.DASHBOARD_ALLOWED
                 return CompanyInfoEnum.SUCCESS
             else:

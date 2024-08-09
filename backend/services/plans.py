@@ -14,23 +14,23 @@ WITHOUT_CARD_PLAN_ID = 15
 
 class PlansService:
 
-    def __init__(self, user: Users, plans_persistence: PlansPersistence,
+    def __init__(self, user, plans_persistence: PlansPersistence,
                  subscription_service: SubscriptionService):
         self.plans_persistence = plans_persistence
         self.user = user
         self.subscription_service = subscription_service
 
     def get_customer_id(self):
-        return self.user.customer_id
+        return self.user.get('customer_id')
 
     def is_had_trial_period(self):
-        return not self.subscription_service.is_had_trial_period(self.user.id)
+        return not self.subscription_service.is_had_trial_period(self.user.get('id'))
 
     def get_user_subscription_authorization_status(self):
-        if not self.user.is_with_card:
-            if not self.user.is_email_confirmed:
+        if not self.user.get('is_with_card'):
+            if not self.user.get('is_email_confirmed'):
                 return UserAuthorizationStatus.NEED_CONFIRM_EMAIL
-            if not self.user.is_company_details_filled:
+            if not self.user.get('is_company_details_filled'):
                 return UserAuthorizationStatus.FILL_COMPANY_DETAILS
         return UserAuthorizationStatus.SUCCESS
 
