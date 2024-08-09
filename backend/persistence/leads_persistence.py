@@ -215,7 +215,7 @@ class LeadsPersistence:
         )
 
         if not_in_existing_lists:
-            regions = regions.split(',')
+            not_in_existing_lists = not_in_existing_lists.split(',')
             audience_leads_alias = aliased(AudienceLeads)
             audience_subquery = (
                 self.db.query(audience_leads_alias.lead_id)
