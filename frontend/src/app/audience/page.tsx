@@ -678,7 +678,7 @@ const Audience: React.FC = () => {
 
     useEffect(() => {
         fetchData({sortBy: orderBy, sortOrder: order, page, rowsPerPage, activeFilter, appliedDates});
-    }, [orderBy, order, page, rowsPerPage, activeFilter, appliedDates]);
+    }, [orderBy, order, page, rowsPerPage, activeFilter, appliedDates, fetchData]);
 
 
     if (isLoading) {

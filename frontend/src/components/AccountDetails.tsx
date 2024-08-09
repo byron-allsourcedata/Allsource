@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Drawer, Backdrop, Box, Typography, IconButton, Button } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { accountStyles } from '../css/accountDetails';
+import Image from 'next/image'
 
 interface PopupDetailsProps {
     open: boolean;
@@ -113,10 +114,11 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                     border: '2px solid #000000',
                                 }}
                             >
-                                <img
+                                <Image
                                     src={lead.photo || '/avatar.jpg'}
                                     alt="Lead"
-                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                    width={100}
+                                    height={100}
                                 />
                             </Box>
                             <Box sx={{ flex: 1, textAlign: 'start' }}>
@@ -160,10 +162,11 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                     border: '2px solid #000000',
                                 }}
                             >
-                                <img
-                                    src={company.logo || '/avatar.jpg'}
-                                    alt="Company"
-                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                <Image
+                                    src={company.photo || '/avatar.jpg'}
+                                    alt="Lead"
+                                    width={100}
+                                    height={100}
                                 />
                             </Box>
                             <Box sx={{ flex: 1, textAlign: 'start' }}>
