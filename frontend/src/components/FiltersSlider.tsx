@@ -41,6 +41,16 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
   const [emails, setEmails] = useState<string[]>([]);
   const [selectedFunnels, setSelectedFunnels] = useState<string[]>([]);
   const [selectedStatus, setSelectedStatus] = useState<string[]>([]);
+  const [buttonFilters, setButtonFilters] = useState<ButtonFilters>(null);
+
+  type ButtonFilters = {
+    button: string;
+    dateRange: {
+      fromDate: number;
+      toDate: number;
+    };
+    selectedFunnels: string[];
+  } | null;
 
   const handleAddTag = (e: { key: string; }) => {
     if (e.key === 'Enter' && region.trim()) {
@@ -311,12 +321,10 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
         toDate,
       },
       selectedFunnels: [funnel],
-      // Добавьте остальные параметры фильтров, если необходимо
     };
   
+    setButtonFilters(newFilters); // Сохраняем фильтры в состоянии
     setSelectedButton(label);
-    onApply(newFilters); // Передаем фильтры в функцию обработки фильтров
-    onClose(); // Закрыть попап после применения фильтров
   };
 
 
@@ -557,32 +565,37 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
     const toDateTimeWithTime = toDateTime && timeRange.toTime
       ? dayjs.unix(toDateTime).hour(dayjs(timeRange.toTime).hour()).minute(dayjs(timeRange.toTime).minute()).unix()
       : toDateTime;
-  
-    const filters = {
-      button: selectedButton,
-      dateRange: {
-        fromDate: fromDateTimeWithTime,
-        toDate: toDateTimeWithTime,
-      },
-      checkedFilters,
-      checkedFiltersTime,
-      checkedFiltersPageVisits,
-      regions,
-      checkedFiltersTimeSpent,
-      selectedFunnels,
-      emails,
-      selectedStatus,
-      selectedValue,
-    };
+    
+    console.log(buttonFilters)  
+    // Формирование объекта filters с учетом переданных buttonFilters
+  const filters = {
+    ...buttonFilters, // Включаем фильтры, полученные из кнопки (если есть)
+    dateRange: buttonFilters ? buttonFilters.dateRange : {
+      fromDate: fromDateTimeWithTime,
+      toDate: toDateTimeWithTime,
+    },
+    selectedFunnels: buttonFilters ? buttonFilters.selectedFunnels : selectedFunnels,
+    button: buttonFilters ? buttonFilters.button : selectedButton,
+    checkedFilters,
+    checkedFiltersTime,
+    checkedFiltersPageVisits,
+    regions,
+    checkedFiltersTimeSpent,
+    emails,
+    selectedStatus,
+    selectedValue,
+  };
   
     return filters;
   };
   
 
   const handleApply = () => {
-    const filters = handleFilters(); // Собираем фильтры
-    onApply(filters); // Передаем фильтры в функцию обработки фильтров
-    onClose(); // Закрываем фильтр после применения
+    const filters = handleFilters();
+    onApply(filters);
+    setSelectedButton('')
+    setButtonFilters(null)
+    onClose();
   };
 
 
