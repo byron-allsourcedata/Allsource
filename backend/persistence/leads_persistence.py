@@ -90,7 +90,7 @@ class LeadsPersistence:
                 Locations.city.in_(region_list)
             )
         if emails:
-            email_filters = [Lead.business_email.like(f"%{email}") for email in emails]
+            email_filters = [Lead.business_email.ilike(f'%{email}') for email in emails]
             query = query.filter(or_(*email_filters))
         if status == 'new_customers':
             query = query.filter(LeadUser.status == 'New')
@@ -100,6 +100,12 @@ class LeadsPersistence:
         if lead_funnel:
             funnel_list = lead_funnel.split(',')
             query = query.filter(LeadUser.funnel.in_(funnel_list))
+
+        if page_visits:
+            query = query.filter(Lead.no_of_page_visits >= page_visits)
+
+        if average_time_spent:
+            query = query.filter(Lead.time_spent >= average_time_spent)
 
         offset = (page - 1) * per_page
         leads = query.limit(per_page).offset(offset).all()
