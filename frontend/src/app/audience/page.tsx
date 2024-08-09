@@ -6,6 +6,7 @@ import {
     Typography,
     Button,
     Menu,
+    Chip,
     MenuItem,
     Table,
     TableBody,
@@ -39,6 +40,10 @@ import Swal from 'sweetalert2';
 import BuildAudience from "@/components/BuildAudience";
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
+import {LeadData} from "@/types/leadData";
+import {leadsStyles} from "@/app/leads/leadsStyles";
+import AudiencePopup from "@/components/AudienceSlider";
+import {useTheme} from '@mui/material/styles';
 
 
 const Sidebar = dynamic(() => import('../../components/Sidebar'), {
@@ -182,6 +187,7 @@ const Audience: React.FC = () => {
         end: null
     });
     const [maxPage, setMaxPage] = useState<number>(0);
+    const [leadsData, setLeadsData] = useState<LeadData[] | null>(null);
     const [status, setStatus] = useState<string | null>(null);
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [showSlider, setShowSlider] = useState(false);
@@ -193,13 +199,19 @@ const Audience: React.FC = () => {
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(15);
     const [activeFilter, setActiveFilter] = useState<string>('all');
-    const [calendarAnchorEl, setCalendarAnchorEl] = useState<null | HTMLElement>(null);
     const [filterPopupOpen, setFilterPopupOpen] = useState(false);
     const [audiencePopupOpen, setAudiencePopupOpen] = useState(false);
+    const [buildAudiencePopupOpen, setBuildAudiencePopupOpen] = useState(false);
     const [loading, setLoading] = useState(false);
 
     const handleFilterPopupOpen = () => {
         setFilterPopupOpen(true);
+    };
+
+    const handleDataFetch = (leads_list: LeadData[], count_leads: number, max_page: number ) => {
+        setLeadsData(leads_list);
+        setMaxPage(max_page);
+        setCount(count_leads);
     };
 
     const handleFilterPopupClose = () => {
@@ -211,7 +223,41 @@ const Audience: React.FC = () => {
     };
 
     const handleAudiencePopupClose = () => {
+        setSelectedRows(new Set());
         setAudiencePopupOpen(false);
+    };
+
+    const handleBuildAudiencePopupOpen = () => {
+        setSelectedRows(new Set());
+        setBuildAudiencePopupOpen(true);
+    };
+
+    const handleBuildAudiencePopupClose = () => {
+        setBuildAudiencePopupOpen(false);
+    };
+    const theme = useTheme();
+    const getStateDisplay = (state: string | null | undefined): React.ReactNode => {
+        if (!state) return 'N/A';
+
+        const items = state.split(',').map(item => item.trim());
+        const count = items.length;
+
+        if (count > 1) {
+            return (
+                <Box sx={{display: 'flex', alignItems: 'center'}}>
+                    <Chip
+                        label={`Hug ${count}`}
+                        sx={{
+                            margin: '0 2px',
+                            backgroundColor: theme.palette.grey[300],
+                            color: theme.palette.text.primary
+                        }}
+                    />
+                </Box>
+            );
+        }
+
+        return items[0];
     };
 
     const handleSortRequest = (property: string) => {
@@ -237,6 +283,219 @@ const Audience: React.FC = () => {
     const handleProfileMenuClose = () => {
         setAnchorEl(null);
     };
+
+    const renderAudienceTable = () => (
+        <Table sx={{minWidth: 850}} aria-label="Audience table">
+            <TableHead>
+                <TableRow>
+                    <TableCell
+                        padding="checkbox"
+                        sx={{borderRight: '1px solid rgba(235, 235, 235, 1)'}}
+                    >
+                        <Checkbox
+                            indeterminate={selectedRows.size > 0 && selectedRows.size < data.length}
+                            checked={data.length > 0 && selectedRows.size === data.length}
+                            onChange={handleSelectAllClick}
+                            color="primary"
+                        />
+                    </TableCell>
+                    {[
+                        {key: 'list_name', label: 'List Name'},
+                        {key: 'no_of_leads', label: 'No: of leads'},
+                        {key: 'created_by', label: 'Created by'},
+                        {key: 'created_date', label: 'Created date'},
+                        {key: 'platform', label: 'Platform', sortable: false},
+                        {key: 'status', label: 'Status'},
+                        {key: 'exported_on', label: 'Exported on'},
+                        {key: 'actions', label: 'Actions', sortable: false},
+                    ].map(({key, label, sortable = true}) => (
+                        <TableCell
+                            key={key}
+                            sx={audienceStyles.table_column}
+                            onClick={sortable ? () => handleSortRequest(key) : undefined}
+                            style={{cursor: sortable ? 'pointer' : 'default'}}
+                        >
+                            <Box sx={{display: 'flex', alignItems: 'center'}}>
+                                <Typography variant="body2">{label}</Typography>
+                                {sortable && orderBy === key && (
+                                    <IconButton size="small" sx={{ml: 1}}>
+                                        {order === 'asc' ? (
+                                            <ArrowUpwardIcon fontSize="inherit"/>
+                                        ) : (
+                                            <ArrowDownwardIcon fontSize="inherit"/>
+                                        )}
+                                    </IconButton>
+                                )}
+                            </Box>
+                        </TableCell>
+                    ))}
+                </TableRow>
+            </TableHead>
+
+            <TableBody>
+                {data.map((row) => (
+                    <TableRow
+                        key={row.id}
+                        selected={selectedRows.has(row.id)}
+                        onClick={() => handleSelectRow(row.id)}
+                        sx={{
+                            backgroundColor: selectedRows.has(row.id) ? 'rgba(235, 243, 254, 1)' : 'inherit',
+                        }}
+                    >
+                        <TableCell
+                            padding="checkbox"
+                            sx={{borderRight: '1px solid rgba(235, 235, 235, 1)'}}
+                        >
+                            <div
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleSelectRow(row.id);
+                                }}
+                            >
+                                <Checkbox
+                                    checked={selectedRows.has(row.id)}
+                                    color="primary"
+                                />
+                            </div>
+                        </TableCell>
+                        <TableCell sx={audienceStyles.table_column}>{row.name}</TableCell>
+                        <TableCell sx={audienceStyles.table_column}>{row.leads_count || 'N/A'}</TableCell>
+                        <TableCell sx={audienceStyles.table_column}>{row.type || 'N/A'}</TableCell>
+                        <TableCell sx={audienceStyles.table_column}>{row.created_at || 'N/A'}</TableCell>
+                        <TableCell sx={audienceStyles.table_column}>{row.platform || 'N/A'}</TableCell>
+                        <TableCell sx={audienceStyles.table_column}>
+                            <Box
+                                sx={{
+                                    display: 'flex',
+                                    padding: '4px 8px',
+                                    borderRadius: '4px',
+                                    fontFamily: 'Nunito',
+                                    fontSize: '14px',
+                                    fontWeight: '400',
+                                    lineHeight: '19.6px',
+                                    justifyContent: 'center',
+                                    backgroundColor: getStatusStyle(row.status).background,
+                                    color: getStatusStyle(row.status).color
+                                }}
+                            >
+                                {row.status || 'N/A'}
+                            </Box>
+                        </TableCell>
+                        <TableCell sx={audienceStyles.table_column}>{row.exported_on || 'N/A'}</TableCell>
+                        <TableCell sx={audienceStyles.table_column}>
+                            <div style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                            }}>
+                                <EditIcon
+                                    fontSize="small"
+                                    style={{
+                                        cursor: 'pointer',
+                                        marginRight: '8px'
+                                    }}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleEdit(row.id);
+                                    }}
+                                    sx={{color: '#969696'}}
+                                />
+                                <DeleteIcon
+                                    fontSize="small"
+                                    style={{cursor: 'pointer'}}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDelete(row.id);
+                                    }}
+                                    sx={{color: '#E76758'}}
+                                />
+                            </div>
+                        </TableCell>
+                    </TableRow>
+                ))}
+            </TableBody>
+        </Table>
+    );
+
+    const renderLeadsTable = () => (
+        <Table sx={{minWidth: 850}} aria-label="Audience table">
+            <TableHead>
+                <TableRow>
+                    <TableCell padding="checkbox" sx={{borderRight: '1px solid rgba(235, 235, 235, 1)'}}>
+                        <Checkbox
+                            indeterminate={selectedRows.size > 0 && selectedRows.size < (leadsData?.length ?? 0)}
+                            checked={selectedRows.size === (leadsData?.length ?? 0) && (leadsData?.length ?? 0) > 0}
+                            onChange={handleLeadsSelectAllClick}
+                            color="primary"
+                        />
+                    </TableCell>
+                    {[
+                        {key: 'full_name', label: 'Full name', sortable: true},
+                        {key: 'email', label: 'Email', sortable: true},
+                        {key: 'gender', label: 'Gender', sortable: true},
+                        {key: 'age', label: 'Age', sortable: true},
+                        {key: 'occupation', label: 'Occupation', sortable: true},
+                        {key: 'city', label: 'City', sortable: true},
+                        {key: 'state', label: 'State', sortable: true},
+                    ].map(({key, label, sortable = true}) => (
+                        <TableCell
+                            key={key}
+                            sx={audienceStyles.table_column}
+                            onClick={sortable ? () => handleSortRequest(key) : undefined}
+                            style={{cursor: sortable ? 'pointer' : 'default'}}
+                        >
+                            <Box sx={{display: 'flex', alignItems: 'center'}}>
+                                <Typography variant="body2">{label}</Typography>
+                                {sortable && orderBy === key && (
+                                    <IconButton size="small" sx={{ml: 1}}>
+                                        {order === 'asc' ? (
+                                            <ArrowUpwardIcon fontSize="inherit"/>
+                                        ) : (
+                                            <ArrowDownwardIcon fontSize="inherit"/>
+                                        )}
+                                    </IconButton>
+                                )}
+                            </Box>
+                        </TableCell>
+                    ))}
+                </TableRow>
+            </TableHead>
+
+            <TableBody>
+                {leadsData?.map((row) => (
+                    <TableRow
+                        key={row.id}
+                        selected={selectedRows.has(row.id)}
+                        onClick={() => handleSelectRow(row.id)}
+                        sx={{
+                            backgroundColor: selectedRows.has(row.id) ? 'rgba(235, 243, 254, 1)' : 'inherit',
+                        }}
+                    >
+                        <TableCell padding="checkbox" sx={{borderRight: '1px solid rgba(235, 235, 235, 1)'}}>
+                            <div
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleSelectRow(row.id);
+                                }}
+                            >
+                                <Checkbox
+                                    checked={selectedRows.has(row.id)}
+                                    color="primary"
+                                />
+                            </div>
+                        </TableCell>
+                        <TableCell sx={audienceStyles.table_column}>{row.name}</TableCell>
+                        <TableCell sx={audienceStyles.table_column}>{row.email || 'N/A'}</TableCell>
+                        <TableCell sx={audienceStyles.table_column}>{row.gender || 'N/A'}</TableCell>
+                        <TableCell sx={audienceStyles.table_column}>{row.age || 'N/A'}</TableCell>
+                        <TableCell sx={audienceStyles.table_column}>{row.occupation || 'N/A'}</TableCell>
+                        <TableCell sx={audienceStyles.table_column}>{row.city || 'N/A'}</TableCell>
+                        <TableCell sx={audienceStyles.table_column}>{getStateDisplay(row.state)}</TableCell>
+                    </TableRow>
+                ))}
+            </TableBody>
+        </Table>
+    );
 
     const handleEdit = async (row_id: number | string) => {
         if (row_id === null) {
@@ -367,6 +626,16 @@ const Audience: React.FC = () => {
         }
         setSelectedRows(new Set());
     };
+
+    const handleLeadsSelectAllClick = (event: React.ChangeEvent<HTMLInputElement>) => {
+        if (event.target.checked) {
+            const newSelecteds = leadsData?.map((row) => row.id) || [];
+            setSelectedRows(new Set(newSelecteds));
+        } else {
+            setSelectedRows(new Set());
+        }
+    };
+
 
     const handleChangeRowsPerPage = (event: React.ChangeEvent<{ value: unknown }>) => {
         setRowsPerPage(parseInt(event.target.value as string, 10));
@@ -547,9 +816,37 @@ const Audience: React.FC = () => {
                                     display: 'flex',
                                     flexDirection: 'row',
                                     alignItems: 'center',
-                                    justifyContent: 'end',
+                                    justifyContent: 'space-between',
                                 }}>
+                                <Typography variant="h4" component="h1" sx={audienceStyles.title}>
+                                    {leadsData?.length ? 'Audience List' : 'Build Audience'}
+                                </Typography>
                                 <Box sx={{display: 'flex', mt: 1,}}>
+                                    {leadsData?.length ?
+                                        <Button
+                                            aria-controls={dropdownOpen ? 'account-dropdown' : undefined}
+                                            aria-haspopup="true"
+                                            aria-expanded={dropdownOpen ? 'true' : undefined}
+                                            sx={{
+                                                marginRight: '1.5em',
+                                                textTransform: 'none',
+                                                border: '1px solid rgba(184, 184, 184, 1)',
+                                                borderRadius: '4px',
+                                                padding: '0.5em',
+                                                mt: 1.25,
+                                                color: '#5052B2'
+                                            }}
+                                        >
+                                            <DeleteIcon
+                                                fontSize="small"
+                                                style={{cursor: 'pointer'}}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                }}
+                                                sx={{color: '#E76758'}}
+                                            />
+                                        </Button> : ''
+                                    }
                                     <Button
                                         onClick={handleFilterPopupOpen}
                                         aria-controls={dropdownOpen ? 'account-dropdown' : undefined}
@@ -581,7 +878,7 @@ const Audience: React.FC = () => {
                                         <SendIcon fontSize='medium'/>
                                     </Button>
                                     <Button
-                                        onClick={handleAudiencePopupOpen}
+                                        onClick={leadsData?.length ? handleAudiencePopupOpen : handleBuildAudiencePopupOpen}
                                         aria-haspopup="true"
                                         sx={{
                                             marginRight: '1.5em',
@@ -597,11 +894,11 @@ const Audience: React.FC = () => {
                                             marginRight: '0.5em',
                                             fontFamily: 'Nunito',
                                             lineHeight: '19.1px',
-                                            textSize: '16px',
+                                            fontSize: '16px',
                                             textAlign: 'left',
                                             color: '#5052B2'
                                         }}>
-                                            Build Audience
+                                            {leadsData?.length ? 'Add to List' : 'Build Audience'}
                                         </Typography>
                                     </Button>
                                 </Box>
@@ -653,147 +950,7 @@ const Audience: React.FC = () => {
                                                     overflowY: 'auto'
                                                 }}
                                             >
-                                                <Table sx={{minWidth: 850}} aria-label="Audience table">
-                                                    <TableHead>
-                                                        <TableRow>
-                                                            <TableCell
-                                                                padding="checkbox"
-                                                                sx={{borderRight: '1px solid rgba(235, 235, 235, 1)'}}
-                                                            >
-                                                                <Checkbox
-                                                                    indeterminate={selectedRows.size > 0 && selectedRows.size < data.length}
-                                                                    checked={data.length > 0 && selectedRows.size === data.length}
-                                                                    onChange={handleSelectAllClick}
-                                                                    color="primary"
-                                                                />
-                                                            </TableCell>
-                                                            {[
-                                                                {key: 'list_name', label: 'List Name'},
-                                                                {key: 'no_of_leads', label: 'No: of leads'},
-                                                                {key: 'created_by', label: 'Created by'},
-                                                                {key: 'created_date', label: 'Created date'},
-                                                                {key: 'platform', label: 'Platform', sortable: false},
-                                                                {key: 'status', label: 'Status'},
-                                                                {key: 'exported_on', label: 'Exported on'},
-                                                                {key: 'actions', label: 'Actions', sortable: false},
-                                                            ].map(({key, label, sortable = true}) => (
-                                                                <TableCell
-                                                                    key={key}
-                                                                    sx={audienceStyles.table_column}
-                                                                    onClick={sortable ? () => handleSortRequest(key) : undefined}
-                                                                    style={{cursor: sortable ? 'pointer' : 'default'}}
-                                                                >
-                                                                    <Box sx={{display: 'flex', alignItems: 'center'}}>
-                                                                        <Typography variant="body2">{label}</Typography>
-                                                                        {sortable && orderBy === key && (
-                                                                            <IconButton size="small" sx={{ml: 1}}>
-                                                                                {order === 'asc' ? (
-                                                                                    <ArrowUpwardIcon
-                                                                                        fontSize="inherit"/>
-                                                                                ) : (
-                                                                                    <ArrowDownwardIcon
-                                                                                        fontSize="inherit"/>
-                                                                                )}
-                                                                            </IconButton>
-                                                                        )}
-                                                                    </Box>
-                                                                </TableCell>
-                                                            ))}
-                                                        </TableRow>
-                                                    </TableHead>
-
-                                                    <TableBody>
-                                                        {data.map((row) => (
-                                                            <TableRow
-                                                                key={row.id}
-                                                                selected={selectedRows.has(row.id)}
-                                                                onClick={() => handleSelectRow(row.id)}
-                                                                sx={{
-                                                                    backgroundColor: selectedRows.has(row.id) ? 'rgba(235, 243, 254, 1)' : 'inherit',
-                                                                }}
-                                                            >
-                                                                <TableCell
-                                                                    padding="checkbox"
-                                                                    sx={{borderRight: '1px solid rgba(235, 235, 235, 1)'}}
-                                                                >
-                                                                    <div
-                                                                        onClick={(e) => {
-                                                                            e.stopPropagation();
-                                                                            handleSelectRow(row.id);
-                                                                        }}
-                                                                    >
-                                                                        <Checkbox
-                                                                            checked={selectedRows.has(row.id)}
-                                                                            color="primary"
-                                                                        />
-                                                                    </div>
-                                                                </TableCell>
-                                                                <TableCell
-                                                                    sx={audienceStyles.table_column}>{row.name}</TableCell>
-                                                                <TableCell
-                                                                    sx={audienceStyles.table_column}>{row.leads_count || 'N/A'}</TableCell>
-                                                                <TableCell
-                                                                    sx={audienceStyles.table_column}>{row.type || 'N/A'}</TableCell>
-                                                                <TableCell
-                                                                    sx={audienceStyles.table_column}>{row.created_at || 'N/A'}</TableCell>
-                                                                <TableCell
-                                                                    sx={audienceStyles.table_column}>{row.platform || 'N/A'}</TableCell>
-                                                                <TableCell
-                                                                    sx={audienceStyles.table_column}
-                                                                >
-                                                                    <Box
-                                                                        sx={{
-                                                                            display: 'flex',
-                                                                            padding: '4px 8px',
-                                                                            borderRadius: '4px',
-                                                                            fontFamily: 'Nunito',
-                                                                            fontSize: '14px',
-                                                                            fontWeight: '400',
-                                                                            lineHeight: '19.6px',
-                                                                            justifyContent: 'center',
-                                                                            backgroundColor: getStatusStyle(row.status).background,
-                                                                            color: getStatusStyle(row.status).color
-                                                                        }}
-                                                                    >
-                                                                        {row.status || 'N/A'}
-                                                                    </Box>
-                                                                </TableCell>
-                                                                <TableCell
-                                                                    sx={audienceStyles.table_column}>{row.exported_on || 'N/A'}</TableCell>
-                                                                <TableCell sx={audienceStyles.table_column}>
-                                                                    <div style={{
-                                                                        display: 'flex',
-                                                                        alignItems: 'center',
-                                                                        justifyContent: 'center'
-                                                                    }}>
-                                                                        <EditIcon
-                                                                            fontSize="small"
-                                                                            style={{
-                                                                                cursor: 'pointer',
-                                                                                marginRight: '8px'
-                                                                            }}
-                                                                            onClick={(e) => {
-                                                                                e.stopPropagation();
-                                                                                handleEdit(row.id);
-                                                                            }}
-                                                                            sx={{color: '#969696'}}
-                                                                        />
-                                                                        <DeleteIcon
-                                                                            fontSize="small"
-                                                                            style={{cursor: 'pointer'}}
-                                                                            onClick={(e) => {
-                                                                                e.stopPropagation();
-                                                                                handleDelete(row.id);
-                                                                            }}
-                                                                            sx={{color: '#E76758'}}
-                                                                        />
-                                                                    </div>
-                                                                </TableCell>
-                                                            </TableRow>
-                                                        ))}
-                                                    </TableBody>
-                                                </Table>
-
+                                                {leadsData && leadsData.length > 0 ? renderLeadsTable() : renderAudienceTable()}
                                             </TableContainer>
                                             <CustomTablePagination
                                                 count={count_leads ?? 0}
@@ -808,7 +965,10 @@ const Audience: React.FC = () => {
                                 {showSlider && <Slider/>}
                             </Box>
                         </Grid>
-                        <BuildAudience open={audiencePopupOpen} onClose={handleAudiencePopupClose}/>
+                        <AudiencePopup open={audiencePopupOpen} onClose={handleAudiencePopupClose}
+                                       selectedLeads={Array.from(selectedRows)}/>
+                        <BuildAudience open={buildAudiencePopupOpen} onClose={handleBuildAudiencePopupClose}
+                                       onDataFetch={handleDataFetch}/>
                         <FilterPopup open={filterPopupOpen} onClose={handleFilterPopupClose}/>
                     </Grid>
                 </Box>

@@ -12,9 +12,11 @@ class LeadsService:
 
     def get_leads(self, page, per_page, status, from_date, to_date, regions, page_visits, average_time_spent,
                   lead_funnel, emails, recurring_visits, sort_by, sort_order):
-        leads, count, max_page = self.leads_persistence_service.filter_leads(self.user, page, per_page, status, from_date, to_date,
+        leads, count, max_page = self.leads_persistence_service.filter_leads(self.user, page, per_page, status,
+                                                                             from_date, to_date,
                                                                              regions, page_visits, average_time_spent,
-                                                                             lead_funnel, emails, recurring_visits, sort_by, sort_order)
+                                                                             lead_funnel, emails, recurring_visits,
+                                                                             sort_by, sort_order)
         leads_list = [
             {
                 'lead': lead,
@@ -72,3 +74,29 @@ class LeadsService:
 
         output.seek(0)
         return output
+
+    def get_leads_for_build_an_audience(self, regions, professions, ages, genders, net_worths,
+                                        interest_list, not_in_existing_lists, page, per_page):
+        leads_data, count_leads, max_page = self.leads_persistence_service.filter_leads_for_build_audience(
+            regions=regions, professions=professions, ages=ages, genders=genders, net_worths=net_worths,
+            interest_list=interest_list, not_in_existing_lists=not_in_existing_lists, page=page, per_page=per_page)
+
+        leads_list = [
+            {
+                'id': id,
+                'name': f"{first_name} {last_name}",
+                'email': business_email,
+                'gender': gender,
+                'age': f"{age_min} - {age_max}" if age_min is not None and age_max is not None else None,
+                'occupation': job_title,
+                'city': city,
+                'state': state
+            }
+            for id, first_name, last_name, business_email, gender, age_min, age_max, job_title, city, state in
+            leads_data
+        ]
+        return {
+            'leads_list': leads_list,
+            'count_leads': count_leads,
+            'max_page': max_page,
+        }

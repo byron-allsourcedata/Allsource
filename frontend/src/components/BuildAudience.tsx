@@ -16,13 +16,16 @@ import CloseIcon from '@mui/icons-material/Close';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import SearchIcon from '@mui/icons-material/Search';
+import { LeadData } from '@/types/leadData';
 
 interface BuildAudienceProps {
     open: boolean;
     onClose: () => void;
+    onDataFetch: (leads_list: LeadData[], count_leads: number, max_page: number) => void;
 }
 
-const BuildAudience: React.FC<BuildAudienceProps> = ({ open, onClose }) => {
+
+const BuildAudience: React.FC<BuildAudienceProps> = ({ open, onClose, onDataFetch }) => {
     const [regions, setRegions] = useState<string[]>([]);
     const [professions, setProfessions] = useState<string[]>([]);
     const [ages, setAges] = useState<string[]>([]);
@@ -30,6 +33,8 @@ const BuildAudience: React.FC<BuildAudienceProps> = ({ open, onClose }) => {
     const [netWorths, setNetWorths] = useState<string[]>([]);
     const [notInExistingLists, setNotInExistingLists] = useState<string[]>([]);
     const [interestList, setInterestList] = useState<string[]>([]);
+    const [page, setPage] = useState<number | null>(null);
+    const [per_page, setPerPage] = useState<number | null>(null);
     const [isRegionOpen, setIsRegionOpen] = useState<boolean>(false);
     const [isProfessionOpen, setIsProfessionOpen] = useState<boolean>(false);
     const [isAgeOpen, setIsAgeOpen] = useState<boolean>(false);
@@ -55,23 +60,37 @@ const BuildAudience: React.FC<BuildAudienceProps> = ({ open, onClose }) => {
     };
 
     const handleApplyFilters = async () => {
-        const filters = {
-            ...(regions.length > 0 && { regions }),
-            ...(professions.length > 0 && { professions }),
-            ...(ages.length > 0 && { ages }),
-            ...(genders.length > 0 && { genders }),
-            ...(netWorths.length > 0 && { netWorths }),
-            ...(interestList.length > 0 && { interestList }),
-            ...(notInExistingLists.length > 0 && { notInExistingLists }),
-        };
-
         try {
-            const response = await axiosInstance.post(`/audiences`, filters);
+            const queryParams = new URLSearchParams();
+
+            if (regions.length > 0) queryParams.append('regions', regions.join(','));
+            if (professions.length > 0) queryParams.append('professions', professions.join(','));
+            if (ages.length > 0) queryParams.append('ages', ages.join(','));
+            if (genders.length > 0) queryParams.append('genders', genders.join(','));
+            if (netWorths.length > 0) queryParams.append('net_worths', netWorths.join(','));
+            if (interestList.length > 0) queryParams.append('interest_list', interestList.join(','));
+            if (notInExistingLists.length > 0) queryParams.append('not_in_existing_lists', notInExistingLists.join(','));
+            queryParams.append('page', String(1));
+            queryParams.append('per_page', String(15));
+
+            const response = await axiosInstance.get(`/audience/leads?${queryParams.toString()}`);
+
+
+            const { leads_list, count_leads, max_page } = response.data;
+
+            if (Array.isArray(leads_list) && typeof count_leads === 'number' && typeof max_page === 'number') {
+                onDataFetch(leads_list, count_leads, max_page);
+            } else {
+                console.error('Unexpected data format');
+            }
+
             onClose();
         } catch (error) {
             console.error('Error applying filters:', error);
         }
     };
+
+
 
 
     return (
