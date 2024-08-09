@@ -522,7 +522,7 @@ const Leads: React.FC = () => {
                 end: appliedDates.end,
             }
         });
-    }, [appliedDates, orderBy, order, page, rowsPerPage, activeFilter, filterParams, fetchData]);
+    }, [appliedDates, orderBy, order, page, rowsPerPage, activeFilter, filterParams]);
 
 
 
