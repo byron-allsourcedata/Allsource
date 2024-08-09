@@ -119,25 +119,25 @@ const SidebarAdmin: React.FC = () => {
     return (
         <Box sx={sidebarStyles.container} >
             <List sx={sidebarStyles.menu}>
-                <ListItem button onClick={() => handleNavigation('/admin/reseller')} sx={isActive('/admin/reseller') ? sidebarStyles.activeItem : {}}>
+            <ListItem button onClick={() => handleNavigation('/admin/users')} sx={isActive('/admin/users') ? sidebarStyles.activeItem : {}}>
+                    <ListItemIcon sx={sidebarStyles.listItemIcon}>
+                        <LeadsIcon />
+                    </ListItemIcon>
+                    <ListItemText primary="Users" />
+                </ListItem>
+                <ListItem button>
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
                         <SpaceDashboardIcon />
                     </ListItemIcon>
                     <ListItemText primary="Reseller" />
                 </ListItem>
-                <ListItem button onClick={() => handleNavigation('/admin/client')} sx={isActive('/admin/client') ? sidebarStyles.activeItem : {}}>
-                    <ListItemIcon sx={sidebarStyles.listItemIcon}>
-                        <LeadsIcon />
-                    </ListItemIcon>
-                    <ListItemText primary="Client" />
-                </ListItem>
-                <ListItem button onClick={() => handleNavigation('/admin/assets')} sx={isActive('/admin/assets') ? sidebarStyles.activeItem : {}}>
+                <ListItem button >
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
                         <CategoryIcon />
                     </ListItemIcon>
                     <ListItemText primary="Assets" />
                 </ListItem>
-                <ListItem button onClick={() => handleNavigation('/admin/payouts')} sx={isActive('/admin/payouts') ? sidebarStyles.activeItem : {}}>
+                <ListItem button >
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
                         <CategoryIcon />
                     </ListItemIcon>

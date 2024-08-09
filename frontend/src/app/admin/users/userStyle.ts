@@ -1,6 +1,6 @@
 import { SxProps, Theme } from "@mui/material";
 
-export const clientStyle: { [key: string]: SxProps<Theme> } = {
+export const usersStyle: { [key: string]: SxProps<Theme> } = {
     container: {
         display: 'flex',
         flexDirection: 'column',
@@ -65,5 +65,15 @@ export const clientStyle: { [key: string]: SxProps<Theme> } = {
         fontWeight: 400,
         backgroundColor: '#FEF3CD',
         color: '#FBC70E'
+      },
+      modalStyle: {
+          position: 'absolute' as 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: 400,
+          bgcolor: 'background.paper',
+          boxShadow: 24,
+          p: 4,
       }
 }

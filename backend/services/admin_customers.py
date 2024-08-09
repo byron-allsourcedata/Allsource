@@ -3,7 +3,7 @@ from config.stripe import StripeConfig
 from typing import List
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta, timezone
-from models.plans import SubscriptionPlan
+from models.plans import SubscriptionPlan, UserSubscriptionPlan
 from models.subscriptions import UserSubscriptions
 from models.users import Users
 import logging
@@ -18,6 +18,24 @@ class AdminCustomersService:
     def __init__(self, db: Session, subscription_service: SubscriptionService):
         self.db = db
         self.subscription_service = subscription_service
+
+    def get_users(self):
+        users_object = self.db.query(Users).order_by(Users.id.asc()).all()
+        result = []
+        for user in users_object:
+            try:
+                is_trial = self.db.query(UserSubscriptionPlan).filter_by(user_id=user.id).order_by(UserSubscriptionPlan.created_at.desc()).first().is_trial
+            except:
+                is_trial = False
+            result.append({
+                "id": user.id,
+                "email": user.email,
+                "full_name": user.full_name,
+                "created_at": user.created_at,
+                'payment_status': user.payment_status,
+                "is_trial": is_trial
+            })
+        return result
 
     def get_user_by_email(self, email):
         user_object = self.db.query(Users).filter(func.lower(Users.email) == func.lower(email)).first()

@@ -54,6 +54,9 @@ axiosInterceptorInstance.interceptors.response.use(
             case "PAYMENT_NEEDED":
               navigateTo(`${error.response.data.stripe_payment_url}`);
               break;
+            case "FORBIDDEN":
+              navigateTo(`/dashboard`)
+              break
           }
           break;
         case 500:

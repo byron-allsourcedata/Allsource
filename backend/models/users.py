@@ -1,5 +1,5 @@
 from sqlalchemy import Column, DateTime, event, Integer
-from sqlalchemy.dialects.postgresql import BIGINT, BOOLEAN, INTEGER, TIMESTAMP, VARCHAR
+from sqlalchemy.dialects.postgresql import BIGINT, BOOLEAN, INTEGER, TIMESTAMP, VARCHAR, ARRAY
 
 from .base import Base, create_timestamps, update_timestamps
 
@@ -30,6 +30,7 @@ class Users(Base):
     stripe_payment_url = Column(VARCHAR)
     data_provider_id = Column(VARCHAR(64))
     is_pixel_installed = Column(BOOLEAN, default=False)
+    role = Column(ARRAY(VARCHAR))
 
 
 User = Users
