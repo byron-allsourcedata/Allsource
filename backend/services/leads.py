@@ -6,13 +6,13 @@ from persistence.leads_persistence import LeadsPersistence
 
 
 class LeadsService:
-    def __init__(self, leads_persistence_service: LeadsPersistence, user: Users):
+    def __init__(self, leads_persistence_service: LeadsPersistence, user):
         self.leads_persistence_service = leads_persistence_service
         self.user = user
 
     def get_leads(self, page, per_page, status, from_date, to_date, regions, page_visits, average_time_spent,
                   lead_funnel, emails, recurring_visits, sort_by, sort_order):
-        leads, count, max_page = self.leads_persistence_service.filter_leads(self.user, page, per_page, status,
+        leads, count, max_page = self.leads_persistence_service.filter_leads(self.user.get('id'), page, per_page, status,
                                                                              from_date, to_date,
                                                                              regions, page_visits, average_time_spent,
                                                                              lead_funnel, emails, recurring_visits,
@@ -35,7 +35,7 @@ class LeadsService:
     def download_leads(self, leads_ids):
         if len(leads_ids) == 0:
             return None
-        leads_data = self.leads_persistence_service.get_full_user_leads_by_ids(self.user.id, leads_ids)
+        leads_data = self.leads_persistence_service.get_full_user_leads_by_ids(self.user.get('id'), leads_ids)
         if len(leads_data) == 0:
             return None
         output = io.StringIO()
