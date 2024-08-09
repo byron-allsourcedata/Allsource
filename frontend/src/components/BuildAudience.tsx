@@ -16,7 +16,17 @@ import CloseIcon from '@mui/icons-material/Close';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import SearchIcon from '@mui/icons-material/Search';
-import { LeadData } from '@/types/leadData';
+
+interface LeadData {
+    id: number;
+    occupation?: string | null;
+    email?: string | null;
+    name?: string;
+    age?: string | null;
+    gender?: string | null;
+    city?: string | null;
+    state?: string | null;
+}
 
 interface BuildAudienceProps {
     open: boolean;

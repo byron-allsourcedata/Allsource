@@ -1,23 +1,6 @@
 "use client";
 import React, {useState, useEffect, Suspense} from 'react';
-import {
-    Box,
-    Grid,
-    Typography,
-    Button,
-    Menu,
-    Chip,
-    MenuItem,
-    Table,
-    TableBody,
-    TableCell,
-    IconButton,
-    TableContainer,
-    TableHead,
-    TableRow,
-    Paper,
-    Checkbox,
-} from '@mui/material';
+import { Box, Grid, Typography, Button, Menu, Chip, MenuItem, Table, TableBody, TableCell, IconButton, TableContainer, TableHead, TableRow, Paper, Checkbox} from '@mui/material';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
 import {useRouter} from 'next/navigation';
@@ -40,7 +23,6 @@ import Swal from 'sweetalert2';
 import BuildAudience from "@/components/BuildAudience";
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
-import {LeadData} from "@/types/leadData";
 import {leadsStyles} from "@/app/leads/leadsStyles";
 import AudiencePopup from "@/components/AudienceSlider";
 import {useTheme} from '@mui/material/styles';
@@ -49,6 +31,17 @@ import {useTheme} from '@mui/material/styles';
 const Sidebar = dynamic(() => import('../../components/Sidebar'), {
     suspense: true,
 });
+
+interface LeadData {
+    id: number;
+    occupation?: string | null;
+    email?: string | null;
+    name?: string;
+    age?: string | null;
+    gender?: string | null;
+    city?: string | null;
+    state?: string | null;
+}
 
 
 interface CustomTablePaginationProps {
@@ -969,7 +962,7 @@ const Audience: React.FC = () => {
                                        selectedLeads={Array.from(selectedRows)}/>
                         <BuildAudience open={buildAudiencePopupOpen} onClose={handleBuildAudiencePopupClose}
                                        onDataFetch={handleDataFetch}/>
-                        <FilterPopup open={filterPopupOpen} onClose={handleFilterPopupClose}/>
+                        {/* <FilterPopup open={filterPopupOpen} onClose={handleFilterPopupClose}/> */}
                     </Grid>
                 </Box>
             </Box>
