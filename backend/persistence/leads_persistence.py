@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 
 import pytz
 from sqlalchemy import and_, or_, desc, asc, Integer
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, aliased
 from sqlalchemy.sql import func
 
 from models.audience import Audience
@@ -161,7 +161,7 @@ class LeadsPersistence:
 
     def create_age_conditions(self, age_str: str):
         filters = []
-        for part in age_str.split(','):
+        for part in age_str:
             if '-' in part:
                 start, end = map(int, part.split('-'))
                 filters.append(and_(Lead.age_min <= end, Lead.age_max >= start))
@@ -215,15 +215,21 @@ class LeadsPersistence:
         )
 
         if not_in_existing_lists:
+            not_in_existing_lists = not_in_existing_lists.split(',')
+            audience_leads_alias = aliased(AudienceLeads)
             audience_subquery = (
-                self.db.query(AudienceLeads.lead_id)
-                .join(AudienceLeads, AudienceLeads.lead_id == Audience.id)
+                self.db.query(audience_leads_alias.lead_id)
+                .select_from(audience_leads_alias)
+                .join(Audience, audience_leads_alias.lead_id == Audience.id)
                 .filter(Audience.name.in_(not_in_existing_lists))
             )
             query = query.filter(Lead.id.notin_(audience_subquery))
         if regions:
-            query = query.filter(Locations.city.in_(regions))
+            regions = regions.split(',')
+            filters = [Locations.city == region.lower() for region in regions]
+            query = query.filter(or_(*filters))
         if professions:
+            professions = professions.split(',')
             normalized_professions = [self.normalize_profession(p) for p in professions]
             profession_filters = []
             for profession in normalized_professions:
@@ -231,11 +237,15 @@ class LeadsPersistence:
 
             query = query.filter(or_(*profession_filters))
         if ages:
+            ages = ages.split(',')
             age_filters = self.create_age_conditions(ages)
             query = query.filter(or_(*age_filters))
         if genders:
-            query = query.filter(Lead.gender.in_(genders))
+            genders = genders.split(',')
+            filters = [Lead.gender == gender.upper() for gender in genders]
+            query = query.filter(or_(*filters))
         if net_worths:
+            net_worths = net_worths.split(',')
             net_worth_filters = self.build_net_worth_filters(net_worths)
             query = query.filter(or_(*net_worth_filters))
 
