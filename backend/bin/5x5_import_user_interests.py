@@ -22,7 +22,7 @@ def check_and_print_excel(session):
     try:
         df = pd.read_excel(FILE_PATH, header=1)
     except Exception as e:
-        logging.error(f"Ошибка при загрузке файла: {e}")
+        logging.error(f"Error uploading file: {e}")
         return
 
     required_columns = {'Category', 'Sub Category', 'Topic'}
@@ -40,7 +40,7 @@ def check_and_print_excel(session):
             session.execute(five_x_five_interests)
             session.commit()
     else:
-        logging.error("Некоторые необходимые колонки отсутствуют в файле.")
+        logging.error("Some necessary columns are missing from the file.")
 
 
 def main():
