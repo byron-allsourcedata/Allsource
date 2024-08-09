@@ -60,8 +60,8 @@ def process_file(bucket, file, session):
                 up_id = table['UP_ID'][i]
                 if not up_id.is_valid and str(up_id) == 'None':
                     up_id = session.query(FiveXFiveHems.up_id).filter(
-                        FiveXFiveHems.sha256_lc_hem == str(table['SHA256_LOWER_CASE'][i])).one_or_none()
-                    if up_id is None:
+                        FiveXFiveHems.sha256_lc_hem == str(table['SHA256_LOWER_CASE'][i])).limit(2).all()
+                    if len(up_id) != 1:
                         continue
                     up_id = up_id[0]
                 five_x_five_user = session.query(FiveXFiveUser).filter(
