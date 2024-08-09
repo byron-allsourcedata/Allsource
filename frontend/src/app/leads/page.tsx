@@ -258,9 +258,29 @@ const Leads: React.FC = () => {
     };
 
     const handleApply = (dates: { start: Date | null; end: Date | null }) => {
-        setAppliedDates(dates);
-        setCalendarAnchorEl(null);
-        handleCalendarClose();
+        if (dates.start && dates.end) {
+            const formattedStart = dates.start.toLocaleDateString();
+            const formattedEnd = dates.end.toLocaleDateString();
+
+            const dateRange = `${formattedStart} - ${formattedEnd}`;
+
+            setAppliedDates(dates);
+            setCalendarAnchorEl(null);
+
+            setSelectedFilters(prevFilters => {
+                const existingIndex = prevFilters.findIndex(filter => filter.label === 'Dates');
+                const newFilter = { label: 'Dates', value: dateRange };
+
+                if (existingIndex !== -1) {
+                    const updatedFilters = [...prevFilters];
+                    updatedFilters[existingIndex] = newFilter;
+                    return updatedFilters;
+                } else {
+                    return [...prevFilters, newFilter];
+                }
+            });
+            handleCalendarClose();
+        }
     };
 
 
@@ -469,6 +489,11 @@ const Leads: React.FC = () => {
         const updatedFilters = selectedFilters.filter(filter => filter.label !== filterToDelete.label);
 
         setSelectedFilters(updatedFilters);
+
+        if (filterToDelete.label === 'Dates') {
+            setAppliedDates({ start: null, end: null });
+            setFormattedDates('')
+        }
 
         const newFilters = {
             dateRange: {
