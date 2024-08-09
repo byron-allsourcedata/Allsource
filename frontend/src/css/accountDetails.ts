@@ -21,5 +21,11 @@ export const accountStyles: { [key: string]: SxProps<Theme> } = {
     fontWeight: '700',
     lineHeight: '19.1px',
     color: 'rgba(74, 74, 74, 1)'
+  },
+  headers_title: {
+    textTransform: 'none',
+    borderRadius: '0',
+    fontFamily: 'Nunito',
+    fontSize: '16px',
   }
 };
