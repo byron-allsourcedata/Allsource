@@ -59,40 +59,35 @@ class UserPersistence:
         user_object = self.db.query(Users).filter(func.lower(Users.email) == func.lower(email)).first()
         return user_object
 
-    def get_user_by_id(self, user_id):
-        user = self.db.query(Users).filter(Users.id == user_id).first()
-        if user:
-            return {
-                "id": user.id,
-                "email": user.email,
-                "is_email_confirmed": user.is_email_confirmed,
-                "is_with_card": user.is_with_card,
-                "is_company_details_filled": user.is_company_details_filled,
-                "full_name": user.full_name,
-                "parent_id": user.parent_id,
-                "image": user.image,
-                "company_name": user.company_name,
-                "company_website": user.company_website,
-                "company_email_address": user.company_email_address,
-                "employees_workers": user.employees_workers,
-                "created_at": user.created_at,
-                "last_login": user.last_login,
-                "payment_status": user.payment_status,
-                "customer_id": user.customer_id,
-                "reset_password_sent_at": user.reset_password_sent_at,
-                "verified_email_sent_at": user.verified_email_sent_at,
-                "is_book_call_passed": user.is_book_call_passed,
-                "stripe_payment_url": user.stripe_payment_url,
-                "data_provider_id": user.data_provider_id,
-                "is_pixel_installed": user.is_pixel_installed,
-            }
-        return None
-
-    def get_user_id(self, user_id):
-        user = self.db.query(Users).filter(Users.id == user_id).first()
-        if user:
-            return user.id
-        return None
+    user = self.db.query(Users).filter(Users.id == user_id).first()
+    result_user = None
+    if user:
+        result_user = {
+            "id": user.id,
+            "email": user.email,
+            "is_email_confirmed": user.is_email_confirmed,
+            "is_with_card": user.is_with_card,
+            "is_company_details_filled": user.is_company_details_filled,
+            "full_name": user.full_name,
+            "parent_id": user.parent_id,
+            "image": user.image,
+            "company_name": user.company_name,
+            "company_website": user.company_website,
+            "company_email_address": user.company_email_address,
+            "employees_workers": user.employees_workers,
+            "created_at": user.created_at,
+            "last_login": user.last_login,
+            "payment_status": user.payment_status,
+            "customer_id": user.customer_id,
+            "reset_password_sent_at": user.reset_password_sent_at,
+            "verified_email_sent_at": user.verified_email_sent_at,
+            "is_book_call_passed": user.is_book_call_passed,
+            "stripe_payment_url": user.stripe_payment_url,
+            "data_provider_id": user.data_provider_id,
+            "is_pixel_installed": user.is_pixel_installed,
+        }
+    self.db.rollback()
+    return result_user
 
     def update_user_parent_v2(self, parent_id: int):
         self.db.query(Users).filter(Users.id == parent_id).update({Users.parent_id: parent_id},
