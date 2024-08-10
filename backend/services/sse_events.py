@@ -19,11 +19,11 @@ class SseEventsService:
             data = decode_jwt_data(token)
         except:
             return {'status': VerifyToken.INCORRECT_TOKEN}
-        user_id = self.user_persistence_service.get_user_id(data.get('id'))
-        if user_id:
+        user = self.user_persistence_service.get_user_by_id(data.get('id'))
+        if user:
             return {
                 'status': VerifyToken.SUCCESS,
-                'user_id': user_id
+                'user_id': user['id']
             }
 
         return {'status': VerifyToken.INCORRECT_TOKEN}
