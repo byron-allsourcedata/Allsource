@@ -168,7 +168,7 @@ const Signup: React.FC = () => {
   return (
     <>
       <Box sx={loginStyles.logoContainer}>
-        <Image src='/logo.svg' alt='logo' height={80} width={60} />
+        <Image src='/logo.svg' alt='logo' height={31} width={50} />
       </Box>
 
       <Box sx={loginStyles.container}>
@@ -239,7 +239,7 @@ const Signup: React.FC = () => {
           <Box sx={{ borderBottom: '1px solid #000000', flexGrow: 1 }} />
         </Box>
         <Box component="form" onSubmit={handleSubmit} sx={loginStyles.form}>
-          <TextField
+          <TextField sx={loginStyles.formField}
             InputLabelProps={{ sx: loginStyles.inputLabel }}
             label="Email address"
             name="email"
@@ -251,6 +251,7 @@ const Signup: React.FC = () => {
             onChange={handleChange}
             error={Boolean(errors.email)}
             helperText={errors.email}
+            InputProps={{ sx: loginStyles.formInput }}
           />
           <TextField
             InputLabelProps={{ sx: loginStyles.inputLabel }}
@@ -265,6 +266,7 @@ const Signup: React.FC = () => {
             error={Boolean(errors.password)}
             helperText={errors.password}
             InputProps={{
+              sx: loginStyles.formInput,
               endAdornment: (
                 <InputAdornment position="end">
                   <IconButton onClick={togglePasswordVisibility} edge="end">

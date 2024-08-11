@@ -8,32 +8,42 @@ export const loginStyles: { [key: string]: SxProps<Theme> } = {
         justifyContent: 'center',
         minHeight: '50vh',
         backgroundColor: '#ffffff',
-        width: '100%',
-        maxWidth: '31rem',
+        maxWidth: '25rem',
         margin: '0 auto',
         position: 'relative',
         boxShadow: '0rem 2px 8px 0px #00000033',
         borderRadius: '0.625rem',
-        border: '0.125rem solid transparent',
+        border: '0.0625rem solid transparent',
         marginTop: '120px',
+        textAlign: 'center',
+        padding: '24px 32px',
         '@media (max-width: 440px)': {
             boxShadow: '0rem 0px 0px 0px #00000033',
             border: 'none',
-            marginTop: '3.75em',
+            marginTop: '18px',
+            padding: '0 20px 95px 20px', 
         },
     },
     logoContainer: {
         paddingLeft: '2.5em',
         paddingRight: '0.5em',
+        paddingTop: '2.5em',
+        '@media (max-width: 440px)': {
+            paddingLeft: '1.25em',
+            paddingTop: '1.25em', 
+        },
     },
     title: {
-        mb: 2,
         fontWeight: 'bold',
         fontSize: '28px',
         whiteSpace: 'nowrap',
         textAlign: 'center',
-        padding: '1.5rem 1rem 2.5rem',
+        paddingBottom: '2.5rem',
         fontFamily: 'Nunito',
+        lineHeight: 'normal',
+        '@media (max-width: 440px)': {
+            paddingBottom: '2rem',
+        },
     },
     googleButton: {
         mb: 2,
@@ -48,7 +58,6 @@ export const loginStyles: { [key: string]: SxProps<Theme> } = {
         },
         textTransform: 'none',
         width: '100%',
-        maxWidth: '22.5rem',
         fontWeight: 'medium',
         fontSize: '0.875rem',
     },
@@ -56,9 +65,12 @@ export const loginStyles: { [key: string]: SxProps<Theme> } = {
         display: 'flex',
         alignItems: 'center',
         width: '100%',
-        maxWidth: '22.5rem',
         mt: '24px',
         mb: '24px',
+        '@media (max-width: 440px)': {
+            marginTop: '16px',
+            marginBottom: '16px',
+        }
     },
     orText: {
         px: 2,
@@ -68,12 +80,14 @@ export const loginStyles: { [key: string]: SxProps<Theme> } = {
     },
     form: {
         width: '100%',
-        maxWidth: '360px',
         fontFamily: 'Nunito',
     },
     inputLabel: {
         fontFamily: 'Nunito',
         fontSize: '16px',
+        lineHeight: 'normal',
+        color: 'rgba(17, 17, 19, 0.60)',
+        top: '-3px',
     },
     submitButton: {
         mt: 2,
@@ -84,15 +98,18 @@ export const loginStyles: { [key: string]: SxProps<Theme> } = {
             backgroundColor: 'lightgreen',
         },
         fontWeight: 'bold',
-        margin: '24px 0px 0px 0px',
+        margin: '18px 0px 0px 0px',
         textTransform: 'none',
         minHeight: '3rem',
         fontSize: '16px',
         fontFamily: 'Nunito',
+        '@media (max-width: 440px)': {
+            marginTop: '32px',
+        }
     },
     loginText: {
         mt: 2,
-        margin: '1.25em 0px 24px',
+        margin: '1em 0 0',
         fontFamily: 'Nunito',
         fontSize: '16px',
     },
@@ -101,6 +118,9 @@ export const loginStyles: { [key: string]: SxProps<Theme> } = {
         margin: '3em 0em 0em',
         fontFamily: 'Nunito',
         fontSize: '16px',
+        '@media (max-width: 440px)': {
+            marginTop: '42px',
+        }
     },
     loginLink: {
         color: '#F45745',
@@ -109,4 +129,16 @@ export const loginStyles: { [key: string]: SxProps<Theme> } = {
         fontFamily: 'Nunito',
         textDecoration: 'none',
     },
+    formField: {
+        marginTop: '0',
+    },
+    formInput: {
+        '&.MuiOutlinedInput-root': {
+          height: '48px',
+          '& .MuiOutlinedInput-input': {
+            padding: '13px 16px',
+            fontFamily: 'Nunito',
+          },
+        },
+      },
 }
