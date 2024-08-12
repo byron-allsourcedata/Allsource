@@ -20,7 +20,7 @@ export const loginStyles: { [key: string]: SxProps<Theme> } = {
         '@media (max-width: 440px)': {
             boxShadow: '0rem 0px 0px 0px #00000033',
             border: 'none',
-            marginTop: '18px',
+            marginTop: '32px',
             padding: '0 20px 95px 20px', 
         },
     },
@@ -101,13 +101,13 @@ export const loginStyles: { [key: string]: SxProps<Theme> } = {
             backgroundColor: 'lightgreen',
         },
         fontWeight: 'bold',
-        margin: '18px 0px 0px 0px',
+        margin: '16px 0px 0px 0px',
         textTransform: 'none',
         minHeight: '3rem',
         fontSize: '16px',
         fontFamily: 'Nunito',
         '@media (max-width: 440px)': {
-            marginTop: '32px',
+            marginTop: '24px',
         }
     },
     loginText: {
@@ -134,6 +134,9 @@ export const loginStyles: { [key: string]: SxProps<Theme> } = {
     },
     formField: {
         marginTop: '0',
+        '@media (max-width: 440px)': {
+            marginBottom: '0',
+        }
     },
     formInput: {
         '&.MuiOutlinedInput-root': {
