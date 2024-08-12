@@ -453,7 +453,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                 Job title
                             </Typography>
                             <Typography sx={{ ...accountStyles.text }}>
-                                {activeTab === 'Personal' ? rowData?.job || 'N/A' : company.job || 'N/A'}
+                                {activeTab === 'Personal' ? lead.job_title || 'N/A' : company.job || 'N/A'}
                             </Typography>
                         </Box>
 

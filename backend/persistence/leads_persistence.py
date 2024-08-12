@@ -26,7 +26,7 @@ class LeadsPersistence:
         self.db = db
 
     def filter_leads(self, user_id, page, per_page, status, from_date, to_date, regions, page_visits, average_time_spent,
-                     lead_funnel, emails, recurring_visits, sort_by, sort_order):
+                     lead_funnel, emails, recurring_visits, sort_by, sort_order, search_query):
         subquery = (
             self.db.query(
                 LeadVisits.leads_users_id,
@@ -90,7 +90,8 @@ class LeadsPersistence:
                 Locations.city.in_(region_list)
             )
         if emails:
-            email_filters = [Lead.business_email.ilike(f'%{email}') for email in emails]
+            email_list = emails.split(',')
+            email_filters = [Lead.business_email.ilike(f'%{email.strip()}%') for email in email_list]
             query = query.filter(or_(*email_filters))
         if status == 'new_customers':
             query = query.filter(LeadUser.status == 'New')
@@ -106,6 +107,15 @@ class LeadsPersistence:
 
         if average_time_spent:
             query = query.filter(Lead.time_spent >= average_time_spent)
+
+        if search_query:
+            search_conditions = or_(
+                Lead.first_name.ilike(f'%{search_query}%'),
+                Lead.last_name.ilike(f'%{search_query}%'),
+                Lead.business_email.ilike(f'%{search_query}%'),
+                Lead.mobile_phone.ilike(f'%{search_query}%'),
+            )
+            query = query.filter(search_conditions)
 
         offset = (page - 1) * per_page
         leads = query.limit(per_page).offset(offset).all()

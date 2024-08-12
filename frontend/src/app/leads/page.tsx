@@ -206,13 +206,15 @@ const Leads: React.FC = () => {
         regions: string[];
         emails: string[];
         selectedFunnels: string[];
+        searchQuery: string | null;
     }
     const [filterParams, setFilterParams] = useState<FilterParams>({
         dateRange: { fromDate: null, toDate: null },
         selectedStatus: [],
         regions: [],
         emails: [],
-        selectedFunnels: []
+        selectedFunnels: [],
+        searchQuery: '',
     });
 
     const handleFilterPopupOpen = () => {
@@ -414,6 +416,15 @@ const Leads: React.FC = () => {
                 }
             }
 
+            // Обработка строки поиска
+            if (selectedFilters.some(filter => filter.label === 'Search')) {
+                console.log('123')
+                const searchQuery = selectedFilters.find(filter => filter.label === 'Search')?.value || '';
+                if (searchQuery) {
+                    url += `&search_query=${encodeURIComponent(searchQuery)}`;
+                }
+            }
+
             const response = await axiosInstance.get(url);
             const [leads, count, max_page] = response.data;
 
@@ -441,6 +452,7 @@ const Leads: React.FC = () => {
 
 
     const handleApplyFilters = (filters: FilterParams) => {
+        console.log(filters)
         const newSelectedFilters: { label: string; value: string }[] = [];
 
         if (filters.dateRange.fromDate) {
@@ -461,7 +473,10 @@ const Leads: React.FC = () => {
         if (filters.selectedFunnels && filters.selectedFunnels.length > 0) {
             newSelectedFilters.push({ label: 'Funnels', value: filters.selectedFunnels.join(', ') });
         }
-        console.log(newSelectedFilters)
+        if (filters.searchQuery && filters.searchQuery.trim() !== '') {
+            newSelectedFilters.push({ label: 'Search', value: filters.searchQuery });
+        }
+
         setSelectedFilters(newSelectedFilters);
         setActiveFilter(filters.selectedStatus?.length > 0 ? filters.selectedStatus[0] : 'all');
         setFilterParams(filters);
@@ -503,7 +518,8 @@ const Leads: React.FC = () => {
             selectedStatus: updatedFilters.find(f => f.label === 'Status') ? updatedFilters.find(f => f.label === 'Status')!.value.split(', ') : [],
             regions: updatedFilters.find(f => f.label === 'Regions') ? updatedFilters.find(f => f.label === 'Regions')!.value.split(', ') : [],
             emails: updatedFilters.find(f => f.label === 'Emails') ? updatedFilters.find(f => f.label === 'Emails')!.value.split(', ') : [],
-            selectedFunnels: updatedFilters.find(f => f.label === 'Funnels') ? updatedFilters.find(f => f.label === 'Funnels')!.value.split(', ') : []
+            selectedFunnels: updatedFilters.find(f => f.label === 'Funnels') ? updatedFilters.find(f => f.label === 'Funnels')!.value.split(', ') : [],
+            searchQuery: updatedFilters.find(f => f.label === 'Search') ? updatedFilters.find(f => f.label === 'Search')!.value : '',
         };
 
         handleApplyFilters(newFilters);
