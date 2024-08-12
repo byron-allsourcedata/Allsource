@@ -232,11 +232,11 @@ const Signup: React.FC = () => {
           ux_mode="popup"
         />
         <Box sx={loginStyles.orDivider}>
-          <Box sx={{ borderBottom: '1px solid #000000', flexGrow: 1 }} />
+          <Box sx={{ borderBottom: '1px solid #DCE1E8', flexGrow: 1 }} />
           <Typography variant="body1" sx={loginStyles.orText}>
             OR
           </Typography>
-          <Box sx={{ borderBottom: '1px solid #000000', flexGrow: 1 }} />
+          <Box sx={{ borderBottom: '1px solid #DCE1E8', flexGrow: 1 }} />
         </Box>
         <Box component="form" onSubmit={handleSubmit} sx={loginStyles.form}>
           <TextField sx={loginStyles.formField}

@@ -88,6 +88,9 @@ export const loginStyles: { [key: string]: SxProps<Theme> } = {
         lineHeight: 'normal',
         color: 'rgba(17, 17, 19, 0.60)',
         top: '-3px',
+        '&.Mui-focused': {
+            color: '#0000FF',
+          },
     },
     submitButton: {
         mt: 2,
@@ -138,6 +141,15 @@ export const loginStyles: { [key: string]: SxProps<Theme> } = {
           '& .MuiOutlinedInput-input': {
             padding: '13px 16px',
             fontFamily: 'Nunito',
+          },
+          '& .MuiOutlinedInput-notchedOutline': {
+            borderColor: '#A3B0C2',
+          },
+          '&:hover .MuiOutlinedInput-notchedOutline': {
+            borderColor: '#A3B0C2',
+          },
+          '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+            borderColor: '#0000FF',
           },
         },
       },
