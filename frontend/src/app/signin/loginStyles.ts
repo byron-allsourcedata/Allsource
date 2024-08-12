@@ -14,7 +14,7 @@ export const loginStyles: { [key: string]: SxProps<Theme> } = {
         boxShadow: '0rem 2px 8px 0px #00000033',
         borderRadius: '0.625rem',
         border: '0.0625rem solid transparent',
-        marginTop: '120px',
+        marginTop: '65px',
         textAlign: 'center',
         padding: '24px 32px',
         '@media (max-width: 440px)': {
@@ -31,6 +31,10 @@ export const loginStyles: { [key: string]: SxProps<Theme> } = {
         '@media (max-width: 440px)': {
             paddingLeft: '1.25em',
             paddingTop: '1.25em', 
+            '& img': {
+              width: '40px',
+              height: '24px',
+            },
         },
     },
     title: {

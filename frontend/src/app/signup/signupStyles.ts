@@ -15,7 +15,7 @@ export const signupStyles: { [key: string]: SxProps<Theme> } = {
     boxShadow: '0rem 0.2em 0.8em 0px #00000033',
     borderRadius: '0.625rem',
     border: '0.0625rem solid transparent',
-    marginTop: '1.75em',
+    marginTop: '47px',
     padding: '24px 32px',
     '@media (max-width: 440px)': {
       boxShadow: '0rem 0px 0px 0px #00000033',
