@@ -98,6 +98,7 @@ class AdminCustomersService:
             user_subscription = self.subscription_service.create_subscription_from_free_trial(user_id=user_data.id)
             self.subscription_service.create_new_usp_free_trial(user_data.id, user_subscription.id)
         else:
+            self.subscription_service.remove_trial(user_data.id)
             link = self.create_customer_session(self.get_default_plan().stripe_price_id, user_data.customer_id)['link']
         self.update_book_call(user_data.id, link)
         

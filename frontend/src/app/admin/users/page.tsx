@@ -30,6 +30,7 @@ interface UserData {
 
 interface TableBodyUserProps {
     data: UserData[]
+    onSwitchChange: any
 }
 
 const IOSSwitch = styled((props) => (
@@ -83,50 +84,106 @@ const IOSSwitch = styled((props) => (
     },
   }));
 
-const TableHeader: React.FC<{ onSort: (field: string) => void, sortField: string, sortOrder: string }> = ({ onSort, sortField, sortOrder }) => {
+  const TableHeader: React.FC<{ onSort: (field: string) => void, sortField: string, sortOrder: string }> = ({ onSort, sortField, sortOrder }) => {
     return (
         <TableHead>
             <TableRow>
-                <TableCell padding="checkbox">
-                    <Checkbox color="primary" />
-                </TableCell>
                 <TableCell onClick={() => onSort('full_name')} sx={{ cursor: 'pointer' }}>
                     <Typography sx={{ textAlign: 'center', cursor: 'pointer', display: "flex", }}>
-                        Username {sortField === 'full_name' && (sortOrder === 'asc' ? <ExpandLessIcon /> :  <ExpandMoreIcon/ > )}
+                        Username {sortField === 'full_name' && (sortOrder === 'asc' ? <ExpandLessIcon /> : <ExpandMoreIcon />)}
                     </Typography>
                 </TableCell>
                 <TableCell onClick={() => onSort('email')} >
-                    <Typography sx={{ textAlign: 'center', cursor: 'pointer', display: "flex", justifyContent: 'center'}}>
-                        Email {sortField === 'email' && (sortOrder === 'asc' ? <ExpandLessIcon /> : <ExpandMoreIcon/ > )}
+                    <Typography sx={{ textAlign: 'center', cursor: 'pointer', display: "flex", justifyContent: 'center' }}>
+                        Email {sortField === 'email' && (sortOrder === 'asc' ? <ExpandLessIcon /> : <ExpandMoreIcon />)}
                     </Typography>
                 </TableCell>
-                <TableCell onClick={() => onSort('created_at')} sx={{ textAlign: 'center', cursor: 'pointer',width: '200px' }}>
-                    <Typography sx={{ textAlign: 'center', cursor: 'pointer', display: "flex", justifyContent: 'center'}}>
-                        Joined date {sortField === 'created_at' && (sortOrder === 'asc' ? <ExpandLessIcon /> : <ExpandMoreIcon/ > )}
+                <TableCell onClick={() => onSort('created_at')} sx={{ textAlign: 'center', cursor: 'pointer', width: '200px' }}>
+                    <Typography sx={{ textAlign: 'center', cursor: 'pointer', display: "flex", justifyContent: 'center' }}>
+                        Joined date {sortField === 'created_at' && (sortOrder === 'asc' ? <ExpandLessIcon /> : <ExpandMoreIcon />)}
                     </Typography>
                 </TableCell>
                 <TableCell sx={{ textAlign: 'center' }}><Typography>Payments status</Typography></TableCell>
                 <TableCell sx={{ textAlign: 'center' }}><Typography>Free Trial</Typography></TableCell>
             </TableRow>
         </TableHead>
-    )
-}
+    );
+};
 
-const TableBodyClient: React.FC<TableBodyUserProps> = ({ data }) => {
-    const [sortedData, setSortedData] = useState<UserData[]>(data)
-    const [sortField, setSortField] = useState<string>('')
-    const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
-    
+const TableBodyClient: React.FC<TableBodyUserProps> = ({ data, onSwitchChange }) => {
 
     const formatDate = (dateString: string): string => {
-        const date = new Date(dateString)
-        return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`
-    }
-    const handleSort = (field: string) => {
-        const isAsc = sortField === field && sortOrder === 'asc'
-        setSortOrder(isAsc ? 'desc' : 'asc')
-        setSortField(field)
-    }
+        const date = new Date(dateString);
+        return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
+    };
+
+    return (
+        <TableBody>
+            {data.map((row) => (
+                <TableRow key={row.id}>
+                    <TableCell>{row.full_name}</TableCell>
+                    <TableCell sx={{ textAlign: 'center' }}>{row.email}</TableCell>
+                    <TableCell sx={{ textAlign: 'center' }}>{formatDate(row.created_at)}</TableCell>
+                    <TableCell sx={{ textAlign: 'center' }}>
+                        <Button
+                            variant='text'
+                            size="small"
+                            sx={{
+                                fontWeight: 500,
+                                backgroundColor: row.payment_status === 'COMPLETE' ? '#EAF8DD' : '#FEF3CD',
+                                color: row.payment_status === 'COMPLETE' ? '#6EC125' : '#FBC70E'
+                            }}>
+                            {row.payment_status}
+                        </Button>
+                    </TableCell>
+                    <TableCell sx={{ textAlign: 'center' }}>
+                        <IOSSwitch onChange={() => onSwitchChange(row)} checked={row.is_trial} />
+                    </TableCell>
+                </TableRow>
+            ))}
+        </TableBody>
+    );
+};
+
+const Users: React.FC = () => {
+    const router = useRouter();
+    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+    const open = Boolean(anchorEl);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [rowsPerPage] = useState(9);
+    const [data, setData] = useState<UserData[]>([]);
+    const [paginatedData, setPaginatedData] = useState<UserData[]>([]);
+    const [totalItems, setTotalItems] = useState(0);
+    const [isLoading, setIsLoading] = useState(true);
+    const [sortedData, setSortedData] = useState<UserData[]>([]);
+    const [sortField, setSortField] = useState<string>('');
+    const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+
+    useEffect(() => {
+        const accessToken = localStorage.getItem('token');
+        if (!accessToken) {
+            router.push('/signin');
+            return;
+        }
+
+        const fetchData = async () => {
+            try {
+                const response = await axiosInstance.get('/admin/users', {
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`
+                    }
+                });
+                if (response.status === 200) {
+                    setData(response.data);
+                    setTotalItems(response.data.length);
+                    setSortedData(response.data);
+                }
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchData();
+    }, [router]);
 
     useEffect(() => {
         if (!sortField) {
@@ -143,101 +200,11 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({ data }) => {
         setSortedData(sorted);
     }, [data, sortField, sortOrder]);
 
-
-    const handleSwitchChange = async (user_change: any) => {
-        const updatedData = sortedData.map(user =>
-            user.id === user_change.id ? { ...user, is_trial: !user.is_trial } : user
-        )
-        setSortedData(updatedData);
-        try {
-            await axiosInstance.get('/admin/confirm_customer', {
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem('token')}`
-                },
-                params: {
-                    mail: user_change.email,
-                    free_trial: !user_change.is_trial
-                } 
-            })
-        } catch (error) {
-            console.error('Ошибка при обновлении пользователя:', error);
-        }
-    };
-    return (
-        <>
-            <TableHeader onSort={handleSort} sortField={sortField} sortOrder={sortOrder} />
-            <TableBody>
-                {sortedData.map((row) => (
-                    <TableRow key={row.id}>
-                        <TableCell padding="checkbox">
-                            <Checkbox color="primary" />
-                        </TableCell>
-                        <TableCell>{row.full_name}</TableCell>
-                        <TableCell sx={{ textAlign: 'center' }}>{row.email}</TableCell>
-                        <TableCell sx={{ textAlign: 'center' }}>{formatDate(row.created_at)}</TableCell>
-                        <TableCell sx={{ textAlign: 'center' }}>
-                            <Button
-                                variant='text'
-                                size="small"
-                                sx={{
-                                    fontWeight: 500,
-                                    backgroundColor: row.payment_status === 'COMPLETE' ? '#EAF8DD' : '#FEF3CD',
-                                    color: row.payment_status === 'COMPLETE' ? '#6EC125' : '#FBC70E'
-                                }}>
-                                {row.payment_status}
-                            </Button>
-                        </TableCell>
-                        <TableCell sx={{ textAlign: 'center' }}><IOSSwitch onChange={() => handleSwitchChange(row)} checked={row.is_trial}  /></TableCell>
-                    </TableRow>
-                ))}
-            </TableBody>
-        </>
-    )
-}
-
-
-
-const Users: React.FC = () => {
-    const router = useRouter();
-    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-    const open = Boolean(anchorEl);
-    const [currentPage, setCurrentPage] = useState(1);
-    const [rowsPerPage] = useState(10);
-    const [data, setData] = useState<UserData[]>([]);
-    const [paginatedData, setPaginatedData] = useState<UserData[]>([]);
-    const [totalItems, setTotalItems] = useState(0);
-    const [isLoading, setIsLoading] = useState(true)
-    useEffect(() => {
-        const accessToken = localStorage.getItem('token');
-        if (!accessToken) {
-            router.push('/signin');
-            return;
-        }
-
-        const fetchData = async () => {
-            try{
-                const response = await axiosInstance.get('/admin/users', {
-                    headers: {
-                        Authorization: `Bearer ${accessToken}`
-                    }
-                });
-                if (response.status === 200) {
-                    setData(response.data);
-                    setTotalItems(response.data.length);
-                }     
-            }
-            finally {
-                setIsLoading(false);
-              }
-            }
-        fetchData();
-        
-    }, [router]);
     useEffect(() => {
         const startIndex = (currentPage - 1) * rowsPerPage;
         const endIndex = startIndex + rowsPerPage;
-        setPaginatedData(data.slice(startIndex, endIndex));
-    }, [currentPage, data, rowsPerPage]);
+        setPaginatedData(sortedData.slice(startIndex, endIndex));
+    }, [currentPage, sortedData, rowsPerPage]);
 
     const handlePageChange = (event: React.ChangeEvent<unknown>, page: number) => {
         setCurrentPage(page);
@@ -247,11 +214,34 @@ const Users: React.FC = () => {
         setAnchorEl(event.currentTarget);
     };
 
+    const handleSort = (field: string) => {
+        const isAsc = sortField === field && sortOrder === 'asc';
+        setSortOrder(isAsc ? 'desc' : 'asc');
+        setSortField(field);
+    };
+
+    const handleSwitchChange = async (user_change: any) => {
+        const updatedData = sortedData.map(user =>
+            user.id === user_change.id ? { ...user, is_trial: !user.is_trial } : user
+        );
+        setSortedData(updatedData);
+        await axiosInstance.get('/admin/confirm_customer', {
+            headers: {
+                Authorization: `Bearer ${localStorage.getItem('token')}`
+            },
+            params: {
+                mail: user_change.email,
+                free_trial: !user_change.is_trial
+            }
+        });
+        
+    };
+
     const totalPages = Math.ceil(totalItems / rowsPerPage);
 
     if (isLoading) {
         return <div>Loading...</div>;
-    } 
+    }
 
     return (
         <>
@@ -286,16 +276,17 @@ const Users: React.FC = () => {
                             <Grid sx={{ marginRight: '4em' }} xs={12} mt={4}>
                                 <TableContainer component={Paper}>
                                     <Table aria-label="simple table">
-                                        <TableBodyClient data={paginatedData} />
+                                        <TableHeader onSort={handleSort} sortField={sortField} sortOrder={sortOrder} />
+                                        <TableBodyClient data={paginatedData} onSwitchChange={handleSwitchChange} />
                                     </Table>
                                 </TableContainer>
                                 <Pagination
-                                        count={totalPages}
-                                        page={currentPage}
-                                        onChange={handlePageChange}
-                                        color="primary"
-                                        sx={{ display: 'flex', justifyContent: 'center', mt: 2, mb: 2}}
-                                    />
+                                    count={totalPages}
+                                    page={currentPage}
+                                    onChange={handlePageChange}
+                                    color="primary"
+                                    sx={{ display: 'flex', justifyContent: 'center', mt: 2, mb: 2 }}
+                                />
                             </Grid>
                         )}
                     </Grid>
@@ -303,6 +294,6 @@ const Users: React.FC = () => {
             </Box>
         </>
     );
-}
+};
 
 export default Users;

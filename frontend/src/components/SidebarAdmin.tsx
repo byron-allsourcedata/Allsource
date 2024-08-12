@@ -19,7 +19,7 @@ const sidebarStyles = {
         backgroundColor: 'rgba(255, 255, 255, 1)',
         borderRight: '1px solid rgba(228, 228, 228, 1)',
         marginRight: '10em',
-        height: '90vh',
+        height: '95vh',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'start',
