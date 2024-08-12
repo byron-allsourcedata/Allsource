@@ -172,7 +172,7 @@ const Signup: React.FC = () => {
   return (
     <>
       <Box sx={signupStyles.logoContainer}>
-        <Image src='/logo.svg' alt='logo' height={80} width={60} />
+        <Image src='/logo.svg' alt='logo' height={31} width={50} />
       </Box>
 
       <Box sx={signupStyles.container}>
@@ -238,11 +238,11 @@ const Signup: React.FC = () => {
         />
 
         <Box sx={signupStyles.orDivider}>
-          <Box sx={{ borderBottom: '1px solid #000000', flexGrow: 1 }} />
+          <Box sx={{ borderBottom: '1px solid #DCE1E8', flexGrow: 1 }} />
           <Typography variant="body1" sx={signupStyles.orText}>
             OR
           </Typography>
-          <Box sx={{ borderBottom: '1px solid #000000', flexGrow: 1 }} />
+          <Box sx={{ borderBottom: '1px solid #DCE1E8', flexGrow: 1 }} />
         </Box>
         <Box component="form" onSubmit={handleSubmit} sx={signupStyles.form}>
           <TextField
@@ -255,8 +255,9 @@ const Signup: React.FC = () => {
             onChange={handleChange}
             error={Boolean(errors.full_name)}
             helperText={errors.full_name}
+            InputProps={{ sx: signupStyles.formInput }}
           />
-          <TextField
+          <TextField sx={signupStyles.formField}
             InputLabelProps={{ sx: signupStyles.inputLabel }}
             label="Email address"
             name="email"
@@ -268,8 +269,9 @@ const Signup: React.FC = () => {
             onChange={handleChange}
             error={Boolean(errors.email)}
             helperText={errors.email}
+            InputProps={{ sx: signupStyles.formInput }}
           />
-          <TextField
+          <TextField sx={signupStyles.formField}
             InputLabelProps={{ sx: signupStyles.inputLabel }}
             label="Create password"
             name="password"
@@ -282,6 +284,7 @@ const Signup: React.FC = () => {
             error={Boolean(errors.password)}
             helperText={errors.password}
             InputProps={{
+              sx: signupStyles.formInput,
               endAdornment: (
                 <InputAdornment position="end">
                   <IconButton onClick={togglePasswordVisibility} edge="end">
