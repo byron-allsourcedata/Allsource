@@ -361,7 +361,8 @@ const Leads: React.FC = () => {
                 router.push('/signin');
                 return;
             }
-
+            
+            // Processing "Date Calendly"
             const startEpoch = appliedDates.start ? Math.floor(appliedDates.start.getTime() / 1000) : null;
             const endEpoch = appliedDates.end ? Math.floor(appliedDates.end.getTime() / 1000) : null;
 
@@ -374,7 +375,7 @@ const Leads: React.FC = () => {
             }
 
             // Include other filter parameters if necessary
-            // Обработка "Regions"
+            // Processing "Regions"
             if (selectedFilters.some(filter => filter.label === 'Regions')) {
                 const regions = selectedFilters.find(filter => filter.label === 'Regions')?.value.split(', ') || [];
                 if (regions.length > 0) {
@@ -382,7 +383,7 @@ const Leads: React.FC = () => {
                 }
             }
 
-            // Обработка "Emails"
+            // Processing "Emails"
             if (selectedFilters.some(filter => filter.label === 'Emails')) {
                 const emails = selectedFilters.find(filter => filter.label === 'Emails')?.value.split(', ') || [];
                 if (emails.length > 0) {
@@ -390,7 +391,7 @@ const Leads: React.FC = () => {
                 }
             }
 
-            // Обработка "From Date"
+            // Processing "From Date"
             if (selectedFilters.some(filter => filter.label === 'From Date')) {
                 const fromDate = selectedFilters.find(filter => filter.label === 'From Date')?.value || '';
                 if (fromDate) {
@@ -399,7 +400,7 @@ const Leads: React.FC = () => {
                 }
             }
 
-            // Обработка "To Date"
+            // Processing "To Date"
             if (selectedFilters.some(filter => filter.label === 'To Date')) {
                 const toDate = selectedFilters.find(filter => filter.label === 'To Date')?.value || '';
                 if (toDate) {
@@ -408,7 +409,7 @@ const Leads: React.FC = () => {
                 }
             }
 
-            // Обработка "Funnels"
+            // Processing "Funnels"
             if (selectedFilters.some(filter => filter.label === 'Funnels')) {
                 const funnels = selectedFilters.find(filter => filter.label === 'Funnels')?.value.split(', ') || [];
                 if (funnels.length > 0) {
@@ -416,9 +417,8 @@ const Leads: React.FC = () => {
                 }
             }
 
-            // Обработка строки поиска
+            // Search string processing
             if (selectedFilters.some(filter => filter.label === 'Search')) {
-                console.log('123')
                 const searchQuery = selectedFilters.find(filter => filter.label === 'Search')?.value || '';
                 if (searchQuery) {
                     url += `&search_query=${encodeURIComponent(searchQuery)}`;
@@ -452,7 +452,6 @@ const Leads: React.FC = () => {
 
 
     const handleApplyFilters = (filters: FilterParams) => {
-        console.log(filters)
         const newSelectedFilters: { label: string; value: string }[] = [];
 
         if (filters.dateRange.fromDate) {
