@@ -86,7 +86,7 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode }) => {
     >
       <Box sx={{ ...style, ...(open ? openStyle : {}) }}>
         <Box display="flex" justifyContent="space-between" sx={{ width: '100%', paddingBottom: '1em' }}>
-          <Typography variant="h6" component="h2" sx={{ fontFamily: 'Nunito', fontSize: '14px', fontWeight: '700', lineHeight: '19.1px', textAlign: 'left', color: 'rgba(28, 28, 28, 1)', '@media (max-width: 600px)': { pt: 2, pl: 2} }}>
+          <Typography variant="h6" component="h2" sx={{ fontFamily: 'Nunito', fontSize: '14px', fontWeight: '700', lineHeight: '19.1px', textAlign: 'left', color: 'rgba(28, 28, 28, 1)', '@media (max-width: 600px)': { pt: 2, pl: 2 } }}>
             Install Manually
           </Typography>
           <IconButton onClick={handleClose}>
@@ -94,7 +94,7 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode }) => {
           </IconButton>
         </Box>
         <Divider />
-        <Box sx={{ flex: 1, overflowY: 'auto', paddingBottom: '30px' }}>
+        <Box sx={{ flex: 1, overflowY: 'auto', paddingBottom: '30px', '@media (max-width: 600px)': {p: 2} }}>
           <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', padding: '1em 0em 0em 0em', justifyContent: 'start' }}>
             <Image src='/1.svg' alt='1' width={28} height={28} />
             <Typography sx={maintext}>Copy the pixel code</Typography>
@@ -123,7 +123,7 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode }) => {
             >
               <ContentCopyIcon />
             </IconButton>
-            <code style={{ color: '#000000', maxHeight: '2em',  }}>{pixelCode}</code>
+            <code style={{ color: '#000000'}}>{pixelCode}</code>
           </Box>
           <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', padding: '2em 0em 0em 0em', justifyContent: 'start' }}>
             <Image src='/2.svg' alt='2' width={28} height={28} />
@@ -144,7 +144,7 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode }) => {
             backgroundColor: 'rgba(247, 247, 247, 1)',
             boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
             marginBottom: '3rem',
-            '@media (max-width: 600px)': { m: 2} 
+            '@media (max-width: 600px)': { m: 2 }
           }}
         >
           <Typography
@@ -201,11 +201,11 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode }) => {
             </Button>
           </Box>
         </Box>
-        <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-end', paddingTop: '1em', maxHeight: '20em', '@media (max-width: 600px)': {justifyContent: 'center', pb:3, width: '94%', pl: 2} }}>
-          <Button variant="outlined" sx={{ mr: 2, backgroundColor: 'rgba(255, 255, 255, 1)', color: 'rgba(80, 82, 178, 1)', textTransform: 'none', padding: '1em 2em', border: '1px solid rgba(80, 82, 178, 1)', '@media (max-width: 600px)': {width: '100%'}, }}>
+        <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-end', paddingTop: '1em', maxHeight: '20em', '@media (max-width: 600px)': { justifyContent: 'center', pb: 3, width: '94%', pl: 2 } }}>
+          <Button variant="outlined" sx={{ mr: 2, backgroundColor: 'rgba(255, 255, 255, 1)', color: 'rgba(80, 82, 178, 1)', textTransform: 'none', padding: '1em 2em', border: '1px solid rgba(80, 82, 178, 1)', '@media (max-width: 600px)': { width: '100%' }, }}>
             Contact support
           </Button>
-          <Button variant="contained" onClick={handleClose} sx={{ backgroundColor: 'rgba(80, 82, 178, 1)', fontFamily: "Nunito", textTransform: 'none', padding: '1em 3em', '@media (max-width: 600px)': {width: '100%'} }}>
+          <Button variant="contained" onClick={handleClose} sx={{ backgroundColor: 'rgba(80, 82, 178, 1)', fontFamily: "Nunito", textTransform: 'none', padding: '1em 3em', '@media (max-width: 600px)': { width: '100%' } }}>
             Next
           </Button>
         </Box>
