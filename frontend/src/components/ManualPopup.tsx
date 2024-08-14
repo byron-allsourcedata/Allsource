@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from 'react';
-import { Box, Button, Typography, Modal, IconButton, Divider } from '@mui/material';
+import { Box, Button, Typography, Modal, IconButton, Divider, Input } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import Image from 'next/image';
@@ -161,23 +161,25 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode }) => {
           >
             Send this to my developer
           </Typography>
-          <Box display="flex" alignItems="center" justifyContent="space-between">
-            <input
+          <Box display="flex" alignItems="center" justifyContent="space-between" flexDirection="row" sx={{'@media (max-width: 600px)': { flexDirection: 'column', display: 'flex', alignContent: 'flex-start', alignItems: 'flex-start', gap: 1}}}>
+            <Input
               id="email_send"
               type="text"
               placeholder="Enter Email ID"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              style={{
-                padding: '0.5rem 3em 0.5em 1em',
-                width: '50%',
+              sx={{padding: '0.5rem 3em 0.5em 1em',
+                width: '60%',
                 border: '1px solid #e4e4e4',
                 borderRadius: '4px',
                 fontFamily: 'Nunito',
                 fontSize: '16px',
                 fontWeight: '600',
                 lineHeight: '22.4px',
-                textAlign: 'left'
+                textAlign: 'left',
+                '@media (max-width: 600px)': {
+                  width: '100%',
+                },
               }}
             />
             <Button
@@ -190,7 +192,8 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode }) => {
                 color: 'rgba(80, 82, 178, 1)',
                 fontFamily: 'Nunito',
                 padding: '1.25em 3em',
-                mr: 2
+                mr: 2,
+                '@media (max-width: 600px)': {padding: '0.5em 1.5em', mr: 0, ml: 0, left: 0}
               }}
             >
               <Typography sx={{
