@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, TEXT, VARCHAR
+from sqlalchemy import Column, Integer, TEXT, VARCHAR, TIMESTAMP
 
 from .base import Base
 
@@ -33,3 +33,10 @@ class FiveXFiveUser(Base):
     company_employee_count = Column(VARCHAR, nullable=True)
     net_worth = Column(VARCHAR, nullable=True)
     job_title = Column(VARCHAR, nullable=True)
+    sha256_lc_hem = Column(VARCHAR, nullable=True)
+    md5_lc_hem = Column(VARCHAR, nullable=True)
+    sha1_lc_hem = Column(VARCHAR, nullable=True)
+    last_updated = Column(TIMESTAMP, nullable=True)
+    personal_emails_last_seen = Column(TIMESTAMP, nullable=True)
+    company_last_updated = Column(TIMESTAMP, nullable=True)
+    job_title_last_updated = Column(TIMESTAMP, nullable=True)
