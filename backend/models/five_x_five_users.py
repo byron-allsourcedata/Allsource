@@ -14,7 +14,6 @@ class FiveXFiveUser(Base):
     mobile_phone = Column(TEXT, nullable=True)
     direct_number = Column(TEXT, nullable=True)
     gender = Column(VARCHAR, nullable=True)
-    age_range = Column(VARCHAR, nullable=True)
     personal_phone = Column(VARCHAR, nullable=True)
     business_email = Column(VARCHAR, nullable=True)
     personal_emails = Column(VARCHAR, nullable=True)

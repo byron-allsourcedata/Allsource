@@ -123,7 +123,10 @@ async def on_message_received(message, s3_session, credentials, db_session):
                                     age_min = int(age_min.strip())
                                     age_max = int(age_max.strip())
                                 else:
-                                    age_min = age_max = int(age_range.strip())
+                                    try:
+                                        age_min = age_max = int(age_range.strip())
+                                    except ValueError:
+                                        logging.warning(f"Invalid age range format: {age_range}")
 
                             five_x_five_user = FiveXFiveUser(
                                 up_id=str(row.get('UP_ID', None)),
@@ -133,7 +136,6 @@ async def on_message_received(message, s3_session, credentials, db_session):
                                 mobile_phone=str(row.get('MOBILE_PHONE', None)),
                                 direct_number=str(row.get('DIRECT_NUMBER', None)),
                                 gender=str(row.get('GENDER', None)),
-                                age_range=str(row.get('AGE_RANGE', None)),
                                 age_min=age_min,
                                 age_max=age_max,
                                 personal_phone=str(row.get('PERSONAL_PHONE', None)),
@@ -212,6 +214,7 @@ async def on_message_received(message, s3_session, credentials, db_session):
             logging.info(f"{message_json['file_name']} processed")
         except Exception as e:
             logging.error(f"Error processing message: {e}", exc_info=True)
+            session.rollback()
         finally:
             session.close()
 
