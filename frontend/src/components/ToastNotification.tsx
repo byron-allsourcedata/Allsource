@@ -5,7 +5,7 @@ import { Typography } from '@mui/material';
 
 export const CustomToast = ({ message }: { message: string }) => (
   <div style={{ color: 'green' }}>
-    <Typography style={{ fontWeight: 'bold', color: 'rgba(86, 153, 27, 1)', fontFamily: 'Nunito', fontSize: '18px', }}>
+    <Typography style={{ fontWeight: '700', color: 'rgba(86, 153, 27, 1)', fontFamily: 'Nunito', fontSize: '18px' }}>
       Success
     </Typography>
     <Typography variant="body2" sx={{ color: 'rgba(110, 193, 37, 1)', fontFamily: 'Nunito', fontWeight: '400', fontSize: '14px', }}>
@@ -27,7 +27,7 @@ export const CustomInfoToast = ({ message }: { message: string }) => (
 
 export const CustomErrorToast = ({ message }: { message: string }) => (
   <div style={{ color: 'rgba(255, 245, 245, 1)' }}>
-    <Typography style={{ fontWeight: 'bold', color: 'rgba(224, 49, 48, 1)' }}>
+    <Typography style={{ fontWeight: '700', color: 'rgba(224, 49, 48, 1)', fontFamily: 'Nunito', fontSize: '18px' }}>
       Error
     </Typography>
     <Typography variant="body2" sx={{ color: 'rgba(224, 49, 48, 1)', fontWeight: '400', fontFamily: 'Nunito', fontSize: '14px' }}>

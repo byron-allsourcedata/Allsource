@@ -892,7 +892,7 @@ const Leads: React.FC = () => {
                                             Pixel Integration isn&apos;t completed yet!
                                         </Typography>
                                         <Image src='/pixel_installation_needed.svg' alt='Need Pixel Install'
-                                            height={200} width={300} />
+                                            height={250} width={300} />
                                         <Typography variant="body1" color="textSecondary" sx={{ mt: 2 }}>
                                             Install the pixel to complete the setup.
                                         </Typography>
@@ -916,7 +916,7 @@ const Leads: React.FC = () => {
                                         <Typography variant="h5" sx={{ mb: 6 }}>
                                             Data not matched yet!
                                         </Typography>
-                                        <Image src='/no-data.svg' alt='No Data' height={400} width={500} />
+                                        <Image src='/no-data.svg' alt='No Data' height={250} width={300} />
                                         <Typography variant="body1" color="textSecondary" sx={{ mt: 2 }}>
                                             Please check back later.
                                         </Typography>
