@@ -17,6 +17,7 @@ class FiveXFiveUser(Base):
     age_range = Column(VARCHAR, nullable=True)
     personal_phone = Column(VARCHAR, nullable=True)
     business_email = Column(VARCHAR, nullable=True)
+    personal_emails = Column(VARCHAR, nullable=True)
     last_name = Column(VARCHAR, nullable=True)
     personal_city = Column(VARCHAR, nullable=True)
     personal_state = Column(VARCHAR, nullable=True)
@@ -40,3 +41,5 @@ class FiveXFiveUser(Base):
     personal_emails_last_seen = Column(TIMESTAMP, nullable=True)
     company_last_updated = Column(TIMESTAMP, nullable=True)
     job_title_last_updated = Column(TIMESTAMP, nullable=True)
+    first_name_id = Column(Integer, nullable=True)
+    last_name_id = Column(Integer, nullable=True)
