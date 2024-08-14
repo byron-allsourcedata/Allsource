@@ -43,3 +43,5 @@ class FiveXFiveUser(Base):
     job_title_last_updated = Column(TIMESTAMP, nullable=True)
     first_name_id = Column(Integer, nullable=True)
     last_name_id = Column(Integer, nullable=True)
+    age_min = Column(Integer, nullable=True)
+    age_max = Column(Integer, nullable=True)
