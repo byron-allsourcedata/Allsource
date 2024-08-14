@@ -1,15 +1,14 @@
 
 import React from 'react';
 import { ToastContainer, toast, ToastOptions, Bounce } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 import { Typography } from '@mui/material';
 
 export const CustomToast = ({ message }: { message: string }) => (
   <div style={{ color: 'green' }}>
-    <Typography style={{ fontWeight: 'bold', color: 'rgba(86, 153, 27, 1)' }}>
+    <Typography style={{ fontWeight: 'bold', color: 'rgba(86, 153, 27, 1)', fontFamily: 'Nunito', fontSize: '18px', }}>
       Success
     </Typography>
-    <Typography variant="body2">
+    <Typography variant="body2" sx={{ color: 'rgba(110, 193, 37, 1)', fontFamily: 'Nunito', fontWeight: '400', fontSize: '14px', }}>
       {message}
     </Typography>
   </div>
@@ -27,11 +26,11 @@ export const CustomInfoToast = ({ message }: { message: string }) => (
 );
 
 export const CustomErrorToast = ({ message }: { message: string }) => (
-  <div style={{ color: 'red' }}>
-    <Typography style={{ fontWeight: 'bold', color: 'rgba(255, 0, 0, 1)' }}>
+  <div style={{ color: 'rgba(255, 245, 245, 1)' }}>
+    <Typography style={{ fontWeight: 'bold', color: 'rgba(224, 49, 48, 1)' }}>
       Error
     </Typography>
-    <Typography variant="body2">
+    <Typography variant="body2" sx={{ color: 'rgba(224, 49, 48, 1)', fontWeight: '400', fontFamily: 'Nunito', fontSize: '14px' }}>
       {message}
     </Typography>
   </div>
@@ -100,7 +99,7 @@ export const showInfoToast = (message: string, options: ToastOptions = {}) => {
 
 const ToastNotificationContainer = () => (
   <ToastContainer
-    position="bottom-center"
+    position="top-right"
     autoClose={4000}
     hideProgressBar={false}
     newestOnTop={false}

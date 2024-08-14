@@ -3,8 +3,6 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Box, Button, TextField, Typography, Link, IconButton, InputAdornment } from '@mui/material';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import axiosInterceptorInstance from '../../axios/axiosInterceptorInstance';
 import { AxiosError } from 'axios';
 import { loginStyles } from './loginStyles';

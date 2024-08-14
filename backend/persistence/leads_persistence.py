@@ -86,9 +86,8 @@ class LeadsPersistence:
             )
         if regions:
             region_list = regions.split(',')
-            query = query.filter(
-                Locations.city.in_(region_list)
-            )
+            region_filters = [Locations.city.ilike(f'%{region.strip()}%') for region in region_list]
+            query = query.filter(or_(*region_filters))
         if emails:
             email_list = emails.split(',')
             email_filters = [Lead.business_email.ilike(f'%{email.strip()}%') for email in email_list]
