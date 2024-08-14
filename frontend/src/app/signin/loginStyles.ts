@@ -1,28 +1,49 @@
 import { SxProps, Theme } from '@mui/system';
 
 export const loginStyles: { [key: string]: SxProps<Theme> } = {
+    mainContent: {
+        display:'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '100vh',
+        marginTop: '-80px',
+
+        '@media (max-width: 440px)': {
+            marginTop: '-60px',
+            padding: '0',
+        },
+    },
     container: {
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        minHeight: '50vh',
-        backgroundColor: '#ffffff',
-        maxWidth: '25rem',
         margin: '0 auto',
         position: 'relative',
         boxShadow: '0rem 2px 8px 0px #00000033',
         borderRadius: '0.625rem',
         border: '0.0625rem solid transparent',
-        marginTop: '65px',
         textAlign: 'center',
-        padding: '24px 32px',
+        padding: '32px',
+        maxWidth: '398px',
+        minHeight: '481px',
+        marginTop: '143px',
+        marginBottom: '143px',
+        '@media (min-width: 1400px)': {
+            marginTop: '130px',
+            marginBottom: '130px',
+        },
         '@media (max-width: 440px)': {
             boxShadow: '0rem 0px 0px 0px #00000033',
             border: 'none',
-            marginTop: '32px',
-            padding: '0 20px 95px 20px', 
+            padding: '0 20px 40px 20px', 
+            marginTop: '0',
+            marginBottom: '0',
         },
+        '@media (max-width: 380px)': {
+            marginTop: '76px',
+        }
     },
     logoContainer: {
         paddingLeft: '2.5em',
@@ -32,9 +53,9 @@ export const loginStyles: { [key: string]: SxProps<Theme> } = {
             paddingLeft: '1.25em',
             paddingTop: '1.25em', 
             '& img': {
-              width: '40px',
-              height: '24px',
-            },
+                width: '40px',
+                height: '25px',
+            } 
         },
     },
     title: {
@@ -42,10 +63,11 @@ export const loginStyles: { [key: string]: SxProps<Theme> } = {
         fontSize: '28px',
         whiteSpace: 'nowrap',
         textAlign: 'center',
-        paddingBottom: '2.5rem',
+        paddingBottom: '33px',
         fontFamily: 'Nunito',
         lineHeight: 'normal',
         '@media (max-width: 440px)': {
+            fontSize: '24px',
             paddingBottom: '2rem',
         },
     },
@@ -77,7 +99,7 @@ export const loginStyles: { [key: string]: SxProps<Theme> } = {
         }
     },
     orText: {
-        px: 2,
+        px: '36px',
         fontWeight: 'regular',
         fontSize: '14px',
         fontFamily: 'Nunito',
@@ -105,29 +127,31 @@ export const loginStyles: { [key: string]: SxProps<Theme> } = {
             backgroundColor: 'lightgreen',
         },
         fontWeight: 'bold',
-        margin: '16px 0px 0px 0px',
+        margin: '0',
+        padding: '10px 24px',
         textTransform: 'none',
-        minHeight: '3rem',
         fontSize: '16px',
         fontFamily: 'Nunito',
         '@media (max-width: 440px)': {
-            marginTop: '24px',
+            marginTop: '20px',
         }
     },
     loginText: {
         mt: 2,
-        margin: '1em 0 0',
+        margin: '43px 0 0',
         fontFamily: 'Nunito',
-        fontSize: '16px',
+        fontSize: '14px',
+        fontWeight: '500',
+        '@media (max-width: 440px)': {
+            marginTop: '83px',
+        }
     },
     resetPassword: {
         mt: 2,
-        margin: '3em 0em 0em',
+        margin: '0 0 24px',
         fontFamily: 'Nunito',
         fontSize: '16px',
-        '@media (max-width: 440px)': {
-            marginTop: '42px',
-        }
+        textAlign: 'left',
     },
     loginLink: {
         color: '#F45745',
@@ -135,6 +159,7 @@ export const loginStyles: { [key: string]: SxProps<Theme> } = {
         fontWeight: 'bold',
         fontFamily: 'Nunito',
         textDecoration: 'none',
+        fontSize: '16px',
     },
     formField: {
         marginTop: '0',
@@ -146,7 +171,7 @@ export const loginStyles: { [key: string]: SxProps<Theme> } = {
         '&.MuiOutlinedInput-root': {
           height: '48px',
           '& .MuiOutlinedInput-input': {
-            padding: '13px 16px',
+            padding: '12px 16px 13px 16px',
             fontFamily: 'Nunito',
           },
           '& .MuiOutlinedInput-notchedOutline': {

@@ -168,134 +168,143 @@ const Signup: React.FC = () => {
   return (
     <>
       <Box sx={loginStyles.logoContainer}>
-        <Image src='/logo.svg' alt='logo' height={31} width={50} />
+        <Image src='/logo.svg' alt='logo' height={30} width={50} />
       </Box>
 
-      <Box sx={loginStyles.container}>
-        <Typography variant="h4" component="h1" sx={loginStyles.title}>
-          Login
-        </Typography>
-        <GoogleLogin
-          onSuccess={async (credentialResponse) => {
-            try {
-              const response = await axiosInterceptorInstance.post('/login-google', {
-                token: credentialResponse.credential,
-              });
-              const responseData = response.data;
-              if (typeof window !== 'undefined') {
-                if (responseData.token && responseData.token !== null) {
-                  localStorage.setItem('token', responseData.token);
-                }
-              }
-
-              switch (response.data.status) {
-                case 'SUCCESS':
-                  get_me()
-                  router.push('/dashboard');
-                  break;
-                case 'NEED_CHOOSE_PLAN':
-                  get_me()
-                  router.push('/choose-plan');
-                  break;
-                case 'FILL_COMPANY_DETAILS':
-                  get_me()
-                  router.push('/account-setup');
-                  break;
-                case 'NEED_BOOK_CALL':
-                  get_me()
-                  sessionStorage.setItem('is_slider_opened', 'true')
-                  router.push('/dashboard');
-                  break;
-                case 'PAYMENT_NEEDED':
-                  get_me()
-                  router.push(`${response.data.stripe_payment_url}`);
-                  break;
-                case 'INCORRECT_PASSWORD_OR_EMAIL':
-                  showErrorToast("User with this email does not exist");
-                  break;
-                  case "PIXEL_INSTALLATION_NEEDED":
-                    get_me()
-                    router.push('/dashboard')
-                    break;
-                default:
-                  router.push('/dashboard')
-                  console.error('Authorization failed:', response.data.status);
-              }
-            } catch (error) {
-              console.error('Error during Google login:', error);
-            }
-
-          }}
-          onError={() => {
-            console.log('Login Failed');
-          }}
-          ux_mode="popup"
-        />
-        <Box sx={loginStyles.orDivider}>
-          <Box sx={{ borderBottom: '1px solid #DCE1E8', flexGrow: 1 }} />
-          <Typography variant="body1" sx={loginStyles.orText}>
-            OR
+      <Box sx={loginStyles.mainContent}>
+        <Box sx={loginStyles.container}>
+          <Typography variant="h4" component="h1" sx={loginStyles.title}>
+            Welcome Back!
           </Typography>
-          <Box sx={{ borderBottom: '1px solid #DCE1E8', flexGrow: 1 }} />
-        </Box>
-        <Box component="form" onSubmit={handleSubmit} sx={loginStyles.form}>
-          <TextField sx={loginStyles.formField}
-            InputLabelProps={{ sx: loginStyles.inputLabel }}
-            label="Email address"
-            name="email"
-            type="email"
-            variant="outlined"
-            fullWidth
-            margin="normal"
-            value={formValues.email}
-            onChange={handleChange}
-            error={Boolean(errors.email)}
-            helperText={errors.email}
-            InputProps={{ sx: loginStyles.formInput }}
-          />
-          <TextField
-            InputLabelProps={{ sx: loginStyles.inputLabel }}
-            label="Enter password"
-            name="password"
-            type={showPassword ? 'text' : 'password'}
-            variant="outlined"
-            fullWidth
-            margin="normal"
-            value={formValues.password}
-            onChange={handleChange}
-            error={Boolean(errors.password)}
-            helperText={errors.password}
-            InputProps={{
-              sx: loginStyles.formInput,
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton onClick={togglePasswordVisibility} edge="end">
-                    {showPassword ? <VisibilityIcon /> : <VisibilityOffIcon />}
-                  </IconButton>
-                </InputAdornment>
-              ),
+          <GoogleLogin
+            onSuccess={async (credentialResponse) => {
+              try {
+                const response = await axiosInterceptorInstance.post('/login-google', {
+                  token: credentialResponse.credential,
+                });
+                const responseData = response.data;
+                if (typeof window !== 'undefined') {
+                  if (responseData.token && responseData.token !== null) {
+                    localStorage.setItem('token', responseData.token);
+                  }
+                }
+
+                switch (response.data.status) {
+                  case 'SUCCESS':
+                    get_me()
+                    router.push('/dashboard');
+                    break;
+                  case 'NEED_CHOOSE_PLAN':
+                    get_me()
+                    router.push('/choose-plan');
+                    break;
+                  case 'FILL_COMPANY_DETAILS':
+                    get_me()
+                    router.push('/account-setup');
+                    break;
+                  case 'NEED_BOOK_CALL':
+                    get_me()
+                    sessionStorage.setItem('is_slider_opened', 'true')
+                    router.push('/dashboard');
+                    break;
+                  case 'PAYMENT_NEEDED':
+                    get_me()
+                    router.push(`${response.data.stripe_payment_url}`);
+                    break;
+                  case 'INCORRECT_PASSWORD_OR_EMAIL':
+                    showErrorToast("User with this email does not exist");
+                    break;
+                    case "PIXEL_INSTALLATION_NEEDED":
+                      get_me()
+                      router.push('/dashboard')
+                      break;
+                  default:
+                    router.push('/dashboard')
+                    console.error('Authorization failed:', response.data.status);
+                }
+              } catch (error) {
+                console.error('Error during Google login:', error);
+              }
+
             }}
+            onError={() => {
+              console.log('Login Failed');
+            }}
+            ux_mode="popup"
           />
-          <Button
-            type="submit"
-            variant="contained"
-            sx={loginStyles.submitButton}
-            fullWidth
-          >
-            Login
-          </Button>
+          <Box sx={loginStyles.orDivider}>
+            <Box sx={{ borderBottom: '1px solid #DCE1E8', flexGrow: 1 }} />
+            <Typography variant="body1" sx={loginStyles.orText}>
+              OR
+            </Typography>
+            <Box sx={{ borderBottom: '1px solid #DCE1E8', flexGrow: 1 }} />
+          </Box>
+          <Box component="form" onSubmit={handleSubmit} sx={loginStyles.form}>
+            <TextField sx={loginStyles.formField}
+              InputLabelProps={{ sx: loginStyles.inputLabel }}
+              label="Email address"
+              name="email"
+              type="email"
+              variant="outlined"
+              fullWidth
+              margin="normal"
+              value={formValues.email}
+              onChange={handleChange}
+              error={Boolean(errors.email)}
+              helperText={errors.email}
+              InputProps={{ sx: loginStyles.formInput }}
+            />
+            <TextField
+              InputLabelProps={{ sx: loginStyles.inputLabel }}
+              label="Enter password"
+              name="password"
+              type={showPassword ? 'text' : 'password'}
+              variant="outlined"
+              fullWidth
+              margin="normal"
+              value={formValues.password}
+              onChange={handleChange}
+              error={Boolean(errors.password)}
+              helperText={errors.password}
+              InputProps={{
+                sx: loginStyles.formInput,
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton onClick={togglePasswordVisibility} edge="end">
+                      {/* {showPassword ? <VisibilityIcon /> : <VisibilityOffIcon />} */}
+                      <Image 
+                        src={showPassword ? "/custom-visibility-icon-off.svg" : "/custom-visibility-icon.svg"} 
+                        alt={showPassword ? "Show password" : "Hide password"} 
+                        height={18} width={18} // Adjust the size as needed
+                        title={showPassword ? "Hide password" : "Show password"}
+                      />
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+            />
+            <Typography variant="body2" sx={loginStyles.resetPassword}>
+            <Link href="/reset-password" sx={loginStyles.loginLink}>
+              Forgot Password
+            </Link>
+          </Typography>
+            <Button
+              type="submit"
+              variant="contained"
+              sx={loginStyles.submitButton}
+              fullWidth
+            >
+              Login
+            </Button>
+          </Box>
+          
+          <Typography variant="body2" sx={loginStyles.loginText}>
+            Don’t have an account?{' '}
+            <Link href="/signup" sx={loginStyles.loginLink}>
+              Signup now
+            </Link>
+          </Typography>
         </Box>
-        <Typography variant="body2" sx={loginStyles.resetPassword}>
-          <Link href="/reset-password" sx={loginStyles.loginLink}>
-            Reset password
-          </Link>
-        </Typography>
-        <Typography variant="body2" sx={loginStyles.loginText}>
-          No account?{' '}
-          <Link href="/signup" sx={loginStyles.loginLink}>
-            Create one
-          </Link>
-        </Typography>
       </Box>
     </>
   );
