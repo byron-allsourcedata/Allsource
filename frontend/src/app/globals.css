@@ -6,9 +6,27 @@
 
 body {
   margin: 0;
-  padding: 0; 
+  padding: 0;
 }
 
 ::-ms-reveal {
-  display: none; 
+  display: none;
+}
+
+.Toastify__progress-bar--wrp {
+  position: absolute;
+  bottom: 0;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 5px;
+  color: 'rgba(110, 193, 37, 1)';
+  border-bottom-left-radius: var(--toastify-toast-bd-radius);
+}
+
+.Toastify__close-button {
+  position: absolute;
+  top: 30px;
+  right: 10px;
+  z-index: 1;
 }

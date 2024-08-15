@@ -42,6 +42,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
   const [selectedFunnels, setSelectedFunnels] = useState<string[]>([]);
   const [selectedStatus, setSelectedStatus] = useState<string[]>([]);
   const [buttonFilters, setButtonFilters] = useState<ButtonFilters>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   type ButtonFilters = {
     button: string;
@@ -144,7 +145,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
     Existing: 'existing_customers',
     All: 'all_customers',
   };
-  
+
 
 
   const addTag = (category: string, tag: string) => {
@@ -309,11 +310,11 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
       default:
         funnel = '';
     }
-  
+
     const now = dayjs();
     const fromDate = now.subtract(30, 'days').startOf('day').unix();
     const toDate = now.endOf('day').unix();
-  
+
     const newFilters = {
       button: label,
       dateRange: {
@@ -322,7 +323,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
       },
       selectedFunnels: [funnel],
     };
-  
+
     setButtonFilters(newFilters); // Сохраняем фильтры в состоянии
     setSelectedButton(label);
   };
@@ -543,52 +544,53 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
   const handleFilters = () => {
     const filterDates = getFilterDates();
     const isButtonChecked = Object.values(checkedFilters).some(value => value);
-  
+
     const fromDateTime = isButtonChecked
       ? (checkedFilters.lastWeek && filterDates.lastWeek.from) ||
       (checkedFilters.last30Days && filterDates.last30Days.from) ||
       (checkedFilters.last6Months && filterDates.last6Months.from) ||
       (checkedFilters.allTime && filterDates.allTime.from)
       : dateRange.fromDate ? dayjs(dateRange.fromDate).startOf('day').unix() : null;
-  
+
     const toDateTime = isButtonChecked
       ? (checkedFilters.lastWeek && filterDates.lastWeek.to) ||
       (checkedFilters.last30Days && filterDates.last30Days.to) ||
       (checkedFilters.last6Months && filterDates.last6Months.to) ||
       (checkedFilters.allTime && filterDates.allTime.to)
       : dateRange.toDate ? dayjs(dateRange.toDate).endOf('day').unix() : null;
-  
+
     const fromDateTimeWithTime = fromDateTime && timeRange.fromTime
       ? dayjs.unix(fromDateTime).hour(dayjs(timeRange.fromTime).hour()).minute(dayjs(timeRange.fromTime).minute()).unix()
       : fromDateTime;
-  
+
     const toDateTimeWithTime = toDateTime && timeRange.toTime
       ? dayjs.unix(toDateTime).hour(dayjs(timeRange.toTime).hour()).minute(dayjs(timeRange.toTime).minute()).unix()
       : toDateTime;
-    
-    console.log(buttonFilters)  
+
+
     // Формирование объекта filters с учетом переданных buttonFilters
-  const filters = {
-    ...buttonFilters, // Включаем фильтры, полученные из кнопки (если есть)
-    dateRange: buttonFilters ? buttonFilters.dateRange : {
-      fromDate: fromDateTimeWithTime,
-      toDate: toDateTimeWithTime,
-    },
-    selectedFunnels: buttonFilters ? buttonFilters.selectedFunnels : selectedFunnels,
-    button: buttonFilters ? buttonFilters.button : selectedButton,
-    checkedFilters,
-    checkedFiltersTime,
-    checkedFiltersPageVisits,
-    regions,
-    checkedFiltersTimeSpent,
-    emails,
-    selectedStatus,
-    selectedValue,
-  };
-  
+    const filters = {
+      ...buttonFilters, // Включаем фильтры, полученные из кнопки (если есть)
+      dateRange: buttonFilters ? buttonFilters.dateRange : {
+        fromDate: fromDateTimeWithTime,
+        toDate: toDateTimeWithTime,
+      },
+      selectedFunnels: buttonFilters ? buttonFilters.selectedFunnels : selectedFunnels,
+      button: buttonFilters ? buttonFilters.button : selectedButton,
+      checkedFilters,
+      checkedFiltersTime,
+      checkedFiltersPageVisits,
+      regions,
+      checkedFiltersTimeSpent,
+      emails,
+      selectedStatus,
+      selectedValue,
+      searchQuery,
+    };
+
     return filters;
   };
-  
+
 
   const handleApply = () => {
     const filters = handleFilters();
@@ -632,6 +634,8 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
             placeholder="Search people"
             variant="outlined"
             fullWidth
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
