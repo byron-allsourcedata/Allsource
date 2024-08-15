@@ -96,20 +96,19 @@ const maintext = {
   fontSize: '16px',
   fontWeight: '600',
   lineHeight: '19.6px',
-  color: 'rgba(74, 74, 74, 1)',
+  color: 'rgba(0, 0, 0, 1)',
   paddingTop: '1em',
   paddingBottom: '0.75em',
 };
 
 const subtext = {
   fontFamily: 'Nunito',
-  fontSize: '14px',
-  fontWeight: '400',
-  lineHeight: '16.8px',
-  textAlign: 'left',
-  color: 'rgba(0, 0, 0, 1)',
-  paddingTop: '0.5em',
-
+  fontSize: '15px',
+  fontWeight: '600',
+  lineHeight: '19.6px',
+  textAlign: 'center',
+  color: 'rgba(74, 74, 74, 1)',
+  paddingTop: '0.25em',
 };
 
 interface PopupProps {
@@ -226,7 +225,30 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode }) => {
                     </Box>
                   </>
                 ) : (
-                  <Typography> WORDPRESS</Typography>
+                  <>
+                    <Box sx={{ flex: 1, overflowY: 'auto', paddingBottom: '2em', pl: 2.25  }}>
+                      <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', padding: '1em 0em 0em 0em', justifyContent: 'start' }}>
+                        <Image src='/1.svg' alt='1' width={28} height={28} />
+                        <Typography sx={{ ...maintext, textAlign: 'center', padding: '1em', fontWeight:'500' }}>Add our offical Maximiz pixel plugin to your Wordpress site.</Typography>
+                      </Box>
+                      <Box>
+                      <Button variant="outlined" sx={{ml: 5,backgroundColor: 'rgba(80, 82, 178, 1)', color: 'rgba(255, 255, 255, 1)', textTransform: 'none', padding: '1em 2em', border: '1px solid rgba(80, 82, 178, 1)', '&:hover': {backgroundColor: 'rgba(80, 82, 178, 1)'} }}>
+                        <Typography sx={{fontFamily: 'Nunito', fontSize: '16px', fontWeight: '600', lineHeight: '22.4px', textAlign: 'left', textWrap: 'wrap'}}>Get plugin</Typography>
+                      </Button>
+                      </Box>
+                      <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', padding: '1em 0em 0em 0em', justifyContent: 'start' }}>
+                        <Image src='/2.svg' alt='2' width={28} height={28} />
+                        <Typography sx={{ ...maintext, textAlign: 'left', padding: '1em', fontWeight:'500' }}>Enter your site ID: <span style={{fontWeight: '900'}}>5037749</span> during the checkout process</Typography>
+                      </Box>
+                      <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', padding: '1em 0em 0em 0em', justifyContent: 'start' }}>
+                        <Image src='/3.svg' alt='3' width={28} height={28} />
+                        <Typography sx={{ ...maintext, textAlign: 'left',  padding: '1em', fontWeight:'500' }}>Verify if Maximiz is receiving data from your site</Typography>
+                      </Box>
+                      <Button variant="outlined" sx={{ml: 5,backgroundColor: 'rgba(255, 255, 255, 1)', color: 'rgba(80, 82, 178, 1)', textTransform: 'none', padding: '1em 2em', border: '1px solid rgba(80, 82, 178, 1)' }}>
+                        <Typography sx={{fontFamily: 'Nunito', fontSize: '16px', fontWeight: '600', lineHeight: '22.4px', textAlign: 'left', textWrap: 'wrap'}}>View installation</Typography>
+                      </Button>
+                    </Box>
+                  </>
                 )}
               </Box>
             </>
