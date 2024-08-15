@@ -3,6 +3,7 @@ import { Drawer, Backdrop, Box, Typography, IconButton, Button } from '@mui/mate
 import CloseIcon from '@mui/icons-material/Close';
 import { accountStyles } from '../css/accountDetails';
 import Image from 'next/image'
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 
 interface PopupDetailsProps {
     open: boolean;
@@ -14,7 +15,6 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
     const [activeTab, setActiveTab] = useState<'Personal' | 'Company'>('Personal');
 
     const lead = rowData?.lead || {};
-    const company = rowData?.company || {};
 
     const handleTabChange = (tab: 'Personal' | 'Company') => {
         setActiveTab(tab);
@@ -108,18 +108,14 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                     overflow: 'hidden',
                                     mb: 2,
                                     display: 'flex',
+                                    transform: 'scale(1.0)',
                                     alignItems: 'center',
                                     justifyContent: 'center',
                                     backgroundColor: '#f0f0f0',
-                                    border: '2px solid #000000',
+                                    border: '2px solid grey',
                                 }}
                             >
-                                <Image
-                                    src={lead.photo || '/avatar.jpg'}
-                                    alt="Lead"
-                                    width={100}
-                                    height={100}
-                                />
+                                <AccountCircleIcon sx={{ fontSize: '76px', color: 'grey' }} />
                             </Box>
                             <Box sx={{ flex: 1, textAlign: 'start' }}>
                                 <Typography variant="body1" gutterBottom sx={{ ...accountStyles.name, pb: 1 }}>
@@ -156,28 +152,24 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                     overflow: 'hidden',
                                     mb: 2,
                                     display: 'flex',
+                                    transform: 'scale(1.0)',
                                     alignItems: 'center',
                                     justifyContent: 'center',
                                     backgroundColor: '#f0f0f0',
-                                    border: '2px solid #000000',
+                                    border: '2px solid grey',
                                 }}
                             >
-                                <Image
-                                    src={company.photo || '/avatar.jpg'}
-                                    alt="Lead"
-                                    width={100}
-                                    height={100}
-                                />
+                                <AccountCircleIcon sx={{ fontSize: '76px', color: 'grey' }} />
                             </Box>
                             <Box sx={{ flex: 1, textAlign: 'start' }}>
                                 <Typography variant="body1" gutterBottom sx={{ ...accountStyles.name, pb: 1 }}>
-                                    {company.name || 'Company name'}
+                                    {lead.company_name || 'Company name'}
                                 </Typography>
                                 <Typography variant="body1" gutterBottom sx={{ ...accountStyles.text, pb: 1 }}>
-                                    {company.business_email || 'N/A'}
+                                    {lead.business_email || 'N/A'}
                                 </Typography>
                                 <Typography variant="body1" gutterBottom sx={accountStyles.text}>
-                                    {company.phone || 'N/A'}
+                                    {lead.mobile_phone || 'N/A'}
                                 </Typography>
                             </Box>
                         </Box>
@@ -207,7 +199,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                 {activeTab === 'Personal' ? 'Direct number' : 'Job Title'}
                             </Typography>
                             <Typography sx={{ ...accountStyles.text }}>
-                                {activeTab === 'Personal' ? lead.mobile_phone || 'N/A' : company.business_email || 'N/A'}
+                                {activeTab === 'Personal' ? lead.mobile_phone || 'N/A' : lead.job_title || 'N/A'}
                             </Typography>
                         </Box>
 
@@ -216,7 +208,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                 {activeTab === 'Personal' ? 'Address' : 'Seniority level'}
                             </Typography>
                             <Typography sx={{ ...accountStyles.text }}>
-                                {activeTab === 'Personal' ? lead.address || 'N/A' : company.address || 'N/A'}
+                                {activeTab === 'Personal' ? lead.address || 'N/A' : lead.address || 'N/A'}
                             </Typography>
                         </Box>
 
@@ -225,7 +217,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                 {activeTab === 'Personal' ? 'City' : 'Department'}
                             </Typography>
                             <Typography sx={{ ...accountStyles.text }}>
-                                {activeTab === 'Personal' ? rowData?.city || 'N/A' : company.business_email || 'N/A'}
+                                {activeTab === 'Personal' ? rowData?.city || 'N/A' : lead.company_department || 'N/A'}
                             </Typography>
                         </Box>
 
@@ -234,7 +226,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                 {activeTab === 'Personal' ? 'State' : 'Company name'}
                             </Typography>
                             <Typography sx={{ ...accountStyles.text }}>
-                                {activeTab === 'Personal' ? rowData?.state || 'N/A' : company.business_email || 'N/A'}
+                                {activeTab === 'Personal' ? rowData?.state || 'N/A' : lead.company_name || 'N/A'}
                             </Typography>
                         </Box>
 
@@ -243,7 +235,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                 {activeTab === 'Personal' ? 'Zip' : 'Company domain'}
                             </Typography>
                             <Typography sx={{ ...accountStyles.text }}>
-                                {activeTab === 'Personal' ? lead.zip || 'N/A' : company.domain || 'N/A'}
+                                {activeTab === 'Personal' ? lead.zip || 'N/A' : lead.company_domain || 'N/A'}
                             </Typography>
                         </Box>
 
@@ -252,7 +244,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                 {activeTab === 'Personal' ? 'Other emails' : 'Company phone'}
                             </Typography>
                             <Typography sx={{ ...accountStyles.text }}>
-                                {activeTab === 'Personal' ? lead.business_email || 'N/A' : company.phone || 'N/A'}
+                                {activeTab === 'Personal' ? lead.business_email || 'N/A' : lead.company_phone || 'N/A'}
                             </Typography>
                         </Box>
 
@@ -261,7 +253,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                 {activeTab === 'Personal' ? 'Personal email last seen' : 'Company description'}
                             </Typography>
                             <Typography sx={{ ...accountStyles.text }}>
-                                {activeTab === 'Personal' ? lead.email || 'N/A' : company.phone || 'N/A'}
+                                {activeTab === 'Personal' ? lead.email || 'N/A' : lead.company_decription || 'N/A'}
                             </Typography>
                         </Box>
 
@@ -272,7 +264,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                         Business email last seen
                                     </Typography>
                                     <Typography sx={{ ...accountStyles.text }}>
-                                        {lead.email || 'N/A'}
+                                        {lead.business_email || 'N/A'}
                                     </Typography>
                                 </Box>
 
@@ -281,7 +273,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                         Company last updated
                                     </Typography>
                                     <Typography sx={{ ...accountStyles.text }}>
-                                        {lead.email || 'N/A'}
+                                        {lead.company_last_update || 'N/A'}
                                     </Typography>
                                 </Box>
                             </>
@@ -370,7 +362,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                     Address
                                 </Typography>
                                 <Typography sx={{ ...accountStyles.text }}>
-                                    {company.address || 'N/A'}
+                                    {lead.company_address || 'N/A'}
                                 </Typography>
                             </Box>
 
@@ -379,7 +371,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                     City
                                 </Typography>
                                 <Typography sx={{ ...accountStyles.text }}>
-                                    {company.city || 'N/A'}
+                                    {lead.company_city || 'N/A'}
                                 </Typography>
                             </Box>
 
@@ -388,7 +380,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                     State
                                 </Typography>
                                 <Typography sx={{ ...accountStyles.text }}>
-                                    {company.state || 'N/A'}
+                                    {lead.company_state || 'N/A'}
                                 </Typography>
                             </Box>
 
@@ -397,7 +389,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                     Zip
                                 </Typography>
                                 <Typography sx={{ ...accountStyles.text }}>
-                                    {company.zip || 'N/A'}
+                                    {lead.company_zip || 'N/A'}
                                 </Typography>
                             </Box>
                         </Box>
@@ -426,7 +418,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                 Income range
                             </Typography>
                             <Typography sx={{ ...accountStyles.text }}>
-                                {activeTab === 'Personal' ? lead.range || 'N/A' : company.range || 'N/A'}
+                                {activeTab === 'Personal' ? lead.income_range || 'N/A' : lead.company_income_range || 'N/A'}
                             </Typography>
                         </Box>
 
@@ -435,7 +427,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                 Net worth
                             </Typography>
                             <Typography sx={{ ...accountStyles.text }}>
-                                {activeTab === 'Personal' ? lead.net_worth || 'N/A' : company.net_worth || 'N/A'}
+                                {lead.net_worth || 'N/A'}
                             </Typography>
                         </Box>
 
@@ -444,7 +436,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                 Home own
                             </Typography>
                             <Typography sx={{ ...accountStyles.text }}>
-                                {activeTab === 'Personal' ? rowData?.home_own || 'N/A' : company.home_own || 'N/A'}
+                                {lead.home_own || 'N/A'}
                             </Typography>
                         </Box>
 
@@ -453,7 +445,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                 Job title
                             </Typography>
                             <Typography sx={{ ...accountStyles.text }}>
-                                {activeTab === 'Personal' ? rowData?.job || 'N/A' : company.job || 'N/A'}
+                                {lead.job_title || 'N/A'}
                             </Typography>
                         </Box>
 
@@ -462,7 +454,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                 Seniority
                             </Typography>
                             <Typography sx={{ ...accountStyles.text }}>
-                                {activeTab === 'Personal' ? lead.seniority || 'N/A' : company.seniority || 'N/A'}
+                                {activeTab === 'Personal' ? lead.seniority || 'N/A' : lead.seniority || 'N/A'}
                             </Typography>
                         </Box>
 
@@ -471,12 +463,12 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                 Department
                             </Typography>
                             <Typography sx={{ ...accountStyles.text }}>
-                                {activeTab === 'Personal' ? lead.department || 'N/A' : company.department || 'N/A'}
+                                {activeTab === 'Personal' ? lead.department || 'N/A' : lead.department || 'N/A'}
                             </Typography>
                         </Box>
                     </Box>
 
-                    {/* Company Address */}
+                    {/* Financial details */}
                     {activeTab === 'Company' && (
                         <Box sx={{
                             mt: 2,
@@ -501,7 +493,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                     Company Revenue
                                 </Typography>
                                 <Typography sx={{ ...accountStyles.text }}>
-                                    {company.address || 'N/A'}
+                                    {lead.company_revenue || 'N/A'}
                                 </Typography>
                             </Box>
 
@@ -510,7 +502,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                     Company employee count
                                 </Typography>
                                 <Typography sx={{ ...accountStyles.text }}>
-                                    {company.city || 'N/A'}
+                                    {lead.company_employee_count || 'N/A'}
                                 </Typography>
                             </Box>
 
@@ -519,7 +511,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                     Primary industry
                                 </Typography>
                                 <Typography sx={{ ...accountStyles.text }}>
-                                    {company.state || 'N/A'}
+                                    {lead.state || 'N/A'}
                                 </Typography>
                             </Box>
 
@@ -528,7 +520,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                     Institution url
                                 </Typography>
                                 <Typography sx={{ ...accountStyles.text }}>
-                                    {company.zip || 'N/A'}
+                                    {lead.zip || 'N/A'}
                                 </Typography>
                             </Box>
                         </Box>
@@ -551,12 +543,12 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                             },
                         }}>
                             <Typography sx={accountStyles.title}>
-                            Education history
+                                Education history
                             </Typography>
 
                             <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
                                 <Typography sx={{ ...accountStyles.text }}>
-                                Degree
+                                    Degree
                                 </Typography>
                                 <Typography sx={{ ...accountStyles.text }}>
                                     {lead.address || 'N/A'}
@@ -565,7 +557,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
 
                             <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
                                 <Typography sx={{ ...accountStyles.text }}>
-                                Duration
+                                    Duration
                                 </Typography>
                                 <Typography sx={{ ...accountStyles.text }}>
                                     {lead.city || 'N/A'}
@@ -574,7 +566,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
 
                             <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
                                 <Typography sx={{ ...accountStyles.text }}>
-                                Institution name
+                                    Institution name
                                 </Typography>
                                 <Typography sx={{ ...accountStyles.text }}>
                                     {lead.state || 'N/A'}
@@ -583,7 +575,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
 
                             <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
                                 <Typography sx={{ ...accountStyles.text }}>
-                                Institution url
+                                    Institution url
                                 </Typography>
                                 <Typography sx={{ ...accountStyles.text }}>
                                     {lead.zip || 'N/A'}
@@ -608,7 +600,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                         },
                     }}>
                         <Typography sx={accountStyles.title}>
-                        Social Connections
+                            Social Connections
                         </Typography>
 
                         <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
@@ -616,7 +608,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                 Followers
                             </Typography>
                             <Typography sx={{ ...accountStyles.text }}>
-                                {activeTab === 'Personal' ? lead.followers || 'N/A' : company.followers || 'N/A'}
+                                {activeTab === 'Personal' ? lead.followers || 'N/A' : lead.company_followers || 'N/A'}
                             </Typography>
                         </Box>
 
@@ -625,7 +617,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                 {activeTab === 'Personal' ? 'Duration' : 'Company url'}
                             </Typography>
                             <Typography sx={{ ...accountStyles.text }}>
-                                {activeTab === 'Personal' ? lead.duration || 'N/A' : company.company_url || 'N/A'}
+                                {activeTab === 'Personal' ? lead.duration || 'N/A' : lead.company_linkedin_url || 'N/A'}
                             </Typography>
                         </Box>
 
@@ -634,7 +626,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                             <>
                                 <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
                                     <Typography sx={{ ...accountStyles.text }}>
-                                    Institution name
+                                        Institution name
                                     </Typography>
                                     <Typography sx={{ ...accountStyles.text }}>
                                         {lead.institution_name || 'N/A'}
@@ -643,7 +635,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
 
                                 <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
                                     <Typography sx={{ ...accountStyles.text }}>
-                                    Institution url
+                                        Institution url
                                     </Typography>
                                     <Typography sx={{ ...accountStyles.text }}>
                                         {lead.institution_url || 'N/A'}

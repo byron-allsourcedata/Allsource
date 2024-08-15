@@ -2,7 +2,7 @@
 import React from 'react';
 import { Box, List, ListItem, ListItemIcon, ListItemText, Divider, LinearProgress, Typography } from '@mui/material';
 import { useRouter } from 'next/navigation';
-import { usePathname } from 'next/navigation'; 
+import { usePathname } from 'next/navigation';
 import SpaceDashboardIcon from '@mui/icons-material/SpaceDashboard';
 import LeadsIcon from '@mui/icons-material/People';
 import CategoryIcon from '@mui/icons-material/Category';
@@ -24,19 +24,19 @@ const sidebarStyles = {
         backgroundColor: 'rgba(255, 255, 255, 1)',
         borderRight: '1px solid rgba(228, 228, 228, 1)',
         marginRight: '10em',
-        height: '90vh',
+        height: '100%',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'start',
         '@media (min-width: 1500px)': {
-        width:'70%'
+            width: '70%'
 
-    },
+        },
     },
     menu: {
         alignItems: 'center',
         paddingTop: '0 !important',
-        paddingBottom: '4em !important', 
+        paddingBottom: '4em !important',
         '& .MuiListItem-root': {
             paddingBottom: '2em',
             paddingTop: '2em',
@@ -104,9 +104,19 @@ const SetupSection: React.FC = () => (
                 Setup
             </Typography>
         </Box>
-        <LinearProgress variant="determinate" color='success' value={14} sx={{ height: '8px', borderRadius: '4px'}} />
+        <LinearProgress
+            variant="determinate"
+            value={33}
+            sx={{
+                height: '8px',
+                borderRadius: '4px',
+                '& .MuiLinearProgress-bar': {
+                    backgroundColor: 'rgba(110, 193, 37, 1)',
+                },
+            }}
+        />
         <Typography variant="body2" color="textSecondary" mt={1}>
-            14% complete
+            33% complete
         </Typography>
     </Box>
 );
