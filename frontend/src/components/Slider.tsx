@@ -74,7 +74,7 @@ const Slider: React.FC = () => {
               </Box>
               <Box sx={{ display: 'flex', justifyContent: 'start', pl: 4.5 }}>
                 <Typography sx={{ color: 'rgba(74, 74, 74, 1)', fontFamily: 'Nunito', textAlign: 'left', fontWeight: '400', fontSize: '18px', lineHeight: '19.6px', marginBottom: '2em', '@media (max-width: 600px)': { fontSize: '14px', lineHeight: '18px', marginBottom: '1em' } }}>
-                  Our marketing experts are available to provide personalized insights and strategies to help you fully leverage Maximiz's capabilities for your specific needs.
+                  Our marketing experts are available to provide personalized insights and strategies to help you fully leverage Maximiz&apos;s capabilities for your specific needs.
                 </Typography>
               </Box>
             </Box>

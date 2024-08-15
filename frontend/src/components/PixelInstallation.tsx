@@ -113,9 +113,10 @@ const PixelInstallation: React.FC = () => {
         <Grid item xs={12} md={4}>
           <Button variant="outlined" fullWidth onClick={installCMS} sx={buttonStyles}>
             <Box>
+              <Image src={'/install_cms1.svg'} alt="Install on CMS" width={28} height={28} style={{marginRight:4}} />
               <Image src={'/install_cms2.svg'} alt="Install on CMS" width={28} height={28} />
             </Box>
-            <Typography sx={typographyStyles}>Install on CMS</Typography>
+            <Typography sx={{...typographyStyles, pt: 1.75}}>Install on CMS</Typography>
           </Button>
           <CRMPopup open={opencrm} handleClose={handleCRMClose} pixelCode={cmsCode} />
         </Grid>
