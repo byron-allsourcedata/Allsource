@@ -34,6 +34,8 @@ from models.users import Users as User
 from services.users_auth import UsersAuth
 from persistence.user_persistence import UserPersistence
 from services.webhook import WebhookService
+from persistence.users_integrations_persistence import UserIntegrationsPresistence
+from services.integrations.base import IntegrationService
 
 logger = logging.getLogger(__name__)
 
@@ -286,3 +288,9 @@ def check_user_admin(Authorization: Annotated[str, Header()],
     if 'admin' not in user.role:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail={'status': 'FORBIDDEN'})
     return user
+
+def get_user_integrations_presistence(db: Session = Depends(get_db)) -> UserIntegrationsPresistence:
+    return UserIntegrationsPresistence(db)
+
+def get_integration_service(user: User = Depends(check_user_authentication), db: Session = Depends(get_db), user_integration_presistence: UserIntegrationsPresistence = Depends(get_user_integrations_presistence)):
+    return IntegrationService(db, user_integration_presistence, user)
