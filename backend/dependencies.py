@@ -72,8 +72,11 @@ def get_subscription_service(db: Session = Depends(get_db),
 
 
 def get_admin_customers_service(db: Session = Depends(get_db),
-                                subscription_service: SubscriptionService = Depends(get_subscription_service)):
-    return AdminCustomersService(db=db, subscription_service=subscription_service)
+                                subscription_service: SubscriptionService = Depends(get_subscription_service),
+                                user_persistence: UserPersistence = Depends(get_user_persistence_service), 
+                                plans_presistence: PlansPersistence = Depends(get_plans_persistence)):
+    return AdminCustomersService(db=db, subscription_service=subscription_service, 
+                                 user_persistence=user_persistence, plans_persistence=plans_presistence)
 
 
 def get_user_authorization_status_without_pixel(user: User, subscription_service):

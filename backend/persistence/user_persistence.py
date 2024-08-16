@@ -80,3 +80,6 @@ class UserPersistence:
         self.db.query(Users).filter(Users.id == user_id).update({Users.password: password},
                                                                 synchronize_session=False)
         self.db.commit()
+
+    def get_users(self):
+        return self.db.query(Users).all()
