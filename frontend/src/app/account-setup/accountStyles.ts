@@ -19,8 +19,38 @@ export const styles: { [key: string]: SxProps<Theme> } = {
     marginBottom: '2.5em',
     textTransform: 'none'
   },
+  visitsButtons: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '12px',
+    color: 'black',
+    width: '100%',
+    marginBottom: '2.5em',
+    textTransform: 'none'
+  },
+  visitButton: {
+    padding: '9px 16px',
+    color: 'black',
+    border: '1px solid #ccc',
+    textTransform: 'none'
+  },
   employeeButton: {
     padding: '0.25em 2.25em',
+    color: 'black',
+    border: '1px solid #ccc',
+    textTransform: 'none'
+  },
+  rolesButtons: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '12px',
+    color: 'black',
+    width: '115%',
+    marginBottom: '2.5em',
+    textTransform: 'none'
+  },
+  roleButton: {
+    padding: '0.25em 1.5em',
     color: 'black',
     border: '1px solid #ccc',
     textTransform: 'none'
@@ -35,6 +65,8 @@ export const styles: { [key: string]: SxProps<Theme> } = {
     alignItems: 'center',
     marginRight: '2em',
     marginLeft: '2em',
+    textTransform: 'none',
+    textDecoration: 'none',
     width: '100%',
     color: 'rgba(244, 87, 69, 1)',
     borderBottom: `1px solid rgba(228, 228, 228, 1)`,
@@ -85,11 +117,15 @@ export const styles: { [key: string]: SxProps<Theme> } = {
     paddingLeft: '20px'
   },
   formContainer: {
+    pt: 20,
+    display: 'flex',
     maxWidth: '600px',
-    width: '100%',
-    padding: '2em',
+    width: '90%',
+    flexDirection: 'column',
+    alignItems: 'start',
     borderRadius: '0.5em',
     backgroundColor: '#fff',
+    '@media (max-width: 600px)': { pt: 2, },
   },
   title: {
     fontFamily: 'Nunito',
