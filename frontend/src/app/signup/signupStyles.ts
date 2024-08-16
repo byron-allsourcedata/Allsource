@@ -1,28 +1,47 @@
 // signupStyles.ts
 import { SxProps, Theme } from '@mui/system';
 
+
 export const signupStyles: { [key: string]: SxProps<Theme> } = {
+  mainContent: {
+    display:'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: '100vh',
+    marginTop: '-80px',
+
+    '@media (max-width: 440px)': {
+        marginTop: '-60px',
+        padding: '0',
+    },
+},
   container: {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: '50vh',
-    backgroundColor: '#ffffff',
-    maxWidth: '25rem',
     margin: '0 auto',
     position: 'relative',
     boxShadow: '0rem 0.2em 0.8em 0px #00000033',
     borderRadius: '0.625rem',
     border: '0.0625rem solid transparent',
-    marginTop: '47px',
-    padding: '24px 32px',
+    textAlign: 'center',
+    padding: '32px',
+    maxWidth: '398px',
+    minHeight: '481px',
+    marginTop: '76px',
+    marginBottom: '76px',
     '@media (max-width: 440px)': {
       boxShadow: '0rem 0px 0px 0px #00000033',
       border: 'none',
-      marginTop: '32px',
-      padding: '0 20px 64px 20px', 
+      padding: '0 20px 40px 20px', 
+      marginTop: '0',
+      marginBottom: '0',
     },
+    '@media (max-width: 380px)': {
+      marginTop: '76px',
+    }
   },
   logoContainer: {
     paddingLeft: '2.5em',
@@ -33,7 +52,7 @@ export const signupStyles: { [key: string]: SxProps<Theme> } = {
         paddingTop: '1.25em', 
         '& img': {
           width: '40px',
-          height: '24px',
+          height: '25px',
         }
     },
   },
@@ -42,9 +61,13 @@ export const signupStyles: { [key: string]: SxProps<Theme> } = {
     fontSize: '28px',
     whiteSpace: 'nowrap',
     textAlign: 'center',
-    paddingBottom: '2.5rem',
+    paddingBottom: '33px',
     fontFamily: 'Nunito',
     lineHeight: 'normal',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    display: 'block',
+    maxWidth: '100%',
     '@media (max-width: 440px)': {
         paddingBottom: '2rem',
     },
@@ -78,10 +101,14 @@ export const signupStyles: { [key: string]: SxProps<Theme> } = {
         }
   },
   orText: {
-    px: 2,
+    px: '36px',
     fontWeight: 'regular',
     fontSize: '14px',
     fontFamily: 'Nunito',
+    '@media (max-width: 440px)': {
+      marginTop: '16px',
+      marginBottom: '16px',
+    }
   },
   form: {
     width: '100%',
@@ -117,12 +144,10 @@ export const signupStyles: { [key: string]: SxProps<Theme> } = {
   },
   loginText: {
     mt: 2,
-    margin: '40px 0 0',
+    margin: '43px 0 0',
     fontFamily: 'Nunito',
-    fontSize: '16px',
-    '@media (max-width: 440px)': {
-        marginTop: '32px',
-    }
+    fontSize: '14px',
+    fontWeight: '500',
   },
   loginLink: {
     color: '#F45745',
@@ -130,6 +155,7 @@ export const signupStyles: { [key: string]: SxProps<Theme> } = {
     fontWeight: 'bold',
     fontFamily: 'Nunito',
     textDecoration: 'none',
+    fontSize: '16px',
   },
   formField: {
     marginTop: '24px',
@@ -142,7 +168,7 @@ formInput: {
     '&.MuiOutlinedInput-root': {
       height: '48px',
       '& .MuiOutlinedInput-input': {
-        padding: '13px 16px',
+        padding: '12px 16px 13px 16px',
         fontFamily: 'Nunito',
       },
       '& .MuiOutlinedInput-notchedOutline': {
@@ -155,5 +181,142 @@ formInput: {
         borderColor: '#0000FF',
       },
     },
+    '&+.MuiFormHelperText-root': {
+      marginLeft: '0',
+    }
   },
+  passwordValidationText: {
+    '& .MuiTypography-root' : {
+      fontFamily: 'Nunito',
+      fontSize: '12px',
+      fontWeight: '400',
+      color: 'rgba(17, 17, 19, 0.60)',
+    }
+  },
+  passwordValidationTextSuccess: {
+    '& .MuiTypography-root' : {
+      fontFamily: 'Nunito',
+      fontSize: '12px',
+      fontWeight: '400',
+      color: '#111113',
+    }
+  },
+  passwordContentList: {
+    display: 'flex',
+    padding: '0'
+  },
+  passwordContentListItem: {
+    width: 'auto',
+    padding: '0 16px 0 0',
+    '&:last-child' : {
+      padding: 0
+    }
+  },
+  passwordContentListItemIcon: {
+    minWidth: '0',
+    marginRight: '4px'
+  },
+  checkboxContentField: {
+    display: 'table',
+    textAlign: 'left',
+    color: '#000',
+    fontFamily: 'Nunito',
+    fontSize: '14px',
+    marginTop: '24px',
+    marginLeft: '0',
+    marginRight: '0',
+    '& .MuiCheckbox-root': {
+      padding: 0,
+      marginRight: '10px',
+      position: 'relative',
+      top: '-2px',
+    },
+    '& .MuiSvgIcon-root': {
+      width: 0,
+      height: 0,
+    },
+    '& .MuiCheckbox-root:before': {
+      content: '""',
+      display: 'inline-block',
+      width: '18px',
+      height: '18px',
+      borderRadius: '4px',
+      border: '1px solid #e4e4e4', // Default border color
+      backgroundColor: '#fff',
+      boxShadow: 'none',
+    },
+    '& .MuiCheckbox-root.Mui-checked:before': {
+      border: '1px solid #2196F3',
+      backgroundColor: '#2196F3',
+      content: '""',
+      backgroundImage: 'url("/checkbox-tick.svg")',
+      backgroundPosition: 'center',
+      backgroundRepeat: 'no-repeat',
+      color: '#fff',
+    },
+    '& .MuiCheckbox-root:focusVisible:before': {
+      boxShadow:
+        'rgb(255, 255, 255) 0px 0px 0px 1px, rgb(80, 105, 200) 0px 0px 0px 3px',
+    },
+    '& .MuiCheckbox-root:hover:before': {
+      border: '1px solid #2196F3',
+    },
+  },
+  checkboxContentLink: {
+      color: '#000',
+      fontFamily: 'Nunito',
+      fontSize: '14px',
+      textDecorationColor: '#000',
+      '& img': {
+        position: 'relative',
+        top: '3px',
+        left: '4px',
+      }
+    },
+    // checkbox: {
+    //   padding: 0,
+    //   '&:hover': { backgroundColor: 'transparent' },
+    //   '& .MuiSvgIcon-root': {
+    //     width: '18px', // Make sure this matches the size you want
+    //     height: '18px',
+    //   },
+    //   '&:focusVisible': {
+    //     outline: 'none',
+    //     '&:before': {
+    //       boxShadow:
+    //         'rgb(255, 255, 255) 0px 0px 0px 1px, rgb(80, 105, 200) 0px 0px 0px 3px',
+    //     },
+    //   },
+    //   '&.Mui-checked': {
+    //     '&:before': {
+    //       border: '1px solid #2196F3',
+    //       backgroundColor: '#2196F3',
+    //       content: '""',
+    //       backgroundImage: 'url("/checkbox-tick.svg")',
+    //       backgroundPosition: 'center',
+    //       backgroundRepeat: 'no-repeat',
+    //       display: 'inline-block',
+    //       textAlign: 'center',
+    //       color: '#fff',
+    //       width: '18px',
+    //       height: '18px',
+    //       borderRadius: '4px',
+    //       fontSize: '14px',
+    //       lineHeight: '18px',
+    //     },
+    //   },
+    //   '&:before': {
+    //     border: '1px solid #e4e4e4', // Default border color
+    //     content: '""',
+    //     display: 'inline-block',
+    //     width: '18px',
+    //     height: '18px',
+    //     borderRadius: '4px',
+    //     boxShadow: 'none',
+    //   },
+    //   '&.Mui-focused:before': {
+    //     boxShadow:
+    //       'rgb(255, 255, 255) 0px 0px 0px 1px, rgb(80, 105, 200) 0px 0px 0px 3px',
+    //   },
+    // }
 };
