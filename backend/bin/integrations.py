@@ -1,15 +1,23 @@
-from httpx import Client
-from sqlalchemy.orm import Session, sessionmaker
-from sqlalchemy.engine import create_engine
-import dotenv
-from models.users_integrations import UserIntegration
-from models.leads import Lead
-from models.leads_users import LeadUser
-import os
-from utils import mapped_customers
 import time
 import logging
 import traceback
+import sys
+import os
+import dotenv
+from httpx import Client
+from woocommerce import API
+
+current_dir = os.path.dirname(os.path.realpath(__file__))
+parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
+sys.path.append(parent_dir)
+
+from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.engine import create_engine
+from models.users_integrations import UserIntegration
+from models.leads import Lead
+from models.leads_users import LeadUser
+from services.integrations.utils import mapped_customers
+
 
 def shopify_customers(client: Client, shop_domain: str, access_token: str):
     shopify_api_customers = '/admin/api/2024-07/customers.json'
@@ -18,7 +26,23 @@ def shopify_customers(client: Client, shop_domain: str, access_token: str):
     if response.status_code != 200:
         raise Exception
     customers = response.json().get('customers')
-    return mapped_customers(customers)
+    return mapped_customers('shopify',customers)
+
+
+def woocommers_customers(url: str, consumer_key: str, consumer_secret: str):
+    wcapi = API(url, consumer_key, consumer_secret, wp_api=True, version="wc/v3")
+    customers = wcapi.get("customers").json()
+    return mapped_customers('woocommerce', customers)
+
+
+def bigcommerce_customers(client: Client, store_hash: str, auth_token: str):
+    customers_url = f'https://api.bigcommerce.com/stores/{store_hash}/v3/customers'
+    response = client.get(customers_url, headers={'X-Auth-Token': auth_token})
+    if response.status_code != 200:
+        raise Exception
+    customers = response.json().get('customers')
+    return mapped_customers('bigcommerce',customers)
+
 
 def save_customer(session, customer, user_id: int):
     lead = session.query(Lead).filter(Lead.business_email == customer.business_email).first()
@@ -32,8 +56,10 @@ def save_customer(session, customer, user_id: int):
     session.add(LeadUser(lead_id=lead.id, user_id=user_id, status='New', funnel='Converted'))
     session.commit()
 
+
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
+    logging.info('start')
     dotenv.load_dotenv()
     engine = create_engine(
         f"postgresql://{os.getenv('DB_USERNAME')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}")
@@ -41,14 +67,19 @@ if __name__ == '__main__':
     session = Session()
     client = Client()
     try:
+        logging.info('try')
         while True:
-            creaditionals_service = session.query(UserIntegration).all()
-            for creaditionals in creaditionals_service:
-                if creaditionals.service_name == 'shopify':
-                    customers = shopify_customers(client, creaditionals.shop_domain, creaditionals.access_token)
-                    for customer in customers:
-                        save_customer(session, customer, creaditionals.user_id)
-            time.sleep(10)
+            credentials_service = session.query(UserIntegration).all()
+            for credentials in credentials_service:
+                if credentials.service_name == 'shopify':
+                    customers = shopify_customers(client, credentials.shop_domain, credentials.access_token)
+                elif credentials.service_name == 'bigcommerce':
+                    customers = bigcommerce_customers(client, credentials.shop_domain, credentials.access_token)
+                elif credentials.service_name == 'woocommerce':
+                    customers = woocommers_customers(credentials.shop_domain, credentials.consumer_key, credentials.consumer_secret)
+                for customer in customers:
+                    save_customer(session, customer, credentials.user_id)
+            time.sleep(10*60)        
     except Exception as e:
         logging.error(f"An error occurred: {str(e)}")
         traceback.print_exc()

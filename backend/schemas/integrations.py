@@ -2,9 +2,20 @@ from pydantic import BaseModel, EmailStr
 from typing import Optional
 
 
-class IntegrationCreditional(BaseModel):
+class ShopifyOrBigcommerceCredentials(BaseModel):
     shop_domain: str
     access_token: str
+
+class WoocommerceCredentials(BaseModel):
+    url: str
+    consimer_key: str
+    consumer_secret: str
+
+
+class IntegrationCredentials(BaseModel):
+    shopify: Optional[ShopifyOrBigcommerceCredentials] = None
+    woocommerce: Optional[WoocommerceCredentials] = None
+    bigcommerce: Optional[ShopifyOrBigcommerceCredentials] = None
 
 
 class Customer(BaseModel):
