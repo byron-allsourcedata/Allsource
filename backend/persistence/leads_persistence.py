@@ -16,6 +16,8 @@ from models.leads_locations import LeadsLocations
 from models.leads_users import LeadUser
 from models.locations import Locations
 
+from schemas.integrations import Customer
+
 logger = logging.getLogger(__name__)
 
 
@@ -145,3 +147,16 @@ class LeadsPersistence:
             .all()
         )
         return lead_users
+
+    def update_leads_by_cutomer(self, customer: Customer, user_id: int):
+        lead = self.db.query(Lead).filter(Lead.business_email == customer.business_email).first()
+        if lead:
+            self.db.query(LeadUser).filter(LeadUser.lead_id == lead.id).update({LeadUser.status: 'Existing'})
+            self.db.commit()
+            return
+        lead = Lead(**customer.__dict__)
+        self.db.add(lead)
+        self.db.commit()
+        self.db.add(LeadUser(lead_id=lead.id, user_id=user_id, status='New', funnel='Converted'))
+        self.db.commit()
+        

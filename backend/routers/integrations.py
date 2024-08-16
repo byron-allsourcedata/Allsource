@@ -4,10 +4,10 @@ from schemas.integrations import IntegrationCreditional
 router = APIRouter(prefix='/integrations', tags=['Integrations'])
 
 @router.get('/')
-async def get_integration(service_name: str = Query(...), integration_serivce: IntegrationService = Depends(get_integration_service)):
-    integration = integration_serivce.get_user_service_creaditionals(service_name)
+async def get_integrations(integration_serivce: IntegrationService = Depends(get_integration_service)):
+    integration = integration_serivce.get_user_service_creaditionals()
     if not integration:
-        raise HTTPException(status_code=404, detail=f'You didn\'t integrate {service_name}')
+        raise HTTPException(status_code=404, detail='don`t have integrations')
     return integration
 
 
@@ -21,4 +21,15 @@ async def create_integration(creditional: IntegrationCreditional, service_name: 
         integration = service.create_integration(**creditional.__dict__)
         if not integration:
             raise HTTPException(status_code=400)
-        return integration
+        integration_service.save_customers(integration)
+        return {'message': 'Successfuly'}
+    
+
+@router.delete('/')
+async def delete_integration(service_name: str = Query(...),
+                             integration_service: IntegrationService = Depends(get_integration_service)):
+    try:
+        integration_service.delete_integration(service_name)
+        return {'message': 'Successfuly'}
+    except:
+        raise HTTPException(status_code=400)

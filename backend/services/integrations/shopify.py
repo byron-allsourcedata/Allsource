@@ -3,7 +3,7 @@ from fastapi import HTTPException
 from httpx import Client
 from models.users import User
 from persistence.users_integrations_persistence import UserIntegrationsPresistence
-from schemas.integrations import Customer
+from utils import mapped_customers
 
 class ShopifyIntegrationService:
 
@@ -16,7 +16,6 @@ class ShopifyIntegrationService:
         self.user = user
 
 
-
     def get_customers(self, shop_domain: str, access_token: str):
         customers_url = f'https://{shop_domain}.myshopify.com{self.shopify_api_customers}'
         response = self.client.get(customers_url, headers={'X-Shopify-Access-Token': access_token})
@@ -24,14 +23,9 @@ class ShopifyIntegrationService:
         if response.status_code != 200:
             raise HTTPException(status_code=400, detail='Invalid shop name or access token')
 
-        customers_data = response.json().get('customers')
+        customers = response.json().get('customers')
 
-        customers = [Customer(email=customer['email'], 
-                              first_name=customer['first_name'],
-                              last_name=customer['last_name'],
-                              phone=customer['phone']) for customer in customers_data]
-
-        return customers
+        return mapped_customers(customers)
 
 
     def create_integration(self, shop_domain: str, access_token: str):

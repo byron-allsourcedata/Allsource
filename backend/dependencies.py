@@ -292,5 +292,8 @@ def check_user_admin(Authorization: Annotated[str, Header()],
 def get_user_integrations_presistence(db: Session = Depends(get_db)) -> UserIntegrationsPresistence:
     return UserIntegrationsPresistence(db)
 
-def get_integration_service(user: User = Depends(check_user_authentication), db: Session = Depends(get_db), user_integration_presistence: UserIntegrationsPresistence = Depends(get_user_integrations_presistence)):
-    return IntegrationService(db, user_integration_presistence, user)
+def get_integration_service(user: User = Depends(check_user_authentication), 
+                            db: Session = Depends(get_db), 
+                            user_integration_presistence: UserIntegrationsPresistence = Depends(get_user_integrations_presistence),
+                            lead_presistence: LeadsPersistence = Depends(get_leads_persistence)):
+    return IntegrationService(db, user_integration_presistence, lead_presistence, user)
