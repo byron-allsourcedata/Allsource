@@ -17,7 +17,8 @@ export const styles: { [key: string]: SxProps<Theme> } = {
     color: 'black',
     width: '100%',
     marginBottom: '2.5em',
-    textTransform: 'none'
+    textTransform: 'none',
+    '@media (max-width: 600px)': { marginBottom: 1, }
   },
   visitsButtons: {
     display: 'flex',
@@ -26,7 +27,9 @@ export const styles: { [key: string]: SxProps<Theme> } = {
     color: 'black',
     width: '100%',
     marginBottom: '2.5em',
-    textTransform: 'none'
+    textTransform: 'none',
+    '@media (max-width: 400px)': { marginBottom: 1.5 },
+    '@media (max-width: 600px)': { marginBottom: 2.5 }
   },
   visitButton: {
     padding: '9px 16px',
@@ -38,7 +41,7 @@ export const styles: { [key: string]: SxProps<Theme> } = {
     padding: '0.25em 2.25em',
     color: 'black',
     border: '1px solid #ccc',
-    textTransform: 'none'
+    textTransform: 'none',
   },
   rolesButtons: {
     display: 'flex',
@@ -47,7 +50,9 @@ export const styles: { [key: string]: SxProps<Theme> } = {
     color: 'black',
     width: '115%',
     marginBottom: '2.5em',
-    textTransform: 'none'
+    textTransform: 'none',
+    '@media (max-width: 400px)': { marginBottom: 1.5, width: '100%' },
+    '@media (max-width: 600px)': { marginBottom: 2.5, width: '100%' }
   },
   roleButton: {
     padding: '0.25em 1.5em',
@@ -71,6 +76,7 @@ export const styles: { [key: string]: SxProps<Theme> } = {
     color: 'rgba(244, 87, 69, 1)',
     borderBottom: `1px solid rgba(228, 228, 228, 1)`,
     marginBottom: '1.25em',
+    '@media (max-width: 600px)': { display: 'flex', flexDirection: 'column', justifyContent: 'start', alignItems: 'start' },
   },
   header: {
     display: 'flex',
@@ -108,7 +114,8 @@ export const styles: { [key: string]: SxProps<Theme> } = {
   nav: {
     display: 'flex',
     gap: '1em',
-    marginBottom: '1em'
+    marginBottom: '1em',
+    '@media (max-width: 600px)': { gap: 0.5 }
   },
   logo: {
     display: 'flex',
@@ -125,7 +132,8 @@ export const styles: { [key: string]: SxProps<Theme> } = {
     alignItems: 'start',
     borderRadius: '0.5em',
     backgroundColor: '#fff',
-    '@media (max-width: 600px)': { pt: 2, },
+    '@media (max-width: 400px)': { pl: 2, pt: 0 },
+    '@media (max-width: 600px)': { pl: 0, pt: 7, gap: 1 }
   },
   title: {
     fontFamily: 'Nunito',
@@ -134,6 +142,7 @@ export const styles: { [key: string]: SxProps<Theme> } = {
     lineHeight: '38.19px',
     marginBottom: '0.25em',
     textAlign: 'start',
+    '@media (max-width: 600px)': { fontSize: '24px', lineHeight: '32.74px', }
   },
   subtitle: {
     marginBottom: '2em',
@@ -142,6 +151,7 @@ export const styles: { [key: string]: SxProps<Theme> } = {
     fontSize: '16px',
     fontWeight: '700',
     textAlign: 'start',
+    '@media (max-width: 600px)': { marginBottom: 0.35 }
   },
   text: {
     color: 'rgba(72, 72, 72, 1)',
@@ -150,8 +160,8 @@ export const styles: { [key: string]: SxProps<Theme> } = {
     fontWeight: '400',
     lineHeight: '21.82px',
     textAlign: 'left',
-    paddingBottom: '0.5em'
-
+    paddingBottom: '0.5em',
+    '@media (max-width: 600px)': { marginBottom: 0.35, fontSize: '14px', fontWeight: '400' }
   },
 
   formField: {
@@ -169,5 +179,6 @@ export const styles: { [key: string]: SxProps<Theme> } = {
     '&:hover': {
       backgroundColor: red[700],
     },
+    '@media (max-width: 600px)': { marginBottom: 0.35, fontSize: '14px', fontWeight: '400' }
   },
 };

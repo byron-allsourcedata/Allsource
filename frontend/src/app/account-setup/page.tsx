@@ -166,9 +166,9 @@ const AccountSetup = () => {
   };
 
   const isFormValid = () => {
-    return organizationName.trim() !== '' && 
-           websiteLink.trim() !== '' && 
-           selectedVisits !== '';
+    return organizationName.trim() !== '' &&
+      websiteLink.trim() !== '' &&
+      selectedVisits !== '';
   };
 
   const ranges = [
@@ -210,22 +210,25 @@ const AccountSetup = () => {
     <Box sx={styles.pageContainer}>
       <Box sx={styles.headers}>
         <Box sx={styles.logo}>
-          <Image src='/logo.svg' alt='logo' height={80} width={60} />
+          <Image src='/logo.svg' alt='logo' height={30} width={50} />
         </Box>
         <Box sx={styles.nav}>
-        {activeTab === 1 && (
-        <Button
-          variant="outlined"
-          onClick={handleBackClick}
-          sx={{ marginRight: 2, color: 'rgba(50, 50, 50, 1)', border: 'none', position: 'fixed', left: 550, top: 50, '&:hover': {
-        border: 'none',
-        backgroundColor: 'transparent',
-      }, }}
-        >
-          <ArrowBackIcon sx={{color: 'rgba(50, 50, 50, 1)'}} />
-          Back
-        </Button>
-      )}
+          {activeTab === 1 && (
+            <Button
+              variant="outlined"
+              onClick={handleBackClick}
+              sx={{
+                marginRight: 2, color: 'rgba(50, 50, 50, 1)', border: 'none', position: 'fixed', left: 550, top: 50, fontFamily: 'Nunito', textTransform: 'none', fontSize: '16px', '&:hover': {
+                  border: 'none',
+                  backgroundColor: 'transparent',
+                },
+                '@media (max-width: 600px)': { display: 'flex', mr:0, position: 'inherit' }
+              }}
+            >
+              <ArrowBackIcon sx={{ color: 'rgba(50, 50, 50, 1)' }} />
+              Back
+            </Button>
+          )}
           <Tabs
             value={activeTab}
             sx={{
@@ -242,7 +245,7 @@ const AccountSetup = () => {
                 fontFamily: 'Nunito',
                 fontSize: '16px',
                 fontWeight: '600',
-                pointerEvents: 'none', 
+                pointerEvents: 'none',
                 lineHeight: '21.82px',
                 color: activeTab === 0 ? 'rgba(50, 50, 50, 1)' : 'rgba(142, 142, 142, 1)',
                 '&.Mui-selected': {
@@ -257,7 +260,7 @@ const AccountSetup = () => {
                 fontFamily: 'Nunito',
                 fontSize: '16px',
                 fontWeight: '600',
-                pointerEvents: 'none', 
+                pointerEvents: 'none',
                 lineHeight: '21.82px',
                 color: activeTab === 1 ? 'rgba(50, 50, 50, 1)' : 'rgba(142, 142, 142, 1)',
                 '&.Mui-selected': {
@@ -272,6 +275,7 @@ const AccountSetup = () => {
           aria-haspopup="true"
           aria-expanded={open ? 'true' : undefined}
           onClick={handleProfileMenuClick}
+          sx={{'@media (max-width: 600px)': { display: 'none'}}}
         >
           <PersonIcon sx={styles.account} />
         </Button>
