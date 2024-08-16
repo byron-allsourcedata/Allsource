@@ -53,7 +53,8 @@ class SendgridHandler:
         message.dynamic_template_data = {
             "Full_name": template_placeholder.get("full_name"),
             "Link": template_placeholder.get("link"),
-            "Email": template_placeholder.get("email")
+            "Email": template_placeholder.get("email"),
+            "Pixel_code": template_placeholder.get("pixel_code")
         }
         message.is_multiple = True
         if attachedfile is not None:

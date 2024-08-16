@@ -5,17 +5,23 @@ import re
 from sqlalchemy.orm import Session
 from bs4 import BeautifulSoup
 import requests
+
+from enums import AutomationSystemTemplate
 from models.subscriptions import UserSubscriptions
 from models.users import Users
 from datetime import datetime, timedelta
+
+from persistence.sendgrid_persistence import SendgridPersistence
+from services.sendgrid import SendgridHandler
 
 logger = logging.getLogger(__name__)
 
 
 class PixelInstallationService:
-    def __init__(self, db: Session, user):
+    def __init__(self, db: Session, user, send_grid_persistence_service: SendgridPersistence):
         self.db = db
         self.user = user
+        self.send_grid_persistence_service = send_grid_persistence_service
 
     def get_my_info(self):
         return {"email": self.user.get('email'),
@@ -89,6 +95,21 @@ class PixelInstallationService:
             </script>
         '''
         return script
+
+    def send_pixel_code_in_email(self, email):
+        pixel_code = self.get_manual()
+        mail_object = SendgridHandler()
+
+        template_id = self.send_grid_persistence_service.get_template_by_alias(
+            AutomationSystemTemplate.SEND_PIXEL_CODE_TEMPLATE.value)
+        full_name = email.split('@')[0]
+        mail_object.send_sign_up_mail(
+            subject="Maximize Password Reset Request",
+            to_emails=email,
+            template_id=template_id,
+            template_placeholder={"full_name": full_name, "pixel_code": pixel_code,
+                                  "email": email},
+        )
 
     def parse_website(self, url):
         try:

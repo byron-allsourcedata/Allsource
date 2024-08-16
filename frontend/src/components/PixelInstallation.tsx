@@ -8,6 +8,7 @@ import ManualPopup from '../components/ManualPopup';
 import GoogleTagPopup from '../components/GoogleTagPopup';
 import CRMPopup from "./CMSPopup";
 import {  useTrial } from "@/context/TrialProvider";
+import IndexPage from "@/components/GoogleTagPopup";
 
 
 const PixelInstallation: React.FC = () => {
@@ -34,32 +35,14 @@ const PixelInstallation: React.FC = () => {
   };
 
   const installGoogleTag = async () => {
-    try {
-      const response = await axiosInterceptorInstance.get('/install-pixel/manually');
-      setGoogleCode(response.data);
-      setGoogleOpen(true);
-    } catch (error) {
-      if (error instanceof AxiosError && error.response?.status === 403) {
-        if (error.response.data.status === 'NEED_BOOK_CALL') {
-          sessionStorage.setItem('is_slider_opened', 'true');
-          setShowSlider(true);
-        } else {
-          sessionStorage.setItem('is_slider_opened', 'false');
-          setShowSlider(false);
-        }
-      } else {
-        console.error('Error fetching data:', error);
-      }
-    }
+    setGoogleOpen(true)
   };
 
   const [openmanually, setOpen] = useState(false);
   const [pixelCode, setPixelCode] = useState('');
   const [opengoogle, setGoogleOpen] = useState(false);
-  const [googleCode, setGoogleCode] = useState('');
   const [cmsCode, setCmsCode] = useState('');
   const [opencrm, setCMSOpen] = useState(false);
-
 
 
   const handleManualClose = () => setOpen(false);
@@ -108,7 +91,7 @@ const PixelInstallation: React.FC = () => {
             <Image src={'/install_gtm.svg'} alt="Install on Google Tag Manager" width={28} height={28} />
             <Typography sx={typographyGoogle}>Install on Google Tag Manager</Typography>
           </Button>
-          <GoogleTagPopup open={opengoogle} handleClose={handleGoogleClose} pixelCode={googleCode} />
+          <GoogleTagPopup open={opengoogle} handleClose={handleGoogleClose}/>
         </Grid>
         <Grid item xs={12} md={4}>
           <Button variant="outlined" fullWidth onClick={installCMS} sx={buttonStyles}>

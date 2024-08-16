@@ -69,6 +69,7 @@ class UpdatePasswordStatus(Enum):
 class AutomationSystemTemplate(Enum):
     EMAIL_VERIFICATION_TEMPLATE = 'email_verification_template'
     FORGOT_PASSWORD_TEMPLATE = 'forgot_password_template'
+    SEND_PIXEL_CODE_TEMPLATE = 'send_pixel_code_template'
 
 
 class ResetPasswordEnum(Enum):
