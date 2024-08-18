@@ -361,7 +361,7 @@ const Leads: React.FC = () => {
                 router.push('/signin');
                 return;
             }
-            
+
             // Processing "Date Calendly"
             const startEpoch = appliedDates.start ? Math.floor(appliedDates.start.getTime() / 1000) : null;
             const endEpoch = appliedDates.end ? Math.floor(appliedDates.end.getTime() / 1000) : null;
@@ -582,6 +582,16 @@ const Leads: React.FC = () => {
                 return {
                     background: 'rgba(254, 238, 236, 1)',
                     color: 'rgba(244, 87, 69, 1)',
+                };
+            case 'Existing':
+                return {
+                    background: 'rgba(244, 252, 238, 1)',
+                    color: 'rgba(43, 91, 0, 1)',
+                };
+            case 'New':
+                return {
+                    background: 'rgba(254, 243, 205, 1)',
+                    color: 'rgba(101, 79, 0, 1))',
                 };
             default:
                 return {
@@ -869,21 +879,21 @@ const Leads: React.FC = () => {
                                 </Box>
                             </Box>
                             <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, mt: 2 }}>
-                                {selectedFilters.length > 0 && (
-                                    <Chip
-                                        label="Reset all"
-                                        onDelete={handleResetFilters}
-                                        sx={{ backgroundColor: 'rgba(255, 255, 255, 1)', color: 'rgba(80, 82, 178, 1)', border: '1px solid rgba(220, 220, 239, 1)', borderRadius: '3px' }}
-                                    />
-                                )}
                                 {selectedFilters.map(filter => (
                                     <Chip
                                         key={filter.label}
-                                        label={`${filter.label}: ${filter.value}`}
+                                        label={`${filter.value}`}
                                         onDelete={() => handleDeleteFilter(filter)}
-                                        sx={{ borderRadius: '3px', border: '1px solid rgba(220, 220, 239, 1)', backgroundColor: 'rgba(229, 229, 229, 1)', color: 'rgba(123, 123, 123, 1)' }}
+                                        sx={{ borderRadius: '3px', border: '1px solid rgba(80, 82, 178, 1)', backgroundColor: 'rgba(237, 237, 247, 1)', color: 'rgba(123, 123, 123, 1)', fontFamily: 'Nunito', fontWeight: '600', fontSize: '13px' }}
                                     />
                                 ))}
+                                {selectedFilters.length > 0 && (
+                                    <Chip
+                                        label="Clear all"
+                                        onDelete={handleResetFilters}
+                                        sx={{ backgroundColor: 'rgba(255, 255, 255, 1)', color: 'rgba(80, 82, 178, 1)', border: '1px solid rgba(220, 220, 239, 1)', borderRadius: '3px', fontFamily: 'Nunito', fontWeight: '600', fontSize: '12px' }}
+                                    />
+                                )}
                             </Box>
                             <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', padding: 2 }}>
                                 {status === 'PIXEL_INSTALLATION_NEEDED' ? (
@@ -1049,7 +1059,24 @@ const Leads: React.FC = () => {
                                                                     </Box>
                                                                 </TableCell>
                                                                 <TableCell
-                                                                    sx={leadsStyles.table_array}>{row.status || 'N/A'}</TableCell>
+                                                                    sx={leadsStyles.table_array}>
+                                                                        <Box
+                                                                        sx={{
+                                                                            display: 'flex',
+                                                                            padding: '4px 8px',
+                                                                            borderRadius: '4px',
+                                                                            fontFamily: 'Nunito',
+                                                                            fontSize: '14px',
+                                                                            fontWeight: '400',
+                                                                            lineHeight: '19.6px',
+                                                                            backgroundColor: getStatusStyle(row.status).background,
+                                                                            color: getStatusStyle(row.status).color,
+                                                                            justifyContent: 'center',
+                                                                        }}
+                                                                    >
+                                                                        {row.status || 'N/A'}
+                                                                    </Box>
+                                                                    </TableCell>
                                                                 <TableCell
                                                                     sx={leadsStyles.table_array}>{row.lead.time_spent || 'N/A'}</TableCell>
                                                                 <TableCell
