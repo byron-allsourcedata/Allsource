@@ -184,5 +184,8 @@ export const loginStyles: { [key: string]: SxProps<Theme> } = {
             borderColor: '#0000FF',
           },
         },
+        '&+.MuiFormHelperText-root': {
+            marginLeft: '0',
+        },
       },
 }
