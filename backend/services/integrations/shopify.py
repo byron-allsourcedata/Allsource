@@ -29,10 +29,16 @@ class ShopifyIntegrationService:
 
 
     def create_integration(self, shop_domain: str, access_token: str):
-        integration = self.user_integration_persistence.create_integration({
+        data = {
             'user_id': self.user.id,
             'shop_domain': shop_domain,
             'access_token': access_token,
             'service_name': 'shopify'
-        })
-        return self.get_customers(integration.shop_domain, integration.access_token)
+        }
+        existing_integration = self.user_integration_persistence.get_user_integrations_by_service(self.user.id, 'shopify')
+        if existing_integration:
+            updated_integration = self.user_integration_persistence.edit_integrations(self.user.id, 'shopify', data)
+            return updated_integration
+        else:
+            new_integration = self.user_integration_persistence.create_integration(data)
+            return self.get_customers(new_integration.shop_domain, new_integration.access_token)

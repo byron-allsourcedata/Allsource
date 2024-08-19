@@ -40,7 +40,7 @@ def bigcommerce_customers(client: Client, store_hash: str, auth_token: str):
     response = client.get(customers_url, headers={'X-Auth-Token': auth_token})
     if response.status_code != 200:
         raise Exception
-    customers = response.json().get('customers')
+    customers = response.json()
     return mapped_customers('bigcommerce',customers)
 
 

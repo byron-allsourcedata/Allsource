@@ -20,10 +20,10 @@ class IntegrationService:
         self.lead_persistence = lead_persistence
         
 
-    def get_user_service_credentials(self, service_name: str):
-        return self.user_integration_persistence.get_integration_by_user_with_service(self.user.id, service_name)
+    def get_user_service_credentials(self):
+        return self.user_integration_persistence.get_integration_by_user(self.user.id)
     
-    def save_customers(self, customers: List[Customer]):
+    async def save_customers(self, customers: List[Customer]):
         for customer in customers:
             self.lead_persistence.update_leads_by_cutomer(customer, self.user.id)
 
