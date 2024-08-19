@@ -13,19 +13,19 @@ logger = logging.getLogger(__name__)
 
 
 class PixelInstallationService:
-    def __init__(self, db: Session, user: Users):
+    def __init__(self, db: Session, user):
         self.db = db
         self.user = user
 
     def get_my_info(self):
-        return {"email": self.user.email,
-                "full_name": self.user.full_name}
+        return {"email": self.user.get('email'),
+                "full_name": self.user.get('full_name')}
 
     def get_manual(self):
-        client_id = self.user.data_provider_id
+        client_id = self.user.get('data_provider_id')
         if client_id is None:
-            client_id = hashlib.sha256((str(self.user.id) + os.getenv('SECRET_SALT')).encode()).hexdigest()
-            self.db.query(Users).filter(Users.id == self.user.id).update(
+            client_id = hashlib.sha256((str(self.user.get('id')) + os.getenv('SECRET_SALT')).encode()).hexdigest()
+            self.db.query(Users).filter(Users.id == self.user.get('id')).update(
                 {Users.data_provider_id: client_id},
                 synchronize_session=False)
             self.db.commit()
@@ -105,7 +105,7 @@ class PixelInstallationService:
             client_id_match = re.search(r'const\s+pixel_clientId\s*=\s*["\']([^"\']+)["\']', script_content)
             if client_id_match:
                 pixel_client_id = client_id_match.group(1)
-                if self.user.data_provider_id == pixel_client_id:
+                if self.user.get('data_provider_id') == pixel_client_id:
                     return True
         return False
 
@@ -117,14 +117,14 @@ class PixelInstallationService:
             end_date = start_date + timedelta(days=7)
             start_date_str = start_date.isoformat() + "Z"
             end_date_str = end_date.isoformat() + "Z"
-            self.db.query(UserSubscriptions).filter(UserSubscriptions.user_id == self.user.id).update(
+            self.db.query(UserSubscriptions).filter(UserSubscriptions.user_id == self.user.get('id')).update(
                 {UserSubscriptions.plan_start: start_date_str, UserSubscriptions.plan_end: end_date_str},
                 synchronize_session=False
             )
-            self.db.query(Users).filter(Users.id == self.user.id).update(
+            self.db.query(Users).filter(Users.id == self.user.get('id')).update(
                 {Users.is_pixel_installed: True},
                 synchronize_session=False)
             self.db.commit()
             result['success'] = True
-        result['user_id'] = self.user.id
+        result['user_id'] = self.user.get('id')
         return result

@@ -79,10 +79,10 @@ def get_admin_customers_service(db: Session = Depends(get_db),
                                  user_persistence=user_persistence, plans_persistence=plans_presistence)
 
 
-def get_user_authorization_status_without_pixel(user: User, subscription_service):
-    if user.is_with_card:
-        if user.company_name:
-            subscription_plan_is_active = subscription_service.is_user_has_active_subscription(user.id)
+def get_user_authorization_status_without_pixel(user, subscription_service):
+    if user.get('is_with_card'):
+        if user.get('company_name'):
+            subscription_plan_is_active = subscription_service.is_user_has_active_subscription(user.get('id'))
             if subscription_plan_is_active:
                 return UserAuthorizationStatus.SUCCESS
             else:
@@ -90,14 +90,14 @@ def get_user_authorization_status_without_pixel(user: User, subscription_service
         else:
             return UserAuthorizationStatus.FILL_COMPANY_DETAILS
     else:
-        if user.is_email_confirmed:
-            if user.company_name:
-                if user.is_book_call_passed:
-                    subscription_plan_is_active = subscription_service.is_user_has_active_subscription(user.id)
+        if user.get('is_email_confirmed'):
+            if user.get('company_name'):
+                if user.get('is_book_call_passed'):
+                    subscription_plan_is_active = subscription_service.is_user_has_active_subscription(user.get('id'))
                     if subscription_plan_is_active:
                         return UserAuthorizationStatus.SUCCESS
                     else:
-                        if user.stripe_payment_url:
+                        if user.get('stripe_payment_url'):
                             return UserAuthorizationStatus.PAYMENT_NEEDED
                         else:
                             return UserAuthorizationStatus.NEED_CHOOSE_PLAN
@@ -108,9 +108,9 @@ def get_user_authorization_status_without_pixel(user: User, subscription_service
     return UserAuthorizationStatus.NEED_CONFIRM_EMAIL
 
 
-def get_user_authorization_status(user: User, subscription_service):
+def get_user_authorization_status(user, subscription_service):
     status = get_user_authorization_status_without_pixel(user, subscription_service)
-    if status == UserAuthorizationStatus.SUCCESS and not user.is_pixel_installed:
+    if status == UserAuthorizationStatus.SUCCESS and not user.get('is_pixel_installed'):
         return UserAuthorizationStatus.PIXEL_INSTALLATION_NEEDED
     return status
 
@@ -141,7 +141,7 @@ def check_user_authorization(Authorization: Annotated[str, Header()],
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail={'status': auth_status.value,
-                    'stripe_payment_url': user.stripe_payment_url}
+                    'stripe_payment_url': user.get('stripe_payment_url')}
         )
     if auth_status != UserAuthorizationStatus.SUCCESS:
         raise HTTPException(
@@ -163,7 +163,7 @@ def check_user_authorization_without_pixel(Authorization: Annotated[str, Header(
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail={'status': auth_status.value,
-                    'stripe_payment_url': user.stripe_payment_url}
+                    'stripe_payment_url': user.get('stripe_payment_url')}
         )
     if auth_status != UserAuthorizationStatus.SUCCESS and auth_status != UserAuthorizationStatus.PIXEL_INSTALLATION_NEEDED:
         raise HTTPException(
@@ -206,7 +206,7 @@ def get_users_auth_service(db: Session = Depends(get_db),
                      subscription_service=subscription_service)
 
 
-def get_users_service(user: User = Depends(check_user_authentication),
+def get_users_service(user=Depends(check_user_authentication),
                       user_persistence_service: UserPersistence = Depends(get_user_persistence_service)):
     return UsersService(user=user, user_persistence_service=user_persistence_service)
 
@@ -234,7 +234,7 @@ def get_pixel_installation_service(db: Session = Depends(get_db),
     return PixelInstallationService(db=db, user=user)
 
 
-def get_plans_service(user: User = Depends(check_user_authentication),
+def get_plans_service(user=Depends(check_user_authentication),
                       plans_persistence: PlansPersistence = Depends(get_plans_persistence),
                       subscription_service: SubscriptionService = Depends(get_subscription_service)):
     return PlansService(plans_persistence=plans_persistence, user=user, subscription_service=subscription_service)
@@ -248,12 +248,12 @@ def get_payments_service(plans_service: PlansService = Depends(get_plans_service
     return PaymentsService(plans_service=plans_service)
 
 
-def get_company_info_service(db: Session = Depends(get_db), user: User = Depends(check_user_authentication),
+def get_company_info_service(db: Session = Depends(get_db), user=Depends(check_user_authentication),
                              subscription_service: SubscriptionService = Depends(get_subscription_service)):
     return CompanyInfoService(db=db, user=user, subscription_service=subscription_service)
 
 
-def get_users_email_verification_service(user: User = Depends(check_user_authentication),
+def get_users_email_verification_service(user=Depends(check_user_authentication),
                                          user_persistence_service: UserPersistence = Depends(
                                              get_user_persistence_service),
                                          sendgrid_persistence_service: SendgridPersistence = Depends(

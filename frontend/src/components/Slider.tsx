@@ -4,6 +4,7 @@ import { Drawer, Box, Typography, Button, IconButton, Backdrop } from '@mui/mate
 import CloseIcon from '@mui/icons-material/Close';
 import { useSlider } from '../context/SliderContext';
 import { PopupButton } from "react-calendly";
+import Image from 'next/image'
 
 const Slider: React.FC = () => {
   const { showSlider, setShowSlider } = useSlider();
@@ -49,7 +50,7 @@ const Slider: React.FC = () => {
           <Typography variant="body1" gutterBottom sx={{color: '#4A4A4A', fontFamily: 'Nunito', fontWeight: '500', fontSize: '24px', lineHeight: '25.2px', marginTop: '3em' }}>
             To activate your account, please speak with one of our onboarding specialists, and we&apos;ll get you started.
           </Typography>
-          <img src="/slider-bookcall.png" alt="Setup" style={{ width: '50%', marginBottom: '1rem' }} />
+          <Image src="/slider-bookcall.png" alt="Setup" style={{ width: '50%', marginBottom: '1rem' }} />
           <div id='calendly-popup-wrapper' className="book-call-button__wrapper">
           <PopupButton 
               className="book-call-button" 
