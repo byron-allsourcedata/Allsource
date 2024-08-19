@@ -5,6 +5,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import Image from 'next/image';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
+import { showToast } from './ToastNotification';
 
 const style = {
   position: 'fixed' as 'fixed',
@@ -67,9 +68,9 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode }) => {
   const [email, setEmail] = useState('');
 
   const handleButtonClick = () => {
-    axiosInstance.post('/install-manually/send-email', { email })
+    axiosInstance.post('/send-pixel-code', { email })
       .then(response => {
-        console.log('Response:', response.data);
+        showToast('Successfully send email')
       })
       .catch(error => {
         console.error('There was an error!', error);
