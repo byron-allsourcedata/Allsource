@@ -21,9 +21,6 @@ const AccountSetup = () => {
   const { full_name, email } = useUser();
 
   const [activeTab, setActiveTab] = useState(0);
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
-    setActiveTab(newValue);
-  };
 
   useEffect(() => {
     const fetchCompanyInfo = async () => {
@@ -106,6 +103,17 @@ const AccountSetup = () => {
     setErrors({ ...errors, selectedVisits: '' });
   };
 
+  const handleWebsiteLinkChange = (e: { target: { value: any; }; }) => {
+    const value = e.target.value;
+    setWebsiteLink(value);
+  
+    const websiteLinkError = validateField(value, 'website');
+    setErrors((prevErrors) => ({
+      ...prevErrors,
+      websiteLink: websiteLinkError,
+    }));
+  };
+
   const validateField = (value: string, type: 'email' | 'website' | 'organizationName'): string => {
     switch (type) {
       case 'email':
@@ -127,7 +135,8 @@ const AccountSetup = () => {
       websiteLink: validateField(websiteLink, 'website'),
       organizationName: validateField(organizationName, 'organizationName'),
       selectedEmployees: selectedEmployees ? '' : 'Please select number of employees',
-      selectedVisits: selectedVisits ? '' : 'Please select number of visits'
+      selectedVisits: selectedVisits ? '' : 'Please select number of visits',
+      selectedRoles: selectedRoles ? '' : 'Please select your`s role',
     };
     setErrors(newErrors);
 
@@ -139,7 +148,8 @@ const AccountSetup = () => {
       const response = await axiosInterceptorInstance.post('/company-info', {
         organization_name: organizationName.trim(),
         company_website: websiteLink,
-
+        company_role: selectedRoles,
+        monthly_visits: selectedVisits,
         employees_workers: selectedEmployees,
       });
 
@@ -166,9 +176,13 @@ const AccountSetup = () => {
   };
 
   const isFormValid = () => {
-    return organizationName.trim() !== '' &&
-      websiteLink.trim() !== '' &&
-      selectedVisits !== '';
+    const errors = {
+      websiteLink: validateField(websiteLink, 'website'),
+      organizationName: validateField(organizationName, 'organizationName'),
+      selectedVisits: selectedVisits ? '' : 'Please select number of visits'
+    };
+  
+    return !errors.websiteLink && !errors.organizationName && !errors.selectedVisits;
   };
 
   const ranges = [
@@ -199,7 +213,7 @@ const AccountSetup = () => {
   ];
 
   const handleBackClick = () => {
-    setActiveTab(0); // Переход на вкладку "Create Account"
+    setActiveTab(0);
   };
 
   const handleNextClick = () => {
@@ -218,7 +232,7 @@ const AccountSetup = () => {
               variant="outlined"
               onClick={handleBackClick}
               sx={{
-                marginRight: 2, color: 'rgba(50, 50, 50, 1)', border: 'none', position: 'fixed', left: 550, top: 50, fontFamily: 'Nunito', textTransform: 'none', fontSize: '16px', '&:hover': {
+                marginRight: 2, color: 'rgba(50, 50, 50, 1)', border: 'none', position: 'fixed', left: 600, top: 30, fontFamily: 'Nunito', textTransform: 'none', fontSize: '16px', '&:hover': {
                   border: 'none',
                   backgroundColor: 'transparent',
                 },
@@ -326,7 +340,7 @@ const AccountSetup = () => {
               variant="outlined"
               sx={styles.formField}
               value={websiteLink}
-              onChange={(e) => setWebsiteLink(e.target.value)}
+              onChange={handleWebsiteLinkChange}
               error={!!errors.websiteLink}
               helperText={errors.websiteLink} />
             <Typography variant="body1" sx={styles.text}>
@@ -358,7 +372,7 @@ const AccountSetup = () => {
                 pointerEvents: isFormValid() ? 'auto' : 'none',
               }}
               onClick={handleNextClick}
-              disabled={!isFormValid()} // Делаем кнопку неактивной, если форма не валидна
+              disabled={!isFormValid()}
             >
               Next
             </Button>

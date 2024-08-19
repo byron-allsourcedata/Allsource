@@ -19,6 +19,8 @@ class Users(Base):
     company_name = Column(VARCHAR, nullable=True)
     company_website = Column(VARCHAR, nullable=True)
     company_email_address = Column(VARCHAR, nullable=True)
+    company_role = Column(VARCHAR, nullable=True)
+    company_website_visits = Column(VARCHAR, nullable=True)
     employees_workers = Column(VARCHAR, nullable=True)
     created_at = Column(TIMESTAMP(precision=7), nullable=True)
     last_login = Column(TIMESTAMP(precision=7), nullable=True)

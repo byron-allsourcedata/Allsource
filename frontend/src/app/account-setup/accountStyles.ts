@@ -77,6 +77,7 @@ export const styles: { [key: string]: SxProps<Theme> } = {
     borderBottom: `1px solid rgba(228, 228, 228, 1)`,
     marginBottom: '1.25em',
     '@media (max-width: 600px)': { display: 'flex', flexDirection: 'column', justifyContent: 'start', alignItems: 'start' },
+    '@media (max-height: 670px)': { marginBottom: 1 }
   },
   header: {
     display: 'flex',
@@ -133,7 +134,8 @@ export const styles: { [key: string]: SxProps<Theme> } = {
     borderRadius: '0.5em',
     backgroundColor: '#fff',
     '@media (max-width: 400px)': { pl: 2, pt: 0 },
-    '@media (max-width: 600px)': { pl: 0, pt: 7, gap: 1 }
+    '@media (max-width: 600px)': { pl: 0, pt: 8, gap: 1 },
+    '@media (max-height: 670px)': { pl: 0, pt: 1, gap: 0 }
   },
   title: {
     fontFamily: 'Nunito',
