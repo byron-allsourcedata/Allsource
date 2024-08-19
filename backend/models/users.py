@@ -31,7 +31,6 @@ class Users(Base):
     data_provider_id = Column(VARCHAR(64))
     is_pixel_installed = Column(BOOLEAN, default=False)
     role = Column(ARRAY(VARCHAR))
-    
 
 
 User = Users
