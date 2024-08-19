@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from bs4 import BeautifulSoup
 import requests
 
-from enums import AutomationSystemTemplate, BaseEnum
+from enums import BaseEnum, SendgridTemplate
 from models.subscriptions import UserSubscriptions
 from models.users import Users
 from datetime import datetime, timedelta
@@ -106,7 +106,7 @@ class PixelInstallationService:
         mail_object = SendgridHandler()
 
         template_id = self.send_grid_persistence_service.get_template_by_alias(
-            AutomationSystemTemplate.SEND_PIXEL_CODE_TEMPLATE.value)
+            SendgridTemplate.SEND_PIXEL_CODE_TEMPLATE.value)
         full_name = email.split('@')[0]
         mail_object.send_sign_up_mail(
             subject="Maximize Password Reset Request",

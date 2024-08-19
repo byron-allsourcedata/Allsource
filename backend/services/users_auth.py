@@ -7,8 +7,8 @@ from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token
 from sqlalchemy.orm import Session
 
-from enums import SignUpStatus, StripePaymentStatusEnum, AutomationSystemTemplate, LoginStatus, ResetPasswordEnum, \
-    VerifyToken, UserAuthorizationStatus
+from enums import SignUpStatus, StripePaymentStatusEnum, LoginStatus, ResetPasswordEnum, \
+    VerifyToken, UserAuthorizationStatus, SendgridTemplate
 from models.users import User
 from models.users import Users
 from persistence.sendgrid_persistence import SendgridPersistence
@@ -226,7 +226,7 @@ class UsersAuth:
         logger.info("Token created")
         if is_without_card:
             template_id = self.send_grid_persistence_service.get_template_by_alias(
-                AutomationSystemTemplate.EMAIL_VERIFICATION_TEMPLATE.value)
+                SendgridTemplate.EMAIL_VERIFICATION_TEMPLATE.value)
             if not template_id:
                 return {
                     'is_success': False,
@@ -332,7 +332,7 @@ class UsersAuth:
             }
             token = create_access_token(token_info)
             template_id = self.send_grid_persistence_service.get_template_by_alias(
-                AutomationSystemTemplate.FORGOT_PASSWORD_TEMPLATE.value)
+                SendgridTemplate.FORGOT_PASSWORD_TEMPLATE.value)
             if db_user:
                 confirm_email_url = f"{os.getenv('SITE_HOST_URL')}/forgot-password?token={token}"
                 mail_object = SendgridHandler()

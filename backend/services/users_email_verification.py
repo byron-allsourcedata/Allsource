@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from persistence.sendgrid_persistence import SendgridPersistence
 from .sendgrid import SendgridHandler
 from persistence.user_persistence import UserPersistence
-from enums import AutomationSystemTemplate, VerificationEmail
+from enums import VerificationEmail, SendgridTemplate
 from models.users import Users
 
 logger = logging.getLogger(__name__)
@@ -19,7 +19,7 @@ class UsersEmailVerificationService:
 
     def resend_verification_email(self, token: str):
         if not self.user.get('is_email_confirmed'):
-            template_id = self.send_grid_persistence_service.get_template_by_alias(AutomationSystemTemplate.EMAIL_VERIFICATION_TEMPLATE.value)
+            template_id = self.send_grid_persistence_service.get_template_by_alias(SendgridTemplate.EMAIL_VERIFICATION_TEMPLATE.value)
             if not template_id:
                 return {
                     'is_success': False,
