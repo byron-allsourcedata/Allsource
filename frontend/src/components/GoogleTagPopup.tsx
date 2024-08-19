@@ -3,6 +3,7 @@ import {GoogleLogin} from '@react-oauth/google';
 import {Box, Button, FormControl, InputLabel, MenuItem, Modal, Select, Typography} from '@mui/material';
 import axios from 'axios';
 import axiosInterceptorInstance from "@/axios/axiosInterceptorInstance";
+import {showErrorToast, showToast} from "@/components/ToastNotification";
 
 interface GTMContainer {
     containerId: string;
@@ -24,8 +25,8 @@ interface GoogleLoginResponse {
 }
 
 const GoogleTagPopup: React.FC<PopupProps> = ({open, handleClose}) => {
-    const clientId = process.env.GOOGLE_CLIENT_ID;
-    const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
+    const clientSecret = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_SECRET
     const dashboard_url: string = process.env.NEXT_PUBLIC_API_DASHBOARD_URL || 'http://localhost:8000';
 
     const [session, setSession] = useState<{ token: string } | null>(null);
@@ -40,7 +41,6 @@ const GoogleTagPopup: React.FC<PopupProps> = ({open, handleClose}) => {
         const handleRedirect = async () => {
             const query = new URLSearchParams(window.location.search);
             const authorizationCode = query.get('code');
-
             if (authorizationCode) {
                 try {
                     const tokenResponse = await exchangeCodeForToken(authorizationCode);
@@ -115,7 +115,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({open, handleClose}) => {
             const workspaceId = selectedWorkspace;
 
             if (!accountId || !containerId || !workspaceId) {
-                alert('Please select account, container, and workspace.');
+                showErrorToast('Please select account, container, and workspace.')
                 return;
             }
 
@@ -138,8 +138,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({open, handleClose}) => {
                 tagData,
                 {headers: {Authorization: `Bearer ${accessToken}`}}
             );
-
-            alert('Tag created and sent successfully!');
+            showToast('Tag created and sent successfully!')
             handleClose();
         } catch (error) {
             if (axios.isAxiosError(error)) {
@@ -152,7 +151,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({open, handleClose}) => {
                     console.error('Error message:', error.message);
                 }
             }
-            alert('Failed to create and send tag.');
+            showErrorToast('Failed to create and send tag.')
         }
     };
 
@@ -179,11 +178,11 @@ const GoogleTagPopup: React.FC<PopupProps> = ({open, handleClose}) => {
                 const scope = 'https://www.googleapis.com/auth/tagmanager.edit.containers';
                 window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${encodeURIComponent(scope)}&access_type=offline&prompt=consent`;
             } else {
-                alert('Account data not available');
+                showErrorToast('Account data not available')
             }
         } catch (error) {
             console.error('Error during Google login:', error);
-            alert('Failed to log in.');
+            showErrorToast('Failed to log in.')
         }
     };
 
@@ -217,7 +216,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({open, handleClose}) => {
                 {!session ? (
                     <GoogleLogin
                         onSuccess={handleLoginSuccess}
-                        onError={() => alert('Failed to log in.')}
+                        onError={() => showErrorToast('Failed to log in.')}
                         ux_mode="popup"
                     />
                 ) : (
