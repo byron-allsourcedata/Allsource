@@ -246,8 +246,8 @@ formInput: {
       boxShadow: 'none',
     },
     '& .MuiCheckbox-root.Mui-checked:before': {
-      border: '1px solid #2196F3',
-      backgroundColor: '#2196F3',
+      border: '1px solid #f45745',
+      backgroundColor: '#f45745',
       content: '""',
       backgroundImage: 'url("/checkbox-tick.svg")',
       backgroundPosition: 'center',
@@ -259,7 +259,7 @@ formInput: {
         'rgb(255, 255, 255) 0px 0px 0px 1px, rgb(80, 105, 200) 0px 0px 0px 3px',
     },
     '& .MuiCheckbox-root:hover:before': {
-      border: '1px solid #2196F3',
+      border: '1px solid #f45745',
     },
   },
   checkboxContentLink: {
