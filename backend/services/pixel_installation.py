@@ -28,9 +28,6 @@ class PixelInstallationService:
                 "full_name": self.user.get('full_name')}
 
     def get_manual(self):
-        import hashlib
-        import os
-
         client_id = self.user.get('data_provider_id')
         if client_id is None:
             client_id = hashlib.sha256((str(self.user.get('id')) + os.getenv('SECRET_SALT')).encode()).hexdigest()
