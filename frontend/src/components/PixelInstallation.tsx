@@ -3,7 +3,7 @@ import Image from "next/image";
 import axiosInterceptorInstance from "../axios/axiosInterceptorInstance";
 import { AxiosError } from "axios";
 import { useSlider } from '../context/SliderContext';
-import React, { useState } from "react";
+import React, {useEffect, useState} from "react";
 import ManualPopup from '../components/ManualPopup';
 import GoogleTagPopup from '../components/GoogleTagPopup';
 import CRMPopup from "./CMSPopup";
@@ -43,6 +43,23 @@ const PixelInstallation: React.FC = () => {
   const [opengoogle, setGoogleOpen] = useState(false);
   const [cmsCode, setCmsCode] = useState('');
   const [opencrm, setCMSOpen] = useState(false);
+
+  useEffect(() => {
+    const handleRedirect = async () => {
+      const query = new URLSearchParams(window.location.search);
+      const authorizationCode = query.get('code');
+
+      if (authorizationCode) {
+        try {
+          setGoogleOpen(true);
+        } catch (error) {
+          console.error('Error handling redirect:', error);
+        }
+      }
+    };
+
+    handleRedirect();
+  }, []);
 
 
   const handleManualClose = () => setOpen(false);

@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { GoogleLogin } from '@react-oauth/google';
-import { Box, Button, Typography, MenuItem, Select, InputLabel, FormControl, Modal } from '@mui/material';
+import React, {useEffect, useState} from 'react';
+import {GoogleLogin} from '@react-oauth/google';
+import {Box, Button, FormControl, InputLabel, MenuItem, Modal, Select, Typography} from '@mui/material';
 import axios from 'axios';
 import axiosInterceptorInstance from "@/axios/axiosInterceptorInstance";
 
@@ -23,13 +23,17 @@ interface GoogleLoginResponse {
     credential?: string;
 }
 
-const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
+const GoogleTagPopup: React.FC<PopupProps> = ({open, handleClose}) => {
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+    const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+    const dashboard_url: string = process.env.NEXT_PUBLIC_API_DASHBOARD_URL || 'http://localhost:8000';
+
     const [session, setSession] = useState<{ token: string } | null>(null);
     const [accounts, setAccounts] = useState<GTMAccount[]>([]);
     const [containers, setContainers] = useState<GTMContainer[]>([]);
     const [selectedAccount, setSelectedAccount] = useState<string>('');
     const [selectedContainer, setSelectedContainer] = useState<string>('');
-    const [workspaces, setWorkspaces] = useState<any[]>([]); // Уточните тип, если нужно
+    const [workspaces, setWorkspaces] = useState<any[]>([]);
     const [selectedWorkspace, setSelectedWorkspace] = useState<string>('');
 
     useEffect(() => {
@@ -41,11 +45,13 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
                 try {
                     const tokenResponse = await exchangeCodeForToken(authorizationCode);
                     const accessToken = tokenResponse.access_token;
-                    console.log('Access Token:', accessToken);
-                    setSession({ token: accessToken });
+                    setSession({token: accessToken});
                     fetchAccounts(accessToken);
                 } catch (error) {
                     console.error('Error handling redirect:', error);
+                } finally {
+                    const newUrl = window.location.pathname;
+                    window.history.replaceState({}, document.title, newUrl);
                 }
             }
         };
@@ -53,47 +59,16 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
         handleRedirect();
     }, []);
 
-    const fetchWorkspaces = async () => {
-        if (selectedAccount && selectedContainer && session?.token) {
-            try {
-                const response = await axios.get(
-                    `https://www.googleapis.com/tagmanager/v2/accounts/${selectedAccount}/containers/${selectedContainer}/workspaces`,
-                    { headers: { Authorization: `Bearer ${session.token}` } }
-                );
-                setWorkspaces(response.data.workspace || []);
-                console.log('Fetched Workspaces:', response.data.workspace);
-            } catch (error) {
-                console.error('Error fetching workspaces:', error);
-            }
-        }
-    };
-    useEffect(() => {
-        fetchWorkspaces();
-    }, [selectedAccount, selectedContainer, session?.token]);
-
-
-    const fetchAccounts = async (accessToken: string) => {
-        try {
-            const response = await axios.get('https://www.googleapis.com/tagmanager/v2/accounts', {
-                headers: { Authorization: `Bearer ${accessToken}` }
-            });
-            setAccounts(response.data.account || []);
-            console.log('Fetched Accounts:', response.data.account);
-        } catch (error) {
-            console.error('Error fetching accounts:', error);
-        }
-    };
 
     useEffect(() => {
         const fetchContainers = async () => {
             if (selectedAccount && session?.token) {
-                console.log('Fetching containers for account:', selectedAccount);
                 try {
-                    const response = await axios.get(`https://www.googleapis.com/tagmanager/v2/accounts/${selectedAccount}/containers`, {
-                        headers: { Authorization: `Bearer ${session.token}` }
-                    });
+                    const response = await axios.get(
+                        `https://www.googleapis.com/tagmanager/v2/accounts/${selectedAccount}/containers`,
+                        {headers: {Authorization: `Bearer ${session.token}`}}
+                    );
                     setContainers(response.data.container || []);
-                    console.log('Fetched Containers:', response.data.container);
                 } catch (error) {
                     console.error('Error fetching containers:', error);
                 }
@@ -102,6 +77,35 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
 
         fetchContainers();
     }, [selectedAccount, session?.token]);
+
+    useEffect(() => {
+        const fetchWorkspaces = async () => {
+            if (selectedAccount && selectedContainer && session?.token) {
+                try {
+                    const response = await axios.get(
+                        `https://www.googleapis.com/tagmanager/v2/accounts/${selectedAccount}/containers/${selectedContainer}/workspaces`,
+                        {headers: {Authorization: `Bearer ${session.token}`}}
+                    );
+                    setWorkspaces(response.data.workspace || []);
+                } catch (error) {
+                    console.error('Error fetching workspaces:', error);
+                }
+            }
+        };
+
+        fetchWorkspaces();
+    }, [selectedAccount, selectedContainer, session?.token]);
+
+    const fetchAccounts = async (accessToken: string) => {
+        try {
+            const response = await axios.get('https://www.googleapis.com/tagmanager/v2/accounts', {
+                headers: {Authorization: `Bearer ${accessToken}`}
+            });
+            setAccounts(response.data.account || []);
+        } catch (error) {
+            console.error('Error fetching accounts:', error);
+        }
+    };
 
     const handleCreateAndSendTag = async () => {
         try {
@@ -129,20 +133,19 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
                 ]
             };
 
-            const response = await axios.post(
+            await axios.post(
                 `https://www.googleapis.com/tagmanager/v2/accounts/${accountId}/containers/${containerId}/workspaces/${workspaceId}/tags`,
                 tagData,
-                { headers: { Authorization: `Bearer ${accessToken}` } }
+                {headers: {Authorization: `Bearer ${accessToken}`}}
             );
 
-            console.log('API Response:', response.data);
             alert('Tag created and sent successfully!');
-            handleClose(); // Close the modal after successful tag creation
+            handleClose();
         } catch (error) {
             if (axios.isAxiosError(error)) {
                 console.error('Error creating and sending tag:', error.message);
-                console.error('Response Data:', error.response?.data); // Log response data
-                console.error('Response Status:', error.response?.status); // Log response status
+                console.error('Response Data:', error.response?.data);
+                console.error('Response Status:', error.response?.status);
             } else {
                 console.error('Unexpected error:', error);
                 if (error instanceof Error) {
@@ -153,19 +156,13 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
         }
     };
 
-
-
-
-
-
-
     const exchangeCodeForToken = async (authorizationCode: string) => {
         try {
             const response = await axios.post('https://oauth2.googleapis.com/token', {
                 code: authorizationCode,
-                client_id: '328826124392-8tc1teht88satmdf6ti2sd5uh9lu1ove.apps.googleusercontent.com',
-                client_secret: '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',
-                redirect_uri: 'http://localhost:3000/dashboard',
+                client_id: clientId,
+                client_secret: clientSecret,
+                redirect_uri: dashboard_url,
                 grant_type: 'authorization_code'
             });
             return response.data;
@@ -174,17 +171,13 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
             throw error;
         }
     };
-
     const handleLoginSuccess = async (response: GoogleLoginResponse) => {
         try {
             if (response.credential) {
-                setSession({ token: response.credential });
-
-                const clientId = '328826124392-8tc1teht88satmdf6ti2sd5uh9lu1ove.apps.googleusercontent.com';
-                const redirectUri = 'http://localhost:3000/dashboard';
+                setSession({token: response.credential});
+                const redirectUri = dashboard_url;
                 const scope = 'https://www.googleapis.com/auth/tagmanager.edit.containers';
-                const consentUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${encodeURIComponent(scope)}&access_type=offline&prompt=consent`;
-                window.location.href = consentUrl;
+                window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${encodeURIComponent(scope)}&access_type=offline&prompt=consent`;
             } else {
                 alert('Account data not available');
             }
@@ -232,13 +225,12 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
                         <Typography variant="h6" gutterBottom>
                             Select GTM Account and Container
                         </Typography>
-                        <FormControl fullWidth sx={{ mb: 2 }}>
+                        <FormControl fullWidth sx={{mb: 2}}>
                             <InputLabel>Account</InputLabel>
                             <Select
                                 value={selectedAccount || ''}
                                 onChange={(e) => {
                                     const selectedValue = e.target.value as string;
-                                    console.log('Selected Account ID:', selectedValue);
                                     setSelectedAccount(selectedValue);
                                 }}
                                 label="Account"
@@ -252,7 +244,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
                             </Select>
                         </FormControl>
 
-                        <FormControl fullWidth>
+                        <FormControl fullWidth sx={{mb: 2}}>
                             <InputLabel>Container</InputLabel>
                             <Select
                                 value={selectedContainer}
@@ -267,7 +259,17 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
                                 ))}
                             </Select>
                         </FormControl>
-                        <FormControl fullWidth sx={{ mb: 2 }}>
+                        {accounts.length === 0 && (
+                            <Typography color="error" variant="body2" sx={{mb: 2}}>
+                                No accounts available. Please check your Google Tag Manager setup.
+                            </Typography>
+                        )}
+                        {containers.length === 0 && selectedAccount && (
+                            <Typography color="error" variant="body2" sx={{mb: 2}}>
+                                No containers available for the selected account. Please try another account.
+                            </Typography>
+                        )}
+                        <FormControl fullWidth sx={{mb: 2}}>
                             <InputLabel>Workspace</InputLabel>
                             <Select
                                 value={selectedWorkspace || ''}
@@ -283,7 +285,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
                             </Select>
                         </FormControl>
 
-                        <Box sx={{ mt: 2 }}>
+                        <Box sx={{mt: 2}}>
                             <Button
                                 variant="contained"
                                 color="primary"
@@ -295,7 +297,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
                                 variant="outlined"
                                 color="secondary"
                                 onClick={handleClose}
-                                sx={{ ml: 2 }}
+                                sx={{ml: 2}}
                             >
                                 Cancel
                             </Button>
