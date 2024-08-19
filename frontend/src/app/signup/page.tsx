@@ -193,9 +193,6 @@ const Signup: React.FC = () => {
     setShowPassword(!showPassword);
   };
 
-  // const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  //   setFormValues({ ...formValues, termsAccepted: e.target.checked });
-  // };
 
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { checked } = e.target;
