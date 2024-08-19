@@ -68,7 +68,7 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode }) => {
   const [email, setEmail] = useState('');
 
   const handleButtonClick = () => {
-    axiosInstance.post('/send-pixel-code', { email })
+    axiosInstance.post('/install-pixel/send-pixel-code', { email })
       .then(response => {
         showToast('Successfully send email')
       })
