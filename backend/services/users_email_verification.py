@@ -36,7 +36,6 @@ class UsersEmailVerificationService:
             confirm_email_url = f"{os.getenv('SITE_HOST_URL')}/authentication/verify-token?token={token}&skip_pricing=true"
             mail_object = SendgridHandler()
             mail_object.send_sign_up_mail(
-                subject="Please Verify Your Email",
                 to_emails=self.user.get('email'),
                 template_id=template_id,
                 template_placeholder={"full_name": self.user.get('full_name'), "link": confirm_email_url},

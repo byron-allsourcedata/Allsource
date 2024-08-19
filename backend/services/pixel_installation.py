@@ -99,14 +99,17 @@ class PixelInstallationService:
         return script
 
     def send_pixel_code_in_email(self, email):
+        message_expiration_time = self.user.get('pixel_code_sent_at', None)
+        time_now = datetime.now()
+        if message_expiration_time is not None:
+            if (message_expiration_time + timedelta(minutes=1)) > time_now:
+                return BaseEnum.SUCCESS
         pixel_code = self.get_manual()
         mail_object = SendgridHandler()
-
         template_id = self.send_grid_persistence_service.get_template_by_alias(
             SendgridTemplate.SEND_PIXEL_CODE_TEMPLATE.value)
         full_name = email.split('@')[0]
         mail_object.send_sign_up_mail(
-            subject="Maximize Password Reset Request",
             to_emails=email,
             template_id=template_id,
             template_placeholder={"full_name": full_name, "pixel_code": pixel_code,

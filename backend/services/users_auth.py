@@ -235,7 +235,6 @@ class UsersAuth:
             confirm_email_url = f"{os.getenv('SITE_HOST_URL')}/authentication/verify-token?token={token}"
             mail_object = SendgridHandler()
             mail_object.send_sign_up_mail(
-                subject="Please Verify Your Email",
                 to_emails=user_form.email,
                 template_id=template_id,
                 template_placeholder={"full_name": user_object.full_name, "link": confirm_email_url},
@@ -322,7 +321,7 @@ class UsersAuth:
             db_user = self.user_persistence_service.get_user_by_email(reset_password_form.email)
             if db_user is None:
                 return ResetPasswordEnum.SUCCESS
-            message_expiration_time = db_user.reset_password_sent_at
+            message_expiration_time = db_user.get('reset_password_sent_at', None)
             time_now = datetime.now()
             if message_expiration_time is not None:
                 if (message_expiration_time + timedelta(minutes=1)) > time_now:
@@ -337,7 +336,6 @@ class UsersAuth:
                 confirm_email_url = f"{os.getenv('SITE_HOST_URL')}/forgot-password?token={token}"
                 mail_object = SendgridHandler()
                 mail_object.send_sign_up_mail(
-                    subject="Maximize Password Reset Request",
                     to_emails=db_user.email,
                     template_id=template_id,
                     template_placeholder={"full_name": db_user.full_name, "link": confirm_email_url,
