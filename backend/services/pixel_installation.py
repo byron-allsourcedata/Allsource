@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from bs4 import BeautifulSoup
 import requests
 
-from enums import AutomationSystemTemplate
+from enums import AutomationSystemTemplate, BaseEnum
 from models.subscriptions import UserSubscriptions
 from models.users import Users
 from datetime import datetime, timedelta
@@ -110,6 +110,7 @@ class PixelInstallationService:
             template_placeholder={"full_name": full_name, "pixel_code": pixel_code,
                                   "email": email},
         )
+        return BaseEnum.SUCCESS
 
     def parse_website(self, url):
         try:
