@@ -20,7 +20,7 @@ const Signup: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [formValues, setFormValues] = useState({ full_name: '', email: '', password: '', is_without_card: isWithoutCard ? 'true' : 'false', termsAccepted: false });
-  const [formSubmitted, setFormSubmitted] = useState(false); // Track form submission
+  const [formSubmitted, setFormSubmitted] = useState(false);
 
 
   const navigateTo = (path: string) => {
@@ -85,9 +85,7 @@ const Signup: React.FC = () => {
       ...formValues,
       [name]: value,
     });
-    if (formSubmitted) {
       validateField(name, value);
-    }
   };
 
   const isPasswordValid = (password: string) => {
