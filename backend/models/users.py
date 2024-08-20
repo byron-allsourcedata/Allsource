@@ -33,7 +33,7 @@ class Users(Base):
     data_provider_id = Column(VARCHAR(64), nullable=True)
     is_pixel_installed = Column(BOOLEAN, default=False, nullable=True)
     role = Column(ARRAY(VARCHAR(32)))
-    calendly_uuid = Column(VARCHAR, nullable=True)
+    calendly_uuid = Column(VARCHAR(64), nullable=True)
 
 
 User = Users

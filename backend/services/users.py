@@ -49,25 +49,32 @@ class UsersService:
         return None
 
     def update_calendly_info(self, uuid: str):
-        calendly_uuid = self.get_calendly_uuid()
-        print(calendly_uuid)
+        try:
+            calendly_uuid = self.get_calendly_uuid()
 
-        if calendly_uuid:
-            url = f"https://api.calendly.com/scheduled_events/{calendly_uuid}/cancellation"
+            if calendly_uuid:
+                url = f"https://api.calendly.com/scheduled_events/{calendly_uuid}/cancellation"
 
-            headers = {
-                'Authorization': f'Bearer {os.getenv("CALENDLY_TOKEN")}',
-                'Content-Type': 'application/json'
-            }
+                headers = {
+                    'Authorization': f'Bearer {os.getenv("CALENDLY_TOKEN")}',
+                    'Content-Type': 'application/json'
+                }
 
-            data = {
-                "reason": 'Reschedule a Call'
-            }
+                data = {
+                    "reason": 'Reschedule a Call'
+                }
 
-            response = requests.post(url, headers=headers, json=data)
+                response = requests.post(url, headers=headers, json=data)
 
-            if response.status_code == 204:
-                logger.info('Event completed successfully')
+                if response.status_code == 204:
+                    logger.info('Event completed successfully')
+                else:
+                    logger.error(f"Calendly cancel response code: {response.status_code}")
+
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Request failed: {str(e)}")
+        except Exception as e:
+            logger.error(f"An error occurred: {str(e)}")
 
         self.user_persistence_service.update_calendly_uuid(self.user.get('id'), str(uuid))
         return 'OK'
