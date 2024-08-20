@@ -42,6 +42,10 @@ class UpdatePassword(BaseModel):
     confirm_password: str = Field(...)
 
 
+class CalendlyUUID(BaseModel):
+    uuid: str = Field(...)
+
+
 class CompanyInfo(BaseModel):
     organization_name: str = Field(...)
     company_website: str = Field(...)

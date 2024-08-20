@@ -1,12 +1,16 @@
 import logging
+import os
 
 from enums import UpdatePasswordStatus
 from persistence.user_persistence import UserPersistence
 from models.users import Users
-from schemas.users import UpdatePassword
+from schemas.users import UpdatePassword, CalendlyUUID
 from services.jwt_service import get_password_hash
+import requests
+from dotenv import load_dotenv
 
 logger = logging.getLogger(__name__)
+load_dotenv()
 
 
 class UsersService:
@@ -30,3 +34,41 @@ class UsersService:
                 "full_name": self.user.get('full_name'),
                 "company_website": self.user.get('company_website')
                 }
+
+    def get_calendly_info(self):
+        if self.user.get('calendly_uuid'):
+            return {"email": self.user.get('email'),
+                    "full_name": self.user.get('full_name')
+                    }
+
+    def get_calendly_uuid(self):
+        uuid_str = self.user.get('calendly_uuid')
+        if uuid_str:
+            uuid_cleaned = uuid_str.replace("uuid=", "").strip("'")
+            return uuid_cleaned
+        return None
+
+    def update_calendly_info(self, uuid: str):
+        calendly_uuid = self.get_calendly_uuid()
+        print(calendly_uuid)
+
+        if calendly_uuid:
+            url = f"https://api.calendly.com/scheduled_events/{calendly_uuid}/cancellation"
+
+            headers = {
+                'Authorization': f'Bearer {os.getenv("CALENDLY_TOKEN")}',
+                'Content-Type': 'application/json'
+            }
+
+            data = {
+                "reason": 'Reschedule a Call'
+            }
+
+            response = requests.post(url, headers=headers, json=data)
+
+            if response.status_code == 204:
+                logger.info('Event completed successfully')
+
+        self.user_persistence_service.update_calendly_uuid(self.user.get('id'), str(uuid))
+        return 'OK'
+
