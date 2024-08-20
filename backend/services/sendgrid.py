@@ -31,7 +31,6 @@ class SendgridHandler:
     @classmethod
     def send_sign_up_mail(
             cls,
-            subject: str,
             template_id: str,
             template_placeholder: dict,
             to_emails: List[str],
@@ -48,12 +47,12 @@ class SendgridHandler:
         message = Mail()
         message.from_email = From(from_user)
         message.add_to(to_email=to_emails)
-        message.subject = Subject(subject)
         message.template_id = template_id
         message.dynamic_template_data = {
             "Full_name": template_placeholder.get("full_name"),
             "Link": template_placeholder.get("link"),
-            "Email": template_placeholder.get("email")
+            "Email": template_placeholder.get("email"),
+            "Pixel_code": template_placeholder.get("pixel_code")
         }
         message.is_multiple = True
         if attachedfile is not None:

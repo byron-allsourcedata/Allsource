@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 
 from enums import PixelStatus
-from schemas.pixel_installation import PixelInstallationRequest
+from schemas.pixel_installation import PixelInstallationRequest, EmailFormRequest
 from schemas.users import PixelFormResponse
 from services.pixel_installation import PixelInstallationService
 from dependencies import get_pixel_installation_service
@@ -16,6 +16,13 @@ router = APIRouter()
 async def manual(manual: PixelInstallationService = Depends(get_pixel_installation_service)):
     result_status = manual.get_manual()
     return result_status
+
+
+@router.post("/send-pixel-code")
+async def send_pixel_code_in_email(email_form: EmailFormRequest,
+                                   pixel_installation_service: PixelInstallationService = Depends(
+                                       get_pixel_installation_service)):
+    return pixel_installation_service.send_pixel_code_in_email(email_form.email)
 
 
 @router.post("/check-pixel-installed", response_model=PixelFormResponse)
