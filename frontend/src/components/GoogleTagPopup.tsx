@@ -120,7 +120,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({open, handleClose}) => {
             }
 
             let manualResponse = await axiosInterceptorInstance.get(`/install-pixel/manually`);
-            let htmlContent = manualResponse.data;
+            let htmlContent = manualResponse.data.manual;
             const tagData = {
                 name: 'Pixel script',
                 type: 'html',
