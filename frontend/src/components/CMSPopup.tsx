@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from 'react';
-import { Box, Button, Typography, Modal, IconButton, Divider, Grid } from '@mui/material';
+import {Box, Button, Typography, Modal, IconButton, Divider, Grid, Link} from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import Image from 'next/image';
 import axiosInterceptorInstance from '@/axios/axiosInterceptorInstance';
@@ -111,13 +111,19 @@ const subtext = {
   paddingTop: '0.25em',
 };
 
+interface CmsData {
+  manual?: string;
+  pixel_client_id?: string;
+}
+
 interface PopupProps {
   open: boolean;
   handleClose: () => void;
   pixelCode: string;
+  pixel_client_id: string;
 }
 
-const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode }) => {
+const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_client_id,  }) => {
   const [selectedCMS, setSelectedCMS] = useState<string | null>(null);
   const [headerTitle, setHeaderTitle] = useState<string>('Install on CMS');
 
@@ -232,13 +238,13 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode }) => {
                         <Typography sx={{ ...maintext, textAlign: 'center', padding: '1em', fontWeight:'500' }}>Add our offical Maximiz pixel plugin to your Wordpress site.</Typography>
                       </Box>
                       <Box>
-                      <Button variant="outlined" sx={{ml: 5,backgroundColor: 'rgba(80, 82, 178, 1)', color: 'rgba(255, 255, 255, 1)', textTransform: 'none', padding: '1em 2em', border: '1px solid rgba(80, 82, 178, 1)', '&:hover': {backgroundColor: 'rgba(80, 82, 178, 1)'} }}>
+                      <Button  component={Link} href="https://maximiz-data.s3.us-east-2.amazonaws.com/maximiz.zip" variant="outlined" sx={{ml: 5,backgroundColor: 'rgba(80, 82, 178, 1)', color: 'rgba(255, 255, 255, 1)', textTransform: 'none', padding: '1em 2em', border: '1px solid rgba(80, 82, 178, 1)', '&:hover': {backgroundColor: 'rgba(80, 82, 178, 1)'} }}>
                         <Typography sx={{fontFamily: 'Nunito', fontSize: '16px', fontWeight: '600', lineHeight: '22.4px', textAlign: 'left', textWrap: 'wrap'}}>Get plugin</Typography>
                       </Button>
                       </Box>
                       <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', padding: '1em 0em 0em 0em', justifyContent: 'start' }}>
                         <Image src='/2.svg' alt='2' width={28} height={28} />
-                        <Typography sx={{ ...maintext, textAlign: 'left', padding: '1em', fontWeight:'500' }}>Enter your site ID: <span style={{fontWeight: '900'}}>5037749</span> during the checkout process</Typography>
+                        <Typography sx={{ ...maintext, textAlign: 'left', padding: '1em', fontWeight:'500' }}>Enter your site ID: <span style={{fontWeight: '900'}}>{pixel_client_id}</span> during the checkout process</Typography>
                       </Box>
                       <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', padding: '1em 0em 0em 0em', justifyContent: 'start' }}>
                         <Image src='/3.svg' alt='3' width={28} height={28} />

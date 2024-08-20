@@ -7,9 +7,13 @@ import React, {useEffect, useState} from "react";
 import ManualPopup from '../components/ManualPopup';
 import GoogleTagPopup from '../components/GoogleTagPopup';
 import CRMPopup from "./CMSPopup";
-import {  useTrial } from "@/context/TrialProvider";
-import IndexPage from "@/components/GoogleTagPopup";
 
+
+
+interface CmsData {
+  manual?: string;
+  pixel_client_id?: string;
+}
 
 const PixelInstallation: React.FC = () => {
   const { setShowSlider } = useSlider();
@@ -17,7 +21,7 @@ const PixelInstallation: React.FC = () => {
   const installManually = async () => {
     try {
       const response = await axiosInterceptorInstance.get('/install-pixel/manually');
-      setPixelCode(response.data);
+      setPixelCode(response.data.manual);
       setOpen(true);
     } catch (error) {
       if (error instanceof AxiosError && error.response?.status === 403) {
@@ -41,7 +45,7 @@ const PixelInstallation: React.FC = () => {
   const [openmanually, setOpen] = useState(false);
   const [pixelCode, setPixelCode] = useState('');
   const [opengoogle, setGoogleOpen] = useState(false);
-  const [cmsCode, setCmsCode] = useState('');
+  const [cmsData, setCmsData] = useState<CmsData>({});
   const [opencrm, setCMSOpen] = useState(false);
 
   useEffect(() => {
@@ -70,7 +74,7 @@ const PixelInstallation: React.FC = () => {
   const installCMS = async () => {
     try {
       const response = await axiosInterceptorInstance.get('/install-pixel/cms');
-      setCmsCode(response.data);
+      setCmsData(response.data);
       setCMSOpen(true);
     } catch (error) {
       if (error instanceof AxiosError && error.response?.status === 403) {
@@ -118,7 +122,7 @@ const PixelInstallation: React.FC = () => {
             </Box>
             <Typography sx={{...typographyStyles, pt: 1.75}}>Install on CMS</Typography>
           </Button>
-          <CRMPopup open={opencrm} handleClose={handleCRMClose} pixelCode={cmsCode} />
+          <CRMPopup open={opencrm} handleClose={handleCRMClose} pixelCode={cmsData.manual || ''}  pixel_client_id={cmsData.pixel_client_id || ''} />
         </Grid>
       </Grid>
     </Box>
