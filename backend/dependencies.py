@@ -72,8 +72,11 @@ def get_subscription_service(db: Session = Depends(get_db),
 
 
 def get_admin_customers_service(db: Session = Depends(get_db),
-                                subscription_service: SubscriptionService = Depends(get_subscription_service)):
-    return AdminCustomersService(db=db, subscription_service=subscription_service)
+                                subscription_service: SubscriptionService = Depends(get_subscription_service),
+                                user_persistence: UserPersistence = Depends(get_user_persistence_service), 
+                                plans_presistence: PlansPersistence = Depends(get_plans_persistence)):
+    return AdminCustomersService(db=db, subscription_service=subscription_service, 
+                                 user_persistence=user_persistence, plans_persistence=plans_presistence)
 
 
 def get_user_authorization_status_without_pixel(user, subscription_service):
@@ -146,6 +149,7 @@ def check_user_authorization(Authorization: Annotated[str, Header()],
             detail={'status': auth_status.value}
         )
     return user
+
 
 
 def check_user_authorization_without_pixel(Authorization: Annotated[str, Header()],
@@ -258,3 +262,32 @@ def get_users_email_verification_service(user=Depends(check_user_authentication)
                                              get_send_grid_persistence_service)):
     return UsersEmailVerificationService(user=user, user_persistence_service=user_persistence_service,
                                          send_grid_persistence_service=sendgrid_persistence_service)
+
+
+def check_user_authorization(Authorization: Annotated[str, Header()],
+                             user_persistence_service: UserPersistence = Depends(
+                                 get_user_persistence_service), subscription_service: SubscriptionService = Depends(
+            get_subscription_service)) -> Token:
+    user = check_user_authentication(Authorization, user_persistence_service)
+    auth_status = get_user_authorization_status(user, subscription_service)
+    if auth_status == UserAuthorizationStatus.PAYMENT_NEEDED:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={'status': auth_status.value,
+                    'stripe_payment_url': user.stripe_payment_url}
+        )
+    if auth_status != UserAuthorizationStatus.SUCCESS:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={'status': auth_status.value}
+        )
+    return user
+
+
+def check_user_admin(Authorization: Annotated[str, Header()], 
+                     user_persistence_service: UserPersistence = Depends(get_user_persistence_service), 
+                     ) -> Token:
+    user = check_user_authentication(Authorization, user_persistence_service)
+    if 'admin' not in user['role']:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail={'status': 'FORBIDDEN'})
+    return user
