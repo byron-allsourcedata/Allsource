@@ -22,7 +22,7 @@ const VerifyToken = () => {
                 showInfoToast('Email has already been verified')
               }
               else if (response.data.status === 'SUCCESS') {
-                showInfoToast('You have successfully verified your email')
+                showToast('You have successfully verified your email')
               }
               const newToken = response.data.token;
               localStorage.removeItem('token');
