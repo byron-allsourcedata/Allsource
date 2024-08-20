@@ -6,10 +6,12 @@ import csv
 from datetime import datetime, timedelta
 
 import pytz
-from sqlalchemy import and_, or_, desc, asc
-from sqlalchemy.orm import Session
+from sqlalchemy import and_, or_, desc, asc, Integer
+from sqlalchemy.orm import Session, aliased
 from sqlalchemy.sql import func
 
+from models.audience import Audience
+from models.audience_leads import AudienceLeads
 from models.lead_visits import LeadVisits
 from models.leads import Lead
 from models.leads_locations import LeadsLocations
@@ -25,7 +27,7 @@ class LeadsPersistence:
     def __init__(self, db: Session):
         self.db = db
 
-    def filter_leads(self, user, page, per_page, status, from_date, to_date, regions, page_visits, average_time_spent,
+    def filter_leads(self, user_id, page, per_page, status, from_date, to_date, regions, page_visits, average_time_spent,
                      lead_funnel, emails, recurring_visits, sort_by, sort_order):
         subquery = (
             self.db.query(
@@ -48,7 +50,7 @@ class LeadsPersistence:
             .join(LeadsLocations, Lead.id == LeadsLocations.lead_id)
             .join(Locations, LeadsLocations.location_id == Locations.id)
             .outerjoin(subquery, LeadUser.id == subquery.c.leads_users_id)
-            .filter(LeadUser.user_id == user.id)
+            .filter(LeadUser.user_id == user_id)
         )
         sort_options = {
             'name': Lead.first_name,
@@ -85,16 +87,27 @@ class LeadsPersistence:
                 )
             )
         if regions:
+            region_list = regions.split(',')
             query = query.filter(
-                Locations.city.in_(regions)
+                Locations.city.in_(region_list)
             )
         if emails:
-            email_filters = [Lead.business_email.like(f"%{email}") for email in emails]
+            email_filters = [Lead.business_email.ilike(f'%{email}') for email in emails]
             query = query.filter(or_(*email_filters))
         if status == 'new_customers':
             query = query.filter(LeadUser.status == 'New')
         elif status == 'existing_customers':
             query = query.filter(LeadUser.status == 'Existing')
+
+        if lead_funnel:
+            funnel_list = lead_funnel.split(',')
+            query = query.filter(LeadUser.funnel.in_(funnel_list))
+
+        if page_visits:
+            query = query.filter(Lead.no_of_page_visits >= page_visits)
+
+        if average_time_spent:
+            query = query.filter(Lead.time_spent >= average_time_spent)
 
         offset = (page - 1) * per_page
         leads = query.limit(per_page).offset(offset).all()
@@ -147,7 +160,103 @@ class LeadsPersistence:
             .all()
         )
         return lead_users
+    
+    def create_age_conditions(self, age_str: str):
+        filters = []
+        for part in age_str:
+            if '-' in part:
+                start, end = map(int, part.split('-'))
+                filters.append(and_(Lead.age_min <= end, Lead.age_max >= start))
+            else:
+                age = int(part)
+                filters.append(and_(Lead.age_min <= age, Lead.age_max >= age))
+        return filters
 
+    def build_net_worth_filters(self, net_worth_str: str):
+        filters = []
+        for part in net_worth_str.split(','):
+            part = part.strip()
+            if '-' in part:
+                if '$' in part:
+                    part = part.replace('$', '').replace(',', '')
+                start, end = map(int, part.split('-'))
+                filters.append(and_(
+                    func.regexp_replace(Lead.net_worth, r'[\$,]', '', 'g').cast(Integer) >= start,
+                    func.regexp_replace(Lead.net_worth, r'[\$,]', '', 'g').cast(Integer) <= end
+                ))
+            else:
+                if '$' in part:
+                    part = part.replace('$', '').replace(',', '')
+                value = int(part)
+                filters.append(and_(
+                    func.regexp_replace(Lead.net_worth, r'[\$,]', '', 'g').cast(Integer) >= value,
+                    func.regexp_replace(Lead.net_worth, r'[\$,]', '', 'g').cast(Integer) <= value
+                ))
+        return filters
+
+    def normalize_profession(self, profession: str) -> str:
+        return profession.lower().replace(" ", "-")
+
+    def filter_leads_for_build_audience(self, regions, professions, ages, genders, net_worths,
+                                        interest_list, not_in_existing_lists, page, per_page):
+        query = (
+            self.db.query(
+                Lead.id,
+                Lead.first_name,
+                Lead.last_name,
+                Lead.business_email,
+                Lead.gender,
+                Lead.age_min,
+                Lead.age_max,
+                Lead.job_title,
+                Locations.state,
+                Locations.city,
+            )
+            .join(LeadsLocations, LeadsLocations.lead_id == Lead.id)
+            .join(Locations, LeadsLocations.location_id == Locations.id)
+        )
+
+        if not_in_existing_lists:
+            not_in_existing_lists = not_in_existing_lists.split(',')
+            audience_leads_alias = aliased(AudienceLeads)
+            audience_subquery = (
+                self.db.query(audience_leads_alias.lead_id)
+                .select_from(audience_leads_alias)
+                .join(Audience, audience_leads_alias.lead_id == Audience.id)
+                .filter(Audience.name.in_(not_in_existing_lists))
+            )
+            query = query.filter(Lead.id.notin_(audience_subquery))
+        if regions:
+            regions = regions.split(',')
+            filters = [Locations.city == region.lower() for region in regions]
+            query = query.filter(or_(*filters))
+        if professions:
+            professions = professions.split(',')
+            normalized_professions = [self.normalize_profession(p) for p in professions]
+            profession_filters = []
+            for profession in normalized_professions:
+                profession_filters.append(Lead.job_title.ilike(f"%{profession.replace('-', ' ')}%"))
+
+            query = query.filter(or_(*profession_filters))
+        if ages:
+            ages = ages.split(',')
+            age_filters = self.create_age_conditions(ages)
+            query = query.filter(or_(*age_filters))
+        if genders:
+            genders = genders.split(',')
+            filters = [Lead.gender == gender.upper() for gender in genders]
+            query = query.filter(or_(*filters))
+        if net_worths:
+            net_worths = net_worths.split(',')
+            net_worth_filters = self.build_net_worth_filters(net_worths)
+            query = query.filter(or_(*net_worth_filters))
+
+        offset = (page - 1) * per_page
+        leads_data = query.limit(per_page).offset(offset).all()
+        count = query.count()
+        max_page = math.ceil(count / per_page) if per_page > 0 else 1
+        return leads_data, count, max_page
+    
     def update_leads_by_cutomer(self, customer: Customer, user_id: int):
         lead = self.db.query(Lead).filter(Lead.business_email == customer.business_email).first()
         if lead:
@@ -159,4 +268,3 @@ class LeadsPersistence:
         self.db.commit()
         self.db.add(LeadUser(lead_id=lead.id, user_id=user_id, status='New', funnel='Converted'))
         self.db.commit()
-        

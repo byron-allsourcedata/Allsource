@@ -6,8 +6,8 @@ from enums import VerifyToken
 from persistence.user_persistence import UserPersistence
 from .jwt_service import decode_jwt_data
 
-
 logger = logging.getLogger(__name__)
+
 
 class SseEventsService:
 
@@ -19,19 +19,19 @@ class SseEventsService:
             data = decode_jwt_data(token)
         except:
             return {'status': VerifyToken.INCORRECT_TOKEN}
-        check_user_object = self.user_persistence_service.get_user_by_id(data.get('id'))
-        if check_user_object:
+        user = self.user_persistence_service.get_user_by_id(data.get('id'))
+        if user:
             return {
                 'status': VerifyToken.SUCCESS,
-                'user': check_user_object
+                'user_id': user['id']
             }
+
         return {'status': VerifyToken.INCORRECT_TOKEN}
 
     async def init_sse_events(self, token):
         result = self.verify_token(token)
         if result['status'] == VerifyToken.SUCCESS:
-            queue_name = f'sse_events_{str(result["user"].id)}'
-
+            queue_name = f'sse_events_{str(result["user_id"])}'
             rmq_connection = RabbitMQConnection()
             connection = await rmq_connection.connect()
             channel = await connection.channel()

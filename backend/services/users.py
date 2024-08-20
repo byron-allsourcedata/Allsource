@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 class UsersService:
-    def __init__(self, user: Users, user_persistence_service: UserPersistence):
+    def __init__(self, user, user_persistence_service: UserPersistence):
         self.user = user
         self.user_persistence_service = user_persistence_service
 
@@ -19,14 +19,14 @@ class UsersService:
             return UpdatePasswordStatus.PASSWORDS_DO_NOT_MATCH
         update_data.password = get_password_hash(update_data.password)
         logger.info('update password success')
-        self.user_persistence_service.update_password(self.user.id, update_data.password)
+        self.user_persistence_service.update_password(self.user.get('id'), update_data.password)
         return UpdatePasswordStatus.PASSWORD_UPDATED_SUCCESSFULLY
 
     def get_info_plan(self):
-        return self.user_persistence_service.get_user_plan(self.user.id)
+        return self.user_persistence_service.get_user_plan(self.user.get('id'))
 
     def get_my_info(self):
-        return {"email": self.user.email,
-                "full_name": self.user.full_name,
-                "company_website": self.user.company_website
+        return {"email": self.user.get('email'),
+                "full_name": self.user.get('full_name'),
+                "company_website": self.user.get('company_website')
                 }
