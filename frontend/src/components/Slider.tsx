@@ -1,13 +1,47 @@
 "use client"
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Drawer, Box, Typography, IconButton, Backdrop } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { useSlider } from '../context/SliderContext';
-import { PopupButton } from "react-calendly";
+import { PopupButton, useCalendlyEventListener } from "react-calendly";
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import axiosInstance from '@/axios/axiosInterceptorInstance';
 
 const Slider: React.FC = () => {
+  const [prefillData, setPrefillData] = useState({
+    email: '',
+    name: '',
+  });
+
+  const fetchPrefillData = async () => {
+    try {
+      const response = await axiosInstance.get('/calendly');
+      const { name, email } = response.data;
+
+      const [firstName, lastName] = name.split(' ');
+      setPrefillData({
+        email: email || '',
+        name: name || '',
+      });
+    } catch (error) {
+      console.error('Ошибка при получении данных:', error);
+    }
+  };
   const { showSlider, setShowSlider } = useSlider();
+
+  useEffect(() => {
+    if (showSlider) {
+      fetchPrefillData();
+    }
+  }, [showSlider]);
+
+  useCalendlyEventListener({
+    onProfilePageViewed: () => console.log("onProfilePageViewed"),
+    onDateAndTimeSelected: () => console.log("onDateAndTimeSelected"),
+    onEventTypeViewed: () => console.log("onEventTypeViewed"),
+    onEventScheduled: (e) => console.log(e.data),
+  });
+  
   const handleClose = () => {
     sessionStorage.setItem('is_slider_opened', 'false');
     setShowSlider(false);
@@ -107,7 +141,8 @@ const Slider: React.FC = () => {
                 textTransform: 'none',
                 cursor: 'pointer',
               }}
-              url="https://calendly.com/slava-lolly/123"
+              prefill={prefillData}
+              url="https://calendly.com/nickit-schatalow09/maximiz"
               rootElement={document.getElementById("calendly-popup-wrapper")!}
               text="Get Started"
             />

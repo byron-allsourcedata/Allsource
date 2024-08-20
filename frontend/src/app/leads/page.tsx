@@ -879,14 +879,6 @@ const Leads: React.FC = () => {
                                 </Box>
                             </Box>
                             <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, mt: 2 }}>
-                                {selectedFilters.map(filter => (
-                                    <Chip
-                                        key={filter.label}
-                                        label={`${filter.value}`}
-                                        onDelete={() => handleDeleteFilter(filter)}
-                                        sx={{ borderRadius: '3px', border: '1px solid rgba(80, 82, 178, 1)', backgroundColor: 'rgba(237, 237, 247, 1)', color: 'rgba(123, 123, 123, 1)', fontFamily: 'Nunito', fontWeight: '600', fontSize: '13px' }}
-                                    />
-                                ))}
                                 {selectedFilters.length > 0 && (
                                     <Chip
                                         label="Clear all"
@@ -894,6 +886,14 @@ const Leads: React.FC = () => {
                                         sx={{ backgroundColor: 'rgba(255, 255, 255, 1)', color: 'rgba(80, 82, 178, 1)', border: '1px solid rgba(220, 220, 239, 1)', borderRadius: '3px', fontFamily: 'Nunito', fontWeight: '600', fontSize: '12px' }}
                                     />
                                 )}
+                                {selectedFilters.map(filter => (
+                                    <Chip
+                                        key={filter.label}
+                                        label={`${filter.value}`}
+                                        onDelete={() => handleDeleteFilter(filter)}
+                                        sx={{ borderRadius: '4.5px', backgroundColor: 'rgba(237, 237, 247, 1)', color: 'rgba(74, 74, 74, 1)', fontFamily: 'Nunito', fontWeight: '600', fontSize: '13px' }}
+                                    />
+                                ))}
                             </Box>
                             <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', padding: 2 }}>
                                 {status === 'PIXEL_INSTALLATION_NEEDED' ? (
@@ -1060,7 +1060,7 @@ const Leads: React.FC = () => {
                                                                 </TableCell>
                                                                 <TableCell
                                                                     sx={leadsStyles.table_array}>
-                                                                        <Box
+                                                                    <Box
                                                                         sx={{
                                                                             display: 'flex',
                                                                             padding: '4px 8px',
@@ -1076,7 +1076,7 @@ const Leads: React.FC = () => {
                                                                     >
                                                                         {row.status || 'N/A'}
                                                                     </Box>
-                                                                    </TableCell>
+                                                                </TableCell>
                                                                 <TableCell
                                                                     sx={leadsStyles.table_array}>{row.lead.time_spent || 'N/A'}</TableCell>
                                                                 <TableCell
