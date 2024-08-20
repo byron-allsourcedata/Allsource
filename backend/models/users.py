@@ -26,12 +26,13 @@ class Users(Base):
     payment_status = Column(INTEGER, default=5, nullable=True)
     customer_id = Column(VARCHAR, nullable=True)
     reset_password_sent_at = Column(DateTime, nullable=True)
+    pixel_code_sent_at = Column(DateTime, nullable=True)
     verified_email_sent_at = Column(DateTime, nullable=True)
     is_book_call_passed = Column(BOOLEAN, default=False, nullable=True)
     stripe_payment_url = Column(VARCHAR, nullable=True)
     data_provider_id = Column(VARCHAR(64), nullable=True)
     is_pixel_installed = Column(BOOLEAN, default=False, nullable=True)
-    role = Column(ARRAY(VARCHAR))
+    role = Column(ARRAY(VARCHAR(32)))
 
 
 User = Users

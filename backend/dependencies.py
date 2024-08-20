@@ -286,6 +286,6 @@ def check_user_admin(Authorization: Annotated[str, Header()],
                      user_persistence_service: UserPersistence = Depends(get_user_persistence_service), 
                      ) -> Token:
     user = check_user_authentication(Authorization, user_persistence_service)
-    if 'admin' not in user.role:
+    if 'admin' not in user['role']:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail={'status': 'FORBIDDEN'})
     return user
