@@ -40,8 +40,17 @@ def bigcommerce_customers(client: Client, store_hash: str, auth_token: str):
     response = client.get(customers_url, headers={'X-Auth-Token': auth_token})
     if response.status_code != 200:
         raise Exception
-    customers = response.json()
-    return mapped_customers('bigcommerce',customers)
+    customers = response.json().get('data', [])
+    return mapped_customers('bigcommerce', customers)
+
+
+def klaviyo_customers(client: Client, access_token: str):
+    custromers_url = f'https://a.klaviyo.com/api/profiles/'
+    response = client.get(custromers_url, headers={'Authorization': f'Klaviyo-API-Key {access_token}', 'revision': '2023-12-15'})
+    if response.status_code != 200:
+        raise Exception
+    customers = response.json().get('data', [])
+    return mapped_customers('klaviyo', customers)
 
 
 def save_customer(session, customer, user_id: int):
@@ -59,7 +68,6 @@ def save_customer(session, customer, user_id: int):
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
-    logging.info('start')
     dotenv.load_dotenv()
     engine = create_engine(
         f"postgresql://{os.getenv('DB_USERNAME')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}")
@@ -67,7 +75,6 @@ if __name__ == '__main__':
     session = Session()
     client = Client()
     try:
-        logging.info('try')
         while True:
             credentials_service = session.query(UserIntegration).all()
             for credentials in credentials_service:
@@ -77,6 +84,8 @@ if __name__ == '__main__':
                     customers = bigcommerce_customers(client, credentials.shop_domain, credentials.access_token)
                 elif credentials.service_name == 'woocommerce':
                     customers = woocommers_customers(credentials.shop_domain, credentials.consumer_key, credentials.consumer_secret)
+                elif credentials.service_name == 'klaviyo':
+                    customers = klaviyo_customers(client, credentials.access_token)
                 for customer in customers:
                     save_customer(session, customer, credentials.user_id)
             time.sleep(10*60)        

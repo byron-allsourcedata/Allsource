@@ -3,9 +3,9 @@ from fastapi import HTTPException
 from httpx import Client
 from models.users import User
 from persistence.users_integrations_persistence import UserIntegrationsPresistence
-from .utils import mapped_customers
+from .utils import mapped_customers, IntegrationsABC
 
-class ShopifyIntegrationService:
+class ShopifyIntegrationService(IntegrationsABC):
 
     shopify_api_customers = '/admin/api/2024-07/customers.json'
 
@@ -23,7 +23,7 @@ class ShopifyIntegrationService:
         if response.status_code != 200:
             raise HTTPException(status_code=400, detail='Invalid shop name or access token')
 
-        customers = response.json().get('customers')
+        customers = response.json().get('customers', [])
 
         return mapped_customers('shopify',customers)
 

@@ -1,4 +1,22 @@
 from schemas.integrations import Customer
+from abc import ABC, abstractmethod
+
+
+class IntegrationsABC(ABC):
+
+    @abstractmethod
+    def __init__(self) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_customers(self):
+        raise NotImplementedError
+    
+    @abstractmethod
+    def create_integration(self):
+        raise NotImplementedError
+
+
 
 def extract_shopify_data(customer):
     addresses = customer.get('addresses', [])
@@ -65,12 +83,37 @@ def extract_bigcommerce_data(customer):
         company_employee_count=None
     )
 
+
+def extract_klaviyo_data(customer) -> Customer:
+    attributes = customer.get("attributes", {})
+    
+    return Customer(
+        first_name=attributes.get("first_name"),
+        last_name=attributes.get("last_name"),
+        mobile_phone=attributes.get("phone_number"),
+        company_address=f"{attributes.get('location', {}).get('address1', '')} {attributes.get('location', {}).get('address2', '')}".strip(),
+        company_city=attributes.get("location", {}).get("city"),
+        company_state=attributes.get("location", {}).get("region"),
+        company_zip=attributes.get("location", {}).get("zip"),
+        business_email=attributes.get("email"),
+        time_spent=None,
+        no_of_visits=None,
+        no_of_page_visits=None,
+        company_name=attributes.get("organization"),
+        company_phone=attributes.get("phone_number"),
+        company_revenue=None,
+        company_employee_count=None
+    )
+
+
 def mapped_customers(service_name, customers):
     if service_name == 'shopify':
         return [extract_shopify_data(customer) for customer in customers]
     elif service_name == 'woocommerce':
         return [extract_woocommerce_data(customer) for customer in customers]
     elif service_name == 'bigcommerce':
-        return [extract_bigcommerce_data(customer) for customer in customers.get("data", [])]
+        return [extract_bigcommerce_data(customer) for customer in customers]
+    elif service_name == 'klaviyo':
+        return [extract_klaviyo_data(customer) for customer in customers]
     else:
         raise ValueError(f"Unsupported service name: {service_name}")

@@ -6,16 +6,22 @@ class ShopifyOrBigcommerceCredentials(BaseModel):
     shop_domain: str
     access_token: str
 
+
 class WoocommerceCredentials(BaseModel):
     url: str
     consimer_key: str
     consumer_secret: str
 
 
+class KlaviyoCredentials(BaseModel):
+    access_token: str 
+
+
 class IntegrationCredentials(BaseModel):
     shopify: Optional[ShopifyOrBigcommerceCredentials] = None
     woocommerce: Optional[WoocommerceCredentials] = None
     bigcommerce: Optional[ShopifyOrBigcommerceCredentials] = None
+    klaviyo: Optional[KlaviyoCredentials] = None
 
 
 class Customer(BaseModel):

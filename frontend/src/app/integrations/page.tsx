@@ -14,11 +14,11 @@ import CloseIcon from '@mui/icons-material/Close';
 const Sidebar = dynamic(() => import('../../components/Sidebar'), {
     suspense: true,
 });
-
 interface IntegrationService {
     id: number;
     service_name: string;
     image_url: string;
+    fields?: any[];
 }
 
 interface Credential {
@@ -28,46 +28,51 @@ interface Credential {
     service_name: string;
 }
 
-
 interface SliderIntegrationProps {
     credential: Credential | null;
-    service_name: string;
+    service: IntegrationService;
     open: boolean;
     onClose: () => void;
     onSave: (updatedCredential: Credential) => void;
-    onDelete: (service_name: string) => void
+    onDelete: (service_name: string) => void;
 }
 
-const SliderIntegration = ({ credential, service_name, open, onClose, onSave, onDelete }: SliderIntegrationProps) => {
-    const [shopDomain, setShopDomain] = useState('');
-    const [apiKey, setApiKey] = useState<string>('');
+const SliderIntegration = ({ credential, service, open, onClose, onSave, onDelete }: SliderIntegrationProps) => {
+    const [formData, setFormData] = useState<Record<string, string>>({});
     const { setShowSlider } = useSlider();
-    const [openModal, setOpenModal] = useState(false)
+    const [openModal, setOpenModal] = useState(false);
+    const fields = service.fields || [];
+
     useEffect(() => {
         if (credential) {
-            setShopDomain(credential.shop_domain);
-            setApiKey(credential.access_token || '');
+            setFormData({
+                shop_domain: credential.shop_domain || '',
+                access_token: credential.access_token || '',
+            });
         } else {
-            setShopDomain('');
-            setApiKey('');
+            setFormData({});
         }
     }, [credential]);
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setFormData((prevData) => ({ ...prevData, [name]: value }));
+    };
 
     const handleSave = async () => {
         const accessToken = localStorage.getItem('token');
         if (!accessToken) return;
 
-        const body = {
-            [service_name]: {
-                shop_domain: shopDomain,
-                access_token: apiKey,
+        const body: Record<string, any> = {
+            [service.service_name]: {
+                ...formData,
             },
         };
 
         try {
             const response = await axiosInstance.post(`/integrations/`, body, {
-                params:{
-                    service_name: service_name
+                params: {
+                    service_name: service.service_name,
                 },
                 headers: {
                     Authorization: `Bearer ${accessToken}`,
@@ -75,14 +80,14 @@ const SliderIntegration = ({ credential, service_name, open, onClose, onSave, on
                 },
             });
 
-            if (response.status === 201) {
+            if (response.status === 200) {
                 onClose();
                 setShowSlider(false);
                 const newCredential: Credential = {
                     id: -1,
-                    shop_domain: shopDomain,
-                    access_token: apiKey,
-                    service_name: service_name,
+                    shop_domain: formData.shop_domain || '',
+                    access_token: formData.access_token || '',
+                    service_name: service.service_name,
                 };
                 onSave(newCredential);
             }
@@ -96,14 +101,14 @@ const SliderIntegration = ({ credential, service_name, open, onClose, onSave, on
         onClose();
     };
 
-    const handleDelete = async() => {
+    const handleDelete = async () => {
         const accessToken = localStorage.getItem('token');
         if (!accessToken) return;
 
         try {
             const response = await axiosInstance.delete(`/integrations/`, {
-                params:{
-                    service_name: service_name
+                params: {
+                    service_name: service.service_name,
                 },
                 headers: {
                     Authorization: `Bearer ${accessToken}`,
@@ -111,14 +116,13 @@ const SliderIntegration = ({ credential, service_name, open, onClose, onSave, on
                 },
             });
             if (response.status === 200) {
-                onClose();  
+                onClose();
                 setShowSlider(false);
-                setOpenModal(false)
-                onDelete(service_name);
-                
+                setOpenModal(false);
+                onDelete(service.service_name);
             }
         } catch (error) {
-            console.error("Error delete integration", error);
+            console.error("Error deleting integration", error);
         }
     };
 
@@ -143,30 +147,28 @@ const SliderIntegration = ({ credential, service_name, open, onClose, onSave, on
                 }}
             >
                 <Box sx={{ p: 6, display: 'flex', flexDirection: 'column', textAlign: 'center', alignItems: 'center', justifyContent: 'center' }}>
-                    <Box sx={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%'}}>
-                        <Typography variant="h6" component="p">{service_name}</Typography>
-                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }}>
-                        <IconButton onClick={handleClose}>
-                            <CloseIcon />
-                        </IconButton>
-                    </Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                        <Typography variant="h6" component="p">{service.service_name}</Typography>
+                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }}>
+                            <IconButton onClick={handleClose}>
+                                <CloseIcon />
+                            </IconButton>
+                        </Box>
                     </Box>
                     <Box sx={{ mt: 4, width: '100%' }}>
-                        <TextField
-                            label="Shop Domain"
-                            value={shopDomain}
-                            onChange={(e) => setShopDomain(e.target.value)}
-                            fullWidth
-                        />
-                        <TextField
-                            label="Access Token"
-                            value={apiKey}
-                            onChange={(e) => setApiKey(e.target.value)}
-                            fullWidth
-                            type="password"
-                            margin="normal"
-                        />
-                        <Box sx={{display: 'flex', justifyContent: 'space-between'}}>
+                        {fields.map((field: any) => (
+                            <TextField
+                                key={field.name}
+                                label={field.label}
+                                name={field.name}
+                                type={field.type}
+                                value={formData[field.name] || ''}
+                                onChange={handleChange}
+                                fullWidth
+                                margin="normal"
+                            />
+                        ))}
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                             <Button onClick={() => setOpenModal(true)} variant="outlined" color="error" sx={{ mt: 2 }}>Delete</Button>
                             <Button onClick={handleSave} variant="contained" color="primary" sx={{ mt: 2 }}>
                                 Save
@@ -176,31 +178,31 @@ const SliderIntegration = ({ credential, service_name, open, onClose, onSave, on
                 </Box>
             </Drawer>
             <Modal
-                sx={{zIndex: 1302,}}
+                sx={{ zIndex: 1302 }}
                 open={openModal}
                 onClose={() => setOpenModal(false)}
                 aria-labelledby="modal-modal-title"
                 aria-describedby="modal-modal-description"
-                >
+            >
                 <Box sx={integrationsStyle.modal}>
                     <Typography textAlign={'center'} id="modal-modal-title" variant="h6" component="h2">
-                        You already want delete this integration
+                        Are you sure you want to delete this integration?
                     </Typography>
-                    <Box sx={{display: 'flex', justifyContent: 'space-between'}}>
-                        <Button onClick={() => handleDelete()} variant="outlined" color="error" sx={{ mt: 2 }}>Delete</Button>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <Button onClick={handleDelete} variant="outlined" color="error" sx={{ mt: 2 }}>Delete</Button>
                         <Button onClick={() => setOpenModal(false)} variant="contained" color="primary" sx={{ mt: 2 }}>
-                            Discrad
+                            Discard
                         </Button>
                     </Box>
                 </Box>
-                </Modal>
+            </Modal>
         </>
     );
 };
 
 const ServiceIntegrations = ({ service }: { service: IntegrationService[] }) => {
     const [credentials, setCredentials] = useState<Credential[]>([]);
-    const [selectedService, setSelectedService] = useState<string>('');
+    const [selectedService, setSelectedService] = useState<IntegrationService | null>(null);
     const [selectedCredential, setSelectedCredential] = useState<Credential | null>(null);
     const [openModal, setOpenModal] = useState<boolean>(false);
 
@@ -223,11 +225,11 @@ const ServiceIntegrations = ({ service }: { service: IntegrationService[] }) => 
         fetchData();
     }, []);
 
-    const handleServiceClick = (service_name: string) => {
-        setSelectedService(service_name);
-        const matchedCredential = credentials.find(credential => credential.service_name === service_name);
+    const handleServiceClick = (service: IntegrationService) => {
+        setSelectedService(service);
+        const matchedCredential = credentials.find(credential => credential.service_name === service.service_name);
         setSelectedCredential(matchedCredential || null);
-        setOpenModal(true);
+        setOpenModal(true); 
     };
 
     const handleCloseModal = () => setOpenModal(false);
@@ -263,7 +265,7 @@ const ServiceIntegrations = ({ service }: { service: IntegrationService[] }) => 
                 {service.map(srv => {
                     const matchedCredential = credentials.find(credential => credential.service_name === srv.service_name);
                     return (
-                        <Box key={srv.id} onClick={() => handleServiceClick(srv.service_name)} sx={{
+                        <Box key={srv.id} onClick={() => handleServiceClick(srv)} sx={{
                             display: 'flex',
                             flexDirection: 'column',
                             alignItems: 'center',
@@ -279,19 +281,22 @@ const ServiceIntegrations = ({ service }: { service: IntegrationService[] }) => 
                     );
                 })}
             </Box>
-            <SliderProvider>
-                <SliderIntegration
-                    credential={selectedCredential}
-                    service_name={selectedService}
-                    open={openModal}
-                    onClose={handleCloseModal}
-                    onSave={handleSave}
-                    onDelete={handleDelete}
-                />
-            </SliderProvider>
+            {selectedService && (
+                <SliderProvider>
+                    <SliderIntegration
+                        credential={selectedCredential}
+                        service={selectedService}
+                        open={openModal}
+                        onClose={handleCloseModal}
+                        onSave={handleSave}
+                        onDelete={handleDelete}
+                    />
+                </SliderProvider>
+            )}
         </>
     );
 };
+
 
 const Integrations: React.FC = () => {
     const [integrationsService, setIntegrationsService] = useState<IntegrationService[]>([]);
