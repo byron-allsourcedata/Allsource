@@ -1,0 +1,79 @@
+import { SxProps, Theme } from '@mui/system';
+
+export const integrationsStyle: { [key: string]: SxProps<Theme> } = { 
+    container: {
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '50vh',
+        backgroundColor: '#ffffff',
+        width: '100%',
+        maxWidth: '25rem',
+        margin: '0 auto',
+        position: 'relative',
+        boxShadow: '0rem 0.2em 0.8em 0px #00000033',
+        borderRadius: '0.625rem',
+        border: '0.125rem solid transparent',
+        marginTop: '7.5em',
+        '@media (max-width: 440px)': {
+          boxShadow: '0rem 0px 0px 0px #00000033',
+          border: 'none',
+          marginTop: '3.75em',
+        },
+      },
+      headers: {
+        display: 'flex',
+        marginTop: '10px',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        width: '100%',
+        color: 'rgba(244, 87, 69, 1)',
+        borderBottom: `1px solid rgba(228, 228, 228, 1)`,
+      },
+      account: {
+        padding: '10px',
+        width: '1em',
+        color: 'rgba(128, 128, 128, 1)',
+        border: '1px solid rgba(184, 184, 184, 1)',
+        borderRadius: '3.27px'
+      },
+      logoContainer: {
+        paddingLeft: '2.5em',
+        paddingRight: '0.5em',
+      },
+      title: {
+        mb: 2,
+        fontWeight: 'bold',
+        fontSize: '16px',
+        whiteSpace: 'nowrap',
+        textAlign: 'start',
+        padding: '1.5rem 0rem 0',
+        fontFamily: 'Nunito',
+      }, 
+      service: {
+        display: 'flex',
+        width: '80%',
+        gap: 4,
+      },
+      imageServiceBox: {
+        backgroundColor: '#f2f2f2',
+        padding: '1em',
+        '&:hover': {
+            filter: 'none',
+            backgroundColor: '#EAF8DD'
+        }
+      },    
+      modal: {
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        width: 400,
+        bgcolor: 'background.paper',
+        border: '2px solid #000',
+        boxShadow: 24,
+        p: 4,
+      }
+
+}
