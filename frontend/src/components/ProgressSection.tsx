@@ -1,6 +1,9 @@
 import { Typography, Box, Button, LinearProgress, List, ListItemIcon, ListItemText } from "@mui/material";
 import Image from "next/image";
 import { styled } from "@mui/material/styles";
+import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
+import CodeIcon from '@mui/icons-material/Code';
+import AppsIcon from '@mui/icons-material/Apps';
 
 
 const CustomButton = styled(Button)(({ theme }) => ({
@@ -25,6 +28,7 @@ const CustomButton = styled(Button)(({ theme }) => ({
 
 const CustomListItemIcon = styled(ListItemIcon)(({ theme }) => ({
   paddingLeft: '0.5em',
+  minWidth: 0
 }));
 
 export const ProgressSection: React.FC = () => (
@@ -38,43 +42,45 @@ export const ProgressSection: React.FC = () => (
           Progress
         </Typography>
         <Box sx={{ flexGrow: 1, mx: 2 }}>
-          <LinearProgress variant="determinate" color="success" value={14} sx={{ height: '8px', borderRadius: '4px' }} />
-        </Box>
+  <LinearProgress
+    variant="determinate"
+    value={33}
+    sx={{
+      height: '8px',
+      borderRadius: '4px',
+      '& .MuiLinearProgress-bar': {
+        backgroundColor: 'rgba(110, 193, 37, 1)',
+      },
+    }}
+  />
+</Box>
+
         <Typography variant="body2" color="textSecondary">
-          14% complete
+          33% complete
         </Typography>
       </Box>
-      <List sx={{ padding: 0 }}>
+      <List sx={{ mt: 3 }}>
+        <CustomButton>
+          <CustomListItemIcon >
+            <HourglassEmptyIcon sx={{backgroundColor: 'rgba(220, 220, 239, 1)'}} />
+          </CustomListItemIcon>
+          <ListItemText primary="Activate Trial" />
+        </CustomButton>
         <CustomButton>
           <CustomListItemIcon>
-            <Image src={'/Setup1.svg'} alt="Setup pixel" width={24} height={24} />
+            <CodeIcon sx={{backgroundColor: 'rgba(220, 220, 239, 1)'}} />
           </CustomListItemIcon>
           <ListItemText primary="Setup pixel" />
         </CustomButton>
         <CustomButton>
           <CustomListItemIcon>
-            <Image src={'/Setup2.svg'} alt="E-Commerce store" width={24} height={24} />
+            <AppsIcon sx={{backgroundColor: 'rgba(220, 220, 239, 1)'}} />
           </CustomListItemIcon>
-          <ListItemText primary="E-Commerce store" />
-          <Image src={'/ic_baseline-shopify.svg'} alt="Shopify" width={20} height={20} />
-          <Image src={'/ic_baseline-woo-commerce.svg'} alt="Woo" width={20} height={20} />
-          <Image src={'/simple-icons_bigcommerce.svg'} alt="Bigcommerce" width={20} height={20} />
-        </CustomButton>
-        <CustomButton>
-          <CustomListItemIcon>
-            <Image src={'/Setup3.svg'} alt="Connect CRM" width={24} height={24} />
-          </CustomListItemIcon>
-          <ListItemText primary="Connect CRM" />
+          <ListItemText primary="Integrate" />
+          <Image src={'/logos_meta-icon.svg'} alt="Meta" width={24} height={24} />
           <Image src={'/crm1.svg'} alt="Shopify" width={20} height={20} />
           <Image src={'/crm2.svg'} alt="Woo" width={20} height={20} />
           <Image src={'/crm3.svg'} alt="Bigcommerce" width={20} height={20} />
-        </CustomButton>
-        <CustomButton>
-          <CustomListItemIcon>
-            <Image src={'/Setup4.svg'} alt="Connect Meta ads" width={24} height={24} />
-          </CustomListItemIcon>
-          <ListItemText primary="Connect Meta ads" />
-          <Image src={'/logos_meta-icon.svg'} alt="Meta" width={24} height={24} />
         </CustomButton>
       </List>
     </Box>

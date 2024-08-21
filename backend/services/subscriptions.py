@@ -216,3 +216,11 @@ class SubscriptionService:
             .filter(UserSubscriptionPlan.id == usp_id) \
             .update({UserSubscriptionPlan.subscription_id: subscription_id}, synchronize_session=False)
         self.db.commit()
+
+
+    def remove_trial(self, user_id: int):
+        user_subcription_plan = self.db.query(UserSubscriptionPlan).join(SubscriptionPlan, SubscriptionPlan.id == UserSubscriptionPlan.plan_id).filter(UserSubscriptionPlan.user_id == user_id, SubscriptionPlan.title == 'FreeTrail').order_by(UserSubscriptionPlan.created_at.desc()).first()
+        self.db.query(UserSubscriptionPlan).filter(UserSubscriptionPlan.id == user_subcription_plan.id).update({UserSubscriptionPlan.is_trial: False,
+                                                                                                                UserSubscriptionPlan.updated_at: datetime.now()})
+        self.db.query(Subscription).filter(Subscription.id == user_subcription_plan.subscription_id).update({Subscription.plan_end: datetime.now(), Subscription.updated_at: datetime.now()})
+        self.db.commit()

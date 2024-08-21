@@ -81,11 +81,14 @@ class UserPersistence:
                 "payment_status": user.payment_status,
                 "customer_id": user.customer_id,
                 "reset_password_sent_at": user.reset_password_sent_at,
+                'pixel_code_sent_at': user.pixel_code_sent_at,
                 "verified_email_sent_at": user.verified_email_sent_at,
                 "is_book_call_passed": user.is_book_call_passed,
                 "stripe_payment_url": user.stripe_payment_url,
                 "data_provider_id": user.data_provider_id,
                 "is_pixel_installed": user.is_pixel_installed,
+                'role': user.role,
+                'calendly_uuid': user.calendly_uuid
             }
         self.db.rollback()
         return result_user
@@ -105,3 +108,11 @@ class UserPersistence:
         self.db.query(Users).filter(Users.id == user_id).update({Users.password: password},
                                                                 synchronize_session=False)
         self.db.commit()
+
+    def update_calendly_uuid(self, user_id: int, uuid: str):
+        self.db.query(Users).filter(Users.id == user_id).update({Users.calendly_uuid: uuid},
+                                                                synchronize_session=False)
+        self.db.commit()
+
+    def get_users(self):
+        return self.db.query(Users).all()

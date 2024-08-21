@@ -2,7 +2,7 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
-import { Box, Button, TextField, Typography, Link, IconButton, InputAdornment } from '@mui/material';
+import { Box, Button, Checkbox, FormControlLabel, FormHelperText, TextField, Typography, Link, IconButton, InputAdornment, List, ListItem, ListItemIcon, ListItemText } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import axiosInstance from '../../axios/axiosInterceptorInstance';
@@ -19,7 +19,8 @@ const Signup: React.FC = () => {
 
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
-  const [formValues, setFormValues] = useState({ full_name: '', email: '', password: '', is_without_card: isWithoutCard ? 'true' : 'false' });
+  const [formValues, setFormValues] = useState({ full_name: '', email: '', password: '', is_without_card: isWithoutCard ? 'true' : 'false', termsAccepted: false });
+  const [formSubmitted, setFormSubmitted] = useState(false);
 
 
   const navigateTo = (path: string) => {
@@ -63,7 +64,12 @@ const Signup: React.FC = () => {
         if (!value) {
           newErrors.password = 'Password is required';
         } else {
-          delete newErrors.password;
+          const passwordValidation = isPasswordValid(value);
+          if (!passwordValidation.length || !passwordValidation.upperCase || !passwordValidation.lowerCase) {
+            newErrors.password = 'Please enter a stronger password';
+          } else {
+            delete newErrors.password;
+          }
         }
         break;
       default:
@@ -79,11 +85,23 @@ const Signup: React.FC = () => {
       ...formValues,
       [name]: value,
     });
-    validateField(name, value);
+      validateField(name, value);
   };
+
+  const isPasswordValid = (password: string) => {
+    return {
+      length: password.length >= 8,
+      upperCase: /[A-Z]/.test(password),
+      lowerCase: /[a-z]/.test(password),
+    };
+  };
+
+  const passwordValidation = isPasswordValid(formValues.password);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+    setFormSubmitted(true); // Mark the form as submitted
+    
     const newErrors: { [key: string]: string } = {};
 
     if (!formValues.full_name) {
@@ -98,6 +116,12 @@ const Signup: React.FC = () => {
 
     if (!formValues.password) {
       newErrors.password = 'Password is required';
+    } else if (!passwordValidation.length || !passwordValidation.upperCase || !passwordValidation.lowerCase) {
+      newErrors.password = 'Please enter a stronger password';
+    }
+
+    if (!formValues.termsAccepted) {
+      newErrors.termsAccepted = 'Please accept our Terms of Service';
     }
 
     setErrors(newErrors);
@@ -168,144 +192,234 @@ const Signup: React.FC = () => {
   };
 
 
+  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { checked } = e.target;
+    setFormValues({ ...formValues, termsAccepted: checked });
+    if (formSubmitted) {
+      setErrors((prevErrors) => {
+          const newErrors = { ...prevErrors };
+          if (checked) {
+              delete newErrors.termsAccepted; // Remove the error if checked
+          } else {
+              newErrors.termsAccepted = 'Please accept our Terms of Service'; // Add the error if unchecked
+          }
+          return newErrors;
+      });
+    }
+};
+
+  const CustomCheckCircleIcon = ({ isSuccess }: { isSuccess: boolean }) => (
+    <Image 
+        src={isSuccess ? "/tick-circle-green.svg" : "/tick-circle.svg"} 
+        alt={isSuccess ? "Success Check Circle" : "Disabled Check Circle"} 
+        height={16} width={16}
+    />
+  );
+
+
+
 
   return (
     <>
       <Box sx={signupStyles.logoContainer}>
-        <Image src='/logo.svg' alt='logo' height={80} width={60} />
+        <Image src='/logo.svg' alt='logo' height={30} width={50} />
       </Box>
-
-      <Box sx={signupStyles.container}>
-        <Typography variant="h4" component="h1" sx={signupStyles.title}>
-          Create a new account
-        </Typography>
-        <GoogleLogin
-          onSuccess={async (credentialResponse) => {
-            try {
-              const response = await axiosInstance.post('/sign-up-google', {
-                token: credentialResponse.credential,
-              });
-
-              const responseData = response.data;
-              if (typeof window !== 'undefined') {
-                if (responseData.token && responseData.token !== null) {
-                  localStorage.setItem('token', responseData.token);
-                }
-              }
-
-              switch (response.data.status) {
-                case 'SUCCESS':
-                  get_me()
-                  router.push('/dashboard');
-                  break;
-                case 'NEED_CHOOSE_PLAN':
-                  get_me()
-                  router.push('/choose-plan');
-                  break;
-                case 'FILL_COMPANY_DETAILS':
-                  get_me()
-                  navigateTo('/account-setup');
-                  break;
-                case 'NEED_BOOK_CALL':
-                  get_me()
-                  router.push('/dashboard');
-                  sessionStorage.setItem('is_slider_opened', 'true')
-                  break;
-                case 'PAYMENT_NEEDED':
-                  get_me()
-                  router.push(`${response.data.stripe_payment_url}`);
-                  break;
-                case 'INCORRECT_PASSWORD_OR_EMAIL':
-                  showErrorToast("User with this email does not exist");
-                  break;
-                case "PIXEL_INSTALLATION_NEEDED":
-                  get_me()
-                  router.push('/dashboard');
-                  break;
-                default:
-                  get_me()
-                  router.push('/dahboard')
-                  break;
-              }
-            } catch (error) {
-              console.error('Error during Google login:', error);
-            }
-          }}
-          onError={() => {
-            showErrorToast('Login Failed');
-          }}
-          ux_mode="popup"
-        />
-
-        <Box sx={signupStyles.orDivider}>
-          <Box sx={{ borderBottom: '1px solid #000000', flexGrow: 1 }} />
-          <Typography variant="body1" sx={signupStyles.orText}>
-            OR
+      <Box sx={signupStyles.mainContent}>
+        <Box sx={signupStyles.container}>
+          <Typography variant="h4" component="h1" sx={signupStyles.title}>
+            Create your Maximiz account
           </Typography>
-          <Box sx={{ borderBottom: '1px solid #000000', flexGrow: 1 }} />
-        </Box>
-        <Box component="form" onSubmit={handleSubmit} sx={signupStyles.form}>
-          <TextField
-            InputLabelProps={{ sx: signupStyles.inputLabel }}
-            label="Full name"
-            name="full_name"
-            variant="outlined"
-            fullWidth
-            value={formValues.full_name}
-            onChange={handleChange}
-            error={Boolean(errors.full_name)}
-            helperText={errors.full_name}
-          />
-          <TextField
-            InputLabelProps={{ sx: signupStyles.inputLabel }}
-            label="Email address"
-            name="email"
-            type="email"
-            variant="outlined"
-            fullWidth
-            margin="normal"
-            value={formValues.email}
-            onChange={handleChange}
-            error={Boolean(errors.email)}
-            helperText={errors.email}
-          />
-          <TextField
-            InputLabelProps={{ sx: signupStyles.inputLabel }}
-            label="Create password"
-            name="password"
-            type={showPassword ? 'text' : 'password'}
-            variant="outlined"
-            fullWidth
-            margin="normal"
-            value={formValues.password}
-            onChange={handleChange}
-            error={Boolean(errors.password)}
-            helperText={errors.password}
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton onClick={togglePasswordVisibility} edge="end">
-                    {showPassword ? <VisibilityIcon /> : <VisibilityOffIcon />}
-                  </IconButton>
-                </InputAdornment>
-              ),
+          <GoogleLogin
+            onSuccess={async (credentialResponse) => {
+              try {
+                const response = await axiosInstance.post('/sign-up-google', {
+                  token: credentialResponse.credential,
+                });
+
+                const responseData = response.data;
+                if (typeof window !== 'undefined') {
+                  if (responseData.token && responseData.token !== null) {
+                    localStorage.setItem('token', responseData.token);
+                  }
+                }
+
+                switch (response.data.status) {
+                  case 'SUCCESS':
+                    get_me()
+                    router.push('/dashboard');
+                    break;
+                  case 'NEED_CHOOSE_PLAN':
+                    get_me()
+                    router.push('/choose-plan');
+                    break;
+                  case 'FILL_COMPANY_DETAILS':
+                    get_me()
+                    navigateTo('/account-setup');
+                    break;
+                  case 'NEED_BOOK_CALL':
+                    get_me()
+                    router.push('/dashboard');
+                    sessionStorage.setItem('is_slider_opened', 'true')
+                    break;
+                  case 'PAYMENT_NEEDED':
+                    get_me()
+                    router.push(`${response.data.stripe_payment_url}`);
+                    break;
+                  case 'INCORRECT_PASSWORD_OR_EMAIL':
+                    showErrorToast("User with this email does not exist");
+                    break;
+                  case "PIXEL_INSTALLATION_NEEDED":
+                    get_me()
+                    router.push('/dashboard');
+                    break;
+                  default:
+                    get_me()
+                    router.push('/dahboard')
+                    break;
+                }
+              } catch (error) {
+                console.error('Error during Google login:', error);
+              }
             }}
+            onError={() => {
+              showErrorToast('Login Failed');
+            }}
+            ux_mode="popup"
           />
-          <Button
-            type="submit"
-            variant="contained"
-            sx={signupStyles.submitButton}
-            fullWidth
-          >
-            Activate Account
-          </Button>
+
+          <Box sx={signupStyles.orDivider}>
+            <Box sx={{ borderBottom: '1px solid #DCE1E8', flexGrow: 1 }} />
+            <Typography variant="body1" sx={signupStyles.orText}>
+              OR
+            </Typography>
+            <Box sx={{ borderBottom: '1px solid #DCE1E8', flexGrow: 1 }} />
+          </Box>
+          <Box component="form" onSubmit={handleSubmit} sx={signupStyles.form}>
+            <TextField
+              InputLabelProps={{ sx: signupStyles.inputLabel }}
+              label="Full name"
+              name="full_name"
+              variant="outlined"
+              fullWidth
+              value={formValues.full_name}
+              onChange={handleChange}
+              error={Boolean(errors.full_name)}
+              helperText={errors.full_name}
+              InputProps={{ sx: signupStyles.formInput }}
+            />
+            <TextField sx={signupStyles.formField}
+              InputLabelProps={{ sx: signupStyles.inputLabel }}
+              label="Email address"
+              name="email"
+              type="email"
+              variant="outlined"
+              fullWidth
+              margin="normal"
+              value={formValues.email}
+              onChange={handleChange}
+              error={Boolean(errors.email)}
+              helperText={errors.email}
+              InputProps={{ sx: signupStyles.formInput }}
+            />
+            <TextField sx={signupStyles.formField}
+              InputLabelProps={{ sx: signupStyles.inputLabel }}
+              label="Create password"
+              name="password"
+              type={showPassword ? 'text' : 'password'}
+              variant="outlined"
+              fullWidth
+              margin="normal"
+              value={formValues.password}
+              onChange={handleChange}
+              error={Boolean(errors.password)}
+              helperText={errors.password}
+              InputProps={{
+                sx: signupStyles.formInput,
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton onClick={togglePasswordVisibility} edge="end">
+                      {/* {showPassword ? <VisibilityIcon /> : <VisibilityOffIcon />} */}
+                      <Image 
+                        src={showPassword ? "/custom-visibility-icon-off.svg" : "/custom-visibility-icon.svg"} 
+                        alt={showPassword ? "Show password" : "Hide password"} 
+                        height={18} width={18}
+                        title={showPassword ? "Hide password" : "Show password"}
+                      />
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+            />
+            <List sx={signupStyles.passwordContentList}>
+              <ListItem sx={signupStyles.passwordContentListItem}>
+                <ListItemIcon sx={signupStyles.passwordContentListItemIcon}>
+                  <CustomCheckCircleIcon isSuccess={passwordValidation.length} />
+                </ListItemIcon>
+                <ListItemText sx={passwordValidation.length ? signupStyles.passwordValidationTextSuccess : signupStyles.passwordValidationText} primary="8 characters min." />
+              </ListItem>
+              <ListItem sx={signupStyles.passwordContentListItem}>
+                <ListItemIcon sx={signupStyles.passwordContentListItemIcon}>
+                  <CustomCheckCircleIcon isSuccess={passwordValidation.upperCase} />
+                </ListItemIcon>
+                <ListItemText sx={passwordValidation.upperCase ? signupStyles.passwordValidationTextSuccess : signupStyles.passwordValidationText}  primary="1 uppercase" />
+              </ListItem>
+              <ListItem sx={signupStyles.passwordContentListItem}>
+                <ListItemIcon sx={signupStyles.passwordContentListItemIcon}>
+                  <CustomCheckCircleIcon isSuccess={passwordValidation.lowerCase} />
+                </ListItemIcon>
+                <ListItemText sx={passwordValidation.lowerCase ? signupStyles.passwordValidationTextSuccess : signupStyles.passwordValidationText} primary="1 lowercase" />
+              </ListItem>
+          </List>
+          <FormControlLabel
+                sx={signupStyles.checkboxContentField}
+                control={
+                  <Checkbox
+                    checked={formValues.termsAccepted}
+                    onChange={handleCheckboxChange}
+                    name="termsAccepted"
+                    color="primary"
+                    sx={{
+                      '&.MuiCheckbox-root:before': {
+                        border: errors.termsAccepted ? '1px solid #d32f2f' : '1px solid #e4e4e4', // Conditional border color
+                      },
+                    }}
+                  />
+                }
+                label={
+                  <span tabIndex={-1}>
+                    I accept the{' '}
+                    <Link
+                      sx={signupStyles.checkboxContentLink}
+                      href="https://www.maximiz.ai/terms-and-conditions/"
+                      color="primary"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Terms of Service {' '}
+                      <Image src='/terms-service-icon.svg' alt='logo' height={16} width={16} />
+                    </Link>
+                  </span>
+                }
+              />
+            {errors.termsAccepted && (
+              <FormHelperText error>{errors.termsAccepted}</FormHelperText>
+            )}
+            <Button
+              type="submit"
+              variant="contained"
+              sx={signupStyles.submitButton}
+              fullWidth
+            >
+              Get Started
+            </Button>
+          </Box>
+          <Typography variant="body2" sx={signupStyles.loginText}>
+            Already have an account?{' '}
+            <Link href="/signin" sx={signupStyles.loginLink}>
+              Login
+            </Link>
+          </Typography>
         </Box>
-        <Typography variant="body2" sx={signupStyles.loginText}>
-          Already have an account{' '}
-          <Link href="/signin" sx={signupStyles.loginLink}>
-            Login
-          </Link>
-        </Typography>
       </Box>
     </>
   );

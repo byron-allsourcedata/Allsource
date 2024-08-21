@@ -3,21 +3,39 @@ from config.stripe import StripeConfig
 from typing import List
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta, timezone
-from models.plans import SubscriptionPlan
+from models.plans import SubscriptionPlan, UserSubscriptionPlan
 from models.subscriptions import UserSubscriptions
 from models.users import Users
 import logging
 
 from services.subscriptions import SubscriptionService
-
+from persistence.user_persistence import UserPersistence
+from persistence.plans_persistence import PlansPersistence
 logger = logging.getLogger(__name__)
 
 
 class AdminCustomersService:
 
-    def __init__(self, db: Session, subscription_service: SubscriptionService):
+    def __init__(self, db: Session, subscription_service: SubscriptionService, user_persistence: UserPersistence,
+                 plans_persistence: PlansPersistence):
         self.db = db
         self.subscription_service = subscription_service
+        self.user_persistence = user_persistence
+        self.plans_presistence = plans_persistence
+
+    def get_users(self):
+        users_object = self.user_persistence.get_users()
+        result = []
+        for user in users_object:
+            result.append({
+                "id": user.id,
+                "email": user.email,
+                "full_name": user.full_name,
+                "created_at": user.created_at,
+                'payment_status': user.payment_status,
+                "is_trial": self.plans_presistence.get_trial_status_by_user_id(user.id)
+            })
+        return result
 
     def get_user_by_email(self, email):
         user_object = self.db.query(Users).filter(func.lower(Users.email) == func.lower(email)).first()
@@ -80,6 +98,7 @@ class AdminCustomersService:
             user_subscription = self.subscription_service.create_subscription_from_free_trial(user_id=user_data.id)
             self.subscription_service.create_new_usp_free_trial(user_data.id, user_subscription.id)
         else:
+            self.subscription_service.remove_trial(user_data.id)
             link = self.create_customer_session(self.get_default_plan().stripe_price_id, user_data.customer_id)['link']
         self.update_book_call(user_data.id, link)
         

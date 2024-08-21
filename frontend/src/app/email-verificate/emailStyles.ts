@@ -21,6 +21,11 @@ export const emailStyles: { [key: string]: SxProps<Theme> } = {
           border: 'none',
           marginTop: '3.75em',
         },
+        '@media (max-height: 670px)': {
+          boxShadow: '0rem 0px 0px 0px #00000033',
+          border: 'none',
+          marginTop: '2em',
+        },
       },
       hidepc: {
         display: 'none',
@@ -97,6 +102,9 @@ export const emailStyles: { [key: string]: SxProps<Theme> } = {
         margin: '1em 0em 0em',
         fontFamily: 'Nunito',
         fontSize: '16px',
+        textTransform: 'none',
+        textDecoration: 'none',
+        textWrap: 'nowrap'
       },
       loginLink: {
         color: '#F45745',
@@ -104,6 +112,7 @@ export const emailStyles: { [key: string]: SxProps<Theme> } = {
         fontWeight: 'bold',
         fontFamily: 'Nunito',
         textDecoration: 'none',
-        margin: '16px 89px 24px'
+        margin: '16px 89px 24px',
+        textTransform: 'none',
       },
 }
