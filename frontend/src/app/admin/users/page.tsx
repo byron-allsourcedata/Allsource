@@ -158,7 +158,7 @@ const Users: React.FC = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [sortedData, setSortedData] = useState<UserData[]>([]);
     const [sortField, setSortField] = useState<string>('');
-    const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+    const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
     useEffect(() => {
         const accessToken = localStorage.getItem('token');
@@ -188,8 +188,7 @@ const Users: React.FC = () => {
 
     useEffect(() => {
         if (!sortField) {
-            setSortedData(data);
-            return;
+            setSortField('created_at')
         }
         const sorted = [...data].sort((a: any, b: any) => {
             const valueA = a[sortField];
