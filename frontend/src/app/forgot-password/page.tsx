@@ -162,7 +162,7 @@ const ForgotPassword: React.FC = () => {
   return (
     <>
       <Box sx={updatepasswordStyles.logoContainer}>
-        <Image src='/logo.svg' alt='logo' height={80} width={60} />
+        <Image src='/logo.svg' alt='logo' height={30} width={50} />
       </Box>
       <Box sx={updatepasswordStyles.mainContent}>
         <Box sx={updatepasswordStyles.container}>
