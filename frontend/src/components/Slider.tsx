@@ -14,13 +14,20 @@ const Slider: React.FC = () => {
   const fetchPrefillData = async () => {
     try {
       const response = await axiosInstance.get('/calendly');
-      const { full_name, email } = response.data;
-
-      setPrefillData({
-        email: email || '',
-        name: full_name || '',
-      });
+      const user = response.data.user;
+      
+      if (user) {
+        const { full_name, email } = user;
+        setPrefillData({
+          email: email || '',
+          name: full_name || '',
+        });
+      } else {
+        setPrefillData(null);
+      }
     } catch (error) {
+      console.error('Error fetching prefill data:', error);
+      setPrefillData(null);
     }
   };
   const { showSlider, setShowSlider } = useSlider();
