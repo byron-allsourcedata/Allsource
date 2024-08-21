@@ -37,7 +37,7 @@ const ConfirmSend: React.FC = () => {
           Please check your email {email}. If you run into any hiccups, our support team is ready to rock &apos;n&apos; roll and help you out.
           </Typography>
           <Typography sx={confirmStyles.text}>
-            Please check your spam folder or <Link href="/reset-password" sx={confirmStyles.loginLink}>try sending again.</Link>
+            Please check your spam folder or <Link href="/reset-password" sx={confirmStyles.loginLink}>try sending again.</Link>
           </Typography>
 
           <Box component="form" onSubmit={handleSubmit} sx={confirmStyles.form}>
