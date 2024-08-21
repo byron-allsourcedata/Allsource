@@ -321,7 +321,7 @@ class UsersAuth:
             db_user = self.user_persistence_service.get_user_by_email(reset_password_form.email)
             if db_user is None:
                 return ResetPasswordEnum.SUCCESS
-            message_expiration_time = db_user.get('reset_password_sent_at', None)
+            message_expiration_time = db_user.reset_password_sent_at
             time_now = datetime.now()
             if message_expiration_time is not None:
                 if (message_expiration_time + timedelta(minutes=1)) > time_now:
