@@ -3,7 +3,8 @@ import React, { useEffect, useState } from "react";
 import { usersStyle } from "./userStyle";
 import { Box, Button, Grid, Typography, TableHead, TableRow, TableCell, 
     Checkbox, TableBody, TableContainer, Paper, Table, 
-    Switch, Pagination } from "@mui/material";
+    Switch, Pagination, 
+    SwitchProps} from "@mui/material";
 import Image from "next/image";
 import PersonIcon from '@mui/icons-material/Person'
 import AccountButton from "@/components/AccountButton";
@@ -33,7 +34,7 @@ interface TableBodyUserProps {
     onSwitchChange: any
 }
 
-const IOSSwitch = styled((props) => (
+const IOSSwitch = styled((props: SwitchProps) => (
     <Switch focusVisibleClassName=".Mui-focusVisible" disableRipple {...props} />
   ))(({ theme }) => ({
     width: 56,
@@ -157,7 +158,7 @@ const Users: React.FC = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [sortedData, setSortedData] = useState<UserData[]>([]);
     const [sortField, setSortField] = useState<string>('');
-    const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+    const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
     useEffect(() => {
         const accessToken = localStorage.getItem('token');
@@ -187,8 +188,7 @@ const Users: React.FC = () => {
 
     useEffect(() => {
         if (!sortField) {
-            setSortedData(data);
-            return;
+            setSortField('created_at')
         }
         const sorted = [...data].sort((a: any, b: any) => {
             const valueA = a[sortField];

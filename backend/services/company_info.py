@@ -25,8 +25,9 @@ class CompanyInfoService:
                 return CompanyInfoEnum.NEED_EMAIL_VERIFIED
             self.db.query(Users).filter(Users.id == self.user.get('id')).update(
                 {Users.company_name: company_info.organization_name, Users.company_website: company_info.company_website,
-                 Users.company_email_address: company_info.email_address,
-                 Users.employees_workers: company_info.employees_workers},
+                 Users.employees_workers: company_info.employees_workers,
+                 Users.company_role: company_info.company_role,
+                 Users.company_website_visits: company_info.monthly_visits},
                 synchronize_session=False)
             self.db.commit()
             return CompanyInfoEnum.SUCCESS

@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from routers import subscriptions, users, company_info, pixel_installation, admin_customers, dashboard, sse_events, \
-    leads, audience, integrations
+    leads, audience, calendly, integrations
 
 router = APIRouter()
 
@@ -13,4 +13,5 @@ router.include_router(dashboard.router, prefix='/dashboard')
 router.include_router(audience.router, prefix='/audience')
 router.include_router(leads.router, prefix='/leads')
 router.include_router(sse_events.router)
+router.include_router(calendly.router, prefix='/calendly')
 router.include_router(integrations.router)

@@ -8,7 +8,7 @@ import { Box, Button, Typography, Menu, MenuItem } from '@mui/material';
 import PersonIcon from '@mui/icons-material/Person';
 import axiosInterceptorInstance from '@/axios/axiosInterceptorInstance';
 import { emailStyles } from './emailStyles';
-import { showErrorToast } from '@/components/ToastNotification';
+import { showErrorToast, showToast } from '@/components/ToastNotification';
 import { useUser } from '../../context/UserContext'; 
 
 const EmailVerificate: React.FC = () => {
@@ -52,25 +52,6 @@ const EmailVerificate: React.FC = () => {
     router.push('/signin');
   };
 
-  const notify = () => {
-    toast.success(<CustomToast />, {
-      position: "bottom-center",
-      autoClose: 4000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      draggable: true,
-      style: {
-        background: '#EFFAE5',
-        color: '#56991B',
-        fontFamily: 'Nunito',
-        fontSize: '16px',
-        fontWeight: 'bold'
-      },
-      theme: "light",
-      transition: Bounce,
-      icon: false,
-    });
-  };
 
   const handleResendEmail = () => {
     if (canResend) {
@@ -90,7 +71,7 @@ const EmailVerificate: React.FC = () => {
       axiosInterceptorInstance.get('check-verification-status')
         .then(response => {
           if (response.status === 200 && response.data.status === "EMAIL_VERIFIED") {
-            notify();
+            showToast('Verification done successfully');
             clearInterval(interval);
             router.push('/dashboard');
           }
@@ -121,7 +102,7 @@ const EmailVerificate: React.FC = () => {
   return (
     <>
       <ToastContainer
-        position="bottom-center"
+        position="top-right"
         autoClose={3000}
         hideProgressBar={false}
         newestOnTop={false}
@@ -170,13 +151,6 @@ const EmailVerificate: React.FC = () => {
         <Box sx={emailStyles.icon}>
           <Image src="/mail-icon.svg" alt="Mail Icon" width={200} height={200} />
         </Box>
-        <Box sx={emailStyles.orDivider}>
-          <Box sx={{ borderBottom: '1px solid #000000', flexGrow: 1 }} />
-          <Typography variant="body1" sx={emailStyles.orText}>
-            OR
-          </Typography>
-          <Box sx={{ borderBottom: '1px solid #000000', flexGrow: 1 }} />
-        </Box>
         <Box component="form" sx={emailStyles.form}>
           <Typography sx={emailStyles.text}>
             To complete setup and login, click the verification link in the email we’ve sent to <strong>{email}</strong>
@@ -192,15 +166,5 @@ const EmailVerificate: React.FC = () => {
   );
 };
 
-const CustomToast = () => (
-  <div style={{ color: 'green' }}>
-    <Typography style={{ fontWeight: 'bold', color: 'rgba(86, 153, 27, 1)' }}>
-      Success
-    </Typography>
-    <Typography variant="body2">
-      Verification done successfully
-    </Typography>
-  </div>
-);
 
 export default EmailVerificate;

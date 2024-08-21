@@ -3,12 +3,17 @@ import Image from "next/image";
 import axiosInterceptorInstance from "../axios/axiosInterceptorInstance";
 import { AxiosError } from "axios";
 import { useSlider } from '../context/SliderContext';
-import React, { useState } from "react";
+import React, {useEffect, useState} from "react";
 import ManualPopup from '../components/ManualPopup';
 import GoogleTagPopup from '../components/GoogleTagPopup';
 import CRMPopup from "./CMSPopup";
-import {  useTrial } from "@/context/TrialProvider";
 
+
+
+interface CmsData {
+  manual?: string;
+  pixel_client_id?: string;
+}
 
 const PixelInstallation: React.FC = () => {
   const { setShowSlider } = useSlider();
@@ -16,7 +21,7 @@ const PixelInstallation: React.FC = () => {
   const installManually = async () => {
     try {
       const response = await axiosInterceptorInstance.get('/install-pixel/manually');
-      setPixelCode(response.data);
+      setPixelCode(response.data.manual);
       setOpen(true);
     } catch (error) {
       if (error instanceof AxiosError && error.response?.status === 403) {
@@ -34,32 +39,31 @@ const PixelInstallation: React.FC = () => {
   };
 
   const installGoogleTag = async () => {
-    try {
-      const response = await axiosInterceptorInstance.get('/install-pixel/manually');
-      setGoogleCode(response.data);
-      setGoogleOpen(true);
-    } catch (error) {
-      if (error instanceof AxiosError && error.response?.status === 403) {
-        if (error.response.data.status === 'NEED_BOOK_CALL') {
-          sessionStorage.setItem('is_slider_opened', 'true');
-          setShowSlider(true);
-        } else {
-          sessionStorage.setItem('is_slider_opened', 'false');
-          setShowSlider(false);
-        }
-      } else {
-        console.error('Error fetching data:', error);
-      }
-    }
+    setGoogleOpen(true)
   };
 
   const [openmanually, setOpen] = useState(false);
   const [pixelCode, setPixelCode] = useState('');
   const [opengoogle, setGoogleOpen] = useState(false);
-  const [googleCode, setGoogleCode] = useState('');
-  const [cmsCode, setCmsCode] = useState('');
+  const [cmsData, setCmsData] = useState<CmsData>({});
   const [opencrm, setCMSOpen] = useState(false);
 
+  useEffect(() => {
+    const handleRedirect = async () => {
+      const query = new URLSearchParams(window.location.search);
+      const authorizationCode = query.get('code');
+
+      if (authorizationCode) {
+        try {
+          setGoogleOpen(true);
+        } catch (error) {
+          console.error('Error handling redirect:', error);
+        }
+      }
+    };
+
+    handleRedirect();
+  }, []);
 
 
   const handleManualClose = () => setOpen(false);
@@ -70,7 +74,7 @@ const PixelInstallation: React.FC = () => {
   const installCMS = async () => {
     try {
       const response = await axiosInterceptorInstance.get('/install-pixel/cms');
-      setCmsCode(response.data);
+      setCmsData(response.data);
       setCMSOpen(true);
     } catch (error) {
       if (error instanceof AxiosError && error.response?.status === 403) {
@@ -108,16 +112,17 @@ const PixelInstallation: React.FC = () => {
             <Image src={'/install_gtm.svg'} alt="Install on Google Tag Manager" width={28} height={28} />
             <Typography sx={typographyGoogle}>Install on Google Tag Manager</Typography>
           </Button>
-          <GoogleTagPopup open={opengoogle} handleClose={handleGoogleClose} pixelCode={googleCode} />
+          <GoogleTagPopup open={opengoogle} handleClose={handleGoogleClose}/>
         </Grid>
         <Grid item xs={12} md={4}>
           <Button variant="outlined" fullWidth onClick={installCMS} sx={buttonStyles}>
             <Box>
+              <Image src={'/install_cms1.svg'} alt="Install on CMS" width={28} height={28} style={{marginRight:4}} />
               <Image src={'/install_cms2.svg'} alt="Install on CMS" width={28} height={28} />
             </Box>
-            <Typography sx={typographyStyles}>Install on CMS</Typography>
+            <Typography sx={{...typographyStyles, pt: 1.75}}>Install on CMS</Typography>
           </Button>
-          <CRMPopup open={opencrm} handleClose={handleCRMClose} pixelCode={cmsCode} />
+          <CRMPopup open={opencrm} handleClose={handleCRMClose} pixelCode={cmsData.manual || ''}  pixel_client_id={cmsData.pixel_client_id || ''} />
         </Grid>
       </Grid>
     </Box>

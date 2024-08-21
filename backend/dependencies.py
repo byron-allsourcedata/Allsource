@@ -74,8 +74,11 @@ def get_subscription_service(db: Session = Depends(get_db),
 
 
 def get_admin_customers_service(db: Session = Depends(get_db),
-                                subscription_service: SubscriptionService = Depends(get_subscription_service)):
-    return AdminCustomersService(db=db, subscription_service=subscription_service)
+                                subscription_service: SubscriptionService = Depends(get_subscription_service),
+                                user_persistence: UserPersistence = Depends(get_user_persistence_service), 
+                                plans_presistence: PlansPersistence = Depends(get_plans_persistence)):
+    return AdminCustomersService(db=db, subscription_service=subscription_service, 
+                                 user_persistence=user_persistence, plans_persistence=plans_presistence)
 
 
 def get_user_authorization_status_without_pixel(user, subscription_service):
@@ -229,8 +232,10 @@ def get_dashboard_service(user: User = Depends(check_user_authorization)):
 
 
 def get_pixel_installation_service(db: Session = Depends(get_db),
+                                   send_grid_persistence_service: SendgridPersistence = Depends(
+                                       get_send_grid_persistence_service),
                                    user: User = Depends(check_user_authorization_without_pixel)):
-    return PixelInstallationService(db=db, user=user)
+    return PixelInstallationService(db=db, user=user, send_grid_persistence_service=send_grid_persistence_service)
 
 
 def get_plans_service(user=Depends(check_user_authentication),
@@ -285,7 +290,7 @@ def check_user_admin(Authorization: Annotated[str, Header()],
                      user_persistence_service: UserPersistence = Depends(get_user_persistence_service), 
                      ) -> Token:
     user = check_user_authentication(Authorization, user_persistence_service)
-    if 'admin' not in user.role:
+    if 'admin' not in user['role']:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail={'status': 'FORBIDDEN'})
     return user
 

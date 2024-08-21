@@ -9,31 +9,31 @@ from models.users import Users
 import logging
 
 from services.subscriptions import SubscriptionService
-
+from persistence.user_persistence import UserPersistence
+from persistence.plans_persistence import PlansPersistence
 logger = logging.getLogger(__name__)
 
 
 class AdminCustomersService:
 
-    def __init__(self, db: Session, subscription_service: SubscriptionService):
+    def __init__(self, db: Session, subscription_service: SubscriptionService, user_persistence: UserPersistence,
+                 plans_persistence: PlansPersistence):
         self.db = db
         self.subscription_service = subscription_service
+        self.user_persistence = user_persistence
+        self.plans_presistence = plans_persistence
 
     def get_users(self):
-        users_object = self.db.query(Users).order_by(Users.id.asc()).all()
+        users_object = self.user_persistence.get_users()
         result = []
         for user in users_object:
-            try:
-                is_trial = self.db.query(UserSubscriptionPlan).filter_by(user_id=user.id).order_by(UserSubscriptionPlan.created_at.desc()).first().is_trial
-            except:
-                is_trial = False
             result.append({
                 "id": user.id,
                 "email": user.email,
                 "full_name": user.full_name,
                 "created_at": user.created_at,
                 'payment_status': user.payment_status,
-                "is_trial": is_trial
+                "is_trial": self.plans_presistence.get_trial_status_by_user_id(user.id)
             })
         return result
 

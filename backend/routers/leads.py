@@ -25,6 +25,7 @@ async def get_leads(
         recurring_visits: int = Query(None, description="Minimum number of recurring visits"),
         sort_by: str = Query(None, description="Field"),
         sort_order: str = Query(None, description="Field to sort by: 'asc' or 'desc'"),
+        search_query: str = Query(None, description="Search for email, first name, lastname and phone number"),
         leads_service: LeadsService = Depends(get_leads_service)
 ):
     return leads_service.get_leads(
@@ -40,7 +41,8 @@ async def get_leads(
         average_time_spent=average_time_spent,
         lead_funnel=lead_funnel,
         emails=emails,
-        recurring_visits=recurring_visits
+        recurring_visits=recurring_visits,
+        search_query = search_query,
     )
 
 

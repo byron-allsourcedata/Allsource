@@ -206,13 +206,15 @@ const Leads: React.FC = () => {
         regions: string[];
         emails: string[];
         selectedFunnels: string[];
+        searchQuery: string | null;
     }
     const [filterParams, setFilterParams] = useState<FilterParams>({
         dateRange: { fromDate: null, toDate: null },
         selectedStatus: [],
         regions: [],
         emails: [],
-        selectedFunnels: []
+        selectedFunnels: [],
+        searchQuery: '',
     });
 
     const handleFilterPopupOpen = () => {
@@ -360,6 +362,7 @@ const Leads: React.FC = () => {
                 return;
             }
 
+            // Processing "Date Calendly"
             const startEpoch = appliedDates.start ? Math.floor(appliedDates.start.getTime() / 1000) : null;
             const endEpoch = appliedDates.end ? Math.floor(appliedDates.end.getTime() / 1000) : null;
 
@@ -372,7 +375,7 @@ const Leads: React.FC = () => {
             }
 
             // Include other filter parameters if necessary
-            // Обработка "Regions"
+            // Processing "Regions"
             if (selectedFilters.some(filter => filter.label === 'Regions')) {
                 const regions = selectedFilters.find(filter => filter.label === 'Regions')?.value.split(', ') || [];
                 if (regions.length > 0) {
@@ -380,7 +383,7 @@ const Leads: React.FC = () => {
                 }
             }
 
-            // Обработка "Emails"
+            // Processing "Emails"
             if (selectedFilters.some(filter => filter.label === 'Emails')) {
                 const emails = selectedFilters.find(filter => filter.label === 'Emails')?.value.split(', ') || [];
                 if (emails.length > 0) {
@@ -388,7 +391,7 @@ const Leads: React.FC = () => {
                 }
             }
 
-            // Обработка "From Date"
+            // Processing "From Date"
             if (selectedFilters.some(filter => filter.label === 'From Date')) {
                 const fromDate = selectedFilters.find(filter => filter.label === 'From Date')?.value || '';
                 if (fromDate) {
@@ -397,7 +400,7 @@ const Leads: React.FC = () => {
                 }
             }
 
-            // Обработка "To Date"
+            // Processing "To Date"
             if (selectedFilters.some(filter => filter.label === 'To Date')) {
                 const toDate = selectedFilters.find(filter => filter.label === 'To Date')?.value || '';
                 if (toDate) {
@@ -406,11 +409,19 @@ const Leads: React.FC = () => {
                 }
             }
 
-            // Обработка "Funnels"
+            // Processing "Funnels"
             if (selectedFilters.some(filter => filter.label === 'Funnels')) {
                 const funnels = selectedFilters.find(filter => filter.label === 'Funnels')?.value.split(', ') || [];
                 if (funnels.length > 0) {
                     url += `&lead_funnel=${encodeURIComponent(funnels.join(','))}`;
+                }
+            }
+
+            // Search string processing
+            if (selectedFilters.some(filter => filter.label === 'Search')) {
+                const searchQuery = selectedFilters.find(filter => filter.label === 'Search')?.value || '';
+                if (searchQuery) {
+                    url += `&search_query=${encodeURIComponent(searchQuery)}`;
                 }
             }
 
@@ -461,7 +472,10 @@ const Leads: React.FC = () => {
         if (filters.selectedFunnels && filters.selectedFunnels.length > 0) {
             newSelectedFilters.push({ label: 'Funnels', value: filters.selectedFunnels.join(', ') });
         }
-        console.log(newSelectedFilters)
+        if (filters.searchQuery && filters.searchQuery.trim() !== '') {
+            newSelectedFilters.push({ label: 'Search', value: filters.searchQuery });
+        }
+
         setSelectedFilters(newSelectedFilters);
         setActiveFilter(filters.selectedStatus?.length > 0 ? filters.selectedStatus[0] : 'all');
         setFilterParams(filters);
@@ -503,7 +517,8 @@ const Leads: React.FC = () => {
             selectedStatus: updatedFilters.find(f => f.label === 'Status') ? updatedFilters.find(f => f.label === 'Status')!.value.split(', ') : [],
             regions: updatedFilters.find(f => f.label === 'Regions') ? updatedFilters.find(f => f.label === 'Regions')!.value.split(', ') : [],
             emails: updatedFilters.find(f => f.label === 'Emails') ? updatedFilters.find(f => f.label === 'Emails')!.value.split(', ') : [],
-            selectedFunnels: updatedFilters.find(f => f.label === 'Funnels') ? updatedFilters.find(f => f.label === 'Funnels')!.value.split(', ') : []
+            selectedFunnels: updatedFilters.find(f => f.label === 'Funnels') ? updatedFilters.find(f => f.label === 'Funnels')!.value.split(', ') : [],
+            searchQuery: updatedFilters.find(f => f.label === 'Search') ? updatedFilters.find(f => f.label === 'Search')!.value : '',
         };
 
         handleApplyFilters(newFilters);
@@ -567,6 +582,16 @@ const Leads: React.FC = () => {
                 return {
                     background: 'rgba(254, 238, 236, 1)',
                     color: 'rgba(244, 87, 69, 1)',
+                };
+            case 'Existing':
+                return {
+                    background: 'rgba(244, 252, 238, 1)',
+                    color: 'rgba(43, 91, 0, 1)',
+                };
+            case 'New':
+                return {
+                    background: 'rgba(254, 243, 205, 1)',
+                    color: 'rgba(101, 79, 0, 1))',
                 };
             default:
                 return {
@@ -856,17 +881,17 @@ const Leads: React.FC = () => {
                             <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, mt: 2 }}>
                                 {selectedFilters.length > 0 && (
                                     <Chip
-                                        label="Reset all"
+                                        label="Clear all"
                                         onDelete={handleResetFilters}
-                                        sx={{ backgroundColor: 'rgba(255, 255, 255, 1)', color: 'rgba(80, 82, 178, 1)', border: '1px solid rgba(220, 220, 239, 1)', borderRadius: '3px' }}
+                                        sx={{ backgroundColor: 'rgba(255, 255, 255, 1)', color: 'rgba(80, 82, 178, 1)', border: '1px solid rgba(220, 220, 239, 1)', borderRadius: '3px', fontFamily: 'Nunito', fontWeight: '600', fontSize: '12px' }}
                                     />
                                 )}
                                 {selectedFilters.map(filter => (
                                     <Chip
                                         key={filter.label}
-                                        label={`${filter.label}: ${filter.value}`}
+                                        label={`${filter.value}`}
                                         onDelete={() => handleDeleteFilter(filter)}
-                                        sx={{ borderRadius: '3px', border: '1px solid rgba(220, 220, 239, 1)', backgroundColor: 'rgba(229, 229, 229, 1)', color: 'rgba(123, 123, 123, 1)' }}
+                                        sx={{ borderRadius: '4.5px', backgroundColor: 'rgba(237, 237, 247, 1)', color: 'rgba(74, 74, 74, 1)', fontFamily: 'Nunito', fontWeight: '600', fontSize: '13px' }}
                                     />
                                 ))}
                             </Box>
@@ -877,7 +902,7 @@ const Leads: React.FC = () => {
                                             Pixel Integration isn&apos;t completed yet!
                                         </Typography>
                                         <Image src='/pixel_installation_needed.svg' alt='Need Pixel Install'
-                                            height={200} width={300} />
+                                            height={250} width={300} />
                                         <Typography variant="body1" color="textSecondary" sx={{ mt: 2 }}>
                                             Install the pixel to complete the setup.
                                         </Typography>
@@ -901,7 +926,7 @@ const Leads: React.FC = () => {
                                         <Typography variant="h5" sx={{ mb: 6 }}>
                                             Data not matched yet!
                                         </Typography>
-                                        <Image src='/no-data.svg' alt='No Data' height={400} width={500} />
+                                        <Image src='/no-data.svg' alt='No Data' height={250} width={300} />
                                         <Typography variant="body1" color="textSecondary" sx={{ mt: 2 }}>
                                             Please check back later.
                                         </Typography>
@@ -1034,7 +1059,24 @@ const Leads: React.FC = () => {
                                                                     </Box>
                                                                 </TableCell>
                                                                 <TableCell
-                                                                    sx={leadsStyles.table_array}>{row.status || 'N/A'}</TableCell>
+                                                                    sx={leadsStyles.table_array}>
+                                                                    <Box
+                                                                        sx={{
+                                                                            display: 'flex',
+                                                                            padding: '4px 8px',
+                                                                            borderRadius: '4px',
+                                                                            fontFamily: 'Nunito',
+                                                                            fontSize: '14px',
+                                                                            fontWeight: '400',
+                                                                            lineHeight: '19.6px',
+                                                                            backgroundColor: getStatusStyle(row.status).background,
+                                                                            color: getStatusStyle(row.status).color,
+                                                                            justifyContent: 'center',
+                                                                        }}
+                                                                    >
+                                                                        {row.status || 'N/A'}
+                                                                    </Box>
+                                                                </TableCell>
                                                                 <TableCell
                                                                     sx={leadsStyles.table_array}>{row.lead.time_spent || 'N/A'}</TableCell>
                                                                 <TableCell
