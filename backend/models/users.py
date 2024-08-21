@@ -1,12 +1,11 @@
 from sqlalchemy import Column, DateTime, event, Integer
-from sqlalchemy.dialects.postgresql import BIGINT, BOOLEAN, INTEGER, TIMESTAMP, VARCHAR
+from sqlalchemy.dialects.postgresql import BIGINT, BOOLEAN, INTEGER, TIMESTAMP, VARCHAR, ARRAY
 
 from .base import Base, create_timestamps, update_timestamps
 
 
 class Users(Base):
     __tablename__ = "users"
-
     id = Column(Integer, primary_key=True, nullable=False)
     email = Column(VARCHAR, nullable=True)
     is_email_confirmed = Column(BOOLEAN, default=False, nullable=True)
@@ -33,6 +32,7 @@ class Users(Base):
     stripe_payment_url = Column(VARCHAR, nullable=True)
     data_provider_id = Column(VARCHAR(64), nullable=True)
     is_pixel_installed = Column(BOOLEAN, default=False, nullable=True)
+    role = Column(ARRAY(VARCHAR(32)))
 
 
 User = Users
