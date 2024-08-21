@@ -44,6 +44,7 @@ class UpdatePassword(BaseModel):
 
 class CalendlyUUID(BaseModel):
     uuid: str = Field(...)
+    invitees: str = Field(...)
 
 
 class CompanyInfo(BaseModel):

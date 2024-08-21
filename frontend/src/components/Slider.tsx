@@ -6,6 +6,7 @@ import { useSlider } from '../context/SliderContext';
 import { PopupButton, useCalendlyEventListener } from "react-calendly";
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
+import { showToast } from './ToastNotification';
 
 const Slider: React.FC = () => {
   const [prefillData, setPrefillData] = useState<{ email: '', name: '' } | null>(null);
@@ -14,14 +15,12 @@ const Slider: React.FC = () => {
     try {
       const response = await axiosInstance.get('/calendly');
       const { full_name, email } = response.data;
-      console.log(response.data)
 
       setPrefillData({
         email: email || '',
         name: full_name || '',
       });
     } catch (error) {
-      console.error('Error', error);
     }
   };
   const { showSlider, setShowSlider } = useSlider();
@@ -34,23 +33,26 @@ const Slider: React.FC = () => {
 
   useCalendlyEventListener({
     onEventScheduled: async (e) => {
-      console.log(e.data);
 
       const eventUri = e.data.payload.event.uri;
+      const inviteeUri = e.data.payload.invitee.uri
       const uuidMatch = eventUri.match(/scheduled_events\/([a-zA-Z0-9-]+)/);
+      const uuidInvitee = inviteeUri.match(/invitees\/([a-zA-Z0-9-]+)/);
       const eventUUID = uuidMatch ? uuidMatch[1] : null;
+      const inviteesUUID = uuidInvitee ? uuidInvitee[1] : null;
 
-      if (eventUUID) {
-        console.log("UUID события:", eventUUID);
+      if (eventUUID && inviteesUUID) {
 
         try {
           const response = await axiosInstance.post('/calendly', {
             uuid: eventUUID,
+            invitees: inviteesUUID
           });
           response
         } catch (error) {
-          console.error('Ошибка при отправке UUID на бэкенд:', error);
         }
+        handleClose()
+        showToast('You have successfully signed up for a call')
       }
     },
   });

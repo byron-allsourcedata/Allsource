@@ -19,7 +19,7 @@ def get_me(user_service: UsersService = Depends(get_users_service)):
 @router.post('')
 async def update_calendly_uuid(update_data: CalendlyUUID,
                           user: UsersService = Depends(get_users_service)):
-    result_status = user.update_calendly_info(update_data)
+    result_status = user.update_calendly_info(update_data.uuid, update_data.invitees)
     return result_status
 
 
