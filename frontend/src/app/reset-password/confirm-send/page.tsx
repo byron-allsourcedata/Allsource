@@ -34,10 +34,10 @@ const ConfirmSend: React.FC = () => {
           Help is on the way
           </Typography>
           <Typography sx={confirmStyles.text}>
-          Please check your email {email}. If you run into any hiccups, our support team is ready to rock 'n' roll and help you out.
+            Please check your email {email}. If you run into any hiccups, our support team is ready to rock &#39;n&#39; roll and help you out.
           </Typography>
           <Typography sx={confirmStyles.text}>
-            Please check your spam folder or <Link href="/reset-password" sx={confirmStyles.loginLink}>try sending again.</Link>
+            Please check your spam folder or <Link href="/reset-password" sx={confirmStyles.loginLink}>try sending again.</Link>
           </Typography>
 
           <Box component="form" onSubmit={handleSubmit} sx={confirmStyles.form}>

@@ -86,8 +86,9 @@ const Signup: React.FC = () => {
             Forgot your password?
           </Typography>
           <Typography sx={resetStyles.text}>
-          No worries! Let's get you back on track with a new password, pronto! Just follow the steps sent to your email
+            No worries! Let&apos;s get you back on track with a new password, pronto! Just follow the steps sent to your email
           </Typography>
+
           <Box component="form" onSubmit={handleSubmit} sx={resetStyles.form}>
             <TextField sx={resetStyles.formField}
               InputLabelProps={{ sx: resetStyles.inputLabel }}
