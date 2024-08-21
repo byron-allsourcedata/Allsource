@@ -1,9 +1,10 @@
 import React, {useEffect, useState} from 'react';
 import {GoogleLogin} from '@react-oauth/google';
-import {Box, Button, FormControl, InputLabel, MenuItem, Modal, Select, Typography} from '@mui/material';
+import {Box, Button, FormControl, IconButton, InputLabel, MenuItem, Modal, Select, Typography} from '@mui/material';
 import axios from 'axios';
 import axiosInterceptorInstance from "@/axios/axiosInterceptorInstance";
 import {showErrorToast, showToast} from "@/components/ToastNotification";
+import CloseIcon from "@mui/icons-material/Close";
 
 interface GTMContainer {
     containerId: string;
@@ -118,9 +119,8 @@ const GoogleTagPopup: React.FC<PopupProps> = ({open, handleClose}) => {
                 showErrorToast('Please select account, container, and workspace.')
                 return;
             }
-
             let manualResponse = await axiosInterceptorInstance.get(`/install-pixel/manually`);
-            let htmlContent = manualResponse.data.manual;
+            let pixelCode = manualResponse.data.manual;
             const tagData = {
                 name: 'Pixel script',
                 type: 'html',
@@ -128,7 +128,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({open, handleClose}) => {
                     {
                         key: 'html',
                         type: 'template',
-                        value: htmlContent
+                        value: pixelCode
                     }
                 ]
             };
@@ -192,27 +192,62 @@ const GoogleTagPopup: React.FC<PopupProps> = ({open, handleClose}) => {
             onClose={handleClose}
             aria-labelledby="modal-modal-title"
             aria-describedby="modal-modal-description"
+            sx={{ overflow: 'hidden' }}
         >
             <Box
                 sx={{
                     position: 'fixed',
-                    top: '50%',
-                    left: '50%',
-                    transform: 'translate(-50%, -50%)',
-                    width: '80%',
-                    maxWidth: '500px',
+                    top: '0',
+                    right: '0',
+                    width: '400px',
+                    height: '100%',
                     backgroundColor: 'white',
                     padding: '20px',
                     borderRadius: '8px',
                     boxShadow: '0 0 10px rgba(0, 0, 0, 0.2)',
                     zIndex: 1000,
+                    transition: 'transform 0.3s ease-in-out',
+                    transform: open ? 'translateX(0)' : 'translateX(100%)',
+                    display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
                 }}
             >
-                <Typography variant="h5" gutterBottom>
-                    Welcome to GTM Integration Page
-                </Typography>
+                <Box
+                    sx={{
+                        width: '100%',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        paddingBottom: '1em',
+                        alignItems: 'center',
+                        mb: '1em',
+                    }}
+                >
+                    <Typography
+                        variant="h6"
+                        sx={{
+                            fontFamily: 'Nunito, sans-serif',
+                            fontSize: '22px', // Slightly larger font size for emphasis
+                            fontWeight: 'bold',
+                            color: 'rgba(33, 43, 54, 1)', // Darker color for better contrast
+                            lineHeight: '1.4', // Improved line height for readability
+                            letterSpacing: '0.5px', // Subtle letter spacing for a refined look
+                            textShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)', // Soft shadow for depth
+                            textAlign: 'center', // Center-align text for a balanced appearance
+                            mb: '1em', // Margin-bottom to ensure spacing from other elements
+                            '@media (max-width: 600px)': {
+                                fontSize: '18px', // Adjust font size for smaller screens
+                                textAlign: 'left', // Align left on smaller screens for better readability
+                            },
+                        }}
+                    >
+                        Welcome to GTM Integration Page
+                    </Typography>
+
+                    <IconButton onClick={handleClose}>
+                        <CloseIcon />
+                    </IconButton>
+                </Box>
                 {!session ? (
                     <GoogleLogin
                         onSuccess={handleLoginSuccess}
@@ -221,11 +256,29 @@ const GoogleTagPopup: React.FC<PopupProps> = ({open, handleClose}) => {
                     />
                 ) : (
                     <>
-                        <Typography variant="h6" gutterBottom>
+                        <Typography
+                            variant="h6"
+                            sx={{
+                                fontFamily: 'Nunito, sans-serif',
+                                fontSize: '20px', // Slightly larger for better emphasis
+                                fontWeight: '600', // Slightly lighter than bold for a more modern look
+                                color: 'rgba(33, 43, 54, 0.87)', // Darker color with slight opacity for a softer look
+                                mb: '1.2em', // Increased margin-bottom for better spacing
+                                textAlign: 'center', // Center-align text for a balanced appearance
+                                lineHeight: '1.5', // Improved line height for readability
+                                letterSpacing: '0.5px', // Subtle letter spacing to enhance clarity
+                                '@media (max-width: 600px)': {
+                                    fontSize: '18px', // Adjust font size for smaller screens
+                                    textAlign: 'left', // Align left on smaller screens for better readability
+                                    mb: '1em', // Adjust margin-bottom for smaller screens
+                                },
+                            }}
+                        >
                             Select GTM Account and Container
                         </Typography>
-                        <FormControl fullWidth sx={{mb: 2}}>
-                            <InputLabel>Account</InputLabel>
+
+                        <FormControl fullWidth sx={{ mb: 2, mt: 1 }}>
+                            <InputLabel sx={{ fontSize: '16px', fontWeight: '500', color: 'rgba(33, 43, 54, 0.87)' }}>Account</InputLabel>
                             <Select
                                 value={selectedAccount || ''}
                                 onChange={(e) => {
@@ -233,6 +286,15 @@ const GoogleTagPopup: React.FC<PopupProps> = ({open, handleClose}) => {
                                     setSelectedAccount(selectedValue);
                                 }}
                                 label="Account"
+                                sx={{
+                                    backgroundColor: '#ffffff',
+                                    borderRadius: '4px',
+                                    border: '1px solid rgba(224, 224, 224, 1)',
+                                    '&:focus': {
+                                        borderColor: 'rgba(80, 82, 178, 1)',
+                                        boxShadow: '0 0 0 2px rgba(80, 82, 178, 0.2)',
+                                    },
+                                }}
                             >
                                 <MenuItem value="">Select an account</MenuItem>
                                 {accounts.map(account => (
@@ -243,12 +305,21 @@ const GoogleTagPopup: React.FC<PopupProps> = ({open, handleClose}) => {
                             </Select>
                         </FormControl>
 
-                        <FormControl fullWidth sx={{mb: 2}}>
-                            <InputLabel>Container</InputLabel>
+                        <FormControl fullWidth sx={{ mb: 2, mt: 1 }}>
+                            <InputLabel sx={{ fontSize: '16px', fontWeight: '500', color: 'rgba(33, 43, 54, 0.87)' }}>Container</InputLabel>
                             <Select
                                 value={selectedContainer}
                                 onChange={e => setSelectedContainer(e.target.value as string)}
                                 label="Container"
+                                sx={{
+                                    backgroundColor: '#ffffff',
+                                    borderRadius: '4px',
+                                    border: '1px solid rgba(224, 224, 224, 1)',
+                                    '&:focus': {
+                                        borderColor: 'rgba(80, 82, 178, 1)',
+                                        boxShadow: '0 0 0 2px rgba(80, 82, 178, 0.2)',
+                                    },
+                                }}
                             >
                                 <MenuItem value="">Select a container</MenuItem>
                                 {containers.map(container => (
@@ -258,22 +329,34 @@ const GoogleTagPopup: React.FC<PopupProps> = ({open, handleClose}) => {
                                 ))}
                             </Select>
                         </FormControl>
+
                         {accounts.length === 0 && (
-                            <Typography color="error" variant="body2" sx={{mb: 2}}>
+                            <Typography color="error" variant="body2" sx={{ mb: 2, fontSize: '14px', fontWeight: '400' }}>
                                 No accounts available. Please check your Google Tag Manager setup.
                             </Typography>
                         )}
+
                         {containers.length === 0 && selectedAccount && (
-                            <Typography color="error" variant="body2" sx={{mb: 2}}>
+                            <Typography color="error" variant="body2" sx={{ mb: 2, fontSize: '14px', fontWeight: '400' }}>
                                 No containers available for the selected account. Please try another account.
                             </Typography>
                         )}
-                        <FormControl fullWidth sx={{mb: 2}}>
-                            <InputLabel>Workspace</InputLabel>
+
+                        <FormControl fullWidth sx={{ mb: 2, mt: 1 }}>
+                            <InputLabel sx={{ fontSize: '16px', fontWeight: '500', color: 'rgba(33, 43, 54, 0.87)' }}>Workspace</InputLabel>
                             <Select
                                 value={selectedWorkspace || ''}
                                 onChange={(e) => setSelectedWorkspace(e.target.value as string)}
                                 label="Workspace"
+                                sx={{
+                                    backgroundColor: '#ffffff',
+                                    borderRadius: '4px',
+                                    border: '1px solid rgba(224, 224, 224, 1)',
+                                    '&:focus': {
+                                        borderColor: 'rgba(80, 82, 178, 1)',
+                                        boxShadow: '0 0 0 2px rgba(80, 82, 178, 0.2)',
+                                    },
+                                }}
                             >
                                 <MenuItem value="">Select a workspace</MenuItem>
                                 {workspaces.map(workspace => (
@@ -283,12 +366,29 @@ const GoogleTagPopup: React.FC<PopupProps> = ({open, handleClose}) => {
                                 ))}
                             </Select>
                         </FormControl>
-
-                        <Box sx={{mt: 2}}>
+                        <Box sx={{ mt: 2, width: '100%' }}>
                             <Button
                                 variant="contained"
                                 color="primary"
                                 onClick={handleCreateAndSendTag}
+                                sx={{
+                                    width: '100%',
+                                    padding: '12px 0',
+                                    borderRadius: '8px',
+                                    fontSize: '16px',
+                                    fontWeight: '600',
+                                    textTransform: 'none',
+                                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+                                    transition: 'background-color 0.3s, box-shadow 0.3s',
+                                    '&:hover': {
+                                        backgroundColor: 'rgba(80, 82, 178, 0.9)',
+                                        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.15)',
+                                    },
+                                    '&:focus': {
+                                        outline: 'none',
+                                        boxShadow: '0 0 0 2px rgba(80, 82, 178, 0.3)',
+                                    },
+                                }}
                             >
                                 Send
                             </Button>
@@ -296,7 +396,26 @@ const GoogleTagPopup: React.FC<PopupProps> = ({open, handleClose}) => {
                                 variant="outlined"
                                 color="secondary"
                                 onClick={handleClose}
-                                sx={{ml: 2}}
+                                sx={{
+                                    width: '100%',
+                                    padding: '12px 0',
+                                    borderRadius: '8px',
+                                    fontSize: '16px',
+                                    fontWeight: '600',
+                                    textTransform: 'none',
+                                    border: '1px solid rgba(80, 82, 178, 1)',
+                                    color: 'rgba(80, 82, 178, 1)',
+                                    transition: 'background-color 0.3s, border-color 0.3s',
+                                    '&:hover': {
+                                        backgroundColor: 'rgba(80, 82, 178, 0.1)',
+                                        borderColor: 'rgba(80, 82, 178, 0.8)',
+                                    },
+                                    '&:focus': {
+                                        outline: 'none',
+                                        boxShadow: '0 0 0 2px rgba(80, 82, 178, 0.3)',
+                                    },
+                                    mt: 1,
+                                }}
                             >
                                 Cancel
                             </Button>

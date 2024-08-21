@@ -39,7 +39,22 @@ const PixelInstallation: React.FC = () => {
   };
 
   const installGoogleTag = async () => {
-    setGoogleOpen(true)
+    try {
+      const response = await axiosInterceptorInstance.get('/install-pixel/google-tag');
+      setGoogleOpen(true)
+    } catch (error) {
+      if (error instanceof AxiosError && error.response?.status === 403) {
+        if (error.response.data.status === 'NEED_BOOK_CALL') {
+          sessionStorage.setItem('is_slider_opened', 'true');
+          setShowSlider(true);
+        } else {
+          sessionStorage.setItem('is_slider_opened', 'false');
+          setShowSlider(false);
+        }
+      } else {
+        console.error('Error fetching data:', error);
+      }
+    }
   };
 
   const [openmanually, setOpen] = useState(false);

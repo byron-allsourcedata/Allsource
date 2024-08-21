@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 
-from enums import PixelStatus
+from enums import PixelStatus, BaseEnum
 from schemas.pixel_installation import PixelInstallationRequest, EmailFormRequest, ManualFormResponse
 from schemas.users import PixelFormResponse
 from services.pixel_installation import PixelInstallationService
@@ -52,8 +52,7 @@ async def manual(pixel_installation_request: PixelInstallationRequest,
 
 @router.get("/google-tag")
 async def google_tag(pixel_installation_service: PixelInstallationService = Depends(get_pixel_installation_service)):
-    result_status = pixel_installation_service.get_my_info()
-    return result_status
+    return BaseEnum.SUCCESS
 
 
 @router.get("/cms", response_model=ManualFormResponse)
