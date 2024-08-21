@@ -234,6 +234,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({open, handleClose}) => {
                             letterSpacing: '0.5px',
                             textShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
                             textAlign: 'center',
+                            textWrap: 'nowrap',
                             mb: '1em',
                             '@media (max-width: 600px)': {
                                 fontSize: '18px',
@@ -378,27 +379,29 @@ const GoogleTagPopup: React.FC<PopupProps> = ({open, handleClose}) => {
                                 ))}
                             </Select>
                         </FormControl>
-                        <Box sx={{mt: 2, width: '100%'}}>
+                        <Box sx={{mt: 2, width: '100%', display: 'flex', gap: 1}}>
                             <Button
                                 variant="contained"
                                 color="primary"
                                 onClick={handleCreateAndSendTag}
                                 sx={{
-                                    width: '100%',
+                                    flex: 1,
                                     padding: '12px 0',
                                     borderRadius: '8px',
                                     fontSize: '16px',
                                     fontWeight: '600',
                                     textTransform: 'none',
+                                    backgroundColor: '#0853C4',
+                                    color: '#ffffff',
                                     boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
                                     transition: 'background-color 0.3s, box-shadow 0.3s',
                                     '&:hover': {
-                                        backgroundColor: 'rgba(80, 82, 178, 0.9)',
+                                        backgroundColor: '#06479F',
                                         boxShadow: '0 4px 6px rgba(0, 0, 0, 0.15)',
                                     },
                                     '&:focus': {
                                         outline: 'none',
-                                        boxShadow: '0 0 0 2px rgba(80, 82, 178, 0.3)',
+                                        boxShadow: '0 0 0 2px rgba(8, 83, 196, 0.3)',
                                     },
                                 }}
                             >
@@ -409,7 +412,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({open, handleClose}) => {
                                 color="secondary"
                                 onClick={handleClose}
                                 sx={{
-                                    width: '100%',
+                                    flex: 1,
                                     padding: '12px 0',
                                     borderRadius: '8px',
                                     fontSize: '16px',
@@ -426,7 +429,6 @@ const GoogleTagPopup: React.FC<PopupProps> = ({open, handleClose}) => {
                                         outline: 'none',
                                         boxShadow: '0 0 0 2px rgba(80, 82, 178, 0.3)',
                                     },
-                                    mt: 1,
                                 }}
                             >
                                 Cancel
