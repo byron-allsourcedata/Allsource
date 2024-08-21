@@ -26,7 +26,7 @@ export const confirmStyles: { [key: string]: SxProps<Theme> } = {
       border: '0.0625rem solid transparent',
       textAlign: 'center',
       padding: '24px 32px',
-      maxWidth: '382px',
+      maxWidth: '448px',
       marginTop: '143px',
       marginBottom: '143px',
       '@media (min-width: 1400px)': {
