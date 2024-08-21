@@ -37,7 +37,8 @@ export const updatepasswordStyles: { [key: string]: SxProps<Theme> } = {
             padding: '24px 16px', 
             marginTop: '0',
             marginBottom: '0',
-            margin: '0 16px 40px 16px'
+            margin: '0 16px 40px 16px',
+            maxWidth: '100%'
         },
         '@media (max-width: 380px)': {
             marginTop: '76px',

@@ -40,6 +40,7 @@ export const loginStyles: { [key: string]: SxProps<Theme> } = {
             padding: '0 20px 40px 20px', 
             marginTop: '0',
             marginBottom: '0',
+            maxWidth: '100%',
         },
         '@media (max-width: 380px)': {
             marginTop: '76px',

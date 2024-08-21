@@ -37,7 +37,8 @@ export const resetStyles: { [key: string]: SxProps<Theme> } = {
             padding: '24px 16px', 
             marginTop: '0',
             marginBottom: '0',
-            margin: '0 20px 40px 20px'
+            margin: '0 20px 40px 20px',
+            maxWidth: '100%'
         },
         '@media (max-width: 380px)': {
             marginTop: '76px',

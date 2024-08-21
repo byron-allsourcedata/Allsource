@@ -38,6 +38,7 @@ export const signupStyles: { [key: string]: SxProps<Theme> } = {
       padding: '0 20px 40px 20px', 
       marginTop: '0',
       marginBottom: '0',
+      maxWidth: '100%',
     },
     '@media (max-width: 380px)': {
       marginTop: '76px',
@@ -70,6 +71,7 @@ export const signupStyles: { [key: string]: SxProps<Theme> } = {
     maxWidth: '100%',
     '@media (max-width: 440px)': {
         paddingBottom: '2rem',
+        fontSize: '24px'
     },
   },
   googleButton: {
