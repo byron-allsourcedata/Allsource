@@ -22,7 +22,6 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from models.five_x_five_users import FiveXFiveUser
 from dotenv import load_dotenv
-from sqlalchemy.dialects.postgresql import insert
 
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
@@ -49,7 +48,9 @@ def assume_role(role_arn, sts_client):
 
 
 def convert_to_none(value):
-    return value if pd.notna(value) else None
+    if pd.isna(value) or value is None or value == 'nan':
+        return None
+    return value
 
 
 async def on_message_received(message, s3_session, credentials, db_session):
@@ -73,10 +74,6 @@ async def on_message_received(message, s3_session, credentials, db_session):
                         with gzip.open(temp_file.name, 'rt', encoding='utf-8') as f:
                             df = pd.read_csv(f)
 
-                        users_to_insert = []
-                        emails_to_insert = []
-                        users_emails_to_insert = []
-
                         for _, row in df.iterrows():
                             last_updated = convert_to_none(
                                 pd.to_datetime(row.get('LAST_UPDATED', None), unit='s', errors='coerce'))
@@ -90,27 +87,21 @@ async def on_message_received(message, s3_session, credentials, db_session):
                             first_name = str(row.get('FIRST_NAME', '')).lower().strip()
                             last_name = str(row.get('LAST_NAME', '')).lower().strip()
 
-                            if first_name:
-                                first_name_obj = session.query(FiveXFiveNames).filter(
-                                    FiveXFiveNames.name == first_name).first()
-                                if not first_name_obj:
-                                    first_name_obj = FiveXFiveNames(name=first_name)
-                                    session.add(first_name_obj)
-                                    session.flush()
-                                first_name_id = first_name_obj.id
-                            else:
-                                first_name_id = None
+                            first_name_obj = session.query(FiveXFiveNames).filter(
+                                FiveXFiveNames.name == first_name).first()
+                            if not first_name_obj:
+                                first_name_obj = FiveXFiveNames(name=first_name)
+                                session.add(first_name_obj)
+                                session.flush()
+                            first_name_id = first_name_obj.id
 
-                            if last_name:
-                                last_name_obj = session.query(FiveXFiveNames).filter(
-                                    FiveXFiveNames.name == last_name).first()
-                                if not last_name_obj:
-                                    last_name_obj = FiveXFiveNames(name=last_name)
-                                    session.add(last_name_obj)
-                                    session.flush()
-                                last_name_id = last_name_obj.id
-                            else:
-                                last_name_id = None
+                            last_name_obj = session.query(FiveXFiveNames).filter(
+                                FiveXFiveNames.name == last_name).first()
+                            if not last_name_obj:
+                                last_name_obj = FiveXFiveNames(name=last_name)
+                                session.add(last_name_obj)
+                                session.flush()
+                            last_name_id = last_name_obj.id
 
                             age_range = str(row.get('AGE_RANGE', None))
                             age_min = None
@@ -129,37 +120,37 @@ async def on_message_received(message, s3_session, credentials, db_session):
                                         logging.warning(f"Invalid age range format: {age_range}")
 
                             five_x_five_user = FiveXFiveUser(
-                                up_id=str(row.get('UP_ID', None)),
-                                cc_id=str(row.get('CC_ID', None)),
-                                first_name=str(row.get('FIRST_NAME', None)),
-                                programmatic_business_emails=str(row.get('PROGRAMMATIC_BUSINESS_EMAILS', None)),
-                                mobile_phone=str(row.get('MOBILE_PHONE', None)),
-                                direct_number=str(row.get('DIRECT_NUMBER', None)),
-                                gender=str(row.get('GENDER', None)),
+                                up_id=convert_to_none(row.get('UP_ID')),
+                                cc_id=convert_to_none(row.get('CC_ID')),
+                                first_name=convert_to_none(row.get('FIRST_NAME')),
+                                programmatic_business_emails=convert_to_none(row.get('PROGRAMMATIC_BUSINESS_EMAILS')),
+                                mobile_phone=convert_to_none(row.get('MOBILE_PHONE')),
+                                direct_number=convert_to_none(row.get('DIRECT_NUMBER')),
+                                gender=convert_to_none(row.get('GENDER')),
                                 age_min=age_min,
                                 age_max=age_max,
-                                personal_phone=str(row.get('PERSONAL_PHONE', None)),
-                                business_email=str(row.get('BUSINESS_EMAIL', None)),
-                                personal_emails=str(row.get('PERSONAL_EMAILS', None)),
-                                last_name=str(row.get('LAST_NAME', None)),
-                                personal_city=str(row.get('PERSONAL_CITY', None)),
-                                personal_state=str(row.get('PERSONAL_STATE', None)),
-                                company_name=str(row.get('COMPANY_NAME', None)),
-                                company_domain=str(row.get('COMPANY_DOMAIN', None)),
-                                company_phone=str(row.get('COMPANY_PHONE', None)),
-                                company_sic=str(row.get('COMPANY_SIC', None)),
-                                company_address=str(row.get('COMPANY_ADDRESS', None)),
-                                company_city=str(row.get('COMPANY_CITY', None)),
-                                company_state=str(row.get('COMPANY_STATE', None)),
-                                company_zip=str(row.get('COMPANY_ZIP', None)),
-                                company_linkedin_url=str(row.get('COMPANY_LINKEDIN_URL', None)),
-                                company_revenue=str(row.get('COMPANY_REVENUE', None)),
-                                company_employee_count=str(row.get('COMPANY_EMPLOYEE_COUNT', None)),
-                                net_worth=str(row.get('NET_WORTH', None)),
-                                job_title=str(row.get('JOB_TITLE', None)),
-                                sha256_lc_hem=str(row.get('SHA256_LC_HEM', None)),
-                                md5_lc_hem=str(row.get('MD5_LC_HEM', None)),
-                                sha1_lc_hem=str(row.get('SHA1_LC_HEM', None)),
+                                personal_phone=convert_to_none(row.get('PERSONAL_PHONE')),
+                                business_email=convert_to_none(row.get('BUSINESS_EMAIL')),
+                                personal_emails=convert_to_none(row.get('PERSONAL_EMAILS')),
+                                last_name=convert_to_none(row.get('LAST_NAME')),
+                                personal_city=convert_to_none(row.get('PERSONAL_CITY')),
+                                personal_state=convert_to_none(row.get('PERSONAL_STATE')),
+                                company_name=convert_to_none(row.get('COMPANY_NAME')),
+                                company_domain=convert_to_none(row.get('COMPANY_DOMAIN')),
+                                company_phone=convert_to_none(row.get('COMPANY_PHONE')),
+                                company_sic=convert_to_none(row.get('COMPANY_SIC')),
+                                company_address=convert_to_none(row.get('COMPANY_ADDRESS')),
+                                company_city=convert_to_none(row.get('COMPANY_CITY')),
+                                company_state=convert_to_none(row.get('COMPANY_STATE')),
+                                company_zip=convert_to_none(row.get('COMPANY_ZIP')),
+                                company_linkedin_url=convert_to_none(row.get('COMPANY_LINKEDIN_URL')),
+                                company_revenue=convert_to_none(row.get('COMPANY_REVENUE')),
+                                company_employee_count=convert_to_none(row.get('COMPANY_EMPLOYEE_COUNT')),
+                                net_worth=convert_to_none(row.get('NET_WORTH')),
+                                job_title=convert_to_none(row.get('JOB_TITLE')),
+                                sha256_lc_hem=convert_to_none(row.get('SHA256_LC_HEM')),
+                                md5_lc_hem=convert_to_none(row.get('MD5_LC_HEM')),
+                                sha1_lc_hem=convert_to_none(row.get('SHA1_LC_HEM')),
                                 last_updated=last_updated,
                                 personal_emails_last_seen=personal_emails_last_seen,
                                 company_last_updated=company_last_updated,
@@ -168,50 +159,51 @@ async def on_message_received(message, s3_session, credentials, db_session):
                                 last_name_id=last_name_id
                             )
 
-                            users_to_insert.append(five_x_five_user)
+                            five_x_five_user = session.merge(five_x_five_user)
 
-                            business_emails = str(row.get('BUSINESS_EMAIL', None)).split(', ')
-                            personal_emails = str(row.get('PERSONAL_EMAILS', None)).split(', ')
+                            business_emails = str(row.get('BUSINESS_EMAIL', '')).split(', ')
+                            personal_emails = str(row.get('PERSONAL_EMAILS', '')).split(', ')
 
                             for business_email in business_emails:
+                                business_email = business_email.strip()
+                                business_email = convert_to_none(business_email)
                                 if business_email:
-                                    emails_to_insert.append({
-                                        'email': business_email,
-                                        'email_host': business_email.split('@')[-1] if '@' in business_email else None
-                                    })
-                                    users_emails_to_insert.append({
-                                        'user_id': five_x_five_user.id,
-                                        'email_id': None,
-                                        'type': 'business'
-                                    })
+                                    email_obj = session.query(FiveXFiveEmails).filter(
+                                        FiveXFiveEmails.email == business_email).first()
+                                    if not email_obj:
+                                        email_obj = FiveXFiveEmails(
+                                            email=business_email,
+                                            email_host=business_email.split('@')[-1] if '@' in business_email else None
+                                        )
+                                        session.add(email_obj)
+                                        session.flush()
+                                    session.add(FiveXFiveUsersEmails(
+                                        user_id=five_x_five_user.id,
+                                        email_id=email_obj.id,
+                                        type='business'
+                                    ))
 
                             for personal_email in personal_emails:
+                                personal_email = personal_email.strip()
+                                personal_email = convert_to_none(personal_email)
                                 if personal_email:
-                                    emails_to_insert.append({
-                                        'email': personal_email,
-                                        'email_host': personal_email.split('@')[-1] if '@' in personal_email else None
-                                    })
-                                    users_emails_to_insert.append({
-                                        'user_id': five_x_five_user.id,
-                                        'email_id': None,
-                                        'type': 'personal'
-                                    })
-
-                            session.bulk_save_objects(users_to_insert)
-                            session.flush()
-
-                            email_stmt = insert(FiveXFiveEmails).values(
-                                emails_to_insert).on_conflict_do_nothing().returning(FiveXFiveEmails.id)
-                            email_results = session.execute(email_stmt)
-                            email_id_map = {email['email']: id for email, id in zip(emails_to_insert, email_results)}
-
-                            for user_email in users_emails_to_insert:
-                                user_email['email_id'] = email_id_map.get(user_email['email_id'])
-
-                            session.bulk_insert_mappings(FiveXFiveUsersEmails, users_emails_to_insert)
+                                    email_obj = session.query(FiveXFiveEmails).filter(
+                                        FiveXFiveEmails.email == personal_email).first()
+                                    if not email_obj:
+                                        email_obj = FiveXFiveEmails(
+                                            email=personal_email,
+                                            email_host=personal_email.split('@')[-1] if '@' in personal_email else None
+                                        )
+                                        session.add(email_obj)
+                                        session.flush()
+                                    session.add(FiveXFiveUsersEmails(
+                                        user_id=five_x_five_user.id,
+                                        email_id=email_obj.id,
+                                        type='personal'
+                                    ))
+                            logging.info('Committing transaction')
                             session.commit()
-
-            logging.info(f"{message_json['file_name']} processed")
+                        logging.info(f"{message_json['file_name']} processed")
         except Exception as e:
             logging.error(f"Error processing message: {e}", exc_info=True)
             session.rollback()
