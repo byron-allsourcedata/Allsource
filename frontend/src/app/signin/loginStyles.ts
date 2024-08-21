@@ -26,7 +26,7 @@ export const loginStyles: { [key: string]: SxProps<Theme> } = {
         border: '0.0625rem solid transparent',
         textAlign: 'center',
         padding: '32px',
-        maxWidth: '398px',
+        maxWidth: '464px',
         minHeight: '481px',
         marginTop: '143px',
         marginBottom: '143px',
