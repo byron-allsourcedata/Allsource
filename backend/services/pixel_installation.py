@@ -43,7 +43,6 @@ class PixelInstallationService:
         const base_pixel_script = document.createElement('script');
         base_pixel_script.src = pixelScriptUrl;
         document.body.appendChild(base_pixel_script);
-        }}
         </script>
         '''
 
