@@ -192,7 +192,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({open, handleClose}) => {
             onClose={handleClose}
             aria-labelledby="modal-modal-title"
             aria-describedby="modal-modal-description"
-            sx={{ overflow: 'hidden' }}
+            sx={{overflow: 'hidden'}}
         >
             <Box
                 sx={{
@@ -227,17 +227,17 @@ const GoogleTagPopup: React.FC<PopupProps> = ({open, handleClose}) => {
                         variant="h6"
                         sx={{
                             fontFamily: 'Nunito, sans-serif',
-                            fontSize: '22px', // Slightly larger font size for emphasis
+                            fontSize: '22px',
                             fontWeight: 'bold',
-                            color: 'rgba(33, 43, 54, 1)', // Darker color for better contrast
-                            lineHeight: '1.4', // Improved line height for readability
-                            letterSpacing: '0.5px', // Subtle letter spacing for a refined look
-                            textShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)', // Soft shadow for depth
-                            textAlign: 'center', // Center-align text for a balanced appearance
-                            mb: '1em', // Margin-bottom to ensure spacing from other elements
+                            color: 'rgba(33, 43, 54, 1)',
+                            lineHeight: '1.4',
+                            letterSpacing: '0.5px',
+                            textShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
+                            textAlign: 'center',
+                            mb: '1em',
                             '@media (max-width: 600px)': {
-                                fontSize: '18px', // Adjust font size for smaller screens
-                                textAlign: 'left', // Align left on smaller screens for better readability
+                                fontSize: '18px',
+                                textAlign: 'left',
                             },
                         }}
                     >
@@ -245,7 +245,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({open, handleClose}) => {
                     </Typography>
 
                     <IconButton onClick={handleClose}>
-                        <CloseIcon />
+                        <CloseIcon/>
                     </IconButton>
                 </Box>
                 {!session ? (
@@ -260,25 +260,29 @@ const GoogleTagPopup: React.FC<PopupProps> = ({open, handleClose}) => {
                             variant="h6"
                             sx={{
                                 fontFamily: 'Nunito, sans-serif',
-                                fontSize: '20px', // Slightly larger for better emphasis
-                                fontWeight: '600', // Slightly lighter than bold for a more modern look
-                                color: 'rgba(33, 43, 54, 0.87)', // Darker color with slight opacity for a softer look
-                                mb: '1.2em', // Increased margin-bottom for better spacing
-                                textAlign: 'center', // Center-align text for a balanced appearance
-                                lineHeight: '1.5', // Improved line height for readability
-                                letterSpacing: '0.5px', // Subtle letter spacing to enhance clarity
+                                fontSize: '20px',
+                                fontWeight: '600',
+                                color: 'rgba(33, 43, 54, 0.87)',
+                                mb: '1.2em',
+                                textAlign: 'center',
+                                lineHeight: '1.5',
+                                letterSpacing: '0.5px',
                                 '@media (max-width: 600px)': {
-                                    fontSize: '18px', // Adjust font size for smaller screens
-                                    textAlign: 'left', // Align left on smaller screens for better readability
-                                    mb: '1em', // Adjust margin-bottom for smaller screens
+                                    fontSize: '18px',
+                                    textAlign: 'left',
+                                    mb: '1em',
                                 },
                             }}
                         >
                             Select GTM Account and Container
                         </Typography>
 
-                        <FormControl fullWidth sx={{ mb: 2, mt: 1 }}>
-                            <InputLabel sx={{ fontSize: '16px', fontWeight: '500', color: 'rgba(33, 43, 54, 0.87)' }}>Account</InputLabel>
+                        <FormControl fullWidth sx={{mb: 2, mt: 1}}>
+                            <InputLabel sx={{
+                                fontSize: '16px',
+                                fontWeight: '500',
+                                color: 'rgba(33, 43, 54, 0.87)'
+                            }}>Account</InputLabel>
                             <Select
                                 value={selectedAccount || ''}
                                 onChange={(e) => {
@@ -305,8 +309,12 @@ const GoogleTagPopup: React.FC<PopupProps> = ({open, handleClose}) => {
                             </Select>
                         </FormControl>
 
-                        <FormControl fullWidth sx={{ mb: 2, mt: 1 }}>
-                            <InputLabel sx={{ fontSize: '16px', fontWeight: '500', color: 'rgba(33, 43, 54, 0.87)' }}>Container</InputLabel>
+                        <FormControl fullWidth sx={{mb: 2, mt: 1}}>
+                            <InputLabel sx={{
+                                fontSize: '16px',
+                                fontWeight: '500',
+                                color: 'rgba(33, 43, 54, 0.87)'
+                            }}>Container</InputLabel>
                             <Select
                                 value={selectedContainer}
                                 onChange={e => setSelectedContainer(e.target.value as string)}
@@ -331,19 +339,23 @@ const GoogleTagPopup: React.FC<PopupProps> = ({open, handleClose}) => {
                         </FormControl>
 
                         {accounts.length === 0 && (
-                            <Typography color="error" variant="body2" sx={{ mb: 2, fontSize: '14px', fontWeight: '400' }}>
+                            <Typography color="error" variant="body2" sx={{mb: 2, fontSize: '14px', fontWeight: '400'}}>
                                 No accounts available. Please check your Google Tag Manager setup.
                             </Typography>
                         )}
 
                         {containers.length === 0 && selectedAccount && (
-                            <Typography color="error" variant="body2" sx={{ mb: 2, fontSize: '14px', fontWeight: '400' }}>
+                            <Typography color="error" variant="body2" sx={{mb: 2, fontSize: '14px', fontWeight: '400'}}>
                                 No containers available for the selected account. Please try another account.
                             </Typography>
                         )}
 
-                        <FormControl fullWidth sx={{ mb: 2, mt: 1 }}>
-                            <InputLabel sx={{ fontSize: '16px', fontWeight: '500', color: 'rgba(33, 43, 54, 0.87)' }}>Workspace</InputLabel>
+                        <FormControl fullWidth sx={{mb: 2, mt: 1}}>
+                            <InputLabel sx={{
+                                fontSize: '16px',
+                                fontWeight: '500',
+                                color: 'rgba(33, 43, 54, 0.87)'
+                            }}>Workspace</InputLabel>
                             <Select
                                 value={selectedWorkspace || ''}
                                 onChange={(e) => setSelectedWorkspace(e.target.value as string)}
@@ -366,7 +378,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({open, handleClose}) => {
                                 ))}
                             </Select>
                         </FormControl>
-                        <Box sx={{ mt: 2, width: '100%' }}>
+                        <Box sx={{mt: 2, width: '100%'}}>
                             <Button
                                 variant="contained"
                                 color="primary"
