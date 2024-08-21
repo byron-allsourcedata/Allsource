@@ -1,13 +1,60 @@
 "use client"
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Drawer, Box, Typography, IconButton, Backdrop } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { useSlider } from '../context/SliderContext';
-import { PopupButton } from "react-calendly";
+import { PopupButton, useCalendlyEventListener } from "react-calendly";
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import axiosInstance from '@/axios/axiosInterceptorInstance';
 
 const Slider: React.FC = () => {
+  const [prefillData, setPrefillData] = useState<{ email: '', name: '' } | null>(null);
+
+  const fetchPrefillData = async () => {
+    try {
+      const response = await axiosInstance.get('/calendly');
+      const { full_name, email } = response.data;
+      console.log(response.data)
+
+      setPrefillData({
+        email: email || '',
+        name: full_name || '',
+      });
+    } catch (error) {
+      console.error('Error', error);
+    }
+  };
   const { showSlider, setShowSlider } = useSlider();
+
+  useEffect(() => {
+    if (showSlider) {
+      fetchPrefillData();
+    }
+  }, [showSlider]);
+
+  useCalendlyEventListener({
+    onEventScheduled: async (e) => {
+      console.log(e.data);
+
+      const eventUri = e.data.payload.event.uri;
+      const uuidMatch = eventUri.match(/scheduled_events\/([a-zA-Z0-9-]+)/);
+      const eventUUID = uuidMatch ? uuidMatch[1] : null;
+
+      if (eventUUID) {
+        console.log("UUID события:", eventUUID);
+
+        try {
+          const response = await axiosInstance.post('/calendly', {
+            uuid: eventUUID,
+          });
+          response
+        } catch (error) {
+          console.error('Ошибка при отправке UUID на бэкенд:', error);
+        }
+      }
+    },
+  });
+
   const handleClose = () => {
     sessionStorage.setItem('is_slider_opened', 'false');
     setShowSlider(false);
@@ -46,71 +93,143 @@ const Slider: React.FC = () => {
             <CloseIcon />
           </IconButton>
         </Box>
-        <Box sx={{ pl: 5, pr: 5, display: 'flex', flexDirection: 'column', textAlign: 'center', alignItems: 'center', justifyContent: 'center', '@media (max-width: 600px)': { pl: 4, pr: 2 } }}>
+        <Box sx={{ pl: 5, pr: 5, display: 'flex', flexDirection: 'column', textAlign: 'center', alignItems: 'center', '@media (max-width: 600px)': { pl: 4, pr: 2 } }}>
           <img src="/slider-bookcall.png" alt="Setup" style={{ width: '50%', marginBottom: '1rem', marginTop: '1em' }} />
           <div id='calendly-popup-wrapper' className="book-call-button__wrapper"> </div>
-            <Typography variant="body1" gutterBottom sx={{ color: '#4A4A4A', textAlign: 'left', fontFamily: 'Nunito', fontWeight: '500', fontSize: '22px', lineHeight: '25.2px', marginBottom: '2em', '@media (max-width: 600px)': { fontSize: '18px', lineHeight: '22px', marginBottom: '1em'} }}>
-              To activate your account, please speak with one of our onboarding specialists, and we&apos;ll get you started.
-            </Typography>
-            <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'start', gap: 1}}>
-              <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1.5, alignItems: 'center' }}>
-                <CheckCircleIcon sx={{ color: 'rgba(110, 193, 37, 1)', fontSize: '24px' }} />
-                <Typography variant="body1" gutterBottom sx={{ color: 'rgba(74, 74, 74, 1)', fontFamily: 'Nunito', fontWeight: '700', fontSize: '20px', lineHeight: '25.2px', '@media (max-width: 600px)': { fontSize: '16px' } }}>
-                  Unlock Optimal Efficiency:
-                </Typography>
+          {prefillData ? (
+            <>
+              <Typography
+                variant="body1"
+                gutterBottom
+                sx={{
+                  color: '#4A4A4A',
+                  textAlign: 'left',
+                  fontFamily: 'Nunito',
+                  fontWeight: '500',
+                  fontSize: '22px',
+                  lineHeight: '25.2px',
+                  marginBottom: '2em',
+                  '@media (max-width: 600px)': {
+                    fontSize: '18px',
+                    lineHeight: '22px',
+                    marginBottom: '1em'
+                  }
+                }}
+              >
+                Don&apos;t miss out on getting started! Schedule a call with our onboarding specialist now.
+              </Typography>
+              <Typography
+                variant="body1"
+                sx={{
+                  color: '#4A4A4A',
+                  textAlign: 'left',
+                  fontFamily: 'Nunito',
+                  fontWeight: '500',
+                  fontSize: '22px',
+                  lineHeight: '25.2px',
+                  marginBottom: '2em',
+                  paddingRight: 20, 
+                  marginLeft: '0',
+                  '@media (max-width: 600px)': {
+                    fontSize: '18px',
+                    lineHeight: '22px',
+                    marginBottom: '1em'
+                  }
+                }}
+              >
+                Need help? Connect with us directly to activate your account.
+              </Typography>
+
+              
+
+              <PopupButton
+                className="book-call-button"
+                styles={{
+                  width: '100%',
+                  textWrap: 'nowrap',
+                  color: '#fff',
+                  padding: '1em 8em',
+                  fontFamily: 'Nunito',
+                  fontWeight: '700',
+                  fontSize: '16px',
+                  borderRadius: '4px',
+                  lineHeight: '22.4px',
+                  backgroundColor: '#5052B2',
+                  textTransform: 'none',
+                  cursor: 'pointer',
+                }}
+                prefill={prefillData}
+                url="https://calendly.com/nickit-schatalow09/maximiz"
+                rootElement={document.getElementById("calendly-popup-wrapper")!}
+                text="Reschedule a Call"
+              />
+            </>
+          ) : (
+            <>
+              <Typography variant="body1" gutterBottom sx={{ color: '#4A4A4A', textAlign: 'left', fontFamily: 'Nunito', fontWeight: '500', fontSize: '22px', lineHeight: '25.2px', marginBottom: '2em', '@media (max-width: 600px)': { fontSize: '18px', lineHeight: '22px', marginBottom: '1em' } }}>
+                To activate your account, please speak with one of our onboarding specialists, and we&apos;ll get you started.
+              </Typography>
+              <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'start', gap: 1 }}>
+                <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1.5, alignItems: 'center' }}>
+                  <CheckCircleIcon sx={{ color: 'rgba(110, 193, 37, 1)', fontSize: '24px' }} />
+                  <Typography variant="body1" gutterBottom sx={{ color: 'rgba(74, 74, 74, 1)', fontFamily: 'Nunito', fontWeight: '700', fontSize: '20px', lineHeight: '25.2px', '@media (max-width: 600px)': { fontSize: '16px' } }}>
+                    Unlock Optimal Efficiency:
+                  </Typography>
+                </Box>
+                <Box sx={{ display: 'flex', justifyContent: 'start', pl: 4.5, }}>
+                  <Typography sx={{ color: 'rgba(74, 74, 74, 1)', fontFamily: 'Nunito', textAlign: 'left', fontWeight: '400', fontSize: '18px', lineHeight: '19.6px', marginBottom: '2em', '@media (max-width: 600px)': { fontSize: '14px', lineHeight: '18px', marginBottom: '1em' } }}>
+                    Maximiz offers advanced tools and features designed to enhance your business performance, driving better outcomes and maximizing your potential.
+                  </Typography>
+                </Box>
               </Box>
-              <Box sx={{ display: 'flex', justifyContent: 'start', pl: 4.5, }}>
-                <Typography sx={{ color: 'rgba(74, 74, 74, 1)', fontFamily: 'Nunito', textAlign: 'left', fontWeight: '400', fontSize: '18px', lineHeight: '19.6px', marginBottom: '2em', '@media (max-width: 600px)': { fontSize: '14px', lineHeight: '18px', marginBottom: '1em' } }}>
-                  Maximiz offers advanced tools and features designed to enhance your business performance, driving better outcomes and maximizing your potential.
-                </Typography>
+              <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'start', gap: 1 }}>
+                <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1.5, alignItems: 'center' }}>
+                  <CheckCircleIcon sx={{ color: 'rgba(110, 193, 37, 1)', fontSize: '24px' }} />
+                  <Typography variant="body1" gutterBottom sx={{ color: 'rgba(74, 74, 74, 1)', fontFamily: 'Nunito', fontWeight: '700', fontSize: '20px', lineHeight: '25.2px', '@media (max-width: 600px)': { fontSize: '16px' } }}>
+                    Tailored Expert Guidance:
+                  </Typography>
+                </Box>
+                <Box sx={{ display: 'flex', justifyContent: 'start', pl: 4.5 }}>
+                  <Typography sx={{ color: 'rgba(74, 74, 74, 1)', fontFamily: 'Nunito', textAlign: 'left', fontWeight: '400', fontSize: '18px', lineHeight: '19.6px', marginBottom: '2em', '@media (max-width: 600px)': { fontSize: '14px', lineHeight: '18px', marginBottom: '1em' } }}>
+                    Our marketing experts are available to provide personalized insights and strategies to help you fully leverage Maximiz&apos;s capabilities for your specific needs.
+                  </Typography>
+                </Box>
               </Box>
-            </Box>
-            <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'start', gap: 1}}>
-              <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1.5, alignItems: 'center' }}>
-                <CheckCircleIcon sx={{ color: 'rgba(110, 193, 37, 1)', fontSize: '24px' }} />
-                <Typography variant="body1" gutterBottom sx={{ color: 'rgba(74, 74, 74, 1)', fontFamily: 'Nunito', fontWeight: '700', fontSize: '20px', lineHeight: '25.2px', '@media (max-width: 600px)': { fontSize: '16px' } }}>
-                  Tailored Expert Guidance:
-                </Typography>
+              <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'start', gap: 1 }}>
+                <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1.5, alignItems: 'center' }}>
+                  <CheckCircleIcon sx={{ color: 'rgba(110, 193, 37, 1)', fontSize: '24px' }} />
+                  <Typography variant="body1" gutterBottom sx={{ color: 'rgba(74, 74, 74, 1)', fontFamily: 'Nunito', fontWeight: '700', fontSize: '20px', lineHeight: '25.2px', '@media (max-width: 600px)': { fontSize: '16px' } }}>
+                    Proven Success in Driving Growth:
+                  </Typography>
+                </Box>
+                <Box sx={{ display: 'flex', justifyContent: 'start', pl: 4.5 }}>
+                  <Typography sx={{ color: 'rgba(74, 74, 74, 1)', fontFamily: 'Nunito', textAlign: 'left', fontWeight: '400', fontSize: '18px', lineHeight: '19.6px', marginBottom: '4em', '@media (max-width: 600px)': { fontSize: '14px', lineHeight: '18px', marginBottom: '4em' } }}>
+                    With Maximiz, you can expect tangible results and significant improvements in your business metrics, backed by expert support every step of the way.
+                  </Typography>
+                </Box>
               </Box>
-              <Box sx={{ display: 'flex', justifyContent: 'start', pl: 4.5 }}>
-                <Typography sx={{ color: 'rgba(74, 74, 74, 1)', fontFamily: 'Nunito', textAlign: 'left', fontWeight: '400', fontSize: '18px', lineHeight: '19.6px', marginBottom: '2em', '@media (max-width: 600px)': { fontSize: '14px', lineHeight: '18px', marginBottom: '1em' } }}>
-                  Our marketing experts are available to provide personalized insights and strategies to help you fully leverage Maximiz&apos;s capabilities for your specific needs.
-                </Typography>
-              </Box>
-            </Box>
-            <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'start', gap: 1}}>
-              <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1.5, alignItems: 'center' }}>
-                <CheckCircleIcon sx={{ color: 'rgba(110, 193, 37, 1)', fontSize: '24px' }} />
-                <Typography variant="body1" gutterBottom sx={{ color: 'rgba(74, 74, 74, 1)', fontFamily: 'Nunito', fontWeight: '700', fontSize: '20px', lineHeight: '25.2px', '@media (max-width: 600px)': { fontSize: '16px' } }}>
-                  Proven Success in Driving Growth:
-                </Typography>
-              </Box>
-              <Box sx={{ display: 'flex', justifyContent: 'start', pl: 4.5 }}>
-                <Typography sx={{ color: 'rgba(74, 74, 74, 1)', fontFamily: 'Nunito', textAlign: 'left', fontWeight: '400', fontSize: '18px', lineHeight: '19.6px', marginBottom: '4em', '@media (max-width: 600px)': { fontSize: '14px', lineHeight: '18px', marginBottom: '4em' } }}>
-                  With Maximiz, you can expect tangible results and significant improvements in your business metrics, backed by expert support every step of the way.
-                </Typography>
-              </Box>
-            </Box>
-            <PopupButton
-              className="book-call-button"
-              styles={{
-                width: '100%',
-                textWrap: 'nowrap',
-                color: '#fff',
-                padding: '1em 8em',
-                fontFamily: 'Nunito',
-                fontWeight: '700',
-                fontSize: '16px',
-                borderRadius: '4px',
-                lineHeight: '22.4px',
-                backgroundColor: '#5052B2',
-                textTransform: 'none',
-                cursor: 'pointer',
-              }}
-              url="https://calendly.com/slava-lolly/123"
-              rootElement={document.getElementById("calendly-popup-wrapper")!}
-              text="Get Started"
-            />
+              <PopupButton
+                className="book-call-button"
+                styles={{
+                  width: '100%',
+                  textWrap: 'nowrap',
+                  color: '#fff',
+                  padding: '1em 8em',
+                  fontFamily: 'Nunito',
+                  fontWeight: '700',
+                  fontSize: '16px',
+                  borderRadius: '4px',
+                  lineHeight: '22.4px',
+                  backgroundColor: '#5052B2',
+                  textTransform: 'none',
+                  cursor: 'pointer',
+                }}
+                url="https://calendly.com/nickit-schatalow09/maximiz"
+                rootElement={document.getElementById("calendly-popup-wrapper")!}
+                text="Get Started"
+              />
+            </>
+          )}
         </Box>
       </Drawer>
     </>
