@@ -7,7 +7,7 @@ from .utils import mapped_customers, IntegrationsABC
 
 class BigcommerceIntegrationService(IntegrationsABC):
 
-    def __init__(self, db: Session, user_integration_persistence: UserIntegrationsPresistence, client: Client, user: User):
+    def __init__(self, db: Session, user_integration_persistence: UserIntegrationsPresistence, client: Client):
         self.user_integration_persistence = user_integration_persistence
         self.db = db
         self.client = client
@@ -25,14 +25,14 @@ class BigcommerceIntegrationService(IntegrationsABC):
 
     def create_integration(self, shop_domain: str, access_token: str):
         data = {
-            'user_id': self.user.id,
+            'user_id': self.user['id'],
             'shop_domain': shop_domain,
             'access_token': access_token,
             'service_name': 'bigcommerce'
         }
-        existing_integration = self.user_integration_persistence.get_user_integrations_by_service(self.user.id, 'bigcommerce')
+        existing_integration = self.user_integration_persistence.get_user_integrations_by_service(self.user['id'], 'bigcommerce')
         if existing_integration:
-            updated_integration = self.user_integration_persistence.edit_integrations(self.user.id, 'bigcommerce', data)
+            updated_integration = self.user_integration_persistence.edit_integrations(self.user['id'], 'bigcommerce', data)
             return updated_integration
         else:
             new_integration = self.user_integration_persistence.create_integration(data)

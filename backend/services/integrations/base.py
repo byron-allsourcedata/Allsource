@@ -13,7 +13,7 @@ from typing import List
 class IntegrationService:
 
     def __init__(self, db: Session, user_integration_persistence: UserIntegrationsPresistence, 
-                 lead_persistence: LeadsPersistence, user: User):
+                 lead_persistence: LeadsPersistence, user):
         self.user_integration_persistence = user_integration_persistence
         self.db = db
         self.client = httpx.Client()
@@ -22,14 +22,14 @@ class IntegrationService:
         
 
     def get_user_service_credentials(self):
-        return self.user_integration_persistence.get_integration_by_user(self.user.id)
+        return self.user_integration_persistence.get_integration_by_user(self.user['id'])
     
     def save_customers(self, customers: List[Customer]):
         for customer in customers:
-            self.lead_persistence.update_leads_by_cutomer(customer, self.user.id)
+            self.lead_persistence.update_leads_by_cutomer(customer, self.user['id'])
 
     def delete_integration(self, serivce_name: str):
-        self.user_integration_persistence.delete_integration(self.user.id, serivce_name)
+        self.user_integration_persistence.delete_integration(self.user['id'], serivce_name)
 
     def __enter__(self):
         self.shopify = ShopifyIntegrationService(self.db, self.user_integration_persistence, self.client, self.user)
