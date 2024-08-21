@@ -7,7 +7,7 @@ from .utils import mapped_customers, IntegrationsABC
 
 class ShopifyIntegrationService(IntegrationsABC):
 
-    shopify_api_customers = '/admin/api/2024-07/customers.json'
+    SHOPIFY_API_CUSTOMERS = '/admin/api/2024-07/customers.json'
 
     def __init__(self, db: Session, user_integration_persistence: UserIntegrationsPresistence, client: Client, user: User):
         self.user_integration_persistence = user_integration_persistence
@@ -17,7 +17,7 @@ class ShopifyIntegrationService(IntegrationsABC):
 
 
     def get_customers(self, shop_domain: str, access_token: str):
-        customers_url = f'https://{shop_domain}.myshopify.com{self.shopify_api_customers}'
+        customers_url = f'https://{shop_domain}.myshopify.com{self.SHOPIFY_API_CUSTOMERS}'
         response = self.client.get(customers_url, headers={'X-Shopify-Access-Token': access_token})
         
         if response.status_code != 200:

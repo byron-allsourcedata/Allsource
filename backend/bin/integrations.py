@@ -54,16 +54,19 @@ def klaviyo_customers(client: Client, access_token: str):
 
 
 def save_customer(session, customer, user_id: int):
-    lead = session.query(Lead).filter(Lead.business_email == customer.business_email).first()
-    if lead:
-        session.query(LeadUser).filter(LeadUser.lead_id == lead.id).update({LeadUser.status: 'Existing'})
+    existing_lead_user = session.query(LeadUser).join(Lead, Lead.id == LeadUser.lead_id).filter(
+        Lead.business_email == customer.business_email,   
+        LeadUser.user_id == user_id     
+        ).first()
+    if existing_lead_user:
+        session.query(LeadUser).filter(LeadUser.id == existing_lead_user.id).update({LeadUser.status: 'Existing'})
+    else:
+        lead = Lead(**customer.__dict__)
+        session.add(lead)
         session.commit()
-        return
-    lead = Lead(**customer.__dict__)
-    session.add(lead)
+        session.add(LeadUser(lead_id=lead.id, user_id=user_id, status='New', funnel='Converted'))
     session.commit()
-    session.add(LeadUser(lead_id=lead.id, user_id=user_id, status='New', funnel='Converted'))
-    session.commit()
+
 
 
 if __name__ == '__main__':

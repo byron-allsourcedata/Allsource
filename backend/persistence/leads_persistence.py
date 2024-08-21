@@ -266,14 +266,14 @@ class LeadsPersistence:
         max_page = math.ceil(count / per_page) if per_page > 0 else 1
         return leads_data, count, max_page
     
-    def update_leads_by_cutomer(self, customer: Customer, user_id: int):
-        lead = self.db.query(Lead).filter(Lead.business_email == customer.business_email).first()
-        if lead:
-            self.db.query(LeadUser).filter(LeadUser.lead_id == lead.id).update({LeadUser.status: 'Existing'})
+    def update_leads_by_customer(self, customer: Customer, user_id: int):
+        existing_lead_user = self.db.query(LeadUser).join(Lead, Lead.id == LeadUser.lead_id).filter(
+                                    Lead.business_email == customer.business_email, LeadUser.user_id == user_id).first()
+        if existing_lead_user:
+            self.db.query(LeadUser).filter(LeadUser.id == existing_lead_user.id).update({LeadUser.status: 'Existing'})
+        else:
+            lead = Lead(**customer.__dict__)
+            self.db.add(lead)
             self.db.commit()
-            return
-        lead = Lead(**customer.__dict__)
-        self.db.add(lead)
-        self.db.commit()
-        self.db.add(LeadUser(lead_id=lead.id, user_id=user_id, status='New', funnel='Converted'))
-        self.db.commit()
+            self.db.add(LeadUser(lead_id=lead.id, user_id=user_id, status='New', funnel='Converted'))
+            self.db.commit()
