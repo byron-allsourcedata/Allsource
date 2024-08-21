@@ -1,5 +1,5 @@
 import { SxProps, Theme } from '@mui/system';
-import { red, grey } from '@mui/material/colors';
+import { red } from '@mui/material/colors';
 
 export const styles: { [key: string]: SxProps<Theme> } = {
   pageContainer: {
@@ -125,7 +125,7 @@ export const styles: { [key: string]: SxProps<Theme> } = {
     paddingLeft: '20px'
   },
   formContainer: {
-    pt: 20,
+    pt: 10,
     display: 'flex',
     maxWidth: '600px',
     width: '90%',
@@ -135,7 +135,8 @@ export const styles: { [key: string]: SxProps<Theme> } = {
     backgroundColor: '#fff',
     '@media (max-width: 400px)': { pl: 2, pt: 0 },
     '@media (max-width: 600px)': { pl: 0, pt: 8, gap: 1 },
-    '@media (max-height: 670px)': { pl: 0, pt: 1, gap: 0 }
+    '@media (max-height: 670px)': { pl: 0, pt: 1, gap: 0 },
+    '@media (min-width: 1500px)': {pt: 'calc(15vh)',},
   },
   title: {
     fontFamily: 'Nunito',
