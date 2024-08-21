@@ -165,26 +165,37 @@ class SubscriptionService:
         self.db.commit()
         return add_subscription_obj
 
+
     def create_subscription_from_free_trial(self, user_id):
         plan_type = 'FreeTrail'
         price = '0'
         status = 'trialing'
         created_by_id = user_id
-        created_at = get_utc_aware_date_for_postgres()
+        created_at = datetime.strptime(get_utc_aware_date_for_postgres(), '%Y-%m-%dT%H:%M:%SZ')  # Updated format
         plan_name = f"{plan_type} at ${price}"
+        
+        subscription = self.db.query(SubscriptionPlan).filter(SubscriptionPlan.title == 'FreeTrail').first()
+        trial_days = timedelta(days=subscription.trial_days)
+        end_date = (created_at + trial_days).isoformat() + "Z"
+        
         add_subscription_obj = Subscription(
             user_id=created_by_id,
             plan_name=plan_name,
             price=price,
-            updated_at=created_at,
+            plan_start=created_at.isoformat() + "Z",
+            plan_end=end_date,
+            updated_at=created_at.isoformat() + "Z",
             updated_by=created_by_id,
-            created_at=created_at,
+            created_at=created_at.isoformat() + "Z",
             created_by=created_by_id,
             status=status,
         )
+        
         self.db.add(add_subscription_obj)
         self.db.commit()
         return add_subscription_obj
+
+
 
     def create_new_usp_free_trial(self, user_id, subscription_id):
         plan_info = self.db.query(SubscriptionPlan).filter(SubscriptionPlan.is_free_trial == True).first()
