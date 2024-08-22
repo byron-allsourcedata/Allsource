@@ -6,6 +6,7 @@ import { useTrial } from '../context/TrialProvider';
 import { useUser } from '../context/UserContext';
 import PlanSlider from './PlanSlider';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 
 
 const TrialStatus: React.FC = () => {
@@ -40,7 +41,7 @@ const TrialStatus: React.FC = () => {
           setStatusText('Free Trial Expired');
           setBackgroundColor('rgba(246, 202, 204, 1)');
           setTextColor('rgba(78, 1, 16, 1)');
-          setIconColor('rgba(224, 49, 48, 1)');
+          setIconColor('rgba(103, 12, 14, 1)');
         }
       }
     }
@@ -71,14 +72,18 @@ const TrialStatus: React.FC = () => {
         borderRadius: '3.27px',
         color: textColor,
         fontSize: '14px',
-        fontWeight: 500,
+        fontWeight: 700,
         marginRight: '2em',
-        cursor: 'pointer',
         '@media (min-width: 901px)': {
         marginRight: '2em'
       }
       }}>
-        {(statusText.includes('Free Trial Expired') || statusText.includes('Free Trial Left')) && (
+        {(statusText.includes('Free Trial Expired')) && (
+          <>
+          <Image src={'danger.svg'} width={20} height={20} alt="danger" />
+          </>
+        )}
+        {(statusText.includes('Free Trial Left')) && (
           <AccessTimeIcon sx={{ color: iconColor }} />
         )}
         <Typography sx={{
@@ -86,14 +91,18 @@ const TrialStatus: React.FC = () => {
           fontFamily: 'Nunito',
           lineHeight: '19.1px',
           letterSpacing: '-0.02em',
+          pt: '1px',
           textAlign: 'left',
+          fontWeight: '700',
+          marginLeft: '3px'
+          
         }}>
           {statusText}
         </Typography>
         {(statusText.includes('Trial Pending')) && (
           <AccessTimeIcon sx={{ color: iconColor }} />
         )}
-        {(statusText.includes('Free Trial Expired') || statusText.includes('Free Trial Left') || statusText.includes('Trial Pending')) && (
+        {(statusText.includes('Free Trial Expired') || statusText.includes('Free Trial Left')) && (
           <Button onClick={handleOpenSlider} sx={{ ml: 2, textTransform: 'none', padding:0, color: 'rgba(80, 82, 178, 1)' }}>
             <Typography sx={{
           marginRight: '5px',
