@@ -98,9 +98,12 @@ const sidebarStyles = {
     },
 };
 
-const SetupSection: React.FC = () => {
-    const meItem = sessionStorage.getItem('me');
-    const meData = meItem ? JSON.parse(meItem) : {};
+interface ProgressSectionProps {
+    meData: { percent_steps: number };
+}
+
+const SetupSection: React.FC<ProgressSectionProps> = ({ meData }) => {
+    const percent_steps = meData?.percent_steps ?? 0;
 
 
     return (
@@ -131,6 +134,8 @@ const SetupSection: React.FC = () => {
 
 
 const Sidebar: React.FC = () => {
+    const meItem = typeof window !== 'undefined' ? sessionStorage.getItem('me') : null;
+    const meData = meItem ? JSON.parse(meItem) : { percent_steps: 0 };
     const { setShowSlider } = useSlider();
     const router = useRouter();
     const pathname = usePathname();
@@ -139,7 +144,7 @@ const Sidebar: React.FC = () => {
         try {
             const response = await axiosInstance.get("dashboard");
             if (response.data.status === "NEED_BOOK_CALL") {
-                sessionStorage.setItem("is_slider_opened", "true");
+                sessionStorage?.setItem("is_slider_opened", "true");
                 setShowSlider(true);
             } else {
                 setShowSlider(false);
@@ -148,7 +153,7 @@ const Sidebar: React.FC = () => {
         } catch (error) {
             if (error instanceof AxiosError && error.response?.status === 403) {
                 if (error.response.data.status === "NEED_BOOK_CALL") {
-                    sessionStorage.setItem("is_slider_opened", "true");
+                    sessionStorage?.setItem("is_slider_opened", "true");
                     setShowSlider(true);
                 } else {
                     setShowSlider(false);
@@ -214,7 +219,7 @@ const Sidebar: React.FC = () => {
                     <ListItemText primary="Partners" />
                 </ListItem>
             </List>
-            <SetupSection />
+            <SetupSection meData={meData ? meData : { percent_steps: 0 }} />
             <Box sx={sidebarStyles.settings}>
                 <ListItem button onClick={() => handleNavigation('/settings')} sx={isActive('/settings') ? sidebarStyles.activeItem : {}}>
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
