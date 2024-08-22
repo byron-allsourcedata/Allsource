@@ -53,8 +53,6 @@ async def get_integrations_service():
 @router.get('/credentials')
 async def get_integrations_credentials(integration_serivce: IntegrationService = Depends(get_integration_service)):
     integration = integration_serivce.get_user_service_credentials()
-    if not integration:
-        raise HTTPException(status_code=404, detail='don`t have integrations')
     return integration
 
 

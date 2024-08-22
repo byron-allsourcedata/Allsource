@@ -199,7 +199,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({open, handleClose}) => {
                     position: 'fixed',
                     top: '0',
                     right: '0',
-                    width: '400px',
+                    width: '40%',
                     height: '100%',
                     backgroundColor: 'white',
                     padding: '20px',

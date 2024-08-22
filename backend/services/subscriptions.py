@@ -182,7 +182,7 @@ class SubscriptionService:
         created_at = datetime.strptime(get_utc_aware_date_for_postgres(), '%Y-%m-%dT%H:%M:%SZ')  # Updated format
         plan_name = f"{plan_type} at ${price}"
 
-        subscription = self.db.query(SubscriptionPlan).filter(SubscriptionPlan.title == 'FreeTrail').first()
+        subscription = self.db.query(SubscriptionPlan).filter(SubscriptionPlan.is_free_trial == True).first()
         trial_days = timedelta(days=subscription.trial_days)
         end_date = (created_at + trial_days).isoformat() + "Z"
 
@@ -227,7 +227,7 @@ class SubscriptionService:
     def remove_trial(self, user_id: int):
         user_subcription_plan = self.db.query(UserSubscriptionPlan).join(SubscriptionPlan,
                                                                          SubscriptionPlan.id == UserSubscriptionPlan.plan_id).filter(
-            UserSubscriptionPlan.user_id == user_id, SubscriptionPlan.title == 'FreeTrail').order_by(
+            UserSubscriptionPlan.user_id == user_id, SubscriptionPlan.is_free_trial == True).order_by(
             UserSubscriptionPlan.created_at.desc()).first()
         self.db.query(UserSubscriptionPlan).filter(UserSubscriptionPlan.id == user_subcription_plan.id).update(
             {UserSubscriptionPlan.is_trial: False,

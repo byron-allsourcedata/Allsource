@@ -26,7 +26,8 @@ class IntegrationService:
     
     def save_customers(self, customers: List[Customer]):
         for customer in customers:
-            self.lead_persistence.update_leads_by_cutomer(customer, self.user['id'])
+            self.lead_persistence.update_leads_by_customer(customer, self.user['id'])
+
 
     def delete_integration(self, serivce_name: str):
         self.user_integration_persistence.delete_integration(self.user['id'], serivce_name)

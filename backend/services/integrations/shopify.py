@@ -9,7 +9,7 @@ class ShopifyIntegrationService(IntegrationsABC):
 
     SHOPIFY_API_CUSTOMERS = '/admin/api/2024-07/customers.json'
 
-    def __init__(self, db: Session, user_integration_persistence: UserIntegrationsPresistence, client: Client):
+    def __init__(self, db: Session, user_integration_persistence: UserIntegrationsPresistence, client: Client, user):
         self.user_integration_persistence = user_integration_persistence
         self.db = db
         self.client = client
@@ -37,8 +37,8 @@ class ShopifyIntegrationService(IntegrationsABC):
         }
         existing_integration = self.user_integration_persistence.get_user_integrations_by_service(self.user['id'], 'shopify')
         if existing_integration:
-            updated_integration = self.user_integration_persistence.edit_integrations(self.user['id'], 'shopify', data)
-            return updated_integration
+            self.user_integration_persistence.edit_integrations(self.user['id'], 'shopify', data)
+            return self.get_customers(shop_domain, access_token)
         else:
             new_integration = self.user_integration_persistence.create_integration(data)
             return self.get_customers(new_integration.shop_domain, new_integration.access_token)

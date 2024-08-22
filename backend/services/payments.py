@@ -32,4 +32,4 @@ class PaymentsService:
         return {"link": session.url}
 
     def get_user_subscription_authorization_status(self):
-        self.plans_service.get_user_subscription_authorization_status()
+        return self.plans_service.get_user_subscription_authorization_status()

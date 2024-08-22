@@ -1,8 +1,16 @@
 'use client';
 import React from 'react';
-import { Box, List, ListItem, ListItemIcon, ListItemText, LinearProgress, Typography } from '@mui/material';
-import { useRouter } from 'next/navigation';
-import { usePathname } from 'next/navigation'; 
+import {
+    Box,
+    List,
+    ListItemIcon,
+    ListItemText,
+    LinearProgress,
+    Typography,
+    ListItemButton
+} from '@mui/material';
+import {useRouter} from 'next/navigation';
+import {usePathname} from 'next/navigation';
 import SpaceDashboardIcon from '@mui/icons-material/SpaceDashboard';
 import LeadsIcon from '@mui/icons-material/People';
 import CategoryIcon from '@mui/icons-material/Category';
@@ -24,14 +32,14 @@ const sidebarStyles = {
         flexDirection: 'column',
         justifyContent: 'start',
         '@media (min-width: 1500px)': {
-        width:'70%'
+            width: '70%'
 
-    },
+        },
     },
     menu: {
         alignItems: 'center',
         paddingTop: '0 !important',
-        paddingBottom: '4em !important', 
+        paddingBottom: '4em !important',
         '& .MuiListItem-root': {
             paddingBottom: '2em',
             paddingTop: '2em',
@@ -50,9 +58,7 @@ const sidebarStyles = {
     },
     footer: {
         padding: '1rem',
-        '& .MuiListItem-root': {
-
-        },
+        '& .MuiListItem-root': {},
     },
     settings: {
         alignItems: 'center',
@@ -94,12 +100,12 @@ const sidebarStyles = {
 const SetupSection: React.FC = () => (
     <Box sx={sidebarStyles.setupSection}>
         <Box display="flex" alignItems="center" mb={2}>
-            <Image src={'/Vector9.svg'} alt="Setup" width={20} height={20} />
+            <Image src={'/Vector9.svg'} alt="Setup" width={20} height={20}/>
             <Typography variant="h6" component="div" ml={1}>
                 Setup
             </Typography>
         </Box>
-        <LinearProgress variant="determinate" color='success' value={14} sx={{ height: '8px', borderRadius: '4px'}} />
+        <LinearProgress variant="determinate" color='success' value={14} sx={{height: '8px', borderRadius: '4px'}}/>
         <Typography variant="body2" color="textSecondary" mt={1}>
             14% complete
         </Typography>
@@ -117,32 +123,41 @@ const SidebarAdmin: React.FC = () => {
     const isActive = (path: string) => pathname === path;
 
     return (
-        <Box sx={sidebarStyles.container} >
+        <Box sx={sidebarStyles.container}>
             <List sx={sidebarStyles.menu}>
-            <ListItem button onClick={() => handleNavigation('/admin/users')} sx={isActive('/admin/users') ? sidebarStyles.activeItem : {}}>
+                <ListItemButton
+                    onClick={() => handleNavigation('/admin/users')}
+                    sx={isActive('/admin/users') ? sidebarStyles.activeItem : {}}
+                >
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
                         <LeadsIcon />
                     </ListItemIcon>
                     <ListItemText primary="Users" />
-                </ListItem>
-                <ListItem button>
+                </ListItemButton>
+                <ListItemButton
+                    onClick={() => handleNavigation('/admin/reseller')}
+                >
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
                         <SpaceDashboardIcon />
                     </ListItemIcon>
                     <ListItemText primary="Reseller" />
-                </ListItem>
-                <ListItem button >
+                </ListItemButton>
+                <ListItemButton
+                    onClick={() => handleNavigation('/admin/assets')}
+                >
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
                         <CategoryIcon />
                     </ListItemIcon>
                     <ListItemText primary="Assets" />
-                </ListItem>
-                <ListItem button >
+                </ListItemButton>
+                <ListItemButton
+                    onClick={() => handleNavigation('/admin/payouts')}
+                >
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
                         <CategoryIcon />
                     </ListItemIcon>
                     <ListItemText primary="Payouts" />
-                </ListItem>
+                </ListItemButton>
             </List>
         </Box>
     );

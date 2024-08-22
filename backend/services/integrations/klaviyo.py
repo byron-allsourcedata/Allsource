@@ -7,7 +7,7 @@ from .utils import mapped_customers, IntegrationsABC
 from datetime import datetime
 class KlaviyoIntegrations(IntegrationsABC):
 
-    def __init__(self, db: Session, user_integration_persistence: UserIntegrationsPresistence, client: Client):
+    def __init__(self, db: Session, user_integration_persistence: UserIntegrationsPresistence, client: Client, user):
         self.user_integration_persistence = user_integration_persistence
         self.db = db
         self.client = client
@@ -32,7 +32,7 @@ class KlaviyoIntegrations(IntegrationsABC):
         }
         existing_integration = self.user_integration_persistence.get_user_integrations_by_service(self.user['id'], 'klaviyo')
         if existing_integration:
-            self.user_integration_persistence.edit_integrations(self.user['id'] 'klaviyo', data)
+            self.user_integration_persistence.edit_integrations(self.user['id'], 'klaviyo', data)
             return self.get_customers(access_token)
         else:
             new_integration = self.user_integration_persistence.create_integration(data)

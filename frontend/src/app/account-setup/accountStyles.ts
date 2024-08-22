@@ -127,8 +127,8 @@ export const styles: { [key: string]: SxProps<Theme> } = {
   formContainer: {
     pt: 10,
     display: 'flex',
-    maxWidth: '600px',
-    width: '90%',
+    maxWidth: '556px',
+    width: '100%',
     flexDirection: 'column',
     alignItems: 'start',
     borderRadius: '0.5em',
@@ -169,6 +169,17 @@ export const styles: { [key: string]: SxProps<Theme> } = {
 
   formField: {
     marginBottom: '1.5em',
+    maxHeight: '56px',
+    '& .MuiInputBase-root': {
+      maxHeight: '48px', 
+    },
+    '& .MuiOutlinedInput-root': {
+      paddingTop: '13px',
+      paddingBottom: '13px',
+    },
+    '& .MuiInputLabel-root': {
+      top: '-5px',
+    },
   },
   submitButton: {
     backgroundColor: 'rgba(244, 87, 69, 1)',

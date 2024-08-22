@@ -7,7 +7,7 @@ from .utils import mapped_customers
 
 class WoocommerceIntegrationService:
 
-    def __init__(self, db: Session, user_integration_persistence: UserIntegrationsPresistence):
+    def __init__(self, db: Session, user_integration_persistence: UserIntegrationsPresistence, user):
         self.user_integration_persistence = user_integration_persistence
         self.db = db
         self.user = user
