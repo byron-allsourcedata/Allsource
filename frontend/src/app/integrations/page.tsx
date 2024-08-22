@@ -10,7 +10,7 @@ import AccountButton from "@/components/AccountButton";
 import dynamic from "next/dynamic";
 import { useSlider, SliderProvider } from '../../context/SliderContext';
 import CloseIcon from '@mui/icons-material/Close';
-
+import { showToast, showErrorToast } from "../../components/ToastNotification";
 const Sidebar = dynamic(() => import('../../components/Sidebar'), {
     suspense: true,
 });
@@ -90,9 +90,11 @@ const SliderIntegration = ({ credential, service, open, onClose, onSave, onDelet
                     service_name: service.service_name,
                 };
                 onSave(newCredential);
+                showToast('Successuly installed')
+                
             }
         } catch (error) {
-            console.error("Error saving integration", error);
+            showErrorToast('You credential not valid')
         }
     };
 

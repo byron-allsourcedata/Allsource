@@ -27,7 +27,9 @@ class CompanyInfoService:
                 {Users.company_name: company_info.organization_name, Users.company_website: company_info.company_website,
                  Users.employees_workers: company_info.employees_workers,
                  Users.company_role: company_info.company_role,
-                 Users.company_website_visits: company_info.monthly_visits},
+                 Users.company_website_visits: company_info.monthly_visits,
+                 Users.is_company_details_filled: True
+                 },
                 synchronize_session=False)
             self.db.commit()
             return CompanyInfoEnum.SUCCESS

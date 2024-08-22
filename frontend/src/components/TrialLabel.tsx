@@ -73,7 +73,10 @@ const TrialStatus: React.FC = () => {
         fontSize: '14px',
         fontWeight: 500,
         marginRight: '2em',
-        cursor: 'pointer'
+        cursor: 'pointer',
+        '@media (min-width: 901px)': {
+        marginRight: '2em'
+      }
       }}>
         {(statusText.includes('Free Trial Expired') || statusText.includes('Free Trial Left')) && (
           <AccessTimeIcon sx={{ color: iconColor }} />
