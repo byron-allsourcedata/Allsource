@@ -3,7 +3,7 @@ from services.admin_customers import AdminCustomersService
 from dependencies import get_admin_customers_service, check_user_admin
 from config.rmq_connection import publish_rabbitmq_message, RabbitMQConnection
 
-router = APIRouter(dependencies=[Depends(check_user_admin)])
+router = APIRouter()
 
 
 @router.get("/confirm_customer")
@@ -17,7 +17,7 @@ async def verify_token(admin_customers_service: AdminCustomersService = Depends(
         await publish_rabbitmq_message(
             connection=connection,
             queue_name=queue_name,
-            message_body={'status': "BOOK_CALL_PASSED"}
+            message_body={'status': "BOOK_CALL_PASSED", 'percent': 50}
         )
     except:
         await rabbitmq_connection.close()
@@ -38,7 +38,7 @@ async def verify_token(admin_customers_service: AdminCustomersService = Depends(
         await publish_rabbitmq_message(
             connection=connection,
             queue_name=queue_name,
-            message_body={'status': "PIXEL_CODE_INSTALLED"}
+            message_body={'status': "PIXEL_CODE_INSTALLED", 'percent': 90}
         )
     except:
         await rabbitmq_connection.close()

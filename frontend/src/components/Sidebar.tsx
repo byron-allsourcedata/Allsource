@@ -98,30 +98,37 @@ const sidebarStyles = {
     },
 };
 
-const SetupSection: React.FC = () => (
-    <Box sx={sidebarStyles.setupSection}>
-        <Box display="flex" alignItems="center" mb={2}>
-            <Image src={'/Vector9.svg'} alt="Setup" width={20} height={20} />
-            <Typography variant="h6" component="div" ml={1}>
-                Setup
+const SetupSection: React.FC = () => {
+    const meItem = sessionStorage.getItem('me');
+    const meData = meItem ? JSON.parse(meItem) : {};
+
+
+    return (
+        <Box sx={sidebarStyles.setupSection}>
+            <Box display="flex" alignItems="center" mb={2}>
+                <Image src={'/Vector9.svg'} alt="Setup" width={20} height={20} />
+                <Typography variant="h6" component="div" ml={1}>
+                    Setup
+                </Typography>
+            </Box>
+            <LinearProgress
+                variant="determinate"
+                value={meData.percent_steps}
+                sx={{
+                    height: '8px',
+                    borderRadius: '4px',
+                    '& .MuiLinearProgress-bar': {
+                        backgroundColor: 'rgba(110, 193, 37, 1)',
+                    },
+                }}
+            />
+            <Typography variant="body2" color="textSecondary" mt={1}>
+                {meData.percent_steps}% complete
             </Typography>
         </Box>
-        <LinearProgress
-            variant="determinate"
-            value={33}
-            sx={{
-                height: '8px',
-                borderRadius: '4px',
-                '& .MuiLinearProgress-bar': {
-                    backgroundColor: 'rgba(110, 193, 37, 1)',
-                },
-            }}
-        />
-        <Typography variant="body2" color="textSecondary" mt={1}>
-            33% complete
-        </Typography>
-    </Box>
-);
+    )
+};
+
 
 const Sidebar: React.FC = () => {
     const { setShowSlider } = useSlider();
@@ -132,25 +139,25 @@ const Sidebar: React.FC = () => {
         try {
             const response = await axiosInstance.get("dashboard");
             if (response.data.status === "NEED_BOOK_CALL") {
-              sessionStorage.setItem("is_slider_opened", "true");
-              setShowSlider(true);
-            } else {
-              setShowSlider(false);
-              router.push(path);
-            }
-          } catch (error) {
-            if (error instanceof AxiosError && error.response?.status === 403) {
-              if (error.response.data.status === "NEED_BOOK_CALL") {
                 sessionStorage.setItem("is_slider_opened", "true");
                 setShowSlider(true);
-              } else {
+            } else {
                 setShowSlider(false);
                 router.push(path);
-              }
-            } else {
-              console.error("Error fetching data:", error);
             }
-          }
+        } catch (error) {
+            if (error instanceof AxiosError && error.response?.status === 403) {
+                if (error.response.data.status === "NEED_BOOK_CALL") {
+                    sessionStorage.setItem("is_slider_opened", "true");
+                    setShowSlider(true);
+                } else {
+                    setShowSlider(false);
+                    router.push(path);
+                }
+            } else {
+                console.error("Error fetching data:", error);
+            }
+        }
     };
 
     const isActive = (path: string) => pathname === path;

@@ -89,7 +89,8 @@ class UserPersistence:
                 "is_pixel_installed": user.is_pixel_installed,
                 'role': user.role,
                 'calendly_uuid': user.calendly_uuid,
-                'calendly_invitee_uuid': user.calendly_invitee_uuid
+                'calendly_invitee_uuid': user.calendly_invitee_uuid,
+                'activate_steps_percent': user.activate_steps_percent
             }
         self.db.rollback()
         return result_user
