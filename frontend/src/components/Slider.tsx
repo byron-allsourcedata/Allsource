@@ -107,7 +107,7 @@ const Slider: React.FC = () => {
           '@media (max-width: 960px)': { pl: 4, pr: 4 },
           '@media (max-width: 600px)': { pl: 2, pr: 2 }
         }}>
-          <img src="/slider-bookcall.png" alt="Setup" style={{ width: '40%', marginBottom: '0em', marginTop: '0em', }} />
+          <img src="/slider-bookcall.png" alt="Setup" style={{ width: '40%', marginBottom: '0.5em', marginTop: '0.5em', }} />
           <div id='calendly-popup-wrapper' className="book-call-button__wrapper"> </div>
           {prefillData ? (
             <>
