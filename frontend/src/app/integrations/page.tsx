@@ -311,7 +311,7 @@ const Integrations: React.FC = () => {
 
         const fetchData = async () => {
             try {
-                const response = await axiosInstance.get('/integrations', {
+                const response = await axiosInstance.get('/integrations/', {
                     headers: { Authorization: `Bearer ${accessToken}` },
                 });
                 if (response.status === 200) {
