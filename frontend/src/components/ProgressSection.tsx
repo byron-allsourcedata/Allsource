@@ -40,13 +40,13 @@ const CustomListItemIcon = styled(ListItemIcon)(({ theme }) => ({
   minWidth: 0
 }));
 
-const meItem = sessionStorage.getItem('me');
-const meData = meItem ? JSON.parse(meItem) : {};
-const isIntegrateDisabled = meData.percent_steps < 90;
-const isSetupDisabled = meData.percent_steps < 50;
 
 
 export const ProgressSection: React.FC = () => {
+  const meItem = sessionStorage.getItem('me');
+const meData = meItem ? JSON.parse(meItem) : {};
+const isIntegrateDisabled = meData.percent_steps < 90;
+const isSetupDisabled = meData.percent_steps < 50;
   const { setShowSlider } = useSlider();
 
   const installManually = async () => {

@@ -3,7 +3,7 @@ from services.admin_customers import AdminCustomersService
 from dependencies import get_admin_customers_service, check_user_admin
 from config.rmq_connection import publish_rabbitmq_message, RabbitMQConnection
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(check_user_admin)])
 
 
 @router.get("/confirm_customer")
