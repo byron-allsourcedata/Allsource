@@ -37,7 +37,7 @@ const AccountButton: React.FC = () => {
             aria-haspopup="true"
             aria-expanded={dropdownOpen ? 'true' : undefined}
             onClick={handleDropdownClick}
-            sx={{ marginRight: '2em', textTransform: 'none', color: 'rgba(128, 128, 128, 1)', border: '1px solid rgba(184, 184, 184, 1)', borderRadius: '3.27px', padding: '10px' }}
+            sx={{ marginRight: '2em', textTransform: 'none', color: 'rgba(128, 128, 128, 1)', border: '1px solid rgba(184, 184, 184, 1)', borderRadius: '3.27px', padding: '6px' }}
           >
             <Typography sx={{
               marginRight: '0.5em',
