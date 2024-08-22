@@ -24,10 +24,9 @@ class IntegrationsPresistence:
     def delete_integration(self, user_id: int, service_name: str):
         self.db.query(UserIntegration).filter(UserIntegration.user_id == user_id, UserIntegration.service_name == service_name).delete()
 
-    def edit_integrations(self, user_id: int, service_name: str, data: dict) -> UserIntegration:
-        result = self.db.query(UserIntegration).filter(UserIntegration.user_id == user_id, UserIntegration.service_name == service_name).update(data, synchronize_session='fetch')
+    def edit_integrations(self, id: int, data: dict) -> UserIntegration:
+        result = self.db.query(UserIntegration).filter(UserIntegration.id == id).update(data, synchronize_session='fetch')
         self.db.commit()
-        return result
     
     def get_integrations_service(self):
         return self.db.query(Integration).all()

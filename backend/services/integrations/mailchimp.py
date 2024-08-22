@@ -1,6 +1,6 @@
 from fastapi import HTTPException
 from models.users import User
-from persistence.integrations_persistence import IntegrationsPresistence
+from persistence.integrations.integrations_persistence import IntegrationsPresistence
 from .utils import mapped_customers, IntegrationsABC
 import mailchimp_marketing as MailchimpMarketing
 from mailchimp_marketing.api_client import ApiClientError

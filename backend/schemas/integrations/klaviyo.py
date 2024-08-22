@@ -1,0 +1,23 @@
+from pydantic import BaseModel, EmailStr
+import typing as tp
+from datetime import datetime
+
+from pydantic import BaseModel, EmailStr
+import typing as tp
+from datetime import datetime
+
+class KlaviyoUsersScheme(BaseModel):
+    klaviyo_user_id: str
+    email: EmailStr
+    first_name: tp.Optional[str] = None
+    last_name: tp.Optional[str] = None
+    phone_number: tp.Optional[str] = None
+    ip: tp.Optional[str] = None 
+    organization: tp.Optional[str] = None
+    updated_at: tp.Any
+    external_id: tp.Optional[str] = None
+    anonymous_id: tp.Optional[str] = None
+    city: tp.Optional[str] = None
+    zip: tp.Optional[str] = None
+    timezone: tp.Optional[str] = None
+

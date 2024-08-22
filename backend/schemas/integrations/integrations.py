@@ -14,7 +14,7 @@ class WoocommerceCredentials(BaseModel):
 
 
 class KlaviyoCredentials(BaseModel):
-    access_token: str 
+    api_key: str 
 
 
 class MailchimpCredentials(BaseModel):
@@ -30,7 +30,7 @@ class IntegrationCredentials(BaseModel):
     mailchimp: Optional[MailchimpCredentials] = None
 
 
-class Customer(BaseModel):
+class Lead(BaseModel):
     first_name: Optional[str]
     last_name: Optional[str]
     mobile_phone: Optional[str]

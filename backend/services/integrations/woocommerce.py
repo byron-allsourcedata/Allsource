@@ -1,5 +1,5 @@
 from models.users import User
-from persistence.integrations_persistence import IntegrationsPresistence
+from persistence.integrations.integrations_persistence import IntegrationsPresistence
 from woocommerce import API
 from .utils import mapped_customers
 

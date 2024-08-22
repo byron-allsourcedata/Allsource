@@ -1,7 +1,7 @@
 from fastapi import HTTPException
 from httpx import Client
 from models.users import User
-from persistence.integrations_persistence import IntegrationsPresistence
+from persistence.integrations.integrations_persistence import IntegrationsPresistence
 from .utils import mapped_customers, IntegrationsABC
 
 class ShopifyIntegrationService(IntegrationsABC):

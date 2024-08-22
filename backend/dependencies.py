@@ -34,7 +34,7 @@ from models.users import Users as User
 from services.users_auth import UsersAuth
 from persistence.user_persistence import UserPersistence
 from services.webhook import WebhookService
-from persistence.integrations_persistence import IntegrationsPresistence
+from persistence.integrations.integrations_persistence import IntegrationsPresistence
 from services.integrations.base import IntegrationService
 
 logger = logging.getLogger(__name__)

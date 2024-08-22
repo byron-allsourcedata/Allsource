@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Query, HTTPException
 from dependencies import get_integration_service, IntegrationService, IntegrationsPresistence, get_integrations_presistence
-from schemas.integrations import IntegrationCredentials
+from schemas.integrations.integrations import IntegrationCredentials
 
 
 router = APIRouter(prefix='/integrations', tags=['Integrations'])
@@ -25,10 +25,7 @@ async def create_integration(creditional: IntegrationCredentials, service_name: 
         service = getattr(service, service_name)
         if not service:
             raise HTTPException(status_code=404, detail=f'Service {service_name} not found') 
-        integration = service.create_integration(**creditional.__dict__[service_name].__dict__)
-        if not integration:
-            raise HTTPException(status_code=400)
-        integration_service.save_customers(integration)
+        service.create_integration(**creditional.__dict__[service_name].__dict__)
         return {'message': 'Successfuly'}
     
 

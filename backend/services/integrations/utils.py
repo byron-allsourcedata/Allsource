@@ -1,4 +1,4 @@
-from schemas.integrations import Customer
+from schemas.integrations.integrations import Lead
 from abc import ABC, abstractmethod
 
 
@@ -22,7 +22,7 @@ def extract_shopify_data(customer):
     addresses = customer.get('addresses', [])
     address = addresses[0] if addresses else {}
     
-    return Customer(
+    return Lead(
         first_name=customer.get("first_name"),
         last_name=customer.get("last_name"),
         mobile_phone=customer.get("phone"),
@@ -43,7 +43,7 @@ def extract_shopify_data(customer):
 def extract_woocommerce_data(customer):
     billing = customer.get("billing", {})
     
-    return Customer(
+    return Lead(
         first_name=customer.get("first_name"),
         last_name=customer.get("last_name"),
         mobile_phone=billing.get("phone"),
@@ -65,7 +65,7 @@ def extract_bigcommerce_data(customer):
     addresses = customer.get('addresses', [])
     address = addresses[0] if addresses else {}
     
-    return Customer(
+    return Lead(
         first_name=customer.get("first_name"),
         last_name=customer.get("last_name"),
         mobile_phone=customer.get("phone"),
@@ -84,10 +84,10 @@ def extract_bigcommerce_data(customer):
     )
 
 
-def extract_klaviyo_data(customer) -> Customer:
+def extract_klaviyo_data(customer) -> Lead:
     attributes = customer.get("attributes", {})
     
-    return Customer(
+    return Lead(
         first_name=attributes.get("first_name"),
         last_name=attributes.get("last_name"),
         mobile_phone=attributes.get("phone_number"),
@@ -109,7 +109,7 @@ def extract_klaviyo_data(customer) -> Customer:
 def extract_mailchimp_data(customer):
     address = customer.get('address', {})
     
-    return Customer(
+    return Lead(
         first_name=customer.get("first_name"),
         last_name=customer.get("last_name"),
         mobile_phone=None, 
