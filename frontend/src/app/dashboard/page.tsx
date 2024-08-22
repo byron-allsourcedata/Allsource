@@ -354,8 +354,15 @@ const Dashboard: React.FC = () => {
             aria-haspopup="true"
             aria-expanded={open ? "true" : undefined}
             onClick={handleProfileMenuClick}
+            sx={{
+              minWidth: '32px',
+              padding: '8px',
+              color: 'rgba(128, 128, 128, 1)',
+              border: '1px solid rgba(184, 184, 184, 1)',
+              borderRadius: '3.27px',
+            marginRight: 2,}}
           >
-            <PersonIcon sx={dashboardStyles.account} />
+            <Image src={'person.svg'} alt="Person" width={18} height={18} />
           </Button>
           <Menu
             id="profile-menu"
