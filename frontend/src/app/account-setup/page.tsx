@@ -3,6 +3,7 @@ import React, { Suspense, useState, useEffect } from "react";
 import {
   Box,
   Button,
+  InputAdornment,
   Menu,
   MenuItem,
   Tab,
@@ -90,30 +91,30 @@ const AccountSetup = () => {
   const getButtonStyles = (isSelected: boolean): any => {
     return isSelected
       ? {
-          ...styles.employeeButton,
-          backgroundColor: "rgba(249, 189, 182, 1)",
-          color: "black",
-        }
+        ...styles.employeeButton,
+        backgroundColor: "rgba(249, 189, 182, 1)",
+        color: "black",
+      }
       : { ...styles.employeeButton, color: "black" };
   };
 
   const getButtonVisitsStyles = (isSelected: boolean): any => {
     return isSelected
       ? {
-          ...styles.visitButton,
-          backgroundColor: "rgba(249, 189, 182, 1)",
-          color: "black",
-        }
+        ...styles.visitButton,
+        backgroundColor: "rgba(249, 189, 182, 1)",
+        color: "black",
+      }
       : { ...styles.visitButton, color: "black" };
   };
 
   const getButtonRolesStyles = (isSelected: boolean): any => {
     return isSelected
       ? {
-          ...styles.roleButton,
-          backgroundColor: "rgba(249, 189, 182, 1)",
-          color: "black",
-        }
+        ...styles.roleButton,
+        backgroundColor: "rgba(249, 189, 182, 1)",
+        color: "black",
+      }
       : { ...styles.roleButton, color: "black" };
   };
 
@@ -213,6 +214,16 @@ const AccountSetup = () => {
     }
   };
 
+  const handleWebsiteLink = (event: { target: { value: any; }; }) => {
+    const input = event.target.value;
+
+    if (input.startsWith("https://")) {
+      setWebsiteLink(input);
+    } else {
+      setWebsiteLink(`https://${input}`);
+    }
+  };
+
   const isFormValid = () => {
     const errors = {
       websiteLink: validateField(websiteLink, "website"),
@@ -222,6 +233,17 @@ const AccountSetup = () => {
 
     return (
       !errors.websiteLink && !errors.organizationName && !errors.selectedVisits
+    );
+  };
+
+  const isFormBusinessValid = () => {
+    const errors = {
+      selectedEmployees: selectedRoles ? "" : "Please select a number of employees",
+      selectedRoles: selectedRoles ? "": "Please select your role"
+    };
+
+    return (
+      !errors.selectedRoles && !errors.selectedEmployees
     );
   };
 
@@ -377,7 +399,7 @@ const AccountSetup = () => {
                     ? "rgba(50, 50, 50, 1)"
                     : "rgba(142, 142, 142, 1)",
                 "&.Mui-selected": {
-                  color: "rgba(50, 50, 50, 1)",
+                  color: "rgba(244, 87, 69, 1)",
                 },
               }}
             />
@@ -392,10 +414,10 @@ const AccountSetup = () => {
                 lineHeight: "21.82px",
                 color:
                   activeTab === 1
-                    ? "rgba(50, 50, 50, 1)"
+                    ? "rgba(244, 87, 69, 1)"
                     : "rgba(142, 142, 142, 1)",
                 "&.Mui-selected": {
-                  color: "rgba(50, 50, 50, 1)",
+                  color: "rgba(244, 87, 69, 1)",
                 },
               }}
             />
@@ -459,11 +481,15 @@ const AccountSetup = () => {
               fullWidth
               label="Enter website link"
               variant="outlined"
+              placeholder="example.com"
               sx={styles.formField}
-              value={websiteLink}
-              onChange={handleWebsiteLinkChange}
+              value={websiteLink.replace(/^https?:\/\//, '')}
+              onChange={handleWebsiteLink}
               error={!!errors.websiteLink}
               helperText={errors.websiteLink}
+              InputProps={{
+                startAdornment: <InputAdornment position="start">https://</InputAdornment>,
+              }}
             />
             <Typography variant="body1" sx={styles.text}>
               How many monthly visits to your website?
@@ -490,8 +516,13 @@ const AccountSetup = () => {
               variant="contained"
               sx={{
                 ...styles.submitButton,
-                opacity: isFormValid() ? 1 : 0.2,
+                opacity: isFormValid() ? 1 : 0.6,
                 pointerEvents: isFormValid() ? "auto" : "none",
+                backgroundColor: isFormValid() ? 'rgba(244, 87, 69, 1)' : 'rgba(244, 87, 69, 0.4)',
+                '&.Mui-disabled': {
+                  backgroundColor: 'rgba(244, 87, 69, 0.6)',
+                  color: '#fff'
+                }
               }}
               onClick={handleNextClick}
               disabled={!isFormValid()}
@@ -546,8 +577,18 @@ const AccountSetup = () => {
             <Button
               fullWidth
               variant="contained"
-              sx={styles.submitButton}
+              sx={{
+                ...styles.submitButton,
+                opacity: isFormValid() ? 1 : 0.6,
+                pointerEvents: isFormValid() ? "auto" : "none",
+                backgroundColor: isFormValid() ? 'rgba(244, 87, 69, 1)' : 'rgba(244, 87, 69, 0.4)',
+                '&.Mui-disabled': {
+                  backgroundColor: 'rgba(244, 87, 69, 0.6)',
+                  color: '#fff'
+                }
+              }}
               onClick={handleSubmit}
+              disabled={!isFormBusinessValid()}
             >
               Next
             </Button>
