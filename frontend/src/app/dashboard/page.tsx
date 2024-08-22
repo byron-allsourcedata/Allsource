@@ -362,7 +362,7 @@ const Dashboard: React.FC = () => {
               borderRadius: '3.27px',
             marginRight: 2,}}
           >
-            <Image src={'person.svg'} alt="Person" width={18} height={18} />
+            <Image src={'/person.svg'} alt="Person" width={18} height={18} />
           </Button>
           <Menu
             id="profile-menu"
