@@ -1,10 +1,12 @@
 'use client'
 import React, { useEffect, useState } from "react";
 import { usersStyle } from "./userStyle";
-import { Box, Button, Grid, Typography, TableHead, TableRow, TableCell, 
-    TableBody, TableContainer, Paper, Table, 
-    Switch, Pagination, 
-    SwitchProps} from "@mui/material";
+import {
+    Box, Button, Grid, Typography, TableHead, TableRow, TableCell,
+    TableBody, TableContainer, Paper, Table,
+    Switch, Pagination,
+    SwitchProps, Link
+} from "@mui/material";
 import Image from "next/image";
 import PersonIcon from '@mui/icons-material/Person'
 import AccountButton from "@/components/AccountButton";
@@ -14,6 +16,7 @@ import axiosInstance from '../../../axios/axiosInterceptorInstance';
 import { useRouter } from "next/navigation";
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import {resellerStyle} from "@/app/admin/reseller/resellerStyle";
 
 const SidebarAdmin = dynamic(() => import('../../../components/SidebarAdmin'), {
     suspense: true,
@@ -246,8 +249,10 @@ const Users: React.FC = () => {
     return (
         <>
             <Box sx={usersStyle.headers}>
-                <Box sx={usersStyle.logoContainer}>
-                    <Image src='/logo.svg' alt='logo' height={80} width={60} />
+                <Box sx={resellerStyle.logoContainer}>
+                    <Link href="/" underline="none" sx={{ zIndex: 10 }}>
+                        <Image src='/logo.svg' alt='logo' height={80} width={60} />
+                    </Link>
                 </Box>
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
                     <AccountButton />
