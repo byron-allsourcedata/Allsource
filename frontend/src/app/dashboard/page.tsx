@@ -19,6 +19,7 @@ import { useTrial } from "../../context/TrialProvider";
 import StatsCards from "../../components/StatsCard";
 import AccountButton from "@/components/AccountButton";
 import { PopupButton } from "react-calendly";
+import NavigationMenu from "@/components/NavigationMenu";
 
 const Sidebar = dynamic(() => import("../../components/Sidebar"), {
   suspense: true,
@@ -61,6 +62,10 @@ const VerifyPixelIntegration: React.FC = () => {
         backgroundColor: "rgba(247, 247, 247, 1)",
         boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
         marginBottom: "2rem",
+        '@media (max-width: 900px)': {
+          marginBottom: "1.5rem",
+          padding: '1rem'
+        }
       }}
     >
       <Typography
@@ -72,11 +77,23 @@ const VerifyPixelIntegration: React.FC = () => {
           fontWeight: "700",
           lineHeight: "21.82px",
           textAlign: "left",
+          color: '#1c1c1c',
+          '@media (max-width: 900px)': {
+            fontSize: '16px',
+            lineHeight: 'normal',
+            marginBottom: '24px'
+          }
         }}
       >
         2. Verify pixel integration on your website
       </Typography>
-      <Box display="flex" alignItems="center" justifyContent="space-between">
+      <Box display="flex" alignItems="center" justifyContent="space-between" sx={{
+        '@media (max-width: 600px)': {
+          alignItems: 'flex-start',
+          gap: '16px',
+          flexDirection: 'column'
+        }
+      }}>
         <input
           id="urlInput"
           type="text"
@@ -92,7 +109,7 @@ const VerifyPixelIntegration: React.FC = () => {
             fontSize: "16px",
             fontWeight: "600",
             lineHeight: "22.4px",
-            textAlign: "left",
+            textAlign: "left"
           }}
         />
         <Button
@@ -105,6 +122,12 @@ const VerifyPixelIntegration: React.FC = () => {
             color: "rgba(80, 82, 178, 1)",
             fontFamily: "Nunito",
             padding: "0.75em 1.5em",
+            '@media (max-width: 600px)': {
+              padding: '0.625rem 1.5rem',
+              marginLeft: 0,
+              fontSize: '16px',
+              lineHeight: 'normal'
+        }
           }}
         >
           Test
@@ -128,6 +151,17 @@ const SupportSection: React.FC = () => (
         bottom: 0,
         marginBottom: "1em",
         border: "1px solid rgba(228, 228, 228, 1)",
+        '@media (max-width: 1199px)': {
+          width: '100%',
+          position: 'relative',
+          padding: "1em 0em 1.5em 1em",
+          borderRadius: '4px',
+          border: '0.0625rem solid #E4E4E4',
+          background: '#F7F7F7'
+        },
+        '@media (max-width: 900px)': {
+          marginBottom: 0
+        }
       }}
     >
       <Typography
@@ -165,9 +199,10 @@ const SupportSection: React.FC = () => (
             textDecoration: "none",
             fontSize: "16px",
             lineHeight: "22.4px",
-            backgroundColor: "#fff",
+            backgroundColor: "transparent",
             textTransform: "none",
             cursor: "pointer",
+            
           }}
           url="https://calendly.com/slava-lolly/123"
           rootElement={document.getElementById("calendly-popup-wrapper")!}
@@ -190,11 +225,11 @@ const SupportSection: React.FC = () => (
             textDecoration: "none",
             fontSize: "16px",
             lineHeight: "22.4px",
-            backgroundColor: "#fff",
+            backgroundColor: "transparent",
             textTransform: "none",
             cursor: "pointer",
-            paddingLeft: '1em',
-            gap: 1
+            marginLeft: '2em',
+            gap: '8px'
           }}
         >
           Send this to my developer
@@ -300,7 +335,14 @@ const Dashboard: React.FC = () => {
 
   return (
     <>
-      <Box sx={dashboardStyles.headers}>
+    <Box sx={{ display: { md: 'none' } }}>
+      <NavigationMenu/>
+      
+    </Box>
+
+
+    
+      <Box sx={{ ...dashboardStyles.headers, display: { xs: 'none', md: 'flex' } }}>
         <Box sx={dashboardStyles.logoContainer}>
           <Image src="/logo.svg" alt="logo" height={80} width={60} />
         </Box>
@@ -335,13 +377,16 @@ const Dashboard: React.FC = () => {
           </Menu>
         </Box>
       </Box>
-      <Grid container width="100%">
-        <Grid item xs={12} md={2} sx={{ padding: "0px" }}>
-        <Sidebar />
+      <Grid container width="100%" sx={dashboardStyles.mainItemContent}>
+        <Grid item xs={12} sx={{ padding: "0px", display: { xs: 'block', md: 'none' }  }}>
+          <TrialStatus />
+        </Grid>
+        <Grid item xs={12} md={3} lg={2} sx={{ padding: "0px", display: { xs: 'none', md: 'block' }  }}>
+          <Sidebar />
         </Grid>
         {showCharts ? (
           <>
-            <Grid item xs={12} md={8}>
+            <Grid item xs={12} md={9} lg={10} sx={dashboardStyles.mainItemContentInner}>
               <Grid
                 container
                 spacing={2}
@@ -424,29 +469,47 @@ const Dashboard: React.FC = () => {
             </Grid>
           </>
         ) : (
-          <Grid item xs={12} md={10}>
-            <Grid container spacing={2}>
-              <Grid item xs={12} md={8}>
+          // <Box sx={dashboardStyles.mainItem}>
+          
+            <Grid item xs={12} md={9} lg={10} sx={dashboardStyles.mainItemContentInner}>
+              <Grid container spacing={2}>
+                <Grid item xs={12} sx={{display: { md: 'none' }  }}>
                 <Typography
-                  variant="h4"
-                  component="h1"
-                  sx={dashboardStyles.title}
-                >
-                  Let’s Get Started!
-                </Typography>
-                <Typography variant="body2" color="textSecondary" mb={4}>
-                  Install our pixel on your website to start capturing anonymous
-                  visitor data on your store.
-                </Typography>
-                <PixelInstallation />
-                <VerifyPixelIntegration />
+                    variant="h4"
+                    component="h1"
+                    sx={dashboardStyles.title}
+                  >
+                    Let’s Get Started!
+                  </Typography>
+                  <Typography variant="body2" color="textSecondary" sx={dashboardStyles.description}>
+                    Install our pixel on your website to start capturing anonymous
+                    visitor data on your store.
+                  </Typography>
+                  <ProgressSection />
+                  <PixelInstallation />
+                  <VerifyPixelIntegration />
+                </Grid>
+                <Grid item xs={12} lg={8} sx={{display: { xs: 'none', md: 'block' }  }}>
+                  <Typography
+                    variant="h4"
+                    component="h1"
+                    sx={dashboardStyles.title}
+                  >
+                    Let’s Get Started!
+                  </Typography>
+                  <Typography variant="body2" color="textSecondary" mb={4}>
+                    Install our pixel on your website to start capturing anonymous
+                    visitor data on your store.
+                  </Typography>
+                  <PixelInstallation />
+                  <VerifyPixelIntegration />
+                </Grid>
+                <Grid item xs={12} lg={4} sx={{display: { xs: 'none', md: 'block' }  }}>
+                  <ProgressSection />
+                </Grid>
               </Grid>
-              <Grid item xs={12} md={4}>
-                <ProgressSection />
-              </Grid>
+              <SupportSection />
             </Grid>
-            <SupportSection />
-          </Grid>
         )}
       </Grid>
       {showSlider && <Slider />}
@@ -463,5 +526,6 @@ const DashboardPage: React.FC = () => {
     </Suspense>
   );
 };
+
 
 export default DashboardPage;

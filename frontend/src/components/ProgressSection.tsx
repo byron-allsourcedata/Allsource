@@ -33,12 +33,46 @@ const CustomListItemIcon = styled(ListItemIcon)(({ theme }) => ({
 
 export const ProgressSection: React.FC = () => (
   <Box sx={{ display: "flex", justifyContent: 'center', alignItems: 'center' }}>
-    <Box sx={{ width: '70%', height:'100%', padding: '2rem', marginTop: '2em', border: '1px solid #e4e4e4', borderRadius: '8px', backgroundColor: '#fff', boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)', marginBottom: '2rem' }}>
-      <Typography variant="h6" component="div" mb={2}>
+    <Box sx={{
+      width: '70%',
+      height:'100%',
+      padding: '2rem',
+      marginTop: '2em',
+      border: '1px solid #e4e4e4',
+      borderRadius: '8px',
+      backgroundColor: '#fff',
+      boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
+      marginBottom: '2rem',
+      '@media (max-width: 1199px)': {
+        width: '100%',
+        padding: '1.5rem',
+        margin: '1.5rem 0'
+      }
+      }}>
+      <Typography variant="h6" component="div" mb={2} sx={{
+        '@media (max-width: 1199px)': {
+          fontSize: '16px',
+          fontFamily: 'Nunito',
+          color: '#4a4a4a',
+          fontWeight: '600',
+          lineHeight: 'normal',
+          marginBottom: '8px'
+        }
+      }}>
         Activation steps
       </Typography>
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-        <Typography variant="body2" color="textSecondary">
+        <Typography variant="body2" color="textSecondary" 
+        sx={{
+          '@media (max-width: 1199px)': {
+            fontSize: '14px',
+            fontFamily: 'Nunito',
+            color: '#787878',
+            fontWeight: '700',
+            lineHeight: 'normal'
+          }
+        }}
+        >
           Progress
         </Typography>
         <Box sx={{ flexGrow: 1, mx: 2 }}>
@@ -55,24 +89,44 @@ export const ProgressSection: React.FC = () => (
   />
 </Box>
 
-        <Typography variant="body2" color="textSecondary">
+        <Typography variant="body2" color="textSecondary" sx={{
+          '@media (max-width: 1199px)': {
+            fontSize: '14px',
+            fontFamily: 'Nunito',
+            color: '#000',
+            fontWeight: '400',
+            lineHeight: 'normal'
+          }
+        }}>
           33% complete
         </Typography>
       </Box>
       <List sx={{ mt: 3 }}>
-        <CustomButton>
+        <CustomButton sx={{ 
+          borderRadius: '4px',
+          '@media (max-width: 1199px)': {
+            mb: '16px'
+          }
+          }}>
           <CustomListItemIcon >
             <HourglassEmptyIcon sx={{backgroundColor: 'rgba(220, 220, 239, 1)'}} />
           </CustomListItemIcon>
           <ListItemText primary="Activate Trial" />
         </CustomButton>
-        <CustomButton>
+        <CustomButton sx={{ 
+          borderRadius: '4px',
+          '@media (max-width: 1199px)': {
+            mb: '16px'
+          }
+          }}>
           <CustomListItemIcon>
             <CodeIcon sx={{backgroundColor: 'rgba(220, 220, 239, 1)'}} />
           </CustomListItemIcon>
           <ListItemText primary="Setup pixel" />
         </CustomButton>
-        <CustomButton>
+        <CustomButton sx={{ 
+          borderRadius: '4px'
+          }}>
           <CustomListItemIcon>
             <AppsIcon sx={{backgroundColor: 'rgba(220, 220, 239, 1)'}} />
           </CustomListItemIcon>

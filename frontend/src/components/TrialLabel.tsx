@@ -46,13 +46,16 @@ const TrialStatus: React.FC = () => {
     <Box sx={{
       display: 'flex',
       alignItems: 'center',
+      justifyContent: 'center',
       padding: '8px 10px',
       backgroundColor: backgroundColor,
       borderRadius: '3.27px',
       color: textColor,
       fontSize: '14px',
       fontWeight: 500,
-      marginRight: '2em'
+      '@media (min-width: 901px)': {
+        marginRight: '2em'
+      }
     }}>
       <Typography sx={{
         marginRight: '5px',
