@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { usersStyle } from "./userStyle";
 import { Box, Button, Grid, Typography, TableHead, TableRow, TableCell, 
-    Checkbox, TableBody, TableContainer, Paper, Table, 
+    TableBody, TableContainer, Paper, Table, 
     Switch, Pagination, 
     SwitchProps} from "@mui/material";
 import Image from "next/image";

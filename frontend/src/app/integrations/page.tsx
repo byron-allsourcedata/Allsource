@@ -282,7 +282,7 @@ const ServiceIntegrations = ({ service }: { service: IntegrationService[] }) => 
                 })}
             </Box>
             {selectedService && (
-                <SliderProvider>
+                <>
                     <SliderIntegration
                         credential={selectedCredential}
                         service={selectedService}
@@ -291,7 +291,7 @@ const ServiceIntegrations = ({ service }: { service: IntegrationService[] }) => 
                         onSave={handleSave}
                         onDelete={handleDelete}
                     />
-                </SliderProvider>
+                </>
             )}
         </>
     );
@@ -357,4 +357,12 @@ const Integrations: React.FC = () => {
     );
 };
 
-export default Integrations;
+const IntegrationsPage = () => {
+    return ( 
+        <SliderProvider>
+            <Integrations />
+        </SliderProvider>
+     );
+}
+ 
+export default IntegrationsPage;

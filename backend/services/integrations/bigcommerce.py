@@ -7,7 +7,7 @@ from .utils import mapped_customers, IntegrationsABC
 
 class BigcommerceIntegrationService(IntegrationsABC):
 
-    def __init__(self, db: Session, user_integration_persistence: UserIntegrationsPresistence, client: Client):
+    def __init__(self, db: Session, user_integration_persistence: UserIntegrationsPresistence, client: Client, user):
         self.user_integration_persistence = user_integration_persistence
         self.db = db
         self.client = client
