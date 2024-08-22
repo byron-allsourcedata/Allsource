@@ -19,14 +19,13 @@ import axiosInstance from '@/axios/axiosInterceptorInstance';
 
 const sidebarStyles = {
     container: {
-        width: '80%',
+        width: '100%',
         flexShrink: 0,
         fontFamily: 'Nunito',
         fontSize: '14px',
         fontWeight: '500',
         backgroundColor: 'rgba(255, 255, 255, 1)',
         borderRight: '1px solid rgba(228, 228, 228, 1)',
-        marginRight: '10em',
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
