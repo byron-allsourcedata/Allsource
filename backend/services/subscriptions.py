@@ -200,6 +200,8 @@ class SubscriptionService:
         )
 
         self.db.add(add_subscription_obj)
+        self.db.query(User).filter(User.id == user_id).update({Users.activate_steps_percent: 50},
+                                                              synchronize_session=False)
         self.db.commit()
         return add_subscription_obj
 

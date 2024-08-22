@@ -35,6 +35,7 @@ class Users(Base):
     role = Column(ARRAY(VARCHAR(32)))
     calendly_uuid = Column(VARCHAR(64), nullable=True)
     calendly_invitee_uuid = Column(VARCHAR(64), nullable=True)
+    activate_steps_percent = Column(INTEGER, nullable=True)
 
 
 User = Users
