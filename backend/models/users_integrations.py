@@ -1,5 +1,5 @@
 from .base import Base
-from sqlalchemy import VARCHAR, Integer, Column
+from sqlalchemy import VARCHAR, Integer, Column, JSON
 
 class UserIntegration(Base):
     __tablename__ = 'users_integrations'
@@ -9,3 +9,12 @@ class UserIntegration(Base):
     shop_domain = Column(VARCHAR)
     access_token = Column(VARCHAR)
     service_name = Column(VARCHAR)
+
+class Integration(Base):
+
+    __tablename__ = 'integrations'
+
+    id = Column(Integer, primary_key=True)
+    service_name = Column(VARCHAR)
+    image_url = Column(VARCHAR)
+    fields = Column(JSON)

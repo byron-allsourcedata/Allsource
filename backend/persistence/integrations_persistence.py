@@ -1,8 +1,8 @@
-from models.users_integrations import UserIntegration
+from models.users_integrations import UserIntegration, Integration
 from sqlalchemy.orm import Session
 
 
-class UserIntegrationsPresistence:
+class IntegrationsPresistence:
 
     def __init__(self, db: Session) -> None:
         self.db = db
@@ -28,3 +28,6 @@ class UserIntegrationsPresistence:
         result = self.db.query(UserIntegration).filter(UserIntegration.user_id == user_id, UserIntegration.service_name == service_name).update(data, synchronize_session='fetch')
         self.db.commit()
         return result
+    
+    def get_integrations_service(self):
+        return self.db.query(Integration).all()

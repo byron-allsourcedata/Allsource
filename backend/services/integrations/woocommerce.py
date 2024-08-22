@@ -1,15 +1,13 @@
 from models.users import User
-from persistence.users_integrations_persistence import UserIntegrationsPresistence
-from sqlalchemy.orm import Session
+from persistence.integrations_persistence import IntegrationsPresistence
 from woocommerce import API
 from .utils import mapped_customers
 
 
 class WoocommerceIntegrationService:
 
-    def __init__(self, db: Session, user_integration_persistence: UserIntegrationsPresistence, user: User):
+    def __init__(self, user_integration_persistence: IntegrationsPresistence, user: User):
         self.user_integration_persistence = user_integration_persistence
-        self.db = db
         self.user = user
 
 

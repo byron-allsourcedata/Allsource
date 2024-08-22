@@ -17,11 +17,17 @@ class KlaviyoCredentials(BaseModel):
     access_token: str 
 
 
+class MailchimpCredentials(BaseModel):
+    data_center: str
+    store_id: int
+    access_token: str
+
 class IntegrationCredentials(BaseModel):
     shopify: Optional[ShopifyOrBigcommerceCredentials] = None
     woocommerce: Optional[WoocommerceCredentials] = None
     bigcommerce: Optional[ShopifyOrBigcommerceCredentials] = None
     klaviyo: Optional[KlaviyoCredentials] = None
+    mailchimp: Optional[MailchimpCredentials] = None
 
 
 class Customer(BaseModel):

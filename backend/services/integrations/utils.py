@@ -106,6 +106,27 @@ def extract_klaviyo_data(customer) -> Customer:
     )
 
 
+def extract_mailchimp_data(customer):
+    address = customer.get('address', {})
+    
+    return Customer(
+        first_name=customer.get("first_name"),
+        last_name=customer.get("last_name"),
+        mobile_phone=None, 
+        company_address=f"{address.get('address1', '')} {address.get('address2', '')}".strip(),
+        company_city=address.get("city"),
+        company_state=address.get("province"),
+        company_zip=address.get("postal_code"),
+        business_email=customer.get("email_address"),
+        time_spent=float(customer.get("total_spent", 0)),
+        no_of_visits=customer.get("orders_count"),
+        no_of_page_visits=customer.get("orders_count"),
+        company_name=customer.get("company"),
+        company_phone=None,
+        company_revenue=float(customer.get("total_spent", 0)),
+        company_employee_count=None)
+
+
 def mapped_customers(service_name, customers):
     if service_name == 'shopify':
         return [extract_shopify_data(customer) for customer in customers]
@@ -115,5 +136,7 @@ def mapped_customers(service_name, customers):
         return [extract_bigcommerce_data(customer) for customer in customers]
     elif service_name == 'klaviyo':
         return [extract_klaviyo_data(customer) for customer in customers]
+    elif service_name == 'mailchimp':
+        return [extract_mailchimp_data(customer) for customer in customers]
     else:
         raise ValueError(f"Unsupported service name: {service_name}")
