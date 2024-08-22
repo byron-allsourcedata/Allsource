@@ -20,6 +20,7 @@ export const dashboardStyles: { [key: string]: SxProps<Theme> } = {
       boxShadow: '0rem 0px 0px 0px #00000033',
       border: 'none',
       marginTop: '3.75em',
+      background: 'red'
     },
   },
   headers: {
@@ -50,6 +51,9 @@ export const dashboardStyles: { [key: string]: SxProps<Theme> } = {
     textAlign: 'start',
     padding: '1.5rem 0rem 0',
     fontFamily: 'Nunito',
+    '@media (max-width: 1199px)': {
+      paddingTop: '1rem'
+    }
   },
   formContainer: {
     display: 'grid',
@@ -93,4 +97,24 @@ export const dashboardStyles: { [key: string]: SxProps<Theme> } = {
     fontSize: '16px',
     fontFamily: 'Nunito',
   },
+  mainItemContent: {
+    '@media (max-width: 1199px)': {
+        paddingRight: '24px'
+    },
+    '@media (max-width: 900px)': {
+        paddingTop: '72px',
+        paddingRight: 0
+
+    }
+  },
+  mainItemContentInner: {
+    '@media (max-width: 900px)': {
+        padding: '0 16px 32px'
+    }
+  },
+  description: {
+    fontSize: '14px',
+    fontFamily: 'Nunito',
+    color: '#808080',
+  }
 };

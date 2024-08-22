@@ -52,6 +52,12 @@ body {
   opacity: 1;
 }
 
+@media (max-width: 600px) {
+  #urlInput {
+    width: 100% !important;
+  }
+}
+
 @media (max-width: 440px) {
   .Toastify__toast-container.customToastContainer {
     width: 100%;
