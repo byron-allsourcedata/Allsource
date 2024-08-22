@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, colors, IconButton, List, ListItem, ListItemIcon, ListItemText } from '@mui/material';
+import { Box, colors, IconButton, List, ListItem, ListItemIcon, ListItemText, Menu, MenuItem, Typography } from '@mui/material';
 import { useRouter, usePathname } from 'next/navigation';
 import MenuIcon from '@mui/icons-material/Menu';
 import CloseIcon from '@mui/icons-material/Close';
@@ -15,6 +15,7 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import PersonIcon from '@mui/icons-material/Person';
 import NotificationsNoneIcon from '@mui/icons-material/NotificationsNone';
 import Image from "next/image";
+import { useUser } from "../context/UserContext";
 
 const navigationmenuStyles = {
   mobileMenuHeader: {
@@ -75,8 +76,10 @@ const navigationmenuStyles = {
 
 const NavigationMenu = () => {
   const [open, setOpen] = useState(false);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const router = useRouter();
   const pathname = usePathname();
+  const { full_name, email } = useUser();
 
   const toggleDrawer = () => {
     setOpen(!open);
@@ -86,6 +89,20 @@ const NavigationMenu = () => {
   };
 
   const isActive = (path: string) => pathname === path;  
+
+  const handleProfileMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleProfileMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleSignOut = () => {
+    localStorage.clear();
+    sessionStorage.clear();
+    router.push("/signin");
+  };
 
   return (
     <Box>
@@ -104,11 +121,38 @@ const NavigationMenu = () => {
         <IconButton>
           <NotificationsNoneIcon />
         </IconButton>
-        <IconButton>
+        <IconButton onClick={handleProfileMenuOpen}>
           <PersonIcon />
         </IconButton>
         </Box>
       </Box>
+
+       {/* Profile Menu */}
+       <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={handleProfileMenuClose}
+        anchorOrigin={{
+          vertical: 'top',
+          horizontal: 'right',
+        }}
+        transformOrigin={{
+          vertical: 'top',
+          horizontal: 'right',
+        }}
+        sx= {{top: '46px'}}
+      >
+        <Box sx={{ p: 2 }}>
+          <Typography variant="h6">{full_name}</Typography>
+          <Typography variant="body2" color="textSecondary">
+            {email}
+          </Typography>
+        </Box>
+        <MenuItem onClick={() => handleNavigation('/settings')}>
+          Settings
+        </MenuItem>
+        <MenuItem onClick={handleSignOut}>Sign Out</MenuItem>
+      </Menu>
 
       {/* Full-Width Drawer Menu */}
       <Box sx={navigationmenuStyles.mobileDrawerMenu} style={{

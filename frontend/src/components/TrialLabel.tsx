@@ -67,13 +67,13 @@ const TrialStatus: React.FC = () => {
       <Box sx={{
         display: 'flex',
         alignItems: 'center',
+        justifyContent: 'center',
         padding: '8px 10px',
         backgroundColor: backgroundColor,
         borderRadius: '3.27px',
         color: textColor,
         fontSize: '14px',
-        fontWeight: 700,
-        marginRight: '2em',
+        fontWeight: '500',
         '@media (min-width: 901px)': {
         marginRight: '2em'
       }
@@ -93,7 +93,7 @@ const TrialStatus: React.FC = () => {
           letterSpacing: '-0.02em',
           pt: '1px',
           textAlign: 'left',
-          fontWeight: '700',
+          fontWeight: '500',
           marginLeft: '3px'
           
         }}>
