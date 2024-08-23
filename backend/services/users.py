@@ -32,7 +32,8 @@ class UsersService:
     def get_my_info(self):
         return {"email": self.user.get('email'),
                 "full_name": self.user.get('full_name'),
-                "company_website": self.user.get('company_website')
+                "company_website": self.user.get('company_website'),
+                "activate_percent": self.user.get('activate_steps_percent'),
                 }
 
     def get_calendly_info(self):

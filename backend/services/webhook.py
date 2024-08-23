@@ -16,6 +16,8 @@ class WebhookService:
         stripe_request_created_at = datetime.utcfromtimestamp(stripe_request_created_timestamp).isoformat() + "Z"
         customer_id = payload.get("data").get("object").get("customer")
         user_data = self.subscription_service.get_userid_by_customer(customer_id)
+        if not user_data:
+            return payload
         if self.subscription_service.check_duplicate_send(stripe_request_created_at, user_data.id):
             return payload
         request_price_id = payload.get("data").get("object").get("plan").get("id")

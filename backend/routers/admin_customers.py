@@ -17,7 +17,7 @@ async def verify_token(admin_customers_service: AdminCustomersService = Depends(
         await publish_rabbitmq_message(
             connection=connection,
             queue_name=queue_name,
-            message_body={'status': "BOOK_CALL_PASSED"}
+            message_body={'status': "BOOK_CALL_PASSED", 'percent': 50}
         )
     except:
         await rabbitmq_connection.close()
@@ -38,7 +38,7 @@ async def verify_token(admin_customers_service: AdminCustomersService = Depends(
         await publish_rabbitmq_message(
             connection=connection,
             queue_name=queue_name,
-            message_body={'status': "PIXEL_CODE_INSTALLED"}
+            message_body={'status': "PIXEL_CODE_INSTALLED", 'percent': 90}
         )
     except:
         await rabbitmq_connection.close()

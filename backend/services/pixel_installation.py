@@ -39,8 +39,8 @@ class PixelInstallationService:
         script = f'''
         <script id="acegm_pixel_script" type="text/javascript" defer="defer">
         window.pixelClientId = "{client_id}";
-        const acegm_pixelScriptUrl = 'https://maximiz-data.s3.us-east-2.amazonaws.com/pixel.js'
-        const acegm_base_pixel_script = document.createElement('script');
+        var acegm_pixelScriptUrl = 'https://maximiz-data.s3.us-east-2.amazonaws.com/pixel.js'
+        var acegm_base_pixel_script = document.createElement('script');
         acegm_base_pixel_script.src = acegm_pixelScriptUrl;
         document.body.appendChild(acegm_base_pixel_script);
         </script>

@@ -1,38 +1,105 @@
-import { Typography, Box, Button, LinearProgress, List, ListItemIcon, ListItemText } from "@mui/material";
+import {
+  Typography,
+  Box,
+  Button,
+  LinearProgress,
+  List,
+  ListItemIcon,
+  ListItemText,
+} from "@mui/material";
 import Image from "next/image";
 import { styled } from "@mui/material/styles";
-import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
-import CodeIcon from '@mui/icons-material/Code';
-import AppsIcon from '@mui/icons-material/Apps';
-
+import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
+import CodeIcon from "@mui/icons-material/Code";
+import AppsIcon from "@mui/icons-material/Apps";
+import { useSlider } from "../context/SliderContext";
+import ManualPopup from "../components/ManualPopup";
+import { useState } from "react";
+import axiosInterceptorInstance from "@/axios/axiosInterceptorInstance";
+import { AxiosError } from "axios";
+import { useUser } from "@/context/UserContext";
 
 const CustomButton = styled(Button)(({ theme }) => ({
-  width: '100%',
-  height: '68.25px',
-  padding: '16px 8px',
-  gap: '10px',
-  borderRadius: '4px 0px 0px 0px',
-  backgroundColor: 'rgba(255, 255, 255, 1)',
-  border: '1px solid rgba(228, 228, 228, 1)',
-  boxShadow: '0px 1px 2px 0px rgba(158, 158, 158, 0.2)',
-  textAlign: 'left',
-  marginBottom: '8px',
-  textTransform: 'none',
-  fontFamily: 'Nunito',
-  fontSize: '14px',
-  lineHeight: '20px',
-  fontWeight: '600',
-  color: 'rgba(74, 74, 74, 1)',
+  width: "100%",
+  height: "68.25px",
+  padding: "16px 6px",
+  gap: "8px",
+  borderRadius: "4px 0px 0px 0px",
+  backgroundColor: "rgba(255, 255, 255, 1)",
+  border: "1px solid rgba(228, 228, 228, 1)",
+  boxShadow: "0px 1px 2px 0px rgba(158, 158, 158, 0.2)",
+  textAlign: "left",
+  marginBottom: "8px",
+  textTransform: "none",
+  fontFamily: "Nunito",
+  fontSize: "14px",
+  lineHeight: "20px",
+  fontWeight: "600",
+  color: "rgba(74, 74, 74, 1)",
+  opacity: 1,
+  pointerEvents: "auto",
+  "&.Mui-disabled": {
+    opacity: 0.6,
+    pointerEvents: "none",
+  },
+  [theme.breakpoints.down("sm")]: {
+    alignItems: "flex-start",
+    padding: "8px",
+    height: "auto",
+  },
 }));
-
 
 const CustomListItemIcon = styled(ListItemIcon)(({ theme }) => ({
-  paddingLeft: '0.5em',
-  minWidth: 0
+  paddingLeft: "0.5em",
+  minWidth: 0,
+  [theme.breakpoints.down("sm")]: {
+    paddingLeft: "0",
+    marginBottom: "4px",
+  },
 }));
 
-export const ProgressSection: React.FC = () => (
-  <Box sx={{ display: "flex", justifyContent: 'flex-end', alignItems: 'center' }}>
+export const ProgressSection: React.FC = () => {
+  const { setShowSlider } = useSlider();
+  const { percent_steps: userPercentSteps } = useUser();
+  const meItem = typeof window !== 'undefined' ? sessionStorage.getItem('me') : null;
+  const meData = meItem ? JSON.parse(meItem) : { percent_steps: 0 };
+  const percentSteps = userPercentSteps || meData.percent_steps;
+  const isIntegrateDisabled = percentSteps < 90;
+  const isSetupDisabled = percentSteps < 50;
+
+  const installManually = async () => {
+    try {
+      const response = await axiosInterceptorInstance.get(
+        "/install-pixel/manually"
+      );
+      setPixelCode(response.data.manual);
+      setOpen(true);
+    } catch (error) {
+      if (error instanceof AxiosError && error.response?.status === 403) {
+        if (error.response.data.status === "NEED_BOOK_CALL") {
+          sessionStorage.setItem("is_slider_opened", "true");
+          setShowSlider(true);
+        } else {
+          sessionStorage.setItem("is_slider_opened", "false");
+          setShowSlider(false);
+        }
+      } else {
+        console.error("Error fetching data:", error);
+      }
+    }
+  };
+
+  const ActivateTrial = () => {
+    setShowSlider(true);
+  };
+
+
+  const [openmanually, setOpen] = useState(false);
+  const handleManualClose = () => setOpen(false);
+  const [pixelCode, setPixelCode] = useState("");
+
+  return (
+    <Box sx={{ display: "flex", justifyContent: 'flex-end', alignItems: 'center' }}>
     <Box sx={{
       width: '70%',
       height:'100%',
@@ -144,4 +211,5 @@ export const ProgressSection: React.FC = () => (
       </List>
     </Box>
   </Box>
-);
+  );
+};

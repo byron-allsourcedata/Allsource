@@ -6,7 +6,13 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 const AccountButton: React.FC = () => {
-    const { full_name, email } = useUser();
+  const { full_name: userFullName, email: userEmail } = useUser();
+  const meItem = typeof window !== 'undefined' ? sessionStorage.getItem('me') : null;
+  const meData = meItem ? JSON.parse(meItem) : { full_name: '', email: '' };
+  
+  const fullName = userFullName || meData.full_name;
+  const email = userEmail || meData.email;
+  
     const [dropdownEl, setDropdownEl] = useState<null | HTMLElement>(null);
     const router = useRouter();
     const dropdownOpen = Boolean(dropdownEl);
@@ -65,7 +71,7 @@ const AccountButton: React.FC = () => {
             onClose={handleDropdownClose}
           >
             <Box sx={{ p: 2 }}>
-              <Typography variant="h6">{full_name}</Typography>
+              <Typography variant="h6">{fullName}</Typography>
               <Typography variant="body2" color="textSecondary">{email}</Typography>
             </Box>
             <MenuItem onClick={handleSettingsClick}>Settings</MenuItem>
