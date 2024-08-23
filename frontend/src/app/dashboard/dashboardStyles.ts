@@ -106,6 +106,7 @@ export const dashboardStyles: { [key: string]: SxProps<Theme> } = {
   },
   mainItemContentInner: {
     position: 'relative',
+    paddingRight: '24px',
     '@media (max-width: 900px)': {
         padding: '0 16px 32px'
     }

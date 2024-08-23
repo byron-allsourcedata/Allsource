@@ -32,12 +32,12 @@ const CustomListItemIcon = styled(ListItemIcon)(({ theme }) => ({
 }));
 
 export const ProgressSection: React.FC = () => (
-  <Box sx={{ display: "flex", justifyContent: 'center', alignItems: 'center' }}>
+  <Box sx={{ display: "flex", justifyContent: 'flex-end', alignItems: 'center' }}>
     <Box sx={{
       width: '70%',
       height:'100%',
       padding: '2rem',
-      marginTop: '2em',
+      marginTop: '1.5rem',
       border: '1px solid #e4e4e4',
       borderRadius: '8px',
       backgroundColor: '#fff',
@@ -50,27 +50,24 @@ export const ProgressSection: React.FC = () => (
       }
       }}>
       <Typography variant="h6" component="div" mb={2} sx={{
-        '@media (max-width: 1199px)': {
+        
           fontSize: '16px',
           fontFamily: 'Nunito',
           color: '#4a4a4a',
           fontWeight: '600',
           lineHeight: 'normal',
           marginBottom: '8px'
-        }
       }}>
         Activation steps
       </Typography>
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
         <Typography variant="body2" color="textSecondary" 
         sx={{
-          '@media (max-width: 1199px)': {
             fontSize: '14px',
             fontFamily: 'Nunito',
             color: '#787878',
             fontWeight: '700',
             lineHeight: 'normal'
-          }
         }}
         >
           Progress
@@ -90,6 +87,11 @@ export const ProgressSection: React.FC = () => (
 </Box>
 
         <Typography variant="body2" color="textSecondary" sx={{
+          fontFamily: 'Nunito',
+          fontSize: '14px',
+          color: '#000',
+          fontWeight: '400',
+          lineHeight: 'normal',
           '@media (max-width: 1199px)': {
             fontSize: '14px',
             fontFamily: 'Nunito',
@@ -101,9 +103,10 @@ export const ProgressSection: React.FC = () => (
           33% complete
         </Typography>
       </Box>
-      <List sx={{ mt: 3 }}>
+      <List sx={{ mt: '8px', p: '0' }}>
         <CustomButton sx={{ 
           borderRadius: '4px',
+           mb: '16px',
           '@media (max-width: 1199px)': {
             mb: '16px'
           }
@@ -115,6 +118,7 @@ export const ProgressSection: React.FC = () => (
         </CustomButton>
         <CustomButton sx={{ 
           borderRadius: '4px',
+           mb: '16px',
           '@media (max-width: 1199px)': {
             mb: '16px'
           }
@@ -124,7 +128,8 @@ export const ProgressSection: React.FC = () => (
           </CustomListItemIcon>
           <ListItemText primary="Setup pixel" />
         </CustomButton>
-        <CustomButton sx={{ 
+        <CustomButton sx={{
+          marginBottom: '0', 
           borderRadius: '4px'
           }}>
           <CustomListItemIcon>

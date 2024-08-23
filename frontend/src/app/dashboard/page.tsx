@@ -56,7 +56,7 @@ const VerifyPixelIntegration: React.FC = () => {
   return (
     <Box
       sx={{
-        padding: "1.1rem",
+        padding: "1rem",
         border: "1px solid #e4e4e4",
         borderRadius: "8px",
         backgroundColor: "rgba(247, 247, 247, 1)",
@@ -75,9 +75,10 @@ const VerifyPixelIntegration: React.FC = () => {
         sx={{
           fontFamily: "Nunito",
           fontWeight: "700",
-          lineHeight: "21.82px",
+          lineHeight: "normal",
           textAlign: "left",
           color: '#1c1c1c',
+          marginBottom: '1.5rem',
           '@media (max-width: 900px)': {
             fontSize: '16px',
             lineHeight: 'normal',
