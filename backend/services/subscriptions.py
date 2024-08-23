@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from enums import StripePaymentStatusEnum
 from models.plans import SubscriptionPlan, UserSubscriptionPlan
-from models.subscriptions import Subscription
+from models.subscriptions import Subscription, UserSubscriptions
 from models.users import Users, User
 from persistence.user_persistence import UserPersistence
 from utils import get_utc_aware_date_for_postgres
@@ -130,7 +130,17 @@ class SubscriptionService:
             return sub_status in ACTIVE_STATUSES
 
     def is_user_has_active_subscription(self, user_id):
-        return self.db.query(UserSubscriptionPlan).filter(UserSubscriptionPlan.user_id == user_id).limit(1).scalar()
+        user_plan = self.db.query(
+            UserSubscriptions.plan_end
+        ).filter(
+            UserSubscriptions.user_id == user_id,
+        ).order_by(
+            UserSubscriptions.id.desc()).first()
+        if user_plan and user_plan.plan_end:
+            current_date = datetime.now()
+            if user_plan.plan_end > current_date:
+                return True
+        return False
 
     def determine_plan_name_from_price(self, product_id):
         import stripe
