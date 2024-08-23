@@ -138,7 +138,11 @@ const VerifyPixelIntegration: React.FC = () => {
 };
 
 const SupportSection: React.FC = () => (
-  <Box sx={{ alignItems: "flex-end" }}>
+  <Box sx={{
+    display: "flex",
+    alignItems: "flex-end",
+    height: "100%"
+  }}>
     <Box
       sx={{
         padding: "1em 0em 1em 1em",
@@ -146,9 +150,7 @@ const SupportSection: React.FC = () => (
         backgroundColor: "#fff",
         boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
         textAlign: "left",
-        width: "80%",
-        position: "absolute",
-        bottom: 0,
+        width: "100%",
         marginBottom: "1em",
         border: "1px solid rgba(228, 228, 228, 1)",
         '@media (max-width: 1199px)': {
@@ -242,7 +244,7 @@ const SupportSection: React.FC = () => (
         </Button>
       </Grid>
     </Box>
-  </Box>
+    </Box>
 );
 
 const Dashboard: React.FC = () => {
@@ -344,11 +346,23 @@ const Dashboard: React.FC = () => {
     
       <Box sx={{ ...dashboardStyles.headers, display: { xs: 'none', md: 'flex' } }}>
         <Box sx={dashboardStyles.logoContainer}>
-          <Image src="/logo.svg" alt="logo" height={80} width={60} />
+          <Image src="/logo.svg" alt="logo" height={30} width={50} />
+          <AccountButton />
         </Box>
         <Box sx={{ display: "flex", alignItems: "center" }}>
           <TrialStatus />
-          <AccountButton />
+
+          <Button sx={{
+              minWidth: '32px',
+              padding: '8px',
+              color: 'rgba(128, 128, 128, 1)',
+              border: '1px solid rgba(184, 184, 184, 1)',
+              borderRadius: '3.27px',
+            marginRight: '1.5rem'}}
+          >
+          <Image src={'notification.svg'} alt="Person" width={18} height={18} />
+          </Button>
+          
           <Button
             aria-controls={open ? "profile-menu" : undefined}
             aria-haspopup="true"
@@ -359,8 +373,7 @@ const Dashboard: React.FC = () => {
               padding: '8px',
               color: 'rgba(128, 128, 128, 1)',
               border: '1px solid rgba(184, 184, 184, 1)',
-              borderRadius: '3.27px',
-            marginRight: 2,}}
+              borderRadius: '3.27px'}}
           >
             <Image src={'person.svg'} alt="Person" width={18} height={18} />
           </Button>
@@ -384,16 +397,20 @@ const Dashboard: React.FC = () => {
           </Menu>
         </Box>
       </Box>
-      <Grid container width="100%" sx={dashboardStyles.mainItemContent}>
+      <Grid container spacing={{ md: 1, lg: 3 }} sx={dashboardStyles.mainItemContent}>
         <Grid item xs={12} sx={{ padding: "0px", display: { xs: 'block', md: 'none' }  }}>
           <TrialStatus />
         </Grid>
-        <Grid item xs={12} md={3} lg={2} sx={{ padding: "0px", display: { xs: 'none', md: 'block' }  }}>
+        <Grid item xs={12} md="auto" lg="auto" sx={{ 
+          padding: "0px",
+          display: { xs: 'none', md: 'block' },
+          width: '142px'
+          }}>
           <Sidebar />
         </Grid>
         {showCharts ? (
           <>
-            <Grid item xs={12} md={9} lg={10} sx={dashboardStyles.mainItemContentInner}>
+            <Grid item xs={12} md lg sx={dashboardStyles.mainItemContentInner}>
               <Grid
                 container
                 spacing={2}
@@ -478,8 +495,10 @@ const Dashboard: React.FC = () => {
         ) : (
           // <Box sx={dashboardStyles.mainItem}>
           
-            <Grid item xs={12} md={9} lg={10} sx={dashboardStyles.mainItemContentInner}>
-              <Grid container spacing={2}>
+            <Grid item xs={12} md lg sx={dashboardStyles.mainItemContentInner}>
+              <Grid container sx={{
+                height: '100%'
+              }}>
                 <Grid item xs={12} sx={{display: { md: 'none' }  }}>
                 <Typography
                     variant="h4"
@@ -514,11 +533,20 @@ const Dashboard: React.FC = () => {
                 <Grid item xs={12} lg={4} sx={{display: { xs: 'none', md: 'block' }  }}>
                   <ProgressSection />
                 </Grid>
+                <Grid item xs={12}>
+                  <SupportSection />
+                </Grid>
               </Grid>
-              <SupportSection />
+
+             
+              
             </Grid>
+
+            
         )}
+        
       </Grid>
+
       {showSlider && <Slider />}
     </>
   );

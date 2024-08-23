@@ -108,7 +108,7 @@ const PixelInstallation: React.FC = () => {
 
   return (
     <Box sx={{
-      padding: '0.5rem',
+      padding: '1.25rem',
       border: '1px solid #e4e4e4',
       borderRadius: '8px',
       backgroundColor: 'rgba(247, 247, 247, 1)',
@@ -125,6 +125,7 @@ const PixelInstallation: React.FC = () => {
         lineHeight: '21.82px',
         textAlign: 'left',
         color: '#1c1c1c',
+        fontSize: '1rem',
         '@media (max-width: 1199px)': {
           fontSize: '1rem',
           lineHeight: 'normal',
@@ -149,7 +150,7 @@ const PixelInstallation: React.FC = () => {
       <Grid container spacing={2} md={12}>
         <Grid item xs={12} md={4}>
           <Button variant="outlined" fullWidth onClick={installManually} sx={buttonStyles}>
-            <Image src={'/install_manually.svg'} alt="Install Manually" width={36} height={36}
+            <Image src={'/install_manually.svg'} alt="Install Manually" width={32} height={32}
             
             />
             <Typography sx={typographyStyles}>Install Manually</Typography>
@@ -158,7 +159,7 @@ const PixelInstallation: React.FC = () => {
         </Grid>
         <Grid item xs={12} md={4} width={700}>
           <Button variant="outlined" fullWidth onClick={installGoogleTag} sx={buttonGoogle}>
-            <Image src={'/install_gtm.svg'} alt="Install on Google Tag Manager" width={28} height={28} />
+            <Image src={'/install_gtm.svg'} alt="Install on Google Tag Manager" width={32} height={32} />
             <Typography sx={typographyGoogle}>Install on Google Tag Manager</Typography>
           </Button>
           <GoogleTagPopup open={opengoogle} handleClose={handleGoogleClose}/>
@@ -166,10 +167,10 @@ const PixelInstallation: React.FC = () => {
         <Grid item xs={12} md={4}>
           <Button variant="outlined" fullWidth onClick={installCMS} sx={buttonStyles}>
             <Box>
-              <Image src={'/install_cms1.svg'} alt="Install on CMS" width={28} height={28} style={{marginRight:4}} />
-              <Image src={'/install_cms2.svg'} alt="Install on CMS" width={28} height={28} />
+              <Image src={'/install_cms1.svg'} alt="Install on CMS" width={24} height={24} style={{marginRight:4}} />
+              <Image src={'/install_cms2.svg'} alt="Install on CMS" width={24} height={24} />
             </Box>
-            <Typography sx={{...typographyStyles, pt: 1.75}}>Install on CMS</Typography>
+            <Typography sx={{...typographyStyles, pt: '9px'}}>Install on CMS</Typography>
           </Button>
           <CRMPopup open={opencrm} handleClose={handleCRMClose} pixelCode={cmsData.manual || ''}  pixel_client_id={cmsData.pixel_client_id || ''} />
         </Grid>
@@ -184,7 +185,7 @@ const buttonStyles = {
   display: "flex",
   flexDirection: 'column',
   alignItems: 'self-start',
-  padding: '1em',
+  padding: '0.875rem',
   borderColor: 'rgba(228, 228, 228, 1)',
   border: '1px solid rgba(228, 228, 228, 1)',
   width: '100%', 
@@ -201,7 +202,7 @@ const buttonGoogle = {
   display: "flex",
   flexDirection: 'column',
   alignItems: 'self-start',
-  padding: '1em 2em 1.5em 1em', 
+  padding: '0.875rem', 
   borderColor: 'rgba(228, 228, 228, 1)',
   border: '1px solid rgba(228, 228, 228, 1)',
   width: '100%',
@@ -222,8 +223,7 @@ const typographyStyles = {
   lineHeight: '19.6px',
   color: 'rgba(74, 74, 74, 1)',
   textWrap: 'nowrap',
-  paddingTop: '1em',
-  paddingBottom: '0.75em',
+  paddingTop: '0.625rem',
   '@media (max-width: 1199px)': {
     paddingTop: '0.5rem',
     paddingBottom: 0
@@ -238,8 +238,7 @@ const typographyGoogle = {
   lineHeight: '19.6px',
   color: 'rgba(74, 74, 74, 1)',
   textWrap: 'wrap',
-  paddingTop: '1.5em',
-  paddingBottom: '0.25em',
+  paddingTop: '0.625rem',
   '@media (max-width: 1199px)': {
     paddingTop: '0.5rem'
   }
