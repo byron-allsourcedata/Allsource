@@ -247,7 +247,11 @@ const SupportSection: React.FC = () => (
 
 const Dashboard: React.FC = () => {
   const router = useRouter();
-  const { full_name, email } = useUser();
+  const { full_name: userFullName, email: userEmail } = useUser();
+  const meItem = typeof window !== 'undefined' ? sessionStorage.getItem('me') : null;
+  const meData = meItem ? JSON.parse(meItem) : { full_name: '', email: '' };
+  const full_name = userFullName || meData.full_name;
+  const email = userEmail || meData.email;
   const { setTrial, setDaysLeft } = useTrial();
   const [data, setData] = useState<any>(null);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -362,7 +366,7 @@ const Dashboard: React.FC = () => {
               borderRadius: '3.27px',
             marginRight: 2,}}
           >
-            <Image src={'/person.svg'} alt="Person" width={18} height={18} />
+            <Image src={'/Person.svg'} alt="Person" width={18} height={18} />
           </Button>
           <Menu
             id="profile-menu"

@@ -1,124 +1,164 @@
-import { Typography, Box, Button, LinearProgress, List, ListItemIcon, ListItemText } from "@mui/material";
+import {
+  Typography,
+  Box,
+  Button,
+  LinearProgress,
+  List,
+  ListItemIcon,
+  ListItemText,
+} from "@mui/material";
 import Image from "next/image";
 import { styled } from "@mui/material/styles";
-import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
-import CodeIcon from '@mui/icons-material/Code';
-import AppsIcon from '@mui/icons-material/Apps';
-import { useSlider } from '../context/SliderContext';
-import ManualPopup from '../components/ManualPopup';
+import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
+import CodeIcon from "@mui/icons-material/Code";
+import AppsIcon from "@mui/icons-material/Apps";
+import { useSlider } from "../context/SliderContext";
+import ManualPopup from "../components/ManualPopup";
 import { useState } from "react";
 import axiosInterceptorInstance from "@/axios/axiosInterceptorInstance";
 import { AxiosError } from "axios";
+import { useUser } from "@/context/UserContext";
 
 const CustomButton = styled(Button)(({ theme }) => ({
-  width: '100%',
-  height: '68.25px',
-  padding: '16px 8px',
-  gap: '10px',
-  borderRadius: '4px 0px 0px 0px',
-  backgroundColor: 'rgba(255, 255, 255, 1)',
-  border: '1px solid rgba(228, 228, 228, 1)',
-  boxShadow: '0px 1px 2px 0px rgba(158, 158, 158, 0.2)',
-  textAlign: 'left',
-  marginBottom: '8px',
-  textTransform: 'none',
-  fontFamily: 'Nunito',
-  fontSize: '14px',
-  lineHeight: '20px',
-  fontWeight: '600',
-  color: 'rgba(74, 74, 74, 1)',
+  width: "100%",
+  height: "68.25px",
+  padding: "16px 6px",
+  gap: "8px",
+  borderRadius: "4px 0px 0px 0px",
+  backgroundColor: "rgba(255, 255, 255, 1)",
+  border: "1px solid rgba(228, 228, 228, 1)",
+  boxShadow: "0px 1px 2px 0px rgba(158, 158, 158, 0.2)",
+  textAlign: "left",
+  marginBottom: "8px",
+  textTransform: "none",
+  fontFamily: "Nunito",
+  fontSize: "14px",
+  lineHeight: "20px",
+  fontWeight: "600",
+  color: "rgba(74, 74, 74, 1)",
   opacity: 1,
-  pointerEvents: 'auto',
-  '&.Mui-disabled': {
+  pointerEvents: "auto",
+  "&.Mui-disabled": {
     opacity: 0.6,
-    pointerEvents: 'none',
-  }
+    pointerEvents: "none",
+  },
+  [theme.breakpoints.down("sm")]: {
+    alignItems: "flex-start",
+    padding: "8px",
+    height: "auto",
+  },
 }));
 
 const CustomListItemIcon = styled(ListItemIcon)(({ theme }) => ({
-  paddingLeft: '0.5em',
-  minWidth: 0
+  paddingLeft: "0.5em",
+  minWidth: 0,
+  [theme.breakpoints.down("sm")]: {
+    paddingLeft: "0",
+    marginBottom: "4px",
+  },
 }));
 
-
-
 export const ProgressSection: React.FC = () => {
-  const meItem = sessionStorage.getItem('me');
-const meData = meItem ? JSON.parse(meItem) : {};
-const isIntegrateDisabled = meData.percent_steps < 90;
-const isSetupDisabled = meData.percent_steps < 50;
   const { setShowSlider } = useSlider();
+  const { percent_steps: userPercentSteps } = useUser();
+  const meItem = typeof window !== 'undefined' ? sessionStorage.getItem('me') : null;
+  const meData = meItem ? JSON.parse(meItem) : { percent_steps: 0 };
+  const percentSteps = userPercentSteps || meData.percent_steps;
+  const isIntegrateDisabled = percentSteps < 90;
+  const isSetupDisabled = percentSteps < 50;
 
   const installManually = async () => {
     try {
-      const response = await axiosInterceptorInstance.get('/install-pixel/manually');
+      const response = await axiosInterceptorInstance.get(
+        "/install-pixel/manually"
+      );
       setPixelCode(response.data.manual);
       setOpen(true);
     } catch (error) {
       if (error instanceof AxiosError && error.response?.status === 403) {
-        if (error.response.data.status === 'NEED_BOOK_CALL') {
-          sessionStorage.setItem('is_slider_opened', 'true');
+        if (error.response.data.status === "NEED_BOOK_CALL") {
+          sessionStorage.setItem("is_slider_opened", "true");
           setShowSlider(true);
         } else {
-          sessionStorage.setItem('is_slider_opened', 'false');
-          setShowSlider(false); 
+          sessionStorage.setItem("is_slider_opened", "false");
+          setShowSlider(false);
         }
       } else {
-        console.error('Error fetching data:', error);
+        console.error("Error fetching data:", error);
       }
     }
   };
 
   const ActivateTrial = () => {
     setShowSlider(true);
-  }
-  const SetupPixel = () => {
-    setOpen(true);
-  }
+  };
+
+
   const [openmanually, setOpen] = useState(false);
   const handleManualClose = () => setOpen(false);
-  const [pixelCode, setPixelCode] = useState('');
+  const [pixelCode, setPixelCode] = useState("");
 
   return (
-    <Box sx={{ display: "flex", justifyContent: 'center', alignItems: 'center' }}>
-      <Box sx={{
-        width: '70%',
-        height: '100%',
-        padding: '2rem',
-        marginTop: '2em',
-        border: '1px solid #e4e4e4',
-        borderRadius: '8px',
-        backgroundColor: '#fff',
-        boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
-        marginBottom: '2rem',
-        '@media (max-width: 1199px)': {
-          width: '100%',
-          padding: '1.5rem',
-          margin: '1.5rem 0'
-        }
-      }}>
-        <Typography variant="h6" component="div" mb={2} sx={{
-          '@media (max-width: 1199px)': {
-            fontSize: '16px',
-            fontFamily: 'Nunito',
-            color: '#4a4a4a',
-            fontWeight: '600',
-            lineHeight: 'normal',
-            marginBottom: '8px'
-          }
-        }}>
+    <Box
+      sx={{ display: "flex", justifyContent: "center", alignItems: "center", width: '100%' }}
+    >
+      <Box
+        sx={{
+          width: "90%",
+          height: "100%",
+          padding: "1.75em",
+          marginTop: "2em",
+          border: "1px solid #e4e4e4",
+          borderRadius: "8px",
+          backgroundColor: "#fff",
+          boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
+          marginBottom: "2rem",
+          "@media (max-width: 1199px)": {
+            width: "100%",
+            padding: "1.5rem",
+            margin: "1.5rem 0",
+          },
+          "@media (max-width: 600px)": {
+            padding: "1rem",
+          },
+        }}
+      >
+        <Typography
+          variant="h6"
+          component="div"
+          mb={2}
+          sx={{
+            "@media (max-width: 1199px)": {
+              fontSize: "16px",
+              fontFamily: "Nunito",
+              color: "#4a4a4a",
+              fontWeight: "600",
+              lineHeight: "normal",
+              marginBottom: "8px",
+            },
+          }}
+        >
           Activation steps
         </Typography>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-          <Typography variant="body2" color="textSecondary"
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            mb: 1,
+          }}
+        >
+          <Typography
+            variant="body2"
+            color="textSecondary"
             sx={{
-              '@media (max-width: 1199px)': {
-                fontSize: '14px',
-                fontFamily: 'Nunito',
-                color: '#787878',
-                fontWeight: '700',
-                lineHeight: 'normal'
-              }
+              "@media (max-width: 1199px)": {
+                fontSize: "14px",
+                fontFamily: "Nunito",
+                color: "#787878",
+                fontWeight: "700",
+                lineHeight: "normal",
+              },
             }}
           >
             Progress
@@ -126,67 +166,106 @@ const isSetupDisabled = meData.percent_steps < 50;
           <Box sx={{ flexGrow: 1, mx: 2 }}>
             <LinearProgress
               variant="determinate"
-              value={meData.percent_steps}
+              value={percentSteps}
               sx={{
-                height: '8px',
-                borderRadius: '4px',
-                '& .MuiLinearProgress-bar': {
-                  backgroundColor: 'rgba(110, 193, 37, 1)',
+                height: "8px",
+                borderRadius: "4px",
+                "& .MuiLinearProgress-bar": {
+                  backgroundColor: "rgba(110, 193, 37, 1)",
                 },
               }}
             />
           </Box>
 
-          <Typography variant="body2" color="textSecondary" sx={{
-            '@media (max-width: 1199px)': {
-              fontSize: '14px',
-              fontFamily: 'Nunito',
-              color: '#000',
-              fontWeight: '400',
-              lineHeight: 'normal'
-            }
-          }}>
-            {meData.percent_steps}% complete
+          <Typography
+            variant="body2"
+            color="textSecondary"
+            sx={{
+              "@media (max-width: 1199px)": {
+                fontSize: "14px",
+                fontFamily: "Nunito",
+                color: "#000",
+                fontWeight: "400",
+                lineHeight: "normal",
+              },
+            }}
+          >
+            {percentSteps}% complete
           </Typography>
         </Box>
         <List sx={{ mt: 3 }}>
-          <CustomButton disabled={false} onClick={ActivateTrial} sx={{
-            borderRadius: '4px',
-            '@media (max-width: 1199px)': {
-              mb: '16px'
-            }
-          }}>
-            <CustomListItemIcon >
-              <HourglassEmptyIcon sx={{ backgroundColor: 'rgba(220, 220, 239, 1)' }} />
+          <CustomButton
+            disabled={false}
+            onClick={ActivateTrial}
+            sx={{
+              borderRadius: "4px",
+              "@media (max-width: 1199px)": {
+                mb: "16px",
+              },
+            }}
+          >
+            <CustomListItemIcon>
+              <HourglassEmptyIcon
+                sx={{ backgroundColor: "rgba(220, 220, 239, 1)" }}
+              />
             </CustomListItemIcon>
             <ListItemText primary="Activate Trial" />
           </CustomButton>
-          <CustomButton disabled={isSetupDisabled} onClick={installManually} sx={{
-            borderRadius: '4px',
-            '@media (max-width: 1199px)': {
-              mb: '16px'
-            }
-          }}>
+          <CustomButton
+            disabled={isSetupDisabled}
+            onClick={installManually}
+            sx={{
+              borderRadius: "4px",
+              "@media (max-width: 1199px)": {
+                mb: "16px",
+              },
+            }}
+          >
             <CustomListItemIcon>
-              <CodeIcon sx={{ backgroundColor: 'rgba(220, 220, 239, 1)' }} />
+              <CodeIcon sx={{ backgroundColor: "rgba(220, 220, 239, 1)" }} />
             </CustomListItemIcon>
             <ListItemText primary="Setup pixel" />
           </CustomButton>
-          <ManualPopup open={openmanually} handleClose={handleManualClose} pixelCode={pixelCode} />
-          <CustomButton disabled={isIntegrateDisabled} sx={{
-            borderRadius: '4px'
-          }}>
-            <CustomListItemIcon>
-              <AppsIcon sx={{ backgroundColor: 'rgba(220, 220, 239, 1)' }} />
-            </CustomListItemIcon>
-            <ListItemText primary="Integrate" />
-            <Image src={'/logos_meta-icon.svg'} alt="Meta" width={24} height={24} />
-            <Image src={'/crm1.svg'} alt="Shopify" width={20} height={20} />
-            <Image src={'/crm2.svg'} alt="Woo" width={20} height={20} />
-            <Image src={'/crm3.svg'} alt="Bigcommerce" width={20} height={20} />
+          <ManualPopup
+            open={openmanually}
+            handleClose={handleManualClose}
+            pixelCode={pixelCode}
+          />
+          <CustomButton
+            disabled={isIntegrateDisabled}
+            sx={{
+              borderRadius: "4px",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              textAlign: "left",
+            }}
+          >
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <CustomListItemIcon>
+                <AppsIcon sx={{ backgroundColor: "rgba(220, 220, 239, 1)" }} />
+              </CustomListItemIcon>
+              <ListItemText primary="Integrate" />
+            </Box>
+
+            <Box sx={{ display: "flex", gap:1 }}>
+              <Box sx={{ display: "flex", gap:1}}>
+                <Image
+                  src={"/logos_meta-icon.svg"}
+                  alt="Meta"
+                  width={24}
+                  height={24}
+                />
+                <Image src={"/install_cms1.svg"} alt="Shopify" width={20} height={20} />
+              </Box>
+              <Box sx={{ display: "flex", gap: 1 }}>
+                <Image src={"/crm2.svg"} alt="Woo" width={20} height={20} />
+                <Image src={"/simple-icons_bigcommerce.svg"} alt="BigCommerce" width={20} height={20} />
+              </Box>
+            </Box>
           </CustomButton>
         </List>
       </Box>
     </Box>
-  )
+  );
 };
