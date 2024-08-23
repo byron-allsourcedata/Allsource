@@ -135,3 +135,9 @@ class AudiencePersistence:
             self.db.commit()
             return AudienceInfoEnum.SUCCESS
         return AudienceInfoEnum.NOT_FOUND
+
+    def get_audience_by_name(self, name: str, user_id: int) -> Audience:
+        return self.db.query(Audience).where(Audience.name == name, Audience.user_id == user_id).first()
+    
+    def get_audience_leads_by_audience_id(self, audience_id: int):
+        return self.db.query(AudienceLeads).where(AudienceLeads.audience_id == audience_id).all()

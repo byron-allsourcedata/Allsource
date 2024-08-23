@@ -2,27 +2,25 @@ from fastapi import HTTPException
 from httpx import Client
 from schemas.integrations.klaviyo import KlaviyoUsersScheme
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
-from .utils import IntegrationsABC
 from typing import List, Any
 from datetime import datetime
 import logging
-from persistence.integrations.klaviyo_persistence import KlaviyoPersistence
+from .utils import IntegrationsABC
+from persistence.audience_persistence import AudiencePersistence
 from persistence.leads_persistence import LeadsPersistence
+from services.leads import LeadsService
 
-class KlaviyoIntegrations():
+class KlaviyoIntegrations(IntegrationsABC):
 
     def __init__(self, integration_persistence: IntegrationsPresistence, 
                  client: Client, 
-                 klaviyo_persistence: KlaviyoPersistence,
-                 leads_persistence: LeadsPersistence,
                  user):
         self.integration_persistence = integration_persistence
-        self.klaviyo_persistence = klaviyo_persistence
-        self.leads_persistence = leads_persistence
         self.client = client
         self.user = user
-        
-    list = None
+        self.audience_persistence: AudiencePersistence
+        self.leads_persistence: LeadsPersistence
+        self.leads_serivce = LeadsService
 
     def __mapped_leads(self, leads: List[Any]) -> List[KlaviyoUsersScheme]:
         klaviyo_users = list()
@@ -52,7 +50,7 @@ class KlaviyoIntegrations():
         response = self.client.get('https://a.klaviyo.com/api/profiles/', headers={'Authorization': f'Klaviyo-API-Key {api_key}', 'revision': '2023-08-15'})
         logging.info(f'Response Klaviyo {response.status_code}')
         if response.status_code != 200:
-            raise HTTPException(status_code=400, detail='Klaviyo credentials not valid')
+            raise HTTPException(status_code=400, detail='Klaviyo credentials inalid')
         return response.json().get('data')
     
 
@@ -70,8 +68,8 @@ class KlaviyoIntegrations():
 
     def __save_leads(self, leads: List[KlaviyoUsersScheme]):
         for lead in leads:
-            klaviyo_user = self.klaviyo_persistence.save_klaviyo_users(lead.model_dump())
-            self.leads_persistence.update_user_leads_by_klaviyo(klaviyo_user.id, self.user['id'])
+            with self.integration_persistence as persistence:
+                persistence.klaviyo.save_leads(lead.model_dump(), self.user['id'])
 
 
     def create_integration(self, api_key: str):
@@ -79,4 +77,42 @@ class KlaviyoIntegrations():
         self.__save_integrations(api_key)
         self.__save_leads(self.__mapped_leads(leads))
         return 
+
+
+    def __get_lists_upd_crt_leads_by_audience(self, list_name):
+        audience = self.audience_persistence.get_audience_by_name(list_name)
+        ids_leads = [audience_leads for audience_leads in self.audience_persistence.get_audience_leads_by_audience_id(audience.id)]
+        for_update = list()
+        for_create = list()
+        for id in ids_leads:
+            lead_user = self.leads_persistence.get_leads_users_by_lead_id(id, self.user['id'])
+            if lead_user.klaviyo_user_id is not None: 
+                for_update.append(lead_user)
+            else: for_create.append(lead_user)  
+        return for_update, for_create
     
+#  audience -> audience_leads -> leads_users -> klaviyo -> leads -> response on update 
+#                                            -> leads -> response to creaete -> response to add in list
+
+
+    def export_leads(self, list_name: str):
+        logging.info(f'Export into Klaviyo {self.user['email']} in list {list_name}')
+        crenetials = self.integration_persistence.get_user_integrations_by_service(self.user['id'], 'klaviyo')
+        headers = {'Authorization': f'Klaviyo-API-Key {crenetials.access_token}', 'revision': '2024-07-15'}
+        lists = self.client.get('https://a.klaviyo.com/api/lists/', headers=headers)
+        list_id = None
+        for klaviyo_list in lists.json().get('data'):
+            if klaviyo_list['attributes']['name'] == list_name:
+                list_id = klaviyo_list['id']
+        if list_id is None:
+            data = { "data": { "type": "list", "attributes": { "name": list_name } } }
+            list_create = self.client.post('ttps://a.klaviyo.com/api/lists/', headers=headers, data=data)
+            list_id = list_create['data']['id']
+        update, create = self.__get_lists_upd_crt_leads_by_audience(list_name)
+        for leads_ids in update:
+            klaviyo_list = self.integration_persistence.klaviyo.get_service_user_by_id(leads_ids.klaviyo_user_id)
+            lead = self.leads_persistence.get_lead_data(leads_ids.lead_id)
+            data = self.leads_persistence.mapped_leads_for_export(lead)
+            self.client.patch('http://a.klaviyo.com/api/pofile', headers=headers, data=data)
+            
+            # дальше добавлять в лист по leads_ids.klaviyo_user_id

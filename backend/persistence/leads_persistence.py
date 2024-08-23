@@ -18,7 +18,6 @@ from models.leads_locations import LeadsLocations
 from models.leads_users import LeadUser
 from models.locations import Locations
 
-from schemas.integrations.integrations import Lead
 
 logger = logging.getLogger(__name__)
 
@@ -266,19 +265,11 @@ class LeadsPersistence:
         max_page = math.ceil(count / per_page) if per_page > 0 else 1
         return leads_data, count, max_page
     
+    def get_leads_users_by_lead_id(self, lead_id: int, user_id: int):
+        return self.db.query(LeadUser).filter(LeadUser.lead_id == lead_id, LeadUser.user_id == user_id).first()
+    
+    def mapped_leads_for_export(self, lead: Lead):
+        ...
 
-    def update_leads_by_customer(self, customer: Lead, user_id: int):
-        existing_lead_user = self.db.query(LeadUser).join(Lead, Lead.id == LeadUser.lead_id).filter(
-                                    Lead.business_email == customer.business_email, LeadUser.user_id == user_id).first()
-        if existing_lead_user:
-            self.db.query(LeadUser).filter(LeadUser.id == existing_lead_user.id).update({LeadUser.status: 'Existing'})
-        else:
-            lead = Lead(**customer.__dict__)
-            self.db.add(lead)
-            self.db.commit()
-            self.db.add(LeadUser(lead_id=lead.id, user_id=user_id, status='New', funnel='Converted'))
-            self.db.commit()
-
-    def update_user_leads_by_klaviyo(self, klaviyo_user_id: str, user_id: int, five_x_five_user_id: int = None):
-        self.db.add(LeadUser(user_id=user_id, funnel='Existing', klaviyo_user_id=klaviyo_user_id))
-        self.db.commit()
+        
+        

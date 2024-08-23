@@ -13,7 +13,7 @@ sys.path.append(parent_dir)
 
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.engine import create_engine
-from models.users_integrations import UserIntegration
+from models.integrations.users_integrations import UserIntegration
 from models.leads import Lead
 from models.leads_users import LeadUser
 from services.integrations.utils import mapped_customers

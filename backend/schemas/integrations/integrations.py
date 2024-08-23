@@ -19,7 +19,6 @@ class KlaviyoCredentials(BaseModel):
 
 class MailchimpCredentials(BaseModel):
     data_center: str
-    store_id: int
     access_token: str
 
 class IntegrationCredentials(BaseModel):

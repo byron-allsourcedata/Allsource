@@ -12,4 +12,6 @@ class LeadUser(Base):
     funnel = Column(VARCHAR, default='Visitor', nullable=False)
     five_x_five_user_id = Column(Integer, nullable=True)
     klaviyo_user_id = Column(Integer, nullable=True)
-
+    shopify_user_id = Column(Integer, nullable=True)
+    bigcommerce_user_id = Column(Integer, nullable=True)
+    mailchimp_user_id = Column(Integer, nullable=True)

@@ -2,10 +2,6 @@ from pydantic import BaseModel, EmailStr
 import typing as tp
 from datetime import datetime
 
-from pydantic import BaseModel, EmailStr
-import typing as tp
-from datetime import datetime
-
 class KlaviyoUsersScheme(BaseModel):
     klaviyo_user_id: str
     email: EmailStr

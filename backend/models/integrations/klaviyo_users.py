@@ -1,9 +1,8 @@
 from sqlalchemy import Column, Integer, VARCHAR, TIMESTAMP
 from datetime import datetime
-from .base import Base
+from models.base import Base
 
-
-class KlaviyoUsers(Base):
+class KlaviyoUser(Base):
 
     __tablename__ = 'klaviyo_users'
     id = Column(Integer, primary_key=True)
