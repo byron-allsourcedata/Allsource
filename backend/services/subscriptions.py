@@ -1,11 +1,13 @@
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
+
+from sqlalchemy.orm import Session
+
 from enums import StripePaymentStatusEnum
 from models.plans import SubscriptionPlan, UserSubscriptionPlan
+from models.subscriptions import Subscription
 from models.users import Users, User
 from persistence.user_persistence import UserPersistence
-from models.subscriptions import Subscription
-from sqlalchemy.orm import Session
 from utils import get_utc_aware_date_for_postgres
 
 ACTIVE_STATUSES = ["active", "trialing", "completed"]
@@ -54,7 +56,7 @@ class SubscriptionService:
             user_plan = user_plan_db.__dict__
             plan_info = plan_info_db.__dict__
             if user_plan["subscription_id"] is None:
-                user_subscription = self.subscription_service.get_subscription(self.user.id)
+                user_subscription = self.get_subscription(user_id)
                 if user_subscription:
                     self.update_subscription_id(user_plan["id"], user_subscription.id)
 
