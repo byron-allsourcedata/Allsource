@@ -4,7 +4,11 @@ import { styled } from "@mui/material/styles";
 import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
 import CodeIcon from '@mui/icons-material/Code';
 import AppsIcon from '@mui/icons-material/Apps';
-
+import { useSlider } from '../context/SliderContext';
+import ManualPopup from '../components/ManualPopup';
+import { useState } from "react";
+import axiosInterceptorInstance from "@/axios/axiosInterceptorInstance";
+import { AxiosError } from "axios";
 
 const CustomButton = styled(Button)(({ theme }) => ({
   width: '100%',
@@ -23,66 +27,166 @@ const CustomButton = styled(Button)(({ theme }) => ({
   lineHeight: '20px',
   fontWeight: '600',
   color: 'rgba(74, 74, 74, 1)',
+  opacity: 1,
+  pointerEvents: 'auto',
+  '&.Mui-disabled': {
+    opacity: 0.6,
+    pointerEvents: 'none',
+  }
 }));
-
 
 const CustomListItemIcon = styled(ListItemIcon)(({ theme }) => ({
   paddingLeft: '0.5em',
   minWidth: 0
 }));
 
-export const ProgressSection: React.FC = () => (
-  <Box sx={{ display: "flex", justifyContent: 'center', alignItems: 'center' }}>
-    <Box sx={{ width: '70%', height:'100%', padding: '2rem', marginTop: '2em', border: '1px solid #e4e4e4', borderRadius: '8px', backgroundColor: '#fff', boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)', marginBottom: '2rem' }}>
-      <Typography variant="h6" component="div" mb={2}>
-        Activation steps
-      </Typography>
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-        <Typography variant="body2" color="textSecondary">
-          Progress
-        </Typography>
-        <Box sx={{ flexGrow: 1, mx: 2 }}>
-  <LinearProgress
-    variant="determinate"
-    value={33}
-    sx={{
-      height: '8px',
-      borderRadius: '4px',
-      '& .MuiLinearProgress-bar': {
-        backgroundColor: 'rgba(110, 193, 37, 1)',
-      },
-    }}
-  />
-</Box>
 
-        <Typography variant="body2" color="textSecondary">
-          33% complete
+
+export const ProgressSection: React.FC = () => {
+  const meItem = sessionStorage.getItem('me');
+const meData = meItem ? JSON.parse(meItem) : {};
+const isIntegrateDisabled = meData.percent_steps < 90;
+const isSetupDisabled = meData.percent_steps < 50;
+  const { setShowSlider } = useSlider();
+
+  const installManually = async () => {
+    try {
+      const response = await axiosInterceptorInstance.get('/install-pixel/manually');
+      setPixelCode(response.data.manual);
+      setOpen(true);
+    } catch (error) {
+      if (error instanceof AxiosError && error.response?.status === 403) {
+        if (error.response.data.status === 'NEED_BOOK_CALL') {
+          sessionStorage.setItem('is_slider_opened', 'true');
+          setShowSlider(true);
+        } else {
+          sessionStorage.setItem('is_slider_opened', 'false');
+          setShowSlider(false); 
+        }
+      } else {
+        console.error('Error fetching data:', error);
+      }
+    }
+  };
+
+  const ActivateTrial = () => {
+    setShowSlider(true);
+  }
+  const SetupPixel = () => {
+    setOpen(true);
+  }
+  const [openmanually, setOpen] = useState(false);
+  const handleManualClose = () => setOpen(false);
+  const [pixelCode, setPixelCode] = useState('');
+
+  return (
+    <Box sx={{ display: "flex", justifyContent: 'center', alignItems: 'center' }}>
+      <Box sx={{
+        width: '70%',
+        height: '100%',
+        padding: '2rem',
+        marginTop: '2em',
+        border: '1px solid #e4e4e4',
+        borderRadius: '8px',
+        backgroundColor: '#fff',
+        boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
+        marginBottom: '2rem',
+        '@media (max-width: 1199px)': {
+          width: '100%',
+          padding: '1.5rem',
+          margin: '1.5rem 0'
+        }
+      }}>
+        <Typography variant="h6" component="div" mb={2} sx={{
+          '@media (max-width: 1199px)': {
+            fontSize: '16px',
+            fontFamily: 'Nunito',
+            color: '#4a4a4a',
+            fontWeight: '600',
+            lineHeight: 'normal',
+            marginBottom: '8px'
+          }
+        }}>
+          Activation steps
         </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+          <Typography variant="body2" color="textSecondary"
+            sx={{
+              '@media (max-width: 1199px)': {
+                fontSize: '14px',
+                fontFamily: 'Nunito',
+                color: '#787878',
+                fontWeight: '700',
+                lineHeight: 'normal'
+              }
+            }}
+          >
+            Progress
+          </Typography>
+          <Box sx={{ flexGrow: 1, mx: 2 }}>
+            <LinearProgress
+              variant="determinate"
+              value={meData.percent_steps}
+              sx={{
+                height: '8px',
+                borderRadius: '4px',
+                '& .MuiLinearProgress-bar': {
+                  backgroundColor: 'rgba(110, 193, 37, 1)',
+                },
+              }}
+            />
+          </Box>
+
+          <Typography variant="body2" color="textSecondary" sx={{
+            '@media (max-width: 1199px)': {
+              fontSize: '14px',
+              fontFamily: 'Nunito',
+              color: '#000',
+              fontWeight: '400',
+              lineHeight: 'normal'
+            }
+          }}>
+            {meData.percent_steps}% complete
+          </Typography>
+        </Box>
+        <List sx={{ mt: 3 }}>
+          <CustomButton disabled={false} onClick={ActivateTrial} sx={{
+            borderRadius: '4px',
+            '@media (max-width: 1199px)': {
+              mb: '16px'
+            }
+          }}>
+            <CustomListItemIcon >
+              <HourglassEmptyIcon sx={{ backgroundColor: 'rgba(220, 220, 239, 1)' }} />
+            </CustomListItemIcon>
+            <ListItemText primary="Activate Trial" />
+          </CustomButton>
+          <CustomButton disabled={isSetupDisabled} onClick={installManually} sx={{
+            borderRadius: '4px',
+            '@media (max-width: 1199px)': {
+              mb: '16px'
+            }
+          }}>
+            <CustomListItemIcon>
+              <CodeIcon sx={{ backgroundColor: 'rgba(220, 220, 239, 1)' }} />
+            </CustomListItemIcon>
+            <ListItemText primary="Setup pixel" />
+          </CustomButton>
+          <ManualPopup open={openmanually} handleClose={handleManualClose} pixelCode={pixelCode} />
+          <CustomButton disabled={isIntegrateDisabled} sx={{
+            borderRadius: '4px'
+          }}>
+            <CustomListItemIcon>
+              <AppsIcon sx={{ backgroundColor: 'rgba(220, 220, 239, 1)' }} />
+            </CustomListItemIcon>
+            <ListItemText primary="Integrate" />
+            <Image src={'/logos_meta-icon.svg'} alt="Meta" width={24} height={24} />
+            <Image src={'/crm1.svg'} alt="Shopify" width={20} height={20} />
+            <Image src={'/crm2.svg'} alt="Woo" width={20} height={20} />
+            <Image src={'/crm3.svg'} alt="Bigcommerce" width={20} height={20} />
+          </CustomButton>
+        </List>
       </Box>
-      <List sx={{ mt: 3 }}>
-        <CustomButton>
-          <CustomListItemIcon >
-            <HourglassEmptyIcon sx={{backgroundColor: 'rgba(220, 220, 239, 1)'}} />
-          </CustomListItemIcon>
-          <ListItemText primary="Activate Trial" />
-        </CustomButton>
-        <CustomButton>
-          <CustomListItemIcon>
-            <CodeIcon sx={{backgroundColor: 'rgba(220, 220, 239, 1)'}} />
-          </CustomListItemIcon>
-          <ListItemText primary="Setup pixel" />
-        </CustomButton>
-        <CustomButton>
-          <CustomListItemIcon>
-            <AppsIcon sx={{backgroundColor: 'rgba(220, 220, 239, 1)'}} />
-          </CustomListItemIcon>
-          <ListItemText primary="Integrate" />
-          <Image src={'/logos_meta-icon.svg'} alt="Meta" width={24} height={24} />
-          <Image src={'/crm1.svg'} alt="Shopify" width={20} height={20} />
-          <Image src={'/crm2.svg'} alt="Woo" width={20} height={20} />
-          <Image src={'/crm3.svg'} alt="Bigcommerce" width={20} height={20} />
-        </CustomButton>
-      </List>
     </Box>
-  </Box>
-);
+  )
+};
