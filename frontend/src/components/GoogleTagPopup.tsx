@@ -30,6 +30,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({open, handleClose}) => {
     const clientSecret = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_SECRET
     const dashboard_url: string = process.env.NEXT_PUBLIC_API_DASHBOARD_URL || 'http://localhost:8000';
 
+    const [loading, setLoading] = useState(false);
     const [session, setSession] = useState<{ token: string } | null>(null);
     const [accounts, setAccounts] = useState<GTMAccount[]>([]);
     const [containers, setContainers] = useState<GTMContainer[]>([]);
@@ -60,6 +61,43 @@ const GoogleTagPopup: React.FC<PopupProps> = ({open, handleClose}) => {
         handleRedirect();
     }, []);
 
+    const fetchExistingTriggers = async (accessToken: string, accountId: string, containerId: string, workspaceId: string) => {
+        try {
+            const response = await axios.get(
+                `https://www.googleapis.com/tagmanager/v2/accounts/${accountId}/containers/${containerId}/workspaces/${workspaceId}/triggers`,
+                { headers: { Authorization: `Bearer ${accessToken}` } }
+            );
+            return response.data.trigger || [];
+        } catch (error) {
+            console.error('Error fetching triggers:', error);
+            throw error;
+        }
+    };
+
+    const findTriggerIdByName = (triggers: any[], triggerName: string) => {
+        const trigger = triggers.find(t => t.name === triggerName);
+        return trigger ? trigger.triggerId : null;
+    };
+
+    const createAllPagesTrigger = async (accessToken: string, accountId: string, containerId: string, workspaceId: string) => {
+        const triggerData = {
+            name: 'All Pages Trigger for pixel script',
+            type: 'pageview',
+            filter: [],
+        };
+
+        try {
+            const response = await axios.post(
+                `https://www.googleapis.com/tagmanager/v2/accounts/${accountId}/containers/${containerId}/workspaces/${workspaceId}/triggers`,
+                triggerData,
+                { headers: { Authorization: `Bearer ${accessToken}` } }
+            );
+            return response.data.triggerId;
+        } catch (error) {
+            console.error('Error creating All Pages trigger:', error);
+            throw error;
+        }
+    };
 
     useEffect(() => {
         const fetchContainers = async () => {
@@ -108,7 +146,42 @@ const GoogleTagPopup: React.FC<PopupProps> = ({open, handleClose}) => {
         }
     };
 
+    const updateTagWithTrigger = async (accessToken: string, accountId: string, containerId: string, workspaceId: string, tagId: string, triggerId: string) => {
+        try {
+            const tagResponse = await axios.get(
+                `https://www.googleapis.com/tagmanager/v2/accounts/${accountId}/containers/${containerId}/workspaces/${workspaceId}/tags/${tagId}`,
+                { headers: { Authorization: `Bearer ${accessToken}` } }
+            );
+
+            const tag = tagResponse.data;
+
+            tag.firingTriggerId = [triggerId];
+
+            await axios.put(
+                `https://www.googleapis.com/tagmanager/v2/accounts/${accountId}/containers/${containerId}/workspaces/${workspaceId}/tags/${tagId}`,
+                tag,
+                { headers: { Authorization: `Bearer ${accessToken}` } }
+            );
+
+            console.log('Tag updated successfully with trigger!');
+        } catch (error) {
+            if (axios.isAxiosError(error)) {
+                console.error('Error updating tag with trigger:', error.message);
+                console.error('Response Data:', error.response?.data);
+                console.error('Response Status:', error.response?.status);
+            } else {
+                console.error('Unexpected error:', error);
+                if (error instanceof Error) {
+                    console.error('Error message:', error.message);
+                }
+            }
+            throw new Error('Failed to update tag with trigger.');
+        }
+    };
+
+
     const handleCreateAndSendTag = async () => {
+        setLoading(true);
         try {
             const accessToken = session?.token || '';
             const accountId = selectedAccount;
@@ -118,6 +191,11 @@ const GoogleTagPopup: React.FC<PopupProps> = ({open, handleClose}) => {
             if (!accountId || !containerId || !workspaceId) {
                 showErrorToast('Please select account, container, and workspace.')
                 return;
+            }
+            const triggers = await fetchExistingTriggers(accessToken, accountId, containerId, workspaceId);
+            let triggerId = findTriggerIdByName(triggers, 'All Pages Trigger for pixel script');
+            if (!triggerId) {
+                triggerId = await createAllPagesTrigger(accessToken, accountId, containerId, workspaceId);
             }
             let manualResponse = await axiosInterceptorInstance.get(`/install-pixel/manually`);
             let pixelCode = manualResponse.data.manual;
@@ -132,13 +210,18 @@ const GoogleTagPopup: React.FC<PopupProps> = ({open, handleClose}) => {
                     }
                 ]
             };
-
-            await axios.post(
-                `https://www.googleapis.com/tagmanager/v2/accounts/${accountId}/containers/${containerId}/workspaces/${workspaceId}/tags`,
-                tagData,
-                {headers: {Authorization: `Bearer ${accessToken}`}}
-            );
-            showToast('Tag created and sent successfully!')
+            try{
+                const tagResponse = await axios.post(
+                    `https://www.googleapis.com/tagmanager/v2/accounts/${accountId}/containers/${containerId}/workspaces/${workspaceId}/tags`,
+                    tagData,
+                    {headers: {Authorization: `Bearer ${accessToken}`}}
+                );
+                const tagId = tagResponse.data.tagId;
+                await updateTagWithTrigger(accessToken, accountId, containerId, workspaceId, tagId, triggerId)
+                showToast('Tag created and sent successfully!')
+            }catch (e){
+                showErrorToast('Tag already created!')
+            }
             handleClose();
         } catch (error) {
             if (axios.isAxiosError(error)) {
@@ -152,6 +235,9 @@ const GoogleTagPopup: React.FC<PopupProps> = ({open, handleClose}) => {
                 }
             }
             showErrorToast('Failed to create and send tag.')
+        }
+        finally {
+            setLoading(false);
         }
     };
 
@@ -187,6 +273,38 @@ const GoogleTagPopup: React.FC<PopupProps> = ({open, handleClose}) => {
     };
 
     return (
+        <>
+        {loading && (
+            <Box
+                sx={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    background: 'rgba(255, 255, 255, 0.8)',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    zIndex: 1000,
+                }}
+            >
+                <Box
+                    sx={{
+                        border: '8px solid #f3f3f3',
+                        borderTop: '8px solid #3498db',
+                        borderRadius: '50%',
+                        width: '40px',
+                        height: '40px',
+                        animation: 'spin 1s linear infinite',
+                        '@keyframes spin': {
+                            '0%': {transform: 'rotate(0deg)'},
+                            '100%': {transform: 'rotate(360deg)'},
+                        },
+                    }}
+                />
+            </Box>
+        )}
         <Modal
             open={open}
             onClose={handleClose}
@@ -438,6 +556,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({open, handleClose}) => {
                 )}
             </Box>
         </Modal>
+        </>
     );
 };
 
