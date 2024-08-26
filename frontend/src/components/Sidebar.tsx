@@ -202,7 +202,7 @@ const Sidebar: React.FC = () => {
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
                         <LeadsIcon />
                     </ListItemIcon>
-                    <ListItemText primary="Leads" />
+                    <ListItemText primary="Contacts" />
                 </ListItem>
                 <ListItem button onClick={() => handleNavigation('/audience')} sx={isActive('/audience') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
