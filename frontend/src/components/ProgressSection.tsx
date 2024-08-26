@@ -61,7 +61,8 @@ const CustomListItemIcon = styled(ListItemIcon)(({ theme }) => ({
 export const ProgressSection: React.FC = () => {
   const { setShowSlider } = useSlider();
   const { percent_steps: userPercentSteps } = useUser();
-  const meItem = typeof window !== 'undefined' ? sessionStorage.getItem('me') : null;
+  const meItem =
+    typeof window !== "undefined" ? sessionStorage.getItem("me") : null;
   const meData = meItem ? JSON.parse(meItem) : { percent_steps: 0 };
   const percentSteps = userPercentSteps || meData.percent_steps;
   const isIntegrateDisabled = percentSteps < 90;
@@ -93,123 +94,165 @@ export const ProgressSection: React.FC = () => {
     setShowSlider(true);
   };
 
-
   const [openmanually, setOpen] = useState(false);
   const handleManualClose = () => setOpen(false);
   const [pixelCode, setPixelCode] = useState("");
 
   return (
-    <Box sx={{ display: "flex", justifyContent: 'flex-end', alignItems: 'center' }}>
-    <Box sx={{
-      width: '70%',
-      height:'100%',
-      padding: '2rem',
-      marginTop: '1.5rem',
-      border: '1px solid #e4e4e4',
-      borderRadius: '8px',
-      backgroundColor: '#fff',
-      boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
-      marginBottom: '2rem',
-      '@media (max-width: 1199px)': {
-        width: '100%',
-        padding: '1.5rem',
-        margin: '1.5rem 0'
-      }
-      }}>
-      <Typography variant="h6" component="div" mb={2} sx={{
-        
-          fontSize: '16px',
-          fontFamily: 'Nunito',
-          color: '#4a4a4a',
-          fontWeight: '600',
-          lineHeight: 'normal',
-          marginBottom: '8px'
-      }}>
-        Activation steps
-      </Typography>
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-        <Typography variant="body2" color="textSecondary" 
+    <Box
+      sx={{ display: "flex", justifyContent: "flex-end", alignItems: "center" }}
+    >
+      <Box
         sx={{
-            fontSize: '14px',
-            fontFamily: 'Nunito',
-            color: '#787878',
-            fontWeight: '700',
-            lineHeight: 'normal'
+          width: "90%",
+          height: "100%",
+          padding: "2rem",
+          marginTop: "1.5rem",
+          border: "1px solid #e4e4e4",
+          borderRadius: "8px",
+          backgroundColor: "#fff",
+          boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
+          marginBottom: "2rem",
+          "@media (max-width: 1199px)": {
+            width: "100%",
+            padding: "1.5rem",
+            margin: "1.5rem 0",
+          },
         }}
+      >
+        <Typography
+          variant="h6"
+          component="div"
+          mb={2}
+          sx={{
+            fontSize: "16px",
+            fontFamily: "Nunito",
+            color: "#4a4a4a",
+            fontWeight: "600",
+            lineHeight: "normal",
+            marginBottom: "8px",
+          }}
         >
-          Progress
+          Activation steps
         </Typography>
-        <Box sx={{ flexGrow: 1, mx: 2 }}>
-  <LinearProgress
-    variant="determinate"
-    value={33}
-    sx={{
-      height: '8px',
-      borderRadius: '4px',
-      '& .MuiLinearProgress-bar': {
-        backgroundColor: 'rgba(110, 193, 37, 1)',
-      },
-    }}
-  />
-</Box>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            mb: 1,
+          }}
+        >
+          <Typography
+            variant="body2"
+            color="textSecondary"
+            sx={{
+              fontSize: "14px",
+              fontFamily: "Nunito",
+              color: "#787878",
+              fontWeight: "700",
+              lineHeight: "normal",
+            }}
+          >
+            Progress
+          </Typography>
+          <Box sx={{ flexGrow: 1, mx: 2 }}>
+            <LinearProgress
+              variant="determinate"
+              value={percentSteps}
+              sx={{
+                height: "8px",
+                borderRadius: "4px",
+                "& .MuiLinearProgress-bar": {
+                  backgroundColor: "rgba(110, 193, 37, 1)",
+                },
+              }}
+            />
+          </Box>
 
-        <Typography variant="body2" color="textSecondary" sx={{
-          fontFamily: 'Nunito',
-          fontSize: '14px',
-          color: '#000',
-          fontWeight: '400',
-          lineHeight: 'normal',
-          '@media (max-width: 1199px)': {
-            fontSize: '14px',
-            fontFamily: 'Nunito',
-            color: '#000',
-            fontWeight: '400',
-            lineHeight: 'normal'
-          }
-        }}>
-          33% complete
-        </Typography>
+          <Typography
+            variant="body2"
+            color="textSecondary"
+            sx={{
+              fontFamily: "Nunito",
+              fontSize: "14px",
+              color: "#000",
+              fontWeight: "400",
+              lineHeight: "normal",
+              "@media (max-width: 1199px)": {
+                fontSize: "14px",
+                fontFamily: "Nunito",
+                color: "#000",
+                fontWeight: "400",
+                lineHeight: "normal",
+              },
+            }}
+          >
+            {percentSteps}% complete
+          </Typography>
+        </Box>
+        <List sx={{ mt: "8px", p: "0" }}>
+          <CustomButton
+          onClick={ActivateTrial}
+            sx={{
+              borderRadius: "4px",
+              mb: "16px",
+              "@media (max-width: 1199px)": {
+                mb: "16px",
+              },
+            }}
+          >
+            <CustomListItemIcon>
+              <HourglassEmptyIcon
+                sx={{ backgroundColor: "rgba(220, 220, 239, 1)" }}
+              />
+            </CustomListItemIcon>
+            <ListItemText primary="Activate Trial" />
+          </CustomButton>
+          <CustomButton
+          onClick={installManually}
+            disabled={isSetupDisabled}
+            sx={{
+              borderRadius: "4px",
+              mb: "16px",
+              "@media (max-width: 1199px)": {
+                mb: "16px",
+              },
+            }}
+          >
+            <CustomListItemIcon>
+              <CodeIcon sx={{ backgroundColor: "rgba(220, 220, 239, 1)" }} />
+            </CustomListItemIcon>
+            <ListItemText primary="Setup pixel" />
+          </CustomButton>
+          <ManualPopup
+              open={openmanually}
+              handleClose={handleManualClose}
+              pixelCode={pixelCode}
+            />
+          <CustomButton
+            disabled={isIntegrateDisabled}
+            sx={{
+              marginBottom: "0",
+              borderRadius: "4px",
+            }}
+          >
+            <CustomListItemIcon>
+              <AppsIcon sx={{ backgroundColor: "rgba(220, 220, 239, 1)" }} />
+            </CustomListItemIcon>
+            <ListItemText primary="Integrate" />
+            <Image
+              src={"/logos_meta-icon.svg"}
+              alt="Meta"
+              width={24}
+              height={24}
+            />
+            <Image src={"/crm1.svg"} alt="Shopify" width={20} height={20} />
+            <Image src={"/crm2.svg"} alt="Woo" width={20} height={20} />
+            <Image src={"/crm3.svg"} alt="Bigcommerce" width={20} height={20} />
+          </CustomButton>
+        </List>
       </Box>
-      <List sx={{ mt: '8px', p: '0' }}>
-        <CustomButton sx={{ 
-          borderRadius: '4px',
-           mb: '16px',
-          '@media (max-width: 1199px)': {
-            mb: '16px'
-          }
-          }}>
-          <CustomListItemIcon >
-            <HourglassEmptyIcon sx={{backgroundColor: 'rgba(220, 220, 239, 1)'}} />
-          </CustomListItemIcon>
-          <ListItemText primary="Activate Trial" />
-        </CustomButton>
-        <CustomButton sx={{ 
-          borderRadius: '4px',
-           mb: '16px',
-          '@media (max-width: 1199px)': {
-            mb: '16px'
-          }
-          }}>
-          <CustomListItemIcon>
-            <CodeIcon sx={{backgroundColor: 'rgba(220, 220, 239, 1)'}} />
-          </CustomListItemIcon>
-          <ListItemText primary="Setup pixel" />
-        </CustomButton>
-        <CustomButton sx={{
-          marginBottom: '0', 
-          borderRadius: '4px'
-          }}>
-          <CustomListItemIcon>
-            <AppsIcon sx={{backgroundColor: 'rgba(220, 220, 239, 1)'}} />
-          </CustomListItemIcon>
-          <ListItemText primary="Integrate" />
-          <Image src={'/logos_meta-icon.svg'} alt="Meta" width={24} height={24} />
-          <Image src={'/crm1.svg'} alt="Shopify" width={20} height={20} />
-          <Image src={'/crm2.svg'} alt="Woo" width={20} height={20} />
-          <Image src={'/crm3.svg'} alt="Bigcommerce" width={20} height={20} />
-        </CustomButton>
-      </List>
     </Box>
-  </Box>
   );
 };

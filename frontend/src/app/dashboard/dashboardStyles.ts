@@ -28,6 +28,7 @@ export const dashboardStyles: { [key: string]: SxProps<Theme> } = {
     padding: '1.125rem 1.5rem',
     justifyContent: 'space-between',
     alignItems: 'center',
+    minHeight: '9vh',
     color: 'rgba(244, 87, 69, 1)',
     borderBottom: `1px solid rgba(228, 228, 228, 1)`,
   },

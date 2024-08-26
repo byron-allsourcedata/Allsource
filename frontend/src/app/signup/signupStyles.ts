@@ -131,8 +131,8 @@ export const signupStyles: { [key: string]: SxProps<Theme> } = {
     backgroundColor: '#F45745',
     color: '#fff',
     '&:hover': {
-        borderColor: '#000000',
-        backgroundColor: 'lightgreen',
+        borderColor: '#F45745',
+        backgroundColor: '#F45745',
     },
     fontWeight: 'bold',
     margin: '24px 0px 0 0px',
@@ -172,12 +172,6 @@ formInput: {
       '& .MuiOutlinedInput-input': {
         padding: '12px 16px 13px 16px',
         fontFamily: 'Nunito',
-      },
-      '& .MuiOutlinedInput-notchedOutline': {
-        borderColor: '#A3B0C2',
-      },
-      '&:hover .MuiOutlinedInput-notchedOutline': {
-        borderColor: '#A3B0C2',
       },
       '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
         borderColor: '#0000FF',

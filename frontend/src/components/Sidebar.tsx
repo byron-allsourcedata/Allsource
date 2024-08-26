@@ -16,6 +16,7 @@ import Image from 'next/image';
 import { useSlider } from '@/context/SliderContext';
 import { AxiosError } from 'axios';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
+import { Height } from '@mui/icons-material';
 
 const sidebarStyles = {
     container: {
@@ -26,7 +27,7 @@ const sidebarStyles = {
         fontWeight: '500',
         backgroundColor: 'rgba(255, 255, 255, 1)',
         borderRight: '1px solid rgba(228, 228, 228, 1)',
-        height: '100vh',
+        height: '91vh',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'start'
@@ -95,9 +96,13 @@ const sidebarStyles = {
         marginBottom: '1rem',
         boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
     },
+    ListItem: {
+        minHeight: '4.6em' 
+    },
     activeItem: {
-        borderLeft: '4px solid rgba(80, 82, 178, 1)',
+        borderLeft: '3px solid rgba(80, 82, 178, 1)',
         color: 'rgba(80, 82, 178, 1)',
+        minHeight: '4.5em',
         '& .MuiSvgIcon-root': {
             color: 'rgba(80, 82, 178, 1)',
         },
@@ -187,49 +192,49 @@ const Sidebar: React.FC = () => {
     return (
         <Box sx={sidebarStyles.container} >
             <List sx={sidebarStyles.menu}>
-                <ListItem button onClick={() => handleNavigation('/dashboard')} sx={isActive('/dashboard') ? sidebarStyles.activeItem : {}}>
+                <ListItem button onClick={() => handleNavigation('/dashboard')} sx={isActive('/dashboard') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
                         <SpaceDashboardIcon />
                     </ListItemIcon>
                     <ListItemText primary="Dashboard" />
                 </ListItem>
-                <ListItem button onClick={() => handleNavigation('/leads')} sx={isActive('/leads') ? sidebarStyles.activeItem : {}}>
+                <ListItem button onClick={() => handleNavigation('/leads')} sx={isActive('/leads') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
                         <LeadsIcon />
                     </ListItemIcon>
                     <ListItemText primary="Leads" />
                 </ListItem>
-                <ListItem button onClick={() => handleNavigation('/audience')} sx={isActive('/audience') ? sidebarStyles.activeItem : {}}>
+                <ListItem button onClick={() => handleNavigation('/audience')} sx={isActive('/audience') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
                         <CategoryIcon />
                     </ListItemIcon>
                     <ListItemText primary="Audience" />
                 </ListItem>
-                <ListItem button onClick={() => handleNavigation('/integrations')} sx={isActive('/integrations') ? sidebarStyles.activeItem : {}}>
+                <ListItem button onClick={() => handleNavigation('/integrations')} sx={isActive('/integrations') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
                         <IntegrationsIcon />
                     </ListItemIcon>
                     <ListItemText primary="Integrations" />
                 </ListItem>
-                <ListItem button onClick={() => handleNavigation('/analytics')} sx={isActive('/analytics') ? sidebarStyles.activeItem : {}}>
+                <ListItem button onClick={() => handleNavigation('/analytics')} sx={isActive('/analytics') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
                         <AnalyticsIcon />
                     </ListItemIcon>
                     <ListItemText primary="Analytics" />
                 </ListItem>
-                <ListItem button onClick={() => handleNavigation('/suppressions')} sx={isActive('/suppressions') ? sidebarStyles.activeItem : {}}>
+                <ListItem button onClick={() => handleNavigation('/suppressions')} sx={isActive('/suppressions') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
                         <FeaturedPlayListIcon />
                     </ListItemIcon>
                     <ListItemText primary="Suppressions" />
                 </ListItem>
-                <ListItem button onClick={() => handleNavigation('/rules')} sx={isActive('/rules') ? sidebarStyles.activeItem : {}}>
+                <ListItem button onClick={() => handleNavigation('/rules')} sx={isActive('/rules') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
                         <RuleFolderIcon />
                     </ListItemIcon>
                     <ListItemText primary="Rules" />
                 </ListItem>
-                <ListItem button onClick={() => handleNavigation('/partners')} sx={isActive('/partners') ? sidebarStyles.activeItem : {}}>
+                <ListItem button onClick={() => handleNavigation('/partners')} sx={isActive('/partners') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
                         <AccountBoxIcon />
                     </ListItemIcon>
@@ -238,7 +243,7 @@ const Sidebar: React.FC = () => {
             </List>
             <SetupSection meData={meData ? meData : { percent_steps: 0 }} />
             <Box sx={sidebarStyles.settings}>
-                <ListItem button onClick={() => handleNavigation('/settings')} sx={isActive('/settings') ? sidebarStyles.activeItem : {}}>
+                <ListItem button onClick={() => handleNavigation('/settings')} sx={isActive('/settings') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
                         <SettingsIcon />
                     </ListItemIcon>

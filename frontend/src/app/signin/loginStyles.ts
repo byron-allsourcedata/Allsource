@@ -124,8 +124,8 @@ export const loginStyles: { [key: string]: SxProps<Theme> } = {
         backgroundColor: '#F45745',
         color: '#FFFFFF',
         '&:hover': {
-            borderColor: '#000000',
-            backgroundColor: 'lightgreen',
+            borderColor: '#F45745',
+            backgroundColor: '#F45745',
         },
         fontWeight: 'bold',
         margin: '0',
@@ -135,6 +135,9 @@ export const loginStyles: { [key: string]: SxProps<Theme> } = {
         fontFamily: 'Nunito',
         '@media (max-width: 440px)': {
             marginTop: '20px',
+            '&:hover': {
+            borderColor: '#F45745',
+            backgroundColor: '#F45745'}
         }
     },
     loginText: {

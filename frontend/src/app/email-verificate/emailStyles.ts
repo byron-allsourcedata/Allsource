@@ -6,16 +6,13 @@ export const emailStyles: { [key: string]: SxProps<Theme> } = {
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: '50vh',
+    minHeight: '84vh',
     backgroundColor: '#ffffff',
     width: '100%',
     maxWidth: '32rem',
     margin: '0 auto',
     position: 'relative',
-    boxShadow: '0rem 2px 8px 0px #00000033',
-    borderRadius: '0.625rem',
     border: '0.125rem solid transparent',
-    mt: 10,
     '@media (max-width: 440px)': {
       boxShadow: '0rem 0px 0px 0px #00000033',
       border: 'none',
@@ -27,8 +24,16 @@ export const emailStyles: { [key: string]: SxProps<Theme> } = {
       marginTop: '2em',
     },
     '@media (min-width: 1500px)': {
-      marginTop: 'calc(16vh)',
+      marginTop: 'calc(12vh)',
     },
+  },
+  mainbox: {
+    boxShadow: '0rem 2px 8px 0px #00000033',
+    borderRadius: '0.625rem',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center'
   },
   hidepc: {
     display: 'none',
@@ -39,6 +44,7 @@ export const emailStyles: { [key: string]: SxProps<Theme> } = {
     marginTop: '10px',
     justifyContent: 'space-between',
     alignItems: 'center',
+    maxHeight: '16vh',
     width: '100%',
     color: 'rgba(244, 87, 69, 1)',
   },

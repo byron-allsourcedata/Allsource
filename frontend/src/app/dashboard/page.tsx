@@ -142,7 +142,6 @@ const SupportSection: React.FC = () => (
   <Box sx={{
     display: "flex",
     alignItems: "flex-end",
-    height: "100%"
   }}>
     <Box
       sx={{
@@ -152,7 +151,6 @@ const SupportSection: React.FC = () => (
         boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
         textAlign: "left",
         width: "100%",
-        marginBottom: "1em",
         border: "1px solid rgba(228, 228, 228, 1)",
         '@media (max-width: 1199px)': {
           width: '100%',
@@ -172,7 +170,7 @@ const SupportSection: React.FC = () => (
         color="textSecondary"
         mb={2}
         sx={{
-          padding: "1em 0em 1.5em 1em",
+          padding: "0em 0em 1.5em 0.5em",
           fontFamily: "Nunito",
           fontSize: "14px",
           fontWeight: "700",
@@ -194,7 +192,7 @@ const SupportSection: React.FC = () => (
         <PopupButton
           className="book-call-button"
           styles={{
-            marginLeft: '2em',
+            marginLeft: '1.5em',
             textWrap: "nowrap",
             color: "rgba(80, 82, 178, 1)",
             fontFamily: "Nunito",

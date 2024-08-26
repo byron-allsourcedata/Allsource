@@ -125,16 +125,17 @@ export const styles: { [key: string]: SxProps<Theme> } = {
     paddingLeft: '20px'
   },
   formContainer: {
-    pt: 10,
     display: 'flex',
+    flexDirection: 'column',
     maxWidth: '556px',
     width: '100%',
-    flexDirection: 'column',
-    alignItems: 'start',
+    height: '82vh',
+    alignItems: 'center',
+    justifyContent: 'center',
     borderRadius: '0.5em',
     backgroundColor: '#fff',
-    '@media (max-width: 400px)': { pl: 2, pt: 0 },
-    '@media (max-width: 600px)': { pl: 0, pt: 8, gap: 1 },
+    '@media (max-width: 400px)': { pl: 2, pt: 0, height: '77vh',  },
+    '@media (max-width: 600px)': { pl: 0, pt: 8, gap: 1, alignItems: 'start',justifyContent: 'start',},
     '@media (max-height: 670px)': { pl: 0, pt: 1, gap: 0 },
     '@media (min-width: 1500px)': {pt: 'calc(15vh)',},
   },
@@ -163,7 +164,7 @@ export const styles: { [key: string]: SxProps<Theme> } = {
     fontWeight: '400',
     lineHeight: '21.82px',
     textAlign: 'left',
-    paddingBottom: '0.5em',
+    paddingBottom: '0.75em',
     '@media (max-width: 600px)': { marginBottom: 0.35, fontSize: '14px', fontWeight: '400' }
   },
 
@@ -179,6 +180,9 @@ export const styles: { [key: string]: SxProps<Theme> } = {
     },
     '& .MuiInputLabel-root': {
       top: '-5px',
+    },
+    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+      borderColor: '#0000FF',
     },
   },
   submitButton: {

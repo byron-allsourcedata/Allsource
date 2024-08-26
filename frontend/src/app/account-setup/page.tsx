@@ -19,6 +19,7 @@ import { useUser } from "../../context/UserContext";
 import axiosInterceptorInstance from "../../axios/axiosInterceptorInstance";
 import { showErrorToast } from "../../components/ToastNotification";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { accountStyles } from "@/css/accountDetails";
 
 const AccountSetup = () => {
   const [organizationName, setOrganizationName] = useState("");
@@ -34,6 +35,17 @@ const AccountSetup = () => {
   });
   const router = useRouter();
   const { full_name, email } = useUser();
+
+  const [isFocused, setIsFocused] = useState(false);
+
+
+  const handleFocus = () => {
+    setIsFocused(true);
+  };
+
+  const handleBlur = () => {
+    setIsFocused(false);
+  };
 
   const [activeTab, setActiveTab] = useState(0);
 
@@ -91,30 +103,30 @@ const AccountSetup = () => {
   const getButtonStyles = (isSelected: boolean): any => {
     return isSelected
       ? {
-        ...styles.employeeButton,
-        backgroundColor: "rgba(249, 189, 182, 1)",
-        color: "black",
-      }
+          ...styles.employeeButton,
+          backgroundColor: "rgba(249, 189, 182, 1)",
+          color: "black",
+        }
       : { ...styles.employeeButton, color: "black" };
   };
 
   const getButtonVisitsStyles = (isSelected: boolean): any => {
     return isSelected
       ? {
-        ...styles.visitButton,
-        backgroundColor: "rgba(249, 189, 182, 1)",
-        color: "black",
-      }
+          ...styles.visitButton,
+          backgroundColor: "rgba(249, 189, 182, 1)",
+          color: "black",
+        }
       : { ...styles.visitButton, color: "black" };
   };
 
   const getButtonRolesStyles = (isSelected: boolean): any => {
     return isSelected
       ? {
-        ...styles.roleButton,
-        backgroundColor: "rgba(249, 189, 182, 1)",
-        color: "black",
-      }
+          ...styles.roleButton,
+          backgroundColor: "rgba(249, 189, 182, 1)",
+          color: "black",
+        }
       : { ...styles.roleButton, color: "black" };
   };
 
@@ -132,16 +144,6 @@ const AccountSetup = () => {
     setErrors({ ...errors, selectedVisits: "" });
   };
 
-  const handleWebsiteLinkChange = (e: { target: { value: any } }) => {
-    const value = e.target.value;
-    setWebsiteLink(value);
-
-    const websiteLinkError = validateField(value, "website");
-    setErrors((prevErrors) => ({
-      ...prevErrors,
-      websiteLink: websiteLinkError,
-    }));
-  };
 
   const validateField = (
     value: string,
@@ -214,7 +216,7 @@ const AccountSetup = () => {
     }
   };
 
-  const handleWebsiteLink = (event: { target: { value: any; }; }) => {
+  const handleWebsiteLink = (event: { target: { value: any } }) => {
     const input = event.target.value;
 
     if (input.startsWith("https://")) {
@@ -222,6 +224,12 @@ const AccountSetup = () => {
     } else {
       setWebsiteLink(`https://${input}`);
     }
+
+    const websiteError = validateField(input, "website");
+    setErrors((prevErrors) => ({
+      ...prevErrors,
+      websiteLink: websiteError,
+    }));
   };
 
   const isFormValid = () => {
@@ -238,13 +246,13 @@ const AccountSetup = () => {
 
   const isFormBusinessValid = () => {
     const errors = {
-      selectedEmployees: selectedRoles ? "" : "Please select a number of employees",
-      selectedRoles: selectedRoles ? "": "Please select your role"
+      selectedEmployees: selectedRoles
+        ? ""
+        : "Please select a number of employees",
+      selectedRoles: selectedRoles ? "" : "Please select your role",
     };
 
-    return (
-      !errors.selectedRoles && !errors.selectedEmployees
-    );
+    return !errors.selectedRoles && !errors.selectedEmployees;
   };
 
   const ranges = [
@@ -304,17 +312,22 @@ const AccountSetup = () => {
             aria-expanded={open ? "true" : undefined}
             onClick={handleProfileMenuClick}
             sx={{
+              minWidth: '32px',
+              padding: '8px',
+              color: 'rgba(128, 128, 128, 1)',
+              border: '1px solid rgba(184, 184, 184, 1)',
+              borderRadius: '3.27px',
               position: "relative",
               display: "none",
               right: 0,
               "@media (max-width: 600px)": {
                 display: "flex",
-                mr: 0,
+                mr: 2,
+                mb: 2,
                 position: "inherit",
-              },
-            }}
+              }, }}
           >
-            <PersonIcon sx={styles.account} />
+            <Image src={'/Person.svg'} alt="Person" width={18} height={18} />
           </Button>
           <Menu
             id="profile-menu"
@@ -425,34 +438,43 @@ const AccountSetup = () => {
         </Box>
 
         <Button
-          aria-controls={open ? "profile-menu" : undefined}
-          aria-haspopup="true"
-          aria-expanded={open ? "true" : undefined}
-          onClick={handleProfileMenuClick}
-          sx={{ "@media (max-width: 600px)": { display: "none" } }}
-        >
-          <PersonIcon sx={styles.account} />
-        </Button>
-        <Menu
-          id="profile-menu"
-          anchorEl={anchorEl}
-          open={open}
-          onClose={handleProfileMenuClose}
-          MenuListProps={{
-            "aria-labelledby": "profile-menu-button",
-          }}
-        >
-          <Box sx={{ p: 2 }}>
-            <Typography variant="h6">{full_name}</Typography>
-            <Typography variant="body2" color="textSecondary">
-              {email}
-            </Typography>
-          </Box>
-          <MenuItem onClick={handleSettingsClick}>Settings</MenuItem>
-          <MenuItem onClick={handleSignOut}>Sign Out</MenuItem>
-        </Menu>
+            aria-controls={open ? "profile-menu" : undefined}
+            aria-haspopup="true"
+            aria-expanded={open ? "true" : undefined}
+            onClick={handleProfileMenuClick}
+            sx={{
+              minWidth: '32px',
+              padding: '8px',
+              color: 'rgba(128, 128, 128, 1)',
+              border: '1px solid rgba(184, 184, 184, 1)',
+              borderRadius: '3.27px',
+            marginRight: 3,
+          mb: 1,
+        "@media (max-width: 600px)": { display: "none" }  }}
+          >
+            <Image src={'/Person.svg'} alt="Person" width={18} height={18} />
+          </Button>
+          <Menu
+            id="profile-menu"
+            anchorEl={anchorEl}
+            open={open}
+            onClose={handleProfileMenuClose}
+            MenuListProps={{
+              "aria-labelledby": "profile-menu-button",
+            }}
+          >
+            <Box sx={{ p: 2 }}>
+              <Typography variant="h6">{full_name}</Typography>
+              <Typography variant="body2" color="textSecondary">
+                {email}
+              </Typography>
+            </Box>
+            <MenuItem onClick={handleSettingsClick}>Settings</MenuItem>
+            <MenuItem onClick={handleSignOut}>Sign Out</MenuItem>
+          </Menu>
       </Box>
       <Box sx={styles.formContainer}>
+        <Box sx={styles.form}>
         <Typography variant="h5" component="h1" sx={styles.title}>
           Welcome {full_name},
         </Typography>
@@ -481,14 +503,19 @@ const AccountSetup = () => {
               fullWidth
               label="Enter website link"
               variant="outlined"
-              placeholder="example.com"
+              placeholder={isFocused ? "example.com" : ""}
               sx={styles.formField}
+              InputLabelProps={{ sx: accountStyles.inputLabel }}
               value={websiteLink.replace(/^https?:\/\//, '')}
               onChange={handleWebsiteLink}
+              onFocus={handleFocus}
+              onBlur={handleBlur}
               error={!!errors.websiteLink}
               helperText={errors.websiteLink}
               InputProps={{
-                startAdornment: <InputAdornment position="start">https://</InputAdornment>,
+                startAdornment: isFocused && (
+                  <InputAdornment position="start">https://</InputAdornment>
+                ),
               }}
             />
             <Typography variant="body1" sx={styles.text}>
@@ -518,11 +545,13 @@ const AccountSetup = () => {
                 ...styles.submitButton,
                 opacity: isFormValid() ? 1 : 0.6,
                 pointerEvents: isFormValid() ? "auto" : "none",
-                backgroundColor: isFormValid() ? 'rgba(244, 87, 69, 1)' : 'rgba(244, 87, 69, 0.4)',
-                '&.Mui-disabled': {
-                  backgroundColor: 'rgba(244, 87, 69, 0.6)',
-                  color: '#fff'
-                }
+                backgroundColor: isFormValid()
+                  ? "rgba(244, 87, 69, 1)"
+                  : "rgba(244, 87, 69, 0.4)",
+                "&.Mui-disabled": {
+                  backgroundColor: "rgba(244, 87, 69, 0.6)",
+                  color: "#fff",
+                },
               }}
               onClick={handleNextClick}
               disabled={!isFormValid()}
@@ -581,11 +610,13 @@ const AccountSetup = () => {
                 ...styles.submitButton,
                 opacity: isFormValid() ? 1 : 0.6,
                 pointerEvents: isFormValid() ? "auto" : "none",
-                backgroundColor: isFormValid() ? 'rgba(244, 87, 69, 1)' : 'rgba(244, 87, 69, 0.4)',
-                '&.Mui-disabled': {
-                  backgroundColor: 'rgba(244, 87, 69, 0.6)',
-                  color: '#fff'
-                }
+                backgroundColor: isFormValid()
+                  ? "rgba(244, 87, 69, 1)"
+                  : "rgba(244, 87, 69, 0.4)",
+                "&.Mui-disabled": {
+                  backgroundColor: "rgba(244, 87, 69, 0.6)",
+                  color: "#fff",
+                },
               }}
               onClick={handleSubmit}
               disabled={!isFormBusinessValid()}
@@ -594,6 +625,7 @@ const AccountSetup = () => {
             </Button>
           </>
         )}
+        </Box>
       </Box>
     </Box>
   );
