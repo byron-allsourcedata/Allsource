@@ -140,8 +140,13 @@ const VerifyPixelIntegration: React.FC = () => {
 
 const SupportSection: React.FC = () => (
   <Box sx={{
-    display: "flex",
-    alignItems: "flex-end",
+    position: "fixed", 
+    bottom: 20,          
+    width: "86%",     
+    '@media (max-width: 1400px)': {
+      position: 'static', 
+      width: '100%',
+    }
   }}>
     <Box
       sx={{

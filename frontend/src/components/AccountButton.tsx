@@ -48,7 +48,7 @@ const AccountButton: React.FC = () => {
               color: 'rgba(128, 128, 128, 1)',
               border: '1px solid rgba(184, 184, 184, 1)',
               borderRadius: '3.27px',
-              padding: '6px'
+              padding: '7px'
             }}
           >
             <Typography sx={{

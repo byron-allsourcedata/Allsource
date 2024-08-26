@@ -68,7 +68,7 @@ const TrialStatus: React.FC = () => {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '8px 10px',
+        padding: '6.25px 10px',
         backgroundColor: backgroundColor,
         borderRadius: '3.27px',
         color: textColor,

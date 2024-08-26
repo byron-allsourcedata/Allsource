@@ -35,7 +35,7 @@ const sidebarStyles = {
     menu: {
         alignItems: 'center',
         paddingTop: '0 !important',
-        paddingBottom: '2.9375rem !important',
+        paddingBottom: '2.75rem !important',
         '& .MuiListItem-root': {
             paddingBottom: '1rem',
             paddingTop: '1rem',
@@ -97,7 +97,7 @@ const sidebarStyles = {
         boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
     },
     ListItem: {
-        minHeight: '4.6em' 
+        minHeight: '4.5em' 
     },
     activeItem: {
         borderLeft: '3px solid rgba(80, 82, 178, 1)',
