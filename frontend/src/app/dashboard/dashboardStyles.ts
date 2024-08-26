@@ -25,10 +25,9 @@ export const dashboardStyles: { [key: string]: SxProps<Theme> } = {
   },
   headers: {
     display: 'flex',
-    marginTop: '10px',
+    padding: '1.125rem 1.5rem',
     justifyContent: 'space-between',
     alignItems: 'center',
-    width: '100%',
     color: 'rgba(244, 87, 69, 1)',
     borderBottom: `1px solid rgba(228, 228, 228, 1)`,
   },
@@ -40,8 +39,9 @@ export const dashboardStyles: { [key: string]: SxProps<Theme> } = {
     borderRadius: '3.27px'
   },
   logoContainer: {
-    paddingLeft: '2.5em',
-    paddingRight: '0.5em',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '5.25rem'
   },
   title: {
     mb: 2,
@@ -98,9 +98,6 @@ export const dashboardStyles: { [key: string]: SxProps<Theme> } = {
     fontFamily: 'Nunito',
   },
   mainItemContent: {
-    '@media (max-width: 1199px)': {
-        paddingRight: '24px'
-    },
     '@media (max-width: 900px)': {
         paddingTop: '72px',
         paddingRight: 0
@@ -108,6 +105,8 @@ export const dashboardStyles: { [key: string]: SxProps<Theme> } = {
     }
   },
   mainItemContentInner: {
+    position: 'relative',
+    paddingRight: '24px',
     '@media (max-width: 900px)': {
         padding: '0 16px 32px'
     }
