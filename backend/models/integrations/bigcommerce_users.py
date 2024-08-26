@@ -4,7 +4,7 @@ from datetime import datetime
 
 
 class BigCommerceUser(Base):
-    __tablename__ = 'bigcommerce_users'
+    __tablename__ = 'integration_bigcommerce_users'
     id = Column(BigInteger, primary_key=True)
     authentication_force_password_reset = Column(Boolean, default=False)
     company = Column(Text)

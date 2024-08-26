@@ -4,7 +4,7 @@ from models.base import Base
 
 class KlaviyoUser(Base):
 
-    __tablename__ = 'klaviyo_users'
+    __tablename__ = 'integration_klaviyo_users'
     id = Column(Integer, primary_key=True)
     email = Column(VARCHAR, nullable=False)
     phone_number = Column(VARCHAR)

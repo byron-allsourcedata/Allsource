@@ -4,7 +4,7 @@ from datetime import datetime
 
 
 class ShopifyUser(Base):
-    __tablename__ = 'shopify_users'
+    __tablename__ = 'integration_shopify_users'
     id = Column(Integer, primary_key=True, autoincrement=True)
     shopify_user_id = Column(Integer, nullable=False)
     email = Column(VARCHAR, nullable=False)

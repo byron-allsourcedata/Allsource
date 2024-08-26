@@ -141,3 +141,10 @@ class AudiencePersistence:
     
     def get_audience_leads_by_audience_id(self, audience_id: int):
         return self.db.query(AudienceLeads).where(AudienceLeads.audience_id == audience_id).all()
+    
+    def get_audience_by_id(self, audience_id: int) -> Audience:
+        return self.db.query(Audience).filter(Audience.id == audience_id).first()
+    
+    def get_audiences(self):
+        return self.db.query(Audience).all()
+    

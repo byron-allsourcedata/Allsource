@@ -4,7 +4,7 @@ from sqlalchemy import Column, VARCHAR, Boolean, Integer, Float, TIMESTAMP
 
 
 class MailchimpUser(Base):
-    __tablename__ = 'mailchimp_users'
+    __tablename__ = 'integration_mailchimp_users'
     id = Column(Integer, primary_key=True, autoincrement=True)
     mailchimp_user_id = Column(VARCHAR)
     email = Column(VARCHAR, nullable=False)

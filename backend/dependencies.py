@@ -299,6 +299,7 @@ def get_integrations_presistence(db: Session = Depends(get_db)) -> IntegrationsP
 
 def get_integration_service(user: User = Depends(check_user_authentication), 
                             db: Session = Depends(get_db), 
+                            audience_persistence = Depends(get_audience_persistence),
                             user_integration_presistence: IntegrationsPresistence = Depends(get_integrations_presistence),
                             lead_presistence: LeadsPersistence = Depends(get_leads_persistence)):
-    return IntegrationService(db, user_integration_presistence, lead_presistence, user)
+    return IntegrationService(db, user_integration_presistence, lead_presistence, audience_persistence, user)
