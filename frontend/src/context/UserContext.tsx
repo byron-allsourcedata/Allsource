@@ -42,8 +42,20 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
         const currentDate = new Date();
 
         // Calculate the difference in days
-        const timeDifference = endDate.getTime() - currentDate.getTime();
-        const daysDifference = Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
+        let timeDifference = endDate.getTime() - currentDate.getTime();
+
+        if (timeDifference < currentDate.getTime()) {
+          fetchUserData().then(userData => {
+            if (userData) {
+              setEmail(userData.email);
+              setFullName(userData.full_name);
+              setWebsite(userData.company_website);
+              setPercent(userData.percent_steps)
+            }
+          });
+          timeDifference = (new Date(storedData.plan_end).getTime()) - currentDate.getTime();
+        }
+        const daysDifference = Math.ceil((timeDifference - 3600000) / (1000 * 60 * 60 * 24));
 
         // Update the state with the calculated days difference
         setDaysDifference(daysDifference);

@@ -42,8 +42,8 @@ class UserPersistence:
             UserSubscriptionPlan.subscription_id == UserSubscriptions.id
         ).filter(
             UserSubscriptionPlan.user_id == user_id,
-            UserSubscriptions.is_cancelled == 'false'
-        ).first()
+        ).order_by(
+            UserSubscriptionPlan.id.desc()).first()
         if user_plan:
             return {
                 "is_trial": user_plan.is_trial,
