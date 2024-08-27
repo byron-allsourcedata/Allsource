@@ -1,3 +1,4 @@
+import { red } from '@mui/material/colors';
 import { SxProps, Theme } from '@mui/system';
 
 export const loginStyles: { [key: string]: SxProps<Theme> } = {
@@ -124,9 +125,8 @@ export const loginStyles: { [key: string]: SxProps<Theme> } = {
         backgroundColor: '#F45745',
         color: '#FFFFFF',
         '&:hover': {
-            borderColor: '#F45745',
-            backgroundColor: '#F45745',
-        },
+            backgroundColor: red[700],
+          },
         fontWeight: 'bold',
         margin: '0',
         padding: '10px 24px',

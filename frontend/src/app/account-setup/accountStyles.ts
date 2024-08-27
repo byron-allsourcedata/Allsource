@@ -186,7 +186,7 @@ export const styles: { [key: string]: SxProps<Theme> } = {
     },
   },
   form: {
-    display: 'flex', flexDirection: 'column', justifyContent: 'center', alignContent: 'start', '@media (max-width: 400px)': { paddingLeft: 2, gap:0.25,}, '@media (max-width: 600px)': { paddingRight: 1, paddingLeft: 1, gap:0.25,}
+    display: 'flex', flexDirection: 'column', justifyContent: 'center', alignContent: 'start', '@media (max-width: 400px)': { paddingLeft: 2,}, '@media (max-width: 600px)': { paddingRight: 1, paddingLeft: 1,}
   },
   submitButton: {
     backgroundColor: 'rgba(244, 87, 69, 1)',
