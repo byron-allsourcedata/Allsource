@@ -1,10 +1,7 @@
 import logging
-from sqlalchemy.orm import Session
 
 from enums import UserAuthorizationStatus
-from models.users import Users
 from persistence.plans_persistence import PlansPersistence
-from models.plans import SubscriptionPlan, UserSubscriptionPlan
 from services.subscriptions import SubscriptionService
 
 logger = logging.getLogger(__name__)

@@ -1,16 +1,18 @@
-from sqlalchemy import func
-from config.stripe import StripeConfig
+import logging
+from datetime import datetime, timedelta
 from typing import List
+
+from sqlalchemy import func
 from sqlalchemy.orm import Session
-from datetime import datetime, timedelta, timezone
-from models.plans import SubscriptionPlan, UserSubscriptionPlan
+
+from config.stripe import StripeConfig
+from models.plans import SubscriptionPlan
 from models.subscriptions import UserSubscriptions
 from models.users import Users, User
-import logging
-
-from services.subscriptions import SubscriptionService
-from persistence.user_persistence import UserPersistence
 from persistence.plans_persistence import PlansPersistence
+from persistence.user_persistence import UserPersistence
+from services.subscriptions import SubscriptionService
+
 logger = logging.getLogger(__name__)
 
 
