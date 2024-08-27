@@ -1,40 +1,75 @@
 import { SxProps, Theme } from '@mui/system';
 
 export const confirmStyles: { [key: string]: SxProps<Theme> } = {
+    mainContent: {
+      display:'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: '100vh',
+      marginTop: '-80px',
+      position: 'relative',
+
+      '@media (max-width: 440px)': {
+          marginTop: '-60px',
+          padding: '0',
+      },
+    },
     container: {
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        minHeight: '30vh',
-        backgroundColor: '#ffffff',
-        width: '100%',
-        maxWidth: '28rem',
-        margin: '0 auto',
-        position: 'relative',
-        boxShadow: '0rem 2px 8px 0px #00000033',
-        borderRadius: '0.625rem',
-        border: '0.125rem solid transparent',
-        marginTop: '220px',
-        '@media (max-width: 440px)': {
-          boxShadow: '0rem 0px 0px 0px #00000033',
-          border: 'none',
-          marginTop: '3.75em',
-        },
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      margin: '0 auto',
+      boxShadow: '0rem 2px 8px 0px #00000033',
+      borderRadius: '0.625rem',
+      border: '0.0625rem solid transparent',
+      textAlign: 'center',
+      padding: '24px 32px',
+      maxWidth: '448px',
+      marginTop: '143px',
+      marginBottom: '143px',
+      '@media (min-width: 1400px)': {
+          marginTop: '130px',
+          marginBottom: '130px',
       },
-      logoContainer: {
-        paddingLeft: '2.5em',
-        paddingRight: '0.5em',
+      '@media (max-width: 440px)': {
+          padding: '24px 16px', 
+          marginTop: '0',
+          marginBottom: '0',
+          margin: '0 20px 40px 20px',
+          maxWidth: '100%'
       },
-      title: {
-        mb: 2,
-        fontWeight: 'bold',
-        fontSize: '28px',
-        whiteSpace: 'nowrap',
-        textAlign: 'center',
-        padding: '1.5rem 1rem 0',
-        fontFamily: 'Nunito',
+      '@media (max-width: 380px)': {
+          marginTop: '76px',
+      }
+    },
+    logoContainer: {
+      paddingLeft: '2.5em',
+      paddingRight: '0.5em',
+      paddingTop: '2.5em',
+      '@media (max-width: 440px)': {
+          paddingLeft: '1.25em',
+          paddingTop: '1.25em', 
+          '& img': {
+              width: '40px',
+              height: '25px',
+          } 
       },
+    },
+    title: {
+      fontWeight: 'bold',
+      fontSize: '28px',
+      whiteSpace: 'nowrap',
+      textAlign: 'center',
+      paddingBottom: '16px',
+      fontFamily: 'Nunito',
+      lineHeight: 'normal',
+      '@media (max-width: 440px)': {
+          fontSize: '24px',
+          paddingBottom: '1rem',
+      },
+    },
       googleButton: {
         mb: 2,
         bgcolor: '#FFFFFF',
@@ -79,19 +114,24 @@ export const confirmStyles: { [key: string]: SxProps<Theme> } = {
         mt: 2,
         backgroundColor: '#FFFFFF',
         border: '1px solid transparent',
-        margin: '3em 2 em 1.5em',
         borderColor: '#F45745',
+        borderRadius: '0.25rem',
         color: '#F45745',
         '&:hover': {
           borderColor: '#F45745',
           backgroundColor: 'white',
         },
         fontWeight: 'bold',
-        m: '3.25rem 0 1.5rem',
+        m: '3.25rem 0 0',
         textTransform: 'none',
-        minHeight: '3rem',
         fontSize: '16px',
         fontFamily: 'Nunito',
+        padding: '0.625rem 0.5rem',
+        lineHeight: 'normal',
+        '@media (max-width: 440px)': {
+            margin: '2rem 0 0',
+            padding: '0.625rem 1.5rem',
+          }
       },
       loginText: {
         mt: 2,
@@ -110,8 +150,12 @@ export const confirmStyles: { [key: string]: SxProps<Theme> } = {
         fontFamily: 'Nunito',
         fontWeight: '500',
         textAlign: 'center',
-        padding: '1rem 2rem 1rem'
-        
+        '&:nth-of-type(1)': {
+          paddingBottom: '1rem',
+          '@media (max-width: 440px)': {
+            paddingBottom: '1.5rem',
+          }
+        },
       },
       loginLink: {
         color: '#F45745',

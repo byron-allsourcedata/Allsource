@@ -4,6 +4,10 @@
   font-family: 'Nunito', sans-serif;
 }
 
+*, ::after, ::before {
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
   padding: 0;
@@ -26,7 +30,32 @@ body {
 
 .Toastify__close-button {
   position: absolute;
-  top: 30px;
+  top: 50%;
+  transform: translateY(-50%);
   right: 10px;
   z-index: 1;
+}
+
+.Toastify__toast-container.customToastContainer {
+  width: 24rem;
+}
+.Toastify__close-button > svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+.customToastSuccess .Toastify__close-button {
+  color: #6EC125;
+  opacity: 1;
+}
+.customToastError .Toastify__close-button {
+  color: #E03130;
+  opacity: 1;
+}
+
+@media (max-width: 440px) {
+  .Toastify__toast-container.customToastContainer {
+    width: 100%;
+    padding: 0 0.9375rem;
+    top: 90px;
+  }
 }

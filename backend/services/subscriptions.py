@@ -30,13 +30,22 @@ class SubscriptionService:
         subscription_data = self.db.query(Subscription).filter(
             Subscription.user_id == user_id
         ).first()
+
         if subscription_data:
             stripe_request_created_at_dt = datetime.fromisoformat(stripe_request_created_at.replace('Z', ''))
-            subscription_stripe_request_created_at = subscription_data.stripe_request_created_at.replace(tzinfo=None)
-            if stripe_request_created_at_dt < subscription_stripe_request_created_at:
-                return True
+            if subscription_data.stripe_request_created_at is not None:
+                subscription_stripe_request_created_at = subscription_data.stripe_request_created_at.replace(
+                    tzinfo=None)
+
+                if stripe_request_created_at_dt < subscription_stripe_request_created_at:
+                    return True
+                else:
+                    return False
             else:
                 return False
+
+        return False
+
     def get_current_user_plan(self, user_id):
         result = self.user_persistence_service.user_plan_info_db(user_id)
 
@@ -165,7 +174,6 @@ class SubscriptionService:
         self.db.commit()
         return add_subscription_obj
 
-
     def create_subscription_from_free_trial(self, user_id):
         plan_type = 'FreeTrail'
         price = '0'
@@ -173,11 +181,11 @@ class SubscriptionService:
         created_by_id = user_id
         created_at = datetime.strptime(get_utc_aware_date_for_postgres(), '%Y-%m-%dT%H:%M:%SZ')  # Updated format
         plan_name = f"{plan_type} at ${price}"
-        
+
         subscription = self.db.query(SubscriptionPlan).filter(SubscriptionPlan.title == 'FreeTrail').first()
         trial_days = timedelta(days=subscription.trial_days)
         end_date = (created_at + trial_days).isoformat() + "Z"
-        
+
         add_subscription_obj = Subscription(
             user_id=created_by_id,
             plan_name=plan_name,
@@ -190,16 +198,15 @@ class SubscriptionService:
             created_by=created_by_id,
             status=status,
         )
-        
+
         self.db.add(add_subscription_obj)
         self.db.commit()
         return add_subscription_obj
 
-
-
     def create_new_usp_free_trial(self, user_id, subscription_id):
         plan_info = self.db.query(SubscriptionPlan).filter(SubscriptionPlan.is_free_trial == True).first()
-        usp_object = UserSubscriptionPlan(user_id=user_id, plan_id=plan_info.id, subscription_id=subscription_id, is_trial=True)
+        usp_object = UserSubscriptionPlan(user_id=user_id, plan_id=plan_info.id, subscription_id=subscription_id,
+                                          is_trial=True)
         self.db.add(usp_object)
         self.db.commit()
         return usp_object
@@ -217,10 +224,14 @@ class SubscriptionService:
             .update({UserSubscriptionPlan.subscription_id: subscription_id}, synchronize_session=False)
         self.db.commit()
 
-
     def remove_trial(self, user_id: int):
-        user_subcription_plan = self.db.query(UserSubscriptionPlan).join(SubscriptionPlan, SubscriptionPlan.id == UserSubscriptionPlan.plan_id).filter(UserSubscriptionPlan.user_id == user_id, SubscriptionPlan.title == 'FreeTrail').order_by(UserSubscriptionPlan.created_at.desc()).first()
-        self.db.query(UserSubscriptionPlan).filter(UserSubscriptionPlan.id == user_subcription_plan.id).update({UserSubscriptionPlan.is_trial: False,
-                                                                                                                UserSubscriptionPlan.updated_at: datetime.now()})
-        self.db.query(Subscription).filter(Subscription.id == user_subcription_plan.subscription_id).update({Subscription.plan_end: datetime.now(), Subscription.updated_at: datetime.now()})
+        user_subcription_plan = self.db.query(UserSubscriptionPlan).join(SubscriptionPlan,
+                                                                         SubscriptionPlan.id == UserSubscriptionPlan.plan_id).filter(
+            UserSubscriptionPlan.user_id == user_id, SubscriptionPlan.title == 'FreeTrail').order_by(
+            UserSubscriptionPlan.created_at.desc()).first()
+        self.db.query(UserSubscriptionPlan).filter(UserSubscriptionPlan.id == user_subcription_plan.id).update(
+            {UserSubscriptionPlan.is_trial: False,
+             UserSubscriptionPlan.updated_at: datetime.now()})
+        self.db.query(Subscription).filter(Subscription.id == user_subcription_plan.subscription_id).update(
+            {Subscription.plan_end: datetime.now(), Subscription.updated_at: datetime.now()})
         self.db.commit()

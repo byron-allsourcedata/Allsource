@@ -267,10 +267,10 @@ const AccountSetup = () => {
           sx={{
             display: "flex",
             justifyContent: "space-between",
-            alignItems: "center", 
+            alignItems: "center",
             "@media (max-width: 600px)": {
-                  width: '100%'
-                },
+              width: "100%",
+            },
           }}
         >
           <Box sx={styles.logo}>
@@ -281,11 +281,16 @@ const AccountSetup = () => {
             aria-haspopup="true"
             aria-expanded={open ? "true" : undefined}
             onClick={handleProfileMenuClick}
-            sx={{ position: "relative", display: 'none', right: 0, "@media (max-width: 500px)": {
-                  display: "flex",
-                  mr: 0,
-                  position: "inherit",
-                },  }}
+            sx={{
+              position: "relative",
+              display: "none",
+              right: 0,
+              "@media (max-width: 600px)": {
+                display: "flex",
+                mr: 0,
+                position: "inherit",
+              },
+            }}
           >
             <PersonIcon sx={styles.account} />
           </Button>
@@ -308,18 +313,18 @@ const AccountSetup = () => {
             <MenuItem onClick={handleSignOut}>Sign Out</MenuItem>
           </Menu>
         </Box>
-        <Box sx={styles.nav}>
+        <Box sx={{ ...styles.nav, position: "relative" }}>
           {activeTab === 1 && (
             <Button
               variant="outlined"
               onClick={handleBackClick}
               sx={{
+                position: "absolute",
+                left: -120,
+                top: 5,
                 marginRight: 2,
                 color: "rgba(50, 50, 50, 1)",
                 border: "none",
-                position: "fixed",
-                left: 600,
-                top: 30,
                 fontFamily: "Nunito",
                 textTransform: "none",
                 fontSize: "16px",
@@ -335,6 +340,8 @@ const AccountSetup = () => {
                   display: "flex",
                   mr: 0,
                   position: "inherit",
+                  left: 0,
+                  top: 0,
                 },
               }}
             >
@@ -394,6 +401,7 @@ const AccountSetup = () => {
             />
           </Tabs>
         </Box>
+
         <Button
           aria-controls={open ? "profile-menu" : undefined}
           aria-haspopup="true"

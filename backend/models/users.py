@@ -34,6 +34,7 @@ class Users(Base):
     is_pixel_installed = Column(BOOLEAN, default=False, nullable=True)
     role = Column(ARRAY(VARCHAR(32)))
     calendly_uuid = Column(VARCHAR(64), nullable=True)
+    calendly_invitee_uuid = Column(VARCHAR(64), nullable=True)
 
 
 User = Users

@@ -10,7 +10,7 @@ import AccountButton from "@/components/AccountButton";
 import dynamic from "next/dynamic";
 import { useSlider, SliderProvider } from '../../context/SliderContext';
 import CloseIcon from '@mui/icons-material/Close';
-
+import { showToast, showErrorToast } from "../../components/ToastNotification";
 const Sidebar = dynamic(() => import('../../components/Sidebar'), {
     suspense: true,
 });
@@ -93,9 +93,11 @@ const SliderIntegration = ({ credential, service, open, onClose, onSave, onDelet
                     service_name: service.service_name,
                 };
                 onSave(newCredential);
+                showToast('Successuly installed')
+                
             }
         } catch (error) {
-            console.error("Error saving integration", error);
+            showErrorToast('You credential not valid')
         }
     };
 
@@ -285,7 +287,7 @@ const ServiceIntegrations = ({ service }: { service: IntegrationService[] }) => 
                 })}
             </Box>
             {selectedService && (
-                <SliderProvider>
+                <>
                     <SliderIntegration
                         credential={selectedCredential}
                         service={selectedService}
@@ -294,7 +296,7 @@ const ServiceIntegrations = ({ service }: { service: IntegrationService[] }) => 
                         onSave={handleSave}
                         onDelete={handleDelete}
                     />
-                </SliderProvider>
+                </>
             )}
         </>
     );
@@ -314,7 +316,7 @@ const Integrations: React.FC = () => {
 
         const fetchData = async () => {
             try {
-                const response = await axiosInstance.get('/integrations', {
+                const response = await axiosInstance.get('/integrations/', {
                     headers: { Authorization: `Bearer ${accessToken}` },
                 });
                 if (response.status === 200) {
@@ -360,4 +362,12 @@ const Integrations: React.FC = () => {
     );
 };
 
-export default Integrations;
+const IntegrationsPage = () => {
+    return ( 
+        <SliderProvider>
+            <Integrations />
+        </SliderProvider>
+     );
+}
+ 
+export default IntegrationsPage;

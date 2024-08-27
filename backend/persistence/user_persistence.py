@@ -88,7 +88,8 @@ class UserPersistence:
                 "data_provider_id": user.data_provider_id,
                 "is_pixel_installed": user.is_pixel_installed,
                 'role': user.role,
-                'calendly_uuid': user.calendly_uuid
+                'calendly_uuid': user.calendly_uuid,
+                'calendly_invitee_uuid': user.calendly_invitee_uuid
             }
         self.db.rollback()
         return result_user
@@ -109,9 +110,14 @@ class UserPersistence:
                                                                 synchronize_session=False)
         self.db.commit()
 
-    def update_calendly_uuid(self, user_id: int, uuid: str):
-        self.db.query(Users).filter(Users.id == user_id).update({Users.calendly_uuid: uuid},
-                                                                synchronize_session=False)
+    def update_calendly_uuid(self, user_id: int, uuid: str, invitees: str):
+        self.db.query(Users).filter(Users.id == user_id).update(
+            {
+                Users.calendly_uuid: uuid,
+                Users.calendly_invitee_uuid: invitees
+            },
+            synchronize_session=False
+        )
         self.db.commit()
 
     def get_users(self):

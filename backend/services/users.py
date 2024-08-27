@@ -36,10 +36,30 @@ class UsersService:
                 }
 
     def get_calendly_info(self):
-        if self.user.get('calendly_uuid'):
-            return {"email": self.user.get('email'),
-                    "full_name": self.user.get('full_name')
-                    }
+        try:
+            if self.user.get('calendly_uuid'):
+                if self.user.get('calendly_invitee_uuid'):
+                        calendly_uuid = self.get_calendly_uuid()
+                        invitee_uuid = self.get_calendly_invitee_uuid()
+
+                        if calendly_uuid and invitee_uuid:
+                            url = f"https://api.calendly.com/scheduled_events/{calendly_uuid}/invitees/{invitee_uuid}"
+
+                            headers = {
+                                'Authorization': f'Bearer {os.getenv("CALENDLY_TOKEN")}',
+                                'Content-Type': 'application/json'
+                            }
+
+                            response = requests.get(url, headers=headers).json()
+
+                            return {"email": response.get('resource').get('email'),
+                                    "full_name": response.get('resource').get('name')
+                                    }
+
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Request failed: {str(e)}")
+        except Exception as e:
+            logger.error(f"An error occurred: {str(e)}")
 
     def get_calendly_uuid(self):
         uuid_str = self.user.get('calendly_uuid')
@@ -48,7 +68,14 @@ class UsersService:
             return uuid_cleaned
         return None
 
-    def update_calendly_info(self, uuid: str):
+    def get_calendly_invitee_uuid(self):
+        uuid_str = self.user.get('calendly_invitee_uuid')
+        if uuid_str:
+            uuid_cleaned = uuid_str.replace("uuid=", "").strip("'")
+            return uuid_cleaned
+        return None
+
+    def update_calendly_info(self, uuid: str, invitees: str):
         try:
             calendly_uuid = self.get_calendly_uuid()
 
@@ -76,6 +103,6 @@ class UsersService:
         except Exception as e:
             logger.error(f"An error occurred: {str(e)}")
 
-        self.user_persistence_service.update_calendly_uuid(self.user.get('id'), str(uuid))
+        self.user_persistence_service.update_calendly_uuid(self.user.get('id'), str(uuid), str(invitees))
         return 'OK'
 

@@ -269,7 +269,6 @@ const Dashboard: React.FC = () => {
             setShowCharts(true); // Set to true if response is 200
           }
           if (response.data.status === "NEED_BOOK_CALL") {
-            sessionStorage.setItem("is_slider_opened", "true");
             setShowSlider(true);
           } else {
             setShowSlider(false);
@@ -277,7 +276,6 @@ const Dashboard: React.FC = () => {
         } catch (error) {
           if (error instanceof AxiosError && error.response?.status === 403) {
             if (error.response.data.status === "NEED_BOOK_CALL") {
-              sessionStorage.setItem("is_slider_opened", "true");
               setShowSlider(true);
             } else {
               setShowSlider(false);
@@ -339,7 +337,7 @@ const Dashboard: React.FC = () => {
       </Box>
       <Grid container width="100%">
         <Grid item xs={12} md={2} sx={{ padding: "0px" }}>
-          <Sidebar />
+        <Sidebar />
         </Grid>
         {showCharts ? (
           <>

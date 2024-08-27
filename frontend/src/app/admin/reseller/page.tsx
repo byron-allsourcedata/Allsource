@@ -1,6 +1,8 @@
 "use client";
-import { Box, Grid, Typography, Button, Table, TableBody, TableCell, 
-   TableContainer, TableHead, TableRow, Paper, IconButton } from '@mui/material'
+import {
+    Box, Grid, Typography, Button, Table, TableBody, TableCell,
+    TableContainer, TableHead, TableRow, Paper, IconButton, Link
+} from '@mui/material'
 import Image from 'next/image'
 import dynamic from 'next/dynamic'
 import React, { useState } from 'react'
@@ -69,7 +71,7 @@ const TableBodyReseller: React.FC<TableBodyResellerProps> = ({ data }) => {
           <TableCell style={{textAlign: 'center'}}>{row.commission}</TableCell>
           <TableCell style={{textAlign: 'center'}}>{row.clientAccounts}</TableCell>
           <TableCell sx={{ textAlign: 'center' }}>
-            <Button 
+            <Button
             variant='text' size="small" sx={{ fontWeight: 600, backgroundColor: '#EAF8DD', color: '#6EC125' }}>
               {row.status}
             </Button>
@@ -129,12 +131,14 @@ const Reseller: React.FC = () => {
       status: 'Active'
   }
   ];
-    return ( 
+    return (
         <>
       <Box sx={resellerStyle.headers}>
-        <Box sx={resellerStyle.logoContainer}>
-          <Image src='/logo.svg' alt='logo' height={80} width={60} />
-        </Box>
+          <Box sx={resellerStyle.logoContainer}>
+              <Link href="/" underline="none" sx={{ zIndex: 10 }}>
+                  <Image src='/logo.svg' alt='logo' height={80} width={60} />
+              </Link>
+          </Box>
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
         <TrialStatus />
           <AccountButton />
@@ -158,12 +162,12 @@ const Reseller: React.FC = () => {
               <Typography variant="h4" component="h1" sx={resellerStyle.title}>
                 Reseller
               </Typography>
-              <Button variant="contained" 
+              <Button variant="contained"
               size='large'
-                sx={{ marginRight: '4em', 
-                      backgroundColor: 'rgba(80, 82, 178, 1)', 
-                      fontFamily: "Nunito", textTransform: 'none', 
-                      fontWeight: 'bold', 
+                sx={{ marginRight: '4em',
+                      backgroundColor: 'rgba(80, 82, 178, 1)',
+                      fontFamily: "Nunito", textTransform: 'none',
+                      fontWeight: 'bold',
                       mt: 3 }}
               >
                   Add Reseller
@@ -180,10 +184,10 @@ const Reseller: React.FC = () => {
           </Grid>
         </Grid>
       </Box>
-      
+
         </>
-    
+
      );
 }
- 
+
 export default Reseller;

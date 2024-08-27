@@ -61,7 +61,7 @@ const Signup: React.FC = () => {
     if (response.status === 200) {
         sessionStorage.setItem('me', JSON.stringify({ email: formValues.email }));
         router.push('/reset-password/confirm-send');
-        showToast('If there is such an email in our system, then we have sent you a link with password recovery')
+        showToast('Verification link sent to your email successfully');
       }
     } catch (err) {
       const error = err as AxiosError;
@@ -77,37 +77,41 @@ const Signup: React.FC = () => {
   return (
     <>
       <Box sx={resetStyles.logoContainer}>
-        <Image src='/logo.svg' alt='logo' height={80} width={60} />
+        <Image src='/logo.svg' alt='logo' height={30} width={50} />
       </Box>
-      <Box sx={resetStyles.container}>
-        <Typography variant="h4" component="h1" sx={resetStyles.title}>
-          Forgot your password?
-        </Typography>
-        <Typography sx={resetStyles.text}>
-        You will receive an email to reset your password. Please enter the email address associated with your account
-        </Typography>
-        <Box component="form" onSubmit={handleSubmit} sx={resetStyles.form}>
-          <TextField
-            InputLabelProps={{ sx: resetStyles.inputLabel }}
-            label="Email address"
-            name="email"
-            type="email"
-            variant="outlined"
-            fullWidth
-            margin="normal"
-            value={formValues.email}
-            onChange={handleChange}
-            error={Boolean(errors.email)}
-            helperText={errors.email}
-          />
-          <Button
-            type="submit"
-            variant="contained"
-            sx={resetStyles.submitButton}
-            fullWidth
-          >
-            Send
-          </Button>
+
+      <Box sx={resetStyles.mainContent}>
+        <Box sx={resetStyles.container}>
+          <Typography variant="h4" component="h1" sx={resetStyles.title}>
+            Forgot your password?
+          </Typography>
+          <Typography sx={resetStyles.text}>
+          No worries! Let&apos;s get you back on track with a new password, pronto! Just follow the steps sent to your email
+          </Typography>
+          <Box component="form" onSubmit={handleSubmit} sx={resetStyles.form}>
+            <TextField sx={resetStyles.formField}
+              InputLabelProps={{ sx: resetStyles.inputLabel }}
+              label="Email address"
+              name="email"
+              type="email"
+              variant="outlined"
+              fullWidth
+              margin="normal"
+              value={formValues.email}
+              onChange={handleChange}
+              error={Boolean(errors.email)}
+              helperText={errors.email}
+              InputProps={{ sx: resetStyles.formInput }}
+            />
+            <Button
+              type="submit"
+              variant="contained"
+              sx={resetStyles.submitButton}
+              fullWidth
+            >
+              Send
+            </Button>
+          </Box>
         </Box>
       </Box>
     </>

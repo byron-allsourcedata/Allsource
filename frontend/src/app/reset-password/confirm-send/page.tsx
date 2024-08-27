@@ -26,28 +26,30 @@ const ConfirmSend: React.FC = () => {
   return (
     <>
       <Box sx={confirmStyles.logoContainer}>
-        <Image src='/logo.svg' alt='logo' height={80} width={60} />
+        <Image src='/logo.svg' alt='logo' height={30} width={50} />
       </Box>
-      <Box sx={confirmStyles.container}>
-        <Typography variant="h4" component="h1" sx={confirmStyles.title}>
-        Help is on the way
-        </Typography>
-        <Typography sx={confirmStyles.text}>
-        If <strong>{email}</strong> exists, you will receive an email there shortly.
-        </Typography>
-        <Typography sx={confirmStyles.text}>
-         If you haven’t received an email within that timeframe, please check your spam folder or <Link href="/reset-password" sx={confirmStyles.loginLink}>try sending again.</Link>
-        </Typography>
+      <Box sx={confirmStyles.mainContent}>
+        <Box sx={confirmStyles.container}>
+          <Typography variant="h4" component="h1" sx={confirmStyles.title}>
+          Help is on the way
+          </Typography>
+          <Typography sx={confirmStyles.text}>
+          Please check your email {email}. If you run into any hiccups, our support team is ready to rock &apos;n&apos; roll and help you out.
+          </Typography>
+          <Typography sx={confirmStyles.text}>
+            Please check your spam folder or <Link href="/reset-password" sx={confirmStyles.loginLink}>try sending again.</Link>
+          </Typography>
 
-        <Box component="form" onSubmit={handleSubmit} sx={confirmStyles.form}>
-          <Button
-            type="submit"
-            variant="contained"
-            sx={confirmStyles.submitButton}
-            fullWidth
-          >
-            Back to login
-          </Button>
+          <Box component="form" onSubmit={handleSubmit} sx={confirmStyles.form}>
+            <Button
+              type="submit"
+              variant="contained"
+              sx={confirmStyles.submitButton}
+              fullWidth
+            >
+              Back to login
+            </Button>
+          </Box>
         </Box>
       </Box>
     </>

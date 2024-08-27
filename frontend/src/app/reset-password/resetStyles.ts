@@ -1,39 +1,74 @@
 import { SxProps, Theme } from '@mui/system';
 
 export const resetStyles: { [key: string]: SxProps<Theme> } = {
+  mainContent: {
+      display:'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: '100vh',
+      marginTop: '-80px',
+      position: 'relative',
+
+      '@media (max-width: 440px)': {
+          marginTop: '-60px',
+          padding: '0',
+      },
+    },
     container: {
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        minHeight: '30vh',
-        backgroundColor: '#ffffff',
-        width: '100%',
-        maxWidth: '28rem',
         margin: '0 auto',
-        position: 'relative',
         boxShadow: '0rem 2px 8px 0px #00000033',
         borderRadius: '0.625rem',
-        border: '0.125rem solid transparent',
-        marginTop: '220px',
-        '@media (max-width: 440px)': {
-          boxShadow: '0rem 0px 0px 0px #00000033',
-          border: 'none',
-          marginTop: '3.75em',
+        border: '0.0625rem solid transparent',
+        textAlign: 'center',
+        padding: '24px 32px',
+        maxWidth: '448px',
+        marginTop: '143px',
+        marginBottom: '143px',
+        '@media (min-width: 1400px)': {
+            marginTop: '130px',
+            marginBottom: '130px',
         },
+        '@media (max-width: 440px)': {
+            padding: '24px 16px', 
+            marginTop: '0',
+            marginBottom: '0',
+            margin: '0 20px 40px 20px',
+            maxWidth: '100%'
+        },
+        '@media (max-width: 380px)': {
+            marginTop: '76px',
+        }
       },
       logoContainer: {
         paddingLeft: '2.5em',
         paddingRight: '0.5em',
+        paddingTop: '2.5em',
+        '@media (max-width: 440px)': {
+            paddingLeft: '1.25em',
+            paddingTop: '1.25em', 
+            '& img': {
+                width: '40px',
+                height: '25px',
+            } 
+        },
       },
       title: {
-        mb: 2,
         fontWeight: 'bold',
         fontSize: '28px',
         whiteSpace: 'nowrap',
         textAlign: 'center',
-        padding: '1.5rem 1rem 0',
+        paddingBottom: '16px',
         fontFamily: 'Nunito',
+        lineHeight: 'normal',
+        '@media (max-width: 440px)': {
+            fontSize: '24px',
+            paddingBottom: '1rem',
+        },
       },
       googleButton: {
         mb: 2,
@@ -68,28 +103,40 @@ export const resetStyles: { [key: string]: SxProps<Theme> } = {
       },
       form: {
         width: '100%',
-        maxWidth: '384px',
         fontFamily: 'Nunito',
       },
       inputLabel: {
         fontFamily: 'Nunito',
         fontSize: '16px',
+        lineHeight: 'normal',
+        color: 'rgba(17, 17, 19, 0.60)',
+        top: '-3px',
+        '&.Mui-focused': {
+          color: '#0000FF',
+        },
       },
       submitButton: {
         mt: 2,
         backgroundColor: '#F45745',
-        margin: '3em 2 em 1.5em',
         color: '#FFFFFF',
         '&:hover': {
           borderColor: '#000000',
           backgroundColor: 'lightgreen',
         },
         fontWeight: 'bold',
-        m: '3.25rem 0 1.5rem',
+        padding: '10px 8px',
         textTransform: 'none',
-        minHeight: '3rem',
         fontSize: '16px',
         fontFamily: 'Nunito',
+        lineHeight: 'normal',
+        marginTop: '52px',
+        '@media (max-width: 440px)': {
+          margin: '0',
+          position: 'absolute',
+          bottom: '40px',
+          left: '20px',
+          width: '90%',
+        }
       },
       loginText: {
         mt: 2,
@@ -108,7 +155,8 @@ export const resetStyles: { [key: string]: SxProps<Theme> } = {
         fontFamily: 'Nunito',
         fontWeight: '500',
         textAlign: 'center',
-        padding: '1rem 2rem 2.25rem'
+        color: '#000',
+        paddingBottom: '52px',
         
       },
       loginLink: {
@@ -117,5 +165,26 @@ export const resetStyles: { [key: string]: SxProps<Theme> } = {
         fontWeight: 'bold',
         fontFamily: 'Nunito',
         textDecoration: 'none',
+      },
+      formField: {
+        margin: '0',
+    },
+    formInput: {
+        '&.MuiOutlinedInput-root': {
+          height: '48px',
+          '& .MuiOutlinedInput-input': {
+            padding: '12px 16px 13px 16px',
+            fontFamily: 'Nunito',
+          },
+          '& .MuiOutlinedInput-notchedOutline': {
+            borderColor: '#A3B0C2',
+          },
+          '&:hover .MuiOutlinedInput-notchedOutline': {
+            borderColor: '#A3B0C2',
+          },
+          '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+            borderColor: '#0000FF',
+          },
+        },
       },
 }

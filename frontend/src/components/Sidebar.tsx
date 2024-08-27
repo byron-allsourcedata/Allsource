@@ -13,6 +13,9 @@ import RuleFolderIcon from '@mui/icons-material/RuleFolder';
 import AccountBoxIcon from '@mui/icons-material/AccountBox';
 import SettingsIcon from '@mui/icons-material/Settings';
 import Image from 'next/image';
+import { useSlider } from '@/context/SliderContext';
+import { AxiosError } from 'axios';
+import axiosInstance from '@/axios/axiosInterceptorInstance';
 
 const sidebarStyles = {
     container: {
@@ -122,11 +125,33 @@ const SetupSection: React.FC = () => (
 );
 
 const Sidebar: React.FC = () => {
+    const { setShowSlider } = useSlider();
     const router = useRouter();
     const pathname = usePathname();
 
-    const handleNavigation = (path: string) => {
-        router.push(path);
+    const handleNavigation = async (path: string) => {
+        try {
+            const response = await axiosInstance.get("dashboard");
+            if (response.data.status === "NEED_BOOK_CALL") {
+              sessionStorage.setItem("is_slider_opened", "true");
+              setShowSlider(true);
+            } else {
+              setShowSlider(false);
+              router.push(path);
+            }
+          } catch (error) {
+            if (error instanceof AxiosError && error.response?.status === 403) {
+              if (error.response.data.status === "NEED_BOOK_CALL") {
+                sessionStorage.setItem("is_slider_opened", "true");
+                setShowSlider(true);
+              } else {
+                setShowSlider(false);
+                router.push(path);
+              }
+            } else {
+              console.error("Error fetching data:", error);
+            }
+          }
     };
 
     const isActive = (path: string) => pathname === path;

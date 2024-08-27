@@ -1,4 +1,5 @@
 from typing import Optional, List
+from typing_extensions import TypedDict
 
 from pydantic import BaseModel, Field
 
@@ -44,6 +45,7 @@ class UpdatePassword(BaseModel):
 
 class CalendlyUUID(BaseModel):
     uuid: str = Field(...)
+    invitees: str = Field(...)
 
 
 class CompanyInfo(BaseModel):
@@ -81,3 +83,12 @@ class CheckVerificationStatusResponse(BaseModel):
 class VerifyTokenResponse(BaseModel):
     status: VerifyToken
     token: Optional[str] = None
+
+
+class CalendlyDict(TypedDict):
+    email: str
+    full_name: str
+
+
+class CalendlyResponse(BaseModel):
+    user: Optional[CalendlyDict] = None
