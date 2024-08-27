@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
 
 from enums import StripePaymentStatusEnum
-from models.plans import SubscriptionPlan, UserSubscriptionPlan
+from models.plans import SubscriptionPlan
 from models.subscriptions import Subscription, UserSubscriptions
 from models.users import Users, User
 from persistence.user_persistence import UserPersistence
@@ -64,12 +64,8 @@ class SubscriptionService:
         else:
             return None
 
-    def is_had_trial_period(self, user_id):
-        self.db.query(UserSubscriptionPlan, User).join(SubscriptionPlan,
-                                                       UserSubscriptionPlan.user_id == user_id).first()
-
     def is_user_have_subscription(self, user_id):
-        return self.db.query(UserSubscriptionPlan).filter(UserSubscriptionPlan.user_id == user_id).limit(1).scalar()
+        return self.db.query(SubscriptionPlan).filter(SubscriptionPlan.user_id == user_id).limit(1).scalar()
 
     def update_user_payment_status(self, user_id, is_success):
         if is_success:

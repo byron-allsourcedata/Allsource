@@ -2,7 +2,7 @@ from datetime import datetime
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from models.plans import UserSubscriptionPlan, SubscriptionPlan
+from models.plans import SubscriptionPlan
 from models.users import Users
 from models.subscriptions import UserSubscriptions
 import logging
@@ -15,9 +15,7 @@ class UserPersistence:
         self.db = db
 
     def user_plan_info_db(self, user_id):
-        return self.db.query(UserSubscriptionPlan, SubscriptionPlan).join(SubscriptionPlan,
-                                                                          UserSubscriptionPlan.plan_id == SubscriptionPlan.id).filter(
-            UserSubscriptionPlan.user_id == user_id).order_by(UserSubscriptionPlan.id.desc()).first()
+        return self.db.query(SubscriptionPlan).filter(SubscriptionPlan.user_id == user_id).order_by(SubscriptionPlan.id.desc()).first()
 
     def set_reset_password_sent_now(self, user_id: int):
         send_message_expiration_time = datetime.now()
@@ -35,15 +33,11 @@ class UserPersistence:
 
     def get_user_plan(self, user_id: int):
         user_plan = self.db.query(
-            UserSubscriptionPlan.is_trial,
+            UserSubscriptions.is_trial,
             UserSubscriptions.plan_end
-        ).join(
-            UserSubscriptions,
-            UserSubscriptionPlan.subscription_id == UserSubscriptions.id
         ).filter(
-            UserSubscriptionPlan.user_id == user_id,
-        ).order_by(
-            UserSubscriptionPlan.id.desc()).first()
+            UserSubscriptions.user_id == user_id,
+        ).first()
         if user_plan:
             return {
                 "is_trial": user_plan.is_trial,

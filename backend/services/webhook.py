@@ -15,6 +15,7 @@ class WebhookService:
         stripe_request_created_timestamp = payload.get("created")
         stripe_request_created_at = datetime.utcfromtimestamp(stripe_request_created_timestamp).isoformat() + "Z"
         customer_id = payload.get("data").get("object").get("customer")
+
         user_data = self.subscription_service.get_userid_by_customer(customer_id)
         if not user_data:
             return payload

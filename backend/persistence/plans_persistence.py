@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 
-from models.plans import SubscriptionPlan, UserSubscriptionPlan
+from models.plans import SubscriptionPlan
+from models.subscriptions import UserSubscriptions
 
 
 class PlansPersistence:
@@ -12,6 +13,6 @@ class PlansPersistence:
     
     def get_trial_status_by_user_id(self, user_id: int):
         try:
-            return self.db.query(UserSubscriptionPlan).filter_by(user_id=user_id).order_by(UserSubscriptionPlan.created_at.desc()).first().is_trial
+            return self.db.query(UserSubscriptions).filter_by(user_id=user_id).order_by(UserSubscriptions.created_at.desc()).first().is_trial
         except:
             return False
