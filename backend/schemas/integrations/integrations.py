@@ -45,3 +45,7 @@ class Lead(BaseModel):
     company_phone: Optional[str]
     company_revenue: Optional[float]
     company_employee_count: Optional[int]
+
+
+class ExportLeads(BaseModel):
+    list_name: str

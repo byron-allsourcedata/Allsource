@@ -5,24 +5,30 @@ from abc import ABC, abstractmethod
 class IntegrationsABC(ABC):
         
     @abstractmethod
-    def __mapped_leads(self):
+    def mapped_leads(self):
         ...
 
 
     @abstractmethod
-    def get_leads(self):
+    def get_all_leads(self):
         ...
-
 
     @abstractmethod
-    def __save_integrations(self):
+    def save_integrations(self):
         ...
 
-    def __save_leads(self):
+    @abstractmethod
+    def save_leads(self):
         ...
-
 
     @abstractmethod
     def create_integration(self):
         ...
     
+    # @abstractmethod
+    # def __get_lists_upd_crt_leads_by_audience(self):
+    #     ...
+
+    # @abstractmethod
+    # def export_leads(self):
+    #     ...

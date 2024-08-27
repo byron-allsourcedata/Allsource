@@ -11,12 +11,11 @@ from mailchimp_marketing.api_client import ApiClientError
 
 class MailchimpIntegrations(IntegrationsABC):
 
-    def __init__(self, integration_persistence: IntegrationsPresistence, user):
+    def __init__(self, integration_persistence: IntegrationsPresistence):
         self.integration_persistence = integration_persistence
-        self.user = user
 
 
-    def __mapped_leads(self, leads: List[Any]) -> List[MailchimpUserScheme]:
+    def mapped_leads(self, leads: List[Any]) -> List[MailchimpUserScheme]:
         mailchimp_users = []
         for member in leads:
             marketing_permissions = member.get("marketing_permissions", [])
@@ -84,8 +83,8 @@ class MailchimpIntegrations(IntegrationsABC):
         return mailchimp_users
 
 
-    def get_leads(self, api_key: str, data_center: str):
-        logging.info(f'Get leads from Mailchimp <- email: {self.user['email']}, api_key: {api_key}, date_center: {data_center}')
+    def get_all_leads(self, api_key: str, data_center: str):
+        logging.info(f'Get leads from Mailchimp <- api_key: {api_key}, date_center: {data_center}')
         leads = list()
         try:
             client = MailchimpMarketing.Client()
@@ -99,24 +98,35 @@ class MailchimpIntegrations(IntegrationsABC):
         except ApiClientError as error:
             raise HTTPException(status_code=400, detail=error.text)
     
-    def __save_integrations(self, access_token: str, data_center: str):
-        credentials = {'user_id': self.user['id'], 'shop_domain': data_center, 'access_token': access_token, 'service_name': 'mailchimp' }
-        integration = self.integration_persistence.get_user_integrations_by_service(self.user['id'], 'mailchimp')
+    def save_integrations(self, access_token: str, data_center: str, user):
+        credentials = {'user_id': user['id'], 'shop_domain': data_center, 'access_token': access_token, 'service_name': 'mailchimp' }
+        integration = self.integration_persistence.get_user_integrations_by_service(user['id'], 'mailchimp')
         if not integration:
-            logging.info(f'{self.user['email']} create integration Mailchimp')
+            logging.info(f'{user['email']} create integration Mailchimp')
             integration = self.integration_persistence.create_integration(credentials)
             return integration
-        logging.info(f'{self.user['email']} update integration Mailchimp')
+        logging.info(f'{user['email']} update integration Mailchimp')
         self.integration_persistence.edit_integrations(integration.id, credentials)
         return 
     
-    def __save_leads(self, leads: List[MailchimpUserScheme]):
+    def save_leads(self, leads: List[MailchimpUserScheme], user_id):
         for lead in leads:
             with self.integration_persistence as persistence:
-                persistence.mailchimp.save_leads(lead.model_dump(), self.user['id'])
+                persistence.mailchimp.save_leads(lead.model_dump(), user_id)
 
-    def create_integration(self, access_token: str, data_center: str):
-        leads = self.get_leads(access_token, data_center)
-        self.__save_integrations(access_token, data_center)
-        self.__save_leads(self.__mapped_leads(leads))
+    def create_integration(self, user, access_token: str, data_center: str):
+        leads = self.get_all_leads(access_token, data_center)
+        self.save_integrations(access_token, data_center, user)
+        self.save_leads(self.mapped_leads(leads), user['id'])
         return 
+    
+    def auto_import(self):
+        user_integration = self.integration_persistence.get_users_integrations('mailchimp')
+        with self.integration_persistence as service:
+            credentials = service.get_user_integrations_by_service(user_integration.user_id, 'mailchimp')
+            if not credentials:
+                raise HTTPException(status_code=404, detail='Klaviyo integrations not found')
+        self.save_leads(self.mapped_leads(self.get_all_leads(credentials.access_token, credentials.data_center)), user_integration.user_id)
+    
+    def auto_sync(self):
+        self.auto_import()

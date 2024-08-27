@@ -45,3 +45,6 @@ class IntegrationsPresistence:
     
     def get_integrations_service(self):
         return self.db.query(Integration).all()
+    
+    def get_users_integrations(self, service_name):
+        return self.db.query(UserIntegration).filter_by(service_name=service_name).first()

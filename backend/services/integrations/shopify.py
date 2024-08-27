@@ -10,13 +10,12 @@ from .utils import IntegrationsABC
 
 class ShopifyIntegrationService(IntegrationsABC):
 
-    def __init__(self, user_integration_persistence: IntegrationsPresistence, client: Client, user):
-        self.user_integration_persistence = user_integration_persistence
+    def __init__(self, integration_persistence: IntegrationsPresistence, client: Client):
+        self.integration_persistence = integration_persistence
         self.client = client
-        self.user = user
 
 
-    def __mapped_leads(self, leads: List[Any]) -> List[ShopifyUserScheme]:
+    def mapped_leads(self, leads: List[Any]) -> List[ShopifyUserScheme]:
         shopify_users = []
         for lead in leads:
             sms_marketing_consent = lead.get("sms_marketing_consent") or {}
@@ -68,34 +67,45 @@ class ShopifyIntegrationService(IntegrationsABC):
 
 
 
-    def get_leads(self, shop_domain: str, access_token: str):
-        logging.info(f'Get leads from Shopify <- email: {self.user['email']}, shop_domain: {shop_domain}, X-Shopify-Access-Token: {access_token}')
+    def get_all_leads(self, shop_domain: str, access_token: str):
+        logging.info(f'Get leads from Shopify <- shop_domain: {shop_domain}, X-Shopify-Access-Token: {access_token}')
         response = self.client.get(f'https://{shop_domain}.myshopify.com/admin/api/2023-07/customers.json', headers={'X-Shopify-Access-Token': access_token})
         if response.status_code != 200:
             raise HTTPException(status_code=400, detail='Shopify credentials invalid')
         return response.json().get('customers')
 
 
-    def __save_integrations(self, shop_domain: str, access_token: str):
-        credentials = {'user_id': self.user['id'], 'shop_domain': shop_domain, 'access_token': access_token, 'service_name': 'shopify' }
-        integration = self.user_integration_persistence.get_user_integrations_by_service(self.user['id'], 'shopify')
+    def save_integrations(self, shop_domain: str, access_token: str, user):
+        credentials = {'user_id': user['id'], 'shop_domain': shop_domain, 'access_token': access_token, 'service_name': 'shopify' }
+        integration = self.integration_persistence.get_user_integrations_by_service(user['id'], 'shopify')
         if not integration:
-            logging.info(f'{self.user['email']} create integration Shopify')
-            integration = self.user_integration_persistence.create_integration(credentials)
+            logging.info(f'{user['email']} create integration Shopify')
+            integration = self.integration_persistence.create_integration(credentials)
             return integration
-        logging.info(f'{self.user['email']} update integration Shopify')
-        self.user_integration_persistence.edit_integrations(integration.id, credentials)
+        logging.info(f'{user['email']} update integration Shopify')
+        self.integration_persistence.edit_integrations(integration.id, credentials)
         return 
 
 
-    def __save_leads(self, leads: List[ShopifyUserScheme]):
+    def save_leads(self, leads: List[ShopifyUserScheme], user_id):
         for lead in leads:
-            with self.user_integration_persistence as persistence:
-                persistence.shopify.save_leads(lead.model_dump(), self.user['id'])
+            with self.integration_persistence as persistence:
+                persistence.shopify.save_leads(lead.model_dump(), user_id)
 
 
-    def create_integration(self, shop_domain: str, access_token: str):
-        leads = self.get_leads(shop_domain, access_token)
-        self.__save_integrations(shop_domain, access_token)
-        self.__save_leads(self.__mapped_leads(leads))
+    def create_integration(self, user, shop_domain: str, access_token: str):
+        leads = self.get_all_leads(shop_domain, access_token)
+        self.save_integrations(shop_domain, access_token, user)
+        self.save_leads(self.mapped_leads(leads), user['id'])
         return
+    
+    def auto_import(self):
+        user_integration = self.integration_persistence.get_users_integrations('shopify')
+        with self.integration_persistence as service:
+            credentials = service.get_user_integrations_by_service(user_integration.user_id, 'shopify')
+            if not credentials:
+                raise HTTPException(status_code=404, detail='Klaviyo integrations not found')
+        self.save_leads(self.mapped_leads(self.get_all_leads(credentials.shop_domain, credentials.access_token)), user_integration.user_id)
+    
+    def auto_sync(self):
+        self.auto_import()

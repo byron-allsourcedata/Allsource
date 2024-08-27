@@ -11,21 +11,18 @@ from persistence.leads_persistence import LeadsPersistence, LeadUser, Lead
 import json
 
 
-
 class KlaviyoIntegrations(IntegrationsABC):
 
     def __init__(self, integration_persistence: IntegrationsPresistence,
-                 client: Client, audience_persistence: AudiencePersistence, leads_persistence: LeadsPersistence,
-                 user):
+                 client: Client, audience_persistence: AudiencePersistence, leads_persistence: LeadsPersistence):
         self.integration_persistence = integration_persistence
         self.client = client
-        self.user = user
         self.audience_persistence = audience_persistence
         self.leads_persistence = leads_persistence
 
 
     def get_all_leads(self, api_key: str):
-        logging.info(f'Get leads from Klaviyo <- email: {self.user["email"]}, Klaviyo-API-Key: {api_key}')
+        logging.info(f'Get leads from Klaviyo <- Klaviyo-API-Key: {api_key}')
         response = self.client.get('https://a.klaviyo.com/api/profiles/', 
                                    headers={'Authorization': f'Klaviyo-API-Key {api_key}', 'revision': '2023-08-15'})
         logging.info(f'Response Klaviyo {response.status_code}')
@@ -34,40 +31,40 @@ class KlaviyoIntegrations(IntegrationsABC):
         return response.json().get('data')
     
 
-    def save_integrations(self, api_key: str):
-        credentials = {'user_id': self.user['id'], 'access_token': api_key, 'service_name': 'klaviyo'}
-        integration = self.integration_persistence.get_user_integrations_by_service(self.user['id'], 'klaviyo')
+    def save_integrations(self, api_key: str, user):
+        credentials = {'user_id': user['id'], 'access_token': api_key, 'service_name': 'klaviyo'}
+        integration = self.integration_persistence.get_user_integrations_by_service(user['id'], 'klaviyo')
         if not integration:
-            logging.info(f'{self.user["email"]} create integration Klaviyo')
+            logging.info(f'{user["email"]} create integration Klaviyo')
             integration = self.integration_persistence.create_integration(credentials)
             return integration
-        logging.info(f'{self.user["email"]} update integration Klaviyo')
+        logging.info(f'{user["email"]} update integration Klaviyo')
         self.integration_persistence.edit_integrations(integration.id, credentials)
         return
 
 
-    def save_leads(self, leads: List[KlaviyoUsersScheme]):
+    def save_leads(self, leads: List[KlaviyoUsersScheme], user_id):
         for lead in leads:
             with self.integration_persistence as persistence:
-                persistence.klaviyo.save_leads(lead.model_dump(), self.user['id'])
+                persistence.klaviyo.save_leads(lead.model_dump(), user_id)
 
 
-    def create_integration(self, api_key: str):
+    def create_integration(self, user, api_key: str):
         leads = self.get_all_leads(api_key)
-        self.save_integrations(api_key)
-        self.save_leads(self.mapped_leads(leads))
+        self.save_integrations(api_key, user)
+        self.save_leads(self.mapped_leads(leads), user['id'])
         return
 
 
-    def __get_lists_upd_crt_leads_by_audience(self, list_name: str) -> tuple[List[LeadUser], List[LeadUser]]:
-        audience = self.audience_persistence.get_audience_by_name(list_name, self.user['id'])
+    def __get_lists_upd_crt_leads_by_audience(self, list_name: str, user_id) -> tuple[List[LeadUser], List[LeadUser]]:
+        audience = self.audience_persistence.get_audience_by_name(list_name, user_id)
         if not audience:
             raise HTTPException(status_code=404, detail='audience not found')
         leads = self.audience_persistence.get_audience_leads_by_audience_id(audience.id)
         for_update = []
         for_create = []
         for lead in leads:
-            lead_user = self.leads_persistence.get_leads_users_by_lead_id(lead.lead_id, self.user['id'])
+            lead_user = self.leads_persistence.get_leads_users_by_lead_id(lead.lead_id, user_id)
             if lead_user:
                 if lead_user.klaviyo_user_id is not None: 
                     for_update.append(lead_user)
@@ -76,9 +73,9 @@ class KlaviyoIntegrations(IntegrationsABC):
         return for_update, for_create
 
 
-    def get_leads_by_list(self, list_id: str, api_key: str):
+    def __get_leads_by_list(self, list_id: str, api_key: str):
         response = self.client.get(f'https://a.klvaiyo.com/api/lists/{list_id}/profiles/', 
-                                   headers={'Authorizations': f'Klaviyo-API-Key {api_key}',
+                                   headers={'Authorization': f'Klaviyo-API-Key {api_key}',
                                             'revision': '2024-07-15'}) 
         if response.status_code != 200:
             raise HTTPException(status_code=response.status_code, detail=response.json().get('errors')[0].get('detail'))
@@ -97,15 +94,18 @@ class KlaviyoIntegrations(IntegrationsABC):
         return response.json().get('data')
 
     def __get_list_by_name(self, list_name: str, api_key: str):
+        print(api_key)
         response = self.client.get('https://a.klaviyo.com/api/lists/', headers={
-            'Authorizatoin': f'Klaviyo-API-Key {api_key}',
+            'Authorization': f'Klaviyo-API-Key {api_key}',
             'revision': '2024-07-15'
         })
+        if response.status_code != 200:
+            raise HTTPException(status_code=response.status_code, detail=response.json().get('errors')[0].get('detail'))
         for res in response.json().get('data'):
             if res['attributes']['name'] == list_name:
                 return res 
             
-    def __lead_to_klaviyo_profile_post(self, lead_user: LeadUser, api_key: str):
+    def __lead_to_klaviyo_profile_post(self, lead_user: LeadUser, api_key: str, user_id):
         lead = self.leads_persistence.get_lead_data(lead_user.lead_id)
         data = self.__mapped_to_klaviyo_post_json_lead(lead)
         response = self.client.post('https://a.klaviyo.com/api/profiles/', headers={
@@ -115,6 +115,7 @@ class KlaviyoIntegrations(IntegrationsABC):
             'content-type': 'application/json'
         }, data=data)
         if response.status_code == 201:
+            self.save_leads(self.mapped_leads(self.get_all_leads(api_key)), user_id)
             return response.json().get('data')
         else:
             logging.info(f'POST Klaviyo Profile, User_ID: {lead_user.user_id}, Lead_id: {lead_user.lead_id}, Klaviyo_id: {lead_user.klaviyo_user_id}')
@@ -135,7 +136,7 @@ class KlaviyoIntegrations(IntegrationsABC):
         else: logging.info(f'PATCH Klaviyo Profile, User_ID: {lead_user.user_id}, Lead_id: {lead_user.lead_id}, Klaviyo_id: {lead_user.klaviyo_user_id}')
     
 
-    def save_leads_to_list(self, users_ids: List[int], list_id: str, api_key: str):
+    def __save_leads_to_list(self, users_ids: List[int], list_id: str, api_key: str):
         response = self.client.post(f'https://a.klaviyo.com/api/lists/{list_id}/relationships/profiles/', headers={
             'Authorization': f'Klaviyo-API-Key {api_key}',
             'revision': '2024-07-15',
@@ -148,40 +149,53 @@ class KlaviyoIntegrations(IntegrationsABC):
         return True
 
 
-    def export_leads(self, list_name: str):
-        credentials = self.integration_persistence.get_user_integrations_by_service(self.user['id'], 'klaviyo')
+    def export_leads(self, list_name: str, user_id):
+        credentials = self.integration_persistence.get_user_integrations_by_service(user_id, 'klaviyo')
         if not credentials:
             raise HTTPException(status_code=404, detail='Klaviyo integrations not found')
         audience = self.__get_list_by_name(list_name, credentials.access_token)
-        list_id = audience['id']
+        list_id = audience['id'] if audience else None
         if not list_id:
             audience = self.__list_create(list_name, credentials.access_token)
             list_id = audience['id']
-        upd, created = self.__get_lists_upd_crt_leads_by_audience(list_name)
+        upd, created = self.__get_lists_upd_crt_leads_by_audience(list_name, user_id)
         users_ids = []
         for item in created: 
-            klaviyo_user = self.__lead_to_klaviyo_profile_post(item, credentials.access_token)
+            klaviyo_user = self.__lead_to_klaviyo_profile_post(item, credentials.access_token, user_id)
             users_ids.append(klaviyo_user['id'])
         for item in upd:
             klaviyo_user = self.__lead_to_klaviyo_profile_patch(item, credentials.access_token)
             users_ids.append(klaviyo_user['id'])
-        return self.save_leads_to_list(users_ids, list_id, credentials.access_token)
+        return self.__save_leads_to_list(users_ids, list_id, credentials.access_token)
 
 
-    def auto_sync(self, audience_id: int, auto_sync: bool):
-        with self.integration_persistence as service:
-            credentials = service.get_user_integrations_by_service(self.user['id'], 'klaviyo')
-        if not credentials:
-            raise HTTPException(status_code=404, detail='Klaviyo integrations not found')
+    def auto_export(self, audience_id: int, auto_sync: bool, user_id):
         audience = self.audience_persistence.get_audience_by_id(audience_id)
         if not audience:
             raise HTTPException(status_code=404, detail='Audience not found')
-        self.audience_persistence.update_auto_sync(audience_id, auto_sync)
-        logging.info(f'User {self.user["email"]} set auto_sync to {auto_sync} for audience {audience_id}')
+        self.audience_persistence.update_auto_sync(auto_sync, audience.id)
+        logging.info(f'User {user_id} set auto_sync to {auto_sync} for audience {audience_id}')
         if auto_sync:
-            self.export_leads(audience.name)
+            self.export_leads(audience.name, user_id)
         return {"status": "success", "auto_sync": auto_sync}    
         
+    def export_sync(self):
+        audiences = self.audience_persistence.get_audiences(type='Auto Sync')
+        for audience in audiences:
+            self.export_leads(audience.name, audience.user_id)
+
+    def auto_import(self):
+        user_integration = self.integration_persistence.get_users_integrations('klaviyo')
+        with self.integration_persistence as service:
+            credentials = service.get_user_integrations_by_service(user_integration.user_id, 'klaviyo')
+            if not credentials:
+                raise HTTPException(status_code=404, detail='Klaviyo integrations not found')
+        self.save_leads(self.mapped_leads(self.get_all_leads(credentials.access_token)), user_integration.user_id)
+    
+    def auto_sync(self):
+        self.export_sync()
+        self.auto_import()
+
     # MAPEED FUNC FOR KLAVIYO 
 
     def mapped_leads(self, leads: List[Any]) -> List[KlaviyoUsersScheme]:

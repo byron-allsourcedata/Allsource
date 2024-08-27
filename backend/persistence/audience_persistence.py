@@ -145,6 +145,10 @@ class AudiencePersistence:
     def get_audience_by_id(self, audience_id: int) -> Audience:
         return self.db.query(Audience).filter(Audience.id == audience_id).first()
     
-    def get_audiences(self):
-        return self.db.query(Audience).all()
+    def get_audiences(self, **filter_by):
+        return self.db.query(Audience).filter_by(**filter_by).all()
     
+    def update_auto_sync(self, auto_sync: bool, audience_id: int):
+        return self.db.query(Audience).filter(Audience.id == audience_id).update({
+            Audience.type: 'Auto Sync' if auto_sync else None
+        })
