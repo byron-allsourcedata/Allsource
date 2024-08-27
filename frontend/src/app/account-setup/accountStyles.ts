@@ -58,7 +58,8 @@ export const styles: { [key: string]: SxProps<Theme> } = {
     padding: '0.25em 1.5em',
     color: 'black',
     border: '1px solid #ccc',
-    textTransform: 'none'
+    textTransform: 'none',
+    '@media (max-width: 600px)': { padding: '0.25em 1.25em' }
   },
   activeButton: {
     backgroundColor: '#007BFF',
@@ -134,10 +135,9 @@ export const styles: { [key: string]: SxProps<Theme> } = {
     justifyContent: 'center',
     borderRadius: '0.5em',
     backgroundColor: '#fff',
-    '@media (max-width: 400px)': { pl: 2, pt: 0, height: '77vh',  },
-    '@media (max-width: 600px)': { pl: 0, pt: 8, gap: 1, alignItems: 'start',justifyContent: 'start',},
-    '@media (max-height: 670px)': { pl: 0, pt: 1, gap: 0 },
-    '@media (min-width: 1500px)': {pt: 'calc(15vh)',},
+    '@media (max-width: 400px)': { pl: 1, pt: 0, height: '77vh',  },
+    '@media (max-width: 600px)': {height: '77vh',display: 'flex',flexDirection: 'column',alignItems: 'center',justifyContent: 'center'},
+    '@media (max-height: 670px)': { pl: 0, gap: 0 },
   },
   title: {
     fontFamily: 'Nunito',
@@ -184,6 +184,9 @@ export const styles: { [key: string]: SxProps<Theme> } = {
     '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
       borderColor: '#0000FF',
     },
+  },
+  form: {
+    display: 'flex', flexDirection: 'column', justifyContent: 'center', alignContent: 'start', '@media (max-width: 400px)': { paddingLeft: 2, gap:0.25,}, '@media (max-width: 600px)': { paddingRight: 1, paddingLeft: 1, gap:0.25,}
   },
   submitButton: {
     backgroundColor: 'rgba(244, 87, 69, 1)',

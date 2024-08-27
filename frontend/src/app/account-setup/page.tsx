@@ -38,7 +38,6 @@ const AccountSetup = () => {
 
   const [isFocused, setIsFocused] = useState(false);
 
-
   const handleFocus = () => {
     setIsFocused(true);
   };
@@ -144,7 +143,6 @@ const AccountSetup = () => {
     setErrors({ ...errors, selectedVisits: "" });
   };
 
-
   const validateField = (
     value: string,
     type: "email" | "website" | "organizationName"
@@ -154,9 +152,9 @@ const AccountSetup = () => {
         const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         return emailRe.test(value) ? "" : "Invalid email address";
       case "website":
-        const websiteRe =
-          /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/;
-        return websiteRe.test(value) ? "" : "Invalid website URL";
+        const sanitizedValue = value.replace(/^www\./, '');
+        const websiteRe = /^(https?:\/\/)?([\da-z.-]+)\.([a-z]{2,20})([/\w .-]*)*\/?$/i;
+        return websiteRe.test(sanitizedValue) ? "" : "Invalid website URL";
       case "organizationName":
         const orgName = value.trim();
         return orgName ? "" : "Organization name is required";
@@ -217,20 +215,27 @@ const AccountSetup = () => {
   };
 
   const handleWebsiteLink = (event: { target: { value: any } }) => {
-    const input = event.target.value;
-
-    if (input.startsWith("https://")) {
-      setWebsiteLink(input);
+    let input = event.target.value;
+  
+    // Удаляем префикс www.
+    const sanitizedInput = input.replace(/^www\./, '');
+  
+    // Добавляем https:// если его нет
+    if (!sanitizedInput.startsWith("https://")) {
+      input = `https://${sanitizedInput}`;
     } else {
-      setWebsiteLink(`https://${input}`);
+      input = sanitizedInput;
     }
-
+  
+    setWebsiteLink(input);
+  
     const websiteError = validateField(input, "website");
     setErrors((prevErrors) => ({
       ...prevErrors,
       websiteLink: websiteError,
     }));
   };
+  
 
   const isFormValid = () => {
     const errors = {
@@ -312,11 +317,11 @@ const AccountSetup = () => {
             aria-expanded={open ? "true" : undefined}
             onClick={handleProfileMenuClick}
             sx={{
-              minWidth: '32px',
-              padding: '8px',
-              color: 'rgba(128, 128, 128, 1)',
-              border: '1px solid rgba(184, 184, 184, 1)',
-              borderRadius: '3.27px',
+              minWidth: "32px",
+              padding: "8px",
+              color: "rgba(128, 128, 128, 1)",
+              border: "1px solid rgba(184, 184, 184, 1)",
+              borderRadius: "3.27px",
               position: "relative",
               display: "none",
               right: 0,
@@ -325,9 +330,10 @@ const AccountSetup = () => {
                 mr: 2,
                 mb: 2,
                 position: "inherit",
-              }, }}
+              },
+            }}
           >
-            <Image src={'/Person.svg'} alt="Person" width={18} height={18} />
+            <Image src={"/Person.svg"} alt="Person" width={18} height={18} />
           </Button>
           <Menu
             id="profile-menu"
@@ -438,193 +444,206 @@ const AccountSetup = () => {
         </Box>
 
         <Button
-            aria-controls={open ? "profile-menu" : undefined}
-            aria-haspopup="true"
-            aria-expanded={open ? "true" : undefined}
-            onClick={handleProfileMenuClick}
-            sx={{
-              minWidth: '32px',
-              padding: '8px',
-              color: 'rgba(128, 128, 128, 1)',
-              border: '1px solid rgba(184, 184, 184, 1)',
-              borderRadius: '3.27px',
+          aria-controls={open ? "profile-menu" : undefined}
+          aria-haspopup="true"
+          aria-expanded={open ? "true" : undefined}
+          onClick={handleProfileMenuClick}
+          sx={{
+            minWidth: "32px",
+            padding: "8px",
+            color: "rgba(128, 128, 128, 1)",
+            border: "1px solid rgba(184, 184, 184, 1)",
+            borderRadius: "3.27px",
             marginRight: 3,
-          mb: 1,
-        "@media (max-width: 600px)": { display: "none" }  }}
-          >
-            <Image src={'/Person.svg'} alt="Person" width={18} height={18} />
-          </Button>
-          <Menu
-            id="profile-menu"
-            anchorEl={anchorEl}
-            open={open}
-            onClose={handleProfileMenuClose}
-            MenuListProps={{
-              "aria-labelledby": "profile-menu-button",
-            }}
-          >
-            <Box sx={{ p: 2 }}>
-              <Typography variant="h6">{full_name}</Typography>
-              <Typography variant="body2" color="textSecondary">
-                {email}
-              </Typography>
-            </Box>
-            <MenuItem onClick={handleSettingsClick}>Settings</MenuItem>
-            <MenuItem onClick={handleSignOut}>Sign Out</MenuItem>
-          </Menu>
+            mb: 1,
+            "@media (max-width: 600px)": { display: "none" },
+          }}
+        >
+          <Image src={"/Person.svg"} alt="Person" width={18} height={18} />
+        </Button>
+        <Menu
+          id="profile-menu"
+          anchorEl={anchorEl}
+          open={open}
+          onClose={handleProfileMenuClose}
+          MenuListProps={{
+            "aria-labelledby": "profile-menu-button",
+          }}
+        >
+          <Box sx={{ p: 2 }}>
+            <Typography variant="h6">{full_name}</Typography>
+            <Typography variant="body2" color="textSecondary">
+              {email}
+            </Typography>
+          </Box>
+          <MenuItem onClick={handleSettingsClick}>Settings</MenuItem>
+          <MenuItem onClick={handleSignOut}>Sign Out</MenuItem>
+        </Menu>
       </Box>
       <Box sx={styles.formContainer}>
         <Box sx={styles.form}>
-        <Typography variant="h5" component="h1" sx={styles.title}>
-          Welcome {full_name},
-        </Typography>
-        <Typography variant="body1" component="h2" sx={styles.subtitle}>
-          Let&apos;s set up your account
-        </Typography>
-        {activeTab === 0 && (
-          <>
-            <Typography variant="body1" component="h3" sx={styles.text}>
-              What is your organization&apos;s name
+          <Box
+            sx={{
+              "@media (max-width: 600px)": {
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                pb: 2
+              },
+            }}
+          >
+            <Typography variant="h5" component="h1" sx={styles.title}>
+              Welcome {full_name},
             </Typography>
-            <TextField
-              fullWidth
-              label="Organization name"
-              variant="outlined"
-              sx={styles.formField}
-              value={organizationName}
-              onChange={(e) => setOrganizationName(e.target.value)}
-              error={!!errors.organizationName}
-              helperText={errors.organizationName}
-            />
-            <Typography variant="body1" component="h3" sx={styles.text}>
-              Share your company website
+            <Typography variant="body1" component="h2" sx={styles.subtitle}>
+              Let&apos;s set up your account
             </Typography>
-            <TextField
-              fullWidth
-              label="Enter website link"
-              variant="outlined"
-              placeholder={isFocused ? "example.com" : ""}
-              sx={styles.formField}
-              InputLabelProps={{ sx: accountStyles.inputLabel }}
-              value={websiteLink.replace(/^https?:\/\//, '')}
-              onChange={handleWebsiteLink}
-              onFocus={handleFocus}
-              onBlur={handleBlur}
-              error={!!errors.websiteLink}
-              helperText={errors.websiteLink}
-              InputProps={{
-                startAdornment: isFocused && (
-                  <InputAdornment position="start">https://</InputAdornment>
-                ),
-              }}
-            />
-            <Typography variant="body1" sx={styles.text}>
-              How many monthly visits to your website?
-            </Typography>
-            {errors.selectedEmployees && (
-              <Typography variant="body2" color="error">
-                {errors.selectedEmployees}
+          </Box>
+          {activeTab === 0 && (
+            <>
+              <Typography variant="body1" component="h3" sx={styles.text}>
+                What is your organization&apos;s name
               </Typography>
-            )}
-            <Box sx={styles.visitsButtons}>
-              {ranges_visits.map((range, index) => (
-                <Button
-                  key={index}
-                  variant="outlined"
-                  onClick={() => handleVisitsRangeChange(range.label)}
-                  sx={getButtonVisitsStyles(selectedVisits === range.label)}
-                >
-                  {range.label}
-                </Button>
-              ))}
-            </Box>
-            <Button
-              fullWidth
-              variant="contained"
-              sx={{
-                ...styles.submitButton,
-                opacity: isFormValid() ? 1 : 0.6,
-                pointerEvents: isFormValid() ? "auto" : "none",
-                backgroundColor: isFormValid()
-                  ? "rgba(244, 87, 69, 1)"
-                  : "rgba(244, 87, 69, 0.4)",
-                "&.Mui-disabled": {
-                  backgroundColor: "rgba(244, 87, 69, 0.6)",
-                  color: "#fff",
-                },
-              }}
-              onClick={handleNextClick}
-              disabled={!isFormValid()}
-            >
-              Next
-            </Button>
-          </>
-        )}
-        {activeTab === 1 && (
-          <>
-            {/* Business info */}
-            <Typography variant="body1" sx={styles.text}>
-              How many employees work at your organization
-            </Typography>
-            {errors.selectedEmployees && (
-              <Typography variant="body2" color="error">
-                {errors.selectedEmployees}
+              <TextField
+                fullWidth
+                label="Organization name"
+                variant="outlined"
+                sx={styles.formField}
+                value={organizationName}
+                onChange={(e) => setOrganizationName(e.target.value)}
+                error={!!errors.organizationName}
+                helperText={errors.organizationName}
+              />
+              <Typography variant="body1" component="h3" sx={styles.text}>
+                Share your company website
               </Typography>
-            )}
-            <Box sx={styles.employeeButtons}>
-              {ranges.map((range, index) => (
-                <Button
-                  key={index}
-                  variant="outlined"
-                  onClick={() => handleEmployeeRangeChange(range.label)}
-                  sx={getButtonStyles(selectedEmployees === range.label)}
-                >
-                  {range.label}
-                </Button>
-              ))}
-            </Box>
-            <Typography variant="body1" sx={styles.text}>
-              Whats your role?
-            </Typography>
-            {errors.selectedEmployees && (
-              <Typography variant="body2" color="error">
-                {errors.selectedEmployees}
+              <TextField
+                fullWidth
+                label="Enter website link"
+                variant="outlined"
+                placeholder={isFocused ? "example.com" : ""}
+                sx={styles.formField}
+                InputLabelProps={{ sx: accountStyles.inputLabel }}
+                value={websiteLink.replace(/^https?:\/\//, "")}
+                onChange={handleWebsiteLink}
+                onFocus={handleFocus}
+                onBlur={handleBlur}
+                error={!!errors.websiteLink}
+                helperText={errors.websiteLink}
+                InputProps={{
+                  startAdornment: isFocused && (
+                    <InputAdornment position="start">https://</InputAdornment>
+                  ),
+                }}
+              />
+              <Typography variant="body1" sx={styles.text}>
+                How many monthly visits to your website?
               </Typography>
-            )}
-            <Box sx={styles.rolesButtons}>
-              {roles.map((range, index) => (
-                <Button
-                  key={index}
-                  variant="outlined"
-                  onClick={() => handleRolesChange(range.label)}
-                  sx={getButtonRolesStyles(selectedRoles === range.label)}
-                >
-                  {range.label}
-                </Button>
-              ))}
-            </Box>
-            <Button
-              fullWidth
-              variant="contained"
-              sx={{
-                ...styles.submitButton,
-                opacity: isFormValid() ? 1 : 0.6,
-                pointerEvents: isFormValid() ? "auto" : "none",
-                backgroundColor: isFormValid()
-                  ? "rgba(244, 87, 69, 1)"
-                  : "rgba(244, 87, 69, 0.4)",
-                "&.Mui-disabled": {
-                  backgroundColor: "rgba(244, 87, 69, 0.6)",
-                  color: "#fff",
-                },
-              }}
-              onClick={handleSubmit}
-              disabled={!isFormBusinessValid()}
-            >
-              Next
-            </Button>
-          </>
-        )}
+              {errors.selectedEmployees && (
+                <Typography variant="body2" color="error">
+                  {errors.selectedEmployees}
+                </Typography>
+              )}
+              <Box sx={styles.visitsButtons}>
+                {ranges_visits.map((range, index) => (
+                  <Button
+                    key={index}
+                    variant="outlined"
+                    onClick={() => handleVisitsRangeChange(range.label)}
+                    sx={getButtonVisitsStyles(selectedVisits === range.label)}
+                  >
+                    {range.label}
+                  </Button>
+                ))}
+              </Box>
+              <Button
+                fullWidth
+                variant="contained"
+                sx={{
+                  ...styles.submitButton,
+                  opacity: isFormValid() ? 1 : 0.6,
+                  pointerEvents: isFormValid() ? "auto" : "none",
+                  backgroundColor: isFormValid()
+                    ? "rgba(244, 87, 69, 1)"
+                    : "rgba(244, 87, 69, 0.4)",
+                  "&.Mui-disabled": {
+                    backgroundColor: "rgba(244, 87, 69, 0.6)",
+                    color: "#fff",
+                  },
+                }}
+                onClick={handleNextClick}
+                disabled={!isFormValid()}
+              >
+                Next
+              </Button>
+            </>
+          )}
+          {activeTab === 1 && (
+            <>
+              {/* Business info */}
+              <Typography variant="body1" sx={styles.text}>
+                How many employees work at your organization
+              </Typography>
+              {errors.selectedEmployees && (
+                <Typography variant="body2" color="error">
+                  {errors.selectedEmployees}
+                </Typography>
+              )}
+              <Box sx={styles.employeeButtons}>
+                {ranges.map((range, index) => (
+                  <Button
+                    key={index}
+                    variant="outlined"
+                    onClick={() => handleEmployeeRangeChange(range.label)}
+                    sx={getButtonStyles(selectedEmployees === range.label)}
+                  >
+                    {range.label}
+                  </Button>
+                ))}
+              </Box>
+              <Typography variant="body1" sx={styles.text}>
+                Whats your role?
+              </Typography>
+              {errors.selectedEmployees && (
+                <Typography variant="body2" color="error">
+                  {errors.selectedEmployees}
+                </Typography>
+              )}
+              <Box sx={styles.rolesButtons}>
+                {roles.map((range, index) => (
+                  <Button
+                    key={index}
+                    variant="outlined"
+                    onClick={() => handleRolesChange(range.label)}
+                    sx={getButtonRolesStyles(selectedRoles === range.label)}
+                  >
+                    {range.label}
+                  </Button>
+                ))}
+              </Box>
+              <Button
+                fullWidth
+                variant="contained"
+                sx={{
+                  ...styles.submitButton,
+                  opacity: isFormValid() ? 1 : 0.6,
+                  pointerEvents: isFormValid() ? "auto" : "none",
+                  backgroundColor: isFormValid()
+                    ? "rgba(244, 87, 69, 1)"
+                    : "rgba(244, 87, 69, 0.4)",
+                  "&.Mui-disabled": {
+                    backgroundColor: "rgba(244, 87, 69, 0.6)",
+                    color: "#fff",
+                  },
+                }}
+                onClick={handleSubmit}
+                disabled={!isFormBusinessValid()}
+              >
+                Next
+              </Button>
+            </>
+          )}
         </Box>
       </Box>
     </Box>
