@@ -16,7 +16,7 @@ const HeaderWrapper: React.FC = () => {
     const excludedPaths = ['/signin', '/signup'];
     
     // Check if the email exists and the current path is not in the exception list
-    if (email) {
+    if (email && !excludedPaths.includes(pathname)) {
       setShowHeader(true);
     } else {
       setShowHeader(false);
