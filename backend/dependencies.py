@@ -69,15 +69,17 @@ def get_audience_persistence(db: Session = Depends(get_db)):
 
 
 def get_subscription_service(db: Session = Depends(get_db),
-                             user_persistence_service: UserPersistence = Depends(get_user_persistence_service)):
-    return SubscriptionService(db=db, user_persistence_service=user_persistence_service)
+                             user_persistence_service: UserPersistence = Depends(get_user_persistence_service),
+                             plans_persistence: PlansPersistence = Depends(get_plans_persistence)):
+    return SubscriptionService(db=db, user_persistence_service=user_persistence_service,
+                               plans_persistence=plans_persistence)
 
 
 def get_admin_customers_service(db: Session = Depends(get_db),
                                 subscription_service: SubscriptionService = Depends(get_subscription_service),
-                                user_persistence: UserPersistence = Depends(get_user_persistence_service), 
+                                user_persistence: UserPersistence = Depends(get_user_persistence_service),
                                 plans_presistence: PlansPersistence = Depends(get_plans_persistence)):
-    return AdminCustomersService(db=db, subscription_service=subscription_service, 
+    return AdminCustomersService(db=db, subscription_service=subscription_service,
                                  user_persistence=user_persistence, plans_persistence=plans_presistence)
 
 
@@ -151,7 +153,6 @@ def check_user_authorization(Authorization: Annotated[str, Header()],
             detail={'status': auth_status.value}
         )
     return user
-
 
 
 def check_user_authorization_without_pixel(Authorization: Annotated[str, Header()],
@@ -286,19 +287,22 @@ def check_user_authorization(Authorization: Annotated[str, Header()],
     return user
 
 
-def check_user_admin(Authorization: Annotated[str, Header()], 
-                     user_persistence_service: UserPersistence = Depends(get_user_persistence_service), 
+def check_user_admin(Authorization: Annotated[str, Header()],
+                     user_persistence_service: UserPersistence = Depends(get_user_persistence_service),
                      ) -> Token:
     user = check_user_authentication(Authorization, user_persistence_service)
     if 'admin' not in user['role']:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail={'status': 'FORBIDDEN'})
     return user
 
+
 def get_user_integrations_presistence(db: Session = Depends(get_db)) -> UserIntegrationsPresistence:
     return UserIntegrationsPresistence(db)
 
-def get_integration_service(user: User = Depends(check_user_authentication), 
-                            db: Session = Depends(get_db), 
-                            user_integration_presistence: UserIntegrationsPresistence = Depends(get_user_integrations_presistence),
+
+def get_integration_service(user: User = Depends(check_user_authentication),
+                            db: Session = Depends(get_db),
+                            user_integration_presistence: UserIntegrationsPresistence = Depends(
+                                get_user_integrations_presistence),
                             lead_presistence: LeadsPersistence = Depends(get_leads_persistence)):
     return IntegrationService(db, user_integration_presistence, lead_presistence, user)
