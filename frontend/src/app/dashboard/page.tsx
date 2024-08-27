@@ -123,11 +123,11 @@ const VerifyPixelIntegration: React.FC = () => {
             color: "rgba(80, 82, 178, 1)",
             fontFamily: "Nunito",
             padding: "0.75em 1.5em",
+            lineHeight: 'normal',
             '@media (max-width: 600px)': {
               padding: '0.625rem 1.5rem',
               marginLeft: 0,
-              fontSize: '16px',
-              lineHeight: 'normal'
+              fontSize: '16px'
         }
           }}
         >

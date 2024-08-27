@@ -174,7 +174,7 @@ const NavigationMenu = () => {
             ...navigationmenuStyles.mobileDrawerList
           }}>
             <ListItemIcon><PeopleIcon /></ListItemIcon>
-            <ListItemText primary="Leads" />
+            <ListItemText primary="Contacts" />
           </ListItem>
           <ListItem button onClick={() => handleNavigation('/audience')}
           sx={{

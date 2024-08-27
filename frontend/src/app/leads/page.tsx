@@ -733,7 +733,7 @@ const Leads: React.FC = () => {
                         }}>
                             <Sidebar />
                         </Grid>
-                        <Grid item xs={12} md={10.575} sx={{ display: 'flex', flexDirection: 'column', flex: 1, marginLeft: 3 }}>
+                        <Grid item xs={12} md lg sx={{ display: 'flex', flexDirection: 'column', flex: 1, marginLeft: 3 }}>
                             <Box
                                 sx={{
                                     display: 'flex',
@@ -743,8 +743,9 @@ const Leads: React.FC = () => {
                                 }}>
                                 <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', mt: 1, }}>
                                     <Typography variant="h4" component="h1" sx={leadsStyles.title}>
-                                        Leads ({count_leads})
+                                        Resolved Contacts ({count_leads ? count_leads : 0})
                                     </Typography>
+                                    {status != 'PIXEL_INSTALLATION_NEEDED' && data.length != 0 && (
                                     <Button
                                         disabled={status === 'PIXEL_INSTALLATION_NEEDED'}
                                         onClick={() => handleFilterChange('all')}
@@ -761,6 +762,9 @@ const Leads: React.FC = () => {
                                     >
                                         <Typography variant="body2" sx={leadsStyles.subtitle}>All</Typography>
                                     </Button>
+
+                                    )}
+                                    {status != 'PIXEL_INSTALLATION_NEEDED' && data.length != 0 && (
                                     <Button
                                         disabled={status === 'PIXEL_INSTALLATION_NEEDED'}
                                         onClick={() => handleFilterChange('new_customers')}
@@ -777,6 +781,8 @@ const Leads: React.FC = () => {
                                     >
                                         <Typography variant="body2" sx={leadsStyles.subtitle}>New Customers</Typography>
                                     </Button>
+                                    )}
+                                    {status != 'PIXEL_INSTALLATION_NEEDED' && data.length != 0 && (
                                     <Button
                                         disabled={status === 'PIXEL_INSTALLATION_NEEDED'}
                                         onClick={() => handleFilterChange('existing_customers')}
@@ -794,6 +800,7 @@ const Leads: React.FC = () => {
                                         <Typography variant="body2" sx={leadsStyles.subtitle}>Existing
                                             Customers</Typography>
                                     </Button>
+                                    )}
                                 </Box>
                                 <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', mt: 1, }}>
                                     <Button
@@ -818,7 +825,7 @@ const Leads: React.FC = () => {
                                             textSize: '16px',
                                             textAlign: 'left',
                                         }}>
-                                            Build Audience List
+                                            Create Audience List
                                         </Typography>
                                     </Button>
                                     <Button
