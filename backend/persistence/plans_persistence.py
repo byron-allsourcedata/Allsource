@@ -16,3 +16,6 @@ class PlansPersistence:
             return self.db.query(UserSubscriptions).filter_by(user_id=user_id).order_by(UserSubscriptions.created_at.desc()).first().is_trial
         except:
             return False
+
+    def get_plan_by_title(self, title: str):
+        return self.db.query(SubscriptionPlan).filter_by(title=title).first()

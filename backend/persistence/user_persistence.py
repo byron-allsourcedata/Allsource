@@ -15,7 +15,7 @@ class UserPersistence:
         self.db = db
 
     def user_plan_info_db(self, user_id):
-        return self.db.query(SubscriptionPlan).filter(SubscriptionPlan.user_id == user_id).order_by(SubscriptionPlan.id.desc()).first()
+        return self.db.query(UserSubscriptions).filter(UserSubscriptions.user_id == user_id).order_by(UserSubscriptions.id.desc()).first()
 
     def set_reset_password_sent_now(self, user_id: int):
         send_message_expiration_time = datetime.now()
