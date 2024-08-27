@@ -345,7 +345,7 @@ const Dashboard: React.FC = () => {
 
   return (
     <>
-    <Box sx={{ display: { md: 'none' } }}>
+    {/* <Box sx={{ display: { md: 'none' } }}>
       <NavigationMenu/>
       
     </Box>
@@ -404,7 +404,7 @@ const Dashboard: React.FC = () => {
             <MenuItem onClick={handleSignOut}>Sign Out</MenuItem>
           </Menu>
         </Box>
-      </Box>
+      </Box> */}
       <Grid container spacing={{ md: 1, lg: 3 }} sx={dashboardStyles.mainItemContent}>
         <Grid item xs={12} sx={{ padding: "0px", display: { xs: 'block', md: 'none' }  }}>
           <TrialStatus />

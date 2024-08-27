@@ -680,7 +680,7 @@ const Leads: React.FC = () => {
                 </Box>
             )}
             <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-                <Box sx={{
+                {/* <Box sx={{
                     position: 'fixed',
                     top: 0,
                     left: 0,
@@ -722,9 +722,9 @@ const Leads: React.FC = () => {
                             </Menu>
                         </Box>
                     </Box>
-                </Box>
+                </Box> */}
 
-                <Box sx={{ flex: 1, marginTop: '90px', display: 'flex', flexDirection: 'column' }}>
+                <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
                     <Grid container sx={{ flex: 1 }}>
                         <Grid item xs={12} md="auto" lg="auto" sx={{
                             padding: "0px",
@@ -815,6 +815,9 @@ const Leads: React.FC = () => {
                                             padding: '10px',
                                             mt: 1.25,
                                             opacity: selectedRows.size === 0 ? 0.4 : 1,
+                                            '@media (max-width: 900px)': {
+                                                display: 'none'
+                                            }
                                         }}
                                         disabled={selectedRows.size === 0}
                                     >
@@ -839,7 +842,11 @@ const Leads: React.FC = () => {
                                             border: '1px solid rgba(184, 184, 184, 1)',
                                             borderRadius: '4px',
                                             padding: '0.5em',
-                                            mt: 1.25
+                                            mt: 1.25,
+                                            '@media (max-width: 900px)': {
+                                                border: 'none',
+                                                padding: 0
+                                            }
                                         }}
                                         onClick={handleDownload}
                                         disabled={selectedRows.size === 0}
@@ -907,6 +914,27 @@ const Leads: React.FC = () => {
                                             {formattedDates}
                                         </Typography>
                                     </Button>
+                                    <Button
+                                        onClick={handleAudiencePopupOpen}
+                                        aria-haspopup="true"
+                                        sx={{
+                                            marginRight: '1.5em',
+                                            textTransform: 'none',
+                                            color: selectedRows.size === 0 ? 'rgba(128, 128, 128, 1)' : 'rgba(80, 82, 178, 1)',
+                                            border: '1px solid rgba(80, 82, 178, 1)',
+                                            borderRadius: '4px',
+                                            padding: '10px',
+                                            mt: 1.25,
+                                            opacity: selectedRows.size === 0 ? 0.4 : 1,
+                                            '@media (min-width: 901px)': {
+                                                display: 'none'
+                                            }
+                                        }}
+                                        disabled={selectedRows.size === 0}
+
+                                    >
+                                        <Image src='/add.svg' alt='logo' height={24} width={24} />
+                                    </Button>
                                 </Box>
                             </Box>
                             <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, mt: 2 }}>
@@ -926,7 +954,7 @@ const Leads: React.FC = () => {
                                     />
                                 ))}
                             </Box>
-                            <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', padding: 2, maxHeight: '78vh', maxWidth: '100%' }}>
+                            <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', padding: 2, maxHeight: '78vh', maxWidth: '100%', pl: 0 }}>
                                 {status === 'PIXEL_INSTALLATION_NEEDED' ? (
                                     <Box sx={centerContainerStyles}>
                                         <Typography variant="h5" sx={{ mb: 2 }}>
