@@ -2,7 +2,7 @@ from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
 
-class MailchimpUserScheme(BaseModel):
+class MailchimpCustomer(BaseModel):
     mailchimp_user_id: str
     email: str
     unique_email_id: Optional[str]

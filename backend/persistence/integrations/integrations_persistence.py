@@ -30,7 +30,7 @@ class IntegrationsPresistence:
         return self.db.query(UserIntegration).filter(UserIntegration.user_id == user_id).all()
     
 
-    def get_user_integrations_by_service(self, user_id: int, service_name: str) -> UserIntegration:
+    def get_credentials_for_service(self, user_id: int, service_name: str) -> UserIntegration:
         return self.db.query(UserIntegration) \
             .filter(UserIntegration.user_id == user_id, UserIntegration.service_name == service_name).first()
 

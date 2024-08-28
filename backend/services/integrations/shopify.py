@@ -1,111 +1,141 @@
 from fastapi import HTTPException
 from httpx import Client
-from schemas.integrations.shopify import ShopifyUserScheme 
+from schemas.integrations.shopify import ShopifyCustomer 
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
-from typing import List, Any
 from datetime import datetime
-import logging
-from .utils import IntegrationsABC
+from schemas.integrations.integrations import IntegrationCredentials
+from typing import List
 
 
-class ShopifyIntegrationService(IntegrationsABC):
+class ShopifyIntegrationService:
 
     def __init__(self, integration_persistence: IntegrationsPresistence, client: Client):
         self.integration_persistence = integration_persistence
         self.client = client
 
-
-    def mapped_leads(self, leads: List[Any]) -> List[ShopifyUserScheme]:
-        shopify_users = []
-        for lead in leads:
-            sms_marketing_consent = lead.get("sms_marketing_consent") or {}
-            email_marketing_consent = lead.get("email_marketing_consent") or {}
-            shopify_users.append(ShopifyUserScheme(
-                shopify_user_id=lead.get("id"),
-                email=lead.get("email"),
-                updated_at=datetime.now(),
-                first_name=lead.get("first_name"),
-                last_name=lead.get("last_name"),
-                orders_count=lead.get("orders_count", 0),
-                state=lead.get("state"),
-                total_spent=lead.get("total_spent", '0.00'),
-                last_order_id=lead.get("last_order_id"),
-                note=lead.get("note"),
-                verified_email=lead.get("verified_email", False),
-                multipass_identifier=lead.get("multipass_identifier"),
-                tax_exempt=lead.get("tax_exempt", False),
-                tags=lead.get("tags"),
-                last_order_name=lead.get("last_order_name"),
-                currency=lead.get("currency", 'GBP'),
-                phone=lead.get("phone"),
-                accepts_marketing=lead.get("accepts_marketing", False),
-                accepts_marketing_updated_at=lead.get("accepts_marketing_updated_at"),
-                marketing_opt_in_level=lead.get("marketing_opt_in_level"),
-                email_marketing_consent_state=email_marketing_consent.get("state"),
-                email_marketing_consent_opt_in_level=email_marketing_consent.get("opt_in_level"),
-                sms_marketing_consent_state=sms_marketing_consent.get("state"),
-                admin_graphql_api_id=lead.get("admin_graphql_api_id"),
-                address_id=lead.get("address_id"),
-                address_first_name=lead.get("address_first_name"),
-                address_last_name=lead.get("address_last_name"),
-                address_company=lead.get("address_company"),
-                address1=lead.get("address1"),
-                address2=lead.get("address2"),
-                address_city=lead.get("address_city"),
-                address_province=lead.get("address_province"),
-                address_country=lead.get("address_country"),
-                address_zip=lead.get("address_zip"),
-                address_phone=lead.get("address_phone"),
-                address_name=lead.get("address_name"),
-                address_province_code=lead.get("address_province_code"),
-                address_country_code=lead.get("address_country_code"),
-                address_country_name=lead.get("address_country_name"),
-                address_default=lead.get("address_default", False)
-            ))
-        return shopify_users
+    
+    def __get_credentials(self, user_id: int):
+        return self.integration_persistence.get_credentials_for_service(user_id, 'Shopify')
 
 
-
-
-    def get_all_leads(self, shop_domain: str, access_token: str):
-        logging.info(f'Get leads from Shopify <- shop_domain: {shop_domain}, X-Shopify-Access-Token: {access_token}')
+    def __get_customers(self, shop_domain: str, access_token: str):
         response = self.client.get(f'https://{shop_domain}.myshopify.com/admin/api/2023-07/customers.json', headers={'X-Shopify-Access-Token': access_token})
         if response.status_code != 200:
             raise HTTPException(status_code=400, detail='Shopify credentials invalid')
         return response.json().get('customers')
 
 
-    def save_integrations(self, shop_domain: str, access_token: str, user):
-        credentials = {'user_id': user['id'], 'shop_domain': shop_domain, 'access_token': access_token, 'service_name': 'shopify' }
-        integration = self.integration_persistence.get_user_integrations_by_service(user['id'], 'shopify')
-        if not integration:
-            logging.info(f'{user['email']} create integration Shopify')
-            integration = self.integration_persistence.create_integration(credentials)
-            return integration
-        logging.info(f'{user['email']} update integration Shopify')
-        self.integration_persistence.edit_integrations(integration.id, credentials)
-        return 
-
-
-    def save_leads(self, leads: List[ShopifyUserScheme], user_id):
-        for lead in leads:
-            with self.integration_persistence as persistence:
-                persistence.shopify.save_leads(lead.model_dump(), user_id)
-
-
-    def create_integration(self, user, shop_domain: str, access_token: str):
-        leads = self.get_all_leads(shop_domain, access_token)
-        self.save_integrations(shop_domain, access_token, user)
-        self.save_leads(self.mapped_leads(leads), user['id'])
-        return
+    def __save_integration(self, shop_domain: str, access_token: str, user_id: int):
+        credentails = {'user_id': user_id, 'shop_domain': shop_domain,
+                       'access_token': access_token, 'service_name': 'Shopify'}
+        integrations = self.integration_persistence.create_integration(credentails)
+        if not integrations:
+            raise HTTPException(status_code=409)
+        return integrations
     
-    def auto_import(self):
-        user_integration = self.integration_persistence.get_users_integrations('shopify')
-        with self.integration_persistence as service:
-            credentials = service.get_user_integrations_by_service(user_integration.user_id, 'shopify')
-            if not credentials:
-                raise HTTPException(status_code=404, detail='Klaviyo integrations not found')
-        self.save_leads(self.mapped_leads(self.get_all_leads(credentials.shop_domain, credentials.access_token)), user_integration.user_id)
+
+    def __save_customer(self, customer: ShopifyCustomer, user_id: int):
+        with self.integrations_persistence as serivce:
+            serivce.shopify.save_customer(customer.model_dump(), user_id)
+
+
+    def add_integrataion(self, user, credentials: IntegrationCredentials):
+        if user['company_website'] != f'https://{credentials.shopify.shop_domain}.myshopify.com':
+            raise HTTPException(status_code=400, detail={'status': 'error', 'detail': {'message': 'Store Domain does not match the one you specified earlier'}})
+        customers = [self.__mapped_customer(customer) for customer in self.__get_customers(credentials.shopify.shop_domain, credentials.shopify.access_token)]
+        integrataion = self.__save_integration(credentials.shopify.access_token, user['id'])
+        self.__save_customer(customer for customer in customers)
+        return {
+            'status': 'Successfuly',
+            'detail': {
+                'id': integrataion.id,
+                'serivce_name': 'Shopify'
+            }
+        }        
+
+    def __create_or_upadte_shopify_customer(self, customer, shop_domain: str, access_token: str):
+        customer_json = self.__mapped_customer_for_shopify(customer)
+        response = self.client.post(f'https://{shop_domain}.myshopify.com/admin/api/2024-07/customers.json', headers={'X-Shopify-Token': {access_token, "Content-Type: application/json"}}, data=customer_json)
+        if response.status_code != 201:
+            raise HTTPException(status_code=response.status_code)
+        return response.json().get('customers')
+
+    def export_sync(self, user, list_name: str, list_id: str = None, customers_ids: List[int] = None, filter_id: int = None):
+        credential = self.__get_credentials(user['id'])
+        if not list_id:
+            list_id = self.__create_list(list_name)
+        if not customers_ids:
+            if not filter_id:
+                raise HTTPException(status_code=400, detail={'status': 'error', 'detail': {'message': 'Filter is empty' } } )
+            custoemrs_ids = self.leads_persistence.get_customer_by_filter_id(user['id'], filter_id)
+        customers_klaviyo_ids = self.__get_customers_klaiyo_ids(customers_ids, user['id'])
+        klaviyo_ids = [self.__create_or_update_klaviyo_cutomer(customer, customer_klaviyo_id) for (customer, customer_klaviyo_id) in zip([self.leads_persistence.get_lead_data(customer_id) for customer_id in customers_klaviyo_ids], customers_klaviyo_ids)]
+
+        for klaviyo_id in klaviyo_ids:
+            self.__add_customer_to_list(list_id, klaviyo_id, credential.access_token)
+        return {
+            'status': 'Success'
+        }
+
+    def __mapped_customer(self, customer) -> ShopifyCustomer:
+        sms_marketing_consent = customer.get("sms_marketing_consent") or {}
+        email_marketing_consent = customer.get("email_marketing_consent") or {}
+        return ShopifyCustomer(
+            shopify_user_id=customer.get("id"),
+            email=customer.get("email"),
+            updated_at=datetime.now(),
+            first_name=customer.get("first_name"),
+            last_name=customer.get("last_name"),
+            orders_count=customer.get("orders_count", 0),
+            state=customer.get("state"),
+            total_spent=customer.get("total_spent", '0.00'),
+            last_order_id=customer.get("last_order_id"),
+            note=customer.get("note"),
+            verified_email=customer.get("verified_email", False),
+            multipass_identifier=customer.get("multipass_identifier"),
+            tax_exempt=customer.get("tax_exempt", False),
+            tags=customer.get("tags"),
+            last_order_name=customer.get("last_order_name"),
+            currency=customer.get("currency", 'GBP'),
+            phone=customer.get("phone"),
+            accepts_marketing=customer.get("accepts_marketing", False),
+            accepts_marketing_updated_at=customer.get("accepts_marketing_updated_at"),
+            marketing_opt_in_level=customer.get("marketing_opt_in_level"),
+            email_marketing_consent_state=email_marketing_consent.get("state"),
+            email_marketing_consent_opt_in_level=email_marketing_consent.get("opt_in_level"),
+            sms_marketing_consent_state=sms_marketing_consent.get("state"),
+            admin_graphql_api_id=customer.get("admin_graphql_api_id"),
+            address_id=customer.get("address_id"),
+            address_first_name=customer.get("address_first_name"),
+            address_last_name=customer.get("address_last_name"),
+            address_company=customer.get("address_company"),
+            address1=customer.get("address1"),
+            address2=customer.get("address2"),
+            address_city=customer.get("address_city"),
+            address_province=customer.get("address_province"),
+            address_country=customer.get("address_country"),
+            address_zip=customer.get("address_zip"),
+            address_phone=customer.get("address_phone"),
+            address_name=customer.get("address_name"),
+            address_province_code=customer.get("address_province_code"),
+            address_country_code=customer.get("address_country_code"),
+            address_country_name=customer.get("address_country_name"),
+            address_default=customer.get("address_default", False)
+        )
     
-    def auto_sync(self):
-        self.auto_import()
+    def __mapped_customer_for_shopify(self, customer):
+        return {
+             "first_name": customer.first_name,
+            "last_name": customer.last_name,
+            "email": customer.business_email,
+            "phone": customer.mobile_phone,
+            "addresses": [{
+                "address1": customer.company_address,
+                "city": customer.company_city,
+                "province": customer.company_state,
+                "zip": customer.company_zip,
+                "phone": customer.mobile_phone,
+                "last_name": customer.last_name,
+                "first_name": customer.first_name,
+                "country": "CA"
+            }]}

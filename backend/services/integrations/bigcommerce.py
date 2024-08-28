@@ -1,81 +1,85 @@
+from sqlalchemy.orm import Session
+from persistence.leads_persistence import LeadsPersistence
+from persistence.integrations.integrations_persistence import IntegrationsPresistence
 from fastapi import HTTPException
 from httpx import Client
 from schemas.integrations.bigcommerce import BigCommerceUserScheme
-from persistence.integrations.integrations_persistence import IntegrationsPresistence
-from typing import List, Any
+from typing import List
 from datetime import datetime
-import logging
-from .utils import IntegrationsABC
+from schemas.integrations.integrations import IntegrationCredentials
 
+class BigcommerceIntegrations:
 
-class BigcommerceIntegrationService(IntegrationsABC):
-
-    def __init__(self, integration_persistence: IntegrationsPresistence, client: Client):
-        self.integration_persistence = integration_persistence
+    def __init__(self, session: Session, integrations_persistence: IntegrationsPresistence, leads_persistence: LeadsPersistence, client: Client):
+        self.session = session
+        self.integrations_persistence = integrations_persistence
+        self.leads_persistence = leads_persistence
         self.client = client
 
-    def mapped_leads(self, leads: List[Any]) -> List[BigCommerceUserScheme]:
-        bigcommerce_users = []
-        for lead in leads:
-            bigcommerce_users.append(BigCommerceUserScheme(
-                authentication_force_password_reset=lead.get("authentication", {}).get("force_password_reset", False),
-                company=lead.get("company"),
-                customer_group_id=lead.get("customer_group_id", 0),
-                email=lead.get("email"),
-                first_name=lead.get("first_name"),
-                last_name=lead.get("last_name"),
-                notes=lead.get("notes"),
-                phone=lead.get("phone"),
-                registration_ip_address=lead.get("registration_ip_address"),
-                tax_exempt_category=lead.get("tax_exempt_category"),
-                date_modified=datetime.now(),
-                accepts_product_review_abandoned_cart_emails=lead.get("accepts_product_review_abandoned_cart_emails", False),
-                origin_channel_id=lead.get("origin_channel_id"),
-                channel_ids=lead.get("channel_ids")
-            ))
-        return bigcommerce_users
+    def __get_credentials(self, user_id: int):
+        with self.integrations_persistence as service:
+            return service.get_credentials_for_service(user_id, 'BigCommerce')
 
-
-    def get_all_leads(self, shop_hash: str, access_token: str):  
-        logging.info(f'Get leads from BigCommerce <- email: {self.user['email']}, shop_hash: {shop_hash}, X-Auth-Token: {access_token}')
+    def __get_customers(self, shop_hash: str, access_token: str) -> List[dict]:
         response = self.client.get(f'https://api.bigcommerce.com/stores/{shop_hash}/v3/customers', headers={'X-Auth-Token': access_token})
         if response.status_code != 200:
-            raise HTTPException(status_code=400, detail='Bigcommerce credentials invalid')
+            raise HTTPException(status_code=response.status_code, detail=response.json().get('errors')[0].get('detail'))
         return response.json().get('data')
 
-
-    def save_integrations(self, shop_hash: str, access_token: str, user):
-        credentials = {'user_id': user['id'], 'shop_domain': shop_hash, 'access_token': access_token, 'service_name': 'klaviyo' }
-        integration = self.integration_persistence.get_user_integrations_by_service(user['id'], 'klaviyo')
-        if not integration:
-            logging.info(f'{user['email']} create integration Bigcommerce')
-            integration = self.integration_persistence.create_integration(credentials)
+    def __save_integration(self, shop_hash: str, access_token: str, user_id: int):
+        credentials = {'user_id': user_id, 'shop_domain': shop_hash, 'access_token': access_token, 'service_name': 'BigCommerce'}
+        with self.integrations_persistence as service:
+            integration = service.create_integration(credentials)
+            if not integration:
+                raise HTTPException(status_code=409, detail='Integration already exists')
             return integration
-        logging.info(f'{user['email']} update integration Bigcommerce')
-        self.integration_persistence.edit_integrations(integration.id, credentials)
-        return 
+
+    def __save_customer(self, customer: BigCommerceUserScheme, user_id: int):
+        with self.integrations_persistence as service:
+            service.bigcommerce.save_customer(customer.model_dump(), user_id)
+
+    def __get_shop_info(self, shop_hash, api_key: str):
+        response = self.client.get(f'https://api.bigcommerce.com/stores/{shop_hash}/v2/store',
+                                   headers={
+                                       'X-Auth-Token': api_key
+                                   })
+        if response.status_code != 200:
+            raise HTTPException(status_code=400, detail={'status': 'error', 'detail': {'message': 'Credentials invalid'}})
+        return response.json()
     
 
-    def save_leads(self, leads: List[BigCommerceUserScheme], user_id):
-        for lead in leads:
-            with self.integration_persistence as persistence:
-                persistence.bigcommerce.save_leads(lead.model_dump(), user_id)
+    def add_integration(self, credentials: IntegrationCredentials, user):
+        shop_info = self.__get_shop_info()
+        if user['company_website '] != shop_info['domain']:
+            raise HTTPException(status_code=400, detail={'status': 'error', 'detail': {
+                'message': 'This Store does not match the one you specified earlier'
+            }})
+        customers = [self.__mapped_customer(customer) for customer in self.__get_customers(credentials.bigcommerce.shop_domain, credentials.bigcommerce.access_token)]
+        integration = self.__save_integration(credentials.bigcommerce.shop_domain, credentials.bigcommerce.access_token, user['id'])
+        for customer in customers:
+            self.__save_customer(customer, user['id'])
+        return {
+            'status': 'Successfully added',
+            'detail': {
+                'id': integration.id,
+                'service_name': 'BigCommerce'
+            }
+        }
 
-
-    def create_integration(self, user, shop_domain: str, access_token: str):
-        leads = self.get_all_leads(shop_domain, access_token)
-        print(leads)
-        self.save_integrations(shop_domain, access_token, user)
-        self.save_leads(self.mapped_leads(leads), user['id'])
-        return 
-    
-    def auto_import(self):
-        user_integration = self.integration_persistence.get_users_integrations('bigcommerce')
-        with self.integration_persistence as service:
-            credentials = service.get_user_integrations_by_service(user_integration.user_id, 'bigcommerce')
-            if not credentials:
-                raise HTTPException(status_code=404, detail='Klaviyo integrations not found')
-        self.save_leads(self.mapped_leads(self.get_all_leads(credentials.shop_domain, credentials.access_token)))
-    
-    def auto_sync(self):
-        self.auto_import()
+    def __mapped_customer(self, customer: dict) -> BigCommerceUserScheme:
+        return BigCommerceUserScheme(
+            authentication_force_password_reset=customer.get("authentication", {}).get("force_password_reset", False),
+            company=customer.get("company"),
+            customer_group_id=customer.get("customer_group_id", 0),
+            email=customer.get("email"),
+            first_name=customer.get("first_name"),
+            last_name=customer.get("last_name"),
+            notes=customer.get("notes"),
+            phone=customer.get("phone"),
+            registration_ip_address=customer.get("registration_ip_address"),
+            tax_exempt_category=customer.get("tax_exempt_category"),
+            date_modified=datetime.now(),
+            accepts_product_review_abandoned_cart_emails=customer.get("accepts_product_review_abandoned_cart_emails", False),
+            origin_channel_id=customer.get("origin_channel_id"),
+            channel_ids=customer.get("channel_ids")
+        )

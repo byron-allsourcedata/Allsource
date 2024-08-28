@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 class IntegrationPersistenceABC(ABC):
 
     @abstractmethod
-    def save_leads(self):
+    def save_customer(self):
         ...
 
     def get_service_user_by_id(self):
@@ -20,7 +20,7 @@ class ServiceIntegrationsPersistence(IntegrationPersistenceABC):
     def __init__(self, session: Session):
         self.session = session
 
-    def save_leads(self, customer: dict, user_id: int):
+    def save_customer(self, customer: dict, user_id: int):
         existing_lead_user = self.session.query(LeadUser).join(Lead, Lead.id == LeadUser.lead_id).filter(Lead.business_email == customer['email'], LeadUser.user_id == user_id).first()
         if existing_lead_user:
             if getattr(existing_lead_user, self.integration_leads_column):

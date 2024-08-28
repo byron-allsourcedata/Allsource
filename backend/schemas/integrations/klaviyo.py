@@ -2,7 +2,7 @@ from pydantic import BaseModel, EmailStr
 import typing as tp
 from datetime import datetime
 
-class KlaviyoUsersScheme(BaseModel):
+class KlaviyoCustomer(BaseModel):
     klaviyo_user_id: str
     email: EmailStr
     first_name: tp.Optional[str] = None
@@ -17,3 +17,6 @@ class KlaviyoUsersScheme(BaseModel):
     zip: tp.Optional[str] = None
     timezone: tp.Optional[str] = None
 
+class KlaviyoList(BaseModel):
+    id: str
+    list_name: str

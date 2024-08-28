@@ -3,7 +3,7 @@ from typing import Optional
 from datetime import datetime
 
 
-class ShopifyUserScheme(BaseModel):
+class ShopifyCustomer(BaseModel):
     shopify_user_id: int
     email: EmailStr
     updated_at: datetime
