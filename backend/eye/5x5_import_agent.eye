@@ -11,11 +11,11 @@ Eye.application 'maximiz.5x5_import_agent' do
     chain grace: 1.seconds
     WORKERS.times do |n|
       process "worker_#{n}" do
-        stdall File.join('/logs',"5x5_import_agent#{n}.log")
-        pid_file File.join('/tmp', "5x5_import_agent#{n}.pid")
+        stdall File.join('logs',"5x5_import_agent_#{n}.log")
+        pid_file File.join('tmp', "5x5_import_agent_#{n}.pid")
 
 
-        start_command "venv/bin/python 5x5_import_agent.py"
+        start_command "venv/bin/python bin/5x5_import_agent.py"
         stop_command 'kill -TERM {PID}'
 
 
@@ -23,7 +23,7 @@ Eye.application 'maximiz.5x5_import_agent' do
         stop_on_delete true
 
 
-        check :memory, every: 20.seconds, below: 100.megabytes, times: 3
+        check :memory, every: 20.seconds, below: 1000.megabytes, times: 3
       end
     end
   end
