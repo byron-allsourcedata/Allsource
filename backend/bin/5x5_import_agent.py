@@ -179,15 +179,16 @@ async def on_message_received(message, s3_session, credentials, session):
                                 last_name_id=last_name_id,
                                 additional_personal_emails=convert_to_none(row.get('ADDITIONAL_PERSONAL_EMAILS'))
                             )
-
                             five_x_five_user = session.merge(five_x_five_user)
                             session.flush()
-                            business_emails = str(row.get('BUSINESS_EMAIL', '')).split(', ')
-                            personal_emails = str(row.get('PERSONAL_EMAILS', '')).split(', ')
-                            additional_personal_emails = str(row.get('ADDITIONAL_PERSONAL_EMAILS', '')).split(', ')
-                            save_emails_to_user(session, additional_personal_emails, five_x_five_user.id, 'additional_personal_email')
-                            save_emails_to_user(session, business_emails, five_x_five_user.id, 'business')
-                            save_emails_to_user(session, personal_emails, five_x_five_user.id, 'personal')
+
+                            emails = str(row.get('BUSINESS_EMAIL', '')).split(', ')
+                            save_emails_to_user(session, emails, five_x_five_user.id, 'business')
+                            emails = str(row.get('PERSONAL_EMAILS', '')).split(', ')
+                            save_emails_to_user(session, emails, five_x_five_user.id, 'personal')
+                            emails = str(row.get('ADDITIONAL_PERSONAL_EMAILS', '')).split(', ')
+                            save_emails_to_user(session, emails, five_x_five_user.id, 'additional_personal')
+
                             logging.info('Committing transaction')
                             session.commit()
                             logging.info(f"{message_json['file_name']} processed")
