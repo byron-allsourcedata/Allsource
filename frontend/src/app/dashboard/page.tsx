@@ -78,6 +78,7 @@ const VerifyPixelIntegration: React.FC = () => {
           lineHeight: "normal",
           textAlign: "left",
           color: '#1c1c1c',
+          fontSize: '16px',
           marginBottom: '1.5rem',
           '@media (max-width: 900px)': {
             fontSize: '16px',

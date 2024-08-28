@@ -13,18 +13,18 @@ export const styles: { [key: string]: SxProps<Theme> } = {
   employeeButtons: {
     display: 'flex',
     flexWrap: 'wrap',
-    gap: '8px',
-    color: 'black',
+    gap: '12px',
+    color: 'rgba(0, 0, 0, 1)',
     width: '100%',
     marginBottom: '2.5em',
     textTransform: 'none',
-    '@media (max-width: 600px)': { marginBottom: 1, }
+    '@media (max-width: 600px)': { marginBottom: 1, gap: '14px', }
   },
   visitsButtons: {
     display: 'flex',
     flexWrap: 'wrap',
     gap: '12px',
-    color: 'black',
+    color: 'rgba(0, 0, 0, 1)',
     width: '100%',
     marginBottom: '2.5em',
     textTransform: 'none',
@@ -33,33 +33,34 @@ export const styles: { [key: string]: SxProps<Theme> } = {
   },
   visitButton: {
     padding: '9px 16px',
-    color: 'black',
+    color: 'rgba(0, 0, 0, 1)',
     border: '1px solid #ccc',
     textTransform: 'none'
   },
   employeeButton: {
-    padding: '0.25em 2.25em',
-    color: 'black',
+    padding: '9px 20px',
+    color: 'rgba(0, 0, 0, 1)',
     border: '1px solid #ccc',
     textTransform: 'none',
+    '@media (max-width: 600px)': { padding: '8px 16px', minWidth: '96px', maxHeight: '38px' }
   },
   rolesButtons: {
     display: 'flex',
     flexWrap: 'wrap',
-    gap: '12px',
-    color: 'black',
-    width: '115%',
+    gap: '10px',
+    color: 'rgba(0, 0, 0, 1)',
+    width: '100%',
     marginBottom: '2.5em',
     textTransform: 'none',
     '@media (max-width: 400px)': { marginBottom: 1.5, width: '100%' },
-    '@media (max-width: 600px)': { marginBottom: 2.5, width: '100%' }
+    '@media (max-width: 600px)': { marginBottom: 2, width: '100%', gap:'16px' }
   },
   roleButton: {
-    padding: '0.25em 1.5em',
     color: 'black',
     border: '1px solid #ccc',
     textTransform: 'none',
-    '@media (max-width: 600px)': { padding: '0.25em 1.25em' }
+    padding: '8px 8px',
+    '@media (max-width: 600px)': { padding: '6px' }
   },
   activeButton: {
     backgroundColor: '#007BFF',
@@ -135,7 +136,7 @@ export const styles: { [key: string]: SxProps<Theme> } = {
     justifyContent: 'center',
     borderRadius: '0.5em',
     backgroundColor: '#fff',
-    '@media (max-width: 400px)': { pl: 1, pt: 0, height: '77vh',  },
+    '@media (max-width: 400px)': { pl: 0, pt: 0, height: '77vh',  },
     '@media (max-width: 600px)': {height: '77vh',display: 'flex',flexDirection: 'column',alignItems: 'center',justifyContent: 'center'},
     '@media (max-height: 670px)': { pl: 0, gap: 0 },
   },
@@ -146,7 +147,7 @@ export const styles: { [key: string]: SxProps<Theme> } = {
     lineHeight: '38.19px',
     marginBottom: '0.25em',
     textAlign: 'start',
-    '@media (max-width: 600px)': { fontSize: '24px', lineHeight: '32.74px', }
+    '@media (max-width: 600px)': { fontSize: '24px', lineHeight: '32.74px', marginBottom: '0.15em', }
   },
   subtitle: {
     marginBottom: '2em',
@@ -155,7 +156,7 @@ export const styles: { [key: string]: SxProps<Theme> } = {
     fontSize: '16px',
     fontWeight: '700',
     textAlign: 'start',
-    '@media (max-width: 600px)': { marginBottom: 0.35 }
+    '@media (max-width: 600px)': { marginBottom: 0.15 }
   },
   text: {
     color: 'rgba(72, 72, 72, 1)',
@@ -165,7 +166,7 @@ export const styles: { [key: string]: SxProps<Theme> } = {
     lineHeight: '21.82px',
     textAlign: 'left',
     paddingBottom: '0.75em',
-    '@media (max-width: 600px)': { marginBottom: 0.35, fontSize: '14px', fontWeight: '400' }
+    '@media (max-width: 600px)': { marginBottom: 0, fontSize: '14px', fontWeight: '400' }
   },
 
   formField: {
@@ -186,7 +187,7 @@ export const styles: { [key: string]: SxProps<Theme> } = {
     },
   },
   form: {
-    display: 'flex', flexDirection: 'column', justifyContent: 'center', alignContent: 'start', '@media (max-width: 400px)': { paddingLeft: 2,}, '@media (max-width: 600px)': { paddingRight: 1, paddingLeft: 1,}
+    display: 'flex', flexDirection: 'column', justifyContent: 'center', alignContent: 'center', '@media (max-width: 400px)': { paddingLeft: 2.5,}, '@media (max-width: 600px)': { paddingRight: 2.5, paddingLeft: 2.5,}
   },
   submitButton: {
     backgroundColor: 'rgba(244, 87, 69, 1)',

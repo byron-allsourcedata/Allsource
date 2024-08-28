@@ -95,7 +95,7 @@ const Slider: React.FC = () => {
         }}
       >
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 2, borderBottom: '1px solid #e4e4e4' }}>
-          <Typography variant="h6" sx={{ textAlign: 'center', color: '#4A4A4A', fontFamily: 'Nunito', fontWeight: '500', fontSize: '20px', lineHeight: '27px', '@media (max-width: 600px)': { fontSize: '16px' } }}>
+          <Typography variant="h6" sx={{ textAlign: 'center', color: '#4A4A4A', fontFamily: 'Nunito', fontWeight: '500', fontSize: '20px', lineHeight: '27px', '@media (max-width: 600px)': { fontSize: '16px', textAlign: 'left' } }}>
             Unlock the full potential with our maximiz!
           </Typography>
           <IconButton onClick={handleClose}>
