@@ -227,14 +227,11 @@ async def on_message_received(message, s3_session, credentials, session):
                             save_phones_to_user(session, mobile_phone, five_x_five_user.id, 'mobile_phone')
                             save_phones_to_user(session, direct_number, five_x_five_user.id, 'direct_number')
                             save_phones_to_user(session, personal_phone, five_x_five_user.id, 'personal_phone')
-
-                            logging.info('Committing transaction')
                             session.commit()
-                            logging.info(f"{message_json['file_name']} processed")
                         except Exception as e:
                             logging.error(f"Error processing message: {e}", exc_info=True)
                             session.rollback()
-    session.close()
+        logging.info(f"{message_json['file_name']} processed")
 
 
 async def main():
