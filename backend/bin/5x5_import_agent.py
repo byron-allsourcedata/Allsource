@@ -52,6 +52,26 @@ def convert_to_none(value):
         return None
     return value
 
+def save_emails_to_user(session, emails, five_x_five_user_id,type):
+    for email in emails:
+        email = email.strip()
+        email = convert_to_none(email)
+        if email:
+            email_obj = session.query(FiveXFiveEmails).filter(
+                FiveXFiveEmails.email == email).first()
+            if not email_obj:
+                email_obj = FiveXFiveEmails(
+                    email=email,
+                    email_host=email.split('@')[-1] if '@' in email else None
+                )
+                session.add(email_obj)
+                session.flush()
+            session.add(FiveXFiveUsersEmails(
+                user_id=five_x_five_user_id.id,
+                email_id=email_obj.id,
+                type=type
+            ))
+
 
 async def on_message_received(message, s3_session, credentials, db_session):
     session = db_session()
@@ -163,44 +183,8 @@ async def on_message_received(message, s3_session, credentials, db_session):
 
                             business_emails = str(row.get('BUSINESS_EMAIL', '')).split(', ')
                             personal_emails = str(row.get('PERSONAL_EMAILS', '')).split(', ')
-
-                            for business_email in business_emails:
-                                business_email = business_email.strip()
-                                business_email = convert_to_none(business_email)
-                                if business_email:
-                                    email_obj = session.query(FiveXFiveEmails).filter(
-                                        FiveXFiveEmails.email == business_email).first()
-                                    if not email_obj:
-                                        email_obj = FiveXFiveEmails(
-                                            email=business_email,
-                                            email_host=business_email.split('@')[-1] if '@' in business_email else None
-                                        )
-                                        session.add(email_obj)
-                                        session.flush()
-                                    session.add(FiveXFiveUsersEmails(
-                                        user_id=five_x_five_user.id,
-                                        email_id=email_obj.id,
-                                        type='business'
-                                    ))
-
-                            for personal_email in personal_emails:
-                                personal_email = personal_email.strip()
-                                personal_email = convert_to_none(personal_email)
-                                if personal_email:
-                                    email_obj = session.query(FiveXFiveEmails).filter(
-                                        FiveXFiveEmails.email == personal_email).first()
-                                    if not email_obj:
-                                        email_obj = FiveXFiveEmails(
-                                            email=personal_email,
-                                            email_host=personal_email.split('@')[-1] if '@' in personal_email else None
-                                        )
-                                        session.add(email_obj)
-                                        session.flush()
-                                    session.add(FiveXFiveUsersEmails(
-                                        user_id=five_x_five_user.id,
-                                        email_id=email_obj.id,
-                                        type='personal'
-                                    ))
+                            save_emails_to_user(session, business_emails, five_x_five_user.id, 'business')
+                            save_emails_to_user(session, personal_emails, five_x_five_user.id, 'personal')
                             logging.info('Committing transaction')
                             session.commit()
                         logging.info(f"{message_json['file_name']} processed")
