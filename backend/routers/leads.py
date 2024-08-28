@@ -42,7 +42,7 @@ async def get_leads(
         lead_funnel=lead_funnel,
         emails=emails,
         recurring_visits=recurring_visits,
-        search_query = search_query,
+        search_query=search_query,
     )
 
 
