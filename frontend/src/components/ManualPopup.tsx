@@ -136,8 +136,8 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode }) => {
             <Typography sx={maintext}>Verify Your Pixel</Typography>
           </Box>
           <Typography sx={subtext}>Once the pixel is pasted in your website, wait for 10-15 mins and verify your pixel.</Typography>
-        </Box>
-        <Box
+            <Box sx={{ position: 'relative', width: '100%', pt: 5, '@media (max-width: 600px)': {pt: 2}}}>
+            <Box
           sx={{
             padding: '1.1em',
             border: '1px solid #e4e4e4',
@@ -157,7 +157,7 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode }) => {
               fontWeight: '700',
               lineHeight: '21.82px',
               textAlign: 'left',
-              fontSize: '18px'
+              fontSize: '16px'
             }}
           >
             Send this to my developer
@@ -206,6 +206,9 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode }) => {
             </Button>
           </Box>
         </Box>
+            </Box>
+        </Box>
+
         <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-end', paddingBottom: '0em', '@media (max-width: 600px)': { justifyContent: 'center', pb: 3, width: '94%', pl: 2 } }}>
           <Button variant="outlined" sx={{ mr: 2, backgroundColor: 'rgba(255, 255, 255, 1)', color: 'rgba(80, 82, 178, 1)', textTransform: 'none', padding: '0.75em 2em', border: '1px solid rgba(80, 82, 178, 1)', '@media (max-width: 600px)': { width: '100%' }, }}>
             Contact support

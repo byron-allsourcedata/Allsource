@@ -247,9 +247,9 @@ export const ProgressSection: React.FC = () => {
               width={24}
               height={24}
             />
-            <Image src={"/crm1.svg"} alt="Shopify" width={20} height={20} />
+            <Image src={"/shopify.svg"} alt="Shopify" width={20} height={20} />
             <Image src={"/crm2.svg"} alt="Woo" width={20} height={20} />
-            <Image src={"/crm3.svg"} alt="Bigcommerce" width={20} height={20} />
+            <Image src={"/simple-icons_bigcommerce.svg"} alt="Bigcommerce" width={20} height={20} />
           </CustomButton>
         </List>
       </Box>
