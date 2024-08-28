@@ -44,3 +44,4 @@ class FiveXFiveUser(Base):
     last_name_id = Column(Integer, nullable=True)
     age_min = Column(Integer, nullable=True)
     age_max = Column(Integer, nullable=True)
+    additional_personal_emails = Column(TEXT, nullable=True)
