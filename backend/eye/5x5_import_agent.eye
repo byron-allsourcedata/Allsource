@@ -4,7 +4,7 @@ WORKERS = 10
 Eye.application 'maximiz.5x5_import_agent' do
 
 
-  working_dir File.expand_path("../../../", __FILE__)
+  working_dir File.expand_path("../../", __FILE__)
 
 
   group :workers do
