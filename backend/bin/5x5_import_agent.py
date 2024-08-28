@@ -52,7 +52,9 @@ def convert_to_none(value):
         return None
     return value
 
-def save_emails_to_user(session, emails, five_x_five_user_id,type):
+
+def save_emails_to_user(session, emails, five_x_five_user_id, type):
+    print(five_x_five_user_id)
     for email in emails:
         email = email.strip()
         email = convert_to_none(email)
@@ -67,7 +69,7 @@ def save_emails_to_user(session, emails, five_x_five_user_id,type):
                 session.add(email_obj)
                 session.flush()
             session.add(FiveXFiveUsersEmails(
-                user_id=five_x_five_user_id.id,
+                user_id=five_x_five_user_id,
                 email_id=email_obj.id,
                 type=type
             ))
@@ -76,25 +78,25 @@ def save_emails_to_user(session, emails, five_x_five_user_id,type):
 async def on_message_received(message, s3_session, credentials, db_session):
     session = db_session()
     async with message.process():
-        try:
-            message_json = json.loads(message.body)
-            async with s3_session.client(
-                    's3',
-                    region_name='us-west-2',
-                    aws_access_key_id=credentials['AccessKeyId'],
-                    aws_secret_access_key=credentials['SecretAccessKey'],
-                    aws_session_token=credentials['SessionToken']
-            ) as s3:
-                s3_obj = await s3.get_object(Bucket=BUCKET_NAME, Key=message_json['file_name'])
-                async with s3_obj["Body"] as body:
-                    with tempfile.NamedTemporaryFile(delete=True) as temp_file:
-                        file_data = await body.read()
-                        temp_file.write(file_data)
-                        temp_file.seek(0)
-                        with gzip.open(temp_file.name, 'rt', encoding='utf-8') as f:
-                            df = pd.read_csv(f)
+        message_json = json.loads(message.body)
+        async with s3_session.client(
+                's3',
+                region_name='us-west-2',
+                aws_access_key_id=credentials['AccessKeyId'],
+                aws_secret_access_key=credentials['SecretAccessKey'],
+                aws_session_token=credentials['SessionToken']
+        ) as s3:
+            s3_obj = await s3.get_object(Bucket=BUCKET_NAME, Key=message_json['file_name'])
+            async with s3_obj["Body"] as body:
+                with tempfile.NamedTemporaryFile(delete=True) as temp_file:
+                    file_data = await body.read()
+                    temp_file.write(file_data)
+                    temp_file.seek(0)
+                    with gzip.open(temp_file.name, 'rt', encoding='utf-8') as f:
+                        df = pd.read_csv(f)
 
-                        for _, row in df.iterrows():
+                    for _, row in df.iterrows():
+                        try:
                             last_updated = convert_to_none(
                                 pd.to_datetime(row.get('LAST_UPDATED', None), unit='s', errors='coerce'))
                             personal_emails_last_seen = convert_to_none(
@@ -176,23 +178,25 @@ async def on_message_received(message, s3_session, credentials, db_session):
                                 company_last_updated=company_last_updated,
                                 job_title_last_updated=job_title_last_updated,
                                 first_name_id=first_name_id,
-                                last_name_id=last_name_id
+                                last_name_id=last_name_id,
+                                additional_personal_emails=convert_to_none(row.get('ADDITIONAL_PERSONAL_EMAILS'))
                             )
 
                             five_x_five_user = session.merge(five_x_five_user)
-
+                            session.flush()
                             business_emails = str(row.get('BUSINESS_EMAIL', '')).split(', ')
                             personal_emails = str(row.get('PERSONAL_EMAILS', '')).split(', ')
+                            additional_personal_emails = str(row.get('ADDITIONAL_PERSONAL_EMAILS', '')).split(', ')
+                            save_emails_to_user(session, additional_personal_emails, five_x_five_user.id, 'additional_personal_email')
                             save_emails_to_user(session, business_emails, five_x_five_user.id, 'business')
                             save_emails_to_user(session, personal_emails, five_x_five_user.id, 'personal')
                             logging.info('Committing transaction')
                             session.commit()
-                        logging.info(f"{message_json['file_name']} processed")
-        except Exception as e:
-            logging.error(f"Error processing message: {e}", exc_info=True)
-            session.rollback()
-        finally:
-            session.close()
+                            logging.info(f"{message_json['file_name']} processed")
+                        except Exception as e:
+                            logging.error(f"Error processing message: {e}", exc_info=True)
+                            session.rollback()
+    session.close()
 
 
 async def main():
