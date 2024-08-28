@@ -77,7 +77,7 @@ def save_emails_to_user(session, emails, five_x_five_user_id, type):
                 type=type
             ).on_conflict_do_nothing()
             session.execute(five_x_five_user_email)
-
+            session.flush()
 
 def save_phones_to_user(session, phones, five_x_five_user_id, type):
     for number in phones:
@@ -100,6 +100,7 @@ def save_phones_to_user(session, phones, five_x_five_user_id, type):
                 type=type
             ).on_conflict_do_nothing()
             session.execute(five_x_five_user_phone)
+            session.flush()
 
 
 async def on_message_received(message, s3_session, credentials, session):
