@@ -155,7 +155,7 @@ async def on_message_received(message, s3_session, credentials, session):
                             age_range = str(row.get('AGE_RANGE', None))
                             age_min = None
                             age_max = None
-                            if age_range:
+                            if age_range and age_range != 'nan':
                                 if 'and older' in age_range:
                                     age_min = age_max = int(age_range.split()[0])
                                 elif '-' in age_range:
