@@ -8,7 +8,7 @@ import { Box, Button, Typography, Menu, MenuItem } from '@mui/material';
 import PersonIcon from '@mui/icons-material/Person';
 import axiosInterceptorInstance from '@/axios/axiosInterceptorInstance';
 import { emailStyles } from './emailStyles';
-import { showErrorToast } from '@/components/ToastNotification';
+import { showErrorToast, showToast } from '@/components/ToastNotification';
 import { useUser } from '../../context/UserContext'; 
 
 const EmailVerificate: React.FC = () => {
@@ -52,25 +52,6 @@ const EmailVerificate: React.FC = () => {
     router.push('/signin');
   };
 
-  const notify = () => {
-    toast.success(<CustomToast />, {
-      position: "bottom-center",
-      autoClose: 4000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      draggable: true,
-      style: {
-        background: '#EFFAE5',
-        color: '#56991B',
-        fontFamily: 'Nunito',
-        fontSize: '16px',
-        fontWeight: 'bold'
-      },
-      theme: "light",
-      transition: Bounce,
-      icon: false,
-    });
-  };
 
   const handleResendEmail = () => {
     if (canResend) {
@@ -81,6 +62,9 @@ const EmailVerificate: React.FC = () => {
         if (response.status === 200 && response.data.status === "RESEND_TOO_SOON") {
           showErrorToast("Resend too soon, please wait.");
         }
+        if (response.status === 200 && response.data.status === "CONFIRMATION_EMAIL_SENT") {
+          showToast('The letter was sent successfully')
+        }
       })
     }
   };
@@ -90,7 +74,7 @@ const EmailVerificate: React.FC = () => {
       axiosInterceptorInstance.get('check-verification-status')
         .then(response => {
           if (response.status === 200 && response.data.status === "EMAIL_VERIFIED") {
-            notify();
+            showToast('Verification done successfully');
             clearInterval(interval);
             router.push('/dashboard');
           }
@@ -121,7 +105,7 @@ const EmailVerificate: React.FC = () => {
   return (
     <>
       <ToastContainer
-        position="bottom-center"
+        position="top-right"
         autoClose={3000}
         hideProgressBar={false}
         newestOnTop={false}
@@ -138,12 +122,20 @@ const EmailVerificate: React.FC = () => {
           <Image src='/logo.svg' alt='logo' height={80} width={60} />
           </Box>
           <Button
-            aria-controls={open ? 'profile-menu' : undefined}
+            aria-controls={open ? "profile-menu" : undefined}
             aria-haspopup="true"
-            aria-expanded={open ? 'true' : undefined}
+            aria-expanded={open ? "true" : undefined}
             onClick={handleProfileMenuClick}
+            sx={{
+              minWidth: '32px',
+              padding: '8px',
+              color: 'rgba(128, 128, 128, 1)',
+              border: '1px solid rgba(184, 184, 184, 1)',
+              borderRadius: '3.27px',
+              marginRight: 2
+            }}
           >
-            <PersonIcon sx={emailStyles.account} />
+            <Image src={'/Person.svg'} alt="Person" width={18} height={18} />
           </Button>
           <Menu
             id="profile-menu"
@@ -151,12 +143,14 @@ const EmailVerificate: React.FC = () => {
             open={open}
             onClose={handleProfileMenuClose}
             MenuListProps={{
-              'aria-labelledby': 'profile-menu-button',
+              "aria-labelledby": "profile-menu-button",
             }}
           >
             <Box sx={{ p: 2 }}>
               <Typography variant="h6">{full_name}</Typography>
-              <Typography variant="body2" color="textSecondary">{userEmail}</Typography>
+              <Typography variant="body2" color="textSecondary">
+                {email}
+              </Typography>
             </Box>
             <MenuItem onClick={handleSettingsClick}>Settings</MenuItem>
             <MenuItem onClick={handleSignOut}>Sign Out</MenuItem>
@@ -164,18 +158,12 @@ const EmailVerificate: React.FC = () => {
       </Box>
 
       <Box sx={emailStyles.container}>
+        <Box sx={emailStyles.mainbox}>
         <Typography variant="h4" component="h1" sx={emailStyles.title}>
           Check your inbox
         </Typography>
         <Box sx={emailStyles.icon}>
           <Image src="/mail-icon.svg" alt="Mail Icon" width={200} height={200} />
-        </Box>
-        <Box sx={emailStyles.orDivider}>
-          <Box sx={{ borderBottom: '1px solid #000000', flexGrow: 1 }} />
-          <Typography variant="body1" sx={emailStyles.orText}>
-            OR
-          </Typography>
-          <Box sx={{ borderBottom: '1px solid #000000', flexGrow: 1 }} />
         </Box>
         <Box component="form" sx={emailStyles.form}>
           <Typography sx={emailStyles.text}>
@@ -187,20 +175,11 @@ const EmailVerificate: React.FC = () => {
             {canResend ? 'Resend Verification Email' : `Resend in ${timer}s`}
           </Button>
         </Typography>
+      </Box>  
       </Box>
     </>
   );
 };
 
-const CustomToast = () => (
-  <div style={{ color: 'green' }}>
-    <Typography style={{ fontWeight: 'bold', color: 'rgba(86, 153, 27, 1)' }}>
-      Success
-    </Typography>
-    <Typography variant="body2">
-      Verification done successfully
-    </Typography>
-  </div>
-);
 
 export default EmailVerificate;

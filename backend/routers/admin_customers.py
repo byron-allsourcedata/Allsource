@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, Query
 from services.admin_customers import AdminCustomersService
-from dependencies import get_admin_customers_service
+from dependencies import get_admin_customers_service, check_user_admin
 from config.rmq_connection import publish_rabbitmq_message, RabbitMQConnection
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(check_user_admin)])
 
 
 @router.get("/confirm_customer")
@@ -11,21 +11,18 @@ async def verify_token(admin_customers_service: AdminCustomersService = Depends(
                        mail: str = Query(...), free_trial: bool = Query(...)):
     user = admin_customers_service.confirmation_customer(mail, free_trial)
     queue_name = f'sse_events_{str(user.id)}'
-
     rabbitmq_connection = RabbitMQConnection()
     connection = await rabbitmq_connection.connect()
-
     try:
         await publish_rabbitmq_message(
             connection=connection,
             queue_name=queue_name,
-            message_body={'status': "BOOK_CALL_PASSED"}
+            message_body={'status': "BOOK_CALL_PASSED", 'percent': 50}
         )
     except:
         await rabbitmq_connection.close()
     finally:
         await rabbitmq_connection.close()
-
     return "OK"
 
 @router.get("/pixel_code_passed")
@@ -41,7 +38,7 @@ async def verify_token(admin_customers_service: AdminCustomersService = Depends(
         await publish_rabbitmq_message(
             connection=connection,
             queue_name=queue_name,
-            message_body={'status': "PIXEL_CODE_INSTALLED"}
+            message_body={'status': "PIXEL_CODE_INSTALLED", 'percent': 90}
         )
     except:
         await rabbitmq_connection.close()
@@ -49,3 +46,8 @@ async def verify_token(admin_customers_service: AdminCustomersService = Depends(
         await rabbitmq_connection.close()
 
     return 'OK'
+
+@router.get('/users')
+async def get_users(admin_customers_service: AdminCustomersService = Depends(get_admin_customers_service)):
+    users = admin_customers_service.get_users()
+    return users

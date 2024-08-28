@@ -15,7 +15,8 @@ export const fetchUserData = async () => {
         full_name: userInfo.full_name,
         company_website: userInfo.company_website,
         trial: userPlan.is_trial,
-        plan_end: userPlan.plan_end
+        plan_end: userPlan.plan_end,
+        percent_steps: userInfo.activate_percent
       }));
 
       return {
@@ -23,7 +24,8 @@ export const fetchUserData = async () => {
         full_name: userInfo.full_name,
         company_website: userInfo.company_website,
         trial: userPlan.is_trial,
-        days_left: userPlan.plan_end
+        days_left: userPlan.plan_end,
+        percent_steps: userInfo.percent_steps
       };
     } else {
       return null;

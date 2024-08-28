@@ -2,7 +2,7 @@
 import React, { Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
-import { Box, Button, TextField, Typography, IconButton, InputAdornment } from '@mui/material';
+import { Box, Button, TextField, Typography, IconButton, InputAdornment, List, ListItem, ListItemIcon, ListItemText } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import axiosInstance from '../../axios/axiosInterceptorInstance';
@@ -20,6 +20,7 @@ const ForgotPassword: React.FC = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [formValues, setFormValues] = useState({ password: '', confirmPassword: '' });
+  const [formSubmitted, setFormSubmitted] = useState(false); // Track form submission
 
   const validateField = (name: string, value: string) => {
     const newErrors: { [key: string]: string } = { ...errors };
@@ -29,14 +30,19 @@ const ForgotPassword: React.FC = () => {
         if (!value) {
           newErrors.password = 'Password is required';
         } else {
-          delete newErrors.password;
+          const passwordValidation = isPasswordValid(value);
+          if (!passwordValidation.length || !passwordValidation.upperCase || !passwordValidation.lowerCase) {
+            newErrors.password = 'Please enter a stronger password';
+          } else {
+            delete newErrors.password;
+          }
         }
         break;
       case 'confirmPassword':
         if (!value) {
           newErrors.confirmPassword = 'Confirm password is required';
         } else if (value !== formValues.password) {
-          newErrors.confirmPassword = 'Passwords do not match';
+          newErrors.confirmPassword = 'Invalid password combination.';
         } else {
           delete newErrors.confirmPassword;
         }
@@ -54,21 +60,38 @@ const ForgotPassword: React.FC = () => {
       ...formValues,
       [name]: value,
     });
-    validateField(name, value);
+    if (formSubmitted) {
+      validateField(name, value);
+    }
   };
+
+  const isPasswordValid = (password: string) => {
+    return {
+      length: password.length >= 8,
+      upperCase: /[A-Z]/.test(password),
+      lowerCase: /[a-z]/.test(password),
+    };
+  };
+
+  
+
+  const passwordValidation = isPasswordValid(formValues.password);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+    setFormSubmitted(true); // Mark the form as submitted
     const newErrors: { [key: string]: string } = {};
 
     if (!formValues.password) {
       newErrors.password = 'Password is required';
+    } else if (!passwordValidation.length || !passwordValidation.upperCase || !passwordValidation.lowerCase) {
+      newErrors.password = 'Please enter a stronger password';
     }
 
     if (!formValues.confirmPassword) {
       newErrors.confirmPassword = 'Confirm password is required';
     } else if (formValues.confirmPassword !== formValues.password) {
-      newErrors.confirmPassword = 'Passwords do not match';
+      newErrors.confirmPassword = 'Invalid password combination.';
     }
 
     setErrors(newErrors);
@@ -128,72 +151,126 @@ const ForgotPassword: React.FC = () => {
     setShowConfirmPassword(!showConfirmPassword);
   };
 
+  const CustomCheckCircleIcon = ({ isSuccess }: { isSuccess: boolean }) => (
+    <Image 
+        src={isSuccess ? "/tick-circle-green.svg" : "/tick-circle.svg"} 
+        alt={isSuccess ? "Success Check Circle" : "Disabled Check Circle"} 
+        height={16} width={16}
+    />
+  );
+
   return (
     <>
       <Box sx={updatepasswordStyles.logoContainer}>
-        <Image src='/logo.svg' alt='logo' height={80} width={60} />
+        <Image src='/logo.svg' alt='logo' height={30} width={50} />
       </Box>
-
-      <Box sx={updatepasswordStyles.container}>
-        <Typography variant="h4" component="h1" sx={updatepasswordStyles.title}>
-          Reset Your Password
-        </Typography>
-        <Typography variant="h4" component="h1" sx={updatepasswordStyles.subtitle}>
-          Please enter a new password for your Maximiz account
-        </Typography>
-        <Box component="form" onSubmit={handleSubmit} sx={updatepasswordStyles.form}>
-          <TextField
-            InputLabelProps={{ sx: updatepasswordStyles.inputLabel }}
-            label="Enter password"
-            name="password"
-            type={showPassword ? 'text' : 'password'}
-            variant="outlined"
-            fullWidth
-            margin="normal"
-            value={formValues.password}
-            onChange={handleChange}
-            error={Boolean(errors.password)}
-            helperText={errors.password}
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton onClick={togglePasswordVisibility} edge="end">
-                    {showPassword ? <VisibilityIcon /> : <VisibilityOffIcon />}
-                  </IconButton>
-                </InputAdornment>
-              ),
-            }}
-          />
-          <TextField
-            InputLabelProps={{ sx: updatepasswordStyles.inputLabel }}
-            label="Confirm password"
-            name="confirmPassword"
-            type={showConfirmPassword ? 'text' : 'password'}
-            variant="outlined"
-            fullWidth
-            margin="normal"
-            value={formValues.confirmPassword}
-            onChange={handleChange}
-            error={Boolean(errors.confirmPassword)}
-            helperText={errors.confirmPassword}
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton onClick={toggleConfirmPasswordVisibility} edge="end">
-                    {showConfirmPassword ? <VisibilityIcon /> : <VisibilityOffIcon />}
-                  </IconButton>
-                </InputAdornment>
-              ),
-            }}
-          />
-          <Button
-            type="submit"
-            variant="contained"
-            sx={updatepasswordStyles.submitButton}
-            fullWidth
-          >
-            Update Password
-          </Button>
+      <Box sx={updatepasswordStyles.mainContent}>
+        <Box sx={updatepasswordStyles.container}>
+          <Typography variant="h4" component="h1" sx={updatepasswordStyles.title}>
+            Change your password
+          </Typography>
+          <Typography sx={updatepasswordStyles.text}>
+            Update your password to enhance account security and maintain access control.
+          </Typography>
+          <Box component="form" onSubmit={handleSubmit} sx={updatepasswordStyles.form}>
+            <TextField sx={updatepasswordStyles.formField}
+              InputLabelProps={{ sx: updatepasswordStyles.inputLabel }}
+              label="New password"
+              name="password"
+              type={showPassword ? 'text' : 'password'}
+              variant="outlined"
+              fullWidth
+              margin="normal"
+              value={formValues.password}
+              onChange={handleChange}
+              error={Boolean(errors.password)}
+              helperText={errors.password}
+              InputProps={{
+                sx: updatepasswordStyles.formInput,
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton onClick={togglePasswordVisibility} edge="end">
+                      {/* {showPassword ? <VisibilityIcon /> : <VisibilityOffIcon />} */}
+                      <Image 
+                        src={showPassword ? "/custom-visibility-icon-off.svg" : "/custom-visibility-icon.svg"} 
+                        alt={showPassword ? "Show password" : "Hide password"} 
+                        height={18} width={18}
+                        title={showPassword ? "Hide password" : "Show password"}
+                      />
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+            />
+            <List sx={updatepasswordStyles.passwordContentList}>
+              <ListItem sx={updatepasswordStyles.passwordContentListItem}>
+                <ListItemIcon sx={updatepasswordStyles.passwordContentListItemIcon}>
+                  <CustomCheckCircleIcon isSuccess={passwordValidation.length} />
+                </ListItemIcon>
+                <ListItemText sx={passwordValidation.length ? updatepasswordStyles.passwordValidationTextSuccess : updatepasswordStyles.passwordValidationText} primary="8 characters min." />
+              </ListItem>
+              <ListItem sx={updatepasswordStyles.passwordContentListItem}>
+                <ListItemIcon sx={updatepasswordStyles.passwordContentListItemIcon}>
+                  <CustomCheckCircleIcon isSuccess={passwordValidation.upperCase} />
+                </ListItemIcon>
+                <ListItemText sx={passwordValidation.upperCase ? updatepasswordStyles.passwordValidationTextSuccess : updatepasswordStyles.passwordValidationText}  primary="1 uppercase" />
+              </ListItem>
+              <ListItem sx={updatepasswordStyles.passwordContentListItem}>
+                <ListItemIcon sx={updatepasswordStyles.passwordContentListItemIcon}>
+                  <CustomCheckCircleIcon isSuccess={passwordValidation.lowerCase} />
+                </ListItemIcon>
+                <ListItemText sx={passwordValidation.lowerCase ? updatepasswordStyles.passwordValidationTextSuccess : updatepasswordStyles.passwordValidationText} primary="1 lowercase" />
+              </ListItem>
+          </List>
+            <TextField
+              InputLabelProps={{ sx: updatepasswordStyles.inputLabel }}
+              label="Confirm password"
+              name="confirmPassword"
+              type={showConfirmPassword ? 'text' : 'password'}
+              variant="outlined"
+              fullWidth
+              margin="normal"
+              value={formValues.confirmPassword}
+              onChange={handleChange}
+              error={Boolean(errors.confirmPassword)}
+              helperText={errors.confirmPassword}
+              InputProps={{
+                sx: updatepasswordStyles.formInput,
+                endAdornment: (
+                  <InputAdornment position="end">
+                    {Boolean(errors.confirmPassword) && (
+                      <IconButton edge="end">
+                        {/* Add your danger icon here */}
+                        <Image 
+                          src="/danger-icon.svg" 
+                          alt="Danger icon"
+                          height={20} width={20} 
+                          title="Invalid password"
+                        />
+                      </IconButton>
+                    )}
+                    <IconButton onClick={toggleConfirmPasswordVisibility} edge="end">
+                      {/* {showConfirmPassword ? <VisibilityIcon /> : <VisibilityOffIcon />} */}
+                      <Image 
+                        src={showConfirmPassword ? "/custom-visibility-icon-off.svg" : "/custom-visibility-icon.svg"} 
+                        alt={showConfirmPassword ? "Show password" : "Hide password"} 
+                        height={18} width={18}
+                        title={showConfirmPassword ? "Hide password" : "Show password"}
+                      />
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+            />
+            <Button
+              type="submit"
+              variant="contained"
+              sx={updatepasswordStyles.submitButton}
+              fullWidth
+            >
+              Reset Password
+            </Button>
+          </Box>
         </Box>
       </Box>
     </>

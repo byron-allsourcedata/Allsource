@@ -34,6 +34,8 @@ from models.users import Users as User
 from services.users_auth import UsersAuth
 from persistence.user_persistence import UserPersistence
 from services.webhook import WebhookService
+from persistence.users_integrations_persistence import UserIntegrationsPresistence
+from services.integrations.base import IntegrationService
 
 logger = logging.getLogger(__name__)
 
@@ -67,13 +69,18 @@ def get_audience_persistence(db: Session = Depends(get_db)):
 
 
 def get_subscription_service(db: Session = Depends(get_db),
-                             user_persistence_service: UserPersistence = Depends(get_user_persistence_service)):
-    return SubscriptionService(db=db, user_persistence_service=user_persistence_service)
+                             user_persistence_service: UserPersistence = Depends(get_user_persistence_service),
+                             plans_persistence: PlansPersistence = Depends(get_plans_persistence)):
+    return SubscriptionService(db=db, user_persistence_service=user_persistence_service,
+                               plans_persistence=plans_persistence)
 
 
 def get_admin_customers_service(db: Session = Depends(get_db),
-                                subscription_service: SubscriptionService = Depends(get_subscription_service)):
-    return AdminCustomersService(db=db, subscription_service=subscription_service)
+                                subscription_service: SubscriptionService = Depends(get_subscription_service),
+                                user_persistence: UserPersistence = Depends(get_user_persistence_service),
+                                plans_presistence: PlansPersistence = Depends(get_plans_persistence)):
+    return AdminCustomersService(db=db, subscription_service=subscription_service,
+                                 user_persistence=user_persistence, plans_persistence=plans_presistence)
 
 
 def get_user_authorization_status_without_pixel(user, subscription_service):
@@ -226,8 +233,10 @@ def get_dashboard_service(user: User = Depends(check_user_authorization)):
 
 
 def get_pixel_installation_service(db: Session = Depends(get_db),
+                                   send_grid_persistence_service: SendgridPersistence = Depends(
+                                       get_send_grid_persistence_service),
                                    user: User = Depends(check_user_authorization_without_pixel)):
-    return PixelInstallationService(db=db, user=user)
+    return PixelInstallationService(db=db, user=user, send_grid_persistence_service=send_grid_persistence_service)
 
 
 def get_plans_service(user=Depends(check_user_authentication),
@@ -256,3 +265,44 @@ def get_users_email_verification_service(user=Depends(check_user_authentication)
                                              get_send_grid_persistence_service)):
     return UsersEmailVerificationService(user=user, user_persistence_service=user_persistence_service,
                                          send_grid_persistence_service=sendgrid_persistence_service)
+
+
+def check_user_authorization(Authorization: Annotated[str, Header()],
+                             user_persistence_service: UserPersistence = Depends(
+                                 get_user_persistence_service), subscription_service: SubscriptionService = Depends(
+            get_subscription_service)) -> Token:
+    user = check_user_authentication(Authorization, user_persistence_service)
+    auth_status = get_user_authorization_status(user, subscription_service)
+    if auth_status == UserAuthorizationStatus.PAYMENT_NEEDED:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={'status': auth_status.value,
+                    'stripe_payment_url': user.stripe_payment_url}
+        )
+    if auth_status != UserAuthorizationStatus.SUCCESS:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={'status': auth_status.value}
+        )
+    return user
+
+
+def check_user_admin(Authorization: Annotated[str, Header()],
+                     user_persistence_service: UserPersistence = Depends(get_user_persistence_service),
+                     ) -> Token:
+    user = check_user_authentication(Authorization, user_persistence_service)
+    if 'admin' not in user['role']:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail={'status': 'FORBIDDEN'})
+    return user
+
+
+def get_user_integrations_presistence(db: Session = Depends(get_db)) -> UserIntegrationsPresistence:
+    return UserIntegrationsPresistence(db)
+
+
+def get_integration_service(user: User = Depends(check_user_authentication),
+                            db: Session = Depends(get_db),
+                            user_integration_presistence: UserIntegrationsPresistence = Depends(
+                                get_user_integrations_presistence),
+                            lead_presistence: LeadsPersistence = Depends(get_leads_persistence)):
+    return IntegrationService(db, user_integration_presistence, lead_presistence, user)

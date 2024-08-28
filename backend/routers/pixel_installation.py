@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 
-from enums import PixelStatus
-from schemas.pixel_installation import PixelInstallationRequest
+from enums import PixelStatus, BaseEnum
+from schemas.pixel_installation import PixelInstallationRequest, EmailFormRequest, ManualFormResponse
 from schemas.users import PixelFormResponse
 from services.pixel_installation import PixelInstallationService
 from dependencies import get_pixel_installation_service
@@ -12,10 +12,17 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-@router.get("/manually")
-async def manual(manual: PixelInstallationService = Depends(get_pixel_installation_service)):
-    result_status = manual.get_manual()
-    return result_status
+@router.get("/manually", response_model=ManualFormResponse)
+async def manual(pixel_installation_service: PixelInstallationService = Depends(get_pixel_installation_service)):
+    manual_result, pixel_client_id = pixel_installation_service.get_manual()
+    return ManualFormResponse(manual=manual_result, pixel_client_id=pixel_client_id)
+
+
+@router.post("/send-pixel-code")
+async def send_pixel_code_in_email(email_form: EmailFormRequest,
+                                   pixel_installation_service: PixelInstallationService = Depends(
+                                       get_pixel_installation_service)):
+    return pixel_installation_service.send_pixel_code_in_email(email_form.email)
 
 
 @router.post("/check-pixel-installed", response_model=PixelFormResponse)
@@ -44,12 +51,11 @@ async def manual(pixel_installation_request: PixelInstallationRequest,
 
 
 @router.get("/google-tag")
-async def google_tag(google_tag: PixelInstallationService = Depends(get_pixel_installation_service)):
-    result_status = google_tag.get_my_info()
-    return result_status
+async def google_tag(pixel_installation_service: PixelInstallationService = Depends(get_pixel_installation_service)):
+    return BaseEnum.SUCCESS
 
 
-@router.get("/cms")
-async def cms(cms: PixelInstallationService = Depends(get_pixel_installation_service)):
-    result_status = cms.get_manual()
-    return result_status
+@router.get("/cms", response_model=ManualFormResponse)
+async def cms(pixel_installation_service: PixelInstallationService = Depends(get_pixel_installation_service)):
+    manual_result, pixel_client_id = pixel_installation_service.get_manual()
+    return ManualFormResponse(manual=manual_result, pixel_client_id=pixel_client_id)

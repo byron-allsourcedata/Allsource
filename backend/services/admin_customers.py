@@ -1,13 +1,16 @@
-from sqlalchemy import func
-from config.stripe import StripeConfig
+import logging
+from datetime import datetime, timedelta
 from typing import List
+
+from sqlalchemy import func
 from sqlalchemy.orm import Session
-from datetime import datetime, timedelta, timezone
+
+from config.stripe import StripeConfig
 from models.plans import SubscriptionPlan
 from models.subscriptions import UserSubscriptions
-from models.users import Users
-import logging
-
+from models.users import Users, User
+from persistence.plans_persistence import PlansPersistence
+from persistence.user_persistence import UserPersistence
 from services.subscriptions import SubscriptionService
 
 logger = logging.getLogger(__name__)
@@ -15,9 +18,26 @@ logger = logging.getLogger(__name__)
 
 class AdminCustomersService:
 
-    def __init__(self, db: Session, subscription_service: SubscriptionService):
+    def __init__(self, db: Session, subscription_service: SubscriptionService, user_persistence: UserPersistence,
+                 plans_persistence: PlansPersistence):
         self.db = db
         self.subscription_service = subscription_service
+        self.user_persistence = user_persistence
+        self.plans_presistence = plans_persistence
+
+    def get_users(self):
+        users_object = self.user_persistence.get_users()
+        result = []
+        for user in users_object:
+            result.append({
+                "id": user.id,
+                "email": user.email,
+                "full_name": user.full_name,
+                "created_at": user.created_at,
+                'payment_status': user.payment_status,
+                "is_trial": self.plans_presistence.get_trial_status_by_user_id(user.id)
+            })
+        return result
 
     def get_user_by_email(self, email):
         user_object = self.db.query(Users).filter(func.lower(Users.email) == func.lower(email)).first()
@@ -80,13 +100,14 @@ class AdminCustomersService:
             user_subscription = self.subscription_service.create_subscription_from_free_trial(user_id=user_data.id)
             self.subscription_service.create_new_usp_free_trial(user_data.id, user_subscription.id)
         else:
+            self.subscription_service.remove_trial(user_data.id)
             link = self.create_customer_session(self.get_default_plan().stripe_price_id, user_data.customer_id)['link']
         self.update_book_call(user_data.id, link)
         
         return user_data
 
 
-    def set_pixel_installed(self, mail):
+    def set_pixel_installed(self, mail, user_id):
         (
             self.db.query(Users)
             .filter(Users.email == mail)
@@ -95,13 +116,15 @@ class AdminCustomersService:
                 synchronize_session=False,
             )
         )
+        self.db.query(User).filter(User.id == user_id).update({User.activate_steps_percent: 90},
+                                                              synchronize_session=False)
         self.db.commit()
 
     def pixel_code_passed(self, mail):
         user_data = self.get_user_by_email(mail)
         if user_data:
             if not user_data.is_pixel_installed:
-                self.set_pixel_installed(mail)
+                self.set_pixel_installed(mail, user_data.id)
                 user_subscription = self.get_user_subscription(user_data.id)
                 if not user_subscription.plan_start and not user_subscription.plan_end:
                     free_trial_plan = self.get_free_trial_plan()

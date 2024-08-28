@@ -1,5 +1,5 @@
 import { SxProps, Theme } from '@mui/system';
-import { red, grey } from '@mui/material/colors';
+import { red } from '@mui/material/colors';
 
 export const styles: { [key: string]: SxProps<Theme> } = {
   pageContainer: {
@@ -17,13 +17,49 @@ export const styles: { [key: string]: SxProps<Theme> } = {
     color: 'black',
     width: '100%',
     marginBottom: '2.5em',
+    textTransform: 'none',
+    '@media (max-width: 600px)': { marginBottom: 1, }
+  },
+  visitsButtons: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '12px',
+    color: 'black',
+    width: '100%',
+    marginBottom: '2.5em',
+    textTransform: 'none',
+    '@media (max-width: 400px)': { marginBottom: 1.5 },
+    '@media (max-width: 600px)': { marginBottom: 2.5 }
+  },
+  visitButton: {
+    padding: '9px 16px',
+    color: 'black',
+    border: '1px solid #ccc',
     textTransform: 'none'
   },
   employeeButton: {
     padding: '0.25em 2.25em',
     color: 'black',
     border: '1px solid #ccc',
-    textTransform: 'none'
+    textTransform: 'none',
+  },
+  rolesButtons: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '12px',
+    color: 'black',
+    width: '115%',
+    marginBottom: '2.5em',
+    textTransform: 'none',
+    '@media (max-width: 400px)': { marginBottom: 1.5, width: '100%' },
+    '@media (max-width: 600px)': { marginBottom: 2.5, width: '100%' }
+  },
+  roleButton: {
+    padding: '0.25em 1.5em',
+    color: 'black',
+    border: '1px solid #ccc',
+    textTransform: 'none',
+    '@media (max-width: 600px)': { padding: '0.25em 1.25em' }
   },
   activeButton: {
     backgroundColor: '#007BFF',
@@ -35,10 +71,14 @@ export const styles: { [key: string]: SxProps<Theme> } = {
     alignItems: 'center',
     marginRight: '2em',
     marginLeft: '2em',
+    textTransform: 'none',
+    textDecoration: 'none',
     width: '100%',
     color: 'rgba(244, 87, 69, 1)',
     borderBottom: `1px solid rgba(228, 228, 228, 1)`,
     marginBottom: '1.25em',
+    '@media (max-width: 600px)': { display: 'flex', flexDirection: 'column', justifyContent: 'start', alignItems: 'start' },
+    '@media (max-height: 670px)': { marginBottom: 1 }
   },
   header: {
     display: 'flex',
@@ -76,7 +116,8 @@ export const styles: { [key: string]: SxProps<Theme> } = {
   nav: {
     display: 'flex',
     gap: '1em',
-    marginBottom: '1em'
+    marginBottom: '1em',
+    '@media (max-width: 600px)': { gap: 0.5 }
   },
   logo: {
     display: 'flex',
@@ -85,11 +126,18 @@ export const styles: { [key: string]: SxProps<Theme> } = {
     paddingLeft: '20px'
   },
   formContainer: {
-    maxWidth: '600px',
+    display: 'flex',
+    flexDirection: 'column',
+    maxWidth: '556px',
     width: '100%',
-    padding: '2em',
+    height: '82vh',
+    alignItems: 'center',
+    justifyContent: 'center',
     borderRadius: '0.5em',
     backgroundColor: '#fff',
+    '@media (max-width: 400px)': { pl: 1, pt: 0, height: '77vh',  },
+    '@media (max-width: 600px)': {height: '77vh',display: 'flex',flexDirection: 'column',alignItems: 'center',justifyContent: 'center'},
+    '@media (max-height: 670px)': { pl: 0, gap: 0 },
   },
   title: {
     fontFamily: 'Nunito',
@@ -98,6 +146,7 @@ export const styles: { [key: string]: SxProps<Theme> } = {
     lineHeight: '38.19px',
     marginBottom: '0.25em',
     textAlign: 'start',
+    '@media (max-width: 600px)': { fontSize: '24px', lineHeight: '32.74px', }
   },
   subtitle: {
     marginBottom: '2em',
@@ -106,6 +155,7 @@ export const styles: { [key: string]: SxProps<Theme> } = {
     fontSize: '16px',
     fontWeight: '700',
     textAlign: 'start',
+    '@media (max-width: 600px)': { marginBottom: 0.35 }
   },
   text: {
     color: 'rgba(72, 72, 72, 1)',
@@ -114,12 +164,29 @@ export const styles: { [key: string]: SxProps<Theme> } = {
     fontWeight: '400',
     lineHeight: '21.82px',
     textAlign: 'left',
-    paddingBottom: '0.5em'
-
+    paddingBottom: '0.75em',
+    '@media (max-width: 600px)': { marginBottom: 0.35, fontSize: '14px', fontWeight: '400' }
   },
 
   formField: {
     marginBottom: '1.5em',
+    maxHeight: '56px',
+    '& .MuiInputBase-root': {
+      maxHeight: '48px', 
+    },
+    '& .MuiOutlinedInput-root': {
+      paddingTop: '13px',
+      paddingBottom: '13px',
+    },
+    '& .MuiInputLabel-root': {
+      top: '-5px',
+    },
+    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+      borderColor: '#0000FF',
+    },
+  },
+  form: {
+    display: 'flex', flexDirection: 'column', justifyContent: 'center', alignContent: 'start', '@media (max-width: 400px)': { paddingLeft: 2,}, '@media (max-width: 600px)': { paddingRight: 1, paddingLeft: 1,}
   },
   submitButton: {
     backgroundColor: 'rgba(244, 87, 69, 1)',
@@ -133,5 +200,6 @@ export const styles: { [key: string]: SxProps<Theme> } = {
     '&:hover': {
       backgroundColor: red[700],
     },
+    '@media (max-width: 600px)': { marginBottom: 0.35, fontSize: '14px', fontWeight: '400' }
   },
 };

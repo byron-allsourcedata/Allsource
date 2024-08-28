@@ -26,18 +26,6 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
     const [checkedItems, setCheckedItems] = useState<Set<number>>(new Set());
     const [listName, setListName] = useState<string>('');
 
-    useEffect(() => {
-        const fetchListItems = async () => {
-            try {
-                const response = await axiosInstance.get('/audience/list');
-                setListItems(response.data);
-            } catch (error) {
-                console.error('Error fetching list items:', error);
-            }
-        };
-        fetchListItems();
-    }, []);
-
     const fetchListItems = async () => {
         try {
             const response = await axiosInstance.get('/audience/list');
@@ -46,10 +34,6 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
             console.error('Error fetching list items:', error);
         }
     };
-
-    useEffect(() => {
-        fetchListItems();
-    }, []);
 
     useEffect(() => {
         if (open) {

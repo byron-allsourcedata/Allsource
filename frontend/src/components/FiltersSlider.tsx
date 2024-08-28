@@ -7,6 +7,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider, DatePicker, TimePicker } from '@mui/x-date-pickers';
 import dayjs from 'dayjs';
+import Image from 'next/image';
 
 
 interface FilterPopupProps {
@@ -42,6 +43,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
   const [selectedFunnels, setSelectedFunnels] = useState<string[]>([]);
   const [selectedStatus, setSelectedStatus] = useState<string[]>([]);
   const [buttonFilters, setButtonFilters] = useState<ButtonFilters>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   type ButtonFilters = {
     button: string;
@@ -144,7 +146,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
     Existing: 'existing_customers',
     All: 'all_customers',
   };
-  
+
 
 
   const addTag = (category: string, tag: string) => {
@@ -309,11 +311,11 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
       default:
         funnel = '';
     }
-  
+
     const now = dayjs();
     const fromDate = now.subtract(30, 'days').startOf('day').unix();
     const toDate = now.endOf('day').unix();
-  
+
     const newFilters = {
       button: label,
       dateRange: {
@@ -322,7 +324,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
       },
       selectedFunnels: [funnel],
     };
-  
+
     setButtonFilters(newFilters); // Сохраняем фильтры в состоянии
     setSelectedButton(label);
   };
@@ -543,52 +545,53 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
   const handleFilters = () => {
     const filterDates = getFilterDates();
     const isButtonChecked = Object.values(checkedFilters).some(value => value);
-  
+
     const fromDateTime = isButtonChecked
       ? (checkedFilters.lastWeek && filterDates.lastWeek.from) ||
       (checkedFilters.last30Days && filterDates.last30Days.from) ||
       (checkedFilters.last6Months && filterDates.last6Months.from) ||
       (checkedFilters.allTime && filterDates.allTime.from)
       : dateRange.fromDate ? dayjs(dateRange.fromDate).startOf('day').unix() : null;
-  
+
     const toDateTime = isButtonChecked
       ? (checkedFilters.lastWeek && filterDates.lastWeek.to) ||
       (checkedFilters.last30Days && filterDates.last30Days.to) ||
       (checkedFilters.last6Months && filterDates.last6Months.to) ||
       (checkedFilters.allTime && filterDates.allTime.to)
       : dateRange.toDate ? dayjs(dateRange.toDate).endOf('day').unix() : null;
-  
+
     const fromDateTimeWithTime = fromDateTime && timeRange.fromTime
       ? dayjs.unix(fromDateTime).hour(dayjs(timeRange.fromTime).hour()).minute(dayjs(timeRange.fromTime).minute()).unix()
       : fromDateTime;
-  
+
     const toDateTimeWithTime = toDateTime && timeRange.toTime
       ? dayjs.unix(toDateTime).hour(dayjs(timeRange.toTime).hour()).minute(dayjs(timeRange.toTime).minute()).unix()
       : toDateTime;
-    
-    console.log(buttonFilters)  
+
+
     // Формирование объекта filters с учетом переданных buttonFilters
-  const filters = {
-    ...buttonFilters, // Включаем фильтры, полученные из кнопки (если есть)
-    dateRange: buttonFilters ? buttonFilters.dateRange : {
-      fromDate: fromDateTimeWithTime,
-      toDate: toDateTimeWithTime,
-    },
-    selectedFunnels: buttonFilters ? buttonFilters.selectedFunnels : selectedFunnels,
-    button: buttonFilters ? buttonFilters.button : selectedButton,
-    checkedFilters,
-    checkedFiltersTime,
-    checkedFiltersPageVisits,
-    regions,
-    checkedFiltersTimeSpent,
-    emails,
-    selectedStatus,
-    selectedValue,
-  };
-  
+    const filters = {
+      ...buttonFilters, // Включаем фильтры, полученные из кнопки (если есть)
+      dateRange: buttonFilters ? buttonFilters.dateRange : {
+        fromDate: fromDateTimeWithTime,
+        toDate: toDateTimeWithTime,
+      },
+      selectedFunnels: buttonFilters ? buttonFilters.selectedFunnels : selectedFunnels,
+      button: buttonFilters ? buttonFilters.button : selectedButton,
+      checkedFilters,
+      checkedFiltersTime,
+      checkedFiltersPageVisits,
+      regions,
+      checkedFiltersTimeSpent,
+      emails,
+      selectedStatus,
+      selectedValue,
+      searchQuery,
+    };
+
     return filters;
   };
-  
+
 
   const handleApply = () => {
     const filters = handleFilters();
@@ -619,19 +622,21 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
           },
         }}
       >
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 2, borderBottom: '1px solid #e4e4e4' }}>
-          <Typography variant="h6" sx={{ textAlign: 'center', color: '#4A4A4A', fontFamily: 'Nunito', fontWeight: '600', fontSize: '22px', lineHeight: '25.2px' }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75em 1em 0.25em 1em', borderBottom: '1px solid #e4e4e4' }}>
+          <Typography variant="h6" sx={{ textAlign: 'center', color: '#4A4A4A', fontFamily: 'Nunito', fontWeight: '600', fontSize: '16px', lineHeight: '22.4px' }}>
             Filter Search
           </Typography>
           <IconButton onClick={onClose}>
             <CloseIcon />
           </IconButton>
         </Box>
-        <Box sx={{ p: 3, display: 'flex', flexDirection: 'column', alignItems: 'center', }}>
+        <Box sx={{ p: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', }}>
           <TextField
             placeholder="Search people"
             variant="outlined"
             fullWidth
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -641,9 +646,9 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                 </InputAdornment>
               ),
             }}
-            sx={{ mb: 2 }}
+            sx={{ padding: '1em 1em 0em 1em' }}
           />
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '10px', p:'1em' }}>
             {['Abandon Checkout leads in last 30 days', 'Converters in last 30 days', 'Non Converters in last 30 days', 'Add to cart leads in last 30 days'].map((label) => (
               <Button
                 key={label}
@@ -671,8 +676,9 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
             ))}
           </Box>
           {/* Visited date */}
-          <Box sx={{ width: '95%', mb: 2, mt: 2, padding: '1em', border: '1px solid rgba(228, 228, 228, 1)', borderRadius: '4px' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', mb: 0 }}>
+          <Box sx={{ width: '100%', mt: 0.5, padding: '0.5em', border: '1px solid rgba(228, 228, 228, 1)' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', mb: 0, gap: 1 }}>
+            <Image src='/calendar-2.svg' alt='calendar' width={18} height={18}/>
               <Typography sx={{ flexGrow: 1, color: 'rgba(74, 74, 74, 1)', fontFamily: 'Nunito', fontWeight: '500', fontSize: '16px', lineHeight: '25.2px' }}>
                 Visited date
               </Typography>
@@ -741,8 +747,9 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
             </Collapse>
           </Box>
           {/* Visited time */}
-          <Box sx={{ width: '95%', mb: 2, border: '1px solid rgba(228, 228, 228, 1)', padding: '1em' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+          <Box sx={{ width: '100%', border: '1px solid rgba(228, 228, 228, 1)', padding: '0.5em' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: 1 }}>
+            <Image src='/timer.svg' alt='timer' width={18} height={18}/>
               <Typography sx={{ flexGrow: 1, color: 'rgba(74, 74, 74, 1)', fontFamily: 'Nunito', fontWeight: '500', fontSize: '16px', lineHeight: '25.2px' }}>
                 Visited time
               </Typography>
@@ -809,8 +816,9 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
             </Collapse>
           </Box>
           {/* Region */}
-          <Box sx={{ width: '95%', mb: 2, border: '1px solid rgba(228, 228, 228, 1)', padding: '1em' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+          <Box sx={{ width: '100%', border: '1px solid rgba(228, 228, 228, 1)', padding: '0.5em' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: 1 }}>
+            <Image src='/location.svg' alt='calendar' width={18} height={18}/>
               <Typography sx={{ flexGrow: 1, color: 'rgba(74, 74, 74, 1)', fontFamily: 'Nunito', fontWeight: '500', fontSize: '16px', lineHeight: '25.2px' }}>
                 Region
               </Typography>
@@ -841,8 +849,9 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
             </Collapse>
           </Box>
           {/* Page visits */}
-          <Box sx={{ width: '95%', mb: 2, mt: 2, padding: '1em', border: '1px solid rgba(228, 228, 228, 1)', borderRadius: '4px' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', mb: 0 }}>
+          <Box sx={{ width: '100%', border: '1px solid rgba(228, 228, 228, 1)', padding: '0.5em' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: 1 }}>
+            <Image src='/people.svg' alt='calendar' width={18} height={18}/>
               <Typography sx={{ flexGrow: 1, color: 'rgba(74, 74, 74, 1)', fontFamily: 'Nunito', fontWeight: '500', fontSize: '16px', lineHeight: '25.2px' }}>
                 Page visits
               </Typography>
@@ -884,8 +893,9 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
             </Collapse>
           </Box>
           {/* Average time spent */}
-          <Box sx={{ width: '95%', mb: 2, mt: 2, padding: '1em', border: '1px solid rgba(228, 228, 228, 1)', borderRadius: '4px' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', mb: 0 }}>
+          <Box sx={{ width: '100%', border: '1px solid rgba(228, 228, 228, 1)', padding: '0.5em' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: 1 }}>
+            <Image src='/sand_clock.svg' alt='calendar' width={18} height={18}/>
               <Typography sx={{ flexGrow: 1, color: 'rgba(74, 74, 74, 1)', fontFamily: 'Nunito', fontWeight: '500', fontSize: '16px', lineHeight: '25.2px' }}>
                 Average time spent
               </Typography>
@@ -927,8 +937,9 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
             </Collapse>
           </Box>
           {/* Lead Funnel */}
-          <Box sx={{ width: '95%', mb: 2, mt: 2, padding: '1em', border: '1px solid rgba(228, 228, 228, 1)', borderRadius: '4px' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', mb: 0 }}>
+          <Box sx={{ width: '100%', border: '1px solid rgba(228, 228, 228, 1)', padding: '0.5em' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: 1 }}>
+            <Image src='/Leads.svg' alt='calendar' width={18} height={18}/>
               <Typography sx={{ flexGrow: 1, color: 'rgba(74, 74, 74, 1)', fontFamily: 'Nunito', fontWeight: '500', fontSize: '16px', lineHeight: '25.2px' }}>
                 Lead Funnel
               </Typography>
@@ -975,44 +986,10 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
               </Box>
             </Collapse>
           </Box>
-          {/* Emails */}
-          <Box sx={{ width: '95%', mb: 2, border: '1px solid rgba(228, 228, 228, 1)', padding: '1em' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-              <Typography sx={{ flexGrow: 1, color: 'rgba(74, 74, 74, 1)', fontFamily: 'Nunito', fontWeight: '500', fontSize: '16px', lineHeight: '25.2px' }}>
-                Emails
-              </Typography>
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '8px', mb: 2 }}>
-                {emails.map((tag, index) => (
-                  <CustomChip
-                    key={index}
-                    label={tag}
-                    onDelete={() => setEmails(emails.filter((_, i) => i !== index))}
-                  />
-                ))}
-              </Box>
-              <IconButton onClick={() => setIsEmailOpen(!isEmailOpen)} aria-label="toggle-content">
-                {isEmailOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-              </IconButton>
-            </Box>
-            <Collapse in={isEmailOpen}>
-              <Divider sx={{ mb: 2 }} />
-              <Typography sx={{ color: 'rgba(74, 74, 74, 1)', fontFamily: 'Nunito', fontWeight: '400', fontSize: '16px', lineHeight: '25.2px' }}>
-                Email type
-              </Typography>
-              <TextField
-                placeholder="Email types"
-                variant="outlined"
-                fullWidth
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                onKeyDown={handleAddTagEmails}
-                sx={{ mb: 2 }}
-              />
-            </Collapse>
-          </Box>
           {/* Status */}
-          <Box sx={{ width: '95%', mb: 2, mt: 2, padding: '1em', border: '1px solid rgba(228, 228, 228, 1)', borderRadius: '4px' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', mb: 0 }}>
+          <Box sx={{ width: '100%', border: '1px solid rgba(228, 228, 228, 1)', padding: '0.5em' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: 1 }}>
+            <Image src='/status.svg' alt='calendar' width={18} height={18}/>
               <Typography sx={{ flexGrow: 1, color: 'rgba(74, 74, 74, 1)', fontFamily: 'Nunito', fontWeight: '500', fontSize: '16px', lineHeight: '25.2px' }}>
                 Status
               </Typography>
@@ -1064,8 +1041,9 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
             </Collapse>
           </Box>
           {/* Recurring Visits */}
-          <Box sx={{ width: '95%', mb: 2, mt: 2, padding: '1em', border: '1px solid rgba(228, 228, 228, 1)', borderRadius: '4px' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', mb: 0 }}>
+          <Box sx={{ width: '100%',mb: 2, border: '1px solid rgba(228, 228, 228, 1)', padding: '0.5em' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: 1 }}>
+            <Image src='/repeate-one.svg' alt='calendar' width={18} height={18}/>
               <Typography sx={{ flexGrow: 1, color: 'rgba(74, 74, 74, 1)', fontFamily: 'Nunito', fontWeight: '500', fontSize: '16px', lineHeight: '25.2px' }}>
                 Recurring Visists
               </Typography>
@@ -1106,7 +1084,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
         </Box>
         <Box
           sx={{
-            marginBottom: '2em',
             marginRight: '2em',
             display: 'flex',
             justifyContent: 'end',
@@ -1120,7 +1097,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
               fontFamily: 'Nunito',
               fontSize: '16px',
               textTransform: 'none',
-              padding: '1em 2.5em',
+              padding: '0.75em 2.5em',
             }}
           >
             Apply

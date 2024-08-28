@@ -39,6 +39,12 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
           showErrorToast("Could not find pixel code on your site")
         }
         else {
+          if (data.percent) {
+            const meItem = sessionStorage.getItem('me');
+            const meData = meItem ? JSON.parse(meItem) : {};
+            meData.percent_steps = data.percent;
+            sessionStorage.setItem('me', JSON.stringify(meData));
+          }
           setData(data);
           window.location.reload();
         }
@@ -51,7 +57,6 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
     };
 
     return () => {
-      console.log('Closing EventSource');
       evtSource.close();
     };
   }, [url]);

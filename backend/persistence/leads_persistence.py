@@ -18,6 +18,8 @@ from models.leads_locations import LeadsLocations
 from models.leads_users import LeadUser
 from models.locations import Locations
 
+from schemas.integrations import Customer
+
 logger = logging.getLogger(__name__)
 
 
@@ -26,7 +28,7 @@ class LeadsPersistence:
         self.db = db
 
     def filter_leads(self, user_id, page, per_page, status, from_date, to_date, regions, page_visits, average_time_spent,
-                     lead_funnel, emails, recurring_visits, sort_by, sort_order):
+                     lead_funnel, emails, recurring_visits, sort_by, sort_order, search_query):
         subquery = (
             self.db.query(
                 LeadVisits.leads_users_id,
@@ -86,11 +88,11 @@ class LeadsPersistence:
             )
         if regions:
             region_list = regions.split(',')
-            query = query.filter(
-                Locations.city.in_(region_list)
-            )
+            region_filters = [Locations.city.ilike(f'%{region.strip()}%') for region in region_list]
+            query = query.filter(or_(*region_filters))
         if emails:
-            email_filters = [Lead.business_email.ilike(f'%{email}') for email in emails]
+            email_list = emails.split(',')
+            email_filters = [Lead.business_email.ilike(f'%{email.strip()}%') for email in email_list]
             query = query.filter(or_(*email_filters))
         if status == 'new_customers':
             query = query.filter(LeadUser.status == 'New')
@@ -106,6 +108,15 @@ class LeadsPersistence:
 
         if average_time_spent:
             query = query.filter(Lead.time_spent >= average_time_spent)
+
+        if search_query:
+            search_conditions = or_(
+                Lead.first_name.ilike(f'%{search_query}%'),
+                Lead.last_name.ilike(f'%{search_query}%'),
+                Lead.business_email.ilike(f'%{search_query}%'),
+                Lead.mobile_phone.ilike(f'%{search_query}%'),
+            )
+            query = query.filter(search_conditions)
 
         offset = (page - 1) * per_page
         leads = query.limit(per_page).offset(offset).all()
@@ -158,7 +169,7 @@ class LeadsPersistence:
             .all()
         )
         return lead_users
-
+    
     def create_age_conditions(self, age_str: str):
         filters = []
         for part in age_str:
@@ -254,3 +265,15 @@ class LeadsPersistence:
         count = query.count()
         max_page = math.ceil(count / per_page) if per_page > 0 else 1
         return leads_data, count, max_page
+    
+    def update_leads_by_customer(self, customer: Customer, user_id: int):
+        existing_lead_user = self.db.query(LeadUser).join(Lead, Lead.id == LeadUser.lead_id).filter(
+                                    Lead.business_email == customer.business_email, LeadUser.user_id == user_id).first()
+        if existing_lead_user:
+            self.db.query(LeadUser).filter(LeadUser.id == existing_lead_user.id).update({LeadUser.status: 'Existing'})
+        else:
+            lead = Lead(**customer.__dict__)
+            self.db.add(lead)
+            self.db.commit()
+            self.db.add(LeadUser(lead_id=lead.id, user_id=user_id, status='New', funnel='Converted'))
+            self.db.commit()

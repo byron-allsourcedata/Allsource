@@ -7,6 +7,7 @@ interface UserContextType {
   full_name: string | null;
   website: string | null;
   daysDifference: number | null;
+  percent_steps: number | 0;
 }
 
 interface UserProviderProps {
@@ -21,6 +22,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   const [website, setWebsite] = useState<string | null>(null);
   const [hasFetched, setHasFetched] = useState<boolean>(false);
   const [daysDifference, setDaysDifference] = useState<number | null>(null);
+  const [percent_steps, setPercent] = useState<number | 0>(0);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -31,6 +33,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       setEmail(storedData.email);
       setFullName(storedData.full_name);
       setWebsite(storedData.company_website);
+      setPercent(storedData.percent_steps)
 
       const endDate = new Date(storedData.plan_end);
       if (storedData.plan_end == null) {
@@ -39,8 +42,20 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
         const currentDate = new Date();
 
         // Calculate the difference in days
-        const timeDifference = endDate.getTime() - currentDate.getTime();
-        const daysDifference = Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
+        let timeDifference = endDate.getTime() - currentDate.getTime();
+
+        if (timeDifference < currentDate.getTime()) {
+          fetchUserData().then(userData => {
+            if (userData) {
+              setEmail(userData.email);
+              setFullName(userData.full_name);
+              setWebsite(userData.company_website);
+              setPercent(userData.percent_steps)
+            }
+          });
+          timeDifference = (new Date(storedData.plan_end).getTime()) - currentDate.getTime();
+        }
+        const daysDifference = Math.ceil((timeDifference - 3600000) / (1000 * 60 * 60 * 24));
 
         // Update the state with the calculated days difference
         setDaysDifference(daysDifference);
@@ -53,6 +68,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
           setEmail(userData.email);
           setFullName(userData.full_name);
           setWebsite(userData.company_website);
+          setPercent(userData.percent_steps)
         }
         setHasFetched(true);
       });
@@ -60,7 +76,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   }, [hasFetched]);
 
   return (
-    <UserContext.Provider value={{ email, full_name, website, daysDifference }}>
+    <UserContext.Provider value={{ email, full_name, website, daysDifference, percent_steps }}>
       {children}
     </UserContext.Provider>
   );

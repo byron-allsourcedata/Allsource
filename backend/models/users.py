@@ -1,12 +1,11 @@
 from sqlalchemy import Column, DateTime, event, Integer
-from sqlalchemy.dialects.postgresql import BIGINT, BOOLEAN, INTEGER, TIMESTAMP, VARCHAR
+from sqlalchemy.dialects.postgresql import BIGINT, BOOLEAN, INTEGER, TIMESTAMP, VARCHAR, ARRAY
 
 from .base import Base, create_timestamps, update_timestamps
 
 
 class Users(Base):
     __tablename__ = "users"
-
     id = Column(Integer, primary_key=True, nullable=False)
     email = Column(VARCHAR, nullable=True)
     is_email_confirmed = Column(BOOLEAN, default=False, nullable=True)
@@ -19,17 +18,24 @@ class Users(Base):
     company_name = Column(VARCHAR, nullable=True)
     company_website = Column(VARCHAR, nullable=True)
     company_email_address = Column(VARCHAR, nullable=True)
-    employees_workers = Column(VARCHAR, nullable=True)
+    company_role = Column(VARCHAR(16), nullable=True)
+    company_website_visits = Column(VARCHAR(16), nullable=True)
+    employees_workers = Column(VARCHAR(16), nullable=True)
     created_at = Column(TIMESTAMP(precision=7), nullable=True)
     last_login = Column(TIMESTAMP(precision=7), nullable=True)
     payment_status = Column(INTEGER, default=5, nullable=True)
     customer_id = Column(VARCHAR, nullable=True)
     reset_password_sent_at = Column(DateTime, nullable=True)
+    pixel_code_sent_at = Column(DateTime, nullable=True)
     verified_email_sent_at = Column(DateTime, nullable=True)
     is_book_call_passed = Column(BOOLEAN, default=False, nullable=True)
     stripe_payment_url = Column(VARCHAR, nullable=True)
     data_provider_id = Column(VARCHAR(64), nullable=True)
     is_pixel_installed = Column(BOOLEAN, default=False, nullable=True)
+    role = Column(ARRAY(VARCHAR(32)))
+    calendly_uuid = Column(VARCHAR(64), nullable=True)
+    calendly_invitee_uuid = Column(VARCHAR(64), nullable=True)
+    activate_steps_percent = Column(INTEGER, nullable=True)
 
 
 User = Users
