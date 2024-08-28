@@ -262,10 +262,10 @@ const AccountSetup = () => {
 
   const ranges = [
     { min: 1, max: 10, label: "1-10" },
-    { min: 11, max: 50, label: "11-50" },
-    { min: 51, max: 100, label: "51-100" },
-    { min: 101, max: 500, label: "100-500" },
-    { min: 501, max: Infinity, label: "500+" },
+    { min: 11, max: 50, label: "51-100" },
+    { min: 51, max: 100, label: "101-250" },
+    { min: 101, max: 500, label: "250-500" },
+    { min: 501, max: Infinity, label: ">1k" },
   ];
   const roles = [
     { label: "Digital Marketer" },
@@ -489,7 +489,7 @@ const AccountSetup = () => {
                 flexDirection: "column",
                 alignItems: "center",
                 justifyContent: "center",
-                pb: 2
+                pb: 1
               },
             }}
           >
@@ -598,7 +598,7 @@ const AccountSetup = () => {
                     onClick={() => handleEmployeeRangeChange(range.label)}
                     sx={getButtonStyles(selectedEmployees === range.label)}
                   >
-                    {range.label}
+                    <Typography sx={{fontFamily: 'Nunito', fontWeight: 400, fontSize: '14px', lineHeight: '19.6px', padding: '3px'}}> {range.label}</Typography>
                   </Button>
                 ))}
               </Box>
@@ -618,7 +618,7 @@ const AccountSetup = () => {
                     onClick={() => handleRolesChange(range.label)}
                     sx={getButtonRolesStyles(selectedRoles === range.label)}
                   >
-                    {range.label}
+                    <Typography sx={{fontFamily: 'Nunito', fontWeight: 400, fontSize: '14px', lineHeight: '19.6px', padding: '3px'}}> {range.label}</Typography>
                   </Button>
                 ))}
               </Box>

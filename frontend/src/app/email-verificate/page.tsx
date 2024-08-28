@@ -15,10 +15,14 @@ const EmailVerificate: React.FC = () => {
   const [canResend, setCanResend] = useState(true);
   const [timer, setTimer] = useState(60);
   const router = useRouter();
-  const { full_name, email: userEmail } = useUser(); // Assuming useUser hook provides user information
+  const { full_name: userFullName, email: userEmail } = useUser();
+  const meItem = typeof window !== 'undefined' ? sessionStorage.getItem('me') : null;
+  const meData = meItem ? JSON.parse(meItem) : { full_name: '', email: '' };
+  const full_name = userFullName || meData.full_name;
+  const email = userEmail || meData.email;
 
   const [token, setToken] = useState<string | null>(null);
-  const [email, setEmail] = useState<string | null>(null);
+
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
@@ -27,9 +31,6 @@ const EmailVerificate: React.FC = () => {
     if (typeof window !== 'undefined') {
       const localToken = localStorage.getItem('token');
       setToken(localToken);
-
-      const storedMe = sessionStorage.getItem('me');
-      setEmail(storedMe ? JSON.parse(storedMe)?.email : null);
     }
   }, []);
 
