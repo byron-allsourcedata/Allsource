@@ -78,6 +78,7 @@ const VerifyPixelIntegration: React.FC = () => {
           lineHeight: "normal",
           textAlign: "left",
           color: '#1c1c1c',
+          fontSize: '16px',
           marginBottom: '1.5rem',
           '@media (max-width: 900px)': {
             fontSize: '16px',
@@ -193,11 +194,11 @@ const SupportSection: React.FC = () => (
         justifyContent="flex-start"
         sx={{ rowGap: "24px", display: "flex" }}
       >
-        <div id="calendly-popup-wrapper"> </div>
+        <div id="calendly-popup-wrapper"></div>
         <PopupButton
           className="book-call-button"
           styles={{
-            marginLeft: '1.5em',
+            marginLeft: '1.6em',
             textWrap: "nowrap",
             color: "rgba(80, 82, 178, 1)",
             fontFamily: "Nunito",
@@ -208,7 +209,6 @@ const SupportSection: React.FC = () => (
             backgroundColor: "transparent",
             textTransform: "none",
             cursor: "pointer",
-            
           }}
           url="https://calendly.com/slava-lolly/123"
           rootElement={document.getElementById("calendly-popup-wrapper")!}
@@ -234,7 +234,7 @@ const SupportSection: React.FC = () => (
             backgroundColor: "transparent",
             textTransform: "none",
             cursor: "pointer",
-            marginLeft: '2em',
+            marginLeft: '1.5em',
             gap: '8px'
           }}
         >

@@ -1,4 +1,5 @@
 // signupStyles.ts
+import { red } from '@mui/material/colors';
 import { SxProps, Theme } from '@mui/system';
 
 
@@ -131,8 +132,7 @@ export const signupStyles: { [key: string]: SxProps<Theme> } = {
     backgroundColor: '#F45745',
     color: '#fff',
     '&:hover': {
-        borderColor: '#F45745',
-        backgroundColor: '#F45745',
+      backgroundColor: red[700],
     },
     fontWeight: 'bold',
     margin: '24px 0px 0 0px',

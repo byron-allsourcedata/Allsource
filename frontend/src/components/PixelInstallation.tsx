@@ -108,7 +108,7 @@ const PixelInstallation: React.FC = () => {
 
   return (
     <Box sx={{
-      padding: '1.25rem',
+      padding: '1.25em',
       border: '1px solid #e4e4e4',
       borderRadius: '8px',
       backgroundColor: 'rgba(247, 247, 247, 1)',
@@ -119,7 +119,7 @@ const PixelInstallation: React.FC = () => {
         marginBottom: '1.5rem' ,
       }
       }}>
-      <Typography variant="h6" component="div" mb={2} sx={{
+      <Typography variant="h6" component="div" mb={1} sx={{
         fontFamily: 'Nunito',
         fontWeight: '700',
         lineHeight: '21.82px',
@@ -138,7 +138,8 @@ const PixelInstallation: React.FC = () => {
       sx={{
         fontFamily: 'Nunito',
         fontWeight: '500',
-        color: '#808080',
+        color: 'rgba(128, 128, 128, 1)',
+        fontSize: '12px',
         '@media (max-width: 1199px)': {
           fontSize: '0.875rem',
           lineHeight: 'normal',
@@ -151,7 +152,6 @@ const PixelInstallation: React.FC = () => {
         <Grid item xs={12} md={4}>
           <Button variant="outlined" fullWidth onClick={installManually} sx={buttonStyles}>
             <Image src={'/install_manually.svg'} alt="Install Manually" width={32} height={32}
-            
             />
             <Typography sx={typographyStyles}>Install Manually</Typography>
           </Button>
@@ -174,7 +174,7 @@ const PixelInstallation: React.FC = () => {
           </Button>
           <CRMPopup open={opencrm} handleClose={handleCRMClose} pixelCode={cmsData.manual || ''}  pixel_client_id={cmsData.pixel_client_id || ''} />
         </Grid>
-      </Grid>
+        </Grid>
     </Box>
   );
 };
@@ -188,7 +188,10 @@ const buttonStyles = {
   padding: '0.875rem',
   borderColor: 'rgba(228, 228, 228, 1)',
   border: '1px solid rgba(228, 228, 228, 1)',
-  width: '100%', 
+  width: '100%',
+  '@media (max-width: 1199px)': {
+    maxHeight: '82px',
+    },
   '& img': {
     '@media (max-width: 1199px)': {
       width: '24px',
@@ -209,6 +212,9 @@ const buttonGoogle = {
   borderColor: 'rgba(228, 228, 228, 1)',
   border: '1px solid rgba(228, 228, 228, 1)',
   width: '100%',
+  '@media (max-width: 1199px)': {
+    maxHeight: '82px',
+    },
   '& img': {
     '@media (max-width: 1199px)': {
       width: '24px',
@@ -246,7 +252,7 @@ const typographyGoogle = {
   fontWeight: '600',
   lineHeight: '19.6px',
   color: 'rgba(74, 74, 74, 1)',
-  textWrap: 'wrap',
+  textWrap: 'nowrap',
   paddingTop: '0.625rem',
   '@media (max-width: 1199px)': {
     paddingTop: '0.5rem'

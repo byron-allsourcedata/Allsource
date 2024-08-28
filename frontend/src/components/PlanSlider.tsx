@@ -10,7 +10,7 @@ import { showToast } from './ToastNotification';
 import { PopupButton } from 'react-calendly';
 
 const style = {
-    position: 'fixed' as 'fixed',
+    position: 'absolute' as 'absolute',
     top: 0,
     right: 0,
     width: '40%',
@@ -20,14 +20,23 @@ const style = {
     p: 4,
     display: 'flex',
     flexDirection: 'column',
+    overflow: 'auto',
     transition: 'transform 0.3s ease-in-out',
     transform: 'translateX(100%)',
+    '@media (max-width: 1199px)': {
+        width: '50%',
+        p: 0
+    },
+    '@media (max-width: 900px)': {
+        width: '60%',
+        p: 0
+    },
     '@media (max-width: 600px)': {
         width: '100%',
-        height: '100%',
         p: 0
     },
 };
+
 
 const openStyle = {
     transform: 'translateX(0%)',
@@ -139,7 +148,7 @@ const PlanSlider: React.FC<PopupProps> = ({ open, handleClose, handleChoosePlan 
                             <CheckCircleIcon sx={{ color: 'rgba(110, 193, 37, 1)', fontSize: '20px', '@media (min-width: 1500px)': { fontSize: '24px' } }} />
                             <Typography variant="body1" gutterBottom sx={{
                                 color: 'rgba(74, 74, 74, 1)', fontFamily: 'Nunito', fontWeight: '700', fontSize: '18px', lineHeight: '23.2px',
-                                '@media (max-width: 600px)': { fontSize: '16px' },
+                                '@media (max-width: 600px)': { fontSize: '16px'  },
                                 '@media (min-width: 1500px)': { fontSize: '20px', lineHeight: '25.2px' }
                             }}>
                                 Proven Success in Driving Growth:
@@ -154,7 +163,7 @@ const PlanSlider: React.FC<PopupProps> = ({ open, handleClose, handleChoosePlan 
                             </Typography>
                         </Box>
                     </Box>
-                    <Box sx={{ width: '100%', display: 'flex', justifyContent: 'space-around', paddingTop: '1em', maxHeight: '20em', gap: 2, '@media (max-width: 600px)': { justifyContent: 'center', pb: 3, width: '100%', } }}>
+                    <Box sx={{ width: '100%', display: 'flex', justifyContent: 'space-around', paddingTop: '1em', maxHeight: '20em', gap: 2, '@media (max-width: 600px)': { justifyContent: 'center', pb: 3, width: '60%', } }}>
                         <PopupButton
                             className="book-call-button"
                             styles={{
@@ -170,6 +179,7 @@ const PlanSlider: React.FC<PopupProps> = ({ open, handleClose, handleChoosePlan 
                                 backgroundColor: '#fff',
                                 textTransform: 'none',
                                 cursor: 'pointer',
+                                width: '100%'
 
                             }}
                             url="https://calendly.com/nickit-schatalow09/maximiz"

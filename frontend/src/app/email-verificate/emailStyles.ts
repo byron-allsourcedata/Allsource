@@ -23,9 +23,6 @@ export const emailStyles: { [key: string]: SxProps<Theme> } = {
       border: 'none',
       marginTop: '2em',
     },
-    '@media (min-width: 1500px)': {
-      marginTop: 'calc(12vh)',
-    },
   },
   mainbox: {
     boxShadow: '0rem 2px 8px 0px #00000033',
