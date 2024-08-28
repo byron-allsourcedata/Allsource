@@ -201,9 +201,6 @@ const buttonStyles = {
       width: '24px',
       height: '24px'
     }
-  },
-  '@media (min-width: 1200px) and (max-width: 1399px)': {
-    paddingRight: '0',
   } 
 };
 
@@ -224,9 +221,6 @@ const buttonGoogle = {
       width: '24px',
       height: '24px'
     }
-  },
-  '@media (min-width: 1200px) and (max-width: 1399px)': {
-    paddingRight: '0',
   }
 };
 
