@@ -26,3 +26,6 @@ app/data/cities.json
 
 tmp/*
 !tmp/.gitkeep
+
+logs/*
+!logs/.gitkeep
