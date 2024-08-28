@@ -79,13 +79,18 @@ const NavigationMenu = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const router = useRouter();
   const pathname = usePathname();
-  const { full_name, email } = useUser();
+  const { full_name: userFullName, email: userEmail } = useUser();
+  const meItem = typeof window !== 'undefined' ? sessionStorage.getItem('me') : null;
+  const meData = meItem ? JSON.parse(meItem) : { full_name: '', email: '' };
+  const full_name = userFullName || meData.full_name;
+  const email = userEmail || meData.email;
 
   const toggleDrawer = () => {
     setOpen(!open);
   };
   const handleNavigation = (path: string) => {
     router.push(path);
+    setOpen(!open);
   };
 
   const isActive = (path: string) => pathname === path;  

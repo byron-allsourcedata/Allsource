@@ -558,6 +558,11 @@ const Leads: React.FC = () => {
         width: '100%',
         textAlign: 'center',
         flex: 1,
+        '& img': {
+            width: 'auto',
+            height: 'auto',
+            maxWidth: '100%'
+        }
     };
 
     const getStatusStyle = (funnel: any) => {
@@ -679,50 +684,13 @@ const Leads: React.FC = () => {
                     />
                 </Box>
             )}
-            <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-                {/* <Box sx={{
-                    position: 'fixed',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    zIndex: 1100,
-                    backgroundColor: 'white',
-                    borderBottom: '1px solid rgba(235, 235, 235, 1)'
-                }}>
-                    <Box sx={leadsStyles.headers}>
-                        <Box sx={leadsStyles.logoContainer}>
-                            <Image src='/logo.svg' alt='logo' height={80} width={60} />
-                        </Box>
-                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                            <TrialStatus />
-                            <AccountButton />
-                            <Button
-                                aria-controls={open ? 'profile-menu' : undefined}
-                                aria-haspopup="true"
-                                aria-expanded={open ? 'true' : undefined}
-                                onClick={handleProfileMenuClick}
-                            >
-                                <PersonIcon sx={leadsStyles.account} />
-                            </Button>
-                            <Menu
-                                id="profile-menu"
-                                anchorEl={anchorEl}
-                                open={open}
-                                onClose={handleProfileMenuClose}
-                                MenuListProps={{
-                                    'aria-labelledby': 'profile-menu-button',
-                                }}
-                            >
-                                <Box sx={{ p: 2 }}>
-                                    <Typography variant="h6">{full_name}</Typography>
-                                    <Typography variant="body2" color="textSecondary">{email}</Typography>
-                                </Box>
-                                <MenuItem onClick={handleSettingsClick}>Settings</MenuItem>
-                                <MenuItem onClick={handleSignOut}>Sign Out</MenuItem>
-                            </Menu>
-                        </Box>
-                    </Box>
-                </Box> */}
+            <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh',
+            '@media (max-width: 900px)': {
+                    paddingTop: '72px',
+                    paddingRight: 0
+
+                }
+             }}>
 
                 <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
                     <Grid container sx={{ flex: 1 }}>
@@ -733,15 +701,28 @@ const Leads: React.FC = () => {
                         }}>
                             <Sidebar />
                         </Grid>
-                        <Grid item xs={12} md lg sx={{ display: 'flex', flexDirection: 'column', flex: 1, marginLeft: 3 }}>
+                        <Grid item xs={12} md lg sx={{ display: 'flex', flexDirection: 'column', flex: 1,
+                            paddingLeft: 3,
+                            paddingRight: 3,
+                            '@media (max-width: 900px)': {
+                                paddingLeft: 2,
+                                paddingRight: 2,
+                            }
+                            }}>
                             <Box
                                 sx={{
                                     display: 'flex',
                                     flexDirection: 'row',
                                     alignItems: 'center',
-                                    justifyContent: 'space-between'
+                                    justifyContent: 'space-between',
+                                    marginTop: '2.375rem',
+                                    flexWrap: 'wrap',
+                                    gap: '15px',
+                                    '@media (max-width: 900px)': {
+                                        marginTop: '1.125rem'
+                                    }
                                 }}>
-                                <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', mt: 1, }}>
+                                <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
                                     <Typography variant="h4" component="h1" sx={leadsStyles.title}>
                                         Resolved Contacts ({count_leads ? count_leads : 0})
                                     </Typography>
@@ -802,18 +783,21 @@ const Leads: React.FC = () => {
                                     </Button>
                                     )}
                                 </Box>
-                                <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', mt: 1, }}>
+                                <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '15px',
+                                    '@media (max-width: 900px)': {
+                                        gap: '8px'
+                                    }
+                                }}>
                                     <Button
                                         onClick={handleAudiencePopupOpen}
                                         aria-haspopup="true"
                                         sx={{
-                                            marginRight: '1.5em',
                                             textTransform: 'none',
                                             color: selectedRows.size === 0 ? 'rgba(128, 128, 128, 1)' : 'rgba(80, 82, 178, 1)',
                                             border: '1px solid rgba(80, 82, 178, 1)',
                                             borderRadius: '4px',
-                                            padding: '10px',
-                                            mt: 1.25,
+                                            padding: '9px 16px',
+                                            minWidth: 'auto',
                                             opacity: selectedRows.size === 0 ? 0.4 : 1,
                                             '@media (max-width: 900px)': {
                                                 display: 'none'
@@ -824,11 +808,13 @@ const Leads: React.FC = () => {
                                         <Typography sx={{
                                             marginRight: '0.5em',
                                             fontFamily: 'Nunito',
-                                            lineHeight: '19.1px',
-                                            textSize: '16px',
+                                            lineHeight: '22px',
+                                            fontSize: '16px',
                                             textAlign: 'left',
+                                            fontWeight: '600',
+                                            color: '#5052B2'
                                         }}>
-                                            Create Audience List
+                                            Create Contact List
                                         </Typography>
                                     </Button>
                                     <Button
@@ -836,13 +822,12 @@ const Leads: React.FC = () => {
                                         aria-haspopup="true"
                                         aria-expanded={dropdownOpen ? 'true' : undefined}
                                         sx={{
-                                            marginRight: '1.5em',
                                             textTransform: 'none',
                                             color: 'rgba(128, 128, 128, 1)',
                                             border: '1px solid rgba(184, 184, 184, 1)',
                                             borderRadius: '4px',
-                                            padding: '0.5em',
-                                            mt: 1.25,
+                                            padding: '8px',
+                                            minWidth: 'auto',
                                             '@media (max-width: 900px)': {
                                                 border: 'none',
                                                 padding: 0
@@ -860,14 +845,17 @@ const Leads: React.FC = () => {
                                         aria-haspopup="true"
                                         aria-expanded={dropdownOpen ? 'true' : undefined}
                                         sx={{
-                                            marginRight: '1.5em',
                                             textTransform: 'none',
                                             color: selectedFilters.length > 0 ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)',
                                             border: selectedFilters.length > 0 ? '1px solid rgba(80, 82, 178, 1)' : '1px solid rgba(184, 184, 184, 1)',
                                             borderRadius: '4px',
-                                            padding: '0.5em',
-                                            mt: 1.25,
+                                            padding: '8px',
+                                            minWidth: 'auto',
                                             position: 'relative', 
+                                            '@media (max-width: 900px)': {
+                                                border: 'none',
+                                                padding: 0
+                                            }
                                         }}
                                     >
                                         <FilterListIcon fontSize='medium' sx={{ color: selectedFilters.length > 0 ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)' }} />
@@ -894,13 +882,16 @@ const Leads: React.FC = () => {
                                         aria-expanded={isCalendarOpen ? 'true' : undefined}
                                         onClick={handleCalendarClick}
                                         sx={{
-                                            marginRight: '1.5em',
                                             textTransform: 'none',
                                             color: 'rgba(128, 128, 128, 1)',
                                             border: '1px solid rgba(184, 184, 184, 1)',
                                             borderRadius: '4px',
-                                            padding: '0.5em',
-                                            mt: 1.25
+                                            padding: '8px',
+                                            minWidth: 'auto',
+                                            '@media (max-width: 900px)': {
+                                                border: 'none',
+                                                padding: 0
+                                            }
                                         }}
                                     >
                                         <DateRangeIcon fontSize='medium' />
@@ -918,13 +909,12 @@ const Leads: React.FC = () => {
                                         onClick={handleAudiencePopupOpen}
                                         aria-haspopup="true"
                                         sx={{
-                                            marginRight: '1.5em',
                                             textTransform: 'none',
                                             color: selectedRows.size === 0 ? 'rgba(128, 128, 128, 1)' : 'rgba(80, 82, 178, 1)',
-                                            border: '1px solid rgba(80, 82, 178, 1)',
                                             borderRadius: '4px',
-                                            padding: '10px',
-                                            mt: 1.25,
+                                            padding: '0',
+                                            border: 'none',
+                                            minWidth: 'auto',
                                             opacity: selectedRows.size === 0 ? 0.4 : 1,
                                             '@media (min-width: 901px)': {
                                                 display: 'none'
@@ -954,16 +944,35 @@ const Leads: React.FC = () => {
                                     />
                                 ))}
                             </Box>
-                            <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', padding: 2, maxHeight: '78vh', maxWidth: '100%', pl: 0 }}>
+                            <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', maxWidth: '100%', pl: 0, pr: 0, pt: '22px', pb: '28px',
+                                '@media (max-width: 900px)': {
+                                    pt: '2px',
+                                    pb: '18px'
+                                }
+                             }}>
                                 {status === 'PIXEL_INSTALLATION_NEEDED' ? (
                                     <Box sx={centerContainerStyles}>
-                                        <Typography variant="h5" sx={{ mb: 2 }}>
+                                        <Typography variant="h5" sx={{
+                                            mb: 3,
+                                            fontFamily: "Nunito",
+                                            fontSize: "20px",
+                                            color: "#4a4a4a",
+                                            fontWeight: "600",
+                                            lineHeight: "28px"
+                                            }}>
                                             Pixel Integration isn&apos;t completed yet!
                                         </Typography>
                                         <Image src='/pixel_installation_needed.svg' alt='Need Pixel Install'
                                             height={250} width={300} />
-                                        <Typography variant="body1" color="textSecondary" sx={{ mt: 2 }}>
-                                            Install the pixel to complete the setup.
+                                        <Typography variant="body1" color="textSecondary" sx={{
+                                            mt: 3,
+                                            fontFamily: "Nunito",
+                                            fontSize: "14px",
+                                            color: "#808080",
+                                            fontWeight: "600",
+                                            lineHeight: "20px"
+                                            }}>
+                                            Install the pixel to unlock and gain valuable insights! Start viewing your leads now
                                         </Typography>
                                         <Button
                                             variant="contained"
@@ -972,9 +981,10 @@ const Leads: React.FC = () => {
                                                 backgroundColor: 'rgba(80, 82, 178, 1)',
                                                 fontFamily: "Nunito",
                                                 textTransform: 'none',
-                                                padding: '1em 3em',
+                                                padding: '10px 24px',
                                                 fontSize: '16px',
-                                                mt: 3
+                                                mt: 3,
+                                                lineHeight: '22px'
                                             }}
                                         >
                                             Setup Pixel
@@ -982,11 +992,26 @@ const Leads: React.FC = () => {
                                     </Box>
                                 ) : data.length === 0 ? (
                                     <Box sx={centerContainerStyles}>
-                                        <Typography variant="h5" sx={{ mb: 6 }}>
+                                        <Typography variant="h5" sx={{ 
+                                             mb: 3,
+                                             fontFamily: "Nunito",
+                                             fontSize: "20px",
+                                             color: "#4a4a4a",
+                                             fontWeight: "600",
+                                             lineHeight: "28px"
+                                         }}>
                                             Data not matched yet!
                                         </Typography>
                                         <Image src='/no-data.svg' alt='No Data' height={250} width={300} />
-                                        <Typography variant="body1" color="textSecondary" sx={{ mt: 2 }}>
+                                        <Typography variant="body1" color="textSecondary"
+                                        sx={{
+                                            mt: 3,
+                                            fontFamily: "Nunito",
+                                            fontSize: "14px",
+                                            color: "#808080",
+                                            fontWeight: "600",
+                                            lineHeight: "20px"
+                                            }}>
                                             Please check back later.
                                         </Typography>
                                     </Box>

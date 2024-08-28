@@ -87,11 +87,14 @@ export const leadsStyles: { [key: string]: SxProps<Theme> } = {
   title: {
     fontWeight: 'bold',
     fontSize: '18px',
-    whiteSpace: 'nowrap',
+    // whiteSpace: 'nowrap',
     textAlign: 'start',
-    padding: '1.5rem 0rem 0',
+    padding: '0 0rem 0',
     fontFamily: 'Nunito',
-    mr: '1em'
+    mr: '1em',
+    '@media (max-width: 440px)': {
+      fontSize: '16px'
+    }
   },
   formContainer: {
     display: 'grid',

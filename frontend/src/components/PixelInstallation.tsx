@@ -147,7 +147,7 @@ const PixelInstallation: React.FC = () => {
       >
         Select how you would like to install the pixel
       </Typography>
-      <Grid container spacing={2} md={12}>
+      <Grid container spacing={2}>
         <Grid item xs={12} md={4}>
           <Button variant="outlined" fullWidth onClick={installManually} sx={buttonStyles}>
             <Image src={'/install_manually.svg'} alt="Install Manually" width={32} height={32}
@@ -157,7 +157,7 @@ const PixelInstallation: React.FC = () => {
           </Button>
           <ManualPopup open={openmanually} handleClose={handleManualClose} pixelCode={pixelCode} />
         </Grid>
-        <Grid item xs={12} md={4} width={700}>
+        <Grid item xs={12} md={4}>
           <Button variant="outlined" fullWidth onClick={installGoogleTag} sx={buttonGoogle}>
             <Image src={'/install_gtm.svg'} alt="Install on Google Tag Manager" width={32} height={32} />
             <Typography sx={typographyGoogle}>Install on Google Tag Manager</Typography>
@@ -194,6 +194,9 @@ const buttonStyles = {
       width: '24px',
       height: '24px'
     }
+  },
+  '@media (min-width: 1200px) and (max-width: 1399px)': {
+    paddingRight: '0',
   } 
 };
 
@@ -211,6 +214,9 @@ const buttonGoogle = {
       width: '24px',
       height: '24px'
     }
+  },
+  '@media (min-width: 1200px) and (max-width: 1399px)': {
+    paddingRight: '0',
   }
 };
 
@@ -227,6 +233,9 @@ const typographyStyles = {
   '@media (max-width: 1199px)': {
     paddingTop: '0.5rem',
     paddingBottom: 0
+  },
+  '@media (min-width: 1200px) and (max-width: 1399px)': {
+    fontSize: '12px'
   }
 };
 
@@ -241,6 +250,9 @@ const typographyGoogle = {
   paddingTop: '0.625rem',
   '@media (max-width: 1199px)': {
     paddingTop: '0.5rem'
+  },
+  '@media (min-width: 1200px) and (max-width: 1399px)': {
+    fontSize: '12px'
   }
 };
 
