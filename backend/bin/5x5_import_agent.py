@@ -10,15 +10,18 @@ import tempfile
 import aioboto3
 import boto3
 import pandas as pd
+from sqlalchemy import create_engine
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
+from models.five_x_five_phones import FiveXFivePhones
+from models.five_x_five_users_phones import FiveXFiveUsersPhones
 from models.five_x_five_emails import FiveXFiveEmails
 from models.five_x_five_names import FiveXFiveNames
 from models.five_x_five_users_emails import FiveXFiveUsersEmails
 from config.rmq_connection import RabbitMQConnection
-from sqlalchemy import create_engine
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import sessionmaker
 from models.five_x_five_users import FiveXFiveUser
 from dotenv import load_dotenv
@@ -67,11 +70,36 @@ def save_emails_to_user(session, emails, five_x_five_user_id, type):
                 )
                 session.add(email_obj)
                 session.flush()
-            session.add(FiveXFiveUsersEmails(
+
+            five_x_five_user_email = insert(FiveXFiveUsersEmails).values(
                 user_id=five_x_five_user_id,
                 email_id=email_obj.id,
                 type=type
-            ))
+            ).on_conflict_do_nothing()
+            session.execute(five_x_five_user_email)
+
+
+def save_phones_to_user(session, phones, five_x_five_user_id, type):
+    for number in phones:
+        number = number.strip()
+        number = convert_to_none(number)
+        if number:
+            number = number.replace("+", "")
+            phone_obj = session.query(FiveXFivePhones).filter(
+                FiveXFivePhones.number == number).first()
+            if not phone_obj:
+                phone_obj = FiveXFivePhones(
+                    number=number
+                )
+                session.add(phone_obj)
+                session.flush()
+
+            five_x_five_user_phone = insert(FiveXFiveUsersPhones).values(
+                user_id=five_x_five_user_id,
+                phone_id=phone_obj.id,
+                type=type
+            ).on_conflict_do_nothing()
+            session.execute(five_x_five_user_phone)
 
 
 async def on_message_received(message, s3_session, credentials, session):
@@ -188,6 +216,16 @@ async def on_message_received(message, s3_session, credentials, session):
                             save_emails_to_user(session, emails, five_x_five_user.id, 'personal')
                             emails = str(row.get('ADDITIONAL_PERSONAL_EMAILS', '')).split(', ')
                             save_emails_to_user(session, emails, five_x_five_user.id, 'additional_personal')
+
+                            mobile_phone = str(row.get('MOBILE_PHONE', '')).split(', ')
+                            mobile_phone_set = set(mobile_phone)
+                            direct_number = [num for num in str(row.get('DIRECT_NUMBER', '')).split(', ') if
+                                             num not in mobile_phone_set]
+                            personal_phone = [num for num in str(row.get('PERSONAL_PHONE', '')).split(', ') if
+                                              num not in mobile_phone_set]
+                            save_phones_to_user(session, mobile_phone, five_x_five_user.id, 'mobile_phone')
+                            save_phones_to_user(session, direct_number, five_x_five_user.id, 'direct_number')
+                            save_phones_to_user(session, personal_phone, five_x_five_user.id, 'personal_phone')
 
                             logging.info('Committing transaction')
                             session.commit()
