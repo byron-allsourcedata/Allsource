@@ -1,15 +1,14 @@
+import json
+import logging
+import os
+import sys
 import tempfile
-from datetime import time
-import re
 import traceback
+import urllib.parse
+from datetime import time
 
 import boto3
 import pyarrow.parquet as pq
-import logging
-import urllib.parse
-import json
-import sys
-import os
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
@@ -17,12 +16,9 @@ sys.path.append(parent_dir)
 from models.leads_requests import LeadsRequests
 from models.leads_visits import LeadsVisits
 from models.five_x_five_hems import FiveXFiveHems
-from models.leads_locations import LeadsLocations
-from models.locations import Locations
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from models.five_x_five_users import FiveXFiveUser
-from models.leads import Lead
 from models.leads_users import LeadUser
 from models.users import Users
 from dotenv import load_dotenv
@@ -72,7 +68,7 @@ def process_table(table, session, file_key):
         if five_x_five_user:
             logging.info(f"UP_ID {up_id} found in table")
             process_user_data(table, i, five_x_five_user, session)
-    #update_last_processed_file(file_key)
+    update_last_processed_file(file_key)
 
 
 def process_user_data(table, index, five_x_five_user, session):
