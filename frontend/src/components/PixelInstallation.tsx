@@ -148,7 +148,10 @@ const PixelInstallation: React.FC = () => {
       >
         Select how you would like to install the pixel
       </Typography>
-      <Grid container spacing={2}>
+      <Grid container md={12}>
+        <Box sx={{ display: 'flex', flexDirection: 'row', width: '100%',gap: 1, '@media (max-width: 899px)': {
+          flexDirection: 'column'
+        } }}>
         <Grid item xs={12} md={4}>
           <Button variant="outlined" fullWidth onClick={installManually} sx={buttonStyles}>
             <Image src={'/install_manually.svg'} alt="Install Manually" width={32} height={32}
@@ -174,7 +177,8 @@ const PixelInstallation: React.FC = () => {
           </Button>
           <CRMPopup open={opencrm} handleClose={handleCRMClose} pixelCode={cmsData.manual || ''}  pixel_client_id={cmsData.pixel_client_id || ''} />
         </Grid>
-        </Grid>
+        </Box>
+      </Grid>
     </Box>
   );
 };
@@ -240,8 +244,8 @@ const typographyStyles = {
     paddingTop: '0.5rem',
     paddingBottom: 0
   },
-  '@media (min-width: 1200px) and (max-width: 1399px)': {
-    fontSize: '12px'
+  '@media (max-width: 1300px)': {
+    fontSize:'13px'
   }
 };
 
@@ -257,8 +261,8 @@ const typographyGoogle = {
   '@media (max-width: 1199px)': {
     paddingTop: '0.5rem'
   },
-  '@media (min-width: 1200px) and (max-width: 1399px)': {
-    fontSize: '12px'
+  '@media (max-width: 1300px)': {
+    fontSize:'13px'
   }
 };
 
