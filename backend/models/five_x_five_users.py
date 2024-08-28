@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, TEXT, VARCHAR
+from sqlalchemy import Column, Integer, TEXT, VARCHAR, TIMESTAMP
 
 from .base import Base
 
@@ -14,9 +14,9 @@ class FiveXFiveUser(Base):
     mobile_phone = Column(TEXT, nullable=True)
     direct_number = Column(TEXT, nullable=True)
     gender = Column(VARCHAR, nullable=True)
-    age_range = Column(VARCHAR, nullable=True)
     personal_phone = Column(VARCHAR, nullable=True)
     business_email = Column(VARCHAR, nullable=True)
+    personal_emails = Column(VARCHAR, nullable=True)
     last_name = Column(VARCHAR, nullable=True)
     personal_city = Column(VARCHAR, nullable=True)
     personal_state = Column(VARCHAR, nullable=True)
@@ -33,3 +33,15 @@ class FiveXFiveUser(Base):
     company_employee_count = Column(VARCHAR, nullable=True)
     net_worth = Column(VARCHAR, nullable=True)
     job_title = Column(VARCHAR, nullable=True)
+    sha256_lc_hem = Column(VARCHAR, nullable=True)
+    md5_lc_hem = Column(VARCHAR, nullable=True)
+    sha1_lc_hem = Column(VARCHAR, nullable=True)
+    last_updated = Column(TIMESTAMP, nullable=True)
+    personal_emails_last_seen = Column(TIMESTAMP, nullable=True)
+    company_last_updated = Column(TIMESTAMP, nullable=True)
+    job_title_last_updated = Column(TIMESTAMP, nullable=True)
+    first_name_id = Column(Integer, nullable=True)
+    last_name_id = Column(Integer, nullable=True)
+    age_min = Column(Integer, nullable=True)
+    age_max = Column(Integer, nullable=True)
+    additional_personal_emails = Column(TEXT, nullable=True)
