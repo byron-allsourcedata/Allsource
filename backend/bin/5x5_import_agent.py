@@ -54,7 +54,6 @@ def convert_to_none(value):
 
 
 def save_emails_to_user(session, emails, five_x_five_user_id, type):
-    print(five_x_five_user_id)
     for email in emails:
         email = email.strip()
         email = convert_to_none(email)
@@ -75,8 +74,7 @@ def save_emails_to_user(session, emails, five_x_five_user_id, type):
             ))
 
 
-async def on_message_received(message, s3_session, credentials, db_session):
-    session = db_session()
+async def on_message_received(message, s3_session, credentials, session):
     async with message.process():
         message_json = json.loads(message.body)
         async with s3_session.client(
@@ -218,11 +216,10 @@ async def main():
             f"postgresql://{os.getenv('DB_USERNAME')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}"
         )
         Session = sessionmaker(bind=engine)
-        db_session = Session
-
+        db_session = Session()
         session = aioboto3.Session()
         await queue.consume(
-            functools.partial(on_message_received, s3_session=session, credentials=credentials, db_session=db_session)
+            functools.partial(on_message_received, s3_session=session, credentials=credentials, session=db_session)
         )
         await asyncio.Future()
     except Exception as err:
@@ -230,6 +227,7 @@ async def main():
     finally:
         logging.info("Connection to the database closed")
         logging.info('Shutting down...')
+        db_session.close()
         await rabbitmq_connection.close()
 
 
