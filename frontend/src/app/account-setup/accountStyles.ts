@@ -13,52 +13,56 @@ export const styles: { [key: string]: SxProps<Theme> } = {
   employeeButtons: {
     display: 'flex',
     flexWrap: 'wrap',
-    gap: '8px',
-    color: 'black',
+    gap: '12px',
+    color: 'rgba(0, 0, 0, 1)',
     width: '100%',
     marginBottom: '2.5em',
     textTransform: 'none',
-    '@media (max-width: 600px)': { marginBottom: 1, }
+    '@media (max-width: 600px)': { marginBottom: 1, gap: '14px', }
   },
   visitsButtons: {
     display: 'flex',
     flexWrap: 'wrap',
     gap: '12px',
-    color: 'black',
+    color: 'rgba(0, 0, 0, 1)',
     width: '100%',
     marginBottom: '2.5em',
     textTransform: 'none',
+    '@media (max-width: 600px)': { marginBottom: 2.5 },
     '@media (max-width: 400px)': { marginBottom: 1.5 },
-    '@media (max-width: 600px)': { marginBottom: 2.5 }
   },
   visitButton: {
     padding: '9px 16px',
-    color: 'black',
+    color: 'rgba(0, 0, 0, 1)',
     border: '1px solid #ccc',
     textTransform: 'none'
   },
   employeeButton: {
-    padding: '0.25em 2.25em',
-    color: 'black',
+    padding: '9px 20px',
+    color: 'rgba(0, 0, 0, 1)',
     border: '1px solid #ccc',
     textTransform: 'none',
+    '@media (max-width: 600px)': { padding: '8px 16px', minWidth: '96px', maxHeight: '38px' }
   },
   rolesButtons: {
     display: 'flex',
     flexWrap: 'wrap',
-    gap: '12px',
-    color: 'black',
-    width: '115%',
+    gap: '10px',
+    color: 'rgba(0, 0, 0, 1)',
+    width: '100%',
     marginBottom: '2.5em',
     textTransform: 'none',
-    '@media (max-width: 400px)': { marginBottom: 1.5, width: '100%' },
-    '@media (max-width: 600px)': { marginBottom: 2.5, width: '100%' }
+    '@media (max-width: 600px)': { marginBottom: 2, width: '100%', gap:'16px' },
+    '@media (max-width: 400px)': { marginBottom: 1.5, width: '100%', gap: '14px'  },
+
   },
   roleButton: {
-    padding: '0.25em 1.5em',
     color: 'black',
     border: '1px solid #ccc',
-    textTransform: 'none'
+    textTransform: 'none',
+    padding: '8px 8px',
+    '@media (max-width: 600px)': { padding: '10px' },
+    '@media (max-width: 400px)': {padding: '5px'}
   },
   activeButton: {
     backgroundColor: '#007BFF',
@@ -76,8 +80,9 @@ export const styles: { [key: string]: SxProps<Theme> } = {
     color: 'rgba(244, 87, 69, 1)',
     borderBottom: `1px solid rgba(228, 228, 228, 1)`,
     marginBottom: '1.25em',
+    '@media (max-height: 670px)': { marginBottom: 1 },
     '@media (max-width: 600px)': { display: 'flex', flexDirection: 'column', justifyContent: 'start', alignItems: 'start' },
-    '@media (max-height: 670px)': { marginBottom: 1 }
+
   },
   header: {
     display: 'flex',
@@ -125,18 +130,20 @@ export const styles: { [key: string]: SxProps<Theme> } = {
     paddingLeft: '20px'
   },
   formContainer: {
-    pt: 10,
     display: 'flex',
-    maxWidth: '600px',
-    width: '90%',
     flexDirection: 'column',
-    alignItems: 'start',
+    maxWidth: '556px',
+    width: '100%',
+    height: '82vh',
+    alignItems: 'center',
+    justifyContent: 'center',
     borderRadius: '0.5em',
     backgroundColor: '#fff',
-    '@media (max-width: 400px)': { pl: 2, pt: 0 },
-    '@media (max-width: 600px)': { pl: 0, pt: 8, gap: 1 },
-    '@media (max-height: 670px)': { pl: 0, pt: 1, gap: 0 },
-    '@media (min-width: 1500px)': {pt: 'calc(15vh)',},
+    '@media (max-height: 670px)': { pl: 0, gap: 0 },
+    '@media (max-width: 600px)': {height: '77vh',display: 'flex',flexDirection: 'column',alignItems: 'center',justifyContent: 'center'},
+    '@media (max-width: 400px)': { pl: 0, pt: 0, height: '77vh',  },
+   
+
   },
   title: {
     fontFamily: 'Nunito',
@@ -145,7 +152,7 @@ export const styles: { [key: string]: SxProps<Theme> } = {
     lineHeight: '38.19px',
     marginBottom: '0.25em',
     textAlign: 'start',
-    '@media (max-width: 600px)': { fontSize: '24px', lineHeight: '32.74px', }
+    '@media (max-width: 600px)': { fontSize: '24px', lineHeight: '32.74px', marginBottom: '0.15em', }
   },
   subtitle: {
     marginBottom: '2em',
@@ -154,7 +161,7 @@ export const styles: { [key: string]: SxProps<Theme> } = {
     fontSize: '16px',
     fontWeight: '700',
     textAlign: 'start',
-    '@media (max-width: 600px)': { marginBottom: 0.35 }
+    '@media (max-width: 600px)': { marginBottom: 0.15 }
   },
   text: {
     color: 'rgba(72, 72, 72, 1)',
@@ -163,12 +170,29 @@ export const styles: { [key: string]: SxProps<Theme> } = {
     fontWeight: '400',
     lineHeight: '21.82px',
     textAlign: 'left',
-    paddingBottom: '0.5em',
-    '@media (max-width: 600px)': { marginBottom: 0.35, fontSize: '14px', fontWeight: '400' }
+    paddingBottom: '0.75em',
+    '@media (max-width: 600px)': { marginBottom: 0, fontSize: '14px', fontWeight: '400' }
   },
 
   formField: {
     marginBottom: '1.5em',
+    maxHeight: '56px',
+    '& .MuiInputBase-root': {
+      maxHeight: '48px', 
+    },
+    '& .MuiOutlinedInput-root': {
+      paddingTop: '13px',
+      paddingBottom: '13px',
+    },
+    '& .MuiInputLabel-root': {
+      top: '-5px',
+    },
+    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+      borderColor: '#0000FF',
+    },
+  },
+  form: {
+    display: 'flex', flexDirection: 'column', justifyContent: 'center', alignContent: 'center', '@media (max-width: 400px)': { paddingLeft: 2.5,}, '@media (max-width: 600px)': { paddingRight: 2.5, paddingLeft: 2.5,}
   },
   submitButton: {
     backgroundColor: 'rgba(244, 87, 69, 1)',

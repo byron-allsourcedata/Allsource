@@ -3,6 +3,7 @@ import React, { Suspense, useState, useEffect } from "react";
 import {
   Box,
   Button,
+  InputAdornment,
   Menu,
   MenuItem,
   Tab,
@@ -18,6 +19,7 @@ import { useUser } from "../../context/UserContext";
 import axiosInterceptorInstance from "../../axios/axiosInterceptorInstance";
 import { showErrorToast } from "../../components/ToastNotification";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { accountStyles } from "@/css/accountDetails";
 
 const AccountSetup = () => {
   const [organizationName, setOrganizationName] = useState("");
@@ -33,6 +35,16 @@ const AccountSetup = () => {
   });
   const router = useRouter();
   const { full_name, email } = useUser();
+
+  const [isFocused, setIsFocused] = useState(false);
+
+  const handleFocus = () => {
+    setIsFocused(true);
+  };
+
+  const handleBlur = () => {
+    setIsFocused(false);
+  };
 
   const [activeTab, setActiveTab] = useState(0);
 
@@ -93,6 +105,7 @@ const AccountSetup = () => {
           ...styles.employeeButton,
           backgroundColor: "rgba(249, 189, 182, 1)",
           color: "black",
+          pointerEvents: 'none',
         }
       : { ...styles.employeeButton, color: "black" };
   };
@@ -103,6 +116,7 @@ const AccountSetup = () => {
           ...styles.visitButton,
           backgroundColor: "rgba(249, 189, 182, 1)",
           color: "black",
+          pointerEvents: 'none',
         }
       : { ...styles.visitButton, color: "black" };
   };
@@ -113,6 +127,7 @@ const AccountSetup = () => {
           ...styles.roleButton,
           backgroundColor: "rgba(249, 189, 182, 1)",
           color: "black",
+          pointerEvents: 'none',
         }
       : { ...styles.roleButton, color: "black" };
   };
@@ -131,17 +146,6 @@ const AccountSetup = () => {
     setErrors({ ...errors, selectedVisits: "" });
   };
 
-  const handleWebsiteLinkChange = (e: { target: { value: any } }) => {
-    const value = e.target.value;
-    setWebsiteLink(value);
-
-    const websiteLinkError = validateField(value, "website");
-    setErrors((prevErrors) => ({
-      ...prevErrors,
-      websiteLink: websiteLinkError,
-    }));
-  };
-
   const validateField = (
     value: string,
     type: "email" | "website" | "organizationName"
@@ -151,9 +155,9 @@ const AccountSetup = () => {
         const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         return emailRe.test(value) ? "" : "Invalid email address";
       case "website":
-        const websiteRe =
-          /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/;
-        return websiteRe.test(value) ? "" : "Invalid website URL";
+        const sanitizedValue = value.replace(/^www\./, '');
+        const websiteRe = /^(https?:\/\/)?([\da-z.-]+)\.([a-z]{2,20})([/\w .-]*)*\/?$/i;
+        return websiteRe.test(sanitizedValue) ? "" : "Invalid website URL";
       case "organizationName":
         const orgName = value.trim();
         return orgName ? "" : "Organization name is required";
@@ -166,9 +170,7 @@ const AccountSetup = () => {
     const newErrors = {
       websiteLink: validateField(websiteLink, "website"),
       organizationName: validateField(organizationName, "organizationName"),
-      selectedEmployees: selectedEmployees
-        ? ""
-        : "Please select number of employees",
+      selectedEmployees: selectedEmployees ? "" : "Please select number of employees",
       selectedVisits: selectedVisits ? "" : "Please select number of visits",
       selectedRoles: selectedRoles ? "" : "Please select your`s role",
     };
@@ -177,7 +179,9 @@ const AccountSetup = () => {
     if (
       newErrors.websiteLink ||
       newErrors.organizationName ||
-      newErrors.selectedEmployees
+      newErrors.selectedEmployees ||
+      newErrors.selectedRoles ||
+      newErrors.selectedVisits
     ) {
       return;
     }
@@ -213,6 +217,29 @@ const AccountSetup = () => {
     }
   };
 
+  const handleWebsiteLink = (event: { target: { value: any } }) => {
+    let input = event.target.value;
+  
+    // Удаляем префикс www.
+    const sanitizedInput = input.replace(/^www\./, '');
+  
+    // Добавляем https:// если его нет
+    if (!sanitizedInput.startsWith("https://")) {
+      input = `https://${sanitizedInput}`;
+    } else {
+      input = sanitizedInput;
+    }
+  
+    setWebsiteLink(input);
+  
+    const websiteError = validateField(input, "website");
+    setErrors((prevErrors) => ({
+      ...prevErrors,
+      websiteLink: websiteError,
+    }));
+  };
+  
+
   const isFormValid = () => {
     const errors = {
       websiteLink: validateField(websiteLink, "website"),
@@ -225,12 +252,21 @@ const AccountSetup = () => {
     );
   };
 
+  const isFormBusinessValid = () => {
+    const errors = {
+      selectedEmployees: selectedEmployees ? "" : "Please select a number of employees",
+      selectedRoles: selectedRoles ? "" : "Please select your role",
+    };
+
+    return !errors.selectedRoles && !errors.selectedEmployees;
+  };
+
   const ranges = [
     { min: 1, max: 10, label: "1-10" },
-    { min: 11, max: 50, label: "11-50" },
-    { min: 51, max: 100, label: "51-100" },
-    { min: 101, max: 500, label: "100-500" },
-    { min: 501, max: Infinity, label: "500+" },
+    { min: 11, max: 50, label: "51-100" },
+    { min: 51, max: 100, label: "101-250" },
+    { min: 101, max: 500, label: "250-500" },
+    { min: 501, max: Infinity, label: ">1k" },
   ];
   const roles = [
     { label: "Digital Marketer" },
@@ -282,17 +318,23 @@ const AccountSetup = () => {
             aria-expanded={open ? "true" : undefined}
             onClick={handleProfileMenuClick}
             sx={{
+              minWidth: "32px",
+              padding: "8px",
+              color: "rgba(128, 128, 128, 1)",
+              border: "1px solid rgba(184, 184, 184, 1)",
+              borderRadius: "3.27px",
               position: "relative",
               display: "none",
               right: 0,
               "@media (max-width: 600px)": {
                 display: "flex",
-                mr: 0,
+                mr: 2,
+                mb: 2,
                 position: "inherit",
               },
             }}
           >
-            <PersonIcon sx={styles.account} />
+            <Image src={"/Person.svg"} alt="Person" width={18} height={18} />
           </Button>
           <Menu
             id="profile-menu"
@@ -343,6 +385,14 @@ const AccountSetup = () => {
                   left: 0,
                   top: 0,
                 },
+                "@media (max-width: 400px)": {
+                  display: "flex",
+                  mr: 0,
+                  position: "inherit",
+                  left: 0,
+                  top: 0,
+                  padding: 1.25
+                },
               }}
             >
               <ArrowBackIcon
@@ -377,8 +427,9 @@ const AccountSetup = () => {
                     ? "rgba(50, 50, 50, 1)"
                     : "rgba(142, 142, 142, 1)",
                 "&.Mui-selected": {
-                  color: "rgba(50, 50, 50, 1)",
+                  color: "rgba(244, 87, 69, 1)",
                 },
+                '@media (max-width: 400px)': { padding: 1.25 },
               }}
             />
             <Tab
@@ -392,11 +443,12 @@ const AccountSetup = () => {
                 lineHeight: "21.82px",
                 color:
                   activeTab === 1
-                    ? "rgba(50, 50, 50, 1)"
+                    ? "rgba(244, 87, 69, 1)"
                     : "rgba(142, 142, 142, 1)",
                 "&.Mui-selected": {
-                  color: "rgba(50, 50, 50, 1)",
+                  color: "rgba(244, 87, 69, 1)",
                 },
+                '@media (max-width: 400px)': { padding: 1.25 },
               }}
             />
           </Tabs>
@@ -407,9 +459,18 @@ const AccountSetup = () => {
           aria-haspopup="true"
           aria-expanded={open ? "true" : undefined}
           onClick={handleProfileMenuClick}
-          sx={{ "@media (max-width: 600px)": { display: "none" } }}
+          sx={{
+            minWidth: "32px",
+            padding: "8px",
+            color: "rgba(128, 128, 128, 1)",
+            border: "1px solid rgba(184, 184, 184, 1)",
+            borderRadius: "3.27px",
+            marginRight: 3,
+            mb: 1,
+            "@media (max-width: 600px)": { display: "none" },
+          }}
         >
-          <PersonIcon sx={styles.account} />
+          <Image src={"/Person.svg"} alt="Person" width={18} height={18} />
         </Button>
         <Menu
           id="profile-menu"
@@ -431,128 +492,176 @@ const AccountSetup = () => {
         </Menu>
       </Box>
       <Box sx={styles.formContainer}>
-        <Typography variant="h5" component="h1" sx={styles.title}>
-          Welcome {full_name},
-        </Typography>
-        <Typography variant="body1" component="h2" sx={styles.subtitle}>
-          Let&apos;s set up your account
-        </Typography>
-        {activeTab === 0 && (
-          <>
-            <Typography variant="body1" component="h3" sx={styles.text}>
-              What is your organization&apos;s name
+        <Box sx={styles.form}>
+          <Box
+            sx={{
+              "@media (max-width: 600px)": {
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                pb: 1
+              },
+            }}
+          >
+            <Typography variant="h5" component="h1" sx={styles.title}>
+              Welcome {full_name},
             </Typography>
-            <TextField
-              fullWidth
-              label="Organization name"
-              variant="outlined"
-              sx={styles.formField}
-              value={organizationName}
-              onChange={(e) => setOrganizationName(e.target.value)}
-              error={!!errors.organizationName}
-              helperText={errors.organizationName}
-            />
-            <Typography variant="body1" component="h3" sx={styles.text}>
-              Share your company website
+            <Typography variant="body1" component="h2" sx={styles.subtitle}>
+              Let&apos;s set up your account
             </Typography>
-            <TextField
-              fullWidth
-              label="Enter website link"
-              variant="outlined"
-              sx={styles.formField}
-              value={websiteLink}
-              onChange={handleWebsiteLinkChange}
-              error={!!errors.websiteLink}
-              helperText={errors.websiteLink}
-            />
-            <Typography variant="body1" sx={styles.text}>
-              How many monthly visits to your website?
-            </Typography>
-            {errors.selectedEmployees && (
-              <Typography variant="body2" color="error">
-                {errors.selectedEmployees}
+          </Box>
+          {activeTab === 0 && (
+            <>
+              <Typography variant="body1" component="h3" sx={styles.text}>
+                What is your organization&apos;s name
               </Typography>
-            )}
-            <Box sx={styles.visitsButtons}>
-              {ranges_visits.map((range, index) => (
-                <Button
-                  key={index}
-                  variant="outlined"
-                  onClick={() => handleVisitsRangeChange(range.label)}
-                  sx={getButtonVisitsStyles(selectedVisits === range.label)}
-                >
-                  {range.label}
-                </Button>
-              ))}
-            </Box>
-            <Button
-              fullWidth
-              variant="contained"
-              sx={{
-                ...styles.submitButton,
-                opacity: isFormValid() ? 1 : 0.2,
-                pointerEvents: isFormValid() ? "auto" : "none",
-              }}
-              onClick={handleNextClick}
-              disabled={!isFormValid()}
-            >
-              Next
-            </Button>
-          </>
-        )}
-        {activeTab === 1 && (
-          <>
-            {/* Business info */}
-            <Typography variant="body1" sx={styles.text}>
-              How many employees work at your organization
-            </Typography>
-            {errors.selectedEmployees && (
-              <Typography variant="body2" color="error">
-                {errors.selectedEmployees}
+              <TextField
+                fullWidth
+                label="Organization name"
+                variant="outlined"
+                sx={styles.formField}
+                value={organizationName}
+                onChange={(e) => setOrganizationName(e.target.value)}
+                error={!!errors.organizationName}
+                helperText={errors.organizationName}
+              />
+              <Typography variant="body1" component="h3" sx={styles.text}>
+                Share your company website
               </Typography>
-            )}
-            <Box sx={styles.employeeButtons}>
-              {ranges.map((range, index) => (
-                <Button
-                  key={index}
-                  variant="outlined"
-                  onClick={() => handleEmployeeRangeChange(range.label)}
-                  sx={getButtonStyles(selectedEmployees === range.label)}
-                >
-                  {range.label}
-                </Button>
-              ))}
-            </Box>
-            <Typography variant="body1" sx={styles.text}>
-              Whats your role?
-            </Typography>
-            {errors.selectedEmployees && (
-              <Typography variant="body2" color="error">
-                {errors.selectedEmployees}
+              <TextField
+                fullWidth
+                label="Enter website link"
+                variant="outlined"
+                placeholder={isFocused ? "example.com" : ""}
+                sx={styles.formField}
+                InputLabelProps={{ sx: accountStyles.inputLabel }}
+                value={websiteLink.replace(/^https?:\/\//, "")}
+                onChange={handleWebsiteLink}
+                onFocus={handleFocus}
+                onBlur={handleBlur}
+                error={!!errors.websiteLink}
+                helperText={errors.websiteLink}
+                InputProps={{
+                  startAdornment: isFocused && (
+                    <InputAdornment position="start">https://</InputAdornment>
+                  ),
+                }}
+              />
+              <Typography variant="body1" sx={styles.text}>
+                How many monthly visits to your website?
               </Typography>
-            )}
-            <Box sx={styles.rolesButtons}>
-              {roles.map((range, index) => (
-                <Button
-                  key={index}
-                  variant="outlined"
-                  onClick={() => handleRolesChange(range.label)}
-                  sx={getButtonRolesStyles(selectedRoles === range.label)}
-                >
-                  {range.label}
-                </Button>
-              ))}
-            </Box>
-            <Button
-              fullWidth
-              variant="contained"
-              sx={styles.submitButton}
-              onClick={handleSubmit}
-            >
-              Next
-            </Button>
-          </>
-        )}
+              {errors.selectedEmployees && (
+                <Typography variant="body2" color="error">
+                  {errors.selectedEmployees}
+                </Typography>
+              )}
+              <Box sx={styles.visitsButtons}>
+                {ranges_visits.map((range, index) => (
+                  <Button
+                    key={index}
+                    variant="outlined"
+                    onClick={() => handleVisitsRangeChange(range.label)}
+                    onTouchStart={() => handleVisitsRangeChange(range.label)}
+                    onMouseDown={() => handleVisitsRangeChange(range.label)}
+                    sx={getButtonVisitsStyles(selectedVisits === range.label)}
+                  >
+                    {range.label}
+                  </Button>
+                ))}
+              </Box>
+              <Button
+                fullWidth
+                variant="contained"
+                sx={{
+                  ...styles.submitButton,
+                  opacity: isFormValid() ? 1 : 0.6,
+                  pointerEvents: isFormValid() ? "auto" : "none",
+                  backgroundColor: isFormValid()
+                    ? "rgba(244, 87, 69, 1)"
+                    : "rgba(244, 87, 69, 0.4)",
+                  "&.Mui-disabled": {
+                    backgroundColor: "rgba(244, 87, 69, 0.6)",
+                    color: "#fff",
+                  },
+                }}
+                onClick={handleNextClick}
+                disabled={!isFormValid()}
+              >
+                Next
+              </Button>
+            </>
+          )}
+          {activeTab === 1 && (
+            <>
+              {/* Business info */}
+              <Typography variant="body1" sx={styles.text}>
+                How many employees work at your organization
+              </Typography>
+              {errors.selectedEmployees && (
+                <Typography variant="body2" color="error">
+                  {errors.selectedEmployees}
+                </Typography>
+              )}
+              <Box sx={styles.employeeButtons}>
+                {ranges.map((range, index) => (
+                  <Button
+                    key={index}
+                    variant="outlined"
+                    onClick={() => handleEmployeeRangeChange(range.label)}
+                    onTouchStart={() => handleEmployeeRangeChange(range.label)}
+                    onMouseDown={() => handleEmployeeRangeChange(range.label)}
+                    sx={getButtonStyles(selectedEmployees === range.label)}
+                  >
+                    <Typography sx={{fontFamily: 'Nunito', fontWeight: 400, fontSize: '14px', lineHeight: '19.6px', padding: '3px'}}> {range.label}</Typography>
+                  </Button>
+                ))}
+              </Box>
+              <Typography variant="body1" sx={styles.text}>
+                Whats your role?
+              </Typography>
+              {errors.selectedEmployees && (
+                <Typography variant="body2" color="error">
+                  {errors.selectedEmployees}
+                </Typography>
+              )}
+              <Box sx={styles.rolesButtons}>
+                {roles.map((range, index) => (
+                  <Button
+                    key={index}
+                    variant="outlined"
+                    onClick={() => handleRolesChange(range.label)}
+                    onTouchStart={() => handleRolesChange(range.label)}
+                    onMouseDown={() => handleRolesChange(range.label)}
+                    sx={getButtonRolesStyles(selectedRoles === range.label)}
+                  >
+                    <Typography sx={{fontFamily: 'Nunito', fontWeight: 400, fontSize: '14px', lineHeight: '19.6px', padding: '3px'}}> {range.label}</Typography>
+                  </Button>
+                ))}
+              </Box>
+              <Button
+                fullWidth
+                variant="contained"
+                sx={{
+                  ...styles.submitButton,
+                  opacity: isFormValid() ? 1 : 0.6,
+                  pointerEvents: isFormValid() ? "auto" : "none",
+                  backgroundColor: isFormValid()
+                    ? "rgba(244, 87, 69, 1)"
+                    : "rgba(244, 87, 69, 0.4)",
+                  "&.Mui-disabled": {
+                    backgroundColor: "rgba(244, 87, 69, 0.6)",
+                    color: "#fff",
+                  },
+                }}
+                onClick={handleSubmit}
+                disabled={!isFormBusinessValid()}
+              >
+                Next
+              </Button>
+            </>
+          )}
+        </Box>
       </Box>
     </Box>
   );

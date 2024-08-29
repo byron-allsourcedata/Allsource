@@ -115,7 +115,6 @@ class UsersAuth:
             if user.company_name:
                 subscription_plan_is_active = subscription_service.is_user_has_active_subscription(user.id)
                 if subscription_plan_is_active:
-
                     return {'status': LoginStatus.SUCCESS}
                 else:
                     return {'status': LoginStatus.NEED_CHOOSE_PLAN}

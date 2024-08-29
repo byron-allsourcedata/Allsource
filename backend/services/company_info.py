@@ -1,7 +1,6 @@
 import logging
 
 from enums import CompanyInfoEnum
-from models.plans import UserSubscriptionPlan
 from models.users import Users
 from sqlalchemy.orm import Session
 
@@ -17,17 +16,19 @@ class CompanyInfoService:
         self.db = db
         self.subscription_service = subscription_service
 
-
     def set_company_info(self, company_info: CompanyInfo):
         result = self.check_company_info_authorization()
         if result == CompanyInfoEnum.SUCCESS:
             if not self.user.get('is_with_card') and not self.user.get('is_email_confirmed'):
                 return CompanyInfoEnum.NEED_EMAIL_VERIFIED
             self.db.query(Users).filter(Users.id == self.user.get('id')).update(
-                {Users.company_name: company_info.organization_name, Users.company_website: company_info.company_website,
+                {Users.company_name: company_info.organization_name,
+                 Users.company_website: company_info.company_website,
                  Users.employees_workers: company_info.employees_workers,
                  Users.company_role: company_info.company_role,
-                 Users.company_website_visits: company_info.monthly_visits},
+                 Users.company_website_visits: company_info.monthly_visits,
+                 Users.is_company_details_filled: True
+                 },
                 synchronize_session=False)
             self.db.commit()
             return CompanyInfoEnum.SUCCESS

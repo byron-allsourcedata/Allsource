@@ -525,7 +525,6 @@ const Leads: React.FC = () => {
     };
 
     useEffect(() => {
-        // Вызов fetchData после обновления appliedDates
         fetchData({
             sortBy: orderBy,
             sortOrder: order,
@@ -556,7 +555,7 @@ const Leads: React.FC = () => {
         borderRadius: 2,
         padding: 3,
         boxSizing: 'border-box',
-        width: '90%',
+        width: '100%',
         textAlign: 'center',
         flex: 1,
     };
@@ -727,10 +726,14 @@ const Leads: React.FC = () => {
 
                 <Box sx={{ flex: 1, marginTop: '90px', display: 'flex', flexDirection: 'column' }}>
                     <Grid container sx={{ flex: 1 }}>
-                        <Grid item xs={12} md={2} sx={{ padding: '0px', position: 'relative' }}>
+                        <Grid item xs={12} md="auto" lg="auto" sx={{
+                            padding: "0px",
+                            display: { xs: 'none', md: 'block' },
+                            width: '142px'
+                        }}>
                             <Sidebar />
                         </Grid>
-                        <Grid item xs={12} md={10} sx={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+                        <Grid item xs={12} md={10.575} sx={{ display: 'flex', flexDirection: 'column', flex: 1, marginLeft: 3 }}>
                             <Box
                                 sx={{
                                     display: 'flex',
@@ -743,10 +746,11 @@ const Leads: React.FC = () => {
                                         Leads ({count_leads})
                                     </Typography>
                                     <Button
+                                        disabled={status === 'PIXEL_INSTALLATION_NEEDED'}
                                         onClick={() => handleFilterChange('all')}
                                         sx={{
                                             color: activeFilter === 'all' ? 'rgba(80, 82, 178, 1)' : 'rgba(89, 89, 89, 1)',
-                                            borderBottom: activeFilter === 'all' ? '2px solid rgba(80, 82, 178, 1)' : '0px solid transparent',
+                                            borderBottom: activeFilter === 'all' && status !== 'PIXEL_INSTALLATION_NEEDED' ? '2px solid rgba(80, 82, 178, 1)' : '0px solid transparent',
                                             textTransform: 'none',
                                             mr: '1em',
                                             mt: '1em',
@@ -758,6 +762,7 @@ const Leads: React.FC = () => {
                                         <Typography variant="body2" sx={leadsStyles.subtitle}>All</Typography>
                                     </Button>
                                     <Button
+                                        disabled={status === 'PIXEL_INSTALLATION_NEEDED'}
                                         onClick={() => handleFilterChange('new_customers')}
                                         sx={{
                                             mt: '1em',
@@ -773,6 +778,7 @@ const Leads: React.FC = () => {
                                         <Typography variant="body2" sx={leadsStyles.subtitle}>New Customers</Typography>
                                     </Button>
                                     <Button
+                                        disabled={status === 'PIXEL_INSTALLATION_NEEDED'}
                                         onClick={() => handleFilterChange('existing_customers')}
                                         sx={{
                                             maxHeight: '3em',
@@ -835,24 +841,42 @@ const Leads: React.FC = () => {
                                     </Button>
                                     <Button
                                         onClick={handleFilterPopupOpen}
+                                        disabled={status === 'PIXEL_INSTALLATION_NEEDED'}
                                         aria-controls={dropdownOpen ? 'account-dropdown' : undefined}
                                         aria-haspopup="true"
                                         aria-expanded={dropdownOpen ? 'true' : undefined}
                                         sx={{
                                             marginRight: '1.5em',
                                             textTransform: 'none',
-                                            color: 'rgba(128, 128, 128, 1)',
-                                            border: '1px solid rgba(184, 184, 184, 1)',
+                                            color: selectedFilters.length > 0 ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)',
+                                            border: selectedFilters.length > 0 ? '1px solid rgba(80, 82, 178, 1)' : '1px solid rgba(184, 184, 184, 1)',
                                             borderRadius: '4px',
                                             padding: '0.5em',
-                                            mt: 1.25
+                                            mt: 1.25,
+                                            position: 'relative', 
                                         }}
                                     >
-                                        <FilterListIcon fontSize='medium' />
+                                        <FilterListIcon fontSize='medium' sx={{ color: selectedFilters.length > 0 ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)' }} />
+
+                                        {selectedFilters.length > 0 && (
+                                            <Box
+                                                sx={{
+                                                    position: 'absolute',
+                                                    top: 3,
+                                                    right: 10,
+                                                    width: '10px',
+                                                    height: '10px',
+                                                    backgroundColor: 'red',
+                                                    borderRadius: '50%',
+                                                }}
+                                            />
+                                        )}
                                     </Button>
+
                                     <Button
                                         aria-controls={isCalendarOpen ? 'calendar-popup' : undefined}
                                         aria-haspopup="true"
+                                        disabled={status === 'PIXEL_INSTALLATION_NEEDED'}
                                         aria-expanded={isCalendarOpen ? 'true' : undefined}
                                         onClick={handleCalendarClick}
                                         sx={{
@@ -895,7 +919,7 @@ const Leads: React.FC = () => {
                                     />
                                 ))}
                             </Box>
-                            <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', padding: 2 }}>
+                            <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', padding: 2, maxHeight: '78vh', maxWidth: '100%' }}>
                                 {status === 'PIXEL_INSTALLATION_NEEDED' ? (
                                     <Box sx={centerContainerStyles}>
                                         <Typography variant="h5" sx={{ mb: 2 }}>
@@ -960,21 +984,10 @@ const Leads: React.FC = () => {
                                                                 { key: 'name', label: 'Name' },
                                                                 { key: 'business_email', label: 'Email' },
                                                                 { key: 'mobile_phone', label: 'Phone number' },
-                                                                { key: 'last_visited_date', label: 'Visited date' },
-                                                                {
-                                                                    key: 'last_visited_time',
-                                                                    label: 'Visited time',
-                                                                    sortable: false
-                                                                },
+                                                                { key: 'last_visited_date', label: 'Visited date', sortable: true },
                                                                 { key: 'funnel', label: 'Lead Funnel' },
                                                                 { key: 'status', label: 'Status' },
                                                                 { key: 'time_spent', label: 'Time Spent' },
-                                                                { key: 'no_of_visits', label: 'No of Visits' },
-                                                                { key: 'no_of_page_visits', label: 'No of Page Visits' },
-                                                                { key: 'age', label: 'Age' },
-                                                                { key: 'gender', label: 'Gender' },
-                                                                { key: 'state', label: 'State' },
-                                                                { key: 'city', label: 'City' },
                                                             ].map(({ key, label, sortable = true }) => (
                                                                 <TableCell
                                                                     key={key}
@@ -1037,8 +1050,6 @@ const Leads: React.FC = () => {
                                                                 <TableCell
                                                                     sx={leadsStyles.table_array}>{row.last_visited_date || 'N/A'}</TableCell>
                                                                 <TableCell
-                                                                    sx={leadsStyles.table_array}>{row.last_visited_time || 'N/A'}</TableCell>
-                                                                <TableCell
                                                                     sx={leadsStyles.table_column}
                                                                 >
                                                                     <Box
@@ -1079,19 +1090,6 @@ const Leads: React.FC = () => {
                                                                 </TableCell>
                                                                 <TableCell
                                                                     sx={leadsStyles.table_array}>{row.lead.time_spent || 'N/A'}</TableCell>
-                                                                <TableCell
-                                                                    sx={leadsStyles.table_array}>{row.lead.no_of_visits || 'N/A'}</TableCell>
-                                                                <TableCell
-                                                                    sx={leadsStyles.table_array}>{row.lead.no_of_page_visits || 'N/A'}</TableCell>
-                                                                <TableCell sx={leadsStyles.table_array}>
-                                                                    {row.lead.age_min && row.lead.age_max ? `${row.lead.age_min} - ${row.lead.age_max}` : 'N/A'}
-                                                                </TableCell>
-                                                                <TableCell
-                                                                    sx={leadsStyles.table_array}>{row.lead.gender || 'N/A'}</TableCell>
-                                                                <TableCell
-                                                                    sx={leadsStyles.table_array}>{row.state || 'N/A'}</TableCell>
-                                                                <TableCell
-                                                                    sx={leadsStyles.table_array}>{row.city || 'N/A'}</TableCell>
                                                             </TableRow>
                                                         ))}
                                                     </TableBody>

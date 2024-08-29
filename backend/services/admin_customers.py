@@ -1,16 +1,18 @@
-from sqlalchemy import func
-from config.stripe import StripeConfig
-from typing import List
-from sqlalchemy.orm import Session
-from datetime import datetime, timedelta, timezone
-from models.plans import SubscriptionPlan, UserSubscriptionPlan
-from models.subscriptions import UserSubscriptions
-from models.users import Users
 import logging
+from datetime import datetime, timedelta
+from typing import List
 
-from services.subscriptions import SubscriptionService
-from persistence.user_persistence import UserPersistence
+from sqlalchemy import func
+from sqlalchemy.orm import Session
+
+from config.stripe import StripeConfig
+from models.plans import SubscriptionPlan
+from models.subscriptions import UserSubscriptions
+from models.users import Users, User
 from persistence.plans_persistence import PlansPersistence
+from persistence.user_persistence import UserPersistence
+from services.subscriptions import SubscriptionService
+
 logger = logging.getLogger(__name__)
 
 
@@ -105,7 +107,7 @@ class AdminCustomersService:
         return user_data
 
 
-    def set_pixel_installed(self, mail):
+    def set_pixel_installed(self, mail, user_id):
         (
             self.db.query(Users)
             .filter(Users.email == mail)
@@ -114,13 +116,15 @@ class AdminCustomersService:
                 synchronize_session=False,
             )
         )
+        self.db.query(User).filter(User.id == user_id).update({User.activate_steps_percent: 90},
+                                                              synchronize_session=False)
         self.db.commit()
 
     def pixel_code_passed(self, mail):
         user_data = self.get_user_by_email(mail)
         if user_data:
             if not user_data.is_pixel_installed:
-                self.set_pixel_installed(mail)
+                self.set_pixel_installed(mail, user_data.id)
                 user_subscription = self.get_user_subscription(user_data.id)
                 if not user_subscription.plan_start and not user_subscription.plan_end:
                     free_trial_plan = self.get_free_trial_plan()

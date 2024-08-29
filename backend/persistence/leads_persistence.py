@@ -12,7 +12,7 @@ from sqlalchemy.sql import func
 
 from models.audience import Audience
 from models.audience_leads import AudienceLeads
-from models.lead_visits import LeadVisits
+from models.leads_visits import LeadsVisits
 from models.leads import Lead
 from models.leads_locations import LeadsLocations
 from models.leads_users import LeadUser
@@ -28,14 +28,14 @@ class LeadsPersistence:
 
     def filter_leads(self, user_id, page, per_page, status, from_date, to_date, regions, page_visits, average_time_spent,
                      lead_funnel, emails, recurring_visits, sort_by, sort_order, search_query):
-        subquery = (
-            self.db.query(
-                LeadVisits.leads_users_id,
-                func.max(LeadVisits.visited_at).label('last_visited_at')
-            )
-            .group_by(LeadVisits.leads_users_id)
-            .subquery()
-        )
+        # subquery = (
+        #     self.db.query(
+        #         LeadsVisits.leads_users_id,
+        #         func.max(LeadsVisits.visited_at).label('last_visited_at')
+        #     )
+        #     .group_by(LeadsVisits.leads_users_id)
+        #     .subquery()
+        # )
         query = (
             self.db.query(
                 Lead,
@@ -43,12 +43,12 @@ class LeadsPersistence:
                 LeadUser.funnel,
                 Locations.state,
                 Locations.city,
-                subquery.c.last_visited_at
+                # subquery.c.last_visited_at
             )
             .join(LeadUser, Lead.id == LeadUser.lead_id)
             .join(LeadsLocations, Lead.id == LeadsLocations.lead_id)
             .join(Locations, LeadsLocations.location_id == Locations.id)
-            .outerjoin(subquery, LeadUser.id == subquery.c.leads_users_id)
+            # .outerjoin(subquery, LeadUser.id == subquery.c.leads_users_id)
             .filter(LeadUser.user_id == user_id)
         )
         sort_options = {
@@ -59,7 +59,7 @@ class LeadsPersistence:
             'no_of_visits': Lead.no_of_visits,
             'no_of_page_visits': Lead.no_of_page_visits,
             'gender': Lead.gender,
-            'last_visited_date': subquery.c.last_visited_at,
+            # 'last_visited_date': subquery.c.last_visited_at,
             'status': LeadUser.status,
             'funnel': LeadUser.funnel,
             'state': Locations.state,
@@ -72,19 +72,19 @@ class LeadsPersistence:
                 query = query.order_by(asc(sort_column))
             elif sort_order == 'desc':
                 query = query.order_by(desc(sort_column))
-            else:
-                query = query.order_by(desc(subquery.c.last_visited_at))
-        if from_date and to_date:
-            start_date = datetime.fromtimestamp(from_date, tz=pytz.UTC)
-            end_date = datetime.fromtimestamp(to_date, tz=pytz.UTC)
-            if start_date == end_date:
-                end_date += timedelta(days=1)
-            query = query.filter(
-                and_(
-                    subquery.c.last_visited_at >= start_date,
-                    subquery.c.last_visited_at <= end_date
-                )
-            )
+            # else:
+            #     query = query.order_by(desc(subquery.c.last_visited_at))
+        # if from_date and to_date:
+        #     start_date = datetime.fromtimestamp(from_date, tz=pytz.UTC)
+        #     end_date = datetime.fromtimestamp(to_date, tz=pytz.UTC)
+        #     if start_date == end_date:
+        #         end_date += timedelta(days=1)
+        #     query = query.filter(
+        #         and_(
+        #             subquery.c.last_visited_at >= start_date,
+        #             subquery.c.last_visited_at <= end_date
+        #         )
+        #     )
         if regions:
             region_list = regions.split(',')
             region_filters = [Locations.city.ilike(f'%{region.strip()}%') for region in region_list]

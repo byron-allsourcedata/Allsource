@@ -39,8 +39,8 @@ class PixelInstallationService:
         script = f'''
         <script id="acegm_pixel_script" type="text/javascript" defer="defer">
         window.pixelClientId = "{client_id}";
-        const acegm_pixelScriptUrl = 'https://maximiz-data.s3.us-east-2.amazonaws.com/pixel.js'
-        const acegm_base_pixel_script = document.createElement('script');
+        var acegm_pixelScriptUrl = 'https://maximiz-data.s3.us-east-2.amazonaws.com/pixel.js'
+        var acegm_base_pixel_script = document.createElement('script');
         acegm_base_pixel_script.src = acegm_pixelScriptUrl;
         document.body.appendChild(acegm_base_pixel_script);
         </script>
@@ -79,9 +79,9 @@ class PixelInstallationService:
         pixel_container = soup.find('script', id='acegm_pixel_script')
         if pixel_container:
             script_content = pixel_container.string
-            client_id_match = re.search(r'const\s+pixel_clientId\s*=\s*["\']([^"\']+)["\']', script_content)
+            client_id_match = re.search(r'window\.pixelClientId\s*=\s*"([^"]+)"', script_content)
             if client_id_match:
-                pixel_client_id = client_id_match.group(1)
+                pixel_client_id = client_id_match.group(1).strip()
                 if self.user.get('data_provider_id') == pixel_client_id:
                     return True
         return False

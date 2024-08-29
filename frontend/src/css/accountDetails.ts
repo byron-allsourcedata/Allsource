@@ -8,6 +8,19 @@ export const accountStyles: { [key: string]: SxProps<Theme> } = {
     lineHeight: '19.1px',
     color: 'rgba(74, 74, 74, 1)'
   },
+  inputLabel: {
+    '& .MuiOutlinedInput-root': {
+      '&:hover fieldset': {
+        borderColor: '#A3B0C2', // Цвет рамки при наведении
+      },
+      '&.Mui-focused fieldset': {
+        borderColor: '#A3B0C2', // Цвет рамки при фокусе
+      },
+    },
+    '& .MuiInputLabel-root.Mui-focused': {
+      color: '#A3B0C2',             // Цвет текста label при фокусе
+    },
+  },
   text: {
     fontFamily: 'Nunito',
     fontSize: '16px',
