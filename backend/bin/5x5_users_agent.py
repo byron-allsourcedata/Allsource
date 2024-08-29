@@ -131,75 +131,150 @@ async def on_message_received(message, session):
                     age_min = age_max = int(age_range.strip())
                 except ValueError:
                     logging.warning(f"Invalid age range format: {age_range}")
+        five_x_five_user = session.query(FiveXFiveUser).filter_by(up_id=convert_to_none(user_json.get('UP_ID'))).first()
+        if five_x_five_user:
+            five_x_five_user.cc_id = convert_to_none(user_json.get('CC_ID'))
+            five_x_five_user.first_name = convert_to_none(user_json.get('FIRST_NAME'))
+            five_x_five_user.programmatic_business_emails = convert_to_none(user_json.get('PROGRAMMATIC_BUSINESS_EMAILS'))
+            five_x_five_user.mobile_phone = convert_to_none(user_json.get('MOBILE_PHONE'))
+            five_x_five_user.direct_number = convert_to_none(user_json.get('DIRECT_NUMBER'))
+            five_x_five_user.gender = convert_to_none(user_json.get('GENDER'))
+            five_x_five_user.age_min = age_min
+            five_x_five_user.age_max = age_max
+            five_x_five_user.personal_phone = convert_to_none(user_json.get('PERSONAL_PHONE'))
+            five_x_five_user.business_email = convert_to_none(user_json.get('BUSINESS_EMAIL'))
+            five_x_five_user.personal_emails = convert_to_none(user_json.get('PERSONAL_EMAILS'))
+            five_x_five_user.last_name = convert_to_none(user_json.get('LAST_NAME'))
+            five_x_five_user.personal_city = convert_to_none(user_json.get('PERSONAL_CITY'))
+            five_x_five_user.personal_state = convert_to_none(user_json.get('PERSONAL_STATE'))
+            five_x_five_user.company_name = convert_to_none(user_json.get('COMPANY_NAME'))
+            five_x_five_user.company_domain = convert_to_none(user_json.get('COMPANY_DOMAIN'))
+            five_x_five_user.company_phone = convert_to_none(user_json.get('COMPANY_PHONE'))
+            five_x_five_user.company_sic = convert_to_none(user_json.get('COMPANY_SIC'))
+            five_x_five_user.company_address = convert_to_none(user_json.get('COMPANY_ADDRESS'))
+            five_x_five_user.company_city = convert_to_none(user_json.get('COMPANY_CITY'))
+            five_x_five_user.company_state = convert_to_none(user_json.get('COMPANY_STATE'))
+            five_x_five_user.company_zip = None if convert_to_none(user_json.get('COMPANY_ZIP')) is None else str(
+                int(user_json.get('COMPANY_ZIP')))
+            five_x_five_user.company_linkedin_url = convert_to_none(user_json.get('COMPANY_LINKEDIN_URL'))
+            five_x_five_user.company_revenue = convert_to_none(user_json.get('COMPANY_REVENUE'))
+            five_x_five_user.company_employee_count = convert_to_none(user_json.get('COMPANY_EMPLOYEE_COUNT'))
+            five_x_five_user.net_worth = convert_to_none(user_json.get('NET_WORTH'))
+            five_x_five_user.job_title = convert_to_none(user_json.get('JOB_TITLE'))
+            five_x_five_user.last_updated = last_updated
+            five_x_five_user.personal_emails_last_seen = personal_emails_last_seen
+            five_x_five_user.company_last_updated = company_last_updated
+            five_x_five_user.job_title_last_updated = job_title_last_updated
+            five_x_five_user.first_name_id = first_name_id
+            five_x_five_user.last_name_id = last_name_id
+            five_x_five_user.additional_personal_emails = convert_to_none(user_json.get('ADDITIONAL_PERSONAL_EMAILS'))
+            five_x_five_user.linkedin_url = convert_to_none(user_json.get('LINKEDIN_URL'))
+            five_x_five_user.personal_address = convert_to_none(user_json.get('PERSONAL_ADDRESS'))
+            five_x_five_user.personal_address_2 = convert_to_none(user_json.get('PERSONAL_ADDRESS_2'))
+            five_x_five_user.personal_zip = None if convert_to_none(user_json.get('PERSONAL_ZIP')) is None else str(
+                int(user_json.get('PERSONAL_ZIP')))
+            five_x_five_user.married = convert_to_none(user_json.get('MARRIED'))
+            five_x_five_user.children = convert_to_none(user_json.get('CHILDREN'))
+            five_x_five_user.income_range = convert_to_none(user_json.get('INCOME_RANGE'))
+            five_x_five_user.homeowner = convert_to_none(user_json.get('HOMEOWNER'))
+            five_x_five_user.seniority_level = convert_to_none(user_json.get('SENIORITY_LEVEL'))
+            five_x_five_user.department = convert_to_none(user_json.get('DEPARTMENT'))
+            five_x_five_user.professional_address = convert_to_none(user_json.get('PROFESSIONAL_ADDRESS'))
+            five_x_five_user.professional_address_2 = convert_to_none(user_json.get('PROFESSIONAL_ADDRESS_2'))
+            five_x_five_user.professional_city = convert_to_none(user_json.get('PROFESSIONAL_CITY'))
+            five_x_five_user.professional_state = convert_to_none(user_json.get('PROFESSIONAL_STATE'))
+            five_x_five_user.professional_zip = None if convert_to_none(
+                user_json.get('PROFESSIONAL_ZIP')) is None else str(int(user_json.get('PROFESSIONAL_ZIP')))
+            five_x_five_user.professional_zip4 = None if convert_to_none(
+                user_json.get('PROFESSIONAL_ZIP4')) is None else str(int(user_json.get('PROFESSIONAL_ZIP4')))
+            five_x_five_user.primary_industry = convert_to_none(user_json.get('PRIMARY_INDUSTRY'))
+            five_x_five_user.business_email_validation_status = convert_to_none(
+                user_json.get('BUSINESS_EMAIL_VALIDATION_STATUS'))
+            five_x_five_user.business_email_last_seen = business_email_last_seen
+            five_x_five_user.personal_emails_validation_status = convert_to_none(
+                user_json.get('PERSONAL_EMAILS_VALIDATION_STATUS'))
+            five_x_five_user.work_history = convert_to_none(user_json.get('WORK_HISTORY'))
+            five_x_five_user.education_history = convert_to_none(user_json.get('EDUCATION_HISTORY'))
+            five_x_five_user.company_description = convert_to_none(user_json.get('COMPANY_DESCRIPTION'))
+            five_x_five_user.related_domains = convert_to_none(user_json.get('RELATED_DOMAINS'))
+            five_x_five_user.social_connections = convert_to_none(user_json.get('SOCIAL_CONNECTIONS'))
+            five_x_five_user.dpv_code = convert_to_none(user_json.get('DPV_CODE'))
+            five_x_five_user.personal_zip4 = None if convert_to_none(user_json.get('PERSONAL_ZIP4')) is None else str(
+                int(user_json.get('PERSONAL_ZIP4')))
 
-        five_x_five_user = FiveXFiveUser(
-            up_id=convert_to_none(user_json.get('UP_ID')),
-            cc_id=convert_to_none(user_json.get('CC_ID')),
-            first_name=convert_to_none(user_json.get('FIRST_NAME')),
-            programmatic_business_emails=convert_to_none(user_json.get('PROGRAMMATIC_BUSINESS_EMAILS')),
-            mobile_phone=convert_to_none(user_json.get('MOBILE_PHONE')),
-            direct_number=convert_to_none(user_json.get('DIRECT_NUMBER')),
-            gender=convert_to_none(user_json.get('GENDER')),
-            age_min=age_min,
-            age_max=age_max,
-            personal_phone=convert_to_none(user_json.get('PERSONAL_PHONE')),
-            business_email=convert_to_none(user_json.get('BUSINESS_EMAIL')),
-            personal_emails=convert_to_none(user_json.get('PERSONAL_EMAILS')),
-            last_name=convert_to_none(user_json.get('LAST_NAME')),
-            personal_city=convert_to_none(user_json.get('PERSONAL_CITY')),
-            personal_state=convert_to_none(user_json.get('PERSONAL_STATE')),
-            company_name=convert_to_none(user_json.get('COMPANY_NAME')),
-            company_domain=convert_to_none(user_json.get('COMPANY_DOMAIN')),
-            company_phone=convert_to_none(user_json.get('COMPANY_PHONE')),
-            company_sic=convert_to_none(user_json.get('COMPANY_SIC')),
-            company_address=convert_to_none(user_json.get('COMPANY_ADDRESS')),
-            company_city=convert_to_none(user_json.get('COMPANY_CITY')),
-            company_state=convert_to_none(user_json.get('COMPANY_STATE')),
-            company_zip=None if convert_to_none(user_json.get('COMPANY_ZIP')) is None else str(int(user_json.get('COMPANY_ZIP'))),
-            company_linkedin_url=convert_to_none(user_json.get('COMPANY_LINKEDIN_URL')),
-            company_revenue=convert_to_none(user_json.get('COMPANY_REVENUE')),
-            company_employee_count=convert_to_none(user_json.get('COMPANY_EMPLOYEE_COUNT')),
-            net_worth=convert_to_none(user_json.get('NET_WORTH')),
-            job_title=convert_to_none(user_json.get('JOB_TITLE')),
-            last_updated=last_updated,
-            personal_emails_last_seen=personal_emails_last_seen,
-            company_last_updated=company_last_updated,
-            job_title_last_updated=job_title_last_updated,
-            first_name_id=first_name_id,
-            last_name_id=last_name_id,
-            additional_personal_emails=convert_to_none(user_json.get('ADDITIONAL_PERSONAL_EMAILS')),
-            linkedin_url=convert_to_none(user_json.get('ADDITIONAL_PERSONAL_EMAILS')),
-            personal_address=convert_to_none(user_json.get('PERSONAL_ADDRESS')),
-            personal_address_2=convert_to_none(user_json.get('PERSONAL_ADDRESS_2')),
-            personal_zip=None if convert_to_none(user_json.get('PERSONAL_ZIP')) is None else str(
-                int(user_json.get('PERSONAL_ZIP'))),
-            married=convert_to_none(user_json.get('MARRIED')),
-            children=convert_to_none(user_json.get('CHILDREN')),
-            income_range=convert_to_none(user_json.get('INCOME_RANGE')),
-            homeowner=convert_to_none(user_json.get('HOMEOWNER')),
-            seniority_level=convert_to_none(user_json.get('SENIORITY_LEVEL')),
-            department=convert_to_none(user_json.get('DEPARTMENT')),
-            professional_address=convert_to_none(user_json.get('PROFESSIONAL_ADDRESS')),
-            professional_address_2=convert_to_none(user_json.get('PROFESSIONAL_ADDRESS_2')),
-            professional_city=convert_to_none(user_json.get('PROFESSIONAL_CITY')),
-            professional_state=convert_to_none(user_json.get('PROFESSIONAL_STATE')),
-            professional_zip=None if convert_to_none(user_json.get('PROFESSIONAL_ZIP')) is None else str(int(user_json.get('PROFESSIONAL_ZIP'))),
-            professional_zip4=None if convert_to_none(user_json.get('PROFESSIONAL_ZIP4')) is None else str(int(user_json.get('PROFESSIONAL_ZIP4'))),
-            primary_industry=convert_to_none(user_json.get('PRIMARY_INDUSTRY')),
-            business_email_validation_status=convert_to_none(user_json.get('BUSINESS_EMAIL_VALIDATION_STATUS')),
-            business_email_last_seen=business_email_last_seen,
-            personal_emails_validation_status=convert_to_none(user_json.get('PERSONAL_EMAILS_VALIDATION_STATUS')),
-            work_history=convert_to_none(user_json.get('WORK_HISTORY')),
-            education_history=convert_to_none(user_json.get('EDUCATION_HISTORY')),
-            company_description=convert_to_none(user_json.get('COMPANY_DESCRIPTION')),
-            related_domains=convert_to_none(user_json.get('RELATED_DOMAINS')),
-            social_connections=convert_to_none(user_json.get('SOCIAL_CONNECTIONS')),
-            dpv_code=convert_to_none(user_json.get('DPV_CODE')),
-            personal_zip4=None if convert_to_none(user_json.get('PERSONAL_ZIP4')) is None else str(
-                int(user_json.get('PERSONAL_ZIP4'))),
-        )
-        five_x_five_user = session.merge(five_x_five_user)
-        session.flush()
+            session.flush()
+        else:
+            five_x_five_user = FiveXFiveUser(
+                up_id=convert_to_none(user_json.get('UP_ID')),
+                cc_id=convert_to_none(user_json.get('CC_ID')),
+                first_name=convert_to_none(user_json.get('FIRST_NAME')),
+                programmatic_business_emails=convert_to_none(user_json.get('PROGRAMMATIC_BUSINESS_EMAILS')),
+                mobile_phone=convert_to_none(user_json.get('MOBILE_PHONE')),
+                direct_number=convert_to_none(user_json.get('DIRECT_NUMBER')),
+                gender=convert_to_none(user_json.get('GENDER')),
+                age_min=age_min,
+                age_max=age_max,
+                personal_phone=convert_to_none(user_json.get('PERSONAL_PHONE')),
+                business_email=convert_to_none(user_json.get('BUSINESS_EMAIL')),
+                personal_emails=convert_to_none(user_json.get('PERSONAL_EMAILS')),
+                last_name=convert_to_none(user_json.get('LAST_NAME')),
+                personal_city=convert_to_none(user_json.get('PERSONAL_CITY')),
+                personal_state=convert_to_none(user_json.get('PERSONAL_STATE')),
+                company_name=convert_to_none(user_json.get('COMPANY_NAME')),
+                company_domain=convert_to_none(user_json.get('COMPANY_DOMAIN')),
+                company_phone=convert_to_none(user_json.get('COMPANY_PHONE')),
+                company_sic=convert_to_none(user_json.get('COMPANY_SIC')),
+                company_address=convert_to_none(user_json.get('COMPANY_ADDRESS')),
+                company_city=convert_to_none(user_json.get('COMPANY_CITY')),
+                company_state=convert_to_none(user_json.get('COMPANY_STATE')),
+                company_zip=None if convert_to_none(user_json.get('COMPANY_ZIP')) is None else str(
+                    int(user_json.get('COMPANY_ZIP'))),
+                company_linkedin_url=convert_to_none(user_json.get('COMPANY_LINKEDIN_URL')),
+                company_revenue=convert_to_none(user_json.get('COMPANY_REVENUE')),
+                company_employee_count=convert_to_none(user_json.get('COMPANY_EMPLOYEE_COUNT')),
+                net_worth=convert_to_none(user_json.get('NET_WORTH')),
+                job_title=convert_to_none(user_json.get('JOB_TITLE')),
+                last_updated=last_updated,
+                personal_emails_last_seen=personal_emails_last_seen,
+                company_last_updated=company_last_updated,
+                job_title_last_updated=job_title_last_updated,
+                first_name_id=first_name_id,
+                last_name_id=last_name_id,
+                additional_personal_emails=convert_to_none(user_json.get('ADDITIONAL_PERSONAL_EMAILS')),
+                linkedin_url=convert_to_none(user_json.get('LINKEDIN_URL')),
+                personal_address=convert_to_none(user_json.get('PERSONAL_ADDRESS')),
+                personal_address_2=convert_to_none(user_json.get('PERSONAL_ADDRESS_2')),
+                personal_zip=None if convert_to_none(user_json.get('PERSONAL_ZIP')) is None else str(
+                    int(user_json.get('PERSONAL_ZIP'))),
+                married=convert_to_none(user_json.get('MARRIED')),
+                children=convert_to_none(user_json.get('CHILDREN')),
+                income_range=convert_to_none(user_json.get('INCOME_RANGE')),
+                homeowner=convert_to_none(user_json.get('HOMEOWNER')),
+                seniority_level=convert_to_none(user_json.get('SENIORITY_LEVEL')),
+                department=convert_to_none(user_json.get('DEPARTMENT')),
+                professional_address=convert_to_none(user_json.get('PROFESSIONAL_ADDRESS')),
+                professional_address_2=convert_to_none(user_json.get('PROFESSIONAL_ADDRESS_2')),
+                professional_city=convert_to_none(user_json.get('PROFESSIONAL_CITY')),
+                professional_state=convert_to_none(user_json.get('PROFESSIONAL_STATE')),
+                professional_zip=None if convert_to_none(user_json.get('PROFESSIONAL_ZIP')) is None else str(
+                    int(user_json.get('PROFESSIONAL_ZIP'))),
+                professional_zip4=None if convert_to_none(user_json.get('PROFESSIONAL_ZIP4')) is None else str(
+                    int(user_json.get('PROFESSIONAL_ZIP4'))),
+                primary_industry=convert_to_none(user_json.get('PRIMARY_INDUSTRY')),
+                business_email_validation_status=convert_to_none(user_json.get('BUSINESS_EMAIL_VALIDATION_STATUS')),
+                business_email_last_seen=business_email_last_seen,
+                personal_emails_validation_status=convert_to_none(user_json.get('PERSONAL_EMAILS_VALIDATION_STATUS')),
+                work_history=convert_to_none(user_json.get('WORK_HISTORY')),
+                education_history=convert_to_none(user_json.get('EDUCATION_HISTORY')),
+                company_description=convert_to_none(user_json.get('COMPANY_DESCRIPTION')),
+                related_domains=convert_to_none(user_json.get('RELATED_DOMAINS')),
+                social_connections=convert_to_none(user_json.get('SOCIAL_CONNECTIONS')),
+                dpv_code=convert_to_none(user_json.get('DPV_CODE')),
+                personal_zip4=None if convert_to_none(user_json.get('PERSONAL_ZIP4')) is None else str(
+                    int(user_json.get('PERSONAL_ZIP4'))),
+            )
+            session.add(five_x_five_user)
+            session.flush()
 
         emails = str(user_json.get('BUSINESS_EMAIL', '')).split(', ')
         save_emails_to_user(session, emails, five_x_five_user.id, 'business')
@@ -219,7 +294,6 @@ async def on_message_received(message, session):
         save_phones_to_user(session, personal_phone, five_x_five_user.id, 'personal_phone')
         session.commit()
 
-        logging.info(f"{user_json['UP_ID']} processed")
         await message.ack()
 
     except Exception as e:
