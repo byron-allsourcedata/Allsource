@@ -166,9 +166,9 @@ class SubscriptionService:
         start_date = datetime.utcfromtimestamp(start_date_timestamp).isoformat() + "Z"
         end_date = datetime.utcfromtimestamp(end_date_timestamp).isoformat() + "Z"
         stripe_status = stripe_payload.get("data").get("object").get("status")
-        if stripe_status == "active":
+        if stripe_status in ["active", "succeeded"]:
             status = "active"
-        elif stripe_status == "incomplete":
+        elif stripe_status in ["incomplete", "requires_action", "pending"]:
             status = "inactive"
         else:
             status = "canceled"
