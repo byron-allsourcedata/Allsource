@@ -26,7 +26,7 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO)
 
 BUCKET_NAME = 'trovo-coop-shakespeare'
-QUEUE_USERS_IMPORT_NAME = '5x5_users_rows'
+QUEUE_USERS_USERS_ROWS = '5x5_users_rows'
 
 
 def convert_to_none(value):
@@ -238,7 +238,7 @@ async def main():
         channel = await connection.channel()
         await channel.set_qos(prefetch_count=1)
         queue = await channel.declare_queue(
-            name=QUEUE_USERS_IMPORT_NAME,
+            name=QUEUE_USERS_USERS_ROWS,
             durable=True,
             arguments={
                 'x-consumer-timeout': 3600000,
