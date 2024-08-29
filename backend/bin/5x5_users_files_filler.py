@@ -61,7 +61,7 @@ async def main():
         name=QUEUE_IMPORT_NAME,
         durable=True,
         arguments={
-            'x-message-ttl': 300000
+            'x-consumer-timeout': 3600000,
         }
     )
     await process_files(sts_client, connection)

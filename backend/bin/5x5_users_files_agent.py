@@ -95,14 +95,14 @@ async def main():
             name=QUEUE_IMPORT_NAME,
             durable=True,
             arguments={
-                'x-message-ttl': 300000
+                'x-consumer-timeout': 3600000,
             }
         )
         await channel.declare_queue(
             name=QUEUE_USERS_IMPORT_NAME,
             durable=True,
             arguments={
-                'x-message-ttl': 300000
+                'x-consumer-timeout': 3600000,
             }
         )
         session = aioboto3.Session()
