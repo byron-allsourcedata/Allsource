@@ -56,7 +56,6 @@ async def on_message_received(message, s3_session, credentials, rmq_connection):
                 aws_session_token=credentials['SessionToken']
         ) as s3:
             s3_obj = await s3.get_object(Bucket=BUCKET_NAME, Key=message_json['file_name'])
-            await asyncio.sleep(190)
             async with s3_obj["Body"] as body:
                 with tempfile.NamedTemporaryFile(delete=True) as temp_file:
                     file_data = await body.read()
