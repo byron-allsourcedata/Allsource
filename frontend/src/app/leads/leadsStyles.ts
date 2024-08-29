@@ -30,10 +30,22 @@ export const leadsStyles: { [key: string]: SxProps<Theme> } = {
   },
 
   table_array: {
-    fontFamily: 'Nunito', fontSize: '14px', borderRight: '1px solid rgba(235, 235, 235, 1)', fontWeight: '400',
+    fontFamily: 'Nunito', fontSize: '14px', fontWeight: '400',
     lineHeight: '19.6px',
     textAlign: 'left',
-    textWrap: 'nowrap'
+    textWrap: 'nowrap',
+    color: '#000',
+    '&::after': {
+      content: '""',
+      display: 'block',
+      position: 'absolute',
+      top: '15px', // Space from the top
+      bottom: '15px', // Space from the bottom
+      right: 0, // Position the border at the right edge
+      width: '1px',
+      height: 'calc(100% - 30px)', // Full height minus top and bottom spacing
+      backgroundColor: 'rgba(235, 235, 235, 1)', // Border color
+  }
   },
   table_array_status: {
     fontFamily: 'Nunito', fontSize: '14px', border: '1px solid rgba(235, 235, 235, 1)', fontWeight: '400',
@@ -44,16 +56,42 @@ export const leadsStyles: { [key: string]: SxProps<Theme> } = {
     color: 'rgba(20, 110, 246, 1)',
   },
   table_array_phone: {
-    fontFamily: 'Nunito', fontSize: '14px', borderRight: '1px solid rgba(235, 235, 235, 1)', fontWeight: '400',
+    fontFamily: 'Nunito', fontSize: '14px', fontWeight: '400',
     lineHeight: '19.6px',
     textAlign: 'left',
     textWrap: 'wrap',
+    color: '#000',
+    position: 'relative',
+    '&::after': {
+      content: '""',
+      display: 'block',
+      position: 'absolute',
+      top: '15px', // Space from the top
+      bottom: '15px', // Space from the bottom
+      right: 0, // Position the border at the right edge
+      width: '1px',
+      height: 'calc(100% - 30px)', // Full height minus top and bottom spacing
+      backgroundColor: 'rgba(235, 235, 235, 1)', // Border color
+  }
   },
   table_column: {
-    fontFamily: 'Nunito', fontSize: '14px', borderRight: '1px solid rgba(235, 235, 235, 1)', fontWeight: '700',
+    fontFamily: 'Nunito', fontSize: '14px', fontWeight: '700',
     lineHeight: '19.6px',
     textAlign: 'left',
-    textWrap: 'nowrap'
+    textWrap: 'nowrap',
+    color: '#4a4a4a',
+    '&::after': {
+      content: '""',
+      display: 'block',
+      position: 'absolute',
+      top: '15px', // Space from the top
+      bottom: '15px', // Space from the bottom
+      right: 0, // Position the border at the right edge
+      width: '1px',
+      height: 'calc(100% - 30px)', // Full height minus top and bottom spacing
+      backgroundColor: 'rgba(235, 235, 235, 1)', // Border color
+  }
+
   }
   ,
   headers: {
@@ -73,12 +111,18 @@ export const leadsStyles: { [key: string]: SxProps<Theme> } = {
     borderRadius: '3.27px'
   },
   subtitle: {
-    fontWeight: 'bold',
-    fontSize: '16px',
+    fontWeight: '600',
+    fontSize: '14px',
     whiteSpace: 'nowrap',
     textAlign: 'start',
-    marginTop: '1.5rem',
     fontFamily: 'Nunito',
+    color: '#595959',
+    '@media (max-width: 385px)': {
+      fontSize: '12px'
+    },
+    '@media (max-width: 350px)': {
+      fontSize: '10px'
+    }
   },
   logoContainer: {
     paddingLeft: '2.5em',
@@ -91,9 +135,13 @@ export const leadsStyles: { [key: string]: SxProps<Theme> } = {
     textAlign: 'start',
     padding: '0 0rem 0',
     fontFamily: 'Nunito',
-    mr: '1em',
+    mr: '1.5em',
     '@media (max-width: 440px)': {
       fontSize: '16px'
+    },
+    '@media (max-width: 380px)': {
+      fontSize: '12px',
+      marginRight: '0'
     }
   },
   formContainer: {

@@ -693,7 +693,11 @@ const Leads: React.FC = () => {
              }}>
 
                 <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                    <Grid container sx={{ flex: 1 }}>
+                    <Grid container sx={{ flex: 1,
+                        '@media (min-width: 901px)': {
+                            display:'-webkit-box'
+                        }
+                    }}>
                         <Grid item xs={12} md="auto" lg="auto" sx={{
                             padding: "0px",
                             display: { xs: 'none', md: 'block' },
@@ -735,13 +739,19 @@ const Leads: React.FC = () => {
                                             borderBottom: activeFilter === 'all' && status !== 'PIXEL_INSTALLATION_NEEDED' ? '2px solid rgba(80, 82, 178, 1)' : '0px solid transparent',
                                             textTransform: 'none',
                                             mr: '1em',
-                                            mt: '1em',
-                                            pb: '1.5em',
-                                            maxHeight: '3em',
-                                            borderRadius: '0px'
+                                            borderRadius: '0px',
+                                            minWidth: 'auto',
+                                            padding: '0.25em 1em 0.25em 1em',
+                                            '@media (max-width: 1199px)': {
+                                                display: 'none'
+                                            }
                                         }}
                                     >
-                                        <Typography variant="body2" sx={leadsStyles.subtitle}>All</Typography>
+                                        <Typography variant="body2" sx={{...leadsStyles.subtitle,
+                                            color: activeFilter === 'all' ? 'rgba(80, 82, 178, 1)' : 'rgba(89, 89, 89, 1)',
+                                        }}
+                                        
+                                        >All</Typography>
                                     </Button>
 
                                     )}
@@ -750,17 +760,21 @@ const Leads: React.FC = () => {
                                         disabled={status === 'PIXEL_INSTALLATION_NEEDED'}
                                         onClick={() => handleFilterChange('new_customers')}
                                         sx={{
-                                            mt: '1em',
                                             color: activeFilter === 'new_customers' ? 'rgba(80, 82, 178, 1)' : 'rgba(89, 89, 89, 1)',
                                             borderBottom: activeFilter === 'new_customers' ? '2px solid rgba(80, 82, 178, 1)' : '0px solid transparent',
                                             textTransform: 'none',
                                             mr: '1em',
-                                            pb: '1.5em',
-                                            maxHeight: '3em',
-                                            borderRadius: '0px'
+                                            borderRadius: '0px',
+                                            minWidth: 'auto',
+                                            padding: '0.25em 1em 0.25em 1em',
+                                            '@media (max-width: 1199px)': {
+                                                display: 'none'
+                                            }
                                         }}
                                     >
-                                        <Typography variant="body2" sx={leadsStyles.subtitle}>New Customers</Typography>
+                                        <Typography variant="body2" sx={{...leadsStyles.subtitle,
+                                            color: activeFilter === 'new_customers' ? 'rgba(80, 82, 178, 1)' : 'rgba(89, 89, 89, 1)',
+                                        }}>New Customers</Typography>
                                     </Button>
                                     )}
                                     {status != 'PIXEL_INSTALLATION_NEEDED' && data.length != 0 && (
@@ -768,17 +782,21 @@ const Leads: React.FC = () => {
                                         disabled={status === 'PIXEL_INSTALLATION_NEEDED'}
                                         onClick={() => handleFilterChange('existing_customers')}
                                         sx={{
-                                            maxHeight: '3em',
                                             color: activeFilter === 'existing_customers' ? 'rgba(80, 82, 178, 1)' : 'rgba(89, 89, 89, 1)',
                                             borderBottom: activeFilter === 'existing_customers' ? '2px solid rgba(80, 82, 178, 1)' : '0px solid transparent',
                                             textTransform: 'none',
                                             mr: '1em',
-                                            mt: '1em',
-                                            pb: '1.5em',
-                                            borderRadius: '0px'
+                                            borderRadius: '0px',
+                                            minWidth: 'auto',
+                                            padding: '0.25em 1em 0.25em 1em',
+                                            '@media (max-width: 1199px)': {
+                                                display: 'none'
+                                            }
                                         }}
                                     >
-                                        <Typography variant="body2" sx={leadsStyles.subtitle}>Existing
+                                        <Typography variant="body2" sx={{...leadsStyles.subtitle,
+                                            color: activeFilter === 'existing_customers' ? 'rgba(80, 82, 178, 1)' : 'rgba(89, 89, 89, 1)',
+                                        }}>Existing
                                             Customers</Typography>
                                     </Button>
                                     )}
@@ -814,7 +832,7 @@ const Leads: React.FC = () => {
                                             fontWeight: '600',
                                             color: '#5052B2'
                                         }}>
-                                            Create Contact List
+                                            Create Contact Sync
                                         </Typography>
                                     </Button>
                                     <Button
@@ -927,6 +945,74 @@ const Leads: React.FC = () => {
                                     </Button>
                                 </Box>
                             </Box>
+                            <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center',
+                                flexWrap: 'wrap',
+                                marginTop: '1.125rem',
+                                marginBottom: '0.25rem',
+                                '@media (min-width: 1200px)': {
+                                    display: 'none'
+                                }
+                                 }}>
+                                    
+                                    {status != 'PIXEL_INSTALLATION_NEEDED' && data.length != 0 && (
+                                    <Button
+                                        disabled={status === 'PIXEL_INSTALLATION_NEEDED'}
+                                        onClick={() => handleFilterChange('all')}
+                                        sx={{
+                                            color: activeFilter === 'all' ? 'rgba(80, 82, 178, 1)' : 'rgba(89, 89, 89, 1)',
+                                            borderBottom: activeFilter === 'all' && status !== 'PIXEL_INSTALLATION_NEEDED' ? '2px solid rgba(80, 82, 178, 1)' : '0px solid transparent',
+                                            textTransform: 'none',
+                                            borderRadius: '0px',
+                                            minWidth: 'auto',
+                                            padding: '0.25em 1em 0.25em 1em'
+                                        }}
+                                    >
+                                        <Typography variant="body2" sx={{...leadsStyles.subtitle,
+                                            color: activeFilter === 'all' ? 'rgba(80, 82, 178, 1)' : 'rgba(89, 89, 89, 1)',
+                                        }}
+                                        
+                                        >All</Typography>
+                                    </Button>
+
+                                    )}
+                                    {status != 'PIXEL_INSTALLATION_NEEDED' && data.length != 0 && (
+                                    <Button
+                                        disabled={status === 'PIXEL_INSTALLATION_NEEDED'}
+                                        onClick={() => handleFilterChange('new_customers')}
+                                        sx={{
+                                            color: activeFilter === 'new_customers' ? 'rgba(80, 82, 178, 1)' : 'rgba(89, 89, 89, 1)',
+                                            borderBottom: activeFilter === 'new_customers' ? '2px solid rgba(80, 82, 178, 1)' : '0px solid transparent',
+                                            textTransform: 'none',
+                                            borderRadius: '0px',
+                                            minWidth: 'auto',
+                                            padding: '0.25em 1em 0.25em 1em'
+                                        }}
+                                    >
+                                        <Typography variant="body2" sx={{...leadsStyles.subtitle,
+                                            color: activeFilter === 'new_customers' ? 'rgba(80, 82, 178, 1)' : 'rgba(89, 89, 89, 1)',
+                                        }}>New Customers</Typography>
+                                    </Button>
+                                    )}
+                                    {status != 'PIXEL_INSTALLATION_NEEDED' && data.length != 0 && (
+                                    <Button
+                                        disabled={status === 'PIXEL_INSTALLATION_NEEDED'}
+                                        onClick={() => handleFilterChange('existing_customers')}
+                                        sx={{
+                                            color: activeFilter === 'existing_customers' ? 'rgba(80, 82, 178, 1)' : 'rgba(89, 89, 89, 1)',
+                                            borderBottom: activeFilter === 'existing_customers' ? '2px solid rgba(80, 82, 178, 1)' : '0px solid transparent',
+                                            textTransform: 'none',
+                                            borderRadius: '0px',
+                                            minWidth: 'auto',
+                                            padding: '0.25em 1em 0.25em 1em'
+                                        }}
+                                    >
+                                        <Typography variant="body2" sx={{...leadsStyles.subtitle,
+                                            color: activeFilter === 'existing_customers' ? 'rgba(80, 82, 178, 1)' : 'rgba(89, 89, 89, 1)',
+                                        }}>Existing
+                                            Customers</Typography>
+                                    </Button>
+                                    )}
+                                </Box>
                             <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, mt: 2 }}>
                                 {selectedFilters.length > 0 && (
                                     <Chip
@@ -1026,37 +1112,37 @@ const Leads: React.FC = () => {
                                                     overflowY: 'auto'
                                                 }}
                                             >
-                                                <Table sx={{ minWidth: 850 }} aria-label="leads table">
+                                                <Table sx={{ minWidth: 850 }} stickyHeader aria-label="leads table">
                                                     <TableHead>
                                                         <TableRow>
-                                                            <TableCell
-                                                                padding="checkbox"
-                                                                sx={{ borderRight: '1px solid rgba(235, 235, 235, 1)' }}
-                                                            >
-                                                                <Checkbox
-                                                                    indeterminate={selectedRows.size > 0 && selectedRows.size < data.length}
-                                                                    checked={data.length > 0 && selectedRows.size === data.length}
-                                                                    onChange={handleSelectAllClick}
-                                                                    color="primary"
-                                                                />
-                                                            </TableCell>
                                                             {[
                                                                 { key: 'name', label: 'Name' },
                                                                 { key: 'business_email', label: 'Email' },
                                                                 { key: 'mobile_phone', label: 'Phone number' },
                                                                 { key: 'last_visited_date', label: 'Visited date', sortable: true },
-                                                                { key: 'funnel', label: 'Lead Funnel' },
-                                                                { key: 'status', label: 'Status' },
-                                                                { key: 'time_spent', label: 'Time Spent' },
+                                                                { key: 'funnel', label: 'Visitor Type' },
+                                                                { key: 'time_spent', label: 'Time on site' },
                                                             ].map(({ key, label, sortable = true }) => (
                                                                 <TableCell
                                                                     key={key}
-                                                                    sx={leadsStyles.table_column}
+                                                                    sx={{
+                                                                        ...leadsStyles.table_column,
+                                                                        ...(key === 'name' && {
+                                                                            position: 'sticky', // Make the Name column sticky
+                                                                            left: 0, // Stick it to the left
+                                                                            zIndex: 99
+                                                                        }),
+                                                                        ...(key === 'time_spent' && {
+                                                                            '::after' : {
+                                                                                content: 'none'
+                                                                            }
+                                                                        })
+                                                                    }}
                                                                     onClick={sortable ? () => handleSortRequest(key) : undefined}
                                                                     style={{ cursor: sortable ? 'pointer' : 'default' }}
                                                                 >
                                                                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                                                        <Typography variant="body2">{label}</Typography>
+                                                                        <Typography variant="body2" sx={{...leadsStyles.table_column, borderRight: '0'}}>{label}</Typography>
                                                                         {sortable && orderBy === key && (
                                                                             <IconButton size="small" sx={{ ml: 1 }}>
                                                                                 {order === 'asc' ? (
@@ -1080,74 +1166,45 @@ const Leads: React.FC = () => {
                                                                 selected={selectedRows.has(row.lead.id)}
                                                                 onClick={() => handleSelectRow(row.lead.id)}
                                                                 sx={{
-                                                                    backgroundColor: selectedRows.has(row.lead.id) ? 'rgba(235, 243, 254, 1)' : 'inherit',
+                                                                    backgroundColor: selectedRows.has(row.lead.id) ? 'rgba(235, 243, 254, 1)' : '#fff',
                                                                 }}
                                                             >
-                                                                <TableCell padding="checkbox"
-                                                                    sx={{ borderRight: '1px solid rgba(235, 235, 235, 1)' }}>
-                                                                    <div
-                                                                        onClick={(e) => {
-                                                                            e.stopPropagation();
-                                                                            handleSelectRow(row.lead.id);
-                                                                        }}
-                                                                    >
-                                                                        <Checkbox
-                                                                            checked={selectedRows.has(row.lead.id)}
-                                                                            color="primary"
-                                                                        />
-                                                                    </div>
-                                                                </TableCell>
                                                                 <TableCell
-                                                                    sx={{ ...leadsStyles.table_array, cursor: 'pointer' }} onClick={(e) => {
+                                                                    sx={{ ...leadsStyles.table_array, cursor: 'pointer', position: 'sticky', left: '0', zIndex: 9,
+                                                                        backgroundColor: selectedRows.has(row.lead.id) ? 'rgba(235, 243, 254, 1)' : '#fff'
+                                                                    }} onClick={(e) => {
                                                                         e.stopPropagation();
                                                                         handleOpenPopup(row);
 
                                                                     }}>{row.lead.first_name} {row.lead.last_name}</TableCell>
                                                                 <TableCell
-                                                                    sx={leadsStyles.table_array}>{row.lead.business_email || 'N/A'}</TableCell>
+                                                                    sx={{...leadsStyles.table_array, position: 'relative'}}>{row.lead.business_email || 'N/A'}</TableCell>
                                                                 <TableCell
                                                                     sx={leadsStyles.table_array_phone}>{row.lead.mobile_phone || 'N/A'}</TableCell>
                                                                 <TableCell
-                                                                    sx={leadsStyles.table_array}>{row.last_visited_date || 'N/A'}</TableCell>
+                                                                    sx={{...leadsStyles.table_array, position: 'relative'}}>{row.last_visited_date || 'N/A'}</TableCell>
                                                                 <TableCell
-                                                                    sx={leadsStyles.table_column}
+                                                                    sx={{...leadsStyles.table_column, position: 'relative'}}
                                                                 >
                                                                     <Box
                                                                         sx={{
                                                                             display: 'flex',
-                                                                            padding: '4px 8px',
-                                                                            borderRadius: '4px',
+                                                                            padding: '2px 8px',
+                                                                            borderRadius: '2px',
                                                                             fontFamily: 'Nunito',
-                                                                            fontSize: '14px',
-                                                                            fontWeight: '400',
-                                                                            lineHeight: '19.6px',
+                                                                            fontSize: '12px',
+                                                                            fontWeight: '700',
+                                                                            lineHeight: 'normal',
                                                                             backgroundColor: getStatusStyle(row.funnel).background,
                                                                             color: getStatusStyle(row.funnel).color,
                                                                             justifyContent: 'center',
+                                                                            minWidth: '130px'
                                                                         }}
                                                                     >
                                                                         {row.funnel || 'N/A'}
                                                                     </Box>
                                                                 </TableCell>
-                                                                <TableCell
-                                                                    sx={leadsStyles.table_array}>
-                                                                    <Box
-                                                                        sx={{
-                                                                            display: 'flex',
-                                                                            padding: '4px 8px',
-                                                                            borderRadius: '4px',
-                                                                            fontFamily: 'Nunito',
-                                                                            fontSize: '14px',
-                                                                            fontWeight: '400',
-                                                                            lineHeight: '19.6px',
-                                                                            backgroundColor: getStatusStyle(row.status).background,
-                                                                            color: getStatusStyle(row.status).color,
-                                                                            justifyContent: 'center',
-                                                                        }}
-                                                                    >
-                                                                        {row.status || 'N/A'}
-                                                                    </Box>
-                                                                </TableCell>
+                                                                
                                                                 <TableCell
                                                                     sx={leadsStyles.table_array}>{row.lead.time_spent || 'N/A'}</TableCell>
                                                             </TableRow>
