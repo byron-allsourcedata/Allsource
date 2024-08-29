@@ -10,7 +10,7 @@ from typing import List
 import json
 
 
-class KlaviyoIntegrations:
+class KlaviyoIntegrationsService:
 
     def __init__(self, session: Session, integrations_persistence: IntegrationsPresistence, leads_persistence: LeadsPersistence, client: httpx.Client):
         self.session = session

@@ -6,7 +6,7 @@ import mailchimp_marketing as MailchimpMarketing
 from mailchimp_marketing.api_client import ApiClientError
 from schemas.integrations.integrations import IntegrationCredentials
 
-class MailchimpIntegrations:
+class MailchimpIntegrationsService:
 
 
     def __init__(self, integration_persistence: IntegrationsPresistence):

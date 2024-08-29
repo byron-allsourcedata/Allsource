@@ -21,12 +21,19 @@ class MailchimpCredentials(BaseModel):
     data_center: str
     access_token: str
 
+
+class FacebookCredentials(BaseModel):
+    access_token: str
+    ad_account_id: str
+
+
 class IntegrationCredentials(BaseModel):
     shopify: Optional[ShopifyOrBigcommerceCredentials] = None
     woocommerce: Optional[WoocommerceCredentials] = None
     bigcommerce: Optional[ShopifyOrBigcommerceCredentials] = None
     klaviyo: Optional[KlaviyoCredentials] = None
     mailchimp: Optional[MailchimpCredentials] = None
+    facebook: Optional[FacebookCredentials] = None
 
 
 class Lead(BaseModel):

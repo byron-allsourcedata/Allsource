@@ -1,12 +1,12 @@
 from fastapi import APIRouter, Depends, Query, HTTPException
-from dependencies import get_integration_service, IntegrationService, IntegrationsPresistence, get_integrations_presistence
+from dependencies import get_integration_service, IntegrationService, IntegrationsPresistence, get_integration_service, get_user_integrations_presistence
 from schemas.integrations.integrations import IntegrationCredentials, ExportLeads
 from dependencies import check_user_authentication, User
 
 router = APIRouter(prefix='/integrations', tags=['Integrations'])
 
 @router.get('/')
-async def get_integrations_service(persistence: IntegrationsPresistence = Depends(get_integrations_presistence),):
+async def get_integrations_service(persistence: IntegrationsPresistence = Depends(get_user_integrations_presistence),):
     return persistence.get_integrations_service()
     
 

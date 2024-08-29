@@ -4,7 +4,7 @@ from .klaviyo import KlaviyoPersistence
 from .bigcommerce import BigcommercePersistence
 from .shopify import ShopifyPersistence
 from .mailchimp import MailchimpPersistence
-
+from .facebook import FacebookPersistence
 class IntegrationsPresistence:
 
     def __init__(self, db: Session) -> None:
@@ -15,6 +15,7 @@ class IntegrationsPresistence:
         self.bigcommerce = BigcommercePersistence(self.db)
         self.shopify = ShopifyPersistence(self.db)
         self.mailchimp = MailchimpPersistence(self.db)
+        self.facebook = FacebookPersistence(self.db)
         return self
     
     def __exit__(self, exc_type, exc_val, exc_tb):

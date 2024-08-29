@@ -4,9 +4,9 @@ from persistence.leads_persistence import LeadsPersistence
 import httpx
 from .shopify import ShopifyIntegrationService
 from .woocommerce import WoocommerceIntegrationService
-from .bigcommerce import BigcommerceIntegrationService
-from .klaviyo import KlaviyoIntegrations
-from .mailchimp import MailchimpIntegrations
+from .bigcommerce import BigcommerceIntegrationsService
+from .klaviyo import KlaviyoIntegrationsService
+from .mailchimp import MailchimpIntegrationsService
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
 from persistence.audience_persistence import AudiencePersistence
 from persistence.leads_persistence import LeadsPersistence
@@ -31,12 +31,12 @@ class IntegrationService:
     def __enter__(self):
         self.shopify = ShopifyIntegrationService(self.integration_persistence, self.client)
         # self.woocommerce = WoocommerceIntegrationService(self.integration_persistence, self.user)
-        self.bigcommerce = BigcommerceIntegrationService(self.integration_persistence, self.client)
-        self.klaviyo = KlaviyoIntegrations(self.integration_persistence, 
+        self.bigcommerce = BigcommerceIntegrationsService(self.integration_persistence, self.client)
+        self.klaviyo = KlaviyoIntegrationsService(self.integration_persistence, 
                                            self.client, 
                                            self.audience_persistence,
                                            self.lead_persistence)
-        self.mailchimp = MailchimpIntegrations(self.integration_persistence)
+        self.mailchimp = MailchimpIntegrationsService(self.integration_persistence)
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):

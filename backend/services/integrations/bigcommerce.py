@@ -8,7 +8,7 @@ from typing import List
 from datetime import datetime
 from schemas.integrations.integrations import IntegrationCredentials
 
-class BigcommerceIntegrations:
+class BigcommerceIntegrationsService:
 
     def __init__(self, session: Session, integrations_persistence: IntegrationsPresistence, leads_persistence: LeadsPersistence, client: Client):
         self.session = session
