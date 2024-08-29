@@ -265,10 +265,11 @@ async def on_message_received(message, session):
             existing_user.dpv_code = five_x_five_user.dpv_code
             existing_user.personal_zip4 = five_x_five_user.personal_zip4
             five_x_five_user_id = existing_user.id
+            session.commit()
         else:
             session.add(five_x_five_user)
+            session.commit()
             five_x_five_user_id = five_x_five_user.id
-        session.commit()
 
         emails = str(user_json.get('BUSINESS_EMAIL', '')).split(', ')
         save_emails_to_user(session, emails, five_x_five_user_id, 'business')
