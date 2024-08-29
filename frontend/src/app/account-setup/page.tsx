@@ -105,6 +105,7 @@ const AccountSetup = () => {
           ...styles.employeeButton,
           backgroundColor: "rgba(249, 189, 182, 1)",
           color: "black",
+          pointerEvents: 'none',
         }
       : { ...styles.employeeButton, color: "black" };
   };
@@ -115,6 +116,7 @@ const AccountSetup = () => {
           ...styles.visitButton,
           backgroundColor: "rgba(249, 189, 182, 1)",
           color: "black",
+          pointerEvents: 'none',
         }
       : { ...styles.visitButton, color: "black" };
   };
@@ -125,6 +127,7 @@ const AccountSetup = () => {
           ...styles.roleButton,
           backgroundColor: "rgba(249, 189, 182, 1)",
           color: "black",
+          pointerEvents: 'none',
         }
       : { ...styles.roleButton, color: "black" };
   };
@@ -167,9 +170,7 @@ const AccountSetup = () => {
     const newErrors = {
       websiteLink: validateField(websiteLink, "website"),
       organizationName: validateField(organizationName, "organizationName"),
-      selectedEmployees: selectedEmployees
-        ? ""
-        : "Please select number of employees",
+      selectedEmployees: selectedEmployees ? "" : "Please select number of employees",
       selectedVisits: selectedVisits ? "" : "Please select number of visits",
       selectedRoles: selectedRoles ? "" : "Please select your`s role",
     };
@@ -178,7 +179,9 @@ const AccountSetup = () => {
     if (
       newErrors.websiteLink ||
       newErrors.organizationName ||
-      newErrors.selectedEmployees
+      newErrors.selectedEmployees ||
+      newErrors.selectedRoles ||
+      newErrors.selectedVisits
     ) {
       return;
     }
@@ -251,9 +254,7 @@ const AccountSetup = () => {
 
   const isFormBusinessValid = () => {
     const errors = {
-      selectedEmployees: selectedRoles
-        ? ""
-        : "Please select a number of employees",
+      selectedEmployees: selectedEmployees ? "" : "Please select a number of employees",
       selectedRoles: selectedRoles ? "" : "Please select your role",
     };
 
@@ -384,6 +385,14 @@ const AccountSetup = () => {
                   left: 0,
                   top: 0,
                 },
+                "@media (max-width: 400px)": {
+                  display: "flex",
+                  mr: 0,
+                  position: "inherit",
+                  left: 0,
+                  top: 0,
+                  padding: 1.25
+                },
               }}
             >
               <ArrowBackIcon
@@ -420,6 +429,7 @@ const AccountSetup = () => {
                 "&.Mui-selected": {
                   color: "rgba(244, 87, 69, 1)",
                 },
+                '@media (max-width: 400px)': { padding: 1.25 },
               }}
             />
             <Tab
@@ -438,6 +448,7 @@ const AccountSetup = () => {
                 "&.Mui-selected": {
                   color: "rgba(244, 87, 69, 1)",
                 },
+                '@media (max-width: 400px)': { padding: 1.25 },
               }}
             />
           </Tabs>
@@ -551,6 +562,8 @@ const AccountSetup = () => {
                     key={index}
                     variant="outlined"
                     onClick={() => handleVisitsRangeChange(range.label)}
+                    onTouchStart={() => handleVisitsRangeChange(range.label)}
+                    onMouseDown={() => handleVisitsRangeChange(range.label)}
                     sx={getButtonVisitsStyles(selectedVisits === range.label)}
                   >
                     {range.label}
@@ -596,6 +609,8 @@ const AccountSetup = () => {
                     key={index}
                     variant="outlined"
                     onClick={() => handleEmployeeRangeChange(range.label)}
+                    onTouchStart={() => handleEmployeeRangeChange(range.label)}
+                    onMouseDown={() => handleEmployeeRangeChange(range.label)}
                     sx={getButtonStyles(selectedEmployees === range.label)}
                   >
                     <Typography sx={{fontFamily: 'Nunito', fontWeight: 400, fontSize: '14px', lineHeight: '19.6px', padding: '3px'}}> {range.label}</Typography>
@@ -616,6 +631,8 @@ const AccountSetup = () => {
                     key={index}
                     variant="outlined"
                     onClick={() => handleRolesChange(range.label)}
+                    onTouchStart={() => handleRolesChange(range.label)}
+                    onMouseDown={() => handleRolesChange(range.label)}
                     sx={getButtonRolesStyles(selectedRoles === range.label)}
                   >
                     <Typography sx={{fontFamily: 'Nunito', fontWeight: 400, fontSize: '14px', lineHeight: '19.6px', padding: '3px'}}> {range.label}</Typography>
