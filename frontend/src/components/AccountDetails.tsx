@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import { Drawer, Backdrop, Box, Typography, IconButton, Button } from '@mui/material';
+import { Drawer, Backdrop, Box, Typography, IconButton, Button, Divider } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { accountStyles } from '../css/accountDetails';
 import Image from 'next/image'
-import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 
 interface PopupDetailsProps {
     open: boolean;
@@ -12,14 +11,7 @@ interface PopupDetailsProps {
 }
 
 const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) => {
-    const [activeTab, setActiveTab] = useState<'Personal' | 'Company'>('Personal');
-
     const lead = rowData?.lead || {};
-
-    const handleTabChange = (tab: 'Personal' | 'Company') => {
-        setActiveTab(tab);
-    };
-
     return (
         <>
             <Backdrop open={open} sx={{ zIndex: 1200, color: '#fff' }} />
@@ -30,7 +22,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                 variant="persistent"
                 PaperProps={{
                     sx: {
-                        width: '40%',
+                        width: '48%',
                         position: 'fixed',
                         zIndex: 1301,
                         top: 0,
@@ -43,32 +35,12 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
             >
                 <Box sx={{ width: '100%', boxSizing: 'border-box', display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 2, mt: '0.5em', borderBottom: '1px solid #e4e4e4' }}>
                     <Box sx={{ display: 'flex', gap: 4 }}>
-                        <Button
-                            variant="text"
-                            onClick={() => handleTabChange('Personal')}
-                            sx={{
-                                ...accountStyles.headers_title, textTransform: 'none', backgroundColor: activeTab === 'Personal' ? '#FFFF' : 'transparent',
-                                color: activeTab === 'Personal' ? 'rgba(80, 82, 178, 1)' : 'rgba(74, 74, 74, 1)',
-                                borderBottom: activeTab === 'Personal' ? '2px solid rgba(80, 82, 178, 1)' : 'none',
-                            }}
-                        >
-                            Personal
-                        </Button>
-                        <Button
-                            variant="text"
-                            onClick={() => handleTabChange('Company')}
-                            sx={{
-                                ...accountStyles.headers_title, textTransform: 'none', backgroundColor: activeTab === 'Company' ? '#FFFF' : 'transparent',
-                                color: activeTab === 'Company' ? 'rgba(80, 82, 178, 1)' : 'rgba(74, 74, 74, 1)',
-                                borderBottom: activeTab === 'Company' ? '2px solid rgba(80, 82, 178, 1)' : 'none',
-                            }}
-                        >
-                            Company
-                        </Button>
-
+                        <Typography sx={{ fontSize: '16px', fontFamily: 'Nunito', fontWeight: 700, lineHeight: '22.4px' }}>
+                            Person Overview
+                        </Typography>
                     </Box>
                     <IconButton onClick={onClose}>
-                        <CloseIcon />
+                        <CloseIcon sx={{ color: 'rgba(0, 0, 0, 1)' }} />
                     </IconButton>
                 </Box>
 
@@ -85,566 +57,368 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                         width: '100%',
                     },
                 }}>
-                    {activeTab === 'Personal' ? (
-                        <Box sx={{
-                            p: 3,
-                            gap: 5,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'start',
-                            width: '100%',
-                            maxWidth: '90%',
-                            border: '3px solid rgba(228, 228, 228, 1)',
-                            flexDirection: 'row',
-                            '@media (max-width: 600px)': {
-                                width: '100%',
-                            },
-                        }}>
-                            <Box
-                                sx={{
-                                    width: 70,
-                                    height: 70,
-                                    borderRadius: '50%',
-                                    overflow: 'hidden',
-                                    mb: 2,
-                                    display: 'flex',
-                                    transform: 'scale(1.0)',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    backgroundColor: '#f0f0f0',
-                                    border: '2px solid grey',
-                                }}
-                            >
-                                <AccountCircleIcon sx={{ fontSize: '76px', color: 'grey' }} />
-                            </Box>
-                            <Box sx={{ flex: 1, textAlign: 'start' }}>
-                                <Typography variant="body1" gutterBottom sx={{ ...accountStyles.name, pb: 1 }}>
-                                    {lead.first_name} {lead.last_name}
-                                </Typography>
-                                <Typography variant="body1" gutterBottom sx={{ ...accountStyles.text, pb: 1 }}>
-                                    {lead.business_email || 'N/A'}
-                                </Typography>
-                                <Typography variant="body1" gutterBottom sx={accountStyles.text}>
-                                    {lead.mobile_phone || 'N/A'}
-                                </Typography>
-                            </Box>
-                        </Box>
-                    ) : (
-                        <Box sx={{
-                            p: 3,
-                            gap: 5,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'start',
-                            width: '100%',
-                            maxWidth: '90%',
-                            border: '3px solid rgba(228, 228, 228, 1)',
-                            flexDirection: 'row',
-                            '@media (max-width: 600px)': {
-                                width: '100%',
-                            },
-                        }}>
-                            <Box
-                                sx={{
-                                    width: 70,
-                                    height: 70,
-                                    borderRadius: '50%',
-                                    overflow: 'hidden',
-                                    mb: 2,
-                                    display: 'flex',
-                                    transform: 'scale(1.0)',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    backgroundColor: '#f0f0f0',
-                                    border: '2px solid grey',
-                                }}
-                            >
-                                <AccountCircleIcon sx={{ fontSize: '76px', color: 'grey' }} />
-                            </Box>
-                            <Box sx={{ flex: 1, textAlign: 'start' }}>
-                                <Typography variant="body1" gutterBottom sx={{ ...accountStyles.name, pb: 1 }}>
-                                    {lead.company_name || 'Company name'}
-                                </Typography>
-                                <Typography variant="body1" gutterBottom sx={{ ...accountStyles.text, pb: 1 }}>
-                                    {lead.business_email || 'N/A'}
-                                </Typography>
-                                <Typography variant="body1" gutterBottom sx={accountStyles.text}>
-                                    {lead.mobile_phone || 'N/A'}
-                                </Typography>
-                            </Box>
-                        </Box>
-                    )}
-
-                    {/* Basic Details */}
                     <Box sx={{
-                        mt: 2,
-                        padding: '16px',
-                        gap: 2,
+                        p: 2,
+                        gap: 3,
                         display: 'flex',
-                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'start',
                         width: '100%',
-                        maxWidth: '92%',
-                        border: '3px solid rgba(228, 228, 228, 1)',
+                        maxWidth: '93%',
+                        border: '1px solid rgba(240, 240, 240, 1)',
+                        borderRadius: '4px',
+                        flexDirection: 'row',
                         '@media (max-width: 600px)': {
-                            padding: '8px',
                             width: '100%',
                         },
                     }}>
-                        <Typography sx={accountStyles.title}>
+                        <Box
+                            sx={{
+                                width: 65,
+                                height: 65,
+                                borderRadius: '50%',
+                                overflow: 'hidden',
+                                display: 'flex',
+                                transform: 'scale(1.0)',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                backgroundColor: '#f0f0f0',
+                            }}
+                        >
+                            <Image src={'/profile-circle.svg'} width={48} height={48} alt='Profile icon' />
+                        </Box>
+                        <Box sx={{ flex: 1, textAlign: 'start' }}>
+                            <Typography variant="body1" gutterBottom sx={{ ...accountStyles.name, pb: 1 }}>
+                                {lead.first_name} {lead.last_name}
+                            </Typography>
+                            <Box sx={{ display: 'flex', flexDirection: 'row', gap: 5, '@media (max-width: 600px)': { flexDirection: 'column'}, }}>
+                                <Typography variant="body1" gutterBottom sx={{ ...accountStyles.text, display: 'flex', flexDirection: 'row', gap: 1 }}>
+                                    <Image src={'/sms.svg'} width={18} height={18} alt='mail icon' />
+                                    {lead.business_email || 'N/A'}
+                                </Typography>
+                                <Typography variant="body1" gutterBottom sx={{ ...accountStyles.text, display: 'flex', flexDirection: 'row', gap: 1, color: 'rgba(80, 82, 178, 1)' }}>
+                                    <Image src={'/iphone-02.svg'} width={18} height={18} alt='iphone icon' />
+                                    {lead.mobile_phone || 'N/A'}
+                                </Typography>
+                            </Box>
+                        </Box>
+                    </Box>
+                    {/* Basic Details */}
+                    <Box sx={accountStyles.box_param}>
+                        <Typography sx={{ ...accountStyles.title }}>
+                            <Image src={'/user-square.svg'} width={18} height={18} alt='iphone icon' />
                             Basic Details
                         </Typography>
-
-                        <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
-                            <Typography sx={{ ...accountStyles.text }}>
-                                {activeTab === 'Personal' ? 'Direct number' : 'Job Title'}
+                        <Box sx={accountStyles.rows_pam}>
+                            <Typography sx={accountStyles.title_text}>
+                                Direct number:
                             </Typography>
-                            <Typography sx={{ ...accountStyles.text }}>
-                                {activeTab === 'Personal' ? lead.mobile_phone || 'N/A' : lead.job_title || 'N/A'}
-                            </Typography>
-                        </Box>
-
-                        <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
-                            <Typography sx={{ ...accountStyles.text }}>
-                                {activeTab === 'Personal' ? 'Address' : 'Seniority level'}
-                            </Typography>
-                            <Typography sx={{ ...accountStyles.text }}>
-                                {activeTab === 'Personal' ? lead.address || 'N/A' : lead.address || 'N/A'}
+                            <Typography sx={accountStyles.text}>
+                                {lead.mobile_phone || 'N/A'}
                             </Typography>
                         </Box>
 
-                        <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
-                            <Typography sx={{ ...accountStyles.text }}>
-                                {activeTab === 'Personal' ? 'City' : 'Department'}
+                        <Box sx={accountStyles.rows_pam}>
+                            <Typography sx={{ ...accountStyles.title_text }}>
+                                Address:
                             </Typography>
                             <Typography sx={{ ...accountStyles.text }}>
-                                {activeTab === 'Personal' ? rowData?.city || 'N/A' : lead.company_department || 'N/A'}
-                            </Typography>
-                        </Box>
-
-                        <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
-                            <Typography sx={{ ...accountStyles.text }}>
-                                {activeTab === 'Personal' ? 'State' : 'Company name'}
-                            </Typography>
-                            <Typography sx={{ ...accountStyles.text }}>
-                                {activeTab === 'Personal' ? rowData?.state || 'N/A' : lead.company_name || 'N/A'}
+                                {lead.address || 'N/A'}
                             </Typography>
                         </Box>
 
-                        <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
-                            <Typography sx={{ ...accountStyles.text }}>
-                                {activeTab === 'Personal' ? 'Zip' : 'Company domain'}
+                        <Box sx={accountStyles.rows_pam}>
+                            <Typography sx={{ ...accountStyles.title_text }}>
+                                City:
                             </Typography>
                             <Typography sx={{ ...accountStyles.text }}>
-                                {activeTab === 'Personal' ? lead.zip || 'N/A' : lead.company_domain || 'N/A'}
-                            </Typography>
-                        </Box>
-
-                        <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
-                            <Typography sx={{ ...accountStyles.text }}>
-                                {activeTab === 'Personal' ? 'Other emails' : 'Company phone'}
-                            </Typography>
-                            <Typography sx={{ ...accountStyles.text }}>
-                                {activeTab === 'Personal' ? lead.business_email || 'N/A' : lead.company_phone || 'N/A'}
+                                {rowData?.city || 'N/A'}
                             </Typography>
                         </Box>
 
-                        <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
-                            <Typography sx={{ ...accountStyles.text }}>
-                                {activeTab === 'Personal' ? 'Personal email last seen' : 'Company description'}
+                        <Box sx={accountStyles.rows_pam}>
+                            <Typography sx={{ ...accountStyles.title_text }}>
+                                State:
                             </Typography>
                             <Typography sx={{ ...accountStyles.text }}>
-                                {activeTab === 'Personal' ? lead.email || 'N/A' : lead.company_decription || 'N/A'}
+                                {rowData?.state || 'N/A'}
                             </Typography>
                         </Box>
 
-                        {activeTab === 'Company' && (
-                            <>
-                                <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
-                                    <Typography sx={{ ...accountStyles.text }}>
-                                        Business email last seen
-                                    </Typography>
-                                    <Typography sx={{ ...accountStyles.text }}>
-                                        {lead.business_email || 'N/A'}
-                                    </Typography>
-                                </Box>
+                        <Box sx={accountStyles.rows_pam}>
+                            <Typography sx={{ ...accountStyles.title_text }}>
+                                Zip:
+                            </Typography>
+                            <Typography sx={{ ...accountStyles.text }}>
+                                {lead.zip || 'N/A'}
+                            </Typography>
+                        </Box>
 
-                                <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
-                                    <Typography sx={{ ...accountStyles.text }}>
-                                        Company last updated
-                                    </Typography>
-                                    <Typography sx={{ ...accountStyles.text }}>
-                                        {lead.company_last_update || 'N/A'}
-                                    </Typography>
-                                </Box>
-                            </>
-                        )}
+                        <Box sx={accountStyles.rows_pam}>
+                            <Typography sx={{ ...accountStyles.title_text }}>
+                                Other emails:
+                            </Typography>
+                            <Typography sx={{ ...accountStyles.text }}>
+                                {lead.business_email || 'N/A'}
+                            </Typography>
+                        </Box>
+
+                        <Box sx={accountStyles.rows_pam}>
+                            <Typography sx={{ ...accountStyles.title_text }}>
+                                Personal email last seen:
+                            </Typography>
+                            <Typography sx={{ ...accountStyles.text }}>
+                                {lead.email || 'N/A'}
+                            </Typography>
+                        </Box>
                     </Box>
                     {/* Demographics */}
-                    {activeTab === 'Personal' && (
-                        <Box sx={{
-                            mt: 2,
-                            padding: '16px',
-                            gap: 2,
-                            display: 'flex',
-                            flexDirection: 'column',
-                            width: '100%',
-                            maxWidth: '92%',
-                            border: '3px solid rgba(228, 228, 228, 1)',
-                            '@media (max-width: 600px)': {
-                                padding: '8px',
-                                width: '100%',
-                            },
-                        }}>
-                            <Typography sx={accountStyles.title}>
-                                Demographics
-                            </Typography>
-
-                            <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
-                                <Typography sx={{ ...accountStyles.text }}>
-                                    Gender
-                                </Typography>
-                                <Typography sx={{ ...accountStyles.text }}>
-                                    {lead.gender || 'N/A'}
-                                </Typography>
-                            </Box>
-
-                            <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
-                                <Typography sx={{ ...accountStyles.text }}>
-                                    Age Range
-                                </Typography>
-                                <Typography sx={{ ...accountStyles.text }}>
-                                    {lead.age_min && lead.age_max ? `${lead.age_min} - ${lead.age_max}` : 'N/A'}
-                                </Typography>
-                            </Box>
-
-                            <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
-                                <Typography sx={{ ...accountStyles.text }}>
-                                    Marital status
-                                </Typography>
-                                <Typography sx={{ ...accountStyles.text }}>
-                                    {lead.marital_status || 'N/A'}
-                                </Typography>
-                            </Box>
-
-                            <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
-                                <Typography sx={{ ...accountStyles.text }}>
-                                    Children
-                                </Typography>
-                                <Typography sx={{ ...accountStyles.text }}>
-                                    {lead.children || 'N/A'}
-                                </Typography>
-                            </Box>
-                        </Box>
-                    )}
-
-                    {/* Company Address */}
-                    {activeTab === 'Company' && (
-                        <Box sx={{
-                            mt: 2,
-                            padding: '16px',
-                            gap: 2,
-                            display: 'flex',
-                            flexDirection: 'column',
-                            width: '100%',
-                            maxWidth: '92%',
-                            border: '3px solid rgba(228, 228, 228, 1)',
-                            '@media (max-width: 600px)': {
-                                padding: '8px',
-                                width: '100%',
-                            },
-                        }}>
-                            <Typography sx={accountStyles.title}>
-                                Company Address
-                            </Typography>
-
-                            <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
-                                <Typography sx={{ ...accountStyles.text }}>
-                                    Address
-                                </Typography>
-                                <Typography sx={{ ...accountStyles.text }}>
-                                    {lead.company_address || 'N/A'}
-                                </Typography>
-                            </Box>
-
-                            <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
-                                <Typography sx={{ ...accountStyles.text }}>
-                                    City
-                                </Typography>
-                                <Typography sx={{ ...accountStyles.text }}>
-                                    {lead.company_city || 'N/A'}
-                                </Typography>
-                            </Box>
-
-                            <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
-                                <Typography sx={{ ...accountStyles.text }}>
-                                    State
-                                </Typography>
-                                <Typography sx={{ ...accountStyles.text }}>
-                                    {lead.company_state || 'N/A'}
-                                </Typography>
-                            </Box>
-
-                            <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
-                                <Typography sx={{ ...accountStyles.text }}>
-                                    Zip
-                                </Typography>
-                                <Typography sx={{ ...accountStyles.text }}>
-                                    {lead.company_zip || 'N/A'}
-                                </Typography>
-                            </Box>
-                        </Box>
-                    )}
-                    {/* Visit Details */}
-                    <Box sx={{
-                        mt: 2,
-                        padding: '16px',
-                        gap: 2,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        width: '100%',
-                        maxWidth: '92%',
-                        border: '3px solid rgba(228, 228, 228, 1)',
-                        '@media (max-width: 600px)': {
-                            padding: '8px',
-                            width: '100%',
-                        },
-                    }}>
+                    <Box sx={accountStyles.box_param}>
                         <Typography sx={accountStyles.title}>
-                            Visit Details
+                        <Image src={'/demographic.svg'} width={18} height={18} alt='demographic icon' />
+                            Demographics
                         </Typography>
 
-                        <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
-                            <Typography sx={{ ...accountStyles.text }}>
-                                Income range
+                        <Box sx={accountStyles.rows_pam}>
+                            <Typography sx={{ ...accountStyles.title_text }}>
+                                Gender:
                             </Typography>
                             <Typography sx={{ ...accountStyles.text }}>
-                                {activeTab === 'Personal' ? lead.income_range || 'N/A' : lead.company_income_range || 'N/A'}
-                            </Typography>
-                        </Box>
-
-                        <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
-                            <Typography sx={{ ...accountStyles.text }}>
-                                Net worth
-                            </Typography>
-                            <Typography sx={{ ...accountStyles.text }}>
-                                {lead.net_worth || 'N/A'}
+                                {lead.gender || 'N/A'}
                             </Typography>
                         </Box>
 
-                        <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
-                            <Typography sx={{ ...accountStyles.text }}>
-                                Home own
+                        <Box sx={accountStyles.rows_pam}>
+                            <Typography sx={{ ...accountStyles.title_text }}>
+                                Age Range:
                             </Typography>
                             <Typography sx={{ ...accountStyles.text }}>
-                                {lead.home_own || 'N/A'}
+                                {lead.age_min && lead.age_max ? `${lead.age_min} - ${lead.age_max}` : 'N/A'}
                             </Typography>
                         </Box>
 
-                        <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
+                        <Box sx={accountStyles.rows_pam}>
+                            <Typography sx={{ ...accountStyles.title_text }}>
+                                Marital status:
+                            </Typography>
                             <Typography sx={{ ...accountStyles.text }}>
-                                Job title
+                                {lead.marital_status || 'N/A'}
+                            </Typography>
+                        </Box>
+
+                        <Box sx={accountStyles.rows_pam}>
+                            <Typography sx={{ ...accountStyles.title_text }}>
+                                Children:
+                            </Typography>
+                            <Typography sx={{ ...accountStyles.text }}>
+                                {lead.children || 'N/A'}
+                            </Typography>
+                        </Box>
+                    </Box>
+
+
+                    {/* Company Details */}
+                    <Box sx={accountStyles.box_param}>
+                        <Typography sx={accountStyles.title}>
+                            <Image src={'/company.svg'} width={18} height={18} alt='company icon' />
+                            Company Details
+                        </Typography>
+
+                        <Box sx={accountStyles.rows_pam}>
+                            <Typography sx={{ ...accountStyles.title_text }}>
+                                Job title:
                             </Typography>
                             <Typography sx={{ ...accountStyles.text }}>
                                 {lead.job_title || 'N/A'}
                             </Typography>
                         </Box>
 
-                        <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
-                            <Typography sx={{ ...accountStyles.text }}>
-                                Seniority
+                        <Box sx={accountStyles.rows_pam}>
+                            <Typography sx={{ ...accountStyles.title_text }}>
+                                Seniority level:
                             </Typography>
                             <Typography sx={{ ...accountStyles.text }}>
-                                {activeTab === 'Personal' ? lead.seniority || 'N/A' : lead.seniority || 'N/A'}
+                                {lead.seniority || 'N/A'}
                             </Typography>
                         </Box>
 
-                        <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
-                            <Typography sx={{ ...accountStyles.text }}>
-                                Department
+                        <Box sx={accountStyles.rows_pam}>
+                            <Typography sx={{ ...accountStyles.title_text }}>
+                                Department:
                             </Typography>
                             <Typography sx={{ ...accountStyles.text }}>
-                                {activeTab === 'Personal' ? lead.department || 'N/A' : lead.department || 'N/A'}
+                                {lead.department || 'N/A'}
+                            </Typography>
+                        </Box>
+
+                        <Box sx={accountStyles.rows_pam}>
+                            <Typography sx={{ ...accountStyles.title_text }}>
+                                Company name:
+                            </Typography>
+                            <Typography sx={{ ...accountStyles.text }}>
+                                {lead.company_name || 'N/A'}
+                            </Typography>
+                        </Box>
+
+                        <Box sx={accountStyles.rows_pam}>
+                            <Typography sx={{ ...accountStyles.title_text }}>
+                                Company domain:
+                            </Typography>
+                            <Typography sx={{ ...accountStyles.text }}>
+                                {lead.company_domain || 'N/A'}
+                            </Typography>
+                        </Box>
+
+                        <Box sx={accountStyles.rows_pam}>
+                            <Typography sx={{ ...accountStyles.title_text }}>
+                                Company phone:
+                            </Typography>
+                            <Typography sx={{ ...accountStyles.text }}>
+                                {lead.company_phone || 'N/A'}
+                            </Typography>
+                        </Box>
+
+                        <Box sx={accountStyles.rows_pam}>
+                            <Typography sx={{ ...accountStyles.title_text }}>
+                                Company description:
+                            </Typography>
+                            <Typography sx={{ ...accountStyles.text }}>
+                                {lead.company_decription || 'N/A'}
+                            </Typography>
+                        </Box>
+
+                        <Box sx={accountStyles.rows_pam}>
+                            <Typography sx={{ ...accountStyles.title_text }}>
+                                Business email last seen:
+                            </Typography>
+                            <Typography sx={{ ...accountStyles.text }}>
+                                {lead.business_email || 'N/A'}
+                            </Typography>
+                        </Box>
+
+                        <Box sx={accountStyles.rows_pam}>
+                            <Typography sx={{ ...accountStyles.title_text }}>
+                                Company last updated:
+                            </Typography>
+                            <Typography sx={{ ...accountStyles.text }}>
+                                {lead.company_last_update || 'N/A'}
+                            </Typography>
+                        </Box>
+
+                        <Box sx={accountStyles.rows_pam}>
+                            <Typography sx={{ ...accountStyles.title_text }}>
+                                Address
+                            </Typography>
+                            <Typography sx={{ ...accountStyles.text }}>
+                                {lead.company_address || 'N/A'}
+                            </Typography>
+                        </Box>
+
+                        <Box sx={accountStyles.rows_pam}>
+                            <Typography sx={{ ...accountStyles.title_text }}>
+                                Company City:
+                            </Typography>
+                            <Typography sx={{ ...accountStyles.text }}>
+                                {lead.company_city || 'N/A'}
+                            </Typography>
+                        </Box>
+
+                        <Box sx={accountStyles.rows_pam}>
+                            <Typography sx={{ ...accountStyles.title_text }}>
+                                Company State:
+                            </Typography>
+                            <Typography sx={{ ...accountStyles.text }}>
+                                {lead.company_state || 'N/A'}
+                            </Typography>
+                        </Box>
+
+                    </Box>
+                    {/* Financial details */}
+                    <Box sx={accountStyles.box_param}>
+                        <Typography sx={accountStyles.title}>
+                            <Image src={'/fin_details.svg'} width={18} height={18} alt='finance icon' />
+                            Financial details
+                        </Typography>
+
+                        <Box sx={accountStyles.rows_pam}>
+                            <Typography sx={{ ...accountStyles.title_text }}>
+                                Income range:
+                            </Typography>
+                            <Typography sx={{ ...accountStyles.text }}>
+                                {lead.income_range || 'N/A'}
+                            </Typography>
+                        </Box>
+
+                        <Box sx={accountStyles.rows_pam}>
+                            <Typography sx={{ ...accountStyles.title_text }}>
+                                Net worth:
+                            </Typography>
+                            <Typography sx={{ ...accountStyles.text }}>
+                                {lead.net_worth || 'N/A'}
+                            </Typography>
+                        </Box>
+
+                        <Box sx={accountStyles.rows_pam}>
+                            <Typography sx={{ ...accountStyles.title_text }}>
+                                Company Revenue:
+                            </Typography>
+                            <Typography sx={{ ...accountStyles.text }}>
+                                {lead.company_revenue || 'N/A'}
+                            </Typography>
+                        </Box>
+
+                        <Box sx={accountStyles.rows_pam}>
+                            <Typography sx={{ ...accountStyles.title_text }}>
+                                Company employee count:
+                            </Typography>
+                            <Typography sx={{ ...accountStyles.text }}>
+                                {lead.company_employee_count || 'N/A'}
+                            </Typography>
+                        </Box>
+
+                        <Box sx={accountStyles.rows_pam}>
+                            <Typography sx={{ ...accountStyles.title_text }}>
+                                Primary industry:
+                            </Typography>
+                            <Typography sx={{ ...accountStyles.text }}>
+                                {lead.state || 'N/A'}
+                            </Typography>
+                        </Box>
+
+                        <Box sx={accountStyles.rows_pam}>
+                            <Typography sx={{ ...accountStyles.title_text }}>
+                                Institution url:
+                            </Typography>
+                            <Typography sx={{ ...accountStyles.text }}>
+                                {lead.zip || 'N/A'}
                             </Typography>
                         </Box>
                     </Box>
-
-                    {/* Financial details */}
-                    {activeTab === 'Company' && (
-                        <Box sx={{
-                            mt: 2,
-                            padding: '16px',
-                            gap: 2,
-                            display: 'flex',
-                            flexDirection: 'column',
-                            width: '100%',
-                            maxWidth: '92%',
-                            border: '3px solid rgba(228, 228, 228, 1)',
-                            '@media (max-width: 600px)': {
-                                padding: '8px',
-                                width: '100%',
-                            },
-                        }}>
-                            <Typography sx={accountStyles.title}>
-                                Financial details
-                            </Typography>
-
-                            <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
-                                <Typography sx={{ ...accountStyles.text }}>
-                                    Company Revenue
-                                </Typography>
-                                <Typography sx={{ ...accountStyles.text }}>
-                                    {lead.company_revenue || 'N/A'}
-                                </Typography>
-                            </Box>
-
-                            <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
-                                <Typography sx={{ ...accountStyles.text }}>
-                                    Company employee count
-                                </Typography>
-                                <Typography sx={{ ...accountStyles.text }}>
-                                    {lead.company_employee_count || 'N/A'}
-                                </Typography>
-                            </Box>
-
-                            <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
-                                <Typography sx={{ ...accountStyles.text }}>
-                                    Primary industry
-                                </Typography>
-                                <Typography sx={{ ...accountStyles.text }}>
-                                    {lead.state || 'N/A'}
-                                </Typography>
-                            </Box>
-
-                            <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
-                                <Typography sx={{ ...accountStyles.text }}>
-                                    Institution url
-                                </Typography>
-                                <Typography sx={{ ...accountStyles.text }}>
-                                    {lead.zip || 'N/A'}
-                                </Typography>
-                            </Box>
-                        </Box>
-                    )}
-
-                    {/* Company Address */}
-                    {activeTab === 'Personal' && (
-                        <Box sx={{
-                            mt: 2,
-                            padding: '16px',
-                            gap: 2,
-                            display: 'flex',
-                            flexDirection: 'column',
-                            width: '100%',
-                            maxWidth: '92%',
-                            border: '3px solid rgba(228, 228, 228, 1)',
-                            '@media (max-width: 600px)': {
-                                padding: '8px',
-                                width: '100%',
-                            },
-                        }}>
-                            <Typography sx={accountStyles.title}>
-                                Education history
-                            </Typography>
-
-                            <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
-                                <Typography sx={{ ...accountStyles.text }}>
-                                    Degree
-                                </Typography>
-                                <Typography sx={{ ...accountStyles.text }}>
-                                    {lead.address || 'N/A'}
-                                </Typography>
-                            </Box>
-
-                            <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
-                                <Typography sx={{ ...accountStyles.text }}>
-                                    Duration
-                                </Typography>
-                                <Typography sx={{ ...accountStyles.text }}>
-                                    {lead.city || 'N/A'}
-                                </Typography>
-                            </Box>
-
-                            <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
-                                <Typography sx={{ ...accountStyles.text }}>
-                                    Institution name
-                                </Typography>
-                                <Typography sx={{ ...accountStyles.text }}>
-                                    {lead.state || 'N/A'}
-                                </Typography>
-                            </Box>
-
-                            <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
-                                <Typography sx={{ ...accountStyles.text }}>
-                                    Institution url
-                                </Typography>
-                                <Typography sx={{ ...accountStyles.text }}>
-                                    {lead.zip || 'N/A'}
-                                </Typography>
-                            </Box>
-                        </Box>
-                    )}
-
                     {/* Social Connections */}
-                    <Box sx={{
-                        mt: 2,
-                        padding: '16px',
-                        gap: 2,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        width: '100%',
-                        maxWidth: '92%',
-                        border: '3px solid rgba(228, 228, 228, 1)',
-                        '@media (max-width: 600px)': {
-                            padding: '8px',
-                            width: '100%',
-                        },
-                    }}>
+                    <Box sx={accountStyles.box_param}>
                         <Typography sx={accountStyles.title}>
+                            <Image src={'/social.svg'} width={18} height={18} alt='web icon' />
                             Social Connections
                         </Typography>
 
-                        <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
-                            <Typography sx={{ ...accountStyles.text }}>
-                                Followers
+                        <Box sx={accountStyles.rows_pam}>
+                            <Typography sx={{ ...accountStyles.title_text }}>
+                                Followers:
                             </Typography>
                             <Typography sx={{ ...accountStyles.text }}>
-                                {activeTab === 'Personal' ? lead.followers || 'N/A' : lead.company_followers || 'N/A'}
-                            </Typography>
-                        </Box>
-
-                        <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
-                            <Typography sx={{ ...accountStyles.text }}>
-                                {activeTab === 'Personal' ? 'Duration' : 'Company url'}
-                            </Typography>
-                            <Typography sx={{ ...accountStyles.text }}>
-                                {activeTab === 'Personal' ? lead.duration || 'N/A' : lead.company_linkedin_url || 'N/A'}
+                                {lead.followers || 'N/A'}
                             </Typography>
                         </Box>
 
-
-                        {activeTab === 'Personal' && (
-                            <>
-                                <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
-                                    <Typography sx={{ ...accountStyles.text }}>
-                                        Institution name
-                                    </Typography>
-                                    <Typography sx={{ ...accountStyles.text }}>
-                                        {lead.institution_name || 'N/A'}
-                                    </Typography>
-                                </Box>
-
-                                <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
-                                    <Typography sx={{ ...accountStyles.text }}>
-                                        Institution url
-                                    </Typography>
-                                    <Typography sx={{ ...accountStyles.text }}>
-                                        {lead.institution_url || 'N/A'}
-                                    </Typography>
-                                </Box>
-                            </>
-                        )}
+                        <Box sx={accountStyles.rows_pam}>
+                            <Typography sx={{ ...accountStyles.title_text }}>
+                                Company url:
+                            </Typography>
+                            <Typography sx={{ ...accountStyles.text }}>
+                                {lead.company_linkedin_url || 'N/A'}
+                            </Typography>
+                        </Box>
                     </Box>
-
                 </Box>
             </Drawer>
         </>

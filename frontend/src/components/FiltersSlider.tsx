@@ -292,8 +292,9 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
 
   interface CustomChipProps {
     label: string;
-    onDelete: () => void;
+    onDelete: (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void;
   }
+
   const CustomChip: React.FC<CustomChipProps> = ({ label, onDelete }) => (
     <Box
       sx={{
@@ -308,7 +309,14 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
         fontSize: "12px",
       }}
     >
-      <IconButton size="small" onClick={onDelete} sx={{ p: 0, mr: 0.5 }}>
+      <IconButton
+        size="small"
+        onClick={(e) => {
+          e.stopPropagation();
+          onDelete(e);
+        }}
+        sx={{ p: 0, mr: 0.5 }}
+      >
         <CloseIcon sx={{ fontSize: "12px" }} />
       </IconButton>
       <Typography sx={{ fontFamily: "Nunito", fontSize: "14px" }}>
@@ -316,6 +324,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
       </Typography>
     </Box>
   );
+
 
   const handleButtonClick = (label: string) => {
     let funnel = "";
@@ -672,7 +681,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
 
   // Lead Funnel
   const isLeadFunnelActive = () => {
-    return selectedFunnels.length > 0; 
+    return selectedFunnels.length > 0;
   };
 
   // Status
@@ -924,7 +933,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
               padding: "0.5em",
               border: "1px solid rgba(228, 228, 228, 1)",
             }}
-            onClick={() => setIsVisitedDateOpen(!isVisitedDateOpen)}
           >
             <Box
               sx={{
@@ -935,6 +943,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                 mb: 0,
                 gap: 1,
               }}
+              onClick={() => setIsVisitedDateOpen(!isVisitedDateOpen)}
             >
               <Box
                 sx={{
@@ -1093,7 +1102,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
               border: "1px solid rgba(228, 228, 228, 1)",
               padding: "0.5em",
             }}
-            onClick={() => setIsVisitedTimeOpen(!isVisitedTimeOpen)}
           >
             <Box
               sx={{
@@ -1103,6 +1111,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                 width: "100%",
                 gap: 1,
               }}
+              onClick={() => setIsVisitedTimeOpen(!isVisitedTimeOpen)}
             >
               <Box
                 sx={{
@@ -1250,7 +1259,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
               border: "1px solid rgba(228, 228, 228, 1)",
               padding: "0.5em",
             }}
-            onClick={() => setIsRegionOpen(!isRegionOpen)}
           >
             <Box
               sx={{
@@ -1260,6 +1268,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                 width: "100%",
                 gap: 1,
               }}
+              onClick={() => setIsRegionOpen(!isRegionOpen)}
             >
               <Box
                 sx={{
@@ -1328,7 +1337,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
               border: "1px solid rgba(228, 228, 228, 1)",
               padding: "0.5em",
             }}
-            onClick={() => setIsVisitedPageOpen(!isVisitedPageOpen)}
           >
             <Box
               sx={{
@@ -1338,6 +1346,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                 width: "100%",
                 gap: 1,
               }}
+              onClick={() => setIsVisitedPageOpen(!isVisitedPageOpen)}
             >
               <Box
                 sx={{
@@ -1439,7 +1448,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
               border: "1px solid rgba(228, 228, 228, 1)",
               padding: "0.5em",
             }}
-            onClick={() => setIsTimeSpentOpen(!isTimeSpentOpen)}
           >
             <Box
               sx={{
@@ -1449,6 +1457,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                 width: "100%",
                 gap: 1,
               }}
+              onClick={() => setIsTimeSpentOpen(!isTimeSpentOpen)}
             >
               <Box
                 sx={{
@@ -1555,7 +1564,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
               border: "1px solid rgba(228, 228, 228, 1)",
               padding: "0.5em",
             }}
-            onClick={() => setIsLeadFunnel(!isLeadFunnel)}
           >
             <Box
               sx={{
@@ -1565,6 +1573,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                 width: "100%",
                 gap: 1,
               }}
+              onClick={() => setIsLeadFunnel(!isLeadFunnel)}
             >
               <Box
                 sx={{
@@ -1652,7 +1661,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
               border: "1px solid rgba(228, 228, 228, 1)",
               padding: "0.5em",
             }}
-            onClick={() => setIsStatus(!isStatus)}
           >
             <Box
               sx={{
@@ -1662,6 +1670,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                 width: "100%",
                 gap: 1,
               }}
+              onClick={() => setIsStatus(!isStatus)}
             >
               <Box
                 sx={{
@@ -1750,7 +1759,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
               border: "1px solid rgba(228, 228, 228, 1)",
               padding: "0.5em",
             }}
-            onClick={() => setIsRecurringVisits(!isRecurringVisits)}
           >
             <Box
               sx={{
@@ -1760,8 +1768,9 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                 width: "100%",
                 gap: 1,
               }}
+              onClick={() => setIsRecurringVisits(!isRecurringVisits)}
             >
-               <Box
+              <Box
                 sx={{
                   width: '8px',
                   height: '8px',
