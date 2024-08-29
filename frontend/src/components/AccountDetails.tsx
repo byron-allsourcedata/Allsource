@@ -91,7 +91,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                             <Typography variant="body1" gutterBottom sx={{ ...accountStyles.name, pb: 1 }}>
                                 {lead.first_name} {lead.last_name}
                             </Typography>
-                            <Box sx={{ display: 'flex', flexDirection: 'row', gap: 5, '@media (max-width: 600px)': { flexDirection: 'column'}, }}>
+                            <Box sx={{ display: 'flex', flexDirection: 'row', gap: 5, '@media (max-width: 600px)': { flexDirection: 'column', gap:1}, }}>
                                 <Typography variant="body1" gutterBottom sx={{ ...accountStyles.text, display: 'flex', flexDirection: 'row', gap: 1 }}>
                                     <Image src={'/sms.svg'} width={18} height={18} alt='mail icon' />
                                     {lead.business_email || 'N/A'}
