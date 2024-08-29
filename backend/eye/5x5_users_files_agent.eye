@@ -23,7 +23,7 @@ Eye.application 'maximiz.5x5_users_files_agent' do
         stop_on_delete true
 
 
-        check :memory, every: 20.seconds, below: 1000.megabytes, times: 3
+        check :memory, every: 20.seconds, below: 7000.megabytes, times: 3
       end
     end
   end
