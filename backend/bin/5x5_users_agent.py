@@ -93,6 +93,8 @@ async def on_message_received(message, session):
         user_json = message_json['user']
         last_updated = convert_to_none(
             pd.to_datetime(user_json.get('LAST_UPDATED', None), unit='s', errors='coerce'))
+        business_email_last_seen = convert_to_none(
+            pd.to_datetime(user_json.get('BUSINESS_EMAIL_LAST_SEEN', None), unit='s', errors='coerce'))
         personal_emails_last_seen = convert_to_none(
             pd.to_datetime(user_json.get('PERSONAL_EMAILS_LAST_SEEN', None), unit='s', errors='coerce'))
         company_last_updated = convert_to_none(
@@ -163,16 +165,38 @@ async def on_message_received(message, session):
             company_employee_count=convert_to_none(user_json.get('COMPANY_EMPLOYEE_COUNT')),
             net_worth=convert_to_none(user_json.get('NET_WORTH')),
             job_title=convert_to_none(user_json.get('JOB_TITLE')),
-            sha256_lc_hem=convert_to_none(user_json.get('SHA256_LC_HEM')),
-            md5_lc_hem=convert_to_none(user_json.get('MD5_LC_HEM')),
-            sha1_lc_hem=convert_to_none(user_json.get('SHA1_LC_HEM')),
             last_updated=last_updated,
             personal_emails_last_seen=personal_emails_last_seen,
             company_last_updated=company_last_updated,
             job_title_last_updated=job_title_last_updated,
             first_name_id=first_name_id,
             last_name_id=last_name_id,
-            additional_personal_emails=convert_to_none(user_json.get('ADDITIONAL_PERSONAL_EMAILS'))
+            additional_personal_emails=convert_to_none(user_json.get('ADDITIONAL_PERSONAL_EMAILS')),
+            linkedin_url=convert_to_none(user_json.get('ADDITIONAL_PERSONAL_EMAILS')),
+            personal_address=convert_to_none(user_json.get('PERSONAL_ADDRESS')),
+            personal_address_2=convert_to_none(user_json.get('PERSONAL_ADDRESS_2')),
+            personal_zip=convert_to_none(user_json.get('PERSONAL_ZIP')),
+            married=convert_to_none(user_json.get('MARRIED')),
+            children=convert_to_none(user_json.get('CHILDREN')),
+            income_range=convert_to_none(user_json.get('INCOME_RANGE')),
+            homeowner=convert_to_none(user_json.get('HOMEOWNER')),
+            seniority_level=convert_to_none(user_json.get('SENIORITY_LEVEL')),
+            department=convert_to_none(user_json.get('DEPARTMENT')),
+            professional_address=convert_to_none(user_json.get('PROFESSIONAL_ADDRESS')),
+            professional_address_2=convert_to_none(user_json.get('PROFESSIONAL_ADDRESS_2')),
+            professional_city=convert_to_none(user_json.get('PROFESSIONAL_CITY')),
+            professional_state=convert_to_none(user_json.get('PROFESSIONAL_STATE')),
+            professional_zip4=convert_to_none(user_json.get('PROFESSIONAL_ZIP4')),
+            primary_industry=convert_to_none(user_json.get('PRIMARY_INDUSTRY')),
+            business_email_validation_status=convert_to_none(user_json.get('BUSINESS_EMAIL_VALIDATION_STATUS')),
+            business_email_last_seen=business_email_last_seen,
+            personal_emails_validation_status=convert_to_none(user_json.get('PERSONAL_EMAILS_VALIDATION_STATUS')),
+            work_history=convert_to_none(user_json.get('WORK_HISTORY')),
+            education_history=convert_to_none(user_json.get('EDUCATION_HISTORY')),
+            company_description=convert_to_none(user_json.get('COMPANY_DESCRIPTION')),
+            related_domains=convert_to_none(user_json.get('RELATED_DOMAINS')),
+            social_connections=convert_to_none(user_json.get('SOCIAL_CONNECTIONS')),
+            dpv_code=convert_to_none(user_json.get('DPV_CODE'))
         )
         five_x_five_user = session.merge(five_x_five_user)
         session.flush()
