@@ -1,14 +1,10 @@
 import asyncio
 import functools
-import gzip
 import json
 import logging
 import os
 import sys
-import tempfile
 
-import aioboto3
-import boto3
 import pandas as pd
 from sqlalchemy import create_engine
 
@@ -30,7 +26,7 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO)
 
 BUCKET_NAME = 'trovo-coop-shakespeare'
-QUEUE_USERS_IMPORT_NAME = '5x5_users_rows'
+QUEUE_USERS_USERS_ROWS = '5x5_users_rows'
 
 
 def convert_to_none(value):
@@ -159,7 +155,7 @@ async def on_message_received(message, session):
             company_address=convert_to_none(user_json.get('COMPANY_ADDRESS')),
             company_city=convert_to_none(user_json.get('COMPANY_CITY')),
             company_state=convert_to_none(user_json.get('COMPANY_STATE')),
-            company_zip=convert_to_none(user_json.get('COMPANY_ZIP')),
+            company_zip=None if convert_to_none(user_json.get('COMPANY_ZIP')) is None else str(int(user_json.get('COMPANY_ZIP'))),
             company_linkedin_url=convert_to_none(user_json.get('COMPANY_LINKEDIN_URL')),
             company_revenue=convert_to_none(user_json.get('COMPANY_REVENUE')),
             company_employee_count=convert_to_none(user_json.get('COMPANY_EMPLOYEE_COUNT')),
@@ -175,7 +171,8 @@ async def on_message_received(message, session):
             linkedin_url=convert_to_none(user_json.get('ADDITIONAL_PERSONAL_EMAILS')),
             personal_address=convert_to_none(user_json.get('PERSONAL_ADDRESS')),
             personal_address_2=convert_to_none(user_json.get('PERSONAL_ADDRESS_2')),
-            personal_zip=convert_to_none(user_json.get('PERSONAL_ZIP')),
+            personal_zip=None if convert_to_none(user_json.get('PERSONAL_ZIP')) is None else str(
+                int(user_json.get('PERSONAL_ZIP'))),
             married=convert_to_none(user_json.get('MARRIED')),
             children=convert_to_none(user_json.get('CHILDREN')),
             income_range=convert_to_none(user_json.get('INCOME_RANGE')),
@@ -186,7 +183,8 @@ async def on_message_received(message, session):
             professional_address_2=convert_to_none(user_json.get('PROFESSIONAL_ADDRESS_2')),
             professional_city=convert_to_none(user_json.get('PROFESSIONAL_CITY')),
             professional_state=convert_to_none(user_json.get('PROFESSIONAL_STATE')),
-            professional_zip4=convert_to_none(user_json.get('PROFESSIONAL_ZIP4')),
+            professional_zip=None if convert_to_none(user_json.get('PROFESSIONAL_ZIP')) is None else str(int(user_json.get('PROFESSIONAL_ZIP'))),
+            professional_zip4=None if convert_to_none(user_json.get('PROFESSIONAL_ZIP4')) is None else str(int(user_json.get('PROFESSIONAL_ZIP4'))),
             primary_industry=convert_to_none(user_json.get('PRIMARY_INDUSTRY')),
             business_email_validation_status=convert_to_none(user_json.get('BUSINESS_EMAIL_VALIDATION_STATUS')),
             business_email_last_seen=business_email_last_seen,
@@ -196,7 +194,9 @@ async def on_message_received(message, session):
             company_description=convert_to_none(user_json.get('COMPANY_DESCRIPTION')),
             related_domains=convert_to_none(user_json.get('RELATED_DOMAINS')),
             social_connections=convert_to_none(user_json.get('SOCIAL_CONNECTIONS')),
-            dpv_code=convert_to_none(user_json.get('DPV_CODE'))
+            dpv_code=convert_to_none(user_json.get('DPV_CODE')),
+            personal_zip4=None if convert_to_none(user_json.get('PERSONAL_ZIP4')) is None else str(
+                int(user_json.get('PERSONAL_ZIP4'))),
         )
         five_x_five_user = session.merge(five_x_five_user)
         session.flush()
@@ -230,14 +230,19 @@ async def on_message_received(message, session):
 
 async def main():
     logging.info("Started")
+    db_session = None
+    rabbitmq_connection = None
     try:
         rabbitmq_connection = RabbitMQConnection()
         connection = await rabbitmq_connection.connect()
         channel = await connection.channel()
         await channel.set_qos(prefetch_count=1)
         queue = await channel.declare_queue(
-            name=QUEUE_USERS_IMPORT_NAME,
+            name=QUEUE_USERS_USERS_ROWS,
             durable=True,
+            arguments={
+                'x-consumer-timeout': 3600000,
+            }
         )
 
         engine = create_engine(
@@ -252,10 +257,13 @@ async def main():
     except Exception as err:
         logging.error('Unhandled Exception:', exc_info=True)
     finally:
-        logging.info("Connection to the database closed")
-        logging.info('Shutting down...')
-        db_session.close()
-        await rabbitmq_connection.close()
+        if db_session:
+            logging.info("Closing the database session...")
+            db_session.close()
+        if rabbitmq_connection:
+            logging.info("Closing RabbitMQ connection...")
+            await rabbitmq_connection.close()
+        logging.info("Shutting down...")
 
 
 if __name__ == "__main__":

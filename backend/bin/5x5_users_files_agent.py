@@ -22,8 +22,8 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO)
 
 BUCKET_NAME = 'trovo-coop-shakespeare'
-QUEUE_IMPORT_NAME = '5x5_import'
-QUEUE_USERS_IMPORT_NAME = '5x5_users_rows'
+QUEUE_USERS_FILES = '5x5_users_files'
+QUEUE_USERS_ROWS = '5x5_users_rows'
 
 
 def create_sts_client(key_id, key_secret):
@@ -67,7 +67,7 @@ async def on_message_received(message, s3_session, credentials, rmq_connection):
                     for _, row in df.iterrows():
                         await publish_rabbitmq_message(
                             connection=rmq_connection,
-                            queue_name=QUEUE_USERS_IMPORT_NAME,
+                            queue_name=QUEUE_USERS_ROWS,
                             message_body={'user': row.to_dict()}
                         )
                         rows_counter += 1
@@ -75,7 +75,6 @@ async def on_message_received(message, s3_session, credentials, rmq_connection):
         logging.info(f"{message_json['file_name']} processed")
         await message.ack()
     except Exception as e:
-        logging.error("excepted message. error", body, exc_info=True)
         logging.error("excepted message. error", exc_info=True)
         await asyncio.sleep(5)
         await message.reject(requeue=True)
@@ -93,15 +92,18 @@ async def main():
         channel = await connection.channel()
         await channel.set_qos(prefetch_count=1)
         queue = await channel.declare_queue(
-            name=QUEUE_IMPORT_NAME,
+            name=QUEUE_USERS_FILES,
             durable=True,
             arguments={
-                'x-message-ttl': 300000
+                'x-consumer-timeout': 3600000,
             }
         )
         await channel.declare_queue(
-            name=QUEUE_USERS_IMPORT_NAME,
-            durable=True
+            name=QUEUE_USERS_ROWS,
+            durable=True,
+            arguments={
+                'x-consumer-timeout': 3600000,
+            }
         )
         session = aioboto3.Session()
         await queue.consume(
