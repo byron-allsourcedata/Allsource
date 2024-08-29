@@ -5,11 +5,10 @@ import { Bounce, ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Image from 'next/image';
 import { Box, Button, Typography, Menu, MenuItem } from '@mui/material';
-import PersonIcon from '@mui/icons-material/Person';
 import axiosInterceptorInstance from '@/axios/axiosInterceptorInstance';
 import { emailStyles } from './emailStyles';
 import { showErrorToast, showToast } from '@/components/ToastNotification';
-import { useUser } from '../../context/UserContext'; 
+import { useUser } from '../../context/UserContext';
 
 const EmailVerificate: React.FC = () => {
   const [canResend, setCanResend] = useState(true);
@@ -59,14 +58,14 @@ const EmailVerificate: React.FC = () => {
       setCanResend(false);
       setTimer(60);
       axiosInterceptorInstance.post('resend-verification-email', { token })
-      .then(response => {
-        if (response.status === 200 && response.data.status === "RESEND_TOO_SOON") {
-          showErrorToast("Resend too soon, please wait.");
-        }
-        if (response.status === 200 && response.data.status === "CONFIRMATION_EMAIL_SENT") {
-          showToast('The letter was sent successfully')
-        }
-      })
+        .then(response => {
+          if (response.status === 200 && response.data.status === "RESEND_TOO_SOON") {
+            showErrorToast("Resend too soon, please wait.");
+          }
+          if (response.status === 200 && response.data.status === "CONFIRMATION_EMAIL_SENT") {
+            showToast('The letter was sent successfully')
+          }
+        })
     }
   };
 
@@ -121,62 +120,62 @@ const EmailVerificate: React.FC = () => {
       <Box sx={emailStyles.headers}>
         <Box sx={emailStyles.logoContainer}>
           <Image src='/logo.svg' alt='logo' height={80} width={60} />
+        </Box>
+        <Button
+          aria-controls={open ? "profile-menu" : undefined}
+          aria-haspopup="true"
+          aria-expanded={open ? "true" : undefined}
+          onClick={handleProfileMenuClick}
+          sx={{
+            minWidth: '32px',
+            padding: '8px',
+            color: 'rgba(128, 128, 128, 1)',
+            border: '1px solid rgba(184, 184, 184, 1)',
+            borderRadius: '3.27px',
+            marginRight: 2
+          }}
+        >
+          <Image src={'/Person.svg'} alt="Person" width={18} height={18} />
+        </Button>
+        <Menu
+          id="profile-menu"
+          anchorEl={anchorEl}
+          open={open}
+          onClose={handleProfileMenuClose}
+          MenuListProps={{
+            "aria-labelledby": "profile-menu-button",
+          }}
+        >
+          <Box sx={{ p: 2 }}>
+            <Typography variant="h6">{full_name}</Typography>
+            <Typography variant="body2" color="textSecondary">
+              {email}
+            </Typography>
           </Box>
-          <Button
-            aria-controls={open ? "profile-menu" : undefined}
-            aria-haspopup="true"
-            aria-expanded={open ? "true" : undefined}
-            onClick={handleProfileMenuClick}
-            sx={{
-              minWidth: '32px',
-              padding: '8px',
-              color: 'rgba(128, 128, 128, 1)',
-              border: '1px solid rgba(184, 184, 184, 1)',
-              borderRadius: '3.27px',
-              marginRight: 2
-            }}
-          >
-            <Image src={'/Person.svg'} alt="Person" width={18} height={18} />
-          </Button>
-          <Menu
-            id="profile-menu"
-            anchorEl={anchorEl}
-            open={open}
-            onClose={handleProfileMenuClose}
-            MenuListProps={{
-              "aria-labelledby": "profile-menu-button",
-            }}
-          >
-            <Box sx={{ p: 2 }}>
-              <Typography variant="h6">{full_name}</Typography>
-              <Typography variant="body2" color="textSecondary">
-                {email}
-              </Typography>
-            </Box>
-            <MenuItem onClick={handleSettingsClick}>Settings</MenuItem>
-            <MenuItem onClick={handleSignOut}>Sign Out</MenuItem>
-          </Menu>
+          <MenuItem onClick={handleSettingsClick}>Settings</MenuItem>
+          <MenuItem onClick={handleSignOut}>Sign Out</MenuItem>
+        </Menu>
       </Box>
 
       <Box sx={emailStyles.container}>
         <Box sx={emailStyles.mainbox}>
-        <Typography variant="h4" component="h1" sx={emailStyles.title}>
-          Check your inbox
-        </Typography>
-        <Box sx={emailStyles.icon}>
-          <Image src="/mail-icon.svg" alt="Mail Icon" width={200} height={200} />
-        </Box>
-        <Box component="form" sx={emailStyles.form}>
-          <Typography sx={emailStyles.text}>
-            To complete setup and login, click the verification link in the email we’ve sent to <strong>{email}</strong>
+          <Typography variant="h4" component="h1" sx={emailStyles.title}>
+            Check your inbox
+          </Typography>
+          <Box sx={emailStyles.icon}>
+            <Image src="/mail-icon.svg" alt="Mail Icon" width={200} height={200} />
+          </Box>
+          <Box component="form" sx={emailStyles.form}>
+            <Typography sx={emailStyles.text}>
+              To complete setup and login, click the verification link in the email we’ve sent to <strong>{email}</strong>
+            </Typography>
+          </Box>
+          <Typography sx={emailStyles.resetPassword}>
+            <Button onClick={handleResendEmail} sx={emailStyles.loginLink} disabled={!canResend}>
+              {canResend ? 'Resend Verification Email' : `Resend in ${timer}s`}
+            </Button>
           </Typography>
         </Box>
-        <Typography sx={emailStyles.resetPassword}>
-          <Button onClick={handleResendEmail} sx={emailStyles.loginLink} disabled={!canResend}>
-            {canResend ? 'Resend Verification Email' : `Resend in ${timer}s`}
-          </Button>
-        </Typography>
-      </Box>  
       </Box>
     </>
   );

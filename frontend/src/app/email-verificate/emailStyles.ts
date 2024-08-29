@@ -13,16 +13,6 @@ export const emailStyles: { [key: string]: SxProps<Theme> } = {
     margin: '0 auto',
     position: 'relative',
     border: '0.125rem solid transparent',
-    '@media (max-width: 440px)': {
-      boxShadow: '0rem 0px 0px 0px #00000033',
-      border: 'none',
-      marginTop: '3.75em',
-    },
-    '@media (max-height: 670px)': {
-      boxShadow: '0rem 0px 0px 0px #00000033',
-      border: 'none',
-      marginTop: '2em',
-    },
   },
   mainbox: {
     boxShadow: '0rem 2px 8px 0px #00000033',
@@ -30,7 +20,8 @@ export const emailStyles: { [key: string]: SxProps<Theme> } = {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    justifyContent: 'center'
+    justifyContent: 'center',
+    '@media (max-width: 440px)': {boxShadow: 'none'}
   },
   hidepc: {
     display: 'none',
