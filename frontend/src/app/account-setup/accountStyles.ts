@@ -28,8 +28,8 @@ export const styles: { [key: string]: SxProps<Theme> } = {
     width: '100%',
     marginBottom: '2.5em',
     textTransform: 'none',
+    '@media (max-width: 600px)': { marginBottom: 2.5 },
     '@media (max-width: 400px)': { marginBottom: 1.5 },
-    '@media (max-width: 600px)': { marginBottom: 2.5 }
   },
   visitButton: {
     padding: '9px 16px',
@@ -52,15 +52,17 @@ export const styles: { [key: string]: SxProps<Theme> } = {
     width: '100%',
     marginBottom: '2.5em',
     textTransform: 'none',
-    '@media (max-width: 400px)': { marginBottom: 1.5, width: '100%' },
-    '@media (max-width: 600px)': { marginBottom: 2, width: '100%', gap:'16px' }
+    '@media (max-width: 600px)': { marginBottom: 2, width: '100%', gap:'16px' },
+    '@media (max-width: 400px)': { marginBottom: 1.5, width: '100%', gap: '14px'  },
+
   },
   roleButton: {
     color: 'black',
     border: '1px solid #ccc',
     textTransform: 'none',
     padding: '8px 8px',
-    '@media (max-width: 600px)': { padding: '6px' }
+    '@media (max-width: 600px)': { padding: '10px' },
+    '@media (max-width: 400px)': {padding: '5px'}
   },
   activeButton: {
     backgroundColor: '#007BFF',
@@ -78,8 +80,9 @@ export const styles: { [key: string]: SxProps<Theme> } = {
     color: 'rgba(244, 87, 69, 1)',
     borderBottom: `1px solid rgba(228, 228, 228, 1)`,
     marginBottom: '1.25em',
+    '@media (max-height: 670px)': { marginBottom: 1 },
     '@media (max-width: 600px)': { display: 'flex', flexDirection: 'column', justifyContent: 'start', alignItems: 'start' },
-    '@media (max-height: 670px)': { marginBottom: 1 }
+
   },
   header: {
     display: 'flex',
@@ -136,9 +139,11 @@ export const styles: { [key: string]: SxProps<Theme> } = {
     justifyContent: 'center',
     borderRadius: '0.5em',
     backgroundColor: '#fff',
-    '@media (max-width: 400px)': { pl: 0, pt: 0, height: '77vh',  },
-    '@media (max-width: 600px)': {height: '77vh',display: 'flex',flexDirection: 'column',alignItems: 'center',justifyContent: 'center'},
     '@media (max-height: 670px)': { pl: 0, gap: 0 },
+    '@media (max-width: 600px)': {height: '77vh',display: 'flex',flexDirection: 'column',alignItems: 'center',justifyContent: 'center'},
+    '@media (max-width: 400px)': { pl: 0, pt: 0, height: '77vh',  },
+   
+
   },
   title: {
     fontFamily: 'Nunito',
