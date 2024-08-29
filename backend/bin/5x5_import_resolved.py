@@ -109,23 +109,11 @@ def process_user_data(table, index, five_x_five_user, session):
     session.execute(lead_request)
     session.commit()
 
-def seconds_to_time(seconds):
-    hours, remainder = divmod(seconds, 3600)
-    minutes, seconds = divmod(remainder, 60)
-    return time(hour=int(hours), minute=int(minutes), second=int(seconds))
 
 def process_leads_requests(requested_at, leads_requests, lead_id, session):
-    start_date, start_time, end_time, pages_count, average_time_sec = None, None, 10, 1, 10
+    start_date, start_time, end_time, pages_count, average_time_sec = requested_at.date(), requested_at.time(), 10, 1, 10
     for lead_request in leads_requests:
         request_date = lead_request.requested_at
-        request_date_date = request_date.date()
-        request_date_time = request_date.time()
-        if start_date is None or start_date is None:
-            start_date = requested_at.date()
-            start_time = requested_at.time()
-        else:
-            start_date = request_date_date
-            start_time = request_date_time
         if request_date < datetime.combine(start_date, start_time):
             start_date = request_date.date()
             start_time = request_date.time()
@@ -138,7 +126,7 @@ def process_leads_requests(requested_at, leads_requests, lead_id, session):
     end_time = date_page.time()
     session.query(LeadsVisits).filter_by(lead_id=lead_id).update({
         'start_date': start_date, 'start_time': start_time, 'end_date': end_date,
-        'end_time': end_time, 'pages_count': pages_count, 'average_time_sec': seconds_to_time(average_time_sec)
+        'end_time': end_time, 'pages_count': pages_count, 'average_time_sec': average_time_sec
     })
     session.flush()
 
@@ -152,7 +140,7 @@ def add_new_leads_visits(visited_datetime, lead_id, session):
 
     leads_visits = LeadsVisits(
         start_date=start_date, start_time=start_time, end_date=end_date, end_time=end_time,
-        pages_count=1, average_time_sec=time(hour=0, minute=0, second=10), lead_id=lead_id
+        pages_count=1, average_time_sec=10, lead_id=lead_id
     )
     session.add(leads_visits)
     session.flush()
