@@ -124,11 +124,11 @@ const VerifyPixelIntegration: React.FC = () => {
             color: "rgba(80, 82, 178, 1)",
             fontFamily: "Nunito",
             padding: "0.75em 1.5em",
+            lineHeight: 'normal',
             '@media (max-width: 600px)': {
               padding: '0.625rem 1.5rem',
               marginLeft: 0,
-              fontSize: '16px',
-              lineHeight: 'normal'
+              fontSize: '16px'
         }
           }}
         >
@@ -345,66 +345,7 @@ const Dashboard: React.FC = () => {
 
   return (
     <>
-    <Box sx={{ display: { md: 'none' } }}>
-      <NavigationMenu/>
-      
-    </Box>
-
-
     
-      <Box sx={{ ...dashboardStyles.headers, display: { xs: 'none', md: 'flex' } }}>
-        <Box sx={dashboardStyles.logoContainer}>
-          <Image src="/logo.svg" alt="logo" height={30} width={50} />
-          <AccountButton />
-        </Box>
-        <Box sx={{ display: "flex", alignItems: "center" }}>
-          <TrialStatus />
-
-          <Button sx={{
-              minWidth: '32px',
-              padding: '8px',
-              color: 'rgba(128, 128, 128, 1)',
-              border: '1px solid rgba(184, 184, 184, 1)',
-              borderRadius: '3.27px',
-            marginRight: '1.5rem'}}
-          >
-          <Image src={'notification.svg'} alt="Person" width={18} height={18} />
-          </Button>
-          
-          <Button
-            aria-controls={open ? "profile-menu" : undefined}
-            aria-haspopup="true"
-            aria-expanded={open ? "true" : undefined}
-            onClick={handleProfileMenuClick}
-            sx={{
-              minWidth: '32px',
-              padding: '8px',
-              color: 'rgba(128, 128, 128, 1)',
-              border: '1px solid rgba(184, 184, 184, 1)',
-              borderRadius: '3.27px'}}
-          >
-            <Image src={'/Person.svg'} alt="Person" width={18} height={18} />
-          </Button>
-          <Menu
-            id="profile-menu"
-            anchorEl={anchorEl}
-            open={open}
-            onClose={handleProfileMenuClose}
-            MenuListProps={{
-              "aria-labelledby": "profile-menu-button",
-            }}
-          >
-            <Box sx={{ p: 2 }}>
-              <Typography variant="h6">{full_name}</Typography>
-              <Typography variant="body2" color="textSecondary">
-                {email}
-              </Typography>
-            </Box>
-            <MenuItem onClick={handleSettingsClick}>Settings</MenuItem>
-            <MenuItem onClick={handleSignOut}>Sign Out</MenuItem>
-          </Menu>
-        </Box>
-      </Box>
       <Grid container spacing={{ md: 1, lg: 3 }} sx={dashboardStyles.mainItemContent}>
         <Grid item xs={12} sx={{ padding: "0px", display: { xs: 'block', md: 'none' }  }}>
           <TrialStatus />
@@ -420,10 +361,8 @@ const Dashboard: React.FC = () => {
           <>
             <Grid item xs={12} md lg sx={dashboardStyles.mainItemContentInner}>
               <Grid
-                container
                 spacing={2}
                 sx={{
-                  marginTop: "2em",
                   display: "flex",
                   flexDirection: "column",
                 }}
@@ -459,7 +398,7 @@ const Dashboard: React.FC = () => {
                   }}
                 >
                   {/* Top Row */}
-                  <Grid item xs={4} md={6}>
+                  <Grid item xs={6} md={6}>
                     <Image
                       src="/graphic1.png"
                       alt="Image 1"
@@ -468,7 +407,7 @@ const Dashboard: React.FC = () => {
                       height={100}
                     />
                   </Grid>
-                  <Grid item xs={4} md={6}>
+                  <Grid item xs={6} md={6}>
                     <Image
                       src="/graphic2.png"
                       alt="Image 2"
@@ -478,7 +417,7 @@ const Dashboard: React.FC = () => {
                     />
                   </Grid>
                   {/* Bottom Row */}
-                  <Grid item xs={4} md={6}>
+                  <Grid item xs={6} md={6}>
                     <Image
                       src="/graphic3.png"
                       alt="Image 3"
@@ -487,7 +426,7 @@ const Dashboard: React.FC = () => {
                       height={100}
                     />
                   </Grid>
-                  <Grid item xs={4} md={6}>
+                  <Grid item xs={6} md={6}>
                     <Image
                       src="/graphic1.png"
                       alt="Image 4"
