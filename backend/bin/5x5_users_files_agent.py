@@ -75,7 +75,6 @@ async def on_message_received(message, s3_session, credentials, rmq_connection):
         logging.info(f"{message_json['file_name']} processed")
         await message.ack()
     except Exception as e:
-        logging.error("excepted message. error", body, exc_info=True)
         logging.error("excepted message. error", exc_info=True)
         await asyncio.sleep(5)
         await message.reject(requeue=True)
@@ -101,7 +100,10 @@ async def main():
         )
         await channel.declare_queue(
             name=QUEUE_USERS_IMPORT_NAME,
-            durable=True
+            durable=True,
+            arguments={
+                'x-message-ttl': 300000
+            }
         )
         session = aioboto3.Session()
         await queue.consume(

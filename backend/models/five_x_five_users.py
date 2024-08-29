@@ -46,6 +46,8 @@ class FiveXFiveUser(Base):
     personal_address = Column(VARCHAR, nullable=True)
     personal_address_2 = Column(VARCHAR, nullable=True)
     personal_zip = Column(VARCHAR, nullable=True)
+    personal_zip4 = Column(VARCHAR, nullable=True)
+    professional_zip = Column(VARCHAR, nullable=True)
     married = Column(VARCHAR, nullable=True)
     children = Column(VARCHAR, nullable=True)
     income_range = Column(VARCHAR, nullable=True)

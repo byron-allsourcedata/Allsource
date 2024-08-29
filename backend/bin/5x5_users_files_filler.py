@@ -19,7 +19,7 @@ BUCKET_NAME = 'trovo-coop-shakespeare'
 FILE_PATH = 'outgoing/universal_person_2_7_0/'
 REGION_NAME = 'us-west-2'
 DB_NAME = '5x5_users'
-
+QUEUE_IMPORT_NAME = '5x5_import'
 
 def create_sts_client(key_id, key_secret):
     return boto3.client('sts',
@@ -58,8 +58,11 @@ async def main():
     connection = await rabbitmq_connection.connect()
     channel = await connection.channel()
     await channel.declare_queue(
-        name='5x5_import_hems',
+        name=QUEUE_IMPORT_NAME,
         durable=True,
+        arguments={
+            'x-message-ttl': 300000
+        }
     )
     await process_files(sts_client, connection)
 
