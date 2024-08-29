@@ -1,4 +1,4 @@
-WORKERS = 10
+WORKERS = 2
 
 
 Eye.application 'maximiz.5x5_users_files_agent' do
