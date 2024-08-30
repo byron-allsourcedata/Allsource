@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Drawer, Backdrop, Box, Typography, IconButton, Button, Divider } from '@mui/material';
+import { Drawer, Backdrop, Box, Typography, IconButton, Button, Divider, Link } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { accountStyles } from '../css/accountDetails';
 import Image from 'next/image'
@@ -9,6 +9,23 @@ interface PopupDetailsProps {
     onClose: () => void;
     rowData: any;
 }
+
+const TruncatedText: React.FC<{ text: string; limit: number }> = ({ text, limit }) => {
+    const [isExpanded, setIsExpanded] = useState(false);
+    const shouldTruncate = text.length > limit;
+
+    const handleToggleExpand = () => {
+        setIsExpanded(!isExpanded);
+    };
+
+    return (
+        <Box onClick={handleToggleExpand} sx={{ cursor: shouldTruncate ? 'pointer' : 'default' }}>
+            <Typography sx={{ ...accountStyles.text, display: '-webkit-box', WebkitBoxOrient: 'vertical', overflow: 'hidden', textOverflow: 'ellipsis', WebkitLineClamp: isExpanded ? 'none' : 3 }}>
+                {isExpanded ? text : text.substring(0, limit) + (shouldTruncate ? '...' : '')}
+            </Typography>
+        </Box>
+    );
+};
 
 const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) => {
     const lead = rowData?.lead || {};
@@ -91,15 +108,44 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                             <Typography variant="body1" gutterBottom sx={{ ...accountStyles.name, pb: 1 }}>
                                 {lead.first_name} {lead.last_name}
                             </Typography>
-                            <Box sx={{ display: 'flex', flexDirection: 'row', gap: 5, '@media (max-width: 600px)': { flexDirection: 'column', gap:1}, }}>
-                                <Typography variant="body1" gutterBottom sx={{ ...accountStyles.text, display: 'flex', flexDirection: 'row', gap: 1 }}>
+                            <Box sx={{ display: 'flex', flexDirection: 'row', gap: 5, '@media (max-width: 600px)': { flexDirection: 'column', gap: 1 }, }}>
+                                <Typography variant="body1" gutterBottom sx={{ ...accountStyles.header_text, display: 'flex', flexDirection: 'row', gap: 1 }}>
                                     <Image src={'/sms.svg'} width={18} height={18} alt='mail icon' />
                                     {lead.business_email || 'N/A'}
                                 </Typography>
-                                <Typography variant="body1" gutterBottom sx={{ ...accountStyles.text, display: 'flex', flexDirection: 'row', gap: 1, color: 'rgba(80, 82, 178, 1)' }}>
-                                    <Image src={'/iphone-02.svg'} width={18} height={18} alt='iphone icon' />
-                                    {lead.mobile_phone || 'N/A'}
+                                <Typography
+                                    variant="body1"
+                                    gutterBottom
+                                    sx={{
+                                        ...accountStyles.header_text,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: 1,
+                                        color: 'rgba(80, 82, 178, 1)',
+                                    }}
+                                >
+                                    {lead.mobile_phone ? (
+                                        <Link
+                                            href={`tel:${lead.mobile_phone.split(',')[0]}`}
+                                            underline="none"
+                                            sx={{
+                                                color: 'rgba(80, 82, 178, 1)',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: 1
+                                            }}
+                                        >
+                                            <Image src={'/iphone-02.svg'} width={18} height={18} alt='iphone icon' />
+                                            {lead.mobile_phone ? lead.mobile_phone.split(',')[0] : 'N/A'}
+                                        </Link>
+                                    ) : (
+                                        <>
+                                            <Image src={'/iphone-02.svg'} width={18} height={18} alt='iphone icon' />
+                                            <Typography sx={accountStyles.text}> N/A</Typography>
+                                        </>
+                                    )}
                                 </Typography>
+
                             </Box>
                         </Box>
                     </Box>
@@ -113,7 +159,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                             <Typography sx={accountStyles.title_text}>
                                 Direct number:
                             </Typography>
-                            <Typography sx={accountStyles.text}>
+                            <Typography sx={{ ...accountStyles.text, width: '50%' }}>
                                 {lead.mobile_phone || 'N/A'}
                             </Typography>
                         </Box>
@@ -175,7 +221,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                     {/* Demographics */}
                     <Box sx={accountStyles.box_param}>
                         <Typography sx={accountStyles.title}>
-                        <Image src={'/demographic.svg'} width={18} height={18} alt='demographic icon' />
+                            <Image src={'/demographic.svg'} width={18} height={18} alt='demographic icon' />
                             Demographics
                         </Typography>
 
@@ -283,7 +329,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                 Company description:
                             </Typography>
                             <Typography sx={{ ...accountStyles.text }}>
-                                {lead.company_decription || 'N/A'}
+                                <TruncatedText text={lead.company_description || 'N/A'} limit={100} />
                             </Typography>
                         </Box>
 
@@ -389,8 +435,22 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                             <Typography sx={{ ...accountStyles.title_text }}>
                                 Institution url:
                             </Typography>
-                            <Typography sx={{ ...accountStyles.text }}>
-                                {lead.zip || 'N/A'}
+                            <Typography sx={{ ...accountStyles.text, color: 'rgba(80, 82, 178, 1)' }}>
+                                {lead.institution_url ? (
+                                    <Link
+                                        href={`${lead.institution_url}`}
+                                        target="_blank" 
+                                        rel="noopener noreferrer" 
+                                        underline="none"
+                                        sx={{
+                                            color: 'rgba(80, 82, 178, 1)',
+                                        }}
+                                    >
+                                        {lead.institution_url}
+                                    </Link>
+                                ) : (
+                                    <Typography sx={accountStyles.text}> N/A</Typography>
+                                )}
                             </Typography>
                         </Box>
                     </Box>
@@ -414,8 +474,22 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                             <Typography sx={{ ...accountStyles.title_text }}>
                                 Company url:
                             </Typography>
-                            <Typography sx={{ ...accountStyles.text }}>
-                                {lead.company_linkedin_url || 'N/A'}
+                            <Typography sx={{ ...accountStyles.text, color: 'rgba(80, 82, 178, 1)' }}>
+                                {lead.company_linkedin_url ? (
+                                    <Link
+                                        href={`${lead.company_linkedin_url}`}
+                                        underline="none"
+                                        target="_blank" 
+                                        rel="noopener noreferrer" 
+                                        sx={{
+                                            color: 'rgba(80, 82, 178, 1)',
+                                        }}
+                                    >
+                                        {lead.company_linkedin_url}
+                                    </Link>
+                                ) : (
+                                    <Typography sx={accountStyles.text}> N/A</Typography>
+                                )}
                             </Typography>
                         </Box>
                     </Box>
