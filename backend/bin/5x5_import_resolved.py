@@ -98,14 +98,15 @@ def process_user_data(table, index, five_x_five_user, session: Session):
 
     leads_requests = session.query(LeadsRequests).filter(
         LeadsRequests.lead_id == lead_user.id,
-        LeadsRequests.requested_at <= thirty_minutes_ago
+        LeadsRequests.requested_at >= thirty_minutes_ago
     ).all()
     if leads_requests:
         lead_visits = leads_requests[0].visit_id
         logging.info("leads requests exists")
-        visit_first = session.query(LeadsVisits).filter(LeadsVisits.lead_id == lead_user.id).order_by(LeadsVisits.id.asc).all()
-        if visit_first[0].id == lead_request[0].visit_id:
-            if lead_user.behavior_type in ('visitor', 'viewed_product') and behavior_type in ('viewed_product', 'added_to_cart'):
+        visit_first = session.query(LeadsVisits).filter(LeadsVisits.lead_id == lead_user.id).order_by(LeadsVisits.id.asc).first
+        if visit_first.id == leads_requests[0].visit_id:
+            if lead_user.behavior_type in ('visitor', 'viewed_product') and behavior_type in ('viewed_product', 'added_to_cart')\
+                    and lead_user.behavior_type != behavior_type:
                 session.query(LeadUser).filter(LeadUser.id == lead_user.id).update({
                     LeadUser.behavior_type: behavior_type
                 })

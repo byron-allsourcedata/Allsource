@@ -62,5 +62,5 @@ async def google_tag(user: User = Depends(check_user_authorization_without_pixel
 @router.get("/cms", response_model=ManualFormResponse)
 async def cms(pixel_installation_service: PixelInstallationService = Depends(get_pixel_installation_service),
               user: User = Depends(check_user_authorization_without_pixel)):
-    manual_result, pixel_client_id = pixel_installation_service.get_maxnual(user)
+    manual_result, pixel_client_id = pixel_installation_service.get_manual(user)
     return ManualFormResponse(manual=manual_result, pixel_client_id=pixel_client_id)

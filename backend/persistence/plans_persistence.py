@@ -10,9 +10,12 @@ class PlansPersistence:
 
     def get_stripe_plans(self):
         return self.db.query(SubscriptionPlan).filter(SubscriptionPlan.is_active == True).all()
-    
+
     def get_trial_status_by_user_id(self, user_id: int):
-        return self.db.query(UserSubscriptions).filter_by(user_id=user_id).first().is_trial
+        subscription = self.db.query(UserSubscriptions).filter(UserSubscriptions.user_id == user_id).first()
+        if subscription is not None:
+            return subscription.is_trial
+        return None
 
     def get_plan_by_title(self, title: str):
         plan = self.db.query(SubscriptionPlan).filter(SubscriptionPlan.title == title).first()

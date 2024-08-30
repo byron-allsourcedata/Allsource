@@ -206,30 +206,36 @@ class SubscriptionService:
         return subscription_obj
 
     def create_subscription_from_free_trial(self, user_id):
-        price = '0'
+        plan = self.plans_persistence.get_free_trail_plan()
         status = 'active'
-        created_at = datetime.strptime(get_utc_aware_date_for_postgres(), '%Y-%m-%dT%H:%M:%SZ')  # Updated format
-        subscription = self.db.query(SubscriptionPlan).filter(SubscriptionPlan.is_free_trial == True).first()
-        trial_days = timedelta(days=subscription.trial_days)
+        created_at = datetime.strptime(get_utc_aware_date_for_postgres(), '%Y-%m-%dT%H:%M:%SZ')
+        trial_days = timedelta(days=plan.trial_days)
         end_date = (created_at + trial_days).isoformat() + "Z"
-        plan_id = self.plans_persistence.get_free_trail_plan()
-        add_subscription_obj = Subscription(
-            user_id=user_id,
-            price=price,
-            plan_start=created_at.isoformat() + "Z",
-            plan_end=end_date,
-            updated_at=created_at.isoformat() + "Z",
-            created_at=created_at.isoformat() + "Z",
-            status=status,
-            plan_id=plan_id,
-            is_trial=True
-        )
+        existing_subscription = self.db.query(Subscription).filter_by(user_id=user_id).first()
 
-        self.db.merge(add_subscription_obj)
-        self.db.query(User).filter(User.id == user_id).update({Users.activate_steps_percent: 50},
+        if existing_subscription:
+            existing_subscription.plan_start = created_at.isoformat() + "Z"
+            existing_subscription.plan_end = end_date
+            existing_subscription.updated_at = created_at.isoformat() + "Z"
+            existing_subscription.status = status
+            existing_subscription.is_trial = True
+        else:
+            add_subscription_obj = Subscription(
+                user_id=user_id,
+                plan_start=created_at.isoformat() + "Z",
+                plan_end=end_date,
+                updated_at=created_at.isoformat() + "Z",
+                created_at=created_at.isoformat() + "Z",
+                status=status,
+                plan_id=plan.id,
+                is_trial=True
+            )
+            self.db.add(add_subscription_obj)
+
+        self.db.flush()
+        self.db.query(User).filter(User.id == user_id).update({User.activate_steps_percent: 50},
                                                               synchronize_session=False)
         self.db.commit()
-        return add_subscription_obj
 
     def remove_trial(self, user_id: int):
         self.db.query(UserSubscriptions).filter(

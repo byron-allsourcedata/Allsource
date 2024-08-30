@@ -11,4 +11,4 @@ class LeadUser(Base):
     five_x_five_user_id = Column(Integer, nullable=False)
     status = Column(VARCHAR, default='New', nullable=False)
     funnel = Column(VARCHAR, default='Visitor', nullable=False)
-    behavior_type = Column(VARCHAR, defaul='Visitor', nullable=False)
+    behavior_type = Column(VARCHAR, default='Visitor', nullable=False)
