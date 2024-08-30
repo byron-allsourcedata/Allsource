@@ -6,7 +6,7 @@ import tempfile
 import traceback
 import urllib.parse
 from datetime import time
-
+from sqlalchemy import func, and_, or_
 import boto3
 import pyarrow.parquet as pq
 
@@ -95,12 +95,37 @@ def process_user_data(table, index, five_x_five_user, session: Session):
 
     requested_at = table['EVENT_DATE'][index].as_py().isoformat()
     visited_datetime = datetime.fromisoformat(requested_at)
-    thirty_minutes_ago = visited_datetime - timedelta(minutes=30)
 
-    leads_requests = session.query(LeadsRequests).filter(
-        LeadsRequests.lead_id == lead_user.id,
-        LeadsRequests.requested_at >= thirty_minutes_ago
-    ).all()
+    thirty_minutes_ago = visited_datetime - timedelta(minutes=30)
+    thirty_minutes_later = visited_datetime + timedelta(minutes=30)
+
+    subquery = (
+        session.query(
+            LeadsRequests.requested_at,
+            func.lead(LeadsRequests.requested_at).over(
+                partition_by=LeadsRequests.lead_id,
+                order_by=LeadsRequests.requested_at
+            ).label('next_visit')
+        )
+        .filter(LeadsRequests.lead_id == lead_user.id)
+    ).subquery()
+
+    leads_requests = (
+        session.query(subquery.c.requested_at)
+        .filter(
+            and_(
+                subquery.c.requested_at >= thirty_minutes_ago,
+                subquery.c.requested_at <= thirty_minutes_later,
+                or_(
+                    subquery.c.next_visit.is_(None),
+                    subquery.c.next_visit - subquery.c.requested_at > timedelta(minutes=30)
+                )
+            )
+        )
+        .order_by(subquery.c.requested_at)
+        .all()
+    )
+
     if leads_requests:
         lead_visits = leads_requests[0].visit_id
         logging.info("leads requests exists")
@@ -118,6 +143,9 @@ def process_user_data(table, index, five_x_five_user, session: Session):
     else:
         logging.info("leads requests not exists")
         lead_visits = add_new_leads_visits(visited_datetime, lead_user.id, session, behavior_type).id
+        session.query(Users).filter(Users.id == user.get('id')).update(
+            {Users.is_pixel_installed: True},
+            synchronize_session=False)
     lead_request = insert(LeadsRequests).values(
         lead_id=lead_user.id,
         page=page, requested_at=requested_at, visit_id=lead_visits
