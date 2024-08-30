@@ -13,11 +13,12 @@ import pyarrow.parquet as pq
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
+
 from models.leads_requests import LeadsRequests
 from models.leads_visits import LeadsVisits
 from models.five_x_five_hems import FiveXFiveHems
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, Session
 from models.five_x_five_users import FiveXFiveUser
 from models.leads_users import LeadUser
 from models.users import Users
@@ -71,11 +72,15 @@ def process_table(table, session, file_key):
     update_last_processed_file(file_key)
 
 
-def process_user_data(table, index, five_x_five_user, session):
+def process_user_data(table, index, five_x_five_user, session: Session):
     partner_uid_decoded = urllib.parse.unquote(str(table['PARTNER_UID'][index]).lower())
     partner_uid_dict = json.loads(partner_uid_decoded)
     partner_uid_client_id = partner_uid_dict.get('client_id')
     page = partner_uid_dict.get('current_page')
+    if partner_uid_dict.get('item'):
+        behavior_type = 'Viewed product'
+    if partner_uid_dict.get('addToCart'):
+        behavior_type = 'Add to cart'
     user = session.query(Users).filter(Users.data_provider_id == str(partner_uid_client_id)).first()
     if not user:
         logging.info(f"User not found with client_id {partner_uid_client_id}")
@@ -98,6 +103,13 @@ def process_user_data(table, index, five_x_five_user, session):
     if leads_requests:
         lead_visits = leads_requests[0].visit_id
         logging.info("leads requests exists")
+        visit_first = session.query(LeadsVisits).filter(LeadsVisits.lead_id == lead_user.id).order_by(LeadsVisits.id.asc).all()
+        if visit_first[0].id == lead_request[0].visit_id:
+            if lead_user.behavior_type in ('Visitor', 'Viewed product') and behavior_type in ('Viewed product', 'Add to cart'):
+                session.query(LeadUser).filter(LeadUser.id == lead_user.id).update({
+                    LeadUser.behavior_type: behavior_type
+                })
+                session.commit()
         process_leads_requests(visited_datetime, leads_requests, lead_user.id, session)
     else:
         logging.info("leads requests not exists")
