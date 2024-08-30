@@ -42,21 +42,24 @@ def save_emails_to_user(session, emails, five_x_five_user_id, type):
         if email:
             email_obj = session.query(FiveXFiveEmails).filter(
                 FiveXFiveEmails.email == email).first()
+            email_host = None
             if not email_obj:
-                email_obj = FiveXFiveEmails(
-                    email=email,
-                    email_host=email.split('@')[-1] if '@' in email else None
-                )
-                session.add(email_obj)
+                email_host = email.split('@')[-1] if '@' in email else None
+                if email_host
+                    email_obj = FiveXFiveEmails(
+                        email=email,
+                        email_host=email_host
+                    )
+                    session.add(email_obj)
+                    session.flush()
+            if email_obj
+                five_x_five_user_email = insert(FiveXFiveUsersEmails).values(
+                    user_id=five_x_five_user_id,
+                    email_id=email_obj.id,
+                    type=type
+                ).on_conflict_do_nothing()
+                session.execute(five_x_five_user_email)
                 session.flush()
-
-            five_x_five_user_email = insert(FiveXFiveUsersEmails).values(
-                user_id=five_x_five_user_id,
-                email_id=email_obj.id,
-                type=type
-            ).on_conflict_do_nothing()
-            session.execute(five_x_five_user_email)
-            session.flush()
 
 
 def save_phones_to_user(session, phones, five_x_five_user_id, type):
