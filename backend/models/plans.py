@@ -17,10 +17,12 @@ class SubscriptionPlan(Base):
     trial_days = Column(INTEGER, default=7, nullable=True)
     is_default = Column(BOOLEAN, default=False, nullable=True)
     coupon_id = Column(VARCHAR, nullable=True)
-    created_at = Column(TIMESTAMP(precision=6), nullable=True)
-    updated_at = Column(TIMESTAMP(precision=6), nullable=True)
     is_active = Column(BOOLEAN, default=False, nullable=True)
     is_free_trial = Column(BOOLEAN, default=False, nullable=True)
+    domains_limit = Column(Integer, nullable=True)
+    users_limit = Column(Integer, nullable=True)
+    integrations_limit = Column(Integer, nullable=True)
+    audiences_limit = Column(Integer, nullable=True)
 
 
 event.listen(SubscriptionPlan, "before_insert", create_timestamps)

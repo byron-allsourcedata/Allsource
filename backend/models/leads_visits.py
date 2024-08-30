@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, Text, VARCHAR, DATE, TIME, ForeignKey
+from sqlalchemy import Column, Integer, DATE, TIME
+
 from .base import Base
 
 
@@ -10,6 +11,6 @@ class LeadsVisits(Base):
     start_time = Column(TIME, nullable=True)
     end_date = Column(DATE, nullable=True)
     end_time = Column(TIME, nullable=True)
-    pages_count = Column(Integer, nullable=True)
-    average_time_sec = Column(TIME, nullable=True)
-    lead_id = Column(Integer, ForeignKey('leads.id'), nullable=False)
+    pages_count = Column(Integer, nullable=True, unique=True)
+    average_time_sec = Column(Integer, nullable=True)
+    lead_id = Column(Integer, nullable=False)

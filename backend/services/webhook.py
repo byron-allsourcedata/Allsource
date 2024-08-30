@@ -1,10 +1,8 @@
 import logging
-
-from persistence.plans_persistence import PlansPersistence
-from services.subscriptions import SubscriptionService
 from datetime import datetime
 
-ACTIVE_STATUSES = ["active", "canceled", "inactive"]
+from services.subscriptions import SubscriptionService
+
 logger = logging.getLogger(__name__)
 
 
@@ -23,14 +21,9 @@ class WebhookService:
                                                                   stripe_payload=payload)
         if self.subscription_service.check_duplicate_send(stripe_request_created_at, user_data.id):
             return payload
-        request_price_id = payload.get("data").get("object").get("plan").get("id")
+
         status = payload.get("data").get("object").get("status")
         is_subscription_active = status in ['active', 'trialing']
-        user_plan = self.subscription_service.get_current_user_plan(user_data.id)
-        if user_plan is not None:
-            plan_info = user_plan.get('payment_platform_product_id')
-        else:
-            plan_info = {'payment_platform_product_id': 0}
 
         """
         Saving the details of payment mode
@@ -50,8 +43,4 @@ class WebhookService:
         if user_subscription:
             logger.info("New subscription created")
 
-        if (plan_info["payment_platform_product_id"] != request_price_id):
-            self.subscription_service.create_new_usp(user_data.id, user_subscription.id, request_price_id)
-        else:
-            self.subscription_service.update_subscription_id(user_plan["id"], user_subscription.id)
         return self.subscription_service.construct_webhook_response(user_subscription)
