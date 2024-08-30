@@ -10,7 +10,7 @@ const HeaderWrapper: React.FC = () => {
   useEffect(() => {
     
     // List of pages on which Header should not be displayed
-    const excludedPaths = ['/signin', '/signup', '/email-verificate', '/account-setup'];
+    const excludedPaths = ['/signin', '/signup', '/email-verificate', '/account-setup', '/reset-password', '/choose-plan', '/authentication/verify-token', '/admin/users'];
     
     // Check if the email exists and the current path is not in the exception list
     if (!excludedPaths.includes(pathname)) {
