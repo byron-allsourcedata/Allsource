@@ -27,6 +27,8 @@ def convert_to_none(value):
 def save_city_and_state_to_user(session, personal_city, personal_state, five_x_five_user_id):
     city = convert_to_none(personal_city)
     state = convert_to_none(personal_state)
+    if city is None and state is None:
+        return False
     if city:
         city = city.lower()
     if state:

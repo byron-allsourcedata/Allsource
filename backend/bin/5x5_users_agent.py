@@ -92,6 +92,8 @@ def save_phones_to_user(session, phones, five_x_five_user_id, type):
 def save_city_and_state_to_user(session, personal_city, personal_state, five_x_five_user_id):
     city = convert_to_none(personal_city)
     state = convert_to_none(personal_state)
+    if city is None and state is None:
+        return False
     if city:
         city = convert_to_none(personal_city).lower()
     if state:
