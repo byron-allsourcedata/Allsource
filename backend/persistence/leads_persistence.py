@@ -14,9 +14,9 @@ from models.audience import Audience
 from models.audience_leads import AudienceLeads
 from models.leads_visits import LeadsVisits
 from models.leads import Lead
-from models.leads_locations import LeadsLocations
+from models.five_x_five_users_locations import FiveXFiveUsersLocations
 from models.leads_users import LeadUser
-from models.locations import Locations
+from models.five_x_five_locations import FiveXFiveLocations
 
 from schemas.integrations import Customer
 
@@ -42,13 +42,13 @@ class LeadsPersistence:
                 Lead,
                 LeadUser.status,
                 LeadUser.funnel,
-                Locations.state,
-                Locations.city,
+                FiveXFiveLocations.state,
+                FiveXFiveLocations.city,
                 # subquery.c.last_visited_at
             )
             .join(LeadUser, Lead.id == LeadUser.lead_id)
-            .join(LeadsLocations, Lead.id == LeadsLocations.lead_id)
-            .join(Locations, LeadsLocations.location_id == Locations.id)
+            .join(FiveXFiveUsersLocations, Lead.id == FiveXFiveUsersLocations.lead_id)
+            .join(FiveXFiveLocations, FiveXFiveUsersLocations.location_id == FiveXFiveLocations.id)
             # .outerjoin(subquery, LeadUser.id == subquery.c.leads_users_id)
             .filter(LeadUser.user_id == user_id)
         )
@@ -63,8 +63,8 @@ class LeadsPersistence:
             # 'last_visited_date': subquery.c.last_visited_at,
             'status': LeadUser.status,
             'funnel': LeadUser.funnel,
-            'state': Locations.state,
-            'city': Locations.city,
+            'state': FiveXFiveLocations.state,
+            'city': FiveXFiveLocations.city,
             'age': Lead.age_min
         }
         if sort_by:
@@ -88,7 +88,7 @@ class LeadsPersistence:
         #     )
         if regions:
             region_list = regions.split(',')
-            region_filters = [Locations.city.ilike(f'%{region.strip()}%') for region in region_list]
+            region_filters = [FiveXFiveLocations.city.ilike(f'%{region.strip()}%') for region in region_list]
             query = query.filter(or_(*region_filters))
         if emails:
             email_list = emails.split(',')
@@ -218,11 +218,11 @@ class LeadsPersistence:
                 Lead.age_min,
                 Lead.age_max,
                 Lead.job_title,
-                Locations.state,
-                Locations.city,
+                FiveXFiveLocations.state,
+                FiveXFiveLocations.city,
             )
-            .join(LeadsLocations, LeadsLocations.lead_id == Lead.id)
-            .join(Locations, LeadsLocations.location_id == Locations.id)
+            .join(FiveXFiveUsersLocations, FiveXFiveUsersLocations.five_x_five_user_id == Lead.id)
+            .join(FiveXFiveLocations, FiveXFiveUsersLocations.location_id == FiveXFiveUsersLocations.id)
         )
 
         if not_in_existing_lists:
@@ -237,7 +237,7 @@ class LeadsPersistence:
             query = query.filter(Lead.id.notin_(audience_subquery))
         if regions:
             regions = regions.split(',')
-            filters = [Locations.city == region.lower() for region in regions]
+            filters = [FiveXFiveLocations.city == region.lower() for region in regions]
             query = query.filter(or_(*filters))
         if professions:
             professions = professions.split(',')
