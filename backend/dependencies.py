@@ -235,8 +235,8 @@ def get_dashboard_service(user: User = Depends(check_user_authorization)):
 def get_pixel_installation_service(db: Session = Depends(get_db),
                                    send_grid_persistence_service: SendgridPersistence = Depends(
                                        get_send_grid_persistence_service),
-                                   user: User = Depends(check_user_authorization_without_pixel)):
-    return PixelInstallationService(db=db, user=user, send_grid_persistence_service=send_grid_persistence_service)
+                                   ):
+    return PixelInstallationService(db=db, send_grid_persistence_service=send_grid_persistence_service)
 
 
 def get_plans_service(user=Depends(check_user_authentication),
