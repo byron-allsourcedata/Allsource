@@ -18,7 +18,7 @@ export const accountStyles: { [key: string]: SxProps<Theme> } = {
       },
     },
     '& .MuiInputLabel-root.Mui-focused': {
-      color: '#A3B0C2',            
+      color: '#A3B0C2',
     },
   },
   header_text: {

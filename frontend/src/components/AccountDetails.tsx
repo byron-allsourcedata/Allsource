@@ -439,8 +439,8 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                 {lead.institution_url ? (
                                     <Link
                                         href={`${lead.institution_url}`}
-                                        target="_blank" 
-                                        rel="noopener noreferrer" 
+                                        target="_blank"
+                                        rel="noopener noreferrer"
                                         underline="none"
                                         sx={{
                                             color: 'rgba(80, 82, 178, 1)',
@@ -479,8 +479,8 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                     <Link
                                         href={`${lead.company_linkedin_url}`}
                                         underline="none"
-                                        target="_blank" 
-                                        rel="noopener noreferrer" 
+                                        target="_blank"
+                                        rel="noopener noreferrer"
                                         sx={{
                                             color: 'rgba(80, 82, 178, 1)',
                                         }}
