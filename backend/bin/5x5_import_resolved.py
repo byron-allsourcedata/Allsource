@@ -1,33 +1,30 @@
+import json
+import logging
+import os
+import sys
 import tempfile
-import time
-import re
 import traceback
+import urllib.parse
+from datetime import time
 
 import boto3
 import pyarrow.parquet as pq
-import logging
-import urllib.parse
-import json
-import sys
-import os
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
+from models.leads_requests import LeadsRequests
+from models.leads_visits import LeadsVisits
 from models.five_x_five_hems import FiveXFiveHems
-from models.leads_locations import LeadsLocations
-from models.locations import Locations
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from models.five_x_five_users import FiveXFiveUser
-from models.lead_visits import LeadVisits
-from models.leads import Lead
 from models.leads_users import LeadUser
 from models.users import Users
 from dotenv import load_dotenv
 from sqlalchemy.dialects.postgresql import insert
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, timedelta
 
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
@@ -48,120 +45,112 @@ def assume_role(role_arn, sts_client):
     return credentials
 
 
-def process_file(bucket, file, session):
-    obj = bucket.Object(file)
+def process_file(bucket, file_key, session):
+    obj = bucket.Object(file_key)
     file_data = obj.get()['Body'].read()
-    if file.endswith('.snappy.parquet'):
-        with tempfile.NamedTemporaryFile() as temp_file:
+    if file_key.endswith('.snappy.parquet'):
+        with tempfile.NamedTemporaryFile(delete=True) as temp_file:
             temp_file.write(file_data)
             temp_file.seek(0)
             table = pq.read_table(temp_file.name)
-            for i in range(len(table)):
-                up_id = table['UP_ID'][i]
-                if not up_id.is_valid and str(up_id) == 'None':
-                    up_id = session.query(FiveXFiveHems.up_id).filter(
-                        FiveXFiveHems.sha256_lc_hem == str(table['SHA256_LOWER_CASE'][i])).limit(2).all()
-                    if len(up_id) != 1:
-                        continue
-                    up_id = up_id[0]
-                five_x_five_user = session.query(FiveXFiveUser).filter(
-                    FiveXFiveUser.up_id == str(up_id).lower()).first()
-                if five_x_five_user:
-                    logging.info(f"UP_ID {up_id} found in table")
-                    partner_uid_decoded = urllib.parse.unquote(str(table['PARTNER_UID'][i]).lower())
-                    partner_uid_dict = json.loads(partner_uid_decoded)
-                    partner_uid_client_id = partner_uid_dict.get('client_id')
-                    page = partner_uid_dict.get('current_page')
-                    user = session.query(Users).filter(
-                        Users.data_provider_id == str(partner_uid_client_id)).first()
-                    if not user:
-                        logging.info(f"User not found with client_id {partner_uid_client_id}")
-                        continue
-                    lead_id = session.query(Lead.id).filter(Lead.up_id == str(up_id).lower()).first()
-                    if lead_id is not None:
-                        lead_id = lead_id[0]
-                    if not lead_id:
-                        age_range = five_x_five_user.age_range
-                        lead = Lead(
-                            first_name=five_x_five_user.first_name,
-                            mobile_phone=five_x_five_user.personal_phone if five_x_five_user.personal_phone is not None else five_x_five_user.mobile_phone,
-                            business_email=five_x_five_user.business_email,
-                            company_name=five_x_five_user.company_name,
-                            company_domain=five_x_five_user.company_domain,
-                            company_phone=five_x_five_user.company_phone,
-                            company_sic=five_x_five_user.company_sic,
-                            company_address=five_x_five_user.company_address,
-                            company_city=five_x_five_user.company_city,
-                            company_state=five_x_five_user.company_state,
-                            company_zip=five_x_five_user.company_zip,
-                            company_linkedin_url=five_x_five_user.company_linkedin_url,
-                            company_revenue=five_x_five_user.company_revenue,
-                            company_employee_count=five_x_five_user.company_employee_count,
-                            last_name=five_x_five_user.last_name,
-                            up_id=str(up_id),
-                            trovo_id=str(table['TROVO_ID'][i]),
-                            partner_id=str(table['PARTNER_ID'][i]),
-                            partner_uid=str(table['PARTNER_UID'][i]),
-                            sha256_lower_case=str(table['SHA256_LOWER_CASE'][i]),
-                            ip=str(table['IP'][i]),
-                            age_min=None,
-                            age_max=None,
-                            gender=five_x_five_user.gender,
-                            net_worth=five_x_five_user.net_worth,
-                            job_title=five_x_five_user.job_title
-                        )
-                        if age_range:
-                            if 'and older' in age_range:
-                                lead.age_min = lead.age_max = int(age_range.split()[0])
-                            else:
-                                age_min, age_max = age_range.split('-')
-                                lead.age_min = int(age_min)
-                                lead.age_max = int(age_max)
-                        session.add(lead)
-                        session.commit()
-                        lead_id = lead.id
-                    city = five_x_five_user.personal_city
-                    state = five_x_five_user.personal_state
-                    if city:
-                        city = five_x_five_user.personal_city.lower()
-                    if state:
-                        state = five_x_five_user.personal_state.lower()
-                    location = session.query(Locations).filter(Locations.country == 'us',
-                                                               Locations.city == city,
-                                                               Locations.state == state).first()
-                    if not location:
-                        location = Locations(
-                            country='us',
-                            city=city,
-                            state=state,
-                        )
-                        session.add(location)
-                        session.commit()
-                    leads_locations = insert(LeadsLocations).values(
-                        lead_id=lead_id,
-                        location_id=location.id
-                    ).on_conflict_do_nothing()
-                    session.execute(leads_locations)
-                    session.commit()
-                    lead_user = session.query(LeadUser).filter_by(lead_id=lead_id,
-                                                                  user_id=user.id).first()
-                    if not lead_user:
-                        lead_user = LeadUser(lead_id=lead_id, user_id=user.id)
-                        session.add(lead_user)
-                        session.commit()
-                    leads_users_id = lead_user.id
-                    visited_at = table['EVENT_DATE'][i].as_py().isoformat()
-                    lead_visit = insert(LeadVisits).values(
-                        leads_users_id=leads_users_id, visited_at=visited_at,
-                        page=page
-                    ).on_conflict_do_nothing()
-                    session.execute(lead_visit)
-                    session.commit()
-                    logging.info(f"Processed UP_ID {up_id}")
-        last_processed_file = file
-        logging.info(f"write last processed file {file}")
-        with open(LAST_PROCESSED_FILE_PATH, "w") as file:
-            file.write(last_processed_file)
+            process_table(table, session, file_key)
+
+
+def process_table(table, session, file_key):
+    for i in range(len(table)):
+        up_id = table['UP_ID'][i]
+        if not up_id.is_valid and str(up_id) == 'None':
+            up_id = session.query(FiveXFiveHems.up_id).filter(
+                FiveXFiveHems.sha256_lc_hem == str(table['SHA256_LOWER_CASE'][i])).scalar()
+            if not up_id:
+                continue
+        five_x_five_user = session.query(FiveXFiveUser).filter(FiveXFiveUser.up_id == str(up_id).lower()).first()
+        if five_x_five_user:
+            logging.info(f"UP_ID {up_id} found in table")
+            process_user_data(table, i, five_x_five_user, session)
+    update_last_processed_file(file_key)
+
+
+def process_user_data(table, index, five_x_five_user, session):
+    partner_uid_decoded = urllib.parse.unquote(str(table['PARTNER_UID'][index]).lower())
+    partner_uid_dict = json.loads(partner_uid_decoded)
+    partner_uid_client_id = partner_uid_dict.get('client_id')
+    page = partner_uid_dict.get('current_page')
+    user = session.query(Users).filter(Users.data_provider_id == str(partner_uid_client_id)).first()
+    if not user:
+        logging.info(f"User not found with client_id {partner_uid_client_id}")
+        return
+
+    lead_user = session.query(LeadUser).filter_by(five_x_five_user_id=five_x_five_user.id, user_id=user.id).first()
+    if not lead_user:
+        lead_user = LeadUser(five_x_five_user_id=five_x_five_user.id, user_id=user.id)
+        session.add(lead_user)
+        session.flush()
+
+    requested_at = table['EVENT_DATE'][index].as_py().isoformat()
+    visited_datetime = datetime.fromisoformat(requested_at)
+    thirty_minutes_ago = visited_datetime - timedelta(minutes=30)
+
+    leads_requests = session.query(LeadsRequests).filter(
+        LeadsRequests.lead_id == lead_user.id,
+        LeadsRequests.requested_at <= thirty_minutes_ago
+    ).all()
+    if leads_requests:
+        lead_visits = leads_requests[0].visit_id
+        logging.info("leads requests exists")
+        process_leads_requests(visited_datetime, leads_requests, lead_user.id, session)
+    else:
+        logging.info("leads requests not exists")
+        lead_visits = add_new_leads_visits(visited_datetime, lead_user.id, session).id
+    lead_request = insert(LeadsRequests).values(
+        lead_id=lead_user.id,
+        page=page, requested_at=requested_at, visit_id=lead_visits
+    ).on_conflict_do_nothing()
+    session.execute(lead_request)
+    session.commit()
+
+
+def process_leads_requests(requested_at, leads_requests, lead_id, session):
+    start_date, start_time, end_time, pages_count, average_time_sec = requested_at.date(), requested_at.time(), 10, 1, 10
+    for lead_request in leads_requests:
+        request_date = lead_request.requested_at
+        if request_date < datetime.combine(start_date, start_time):
+            start_date = request_date.date()
+            start_time = request_date.time()
+        pages_count += 1
+        end_time += 10
+        average_time_sec += 10
+
+    date_page = datetime.combine(start_date, start_time) + timedelta(seconds=end_time)
+    end_date = date_page.date()
+    end_time = date_page.time()
+    session.query(LeadsVisits).filter_by(lead_id=lead_id).update({
+        'start_date': start_date, 'start_time': start_time, 'end_date': end_date,
+        'end_time': end_time, 'pages_count': pages_count, 'average_time_sec': average_time_sec
+    })
+    session.flush()
+
+def add_new_leads_visits(visited_datetime, lead_id, session):
+    start_date = visited_datetime.date()
+    start_time = visited_datetime.time()
+    date_page = datetime.combine(start_date, start_time) + timedelta(seconds=10)
+    end_date = date_page.date()
+    end_time = date_page.time()
+
+
+    leads_visits = LeadsVisits(
+        start_date=start_date, start_time=start_time, end_date=end_date, end_time=end_time,
+        pages_count=1, average_time_sec=10, lead_id=lead_id
+    )
+    session.add(leads_visits)
+    session.flush()
+    return leads_visits
+
+
+def update_last_processed_file(file_key):
+    logging.info(f"Writing last processed file {file_key}")
+    with open(LAST_PROCESSED_FILE_PATH, "w") as file:
+        file.write(file_key)
 
 
 def check_visitors(bucket, files):
@@ -172,10 +161,11 @@ def check_visitors(bucket, files):
         file_data = obj.get()['Body'].read()
 
         if file.key.endswith('.snappy.parquet'):
-            with tempfile.NamedTemporaryFile() as temp_file:
+            with tempfile.NamedTemporaryFile(delete=False) as temp_file:
                 temp_file.write(file_data)
-                temp_file.seek(0)
+                temp_file.close()
                 table = pq.read_table(temp_file.name)
+                os.remove(temp_file.name)
 
                 for i in range(len(table)):
                     event_date = table['EVENT_DATE'][i].as_py().date()
