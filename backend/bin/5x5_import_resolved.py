@@ -78,9 +78,9 @@ def process_user_data(table, index, five_x_five_user, session: Session):
     partner_uid_client_id = partner_uid_dict.get('client_id')
     page = partner_uid_dict.get('current_page')
     if partner_uid_dict.get('item'):
-        behavior_type = 'Viewed product'
+        behavior_type = 'viewed_product'
     if partner_uid_dict.get('addToCart'):
-        behavior_type = 'Add to cart'
+        behavior_type = 'added_to_cart'
     user = session.query(Users).filter(Users.data_provider_id == str(partner_uid_client_id)).first()
     if not user:
         logging.info(f"User not found with client_id {partner_uid_client_id}")
@@ -105,7 +105,7 @@ def process_user_data(table, index, five_x_five_user, session: Session):
         logging.info("leads requests exists")
         visit_first = session.query(LeadsVisits).filter(LeadsVisits.lead_id == lead_user.id).order_by(LeadsVisits.id.asc).all()
         if visit_first[0].id == lead_request[0].visit_id:
-            if lead_user.behavior_type in ('Visitor', 'Viewed product') and behavior_type in ('Viewed product', 'Add to cart'):
+            if lead_user.behavior_type in ('visitor', 'viewed_product') and behavior_type in ('viewed_product', 'added_to_cart'):
                 session.query(LeadUser).filter(LeadUser.id == lead_user.id).update({
                     LeadUser.behavior_type: behavior_type
                 })
