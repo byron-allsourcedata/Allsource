@@ -45,14 +45,14 @@ def save_emails_to_user(session, emails, five_x_five_user_id, type):
             email_host = None
             if not email_obj:
                 email_host = email.split('@')[-1] if '@' in email else None
-                if email_host
+                if email_host:
                     email_obj = FiveXFiveEmails(
                         email=email,
                         email_host=email_host
                     )
                     session.add(email_obj)
                     session.flush()
-            if email_obj
+            if email_obj:
                 five_x_five_user_email = insert(FiveXFiveUsersEmails).values(
                     user_id=five_x_five_user_id,
                     email_id=email_obj.id,
