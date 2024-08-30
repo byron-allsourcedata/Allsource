@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, DATE, TIME
+from sqlalchemy import Column, Integer, DATE, TIME, VARCHAR
 
 from .base import Base
 
@@ -14,3 +14,4 @@ class LeadsVisits(Base):
     pages_count = Column(Integer, nullable=True, unique=True)
     average_time_sec = Column(Integer, nullable=True)
     lead_id = Column(Integer, nullable=False)
+    behavior_type = Column(VARCHAR, nullable=True)
