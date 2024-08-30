@@ -24,10 +24,10 @@ class LeadsService:
                 'funnel': funnel,
                 'state': state,
                 'city': city,
-                # 'last_visited_date': last_visited_at.strftime('%d.%m.%Y') if last_visited_at else 'N/A',
-                # 'last_visited_time': last_visited_at.strftime('%H:%M') if last_visited_at else 'N/A'
+                'last_visited_date': last_visited_at.strftime('%d.%m.%Y') if last_visited_at else 'N/A',
+                'last_visited_time': last_visited_at.strftime('%H:%M') if last_visited_at else 'N/A'
             }
-            for lead, status, funnel, state, city in leads
+            for lead, status, funnel, state, city, last_visited_at in leads
         ]
 
         return leads_list, count, max_page

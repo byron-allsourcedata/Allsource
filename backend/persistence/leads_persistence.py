@@ -12,6 +12,7 @@ from sqlalchemy.sql import func
 
 from models.audience import Audience
 from models.audience_leads import AudienceLeads
+from models.five_x_five_users import FiveXFiveUser
 from models.leads_visits import LeadsVisits
 from models.leads import Lead
 from models.five_x_five_users_locations import FiveXFiveUsersLocations
@@ -29,27 +30,27 @@ class LeadsPersistence:
 
     def filter_leads(self, user_id, page, per_page, status, from_date, to_date, regions, page_visits, average_time_spent,
                      lead_funnel, emails, recurring_visits, sort_by, sort_order, search_query):
-        # subquery = (
-        #     self.db.query(
-        #         LeadsVisits.leads_users_id,
-        #         func.max(LeadsVisits.visited_at).label('last_visited_at')
-        #     )
-        #     .group_by(LeadsVisits.leads_users_id)
-        #     .subquery()
-        # )
+        subquery = (
+            self.db.query(
+                LeadsVisits.lead_id,
+                func.max(LeadsVisits.start_date).label('last_visited_at')
+            )
+            .group_by(LeadsVisits.lead_id)
+            .subquery()
+        )
         query = (
             self.db.query(
-                Lead,
+                FiveXFiveUser,
                 LeadUser.status,
                 LeadUser.funnel,
                 FiveXFiveLocations.state,
                 FiveXFiveLocations.city,
-                # subquery.c.last_visited_at
+                subquery.c.last_visited_at
             )
-            .join(LeadUser, Lead.id == LeadUser.lead_id)
-            .join(FiveXFiveUsersLocations, Lead.id == FiveXFiveUsersLocations.lead_id)
-            .join(FiveXFiveLocations, FiveXFiveUsersLocations.location_id == FiveXFiveLocations.id)
-            # .outerjoin(subquery, LeadUser.id == subquery.c.leads_users_id)
+            .join(LeadUser, LeadUser.five_x_five_user_id == FiveXFiveUser.id)
+            .join(FiveXFiveUsersLocations, FiveXFiveUsersLocations.five_x_five_user_id == FiveXFiveUser.id)
+            .join(FiveXFiveLocations, FiveXFiveLocations.id == FiveXFiveUsersLocations.location_id)
+            .outerjoin(subquery, LeadUser.id == subquery.c.lead_id)
             .filter(LeadUser.user_id == user_id)
         )
         sort_options = {
@@ -60,7 +61,7 @@ class LeadsPersistence:
             'no_of_visits': Lead.no_of_visits,
             'no_of_page_visits': Lead.no_of_page_visits,
             'gender': Lead.gender,
-            # 'last_visited_date': subquery.c.last_visited_at,
+            'last_visited_date': subquery.c.last_visited_at,
             'status': LeadUser.status,
             'funnel': LeadUser.funnel,
             'state': FiveXFiveLocations.state,
