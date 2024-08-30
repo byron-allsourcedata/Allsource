@@ -11,6 +11,9 @@ from sqlalchemy import create_engine
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
+
+from models.five_x_five_locations import FiveXFiveLocations
+from models.five_x_five_users_locations import FiveXFiveUsersLocations
 from models.five_x_five_phones import FiveXFivePhones
 from models.five_x_five_users_phones import FiveXFiveUsersPhones
 from models.five_x_five_emails import FiveXFiveEmails
@@ -84,6 +87,35 @@ def save_phones_to_user(session, phones, five_x_five_user_id, type):
             ).on_conflict_do_nothing()
             session.execute(five_x_five_user_phone)
             session.flush()
+
+
+def save_city_and_state_to_user(session, personal_city, personal_state, five_x_five_user_id):
+    city = convert_to_none(personal_city)
+    state = convert_to_none(personal_state)
+    if city is None and state is None:
+        return False
+    if city:
+        city = convert_to_none(personal_city).lower()
+    if state:
+        state = convert_to_none(personal_state).lower()
+    location = session.query(FiveXFiveLocations).filter(FiveXFiveLocations.country == 'us',
+                                               FiveXFiveLocations.city == city,
+                                               FiveXFiveLocations.state == state).first()
+    if not location:
+        location = FiveXFiveLocations(
+            country='us',
+            city=city,
+            state=state,
+        )
+        session.add(location)
+        session.flush()
+
+    leads_locations = insert(FiveXFiveUsersLocations).values(
+        five_x_five_user_id=five_x_five_user_id,
+        location_id=location.id
+    ).on_conflict_do_nothing()
+    session.execute(leads_locations)
+    session.flush()
 
 
 async def on_message_received(message, session):
@@ -290,6 +322,10 @@ async def on_message_received(message, session):
         save_phones_to_user(session, mobile_phone, five_x_five_user_id, 'mobile_phone')
         save_phones_to_user(session, direct_number, five_x_five_user_id, 'direct_number')
         save_phones_to_user(session, personal_phone, five_x_five_user_id, 'personal_phone')
+
+        save_city_and_state_to_user(session, user_json.get('PERSONAL_CITY'), user_json.get('PERSONAL_STATE'),
+                                    five_x_five_user_id)
+
         session.commit()
 
         await message.ack()
