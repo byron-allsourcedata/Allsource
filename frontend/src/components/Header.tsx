@@ -76,7 +76,7 @@ const Header = () => {
               borderRadius: '3.27px',
             marginRight: '1.5rem'}}
           >
-          <Image src={'notification.svg'} alt="Person" width={18} height={18} />
+          <Image src={'/notification.svg'} alt="Person" width={18} height={18} />
           </Button>
           
           <Button
