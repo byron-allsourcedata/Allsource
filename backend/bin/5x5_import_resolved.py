@@ -95,36 +95,15 @@ def process_user_data(table, index, five_x_five_user, session: Session):
 
     requested_at = table['EVENT_DATE'][index].as_py().isoformat()
     visited_datetime = datetime.fromisoformat(requested_at)
-
     thirty_minutes_ago = visited_datetime - timedelta(minutes=30)
-    thirty_minutes_later = visited_datetime + timedelta(minutes=30)
 
-    subquery = (
-        session.query(
-            LeadsRequests.requested_at,
-            func.lead(LeadsRequests.requested_at).over(
-                partition_by=LeadsRequests.lead_id,
-                order_by=LeadsRequests.requested_at
-            ).label('next_visit')
-        )
-        .filter(LeadsRequests.lead_id == lead_user.id)
+    subquery = session.query(LeadsRequests.visit_id).filter(
+        LeadsRequests.lead_id == lead_user.id,
+        LeadsRequests.requested_at >= thirty_minutes_ago
     ).subquery()
-
-    leads_requests = (
-        session.query(subquery.c.requested_at)
-        .filter(
-            and_(
-                subquery.c.requested_at >= thirty_minutes_ago,
-                subquery.c.requested_at <= thirty_minutes_later,
-                or_(
-                    subquery.c.next_visit.is_(None),
-                    subquery.c.next_visit - subquery.c.requested_at > timedelta(minutes=30)
-                )
-            )
-        )
-        .order_by(subquery.c.requested_at)
-        .all()
-    )
+    leads_requests = session.query(LeadsRequests).filter(
+        LeadsRequests.visit_id >= subquery
+    ).all()
 
     if leads_requests:
         lead_visits = leads_requests[0].visit_id
