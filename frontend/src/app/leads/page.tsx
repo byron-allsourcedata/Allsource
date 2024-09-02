@@ -1119,11 +1119,12 @@ const Leads: React.FC = () => {
                                                 component={Paper}
                                                 sx={{
                                                     border: '1px solid rgba(235, 235, 235, 1)',
-                                                    maxHeight: '70vh',
-                                                    overflowY: 'auto'
+                                                    overflowY: 'auto',
+                                                    height: '58vh'
+                                                     
                                                 }}
                                             >
-                                                <Table sx={{ minWidth: 850 }} stickyHeader aria-label="leads table">
+                                                <Table stickyHeader aria-label="leads table">
                                                     <TableHead>
                                                         <TableRow>
                                                             {[
