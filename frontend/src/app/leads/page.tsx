@@ -24,6 +24,7 @@ import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import dayjs from 'dayjs';
 import PopupDetails from '@/components/AccountDetails';
+import CloseIcon from '@mui/icons-material/Close';
 
 
 const Sidebar = dynamic(() => import('../../components/Sidebar'), {
@@ -720,7 +721,7 @@ const Leads: React.FC = () => {
                                     flexDirection: 'row',
                                     alignItems: 'center',
                                     justifyContent: 'space-between',
-                                    marginTop: '2.375rem',
+                                    marginTop: '1rem',
                                     flexWrap: 'wrap',
                                     gap: '15px',
                                     '@media (max-width: 900px)': {
@@ -1018,8 +1019,8 @@ const Leads: React.FC = () => {
                                 {selectedFilters.length > 0 && (
                                     <Chip
                                         label="Clear all"
-                                        onDelete={handleResetFilters}
-                                        sx={{ backgroundColor: 'rgba(255, 255, 255, 1)', color: 'rgba(80, 82, 178, 1)', border: '1px solid rgba(220, 220, 239, 1)', borderRadius: '3px', fontFamily: 'Nunito', fontWeight: '600', fontSize: '12px' }}
+                                        onClick={handleResetFilters}
+                                        sx={{ backgroundColor: 'rgba(255, 255, 255, 1)', color: 'rgba(80, 82, 178, 1)', borderRadius: '3px', fontFamily: 'Nunito', fontWeight: '600', fontSize: '12px' }}
                                     />
                                 )}
                                 {selectedFilters.map(filter => (
@@ -1027,11 +1028,20 @@ const Leads: React.FC = () => {
                                         key={filter.label}
                                         label={`${filter.value}`}
                                         onDelete={() => handleDeleteFilter(filter)}
-                                        sx={{ borderRadius: '4.5px', backgroundColor: 'rgba(237, 237, 247, 1)', color: 'rgba(74, 74, 74, 1)', fontFamily: 'Nunito', fontWeight: '600', fontSize: '13px' }}
+                                        deleteIcon={
+                                            <CloseIcon 
+                                                sx={{ 
+                                                    backgroundColor: 'transparent', 
+                                                    color: 'rgba(74, 74, 74, 1)', 
+                                                    fontSize: '14px' 
+                                                }} 
+                                            />
+                                        }
+                                        sx={{ borderRadius: '4.5px', backgroundColor: 'rgba(237, 237, 247, 1)', color: 'rgba(74, 74, 74, 1)', fontFamily: 'Nunito', fontWeight: '600', fontSize: '12px' }}
                                     />
                                 ))}
                             </Box>
-                            <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', maxWidth: '100%', pl: 0, pr: 0, pt: '22px', pb: '28px',
+                            <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', maxWidth: '100%', pl: 0, pr: 0, pt: '14px', pb: '20px',
                                 '@media (max-width: 900px)': {
                                     pt: '2px',
                                     pb: '18px'
@@ -1109,7 +1119,7 @@ const Leads: React.FC = () => {
                                                 component={Paper}
                                                 sx={{
                                                     border: '1px solid rgba(235, 235, 235, 1)',
-                                                    maxHeight: '60vh',
+                                                    maxHeight: '70vh',
                                                     overflowY: 'auto'
                                                 }}
                                             >
