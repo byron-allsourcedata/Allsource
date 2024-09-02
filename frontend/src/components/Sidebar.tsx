@@ -30,7 +30,8 @@ const sidebarStyles = {
         height: '91vh',
         display: 'flex',
         flexDirection: 'column',
-        justifyContent: 'start'
+        justifyContent: 'start',
+        overflowY: 'auto'
     },
     menu: {
         alignItems: 'center',

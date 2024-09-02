@@ -684,10 +684,11 @@ const Leads: React.FC = () => {
                     />
                 </Box>
             )}
-            <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh',
+            <Box sx={{ display: 'flex', flexDirection: 'column', overflow: 'hidden',
             '@media (max-width: 900px)': {
                     paddingTop: '72px',
-                    paddingRight: 0
+                    paddingRight: 0,
+                    minHeight: '100vh'
 
                 }
              }}>
@@ -1108,7 +1109,7 @@ const Leads: React.FC = () => {
                                                 component={Paper}
                                                 sx={{
                                                     border: '1px solid rgba(235, 235, 235, 1)',
-                                                    maxHeight: '80vh',
+                                                    maxHeight: '60vh',
                                                     overflowY: 'auto'
                                                 }}
                                             >
