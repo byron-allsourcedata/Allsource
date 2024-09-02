@@ -73,7 +73,7 @@ class AudiencePersistence:
     def create_user_audience(self, user_id, leads_ids, audience_name):
         lead_users = (
             self.db.query(LeadUser)
-            .filter(LeadUser.user_id == user_id, LeadUser.lead_id.in_(leads_ids))
+            .filter(LeadUser.user_id == user_id, LeadUser.five_x_five_user_id.in_(leads_ids))
             .all()
         )
         if not audience_name or not audience_name.strip():
@@ -87,7 +87,7 @@ class AudiencePersistence:
         self.db.add(audience)
         self.db.commit()
         for lead_user in lead_users:
-            audience_lead = AudienceLeads(audience_id=audience.id, lead_id=lead_user.lead_id)
+            audience_lead = AudienceLeads(audience_id=audience.id, lead_id=lead_user.five_x_five_user_id)
             self.db.add(audience_lead)
 
         self.db.commit()
