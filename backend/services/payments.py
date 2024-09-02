@@ -41,4 +41,23 @@ class PaymentsService:
         if subscription_data:
             return BaseEnum.SUCCESS
         return BaseEnum.FAILURE
+    
+    def upgrade_and_downgrade_user_subscription(self, price_id):
+        subscription_id = self.plans_service.get_subscription_id()
+        subscription = stripe.Subscription.retrieve(subscription_id)
+        subscription_item_id = subscription['items']['data'][0]['id']
+        subscription_data = stripe.Subscription.modify(
+            subscription_id,
+            items=[{
+                'id': subscription_item_id,
+                'price': price_id,
+            }],
+            proration_behavior='create_prorations'
+        )
+        if subscription_data:
+            return BaseEnum.SUCCESS        
+        return BaseEnum.FAILURE
+
+
+
 
