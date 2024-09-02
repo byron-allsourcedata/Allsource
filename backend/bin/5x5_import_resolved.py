@@ -77,6 +77,7 @@ def process_user_data(table, index, five_x_five_user, session: Session):
     partner_uid_dict = json.loads(partner_uid_decoded)
     partner_uid_client_id = partner_uid_dict.get('client_id')
     page = partner_uid_dict.get('current_page')
+    behavior_type = None
     if partner_uid_dict.get('item'):
         behavior_type = 'viewed_product'
     if partner_uid_dict.get('addToCart'):
@@ -98,22 +99,25 @@ def process_user_data(table, index, five_x_five_user, session: Session):
 
     leads_requests = session.query(LeadsRequests).filter(
         LeadsRequests.lead_id == lead_user.id,
-        LeadsRequests.requested_at <= thirty_minutes_ago
+        LeadsRequests.requested_at >= thirty_minutes_ago
     ).all()
     if leads_requests:
         lead_visits = leads_requests[0].visit_id
         logging.info("leads requests exists")
-        visit_first = session.query(LeadsVisits).filter(LeadsVisits.lead_id == lead_user.id).order_by(LeadsVisits.id.asc).all()
-        if visit_first[0].id == lead_request[0].visit_id:
-            if lead_user.behavior_type in ('visitor', 'viewed_product') and behavior_type in ('viewed_product', 'added_to_cart'):
+        visit_first = session.query(LeadsVisits).filter(LeadsVisits.lead_id == lead_user.id).order_by(
+            LeadsVisits.id.asc).first
+        if visit_first.id == leads_requests[0].visit_id:
+            if lead_user.behavior_type in ('visitor', 'viewed_product') and behavior_type in (
+            'viewed_product', 'added_to_cart') \
+                    and lead_user.behavior_type != behavior_type:
                 session.query(LeadUser).filter(LeadUser.id == lead_user.id).update({
                     LeadUser.behavior_type: behavior_type
                 })
                 session.commit()
-        process_leads_requests(visited_datetime, leads_requests, lead_user.id, session)
+        process_leads_requests(visited_datetime, leads_requests, lead_user.id, session, behavior_type)
     else:
         logging.info("leads requests not exists")
-        lead_visits = add_new_leads_visits(visited_datetime, lead_user.id, session).id
+        lead_visits = add_new_leads_visits(visited_datetime, lead_user.id, session, behavior_type).id
     lead_request = insert(LeadsRequests).values(
         lead_id=lead_user.id,
         page=page, requested_at=requested_at, visit_id=lead_visits
@@ -122,7 +126,7 @@ def process_user_data(table, index, five_x_five_user, session: Session):
     session.commit()
 
 
-def process_leads_requests(requested_at, leads_requests, lead_id, session):
+def process_leads_requests(requested_at, leads_requests, lead_id, session, behavior_type):
     start_date, start_time, end_time, pages_count, average_time_sec = requested_at.date(), requested_at.time(), 10, 1, 10
     for lead_request in leads_requests:
         request_date = lead_request.requested_at
@@ -138,21 +142,22 @@ def process_leads_requests(requested_at, leads_requests, lead_id, session):
     end_time = date_page.time()
     session.query(LeadsVisits).filter_by(lead_id=lead_id).update({
         'start_date': start_date, 'start_time': start_time, 'end_date': end_date,
-        'end_time': end_time, 'pages_count': pages_count, 'average_time_sec': average_time_sec
+        'end_time': end_time, 'pages_count': pages_count, 'average_time_sec': average_time_sec,
+        'behavior_type': behavior_type
     })
     session.flush()
 
-def add_new_leads_visits(visited_datetime, lead_id, session):
+
+def add_new_leads_visits(visited_datetime, lead_id, session, behavior_type):
     start_date = visited_datetime.date()
     start_time = visited_datetime.time()
     date_page = datetime.combine(start_date, start_time) + timedelta(seconds=10)
     end_date = date_page.date()
     end_time = date_page.time()
 
-
     leads_visits = LeadsVisits(
         start_date=start_date, start_time=start_time, end_date=end_date, end_time=end_time,
-        pages_count=1, average_time_sec=10, lead_id=lead_id
+        pages_count=1, average_time_sec=10, lead_id=lead_id, behavior_type=behavior_type
     )
     session.add(leads_visits)
     session.flush()

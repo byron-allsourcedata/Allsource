@@ -1,6 +1,7 @@
 import logging
 from datetime import datetime, timedelta
 
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from enums import StripePaymentStatusEnum
@@ -106,14 +107,15 @@ class SubscriptionService:
         return response
 
     def is_user_has_active_subscription(self, user_id):
-        user_plan = self.db.query(
-            UserSubscriptions.plan_end
-        ).filter(
-            UserSubscriptions.user_id == user_id,
-        ).first()
-        if user_plan and user_plan.plan_end:
-            current_date = datetime.now()
-            if user_plan.plan_end > current_date:
+        user_plan = self.db.query(UserSubscriptions.plan_end).filter(
+            UserSubscriptions.user_id == user_id
+        ).order_by(desc(UserSubscriptions.plan_end)).first()
+        if user_plan:
+            if user_plan.plan_end:
+                current_date = datetime.now()
+                if user_plan.plan_end > current_date:
+                    return True
+            else:
                 return True
         return False
 
@@ -176,65 +178,57 @@ class SubscriptionService:
             stripe_payload.get("data").get("object").get("plan").get("product"))
         payment_platform_subscription_id = stripe_payload.get("data").get("object").get("id")
         plan_id = self.plans_persistence.get_plan_by_title(plan_type)
-        subscription_obj = self.db.query(Subscription).filter_by(user_id=user_id).first()
-
-        if subscription_obj:
-            subscription_obj.plan_start = start_date
-            subscription_obj.plan_end = end_date
-            subscription_obj.status = status
-            subscription_obj.platform_subscription_id = payment_platform_subscription_id
-            subscription_obj.plan_id = plan_id
-            subscription_obj.stripe_request_created_at = stripe_request_created_at
-        else:
-            domains_limit, users_limit, integrations_limit, audiences_limit = self.plans_persistence.get_plan_limit_by_id(
-                plan_id=plan_id)
-            subscription_obj = Subscription(
-                user_id=user_id,
-                plan_start=start_date,
-                plan_end=end_date,
-                status=status,
-                platform_subscription_id=payment_platform_subscription_id,
-                plan_id=plan_id,
-                stripe_request_created_at=stripe_request_created_at,
-                domains_limit=domains_limit,
-                users_limit=users_limit,
-                integrations_limit=integrations_limit,
-                audiences_limit=audiences_limit
-            )
-            self.db.add(subscription_obj)
+        domains_limit, users_limit, integrations_limit, audiences_limit = self.plans_persistence.get_plan_limit_by_id(
+            plan_id=plan_id)
+        subscription_obj = Subscription(
+            user_id=user_id,
+            plan_start=start_date,
+            plan_end=end_date,
+            status=status,
+            platform_subscription_id=payment_platform_subscription_id,
+            plan_id=plan_id,
+            stripe_request_created_at=stripe_request_created_at,
+            domains_limit=domains_limit,
+            users_limit=users_limit,
+            integrations_limit=integrations_limit,
+            audiences_limit=audiences_limit
+        )
+        self.db.add(subscription_obj)
         self.db.commit()
         return subscription_obj
 
     def create_subscription_from_free_trial(self, user_id):
-        price = '0'
+        plan = self.plans_persistence.get_free_trail_plan()
         status = 'active'
-        created_at = datetime.strptime(get_utc_aware_date_for_postgres(), '%Y-%m-%dT%H:%M:%SZ')  # Updated format
-        subscription = self.db.query(SubscriptionPlan).filter(SubscriptionPlan.is_free_trial == True).first()
-        trial_days = timedelta(days=subscription.trial_days)
-        end_date = (created_at + trial_days).isoformat() + "Z"
-        plan_id = self.plans_persistence.get_free_trail_plan()
+        created_at = datetime.strptime(get_utc_aware_date_for_postgres(), '%Y-%m-%dT%H:%M:%SZ')
+        domains_limit, users_limit, integrations_limit, audiences_limit = self.plans_persistence.get_plan_limit_by_id(
+            plan_id=plan.id)
         add_subscription_obj = Subscription(
+            domains_limit=domains_limit,
+            integrations_limit=integrations_limit,
+            audiences_limit=audiences_limit,
+            users_limit=users_limit,
             user_id=user_id,
-            price=price,
-            plan_start=created_at.isoformat() + "Z",
-            plan_end=end_date,
             updated_at=created_at.isoformat() + "Z",
             created_at=created_at.isoformat() + "Z",
             status=status,
-            plan_id=plan_id,
+            plan_id=plan.id,
             is_trial=True
         )
+        self.db.add(add_subscription_obj)
 
-        self.db.merge(add_subscription_obj)
-        self.db.query(User).filter(User.id == user_id).update({Users.activate_steps_percent: 50},
+        self.db.query(User).filter(User.id == user_id).update({User.activate_steps_percent: 50},
                                                               synchronize_session=False)
         self.db.commit()
-        return add_subscription_obj
 
     def remove_trial(self, user_id: int):
         self.db.query(UserSubscriptions).filter(
-            UserSubscriptions.user_id == user_id).update({UserSubscriptions.is_trial: False,
-                                                          UserSubscriptions.updated_at: datetime.now(),
-                                                          Subscription.plan_end: datetime.now()}).first()
+            UserSubscriptions.user_id == user_id
+        ).update({
+            UserSubscriptions.is_trial: False,
+            UserSubscriptions.updated_at: datetime.now(),
+            UserSubscriptions.plan_end: datetime.now()
+        }, synchronize_session=False)
 
         self.db.commit()
+
