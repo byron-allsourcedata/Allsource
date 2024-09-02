@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Drawer, Box, Typography, Button, IconButton, Backdrop, TextField, InputAdornment, Collapse, Divider, FormControlLabel, Checkbox, RadioGroup, Radio, Modal } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import CloseIcon from '@mui/icons-material/Close';
@@ -50,7 +50,14 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
   const [buttonFilters, setButtonFilters] = useState<ButtonFilters>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [open_save, setOpen] = useState(false);
+  const [openLoadDrawer, setOpenLoadDrawer] = useState(false);
   const [filterName, setFilterName] = useState("");
+  const [isButtonDisabled, setIsButtonDisabled] = useState(true);
+  type SavedFilter = {
+    name: string;
+    data: ReturnType<typeof handleFilters>; // Use the return type of handleFilters directly
+  };
+  const [savedFilters, setSavedFilters] = useState<SavedFilter[]>([]);
 
   const handleClear = () => {
     setFilterName("");
@@ -99,17 +106,26 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
     }
   };
 
-  const [selectedValue, setSelectedValue] = useState("");
 
-  const handleChangeRecurringVisits = (event: {
-    target: { value: React.SetStateAction<string> };
-  }) => {
-    setSelectedValue(event.target.value);
-  };
+const [selectedValues, setSelectedValues] = useState<string[]>([]);
 
-  const handleDeleteRecurringVisits = () => {
-    setSelectedValue("");
-  };
+const handleChangeRecurringVisits = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const value = event.target.value;
+
+  setSelectedValues((prevSelectedValues) => {
+    if (prevSelectedValues.includes(value)) {
+      // Remove the value if it is already selected
+      return prevSelectedValues.filter((item) => item !== value);
+    } else {
+      // Add the value if it is not selected
+      return [...prevSelectedValues, value];
+    }
+  });
+};
+
+const handleDeleteRecurringVisits = () => {
+  setSelectedValues([]);
+};
 
   const getButtonStyle = (label: string) => {
     switch (label) {
@@ -641,7 +657,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
       checkedFiltersTimeSpent,
       emails,
       selectedStatus,
-      selectedValue,
+      selectedValues,
       searchQuery,
     };
 
@@ -691,11 +707,175 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
 
   // Recurring Visits
   const isRecurringVisitsFilterActive = () => {
-    return selectedValue !== '';
+    return selectedValues.length > 0;
   };
 
 
 
+  const handleRadioChange = (event: { target: { name: string } }) => {
+    const { name } = event.target;
+  
+    setCheckedFilters((prevFilters) => {
+      // Explicitly type `prevFilters` for better TypeScript support
+      const prevFiltersTyped = prevFilters as Record<string, boolean>;
+  
+      // Find the previously selected radio button
+      const previouslySelected = Object.keys(prevFiltersTyped).find((key) => prevFiltersTyped[key]);
+  
+      // Reset all filters and select the new one
+      const newFilters = {
+        lastWeek: false,
+        last30Days: false,
+        last6Months: false,
+        allTime: false,
+        [name]: true,
+      };
+  
+      const tagMap: { [key: string]: string } = {
+        lastWeek: "Last week",
+        last30Days: "Last 30 days",
+        last6Months: "Last 6 months",
+        allTime: "All time",
+      };
+  
+      // Remove the tag for the previously selected radio button, if any
+      if (previouslySelected && previouslySelected !== name) {
+        removeTag("visitedDate", tagMap[previouslySelected]);
+      }
+  
+      // Add the tag for the currently selected radio button
+      addTag("visitedDate", tagMap[name]);
+  
+      return newFilters;
+    });
+  };
+
+  const handleRadioChangeTime = (event: { target: { name: string } }) => {
+
+    const { name } = event.target;
+  
+    setCheckedFiltersTime((prevFiltersTime) => {
+      // Explicitly type `prevFilters` for better TypeScript support
+      const prevFiltersTimeTyped = prevFiltersTime as Record<string, boolean>;
+  
+      // Find the previously selected radio button
+      const previouslySelectedTime = Object.keys(prevFiltersTimeTyped).find((key) => prevFiltersTimeTyped[key]);
+  
+      // Reset all filters and select the new one
+      const newFiltersTime = {
+        morning: false,
+        afternoon: false,
+        evening: false,
+        all_day: false,
+        [name]: true,
+      };
+  
+      const tagMapTime: { [key: string]: string } = {
+        morning: "Morning 12AM - 11AM",
+        afternoon: "Afternoon 11AM - 5PM",
+        evening: "Evening 5PM - 9PM",
+        all_day: "All day",
+      };
+  
+      // Remove the tag for the previously selected radio button, if any
+      if (previouslySelectedTime && previouslySelectedTime !== name) {
+        removeTag("visitedTime", tagMapTime[previouslySelectedTime]);
+      }
+  
+      // Add the tag for the currently selected radio button
+      addTag("visitedTime", tagMapTime[name]);
+  
+      return newFiltersTime;
+    });
+  };
+
+
+  const handleLoadOpen = () => setOpenLoadDrawer(true);
+  const handleLoadClose = () => setOpenLoadDrawer(false);
+
+// Function to determine if filters are selected
+const updateButtonState = () => {
+  const filters = handleFilters();
+  // console.log('Filters:', filters); // For debugging
+
+  if (!filters || typeof filters !== 'object' || Object.keys(filters).length === 0) {
+    setIsButtonDisabled(true);
+    return;
+  }
+
+  const hasActiveFilters = Object.values(filters).some(value => {
+    if (Array.isArray(value)) {
+      return value.length > 0;
+    } else if (typeof value === 'object' && value !== null) {
+      return Object.values(value).some(val => {
+        if (val === null || val === '') return false;
+        if (Array.isArray(val)) return val.length > 0;
+        if (typeof val === 'boolean') return val;
+        return true;
+      });
+    } else {
+      if (typeof value === 'string') return value.trim() !== '';
+      if (typeof value === 'boolean') return value;
+      return value !== null;
+    }
+  });
+
+  setIsButtonDisabled(!hasActiveFilters);
+};
+
+
+
+  // Call updateButtonState when filter states change
+  useEffect(() => {
+    updateButtonState();
+  }, [
+    selectedButton,
+    isVisitedDateOpen,
+    isVisitedPageOpen,
+    isTimeSpentOpen,
+    isVisitedTimeOpen,
+    isRegionOpen,
+    isLeadFunnel,
+    isStatus,
+    isRecurringVisits,
+    email,
+    region,
+    selectedDateRange,
+    selectedTimeRange,
+    selectedTags,
+    regions,
+    emails,
+    selectedFunnels,
+    selectedStatus,
+    buttonFilters,
+    selectedValues,
+    searchQuery
+  ]);
+
+
+
+const handleSave = () => {
+  try {
+    const filters = handleFilters();
+
+    // console.log('Filter:', filters);
+
+    const newFilter = { name: filterName, data: filters };
+    // console.log('New Filter:', newFilter);
+
+    setSavedFilters(prevFilters => {
+      // console.log('Previous Filters:', prevFilters);
+      return [...prevFilters, newFilter];
+    });
+
+    setFilterName('');
+    handleClose(); // Close the modal
+  } catch (error) {
+    console.error('Error saving filter:', error);
+  }
+};
+
+  
   return (
     <>
       <Backdrop open={open} sx={{ zIndex: 1200, color: "#fff" }} />
@@ -739,7 +919,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
             Filter Search
           </Typography>
           <Box sx={{ display: "flex", flexDirection: "row" }}>
-            <Button>
+            <Button onClick={handleLoadOpen}>
               <Typography
                 sx={{
                   textAlign: "center",
@@ -754,6 +934,135 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                 Load
               </Typography>
             </Button>
+              <Drawer
+                anchor="right"
+                open={openLoadDrawer}
+                onClose={handleLoadClose}
+                PaperProps={{
+                  sx: {
+                    width: "40%",
+                    position: "fixed",
+                    zIndex: 1301,
+                    top: 0,
+                    bottom: 0,
+                    "@media (max-width: 600px)": {
+                      width: "100%",
+                    },
+                  },
+                }}
+              >
+                 <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      padding: "1.5em 1em",
+                      borderBottom: "1px solid #e4e4e4",
+                    }}
+                  >
+                    <IconButton onClick={handleLoadClose}>
+                    <CloseIcon />
+                  </IconButton>
+                    <Typography
+                      variant="h6"
+                      sx={{
+                        textAlign: "center",
+                        color: "#4A4A4A",
+                        fontFamily: "Nunito",
+                        fontWeight: "600",
+                        fontSize: "16px",
+                        lineHeight: "22.4px",
+                      }}
+                    >
+                      Load with saved filters
+                    </Typography>
+                  </Box>
+
+
+                {/* Display saved filters */}
+                
+                  {savedFilters.length > 0 ? (
+                    savedFilters.map((filter, index) => (
+                      <Box key={index} sx={{ padding: '1.5em', borderBottom: "1px solid #ebebeb", display: "flex",
+                        justifyContent: "space-between", alignItems: "center" }}>
+                        <Typography variant="h6" sx={{
+                          fontFamily: 'Nunito',
+                          color: '#3B3B3B',
+                          fontSize: '16px',
+                          fontWeight: '600',
+                          lineHeight: '22.4px'
+                          }}>
+                          {filter.name}
+                        </Typography>
+                        <Typography variant="body2" sx={{ fontFamily: 'Nunito' }}>
+                          {/* {JSON.stringify(filter.data, null, 2)} */}
+                        </Typography>
+                        <Box sx={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          gap: "22px"
+                        }}>
+                          <IconButton>
+                            <Image 
+                              src="/edit.svg"
+                              height={18} width={18} // Adjust the size as needed
+                              alt="edit"
+                            />
+                          </IconButton>
+                          <IconButton>
+                            <Image 
+                                src="/trash.svg"
+                                height={18} width={18} // Adjust the size as needed
+                                alt="trash"
+                              />
+                          </IconButton>
+                        </Box>
+                      </Box>
+                    ))
+                  ) : (
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        border: '1px solid rgba(235, 235, 235, 1)',
+                        borderRadius: 2,
+                        padding: 3,
+                        boxSizing: 'border-box',
+                        width: '100%',
+                        textAlign: 'center',
+                        flex: 1,
+                        '& img': {
+                          width: 'auto',
+                          height: 'auto',
+                          maxWidth: '100%',
+                        },
+                      }}
+                    >
+                      <Typography
+                        variant="h5"
+                        sx={{
+                          mb: 3,
+                          fontFamily: 'Nunito',
+                          fontSize: '20px',
+                          color: '#4a4a4a',
+                          fontWeight: '600',
+                          lineHeight: '28px',
+                        }}
+                      >
+                        Data not Found
+                      </Typography>
+                      <Image
+                        src="/pixel_installation_needed.svg"
+                        alt="Need Pixel Install"
+                        height={250}
+                        width={300}
+                      />
+                    </Box>
+                  )}
+
+              </Drawer>
             <Typography
               sx={{
                 color: "rgba(228, 228, 228, 1)",
@@ -764,17 +1073,18 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
             >
               |
             </Typography>
-            <Button onClick={handleOpen}>
+            <Button onClick={handleOpen} disabled={isButtonDisabled}>
               <Typography
                 sx={{
                   textAlign: "center",
-                  color: "rgba(80, 82, 178, 1)",
+                  color: isButtonDisabled ? "rgba(80, 82, 178, 0.5)" : "rgba(80, 82, 178, 1)",
                   textTransform: "none",
                   fontFamily: "Nunito",
                   fontWeight: "600",
                   fontSize: "16px",
                   lineHeight: "22.4px",
                 }}
+                
               >
                 Save
               </Typography>
@@ -838,12 +1148,13 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                   </Button>
                   <Button
                     variant="contained"
-                    onClick={handleClose}
                     sx={{
                       backgroundColor: "rgba(80, 82, 178, 1)",
                       fontFamily: "Nunito",
                       textTransform: "none",
                     }}
+                    disabled={!filterName.trim()}
+                    onClick={handleSave}
                   >
                     Save
                   </Button>
@@ -1005,9 +1316,9 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
                   <FormControlLabel
                     control={
-                      <Checkbox
+                      <Radio
                         checked={checkedFilters.lastWeek}
-                        onChange={handleCheckboxChange}
+                        onChange={handleRadioChange}
                         name="lastWeek"
                       />
                     }
@@ -1015,9 +1326,9 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                   />
                   <FormControlLabel
                     control={
-                      <Checkbox
+                      <Radio
                         checked={checkedFilters.last30Days}
-                        onChange={handleCheckboxChange}
+                        onChange={handleRadioChange}
                         name="last30Days"
                       />
                     }
@@ -1027,9 +1338,9 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
                   <FormControlLabel
                     control={
-                      <Checkbox
+                      <Radio
                         checked={checkedFilters.last6Months}
-                        onChange={handleCheckboxChange}
+                        onChange={handleRadioChange}
                         name="last6Months"
                       />
                     }
@@ -1037,9 +1348,9 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                   />
                   <FormControlLabel
                     control={
-                      <Checkbox
+                      <Radio
                         checked={checkedFilters.allTime}
-                        onChange={handleCheckboxChange}
+                        onChange={handleRadioChange}
                         name="allTime"
                       />
                     }
@@ -1047,20 +1358,31 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                   />
                 </Box>
               </Box>
-              <Typography
-                sx={{
-                  mt: 2,
-                  mb: 1.5,
-                  fontFamily: "Nunito",
-                  fontSize: "16px",
-                  color: "rgba(74, 74, 74, 1)",
-                  fontWeight: "400",
-                  lineHeight: "16.8px",
-                  textAlign: "left",
-                }}
-              >
-                OR
-              </Typography>
+              <Box sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  width: '100%',
+                  mt: '20px',
+                  mb: '20px',
+                  '@media (max-width: 440px)': {
+                      marginTop: '16px',
+                      marginBottom: '16px',
+                  }}}>
+              <Box sx={{ borderBottom: '1px solid #e4e4e4', flexGrow: 1 }} />
+                <Typography variant="body1" 
+                  sx={{
+                    px: '8px',
+                    fontWeight: '400',
+                    fontSize: '12px',
+                    fontFamily: 'Nunito',
+                    color: '4a4a4a',
+                    lineHeight: '16px'
+                  }}
+                >
+                  OR
+                </Typography>
+                <Box sx={{ borderBottom: '1px solid #e4e4e4', flexGrow: 1 }} />
+              </Box>
               <Box
                 sx={{ display: "flex", gap: 2, justifyContent: "flex-start" }}
               >
@@ -1168,9 +1490,9 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
                   <FormControlLabel
                     control={
-                      <Checkbox
+                      <Radio
                         checked={checkedFiltersTime.morning}
-                        onChange={handleCheckboxChangeTime}
+                        onChange={handleRadioChangeTime}
                         name="morning"
                       />
                     }
@@ -1178,9 +1500,9 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                   />
                   <FormControlLabel
                     control={
-                      <Checkbox
+                      <Radio
                         checked={checkedFiltersTime.evening}
-                        onChange={handleCheckboxChangeTime}
+                        onChange={handleRadioChangeTime}
                         name="evening"
                       />
                     }
@@ -1190,9 +1512,9 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
                   <FormControlLabel
                     control={
-                      <Checkbox
+                      <Radio
                         checked={checkedFiltersTime.afternoon}
-                        onChange={handleCheckboxChangeTime}
+                        onChange={handleRadioChangeTime}
                         name="afternoon"
                       />
                     }
@@ -1200,9 +1522,9 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                   />
                   <FormControlLabel
                     control={
-                      <Checkbox
+                      <Radio
                         checked={checkedFiltersTime.all_day}
-                        onChange={handleCheckboxChangeTime}
+                        onChange={handleRadioChangeTime}
                         name="all_day"
                       />
                     }
@@ -1210,20 +1532,31 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                   />
                 </Box>
               </Box>
-              <Typography
-                sx={{
-                  mt: 2,
-                  mb: 1,
-                  fontFamily: "Nunito",
-                  fontSize: "16px",
-                  color: "rgba(74, 74, 74, 1)",
-                  fontWeight: "400",
-                  lineHeight: "16.8px",
-                  textAlign: "left",
-                }}
-              >
-                OR
-              </Typography>
+              <Box sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  width: '100%',
+                  mt: '20px',
+                  mb: '20px',
+                  '@media (max-width: 440px)': {
+                      marginTop: '16px',
+                      marginBottom: '16px',
+                  }}}>
+              <Box sx={{ borderBottom: '1px solid #e4e4e4', flexGrow: 1 }} />
+                <Typography variant="body1" 
+                  sx={{
+                    px: '8px',
+                    fontWeight: '400',
+                    fontSize: '12px',
+                    fontFamily: 'Nunito',
+                    color: '4a4a4a',
+                    lineHeight: '16px'
+                  }}
+                >
+                  OR
+                </Typography>
+                <Box sx={{ borderBottom: '1px solid #e4e4e4', flexGrow: 1 }} />
+              </Box>
               <Box
                 sx={{ display: "flex", gap: 2, justifyContent: "flex-start" }}
               >
@@ -1797,12 +2130,15 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
               >
                 Recurring Visists
               </Typography>
-              {selectedValue && (
-                <CustomChip
-                  label={selectedValue}
-                  onDelete={handleDeleteRecurringVisits}
-                />
-              )}
+              {selectedValues.length > 0 && 
+                selectedValues.map((value) => (
+                  <CustomChip
+                    key={value}
+                    label={value}
+                    onDelete={handleDeleteRecurringVisits}
+                  />
+                ))
+              }
               <IconButton
                 onClick={() => setIsRecurringVisits(!isRecurringVisits)}
                 aria-label="toggle-content"
@@ -1812,16 +2148,18 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
             </Box>
             <Collapse in={isRecurringVisits}>
               <Divider sx={{ mb: 2 }} />
-              <RadioGroup
-                value={selectedValue}
-                onChange={handleChangeRecurringVisits}
-                row
-              >
+              
                 <Box sx={{ display: "flex", justifyContent: "start", gap: 3 }}>
                   {["1", "2", "3", "4", "4+"].map((label) => (
                     <FormControlLabel
                       key={label}
-                      control={<Radio value={label} />}
+                      control={
+                        <Checkbox
+                          checked={selectedValues.includes(label)}
+                          onChange={handleChangeRecurringVisits}
+                          value={label}
+                        />
+                      }
                       label={label}
                       sx={{
                         display: "flex",
@@ -1835,7 +2173,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                     />
                   ))}
                 </Box>
-              </RadioGroup>
             </Collapse>
           </Box>
         </Box>

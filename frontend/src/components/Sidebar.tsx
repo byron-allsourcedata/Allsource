@@ -216,24 +216,24 @@ const Sidebar: React.FC = () => {
                     </ListItemIcon>
                     <ListItemText primary="Integrations" />
                 </ListItem>
-                <ListItem button onClick={() => handleNavigation('/analytics')} sx={isActive('/analytics') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
+                {/* <ListItem button onClick={() => handleNavigation('/analytics')} sx={isActive('/analytics') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
                         <AnalyticsIcon />
                     </ListItemIcon>
                     <ListItemText primary="Analytics" />
-                </ListItem>
+                </ListItem> */}
                 <ListItem button onClick={() => handleNavigation('/suppressions')} sx={isActive('/suppressions') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
                         <FeaturedPlayListIcon />
                     </ListItemIcon>
                     <ListItemText primary="Suppressions" />
                 </ListItem>
-                <ListItem button onClick={() => handleNavigation('/rules')} sx={isActive('/rules') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
+                {/* <ListItem button onClick={() => handleNavigation('/rules')} sx={isActive('/rules') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
                         <RuleFolderIcon />
                     </ListItemIcon>
                     <ListItemText primary="Rules" />
-                </ListItem>
+                </ListItem> */}
                 <ListItem button onClick={() => handleNavigation('/partners')} sx={isActive('/partners') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
                         <AccountBoxIcon />
