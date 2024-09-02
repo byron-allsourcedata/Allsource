@@ -19,7 +19,6 @@ import { useUser } from "../../context/UserContext";
 import axiosInterceptorInstance from "../../axios/axiosInterceptorInstance";
 import { showErrorToast } from "../../components/ToastNotification";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import { accountStyles } from "@/css/accountDetails";
 
 const AccountSetup = () => {
   const [organizationName, setOrganizationName] = useState("");
@@ -422,6 +421,9 @@ const AccountSetup = () => {
                 fontWeight: "600",
                 pointerEvents: "none",
                 lineHeight: "21.82px",
+                padding: 0,
+                marginRight: 1.5,
+                marginLeft: activeTab === 0 ? 2.5 : 0,
                 color:
                   activeTab === 0
                     ? "rgba(50, 50, 50, 1)"
@@ -429,7 +431,6 @@ const AccountSetup = () => {
                 "&.Mui-selected": {
                   color: "rgba(244, 87, 69, 1)",
                 },
-                '@media (max-width: 400px)': { padding: 1.25 },
               }}
             />
             <Tab
@@ -441,6 +442,7 @@ const AccountSetup = () => {
                 fontWeight: "600",
                 pointerEvents: "none",
                 lineHeight: "21.82px",
+                padding: 0,
                 color:
                   activeTab === 1
                     ? "rgba(244, 87, 69, 1)"
@@ -448,7 +450,7 @@ const AccountSetup = () => {
                 "&.Mui-selected": {
                   color: "rgba(244, 87, 69, 1)",
                 },
-                '@media (max-width: 400px)': { padding: 1.25 },
+                '@media (max-width: 400px)': { padding: 1, },
               }}
             />
           </Tabs>
@@ -517,14 +519,17 @@ const AccountSetup = () => {
                 What is your organization&apos;s name
               </Typography>
               <TextField
+                InputProps={{ sx: styles.formInput }}
                 fullWidth
                 label="Organization name"
                 variant="outlined"
+                margin="normal"
                 sx={styles.formField}
                 value={organizationName}
                 onChange={(e) => setOrganizationName(e.target.value)}
                 error={!!errors.organizationName}
                 helperText={errors.organizationName}
+                InputLabelProps={{ sx: styles.inputLabel }}
               />
               <Typography variant="body1" component="h3" sx={styles.text}>
                 Share your company website
@@ -535,7 +540,7 @@ const AccountSetup = () => {
                 variant="outlined"
                 placeholder={isFocused ? "example.com" : ""}
                 sx={styles.formField}
-                InputLabelProps={{ sx: accountStyles.inputLabel }}
+                InputLabelProps={{ sx: styles.inputLabel }}
                 value={websiteLink.replace(/^https?:\/\//, "")}
                 onChange={handleWebsiteLink}
                 onFocus={handleFocus}
