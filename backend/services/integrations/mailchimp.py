@@ -44,7 +44,8 @@ class MailchimpIntegrationsService:
     def add_integrations(self, credentials: IntegrationCredentials, user):
         customers = [self.__mapped_customer(customer) for customer in self.__get_customers(credentials.mailchimp.data_center, credentials.mailchimp.access_token)]
         integrataion = self.__save_integration(credentials.mailchimp.data_center, credentials.mailchimp.access_token, user['id'])
-        self.__save_customer(customer for customer in customers)
+        for customer in customers:
+            self.__save_customer(customer, user['id'])
         return {
             'status': 'Successfuly',
             'detail': {

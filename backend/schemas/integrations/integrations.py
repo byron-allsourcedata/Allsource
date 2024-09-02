@@ -13,7 +13,7 @@ class WoocommerceCredentials(BaseModel):
     consumer_secret: str
 
 
-class KlaviyoCredentials(BaseModel):
+class KlaviyoOrSandlaneCredentials(BaseModel):
     api_key: str 
 
 
@@ -27,13 +27,15 @@ class FacebookCredentials(BaseModel):
     ad_account_id: str
 
 
+
 class IntegrationCredentials(BaseModel):
     shopify: Optional[ShopifyOrBigcommerceCredentials] = None
     woocommerce: Optional[WoocommerceCredentials] = None
     bigcommerce: Optional[ShopifyOrBigcommerceCredentials] = None
-    klaviyo: Optional[KlaviyoCredentials] = None
+    klaviyo: Optional[KlaviyoOrSandlaneCredentials] = None
     mailchimp: Optional[MailchimpCredentials] = None
     facebook: Optional[FacebookCredentials] = None
+    sendlane: Optional[KlaviyoOrSandlaneCredentials] = None
 
 
 class Lead(BaseModel):

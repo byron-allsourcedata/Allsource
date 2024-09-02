@@ -10,8 +10,7 @@ from schemas.integrations.integrations import IntegrationCredentials
 
 class BigcommerceIntegrationsService:
 
-    def __init__(self, session: Session, integrations_persistence: IntegrationsPresistence, leads_persistence: LeadsPersistence, client: Client):
-        self.session = session
+    def __init__(self, integrations_persistence: IntegrationsPresistence, leads_persistence: LeadsPersistence, client: Client):
         self.integrations_persistence = integrations_persistence
         self.leads_persistence = leads_persistence
         self.client = client
@@ -65,6 +64,9 @@ class BigcommerceIntegrationsService:
                 'service_name': 'BigCommerce'
             }
         }
+
+# -------------------------------MAPPED-BIGCOMMERCE-DATA------------------------------------ #
+
 
     def __mapped_customer(self, customer: dict) -> BigCommerceUserScheme:
         return BigCommerceUserScheme(

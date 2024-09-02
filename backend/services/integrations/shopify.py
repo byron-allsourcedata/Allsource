@@ -17,45 +17,68 @@ class ShopifyIntegrationService:
     def __get_credentials(self, user_id: int):
         return self.integration_persistence.get_credentials_for_service(user_id, 'Shopify')
 
+    def __set_pixel(self, user, shop_domain: str, access_token: str):
+        script_url = f'https://maximiz-data.s3.us-east-2.amazonaws.com/pixel_installed_shopify.js?client_id={user['data_provider_id']}'
+        response = self.client.post(f'https://{shop_domain}.myshopify.com/admin/api/2024-07/script_tags.json',
+                         headers={'X-Shopify-Access-Token': access_token, "Content-Type": "application/json"}, 
+                         json={"script_tag":{"event": "onload","src":f"{script_url}"}})
+        if response.status_code != 201: 
+            raise HTTPException(status_code=response.status_code, detail={'status': 'error', 'detail': {
+                'message': 'Set Shopify pixel failed'
+            }})
+        return {'message': 'Successfuly'}
 
     def __get_customers(self, shop_domain: str, access_token: str):
         response = self.client.get(f'https://{shop_domain}.myshopify.com/admin/api/2023-07/customers.json', headers={'X-Shopify-Access-Token': access_token})
         if response.status_code != 200:
-            raise HTTPException(status_code=400, detail='Shopify credentials invalid')
+            raise HTTPException(status_code=400, detail={'status': 'error', 'detail': {'message': 'Shopify credentials invalid'}})
         return response.json().get('customers')
 
 
+
+
     def __save_integration(self, shop_domain: str, access_token: str, user_id: int):
-        credentails = {'user_id': user_id, 'shop_domain': shop_domain,
+        credentials = {'user_id': user_id, 'shop_domain': shop_domain,
                        'access_token': access_token, 'service_name': 'Shopify'}
-        integrations = self.integration_persistence.create_integration(credentails)
+        if self.integration_persistence.get_credentials_for_service(user_id, 'Shopify'):
+            raise HTTPException(status_code=409, detail={'status': 'error', 'detail': {
+                'message': 'You already have Shopify integrations'
+            }})    
+        integrations = self.integration_persistence.create_integration(credentials)
         if not integrations:
-            raise HTTPException(status_code=409)
+            raise HTTPException(status_code=409, detail={'status': 'error', 'detail': {
+                'message': 'Save integrations is failed'
+            }})
         return integrations
     
 
     def __save_customer(self, customer: ShopifyCustomer, user_id: int):
-        with self.integrations_persistence as serivce:
-            serivce.shopify.save_customer(customer.model_dump(), user_id)
+        with self.integration_persistence as service:
+            service.shopify.save_customer(customer.model_dump(), user_id)
 
 
-    def add_integrataion(self, user, credentials: IntegrationCredentials):
+    def add_integration(self, user, credentials: IntegrationCredentials):
         if user['company_website'] != f'https://{credentials.shopify.shop_domain}.myshopify.com':
             raise HTTPException(status_code=400, detail={'status': 'error', 'detail': {'message': 'Store Domain does not match the one you specified earlier'}})
         customers = [self.__mapped_customer(customer) for customer in self.__get_customers(credentials.shopify.shop_domain, credentials.shopify.access_token)]
-        integrataion = self.__save_integration(credentials.shopify.access_token, user['id'])
-        self.__save_customer(customer for customer in customers)
+        self.__set_pixel(user, credentials.shopify.shop_domain, credentials.shopify.access_token)
+        integrataion = self.__save_integration(credentials.shopify.shop_domain, credentials.shopify.access_token, user['id'])
+        for customer in customers:
+            self.__save_customer(customer, user['id'])
         return {
             'status': 'Successfuly',
             'detail': {
                 'id': integrataion.id,
-                'serivce_name': 'Shopify'
+                'service_name': 'Shopify'
             }
         }        
 
     def __create_or_upadte_shopify_customer(self, customer, shop_domain: str, access_token: str):
         customer_json = self.__mapped_customer_for_shopify(customer)
-        response = self.client.post(f'https://{shop_domain}.myshopify.com/admin/api/2024-07/customers.json', headers={'X-Shopify-Token': {access_token, "Content-Type: application/json"}}, data=customer_json)
+        response = self.client.post(f'https://{shop_domain}.myshopify.com/admin/api/2024-07/customers.json', 
+                                    headers={'X-Shopify-Token': access_token, 
+                                             "Content-Type": "application/json"}, 
+                                    data=customer_json)
         if response.status_code != 201:
             raise HTTPException(status_code=response.status_code)
         return response.json().get('customers')
@@ -76,6 +99,15 @@ class ShopifyIntegrationService:
         return {
             'status': 'Success'
         }
+    
+    def sync_import(self, user_id: int):
+        credentials = self.__get_credentials(user_id)
+        self.__save_customer([self.__mapped_customer(customer) 
+                              for customer in self.__get_customers(credentials.shopify.shop_domain, 
+                                                                   credentials.shopify.access_token)], 
+                              user_id)
+
+# -------------------------------MAPPED-SHOPIFY-DATA------------------------------------ #
 
     def __mapped_customer(self, customer) -> ShopifyCustomer:
         sms_marketing_consent = customer.get("sms_marketing_consent") or {}

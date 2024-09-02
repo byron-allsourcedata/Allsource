@@ -47,3 +47,4 @@ class ShopifyUser(Base):
     address_country_code = Column(VARCHAR)
     address_country_name = Column(VARCHAR)
     address_default = Column(Boolean, default=False)
+    

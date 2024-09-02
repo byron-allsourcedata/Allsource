@@ -31,7 +31,7 @@ class IntegrationService:
     def __enter__(self):
         self.shopify = ShopifyIntegrationService(self.integration_persistence, self.client)
         # self.woocommerce = WoocommerceIntegrationService(self.integration_persistence, self.user)
-        self.bigcommerce = BigcommerceIntegrationsService(self.integration_persistence, self.client)
+        self.bigcommerce = BigcommerceIntegrationsService(self.integration_persistence, self.lead_persistence, self.client)
         self.klaviyo = KlaviyoIntegrationsService(self.integration_persistence, 
                                            self.client, 
                                            self.audience_persistence,

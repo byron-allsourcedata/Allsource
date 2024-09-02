@@ -5,21 +5,13 @@ from .bigcommerce import BigcommercePersistence
 from .shopify import ShopifyPersistence
 from .mailchimp import MailchimpPersistence
 from .facebook import FacebookPersistence
+from .sendlane import SendlanePersistence
+
 class IntegrationsPresistence:
 
     def __init__(self, db: Session) -> None:
         self.db = db
 
-    def __enter__(self):
-        self.klaviyo = KlaviyoPersistence(self.db)
-        self.bigcommerce = BigcommercePersistence(self.db)
-        self.shopify = ShopifyPersistence(self.db)
-        self.mailchimp = MailchimpPersistence(self.db)
-        self.facebook = FacebookPersistence(self.db)
-        return self
-    
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.db.close()
 
     def create_integration(self, data: dict) -> UserIntegration:
         integration = UserIntegration(**data)
@@ -49,3 +41,15 @@ class IntegrationsPresistence:
     
     def get_users_integrations(self, service_name):
         return self.db.query(UserIntegration).filter_by(service_name=service_name).first()
+    
+    def __enter__(self):
+        self.klaviyo = KlaviyoPersistence(self.db)
+        self.bigcommerce = BigcommercePersistence(self.db)
+        self.shopify = ShopifyPersistence(self.db)
+        self.mailchimp = MailchimpPersistence(self.db)
+        self.facebook = FacebookPersistence(self.db)
+        self.sendlane = SendlanePersistence(self.db)
+        return self
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.db.close()
