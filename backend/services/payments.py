@@ -1,7 +1,9 @@
 import logging
+import stripe
 from typing import List
 from config.stripe import StripeConfig
 from services.plans import PlansService
+from enums import BaseEnum
 
 logger = logging.getLogger(__name__)
 
@@ -23,8 +25,7 @@ class PaymentsService:
     def create_stripe_checkout_session(self, success_url: str, cancel_url: str, customer_id: str,
                                        line_items: List[dict],
                                        mode: str):
-        import stripe
-
+        
         session = stripe.checkout.Session.create(
             success_url=success_url, cancel_url=cancel_url, allow_promotion_codes=True, customer=customer_id,
             payment_method_types=["card"], line_items=line_items, mode=mode
@@ -33,3 +34,15 @@ class PaymentsService:
 
     def get_user_subscription_authorization_status(self):
         return self.plans_service.get_user_subscription_authorization_status()
+    
+    def cancel_user_subscripion(self):
+        subscription_id = self.plans_service.get_subscription_id()
+        subscription_data = stripe.Subscription.cancel(subscription_id)
+        print('--------------')
+        print(subscription_data)
+        print('--------------')
+        if subscription_data:
+            self.plans_service.save_cancel_user_subscripion(subscription_data)
+            return BaseEnum.SUCCESS
+        return BaseEnum.FAILURE
+

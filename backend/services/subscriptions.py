@@ -222,13 +222,24 @@ class SubscriptionService:
         self.db.commit()
 
     def remove_trial(self, user_id: int):
-        self.db.query(UserSubscriptions).filter(
-            UserSubscriptions.user_id == user_id
-        ).update({
-            UserSubscriptions.is_trial: False,
-            UserSubscriptions.updated_at: datetime.now(),
-            UserSubscriptions.plan_end: datetime.now()
-        }, synchronize_session=False)
-
+        trial_subscription = self.db.query(UserSubscriptions).filter(
+                UserSubscriptions.user_id == user_id
+            ).order_by(UserSubscriptions.id.desc()).limit(1).scalar()
+        trial_subscription.is_trial = False
+        trial_subscription.updated_at = datetime.now()
+        trial_subscription.plan_end = datetime.now()
         self.db.commit()
 
+    def get_subscription_id_by_user_id(self, user_id):
+        return self.db.query(UserSubscriptions.platform_subscription_id).filter(
+            UserSubscriptions.user_id == user_id
+        ).order_by(UserSubscriptions.id).limit(1).scalar()
+
+
+    def save_cancel_user_subscripion(self, user_id, subscription_data):
+        trial_subscription = self.db.query(UserSubscriptions).filter(
+                UserSubscriptions.user_id == user_id
+            ).order_by(UserSubscriptions.id.desc()).limit(1).scalar()
+        trial_subscription.status = 'canceled'
+        trial_subscription.updated_at = datetime.now()
+        self.db.commit()
