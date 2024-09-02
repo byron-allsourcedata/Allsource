@@ -188,7 +188,7 @@ export const ProgressSection: React.FC = () => {
               },
             }}
           >
-            {percentSteps}% complete
+            {percentSteps ? percentSteps : 0} % complete
           </Typography>
         </Box>
         <List sx={{ mt: "8px", p: "0" }}>

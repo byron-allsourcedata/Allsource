@@ -484,16 +484,9 @@ const Dashboard: React.FC = () => {
                   <SupportSection />
                 </Grid>
               </Grid>
-
-             
-              
             </Grid>
-
-            
         )}
-        
       </Grid>
-
       {showSlider && <Slider />}
     </>
   );

@@ -27,7 +27,7 @@ const sidebarStyles = {
         fontWeight: '500',
         backgroundColor: 'rgba(255, 255, 255, 1)',
         borderRight: '1px solid rgba(228, 228, 228, 1)',
-        height: '91vh',
+        height: '90.99vh',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'start'
@@ -133,7 +133,7 @@ const SetupSection: React.FC<ProgressSectionProps> = ({ meData }) => {
             </Box>
             <LinearProgress
                 variant="determinate"
-                value={meData.percent_steps}
+                value={meData.percent_steps ? meData.percent_steps : 0}
                 sx={{
                     height: '8px',
                     borderRadius: '4px',
@@ -148,7 +148,7 @@ const SetupSection: React.FC<ProgressSectionProps> = ({ meData }) => {
                         color: '#000',
                         fontSize: '0.625rem'
                     }}>
-                {meData.percent_steps}% complete
+                {meData.percent_steps ? meData.percent_steps : 0}% complete
             </Typography>
         </Box>
     )

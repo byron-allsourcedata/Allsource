@@ -422,6 +422,9 @@ const AccountSetup = () => {
                 fontWeight: "600",
                 pointerEvents: "none",
                 lineHeight: "21.82px",
+                padding: 0,
+                marginRight: 1.5,
+                marginLeft: activeTab === 0 ? 2.5 : 0,
                 color:
                   activeTab === 0
                     ? "rgba(50, 50, 50, 1)"
@@ -429,7 +432,6 @@ const AccountSetup = () => {
                 "&.Mui-selected": {
                   color: "rgba(244, 87, 69, 1)",
                 },
-                '@media (max-width: 400px)': { padding: 1.25 },
               }}
             />
             <Tab
@@ -441,6 +443,7 @@ const AccountSetup = () => {
                 fontWeight: "600",
                 pointerEvents: "none",
                 lineHeight: "21.82px",
+                padding: 0,
                 color:
                   activeTab === 1
                     ? "rgba(244, 87, 69, 1)"
@@ -448,7 +451,7 @@ const AccountSetup = () => {
                 "&.Mui-selected": {
                   color: "rgba(244, 87, 69, 1)",
                 },
-                '@media (max-width: 400px)': { padding: 1.25 },
+                '@media (max-width: 400px)': { padding: 1, },
               }}
             />
           </Tabs>
