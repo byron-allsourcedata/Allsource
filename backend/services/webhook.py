@@ -23,7 +23,6 @@ class WebhookService:
             return payload
 
         status = payload.get("data").get("object").get("status")
-        is_subscription_active = status in ['active', 'trialing']
 
         """
         Saving the details of payment mode
@@ -36,10 +35,14 @@ class WebhookService:
         """
         Logic for existing or new subscription, credits and credit usage
         """
-        self.subscription_service.update_user_payment_status(user_id=user_data.id, is_success=is_subscription_active)
+        self.subscription_service.update_user_payment_status(user_id=user_data.id, status=status)
         logger.info(f"updated the payment status of user to completed {user_data.email}")
-        user_subscription = self.subscription_service.create_subscription_from_webhook(user_id=user_data.id,
-                                                                                       stripe_payload=payload)
+        platform_subscription_id = payload.get("data").get("object").get("id")
+        if self.subscription_service.subscription_exists(platform_subscription_id):
+            self.subscription_service.update_subscription_from_webhook(platform_subscription_id, stripe_payload=payload)
+        else:
+            user_subscription = self.subscription_service.create_subscription_from_webhook(user_id=user_data.id,
+                                                                                           stripe_payload=payload)
         if user_subscription:
             logger.info("New subscription created")
 

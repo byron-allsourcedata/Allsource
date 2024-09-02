@@ -38,11 +38,7 @@ class PaymentsService:
     def cancel_user_subscripion(self):
         subscription_id = self.plans_service.get_subscription_id()
         subscription_data = stripe.Subscription.cancel(subscription_id)
-        print('--------------')
-        print(subscription_data)
-        print('--------------')
         if subscription_data:
-            self.plans_service.save_cancel_user_subscripion(subscription_data)
             return BaseEnum.SUCCESS
         return BaseEnum.FAILURE
 

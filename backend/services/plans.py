@@ -51,7 +51,3 @@ class PlansService:
     def get_subscription_id(self):
         return self.subscription_service.get_subscription_id_by_user_id(self.user.get('id'))
     
-    def save_cancel_user_subscripion(self, subscription_data):
-        self.subscription_service.save_cancel_user_subscripion(self.user.get('id'), subscription_data)
-        
-
