@@ -4,6 +4,8 @@ import os
 import sys
 import tempfile
 import traceback
+import time
+import pytz
 import urllib.parse
 from datetime import time
 from sqlalchemy import func, and_, or_
@@ -93,23 +95,34 @@ def process_user_data(table, index, five_x_five_user, session: Session):
         session.add(lead_user)
         session.flush()
 
-    requested_at = table['EVENT_DATE'][index].as_py().isoformat()
-    visited_datetime = datetime.fromisoformat(requested_at)
-    thirty_minutes_ago = visited_datetime - timedelta(minutes=30)
+    requested_at_str = str(table['EVENT_DATE'][index].as_py())
+    requested_at = datetime.fromisoformat(requested_at_str)
+    if requested_at.tzinfo is None:
+        requested_at = pytz.utc.localize(requested_at)
 
-    subquery = session.query(LeadsRequests.visit_id).filter(
+    thirty_minutes_ago = requested_at - timedelta(minutes=30)
+
+    visit = session.query(LeadsRequests.visit_id).filter(
         LeadsRequests.lead_id == lead_user.id,
         LeadsRequests.requested_at >= thirty_minutes_ago
-    ).subquery()
+        ).first()
+    if visit:
+        visit_id = visit[0]
+    else:
+        visit_id = None
+
     leads_requests = session.query(LeadsRequests).filter(
-        LeadsRequests.visit_id >= subquery
+        LeadsRequests.visit_id == visit_id
     ).all()
 
     if leads_requests:
         lead_visits = leads_requests[0].visit_id
         logging.info("leads requests exists")
-        visit_first = session.query(LeadsVisits).filter(LeadsVisits.lead_id == lead_user.id).order_by(
-            LeadsVisits.id.asc).first
+        visit_first = session.query(LeadsVisits).filter(
+            LeadsVisits.lead_id == lead_user.id
+        ).order_by(
+            LeadsVisits.id.asc()
+        ).first()
         if visit_first.id == leads_requests[0].visit_id:
             if lead_user.behavior_type in ('visitor', 'viewed_product') and behavior_type in (
             'viewed_product', 'added_to_cart') \
@@ -118,11 +131,11 @@ def process_user_data(table, index, five_x_five_user, session: Session):
                     LeadUser.behavior_type: behavior_type
                 })
                 session.commit()
-        process_leads_requests(visited_datetime, leads_requests, lead_user.id, session, behavior_type)
+        process_leads_requests(requested_at, leads_requests, lead_user.id, session, behavior_type)
     else:
         logging.info("leads requests not exists")
-        lead_visits = add_new_leads_visits(visited_datetime, lead_user.id, session, behavior_type).id
-        session.query(Users).filter(Users.id == user.get('id')).update(
+        lead_visits = add_new_leads_visits(requested_at, lead_user.id, session, behavior_type).id
+        session.query(Users).filter(Users.id == user.id).update(
             {Users.is_pixel_installed: True},
             synchronize_session=False)
     lead_request = insert(LeadsRequests).values(
