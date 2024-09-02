@@ -52,8 +52,8 @@ export const styles: { [key: string]: SxProps<Theme> } = {
     width: '100%',
     marginBottom: '2.5em',
     textTransform: 'none',
-    '@media (max-width: 600px)': { marginBottom: 2, width: '100%', gap:'16px' },
-    '@media (max-width: 400px)': { marginBottom: 1.5, width: '100%', gap: '14px'  },
+    '@media (max-width: 600px)': { marginBottom: 2, width: '100%', gap: '16px' },
+    '@media (max-width: 400px)': { marginBottom: 1.5, width: '100%', gap: '14px' },
 
   },
   roleButton: {
@@ -62,7 +62,7 @@ export const styles: { [key: string]: SxProps<Theme> } = {
     textTransform: 'none',
     padding: '8px 8px',
     '@media (max-width: 600px)': { padding: '10px' },
-    '@media (max-width: 400px)': {padding: '5px'}
+    '@media (max-width: 400px)': { padding: '5px' }
   },
   activeButton: {
     backgroundColor: '#007BFF',
@@ -140,9 +140,9 @@ export const styles: { [key: string]: SxProps<Theme> } = {
     borderRadius: '0.5em',
     backgroundColor: '#fff',
     '@media (max-height: 670px)': { pl: 0, gap: 0 },
-    '@media (max-width: 600px)': {height: '77vh',display: 'flex',flexDirection: 'column',alignItems: 'center',justifyContent: 'center'},
-    '@media (max-width: 400px)': { pl: 0, pt: 0, height: '77vh',  },
-   
+    '@media (max-width: 600px)': { height: '77vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' },
+    '@media (max-width: 400px)': { pl: 0, pt: 0, height: '77vh', },
+
 
   },
   title: {
@@ -173,12 +173,46 @@ export const styles: { [key: string]: SxProps<Theme> } = {
     paddingBottom: '0.75em',
     '@media (max-width: 600px)': { marginBottom: 0, fontSize: '14px', fontWeight: '400' }
   },
+  inputLabel: {
+    fontFamily: 'Nunito',
+    fontSize: '16px',
+    lineHeight: 'normal',
+    color: 'rgba(17, 17, 19, 0.60)',
+    top: '-3px',
+    '&.Mui-focused': {
+      color: '#0000FF',
+    },
+  },
+  formInput: {
+    '&.MuiOutlinedInput-root': {
+      height: '48px',
+      '& .MuiOutlinedInput-input': {
+        padding: '12px 16px 13px 16px',
+        fontFamily: 'Nunito',
+      },
+      '& .MuiOutlinedInput-notchedOutline': {
+        borderColor: '#A3B0C2',
+      },
+      '&:hover .MuiOutlinedInput-notchedOutline': {
+        borderColor: '#A3B0C2',
+      },
+      '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+        borderColor: '#0000FF',
+      },
+    },
+    '&+.MuiFormHelperText-root': {
+      marginLeft: '0',
+    },
+  },
 
   formField: {
     marginBottom: '1.5em',
     maxHeight: '56px',
     '& .MuiInputBase-root': {
-      maxHeight: '48px', 
+      maxHeight: '48px',
+    },
+    '&.Mui-focused': {
+      color: '#0000FF',
     },
     '& .MuiOutlinedInput-root': {
       paddingTop: '13px',
@@ -192,7 +226,7 @@ export const styles: { [key: string]: SxProps<Theme> } = {
     },
   },
   form: {
-    display: 'flex', flexDirection: 'column', justifyContent: 'center', alignContent: 'center', '@media (max-width: 400px)': { paddingLeft: 2.5,}, '@media (max-width: 600px)': { paddingRight: 2.5, paddingLeft: 2.5,}
+    display: 'flex', flexDirection: 'column', justifyContent: 'center', alignContent: 'center', '@media (max-width: 400px)': { paddingLeft: 2.5, }, '@media (max-width: 600px)': { paddingRight: 2.5, paddingLeft: 2.5, }
   },
   submitButton: {
     backgroundColor: 'rgba(244, 87, 69, 1)',

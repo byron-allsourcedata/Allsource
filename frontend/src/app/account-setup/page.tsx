@@ -19,7 +19,6 @@ import { useUser } from "../../context/UserContext";
 import axiosInterceptorInstance from "../../axios/axiosInterceptorInstance";
 import { showErrorToast } from "../../components/ToastNotification";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import { accountStyles } from "@/css/accountDetails";
 
 const AccountSetup = () => {
   const [organizationName, setOrganizationName] = useState("");
@@ -520,14 +519,17 @@ const AccountSetup = () => {
                 What is your organization&apos;s name
               </Typography>
               <TextField
+                InputProps={{ sx: styles.formInput }}
                 fullWidth
                 label="Organization name"
                 variant="outlined"
+                margin="normal"
                 sx={styles.formField}
                 value={organizationName}
                 onChange={(e) => setOrganizationName(e.target.value)}
                 error={!!errors.organizationName}
                 helperText={errors.organizationName}
+                InputLabelProps={{ sx: styles.inputLabel }}
               />
               <Typography variant="body1" component="h3" sx={styles.text}>
                 Share your company website
@@ -538,7 +540,7 @@ const AccountSetup = () => {
                 variant="outlined"
                 placeholder={isFocused ? "example.com" : ""}
                 sx={styles.formField}
-                InputLabelProps={{ sx: accountStyles.inputLabel }}
+                InputLabelProps={{ sx: styles.inputLabel }}
                 value={websiteLink.replace(/^https?:\/\//, "")}
                 onChange={handleWebsiteLink}
                 onFocus={handleFocus}
