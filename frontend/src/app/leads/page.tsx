@@ -1123,7 +1123,7 @@ const Leads: React.FC = () => {
                                                     overflowY: 'auto'
                                                 }}
                                             >
-                                                <Table sx={{ minWidth: 850 }} stickyHeader aria-label="leads table">
+                                                <Table stickyHeader aria-label="leads table">
                                                     <TableHead>
                                                         <TableRow>
                                                             {[
