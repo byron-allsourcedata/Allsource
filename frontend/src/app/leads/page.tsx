@@ -1119,7 +1119,7 @@ const Leads: React.FC = () => {
                                                 component={Paper}
                                                 sx={{
                                                     border: '1px solid rgba(235, 235, 235, 1)',
-                                                    maxHeight: '70vh',
+                                                    maxHeight: selectedFilters.length < 0 ? '70vh' : '67vh',
                                                     overflowY: 'auto'
                                                 }}
                                             >
