@@ -184,36 +184,31 @@ const Signup: React.FC = () => {
                 if (typeof window !== 'undefined') {
                   if (responseData.token && responseData.token !== null) {
                     localStorage.setItem('token', responseData.token);
+                    get_me();
                   }
                 }
 
                 switch (response.data.status) {
                   case 'SUCCESS':
-                    get_me()
                     router.push('/dashboard');
                     break;
                   case 'NEED_CHOOSE_PLAN':
-                    get_me()
                     router.push('/choose-plan');
                     break;
                   case 'FILL_COMPANY_DETAILS':
-                    get_me()
                     router.push('/account-setup');
                     break;
                   case 'NEED_BOOK_CALL':
-                    get_me()
                     sessionStorage.setItem('is_slider_opened', 'true')
                     router.push('/dashboard');
                     break;
                   case 'PAYMENT_NEEDED':
-                    get_me()
                     router.push(`${response.data.stripe_payment_url}`);
                     break;
                   case 'INCORRECT_PASSWORD_OR_EMAIL':
                     showErrorToast("User with this email does not exist");
                     break;
                     case "PIXEL_INSTALLATION_NEEDED":
-                      get_me()
                       router.push('/dashboard')
                       break;
                   default:

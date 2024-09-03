@@ -33,7 +33,29 @@ const AccountSetup = () => {
     selectedVisits: "",
   });
   const router = useRouter();
-  const { full_name, email } = useUser();
+  const [fullName, setFullName] = useState<string | null>(null);
+  const [email, setEmail] = useState<string | null>(null);
+
+  const { full_name: userFullName, email: userEmail } = useUser();
+
+  const getUserDataFromStorage = () => {
+    const meItem = typeof window !== 'undefined' ? sessionStorage.getItem('me') : null;
+    if (meItem) {
+      const meData = JSON.parse(meItem);
+      setFullName(userFullName || meData.full_name);
+      setEmail(userEmail || meData.email);
+    }
+  };
+
+  useEffect(() => {
+    getUserDataFromStorage();
+
+    const intervalId = setInterval(() => {
+      getUserDataFromStorage();
+    }, 500);
+
+    return () => clearInterval(intervalId);
+  }, [userFullName, userEmail]);
 
   const [isFocused, setIsFocused] = useState(false);
 
@@ -216,20 +238,23 @@ const AccountSetup = () => {
     }
   };
 
-  const handleWebsiteLink = (event: { target: { value: any } }) => {
-    let input = event.target.value;
+  const handleWebsiteLink = (event: { target: { value: string } }) => {
+    let input = event.target.value.trim();
   
-    // Удаляем префикс www.
-    const sanitizedInput = input.replace(/^www\./, '');
+    const hasWWW = input.startsWith("www.");
   
-    // Добавляем https:// если его нет
-    if (!sanitizedInput.startsWith("https://")) {
-      input = `https://${sanitizedInput}`;
-    } else {
-      input = sanitizedInput;
+    const sanitizedInput = hasWWW ? input.replace(/^www\./, '') : input;
+  
+    const domainPattern = /^[\w-]+\.[a-z]{2,}$/i;
+    const isValidDomain = domainPattern.test(sanitizedInput);
+  
+    let finalInput = input;
+  
+    if (isValidDomain) {
+      finalInput = hasWWW ? `https://www.${sanitizedInput}` : `https://${sanitizedInput}`;
     }
   
-    setWebsiteLink(input);
+    setWebsiteLink(finalInput);
   
     const websiteError = validateField(input, "website");
     setErrors((prevErrors) => ({
@@ -237,6 +262,7 @@ const AccountSetup = () => {
       websiteLink: websiteError,
     }));
   };
+  
   
 
   const isFormValid = () => {
@@ -345,7 +371,7 @@ const AccountSetup = () => {
             }}
           >
             <Box sx={{ p: 2 }}>
-              <Typography variant="h6">{full_name}</Typography>
+              <Typography variant="h6">{fullName}</Typography>
               <Typography variant="body2" color="textSecondary">
                 {email}
               </Typography>
@@ -484,7 +510,7 @@ const AccountSetup = () => {
           }}
         >
           <Box sx={{ p: 2 }}>
-            <Typography variant="h6">{full_name}</Typography>
+            <Typography variant="h6">{fullName}</Typography>
             <Typography variant="body2" color="textSecondary">
               {email}
             </Typography>
@@ -507,7 +533,7 @@ const AccountSetup = () => {
             }}
           >
             <Typography variant="h5" component="h1" sx={styles.title}>
-              Welcome {full_name},
+              Welcome {fullName},
             </Typography>
             <Typography variant="body1" component="h2" sx={styles.subtitle}>
               Let&apos;s set up your account
