@@ -94,7 +94,7 @@ class PixelInstallationService:
                 synchronize_session=False
             )
             self.db.query(Users).filter(Users.id == user.get('id')).update(
-                {Users.is_pixel_installed: True, Users.company_website: url},
+                {Users.company_website: url},
                 synchronize_session=False)
             self.db.commit()
             result['success'] = True
