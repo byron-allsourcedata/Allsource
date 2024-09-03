@@ -52,6 +52,7 @@ class LeadsPersistence:
             .join(FiveXFiveLocations, FiveXFiveLocations.id == FiveXFiveUsersLocations.location_id)
             .outerjoin(subquery, LeadUser.id == subquery.c.lead_id)
             .filter(LeadUser.user_id == user_id)
+            .order_by(subquery.c.last_visited_at.desc())
         )
         sort_options = {
             'name': Lead.first_name,
@@ -74,19 +75,19 @@ class LeadsPersistence:
                 query = query.order_by(asc(sort_column))
             elif sort_order == 'desc':
                 query = query.order_by(desc(sort_column))
-            # else:
-            #     query = query.order_by(desc(subquery.c.last_visited_at))
-        # if from_date and to_date:
-        #     start_date = datetime.fromtimestamp(from_date, tz=pytz.UTC)
-        #     end_date = datetime.fromtimestamp(to_date, tz=pytz.UTC)
-        #     if start_date == end_date:
-        #         end_date += timedelta(days=1)
-        #     query = query.filter(
-        #         and_(
-        #             subquery.c.last_visited_at >= start_date,
-        #             subquery.c.last_visited_at <= end_date
-        #         )
-        #     )
+            else:
+                query = query.order_by(desc(subquery.c.last_visited_at))
+        if from_date and to_date:
+            start_date = datetime.fromtimestamp(from_date, tz=pytz.UTC)
+            end_date = datetime.fromtimestamp(to_date, tz=pytz.UTC)
+            if start_date == end_date:
+                end_date += timedelta(days=1)
+            query = query.filter(
+                and_(
+                    subquery.c.last_visited_at >= start_date,
+                    subquery.c.last_visited_at <= end_date
+                )
+            )
         if regions:
             region_list = regions.split(',')
             region_filters = [FiveXFiveLocations.city.ilike(f'%{region.strip()}%') for region in region_list]

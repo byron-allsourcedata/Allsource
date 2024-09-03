@@ -33,7 +33,7 @@ async def check_and_update_pixel_installations(db_session):
         for user in users:
             company_website = user.company_website
             if company_website:
-                result = pixel_service.check_pixel_installed(company_website, user.__dict__)
+                result = pixel_service.check_pixel_installed_via_parse(company_website, user.__dict__)
                 if result['success']:
                     logger.info(f"Pixel confirmed for user {user.id}. Subscription updated.")
                 else:

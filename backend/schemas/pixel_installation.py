@@ -2,6 +2,7 @@ from pydantic import BaseModel, Field
 
 
 class PixelInstallationRequest(BaseModel):
+    pixelClientId: str = Field(...)
     url: str = Field(...)
 
 
