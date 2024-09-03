@@ -14,4 +14,4 @@ class UsersPaymentsTransactions(Base):
     status = Column(VARCHAR, nullable=True)
     amount = Column(Integer, nullable=True)
     type = Column(VARCHAR, nullable=False)
-    lead_id = Column(Integer, nullable=False)
+    lead_id = Column(Integer, nullable=True)
