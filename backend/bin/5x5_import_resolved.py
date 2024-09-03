@@ -4,10 +4,10 @@ import os
 import sys
 import tempfile
 import traceback
-import time
 import pytz
 import urllib.parse
-from datetime import time
+from datetime import time as dt_time
+import time
 from sqlalchemy import func, and_, or_
 import boto3
 import pyarrow.parquet as pq
@@ -131,7 +131,7 @@ def process_user_data(table, index, five_x_five_user, session: Session):
                     LeadUser.behavior_type: behavior_type
                 })
                 session.commit()
-        process_leads_requests(requested_at, leads_requests, lead_user.id, session, behavior_type)
+        process_leads_requests(requested_at, page, leads_requests, lead_user.id, session, behavior_type)
     else:
         logging.info("leads requests not exists")
         lead_visits = add_new_leads_visits(requested_at, lead_user.id, session, behavior_type).id
@@ -145,24 +145,78 @@ def process_user_data(table, index, five_x_five_user, session: Session):
     session.execute(lead_request)
     session.commit()
 
+def normalize_url(url):
+    """
+    Normalize the URL by removing all query parameters and trailing slashes.
+    """
+    if not url:
+        return url
+    
+    scheme_end = url.find('://')
+    if scheme_end != -1:
+        scheme_end += 3
+        scheme = url[:scheme_end]
+        remainder = url[scheme_end:]
+    else:
+        scheme = ''
+        remainder = url
+    
+    path_end = remainder.find('?')
+    if path_end != -1:
+        path = remainder[:path_end]
+    else:
+        path = remainder
 
-def process_leads_requests(requested_at, leads_requests, lead_id, session, behavior_type):
-    start_date, start_time, end_time, pages_count, average_time_sec = requested_at.date(), requested_at.time(), 10, 1, 10
-    for lead_request in leads_requests:
-        request_date = lead_request.requested_at
-        if request_date < datetime.combine(start_date, start_time):
-            start_date = request_date.date()
-            start_time = request_date.time()
-        pages_count += 1
-        end_time += 10
-        average_time_sec += 10
+    path = path.rstrip('/')
+    normalized_url = scheme + path
+    return normalized_url
 
-    date_page = datetime.combine(start_date, start_time) + timedelta(seconds=end_time)
-    end_date = date_page.date()
-    end_time = date_page.time()
+
+def process_leads_requests(requested_at, page, leads_requests, lead_id, session: Session, behavior_type):
+    new_request = LeadsRequests(
+        lead_id=lead_id,
+        page=normalize_url(page),
+        requested_at=requested_at,
+        time_sec=10
+    )
+    leads_requests.append(new_request)
+
+    leads_requests_sorted = sorted(leads_requests, key=lambda r: r.requested_at)
+
+    start_date_time = leads_requests_sorted[0].requested_at
+    end_date_time = leads_requests_sorted[-1].requested_at
+
+    start_date = start_date_time.date()
+    start_time = start_date_time.time()
+    end_date = end_date_time.date()
+    end_time = end_date_time.time()
+
+    total_time_sec = 0
+    pages_set = set()
+
+    for i in range(len(leads_requests_sorted) - 1):
+        current_request = leads_requests_sorted[i]
+        next_request = leads_requests_sorted[i + 1]
+        
+        if current_request.requested_at and next_request.requested_at:
+            time_diff = next_request.requested_at - current_request.requested_at
+            total_time_sec += int(time_diff.total_seconds())
+
+        if current_request.page:
+            pages_set.add(normalize_url(current_request.page))
+
+    if leads_requests_sorted[-1].page:
+        pages_set.add(leads_requests_sorted[-1].page)
+
+    pages_count = len(pages_set)
+    average_time_sec = total_time_sec // pages_count if pages_count > 0 else 0
     session.query(LeadsVisits).filter_by(lead_id=lead_id).update({
-        'start_date': start_date, 'start_time': start_time, 'end_date': end_date,
-        'end_time': end_time, 'pages_count': pages_count, 'average_time_sec': average_time_sec,
+        'start_date': start_date,
+        'start_time': start_time,
+        'end_date': end_date,
+        'end_time': end_time,
+        'pages_count': pages_count,
+        'average_time_sec': average_time_sec,
         'behavior_type': behavior_type
     })
     session.flush()
