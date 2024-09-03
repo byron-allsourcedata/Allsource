@@ -82,8 +82,3 @@ class PaymentsService:
             mode=mode
         )
         return {"link": session.url}
-
-
-
-
-

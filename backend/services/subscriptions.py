@@ -8,7 +8,7 @@ from enums import StripePaymentStatusEnum
 from models.plans import SubscriptionPlan
 from models.subscription_transactions import SubscriptionTransactions
 from models.subscriptions import Subscription, UserSubscriptions
-from models.payments_transactions import PaymentsTransactions
+from models.users_payments_transactions import UsersPaymentsTransactions
 from models.users import Users, User
 from persistence.plans_persistence import PlansPersistence
 from persistence.user_persistence import UserPersistence
@@ -135,12 +135,13 @@ class SubscriptionService:
         created_at = datetime.utcfromtimestamp(created_timestamp).isoformat() + "Z" if created_timestamp else None
         amount = int(payment_intent.get("amount")) / 20
         status = payment_intent.get("status")
-        payment_transaction_obj = PaymentsTransactions(
+        payment_transaction_obj = UsersPaymentsTransactions(
             user_id=user_id,
             transaction_id=transaction_id,
             created_at=created_at,
             status=status,
             amount=amount,
+            type='buy credits'
         )
         self.db.add(payment_transaction_obj)
         self.db.commit()

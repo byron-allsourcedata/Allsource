@@ -4,8 +4,8 @@ from sqlalchemy.dialects.postgresql import BIGINT, TIMESTAMP
 from .base import Base, create_timestamps, update_timestamps
 
 
-class PaymentsTransactions(Base):
-    __tablename__ = "payments_transactions"
+class UsersPaymentsTransactions(Base):
+    __tablename__ = "users_payments_transactions"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
@@ -13,3 +13,5 @@ class PaymentsTransactions(Base):
     transaction_id = Column(VARCHAR, nullable=True)
     status = Column(VARCHAR, nullable=True)
     amount = Column(Integer, nullable=True)
+    type = Column(VARCHAR, nullable=False)
+    lead_id = Column(Integer, nullable=False)
