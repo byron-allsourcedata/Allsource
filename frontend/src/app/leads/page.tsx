@@ -685,9 +685,8 @@ const Leads: React.FC = () => {
                     />
                 </Box>
             )}
-            <Box sx={{ display: 'flex', flexDirection: 'column', overflow: 'hidden',
+            <Box sx={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', height: '100%',
             '@media (max-width: 900px)': {
-                    paddingTop: '72px',
                     paddingRight: 0,
                     minHeight: '100vh'
 
@@ -695,26 +694,6 @@ const Leads: React.FC = () => {
              }}>
 
                 <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                    <Grid container sx={{ flex: 1,
-                        '@media (min-width: 901px)': {
-                            display:'-webkit-box'
-                        }
-                    }}>
-                        <Grid item xs={12} md="auto" lg="auto" sx={{
-                            padding: "0px",
-                            display: { xs: 'none', md: 'block' },
-                            width: '142px'
-                        }}>
-                            <Sidebar />
-                        </Grid>
-                        <Grid item xs={12} md lg sx={{ display: 'flex', flexDirection: 'column', flex: 1,
-                            paddingLeft: 3,
-                            paddingRight: 3,
-                            '@media (max-width: 900px)': {
-                                paddingLeft: 2,
-                                paddingRight: 2,
-                            }
-                            }}>
                             <Box
                                 sx={{
                                     display: 'flex',
@@ -1235,7 +1214,6 @@ const Leads: React.FC = () => {
                                 )}
                                 {showSlider && <Slider />}
                             </Box>
-                        </Grid>
                         <PopupDetails open={openPopup}
                             onClose={handleClosePopup}
                             rowData={popupData} />
@@ -1249,7 +1227,6 @@ const Leads: React.FC = () => {
                             onDateChange={handleDateChange}
                             onApply={handleApply}
                         />
-                    </Grid>
                 </Box>
             </Box>
         </>

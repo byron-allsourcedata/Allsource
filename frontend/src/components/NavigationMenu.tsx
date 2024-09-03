@@ -199,14 +199,14 @@ const NavigationMenu = () => {
             <ListItemIcon><IntegrationIcon /></ListItemIcon>
             <ListItemText primary="Integrations" />
           </ListItem>
-          <ListItem button onClick={() => handleNavigation('/analytics')}
+          {/* <ListItem button onClick={() => handleNavigation('/analytics')}
           sx={{
             ...(isActive('/analytics') ? navigationmenuStyles.activeItem : {}),
             ...navigationmenuStyles.mobileDrawerList
           }}>
             <ListItemIcon><AnalyticsIcon /></ListItemIcon>
             <ListItemText primary="Analytics" />
-          </ListItem>
+          </ListItem> */}
           <ListItem button onClick={() => handleNavigation('/suppressions')}
           sx={{
             ...(isActive('/suppressions') ? navigationmenuStyles.activeItem : {}),
@@ -215,14 +215,14 @@ const NavigationMenu = () => {
             <ListItemIcon><FeaturedPlayListIcon /></ListItemIcon>
             <ListItemText primary="Suppressions" />
           </ListItem>
-          <ListItem button onClick={() => handleNavigation('/rules')}
+          {/* <ListItem button onClick={() => handleNavigation('/rules')}
           sx={{
             ...(isActive('/rules') ? navigationmenuStyles.activeItem : {}),
             ...navigationmenuStyles.mobileDrawerList
             }}>
             <ListItemIcon><RuleFolderIcon /></ListItemIcon>
             <ListItemText primary="Rules" />
-          </ListItem>
+          </ListItem> */}
           <ListItem button onClick={() => handleNavigation('/partners')}
             sx={{
               ...(isActive('/partners') ? navigationmenuStyles.activeItem : {}),

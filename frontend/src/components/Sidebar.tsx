@@ -1,5 +1,5 @@
 'use client';
-import React from 'react';
+import React, { useState } from 'react';
 import { Box, List, ListItem, ListItemIcon, ListItemText, Divider, LinearProgress, Typography } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import { usePathname } from 'next/navigation';
@@ -17,6 +17,7 @@ import { useSlider } from '@/context/SliderContext';
 import { AxiosError } from 'axios';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { Height } from '@mui/icons-material';
+import Slider from "../components/Slider";
 
 const sidebarStyles = {
     container: {
@@ -30,7 +31,8 @@ const sidebarStyles = {
         height: '90.99vh',
         display: 'flex',
         flexDirection: 'column',
-        justifyContent: 'start'
+        justifyContent: 'start',
+        position: 'relative'
     },
     menu: {
         alignItems: 'center',
@@ -161,6 +163,7 @@ const Sidebar: React.FC = () => {
     const { setShowSlider } = useSlider();
     const router = useRouter();
     const pathname = usePathname();
+    const [showBookSlider, setShowBookSlider] = useState(false);
 
     const handleNavigation = async (path: string) => {
         try {
@@ -168,8 +171,10 @@ const Sidebar: React.FC = () => {
             if (response.data.status === "NEED_BOOK_CALL") {
                 sessionStorage?.setItem("is_slider_opened", "true");
                 setShowSlider(true);
+                setShowBookSlider(true);
             } else {
                 setShowSlider(false);
+                setShowBookSlider(false);
                 router.push(path);
             }
         } catch (error) {
@@ -177,8 +182,10 @@ const Sidebar: React.FC = () => {
                 if (error.response.data.status === "NEED_BOOK_CALL") {
                     sessionStorage?.setItem("is_slider_opened", "true");
                     setShowSlider(true);
+                    setShowBookSlider(true);
                 } else {
                     setShowSlider(false);
+                    setShowBookSlider(false);
                     router.push(path);
                 }
             } else {
@@ -241,15 +248,24 @@ const Sidebar: React.FC = () => {
                     <ListItemText primary="Partners" />
                 </ListItem>
             </List>
-            <SetupSection meData={meData ? meData : { percent_steps: 0 }} />
-            <Box sx={sidebarStyles.settings}>
-                <ListItem button onClick={() => handleNavigation('/settings')} sx={isActive('/settings') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
-                    <ListItemIcon sx={sidebarStyles.listItemIcon}>
-                        <SettingsIcon />
-                    </ListItemIcon>
-                    <ListItemText primary="Settings" />
-                </ListItem>
+            <Box sx={{
+                position: 'absolute',
+                bottom: '0',
+                left: '0',
+                right: '0',
+                width: '100%'
+            }}>
+                <SetupSection meData={meData ? meData : { percent_steps: 0 }} />
+                <Box sx={sidebarStyles.settings}>
+                    <ListItem button onClick={() => handleNavigation('/settings')} sx={isActive('/settings') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
+                        <ListItemIcon sx={sidebarStyles.listItemIcon}>
+                            <SettingsIcon />
+                        </ListItemIcon>
+                        <ListItemText primary="Settings" />
+                    </ListItem>
+                </Box>
             </Box>
+            {showBookSlider && <Slider />}
         </Box>
     );
 };
