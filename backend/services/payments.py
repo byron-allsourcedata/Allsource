@@ -13,6 +13,9 @@ class PaymentsService:
     def __init__(self, plans_service: PlansService):
         self.plans_service = plans_service
 
+    def get_additional_credits_price_id(self):
+        return self.plans_service.get_additional_credits_price_id()
+
     def create_customer_session(self, price_id: str):
         return self.create_stripe_checkout_session(
             success_url=StripeConfig.success_url,
@@ -21,22 +24,6 @@ class PaymentsService:
             line_items=[{"price": price_id, "quantity": 1}],
             mode="subscription"
         )
-    
-    def create_stripe_checkout_session(self, success_url: str, cancel_url: str, customer_id: str,
-                                        line_items: List[dict],
-                                        mode: str):
-        session = stripe.checkout.Session.create(
-            success_url=success_url,
-            cancel_url=cancel_url,
-            allow_promotion_codes=True,
-            customer=customer_id,
-            payment_method_types=["card"],
-            line_items=line_items,
-            mode=mode
-        )
-        return {"link": session.url}
-
-    
 
     def get_user_subscription_authorization_status(self):
         return self.plans_service.get_user_subscription_authorization_status()
@@ -72,6 +59,30 @@ class PaymentsService:
             return SubscriptionStatus.CANCELED
         else:
             return SubscriptionStatus.UNKNOWN
+        
+    def charge_user_for_extra_credits(self, quantity: int):
+        return self.create_stripe_checkout_session(
+        success_url=StripeConfig.success_url,
+        cancel_url=StripeConfig.cancel_url,
+        customer_id=self.plans_service.get_customer_id(),
+        line_items=[{"price": self.get_additional_credits_price_id(), "quantity": quantity}],
+        mode="payment"
+    )
+
+    def create_stripe_checkout_session(self, success_url: str, cancel_url: str, customer_id: str,
+                                        line_items: List[dict],
+                                        mode: str):
+        session = stripe.checkout.Session.create(
+            success_url=success_url,
+            cancel_url=cancel_url,
+            allow_promotion_codes=True,
+            customer=customer_id,
+            payment_method_types=["card"],
+            line_items=line_items,
+            mode=mode
+        )
+        return {"link": session.url}
+
 
 
 

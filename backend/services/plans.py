@@ -30,6 +30,9 @@ class PlansService:
             if not self.user.get('is_company_details_filled'):
                 return UserAuthorizationStatus.FILL_COMPANY_DETAILS
         return UserAuthorizationStatus.SUCCESS
+    
+    def get_additional_credits_price_id(self):
+        return self.subscription_service.get_additional_credits_price_id()
 
     def get_subscription_plans(self):
         stripe_plans = self.plans_persistence.get_stripe_plans()

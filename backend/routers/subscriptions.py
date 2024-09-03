@@ -43,4 +43,11 @@ def cancel_user_subscripion(price_id: str, payments_service=Depends(get_payments
     if status != UserAuthorizationStatus.SUCCESS:
         return status
     return payments_service.upgrade_and_downgrade_user_subscription(price_id)
+
+@router.get("/buy-credits")
+def cancel_user_subscripion(credits_used: int, payments_service=Depends(get_payments_service)):
+    status = payments_service.get_user_subscription_authorization_status()
+    if status != UserAuthorizationStatus.SUCCESS:
+        return status
+    return payments_service.charge_user_for_extra_credits(credits_used)
     

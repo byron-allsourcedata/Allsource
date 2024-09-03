@@ -17,8 +17,12 @@ class WebhookService:
         user_data = self.subscription_service.get_userid_by_customer(customer_id)
         if not user_data:
             return payload
-        self.subscription_service.create_subscription_transaction(user_id=user_data.id,
-                                                                  stripe_payload=payload)
+        if payload.get("data").get("object").get('object') == 'payment_intent':
+            self.subscription_service.create_payments_transaction(user_id=user_data.id,
+                                                                    stripe_payload=payload)
+        else:
+            self.subscription_service.create_subscription_transaction(user_id=user_data.id,
+                                                                    stripe_payload=payload)
         if self.subscription_service.check_duplicate_send(stripe_request_created_at, user_data.id):
             return payload
 
@@ -41,8 +45,13 @@ class WebhookService:
         if self.subscription_service.subscription_exists(platform_subscription_id):
             user_subscription = self.subscription_service.update_subscription_from_webhook(platform_subscription_id, stripe_payload=payload)
         else:
-            user_subscription = self.subscription_service.create_subscription_from_webhook(user_id=user_data.id,                                                                           stripe_payload=payload)
-            if user_subscription:
-                logger.info("New subscription created")
-
-        return self.subscription_service.construct_webhook_response(user_subscription)
+            if payload.get("data").get("object").get('object') == 'payment_intent':
+                user_subscription = self.subscription_service.create_payment_from_webhook(user_id=user_data.id, stripe_payload=payload)
+                if user_subscription:
+                    logger.info("New payment created")
+                    return user_subscription
+            else:
+                user_subscription = self.subscription_service.create_subscription_from_webhook(user_id=user_data.id, stripe_payload=payload)
+                if user_subscription:
+                    logger.info("New subscription created")
+                    return self.subscription_service.construct_webhook_response(user_subscription)
