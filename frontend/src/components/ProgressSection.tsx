@@ -47,6 +47,13 @@ const CustomButton = styled(Button)(({ theme }) => ({
     padding: "8px",
     height: "auto",
   },
+  "& .MuiListItemText-root span": {
+    fontFamily: "Nunito",
+    fontSize: "14px",
+    color: "#4a4a4a",
+    fontWeight: "600",
+    lineHeight: "20px"
+  }
 }));
 
 const CustomListItemIcon = styled(ListItemIcon)(({ theme }) => ({
