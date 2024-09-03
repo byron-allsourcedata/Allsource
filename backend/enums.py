@@ -12,6 +12,13 @@ class StripePaymentStatusEnum(Enum):
     PENDING = 'PENDING'
     FAILED = 'FAILED'
 
+class SubscriptionStatus(Enum):
+    SUCCESS = "SUCCESS"
+    INCOMPLETE = "INCOMPLETE"
+    PAST_DUE = "PAST_DUE"
+    CANCELED = "CANCELED"
+    UNKNOWN = "UNKNOWN"
+
 
 class VerificationEmail(Enum):
     EMAIL_ALREADY_VERIFIED = 'EMAIL_ALREADY_VERIFIED'

@@ -3,7 +3,7 @@ import stripe
 from typing import List
 from config.stripe import StripeConfig
 from services.plans import PlansService
-from enums import BaseEnum
+from enums import SubscriptionStatus
 
 logger = logging.getLogger(__name__)
 
@@ -21,16 +21,22 @@ class PaymentsService:
             line_items=[{"price": price_id, "quantity": 1}],
             mode="subscription"
         )
-
+    
     def create_stripe_checkout_session(self, success_url: str, cancel_url: str, customer_id: str,
-                                       line_items: List[dict],
-                                       mode: str):
-        
+                                        line_items: List[dict],
+                                        mode: str):
         session = stripe.checkout.Session.create(
-            success_url=success_url, cancel_url=cancel_url, allow_promotion_codes=True, customer=customer_id,
-            payment_method_types=["card"], line_items=line_items, mode=mode
+            success_url=success_url,
+            cancel_url=cancel_url,
+            allow_promotion_codes=True,
+            customer=customer_id,
+            payment_method_types=["card"],
+            line_items=line_items,
+            mode=mode
         )
         return {"link": session.url}
+
+    
 
     def get_user_subscription_authorization_status(self):
         return self.plans_service.get_user_subscription_authorization_status()
@@ -38,11 +44,12 @@ class PaymentsService:
     def cancel_user_subscripion(self):
         subscription_id = self.plans_service.get_subscription_id()
         subscription_data = stripe.Subscription.cancel(subscription_id)
-        if subscription_data:
-            return BaseEnum.SUCCESS
-        return BaseEnum.FAILURE
+        if subscription_data['status'] == 'canceled':
+            return SubscriptionStatus.SUCCESS
+        else:
+            return SubscriptionStatus.UNKNOWN
     
-    def upgrade_and_downgrade_user_subscription(self, price_id):
+    def upgrade_and_downgrade_user_subscription(self, price_id: str):
         subscription_id = self.plans_service.get_subscription_id()
         subscription = stripe.Subscription.retrieve(subscription_id)
         subscription_item_id = subscription['items']['data'][0]['id']
@@ -54,9 +61,17 @@ class PaymentsService:
             }],
             proration_behavior='create_prorations'
         )
-        if subscription_data:
-            return BaseEnum.SUCCESS        
-        return BaseEnum.FAILURE
+        status = subscription_data['status']
+        if status == 'active':
+            return SubscriptionStatus.SUCCESS
+        elif status == 'incomplete':
+            return SubscriptionStatus.INCOMPLETE
+        elif status == 'past_due':
+            return SubscriptionStatus.PAST_DUE
+        elif status == 'canceled':
+            return SubscriptionStatus.CANCELED
+        else:
+            return SubscriptionStatus.UNKNOWN
 
 
 

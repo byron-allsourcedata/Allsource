@@ -236,7 +236,7 @@ class SubscriptionService:
     def get_subscription_id_by_user_id(self, user_id):
         return self.db.query(UserSubscriptions.platform_subscription_id).filter(
             UserSubscriptions.user_id == user_id
-        ).order_by(UserSubscriptions.id).limit(1).scalar()
+        ).order_by(UserSubscriptions.id.desc()).limit(1).scalar()
     
     def subscription_exists(self, platform_subscription_id):
         latest_subscription = self.db.query(UserSubscriptions).filter(
@@ -270,7 +270,7 @@ class SubscriptionService:
         plan_id = self.plans_persistence.get_plan_by_title(plan_type)
         domains_limit, users_limit, integrations_limit, audiences_limit = self.plans_persistence.get_plan_limit_by_id(
             plan_id=plan_id)
-
+        print(plan_id)
         if status != "canceled":
             user_subscription.plan_start = start_date
             user_subscription.plan_end = end_date
@@ -279,6 +279,7 @@ class SubscriptionService:
             user_subscription.integrations_limit = integrations_limit
             user_subscription.audiences_limit = audiences_limit
         user_subscription.status = status
+        user_subscription.plan_id=plan_id,
         user_subscription.stripe_request_created_at = stripe_request_created_at
         self.db.commit()
 
