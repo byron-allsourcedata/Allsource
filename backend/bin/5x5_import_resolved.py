@@ -173,6 +173,9 @@ def normalize_url(url):
 
 
 def process_leads_requests(requested_at, page, leads_requests, lead_id, session: Session, behavior_type):
+    if requested_at.tzinfo is not None:
+        requested_at = requested_at.replace(tzinfo=None)
+        
     new_request = LeadsRequests(
         lead_id=lead_id,
         page=normalize_url(page),
