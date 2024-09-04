@@ -81,22 +81,29 @@ class PixelInstallationService:
                     return True
         return False
 
-    def check_pixel_installed(self, url, user):
+    def check_pixel_installed_via_parse(self, url, user):
         result = {'success': False}
         result_parser = self.parse_website(url, user)
         if result_parser:
-            start_date = datetime.utcnow()
-            end_date = start_date + timedelta(days=7)
-            start_date_str = start_date.isoformat() + "Z"
-            end_date_str = end_date.isoformat() + "Z"
-            self.db.query(UserSubscriptions).filter(UserSubscriptions.user_id == user.get('id')).update(
-                {UserSubscriptions.plan_start: start_date_str, UserSubscriptions.plan_end: end_date_str},
-                synchronize_session=False
-            )
             self.db.query(Users).filter(Users.id == user.get('id')).update(
-                {Users.is_pixel_installed: True, Users.company_website: url},
+                {Users.company_website: url},
                 synchronize_session=False)
             self.db.commit()
             result['success'] = True
         result['user_id'] = user.get('id')
         return result
+    
+    def check_pixel_installed_via_api(self, pixelClientId, url):
+        result = {'success': False}
+        user = self.db.query(Users).filter(Users.data_provider_id == pixelClientId).first()
+        if user:
+            user.is_pixel_installed = True
+            user.company_website = url
+            self.db.commit()
+            
+            result['success'] = True
+            result['user_id'] = user.id
+        else:
+            result['success'] = False
+        return result
+
