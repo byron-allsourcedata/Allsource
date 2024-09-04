@@ -200,7 +200,7 @@ class SubscriptionService:
             stripe_payload.get("data").get("object").get("plan").get("product"))
         payment_platform_subscription_id = stripe_payload.get("data").get("object").get("id")
         plan_id = self.plans_persistence.get_plan_by_title(plan_type)
-        domains_limit, users_limit, integrations_limit, audiences_limit, credits = self.plans_persistence.get_plan_limit_by_id(
+        domains_limit, users_limit, integrations_limit, audiences_limit, leads_credits, prospect_credits = self.plans_persistence.get_plan_limit_by_id(
             plan_id=plan_id)
         subscription_obj = Subscription(
             user_id=user_id,
@@ -217,7 +217,8 @@ class SubscriptionService:
         )
         self.db.add(subscription_obj)
         user = self.db.query(User).filter(User.id == user_id).first()
-        user.credits = credits
+        user.leads_credits = leads_credits
+        user.prospect_credits = prospect_credits
         self.db.commit()
         return subscription_obj
     
@@ -227,9 +228,9 @@ class SubscriptionService:
         status = payment_intent.get("status")
         if status == "succeeded":
             user = self.db.query(User).filter(User.id == user_id).first()
-            if user.credits is None:
-                user.credits = 0
-            user.credits += amount
+            if user.prospect_credits is None:
+                user.prospect_credits = 0
+            user.prospect_credits += amount
             self.db.commit()
         return user
         
@@ -282,7 +283,7 @@ class SubscriptionService:
     
     def get_additional_credits_price_id(self):
         stripe_price_id = self.db.query(SubscriptionPlan.stripe_price_id).filter(
-            SubscriptionPlan.title == 'Additional_credits'
+            SubscriptionPlan.title == 'Additional_prospect_credits'
         ).scalar()
         return stripe_price_id
 
