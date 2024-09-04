@@ -8,10 +8,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { TrialProvider } from '../context/TrialProvider';
 import { SSEProvider } from '../context/SSEContext';
-import HeaderWrapper from "@/context/HeaderWrapper";
-import SidebarWrapper from "@/context/SidebarWrapper";
-import { Grid } from "@mui/material";
-import TrialStatus from "../components/TrialLabel";
+import { ClientLayout } from "@/context/ClientLayout";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -39,42 +36,9 @@ export default function RootLayout({
           <SSEProvider>
             <TrialProvider>
               <UserProvider>
-                <HeaderWrapper />
-                  <Grid container spacing={{ md: 3, lg: 3 }} sx={{
-                      display: 'flex',
-                      flexWrap: 'nowrap', // Prevents wrapping of items
-                    '@media (max-width: 899px)': {
-                        paddingTop: '72px',
-                        paddingRight: 0,
-                        flexWrap: 'wrap'
-                      }
-                    }}>
-                    <Grid item xs={12} sx={{ padding: "0px", display: { xs: 'block', md: 'none' },
-                    }}>
-                      <TrialStatus />
-                    </Grid>
-                    <Grid item xs={12} md="auto" lg="auto" sx={{ 
-                      padding: "0px",
-                      display: { xs: 'none', md: 'block' },
-                      flexBasis: '142px', // Sidebar fixed width
-                      flexShrink: 0, // Prevents shrinking
-                      minWidth: '142px', // Ensures minimum width
-                      }}>
-                      <SidebarWrapper />
-                    </Grid>
-                    <Grid item xs={12} md lg sx={{
-                      position: 'relative',
-                      flexGrow: 1, // Takes up remaining space
-                      paddingRight: '24px',
-                      minWidth: 0, // Prevents content from causing overflow
-                      '@media (max-width: 899px)': {
-                          padding: '0 16px 32px',
-                          minWidth: '100%',
-                      }
-                    }}>
-                    {children}
-                    </Grid>
-                  </Grid>
+                <ClientLayout>
+                  {children}
+                </ClientLayout>
               </UserProvider>
             </TrialProvider>
           </SSEProvider>
