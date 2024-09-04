@@ -10,32 +10,33 @@ from sqlalchemy.orm import Session
 from typing_extensions import Annotated
 from fastapi import Depends, Header, HTTPException, status
 
-from enums import UserAuthorizationStatus
-from exceptions import InvalidToken
-from persistence.audience_persistence import AudiencePersistence
-from persistence.leads_persistence import LeadsPersistence
-from persistence.plans_persistence import PlansPersistence
-from schemas.auth_token import Token
-from services.admin_customers import AdminCustomersService
-from services.audience import AudienceService
-from services.company_info import CompanyInfoService
-from services.dashboard import DashboardService
-from services.leads import LeadsService
-from services.payments import PaymentsService
-from services.payments_plans import PaymentsPlans
-from persistence.sendgrid_persistence import SendgridPersistence
-from services.plans import PlansService
-from services.subscriptions import SubscriptionService
-from services.users_email_verification import UsersEmailVerificationService
-from services.users import UsersService
-from services.sse_events import SseEventsService
-from services.pixel_installation import PixelInstallationService
-from models.users import Users as User
-from services.users_auth import UsersAuth
-from persistence.user_persistence import UserPersistence
 from services.webhook import WebhookService
-from persistence.integrations.integrations_persistence import IntegrationsPresistence
+from services.users_email_verification import UsersEmailVerificationService
+from services.users_auth import UsersAuth
+from services.users import UsersService
+from services.subscriptions import SubscriptionService
+from services.sse_events import SseEventsService
+from services.plans import PlansService
+from services.pixel_installation import PixelInstallationService
+from services.payments_plans import PaymentsPlans
+from services.payments import PaymentsService
+from services.leads import LeadsService
 from services.integrations.base import IntegrationService
+from services.dashboard import DashboardService
+from services.company_info import CompanyInfoService
+from services.audience import AudienceService
+from services.admin_customers import AdminCustomersService
+from schemas.auth_token import Token
+from persistence.user_persistence import UserPersistence
+from persistence.sendgrid_persistence import SendgridPersistence
+from persistence.plans_persistence import PlansPersistence
+from persistence.leads_persistence import LeadsPersistence
+from persistence.integrations.integrations_persistence import IntegrationsPresistence
+from persistence.audience_persistence import AudiencePersistence
+from persistence.leads_order_persistence import LeadOrdersPersistence
+from models.users import Users as User
+from exceptions import InvalidToken
+from enums import UserAuthorizationStatus
 
 logger = logging.getLogger(__name__)
 
@@ -298,8 +299,16 @@ def check_user_admin(Authorization: Annotated[str, Header()],
 def get_user_integrations_presistence(db: Session = Depends(get_db)) -> IntegrationsPresistence:
     return IntegrationsPresistence(db)
 
+def get_lead_orders_persistence(db: Session = Depends(get_db)) -> LeadsPersistence:
+    return LeadsPersistence(db)
+
 def get_integration_service(db: Session = Depends(get_db), 
                             audience_persistence = Depends(get_audience_persistence),
                             integration_presistence: IntegrationsPresistence = Depends(get_user_integrations_presistence),
-                            lead_presistence: LeadsPersistence = Depends(get_leads_persistence)):
-    return IntegrationService(db, integration_presistence, lead_presistence, audience_persistence)
+                            lead_presistence: LeadsPersistence = Depends(get_leads_persistence),
+                            lead_orders_persistence: LeadOrdersPersistence = Depends(get_lead_orders_persistence)):
+    return IntegrationService(db, 
+                              integration_presistence, 
+                              lead_presistence, 
+                              audience_persistence, 
+                              lead_orders_persistence)

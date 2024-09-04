@@ -1,12 +1,12 @@
+from typing import List
 from sqlalchemy.orm import Session
+from schemas.integrations.integrations import IntegrationCredentials
+from schemas.integrations.bigcommerce import BigCommerceUserScheme
 from persistence.leads_persistence import LeadsPersistence
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
-from fastapi import HTTPException
 from httpx import Client
-from schemas.integrations.bigcommerce import BigCommerceUserScheme
-from typing import List
+from fastapi import HTTPException
 from datetime import datetime
-from schemas.integrations.integrations import IntegrationCredentials
 
 class BigcommerceIntegrationsService:
 

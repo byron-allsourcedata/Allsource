@@ -1,13 +1,13 @@
+import json
+import httpx 
+from typing import List
 from sqlalchemy.orm import Session
+from schemas.integrations.klaviyo import KlaviyoCustomer, KlaviyoList
+from schemas.integrations.integrations import IntegrationCredentials
 from persistence.leads_persistence import LeadsPersistence
 from persistence.integrations.integrations_persistence import IntegrationsPresistence 
-import httpx 
 from fastapi import HTTPException
-from schemas.integrations.klaviyo import KlaviyoCustomer, KlaviyoList
 from datetime import datetime
-from schemas.integrations.integrations import IntegrationCredentials
-from typing import List
-import json
 
 
 class KlaviyoIntegrationsService:

@@ -1,8 +1,8 @@
-from dotenv import load_dotenv
 import os
+from persistence.integrations.integrations_persistence import IntegrationsPresistence
 from httpx import Client
 from fastapi import HTTPException
-from persistence.integrations.integrations_persistence import IntegrationsPresistence
+from dotenv import load_dotenv
 
 class FacebookIntegrations:
 

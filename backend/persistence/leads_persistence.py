@@ -268,8 +268,9 @@ class LeadsPersistence:
     def get_leads_users_by_lead_id(self, lead_id: int, user_id: int) -> LeadUser:
         return self.db.query(LeadUser).filter(LeadUser.lead_id == lead_id, LeadUser.user_id == user_id).first()
     
-    def mapped_leads_for_export(self, lead: Lead):
-        ...
+    def get_leads_user_filter_by_email(self, user_id: int, email: str):
+        return self.db.query(LeadUser).join(Lead, Lead.id == LeadUser.lead_id).filter(LeadUser.user_id == user_id, 
+                                                                                         Lead.business_email == email).all()
 
         
         

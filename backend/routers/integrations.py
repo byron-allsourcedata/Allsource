@@ -18,6 +18,7 @@ async def get_integrations_credentials(integration_serivce: IntegrationService =
         raise HTTPException(status_code=404, detail='don`t have integrations')
     return integration
 
+
 @router.post('/export/')
 async def export(export_query: ExportLeads, service_name: str = Query(...),
                  integrations_service: IntegrationService = Depends(get_integration_service),
@@ -26,6 +27,7 @@ async def export(export_query: ExportLeads, service_name: str = Query(...),
         service = getattr(service, service_name)
         service.export_leads(export_query.list_name, user['id'])
         return {'message': 'Successfuly'}
+
 
 @router.post('/', status_code=200)
 async def create_integration(creditional: IntegrationCredentials, service_name: str = Query(...), 
@@ -41,11 +43,11 @@ async def create_integration(creditional: IntegrationCredentials, service_name: 
 
 @router.delete('/')
 async def delete_integration(service_name: str = Query(...),
+                             user = Depends(check_user_authentication),
                              integration_service: IntegrationService = Depends(get_integration_service)):
     try:
-        integration_service.delete_integration(service_name)
+        integration_service.delete_integration(service_name, user)
         return {'message': 'Successfuly'}
     except:
         raise HTTPException(status_code=400)
-
 

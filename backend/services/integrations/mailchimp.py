@@ -1,10 +1,10 @@
-from fastapi import HTTPException
-from schemas.integrations.mailchimp import MailchimpCustomer
-from persistence.integrations.integrations_persistence import IntegrationsPresistence
-from datetime import datetime
 import mailchimp_marketing as MailchimpMarketing
-from mailchimp_marketing.api_client import ApiClientError
+from schemas.integrations.mailchimp import MailchimpCustomer
 from schemas.integrations.integrations import IntegrationCredentials
+from persistence.integrations.integrations_persistence import IntegrationsPresistence
+from mailchimp_marketing.api_client import ApiClientError
+from fastapi import HTTPException
+from datetime import datetime
 
 class MailchimpIntegrationsService:
 

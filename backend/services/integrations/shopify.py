@@ -1,111 +1,184 @@
-from fastapi import HTTPException
-from httpx import Client
-from schemas.integrations.shopify import ShopifyCustomer 
-from persistence.integrations.integrations_persistence import IntegrationsPresistence
-from datetime import datetime
-from schemas.integrations.integrations import IntegrationCredentials
 from typing import List
+from schemas.integrations.shopify import ShopifyCustomer, ShopifyOrderAPI
+from schemas.integrations.integrations import IntegrationCredentials
+from persistence.leads_persistence import LeadsPersistence
+from persistence.leads_order_persistence import LeadOrdersPersistence
+from persistence.integrations.integrations_persistence import IntegrationsPresistence
+from models.integrations.users_integrations import UserIntegration
+from httpx import Client
+from fastapi import HTTPException
+from datetime import datetime
 
 
 class ShopifyIntegrationService:
 
-    def __init__(self, integration_persistence: IntegrationsPresistence, client: Client):
+    def __init__(self, integration_persistence: IntegrationsPresistence, 
+                 lead_persistence: LeadsPersistence, lead_orders_persistence: LeadOrdersPersistence,
+                 client: Client, ):
         self.integration_persistence = integration_persistence
+        self.lead_persistence = lead_persistence
+        self.lead_orders_persistence = lead_orders_persistence
         self.client = client
 
-    
+
+    def __handle_request(self, method: str, url: str, headers: dict = None, json: dict = None, data: dict = None, params: dict = None):
+        response = self.client.request(method, url, headers=headers, json=json, data=data, params=params)
+
+        if response.is_redirect:
+            redirect_url = response.headers.get('Location')
+            if redirect_url:
+                response = self.client.request(method, redirect_url, headers=headers, json=json, data=data, params=params)
+
+        if response.status_code not in {200, 201}:
+            raise HTTPException(status_code=response.status_code, detail={'status': 'error'})
+        
+        return response
+
+
+    def __get_orders(self, shop_domain: str, access_token: str):
+        url = f'https://{shop_domain}/admin/api/2024-07/orders.json?fields=created_at,id,name,total-price,total_price_set,customer&status=closed'
+        params = {
+            'status': 'closed',
+            'fields': 'created_at,id,name,total_price'
+        }
+        
+        headers = {
+            'X-Shopify-Access-Token': access_token,
+            "Content-Type": "application/json"
+        }
+
+        response = self.__handle_request('GET', url, headers=headers)
+
+        return response.json().get('orders')
+
+
     def __get_credentials(self, user_id: int):
-        return self.integration_persistence.get_credentials_for_service(user_id, 'Shopify')
+        return self.integration_persistence.get_credentials_for_service(user_id, 'shopify')
+
 
     def __set_pixel(self, user, shop_domain: str, access_token: str):
-        script_url = f'https://maximiz-data.s3.us-east-2.amazonaws.com/pixel_installed_shopify.js?client_id={user['data_provider_id']}'
-        response = self.client.post(f'https://{shop_domain}.myshopify.com/admin/api/2024-07/script_tags.json',
-                         headers={'X-Shopify-Access-Token': access_token, "Content-Type": "application/json"}, 
-                         json={"script_tag":{"event": "onload","src":f"{script_url}"}})
-        if response.status_code != 201: 
-            raise HTTPException(status_code=response.status_code, detail={'status': 'error', 'detail': {
-                'message': 'Set Shopify pixel failed'
-            }})
-        return {'message': 'Successfuly'}
+        script_url = f'https://maximiz-data.s3.us-east-2.amazonaws.com/pixel_shopify.js?client_id={user["data_provider_id"]}'
+        url = f'https://{shop_domain}/admin/api/2024-07/script_tags.json'
+        
+        headers = {
+            'X-Shopify-Access-Token': access_token,
+            "Content-Type": "application/json"
+        }
+
+        data = {
+            "script_tag": {
+                "event": "onload",
+                "src": script_url
+            }
+        }
+
+        self.__handle_request('POST', url, headers=headers, json=data)
+        return {'message': 'Successfully'}
+
 
     def __get_customers(self, shop_domain: str, access_token: str):
-        response = self.client.get(f'https://{shop_domain}.myshopify.com/admin/api/2023-07/customers.json', headers={'X-Shopify-Access-Token': access_token})
-        if response.status_code != 200:
-            raise HTTPException(status_code=400, detail={'status': 'error', 'detail': {'message': 'Shopify credentials invalid'}})
+        url = f'https://{shop_domain}/admin/api/2023-07/customers.json'
+        headers = {'X-Shopify-Access-Token': access_token}
+
+        response = self.__handle_request('GET', url, headers=headers)
         return response.json().get('customers')
 
 
-
-
     def __save_integration(self, shop_domain: str, access_token: str, user_id: int):
-        credentials = {'user_id': user_id, 'shop_domain': shop_domain,
-                       'access_token': access_token, 'service_name': 'Shopify'}
         if self.integration_persistence.get_credentials_for_service(user_id, 'Shopify'):
-            raise HTTPException(status_code=409, detail={'status': 'error', 'detail': {
-                'message': 'You already have Shopify integrations'
-            }})    
-        integrations = self.integration_persistence.create_integration(credentials)
-        if not integrations:
-            raise HTTPException(status_code=409, detail={'status': 'error', 'detail': {
-                'message': 'Save integrations is failed'
-            }})
-        return integrations
-    
+            raise HTTPException(status_code=409, detail={'status': 'error', 'detail': {'message': 'You already have Shopify integrations'}})
+
+        credentials = {
+            'user_id': user_id, 
+            'shop_domain': shop_domain,
+            'access_token': access_token, 
+            'service_name': 'Shopify'
+        }
+
+        integration = self.integration_persistence.create_integration(credentials)
+        if not integration:
+            raise HTTPException(status_code=409, detail={'status': 'error', 'detail': {'message': 'Save integration failed'}})
+
+        return integration
+
 
     def __save_customer(self, customer: ShopifyCustomer, user_id: int):
         with self.integration_persistence as service:
             service.shopify.save_customer(customer.model_dump(), user_id)
 
 
-    def add_integration(self, user, credentials: IntegrationCredentials):
-        if user['company_website'] != f'https://{credentials.shopify.shop_domain}.myshopify.com':
-            raise HTTPException(status_code=400, detail={'status': 'error', 'detail': {'message': 'Store Domain does not match the one you specified earlier'}})
-        customers = [self.__mapped_customer(customer) for customer in self.__get_customers(credentials.shopify.shop_domain, credentials.shopify.access_token)]
-        self.__set_pixel(user, credentials.shopify.shop_domain, credentials.shopify.access_token)
-        integrataion = self.__save_integration(credentials.shopify.shop_domain, credentials.shopify.access_token, user['id'])
-        for customer in customers:
-            self.__save_customer(customer, user['id'])
-        return {
-            'status': 'Successfuly',
-            'detail': {
-                'id': integrataion.id,
-                'service_name': 'Shopify'
-            }
-        }        
-
-    def __create_or_upadte_shopify_customer(self, customer, shop_domain: str, access_token: str):
+    def __create_or_update_shopify_customer(self, customer, shop_domain: str, access_token: str):
         customer_json = self.__mapped_customer_for_shopify(customer)
-        response = self.client.post(f'https://{shop_domain}.myshopify.com/admin/api/2024-07/customers.json', 
-                                    headers={'X-Shopify-Token': access_token, 
-                                             "Content-Type": "application/json"}, 
-                                    data=customer_json)
-        if response.status_code != 201:
-            raise HTTPException(status_code=response.status_code)
+        url = f'https://{shop_domain}/admin/api/2024-07/customers.json'
+
+        headers = {
+            'X-Shopify-Token': access_token,
+            "Content-Type": "application/json"
+        }
+
+        response = self.__handle_request('POST', url, headers=headers, json=customer_json)
         return response.json().get('customers')
 
-    def export_sync(self, user, list_name: str, list_id: str = None, customers_ids: List[int] = None, filter_id: int = None):
-        credential = self.__get_credentials(user['id'])
-        if not list_id:
-            list_id = self.__create_list(list_name)
-        if not customers_ids:
-            if not filter_id:
-                raise HTTPException(status_code=400, detail={'status': 'error', 'detail': {'message': 'Filter is empty' } } )
-            custoemrs_ids = self.leads_persistence.get_customer_by_filter_id(user['id'], filter_id)
-        customers_klaviyo_ids = self.__get_customers_klaiyo_ids(customers_ids, user['id'])
-        klaviyo_ids = [self.__create_or_update_klaviyo_cutomer(customer, customer_klaviyo_id) for (customer, customer_klaviyo_id) in zip([self.leads_persistence.get_lead_data(customer_id) for customer_id in customers_klaviyo_ids], customers_klaviyo_ids)]
 
-        for klaviyo_id in klaviyo_ids:
-            self.__add_customer_to_list(list_id, klaviyo_id, credential.access_token)
+    def add_integration(self, user, credentials: IntegrationCredentials):
+        if user['company_website'] != f'https://{credentials.shopify.shop_domain}':
+            raise HTTPException(status_code=400, detail={'status': 'error', 'detail': {'message': 'Store Domain does not match the one you specified earlier'}})
+
+        customers = [self.__mapped_customer(customer) for customer in self.__get_customers(credentials.shopify.shop_domain, credentials.shopify.access_token)]
+        self.__set_pixel(user, credentials.shopify.shop_domain, credentials.shopify.access_token)
+        integration = self.__save_integration(credentials.shopify.shop_domain, credentials.shopify.access_token, user['id'])
+
+        for customer in customers:
+            self.__save_customer(customer, user['id'])
+
         return {
-            'status': 'Success'
+            'status': 'Successfully',
+            'detail': {
+                'id': integration.id,
+                'service_name': 'Shopify'
+            }
         }
     
-    def sync_import(self, user_id: int):
+    def __order_sync(self, user_id):
+        credential = self.__get_credentials(user_id)
+        orders = [self.__mapped_customer_shopify_order(order) for order in self.__get_orders(credential.shop_domain, credential.access_token)]
+        for order in orders:
+            lead_user = self.lead_persistence.get_leads_user_filter_by_email(user_id, order.email)
+            if lead_user and len(lead_user) > 0: 
+                self.lead_orders_persistence.create_lead_order({
+                    'shopify_user_id': order.shopify_user_id,
+                    'lead_user_id': lead_user[0].id,
+                    'shopify_order_id': order.order_shopify_id,
+                    'currency_code': order.currency_code,
+                    'total_price': order.total_price,
+                    'created_at_shopify': order.created_at_shopify
+                })
+
+    
+    def __export_sync(self, user_id, filter_id: int, **filter):
         credentials = self.__get_credentials(user_id)
-        self.__save_customer([self.__mapped_customer(customer) 
-                              for customer in self.__get_customers(credentials.shopify.shop_domain, 
-                                                                   credentials.shopify.access_token)], 
-                              user_id)
+        if filter_id:
+            # сюда с фильтром нужно закинуть функицию какую-нибудь
+            ...
+        else: leads = self.lead_persistence.filter_leads(user_id, **filter)
+        customers = [self.__mapped_customer_for_shopify(lead) for lead in leads]
+        for customer in customers: 
+            self.__create_or_update_shopify_customer(customer, credentials.shop_domain, credentials.access_token)
+        return {'status': 'Success'}
+
+
+    def __import_sync(self, user_id: int):
+        credentials = self.__get_credentials(user_id)
+        customers = [self.__mapped_customer(customer) 
+                     for customer in self.__get_customers(credentials.shopify.shop_domain, 
+                                                          credentials.shopify.access_token)]
+        self.__save_customer(customers, user_id)
+
+
+    def sync(self, user_id):
+        self.__import_sync(user_id)
+        self.__order_sync(user_id)
+        self.__export_sync(user_id)
 
 # -------------------------------MAPPED-SHOPIFY-DATA------------------------------------ #
 
@@ -171,3 +244,13 @@ class ShopifyIntegrationService:
                 "first_name": customer.first_name,
                 "country": "CA"
             }]}
+    
+    def __mapped_customer_shopify_order(self, order) -> ShopifyOrderAPI:
+        return ShopifyOrderAPI(
+            order_shopify_id=order.get('id'),
+            shopify_user_id=order.get('customer').get('id'),
+            total_price=float(order.get('total_price')),
+            currency_code=order.get('total_price_set').get('shop_money').get('currency_code'),
+            created_at_shopify=order.get('created_at'),
+            email=order.get('customer').get('email')
+        )

@@ -1,9 +1,9 @@
+from typing import List
+from schemas.integrations.sendlane import SendlaneCustomer, SendlaneList
+from schemas.integrations.integrations import IntegrationCredentials
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
 from httpx import Client 
 from fastapi import HTTPException
-from schemas.integrations.sendlane import SendlaneCustomer, SendlaneList
-from schemas.integrations.integrations import IntegrationCredentials
-from typing import List
 
 
 class SendlaneIntegration:

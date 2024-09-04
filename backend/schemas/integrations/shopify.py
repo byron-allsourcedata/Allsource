@@ -44,3 +44,12 @@ class ShopifyCustomer(BaseModel):
     address_country_code: Optional[str] = None
     address_country_name: Optional[str] = None
     address_default: Optional[bool] = False
+
+
+class ShopifyOrderAPI(BaseModel):
+    order_shopify_id: int 
+    shopify_user_id: int
+    total_price: float
+    currency_code: str
+    created_at_shopify: str
+    email: EmailStr
