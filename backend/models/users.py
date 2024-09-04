@@ -36,7 +36,8 @@ class Users(Base):
     calendly_uuid = Column(VARCHAR(64), nullable=True)
     calendly_invitee_uuid = Column(VARCHAR(64), nullable=True)
     activate_steps_percent = Column(INTEGER, nullable=True)
-    credits = Column(INTEGER, nullable=True)
+    leads_credits = Column(INTEGER, nullable=True)
+    prospect_credits = Column(INTEGER, nullable=True)
 
 
 User = Users
