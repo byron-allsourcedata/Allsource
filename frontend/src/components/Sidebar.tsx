@@ -215,7 +215,13 @@ const Sidebar: React.FC = () => {
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
                         <CategoryIcon />
                     </ListItemIcon>
-                    <ListItemText primary="Audience" />
+                    <ListItemText primary="Data Sync" />
+                </ListItem>
+                <ListItem button onClick={() => handleNavigation('/prospect')} sx={isActive('/prospect') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
+                    <ListItemIcon sx={sidebarStyles.listItemIcon}>
+                        <Image src="/profile-circle-filled.svg" alt="profile-circle" height={20} width={20} />
+                    </ListItemIcon>
+                    <ListItemText primary="Prospect" />
                 </ListItem>
                 <ListItem button onClick={() => handleNavigation('/integrations')} sx={isActive('/integrations') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
