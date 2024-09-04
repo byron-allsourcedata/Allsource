@@ -274,12 +274,12 @@ class SubscriptionService:
             UserSubscriptions.user_id == user_id
         ).order_by(UserSubscriptions.id.desc()).limit(1).scalar()
     
-    def subscription_exists(self, platform_subscription_id):
-        latest_subscription = self.db.query(UserSubscriptions).filter(
+    def get_user_subscription_by_platform_subscription_id(self, platform_subscription_id):
+        user_subscription = self.db.query(UserSubscriptions).filter(
             UserSubscriptions.platform_subscription_id == platform_subscription_id
         ).order_by(UserSubscriptions.id.desc()).first() 
 
-        return latest_subscription is not None
+        return user_subscription
     
     def get_additional_credits_price_id(self):
         stripe_price_id = self.db.query(SubscriptionPlan.stripe_price_id).filter(
@@ -288,10 +288,7 @@ class SubscriptionService:
         return stripe_price_id
 
     
-    def update_subscription_from_webhook(self, platform_subscription_id, stripe_payload):
-        user_subscription = self.db.query(UserSubscriptions).filter(
-            UserSubscriptions.platform_subscription_id == platform_subscription_id
-        ).first()
+    def update_subscription_from_webhook(self, user_subscription, stripe_payload):
         start_date_timestamp = stripe_payload.get("data").get("object").get("current_period_start")
         stripe_request_created_timestamp = stripe_payload.get("created")
         stripe_request_created_at = datetime.utcfromtimestamp(stripe_request_created_timestamp).isoformat() + "Z"
@@ -318,9 +315,9 @@ class SubscriptionService:
             user_subscription.domains_limit += domains_limit
             user_subscription.users_limit += users_limit
             user_subscription.integrations_limit += integrations_limit
-            user_subscription.audiences_limit += audiences_limit
+            user_subscription.audiences_limit += audiences_limit,
+            user_subscription.plan_id=plan_id,
         user_subscription.status = status
-        user_subscription.plan_id=plan_id,
         user_subscription.stripe_request_created_at = stripe_request_created_at
         self.db.commit()
 

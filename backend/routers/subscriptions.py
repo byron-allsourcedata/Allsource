@@ -27,7 +27,17 @@ async def create_customer_session(price_id: str, payments_service=Depends(get_pa
 @router.post("/update-subscription-webhook")
 async def update_payment_confirmation(request: fastRequest, webhook_service: WebhookService = Depends(get_webhook)):
     payload = await request.json()
-    return webhook_service.update_payment_confirmation(payload)
+    return webhook_service.update_subscription_confirmation(payload)
+
+@router.post("/cancel-subscription-webhook")
+async def update_payment_confirmation(request: fastRequest, webhook_service: WebhookService = Depends(get_webhook)):
+    payload = await request.json()
+    return webhook_service.cancel_subscription_confirmation(payload)
+
+@router.post("/update-payment-webhook")
+async def update_payment_confirmation(request: fastRequest, webhook_service: WebhookService = Depends(get_webhook)):
+    payload = await request.json()
+    return webhook_service.create_payment_confirmation(payload)
 
 
 @router.post("/cancel-plan")
