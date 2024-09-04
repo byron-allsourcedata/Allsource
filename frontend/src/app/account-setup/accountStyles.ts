@@ -226,7 +226,7 @@ export const styles: { [key: string]: SxProps<Theme> } = {
     },
   },
   form: {
-    display: 'flex', flexDirection: 'column', justifyContent: 'center', alignContent: 'center', '@media (max-width: 400px)': { paddingLeft: 2.5, }, '@media (max-width: 600px)': { paddingRight: 2.5, paddingLeft: 2.5, }
+    display: 'flex', flexDirection: 'column', width: '100%', justifyContent: 'center', alignContent: 'center', '@media (max-width: 400px)': { paddingLeft: 2.5, }, '@media (max-width: 600px)': { paddingRight: 2.5, paddingLeft: 2.5, }
   },
   submitButton: {
     backgroundColor: 'rgba(244, 87, 69, 1)',
