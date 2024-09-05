@@ -13,7 +13,7 @@ interface ClientLayoutProps {
 
 export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
     const pathname = usePathname(); // Get the current path
-    const excludedPaths = ['/signin', '/signup', '/email-verificate', '/account-setup', '/reset-password','/reset-password/confirm-send', '/choose-plan', '/authentication/verify-token', '/admin/users'];
+    const excludedPaths = ['/signin', '/signup', '/email-verificate', '/account-setup', '/reset-password','/reset-password/confirm-send', '/choose-plan', '/authentication/verify-token', '/admin/users', '/forgot-password', '/admin'];
     const isAuthenticated = !excludedPaths.includes(pathname);
     if (!isAuthenticated) {
         // Render only the children without the grid layout for excluded paths

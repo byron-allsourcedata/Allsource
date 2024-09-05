@@ -29,18 +29,26 @@ export const styles: { [key: string]: SxProps<Theme> } = {
     marginBottom: '2.5em',
     textTransform: 'none',
     '@media (max-width: 600px)': { marginBottom: 2.5 },
-    '@media (max-width: 400px)': { marginBottom: 1.5 },
+    '@media (max-width: 400px)': { marginBottom: 1.5, gap: '16px', },
   },
   visitButton: {
     padding: '9px 16px',
     color: 'rgba(0, 0, 0, 1)',
     border: '1px solid #ccc',
-    textTransform: 'none'
+    fontFamily: 'Nunito',
+    fontWeight: 400, 
+    fontSize: '14px',
+    textWrap: 'nowrap',
+    textTransform: 'none',
+    '@media (max-width: 400px)': { width: '96px', maxHeight: '38px' },
   },
   employeeButton: {
     padding: '9px 20px',
     color: 'rgba(0, 0, 0, 1)',
     border: '1px solid #ccc',
+    fontFamily: 'Nunito',
+    fontWeight: 400, 
+    fontSize: '14px',
     textTransform: 'none',
     '@media (max-width: 600px)': { padding: '8px 16px', minWidth: '96px', maxHeight: '38px' }
   },
@@ -60,6 +68,9 @@ export const styles: { [key: string]: SxProps<Theme> } = {
     color: 'black',
     border: '1px solid #ccc',
     textTransform: 'none',
+    fontFamily: 'Nunito',
+    fontWeight: 400, 
+    fontSize: '14px',
     padding: '8px 8px',
     '@media (max-width: 600px)': { padding: '10px' },
     '@media (max-width: 400px)': { padding: '5px' }

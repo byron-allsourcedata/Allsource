@@ -103,7 +103,7 @@ const Slider: React.FC = () => {
           </IconButton>
         </Box>
         <Box sx={{
-          pl: 5, pr: 5, display: 'flex', flexDirection: 'column', textAlign: 'center', alignItems: 'center',
+          pl: 5, pr: 5, height: '100%', display: 'flex', flexDirection: 'column', textAlign: 'center', alignItems: 'center',
           '@media (max-width: 960px)': { pl: 4, pr: 4 },
           '@media (max-width: 600px)': { pl: 2, pr: 2 }
         }}>
@@ -122,6 +122,7 @@ const Slider: React.FC = () => {
                   fontSize: '22px',
                   lineHeight: '25.2px',
                   marginBottom: '2em',
+                  paddingTop: 3,
                   '@media (max-width: 600px)': {
                     fontSize: '18px',
                     lineHeight: '22px',
@@ -152,6 +153,7 @@ const Slider: React.FC = () => {
               >
                 Need help? Connect with us directly to activate your account.
               </Typography>
+              <Box sx={{width: '100%', height: '100%', display: 'flex', alignItems: 'end', pb: 5}}>
               <Button onClick={handleClose} sx={{width: '100%'}}>
               <PopupButton
                 className="book-call-button"
@@ -159,10 +161,11 @@ const Slider: React.FC = () => {
                   width: '100%',
                   textWrap: 'nowrap',
                   color: '#fff',
-                  padding: '1em 8em',
+                  padding: '1em',
                   fontFamily: 'Nunito',
                   fontWeight: '700',
                   fontSize: '16px',
+                  textAlign: 'center',
                   borderRadius: '4px',
                   border: 'none',
                   lineHeight: '22.4px',
@@ -175,7 +178,8 @@ const Slider: React.FC = () => {
                 rootElement={document.getElementById("calendly-popup-wrapper")!}
                 text="Reschedule a Call"
               />
-              </Button>
+              </Button>              
+              </Box>
             </>
           ) : (
             <>
@@ -246,6 +250,7 @@ const Slider: React.FC = () => {
                   </Typography>
                 </Box>
               </Box>
+              <Box sx={{width: '100%', height: '100%', display: 'flex', alignItems: 'end', pb: 5}}>
               <Button onClick={handleClose} sx={{width: '100%'}}>
               <PopupButton
                 className="book-call-button"
@@ -269,6 +274,7 @@ const Slider: React.FC = () => {
                 text="Get Started"
               />
               </Button>
+              </Box>
             </>
           )}
         </Box>
