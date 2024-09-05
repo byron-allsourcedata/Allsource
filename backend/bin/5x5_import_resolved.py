@@ -36,7 +36,7 @@ logging.basicConfig(level=logging.INFO)
 BUCKET_NAME = 'trovo-coop-shakespeare'
 FILES_PATH = 'outgoing/cookie_sync/resolved'
 LAST_PROCESSED_FILE_PATH = 'tmp/last_processed_file_resolved.txt'
-AMOUNT_CREDITS = 2
+AMOUNT_CREDITS = 1
 
 def create_sts_client(key_id, key_secret):
     return boto3.client('sts', aws_access_key_id=key_id, aws_secret_access_key=key_secret, region_name='us-west-2')
