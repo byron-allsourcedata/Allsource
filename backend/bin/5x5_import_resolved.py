@@ -80,21 +80,20 @@ def process_user_data(table, index, five_x_five_user, session: Session):
     partner_uid_decoded = urllib.parse.unquote(str(table['PARTNER_UID'][index]).lower())
     partner_uid_dict = json.loads(partner_uid_decoded)
     partner_uid_client_id = partner_uid_dict.get('client_id')
+    user = session.query(Users).filter(Users.data_provider_id == str(partner_uid_client_id)).first()
+    if not user:
+        logging.info(f"User not found with client_id {partner_uid_client_id}")
+        return
     page = partner_uid_dict.get('current_page')
     if page is None:
         json_headers = json.loads(str(table['JSON_HEADERS'][index]).lower())
         referer = json_headers.get('referer')[0]
         page = referer
-    behavior_type = None
+    behavior_type = 'visitor'
     if partner_uid_dict.get('item'):
         behavior_type = 'viewed_product'
     if partner_uid_dict.get('addToCart'):
         behavior_type = 'added_to_cart'
-    user = session.query(Users).filter(Users.data_provider_id == str(partner_uid_client_id)).first()
-    if not user:
-        logging.info(f"User not found with client_id {partner_uid_client_id}")
-        return
-
     lead_user = session.query(LeadUser).filter_by(five_x_five_user_id=five_x_five_user.id, user_id=user.id).first()
     if not lead_user:
         lead_user = LeadUser(five_x_five_user_id=five_x_five_user.id, user_id=user.id)
