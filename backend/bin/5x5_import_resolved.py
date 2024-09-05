@@ -231,7 +231,7 @@ def add_new_leads_visits(visited_datetime, lead_id, session, behavior_type):
 
     leads_visits = LeadsVisits(
         start_date=start_date, start_time=start_time, end_date=end_date, end_time=end_time,
-        pages_count=1, average_time_sec=10, lead_id=lead_id, behavior_type=behavior_type
+        pages_count=1, lead_id=lead_id, behavior_type=behavior_type
     )
     session.add(leads_visits)
     session.flush()

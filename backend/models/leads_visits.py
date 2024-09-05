@@ -12,6 +12,7 @@ class LeadsVisits(Base):
     end_date = Column(DATE, nullable=True)
     end_time = Column(TIME, nullable=True)
     pages_count = Column(Integer, nullable=True, unique=True)
-    average_time_sec = Column(Integer, nullable=True)
+    average_time_sec = Column(Integer, nullable=True, default=10)
+    full_time_sec = Column(Integer, nullable=True, default=10)
     lead_id = Column(Integer, ForeignKey('leads_users.id'), nullable=False)
     behavior_type = Column(VARCHAR, nullable=True)
