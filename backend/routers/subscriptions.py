@@ -27,4 +27,37 @@ async def create_customer_session(price_id: str, payments_service=Depends(get_pa
 @router.post("/update-subscription-webhook")
 async def update_payment_confirmation(request: fastRequest, webhook_service: WebhookService = Depends(get_webhook)):
     payload = await request.json()
-    return webhook_service.update_payment_confirmation(payload)
+    return webhook_service.update_subscription_confirmation(payload)
+
+@router.post("/cancel-subscription-webhook")
+async def update_payment_confirmation(request: fastRequest, webhook_service: WebhookService = Depends(get_webhook)):
+    payload = await request.json()
+    return webhook_service.cancel_subscription_confirmation(payload)
+
+@router.post("/update-payment-webhook")
+async def update_payment_confirmation(request: fastRequest, webhook_service: WebhookService = Depends(get_webhook)):
+    payload = await request.json()
+    return webhook_service.create_payment_confirmation(payload)
+
+
+@router.post("/cancel-plan")
+def cancel_user_subscripion(payments_service=Depends(get_payments_service)):
+    status = payments_service.get_user_subscription_authorization_status()
+    if status != UserAuthorizationStatus.SUCCESS:
+        return status
+    return payments_service.cancel_user_subscripion()
+
+@router.get("/upgrade-and-downgrade-user-subscription")
+def cancel_user_subscripion(price_id: str, payments_service=Depends(get_payments_service)):
+    status = payments_service.get_user_subscription_authorization_status()
+    if status != UserAuthorizationStatus.SUCCESS:
+        return status
+    return payments_service.upgrade_and_downgrade_user_subscription(price_id)
+
+@router.get("/buy-credits")
+def cancel_user_subscripion(credits_used: int, payments_service=Depends(get_payments_service)):
+    status = payments_service.get_user_subscription_authorization_status()
+    if status != UserAuthorizationStatus.SUCCESS:
+        return status
+    return payments_service.charge_user_for_extra_credits(credits_used)
+    

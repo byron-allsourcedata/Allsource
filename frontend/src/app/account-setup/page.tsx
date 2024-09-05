@@ -19,7 +19,6 @@ import { useUser } from "../../context/UserContext";
 import axiosInterceptorInstance from "../../axios/axiosInterceptorInstance";
 import { showErrorToast } from "../../components/ToastNotification";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import { accountStyles } from "@/css/accountDetails";
 
 const AccountSetup = () => {
   const [organizationName, setOrganizationName] = useState("");
@@ -34,7 +33,29 @@ const AccountSetup = () => {
     selectedVisits: "",
   });
   const router = useRouter();
-  const { full_name, email } = useUser();
+  const [fullName, setFullName] = useState<string | null>(null);
+  const [email, setEmail] = useState<string | null>(null);
+
+  const { full_name: userFullName, email: userEmail } = useUser();
+
+  const getUserDataFromStorage = () => {
+    const meItem = typeof window !== 'undefined' ? sessionStorage.getItem('me') : null;
+    if (meItem) {
+      const meData = JSON.parse(meItem);
+      setFullName(userFullName || meData.full_name);
+      setEmail(userEmail || meData.email);
+    }
+  };
+
+  useEffect(() => {
+    getUserDataFromStorage();
+
+    const intervalId = setInterval(() => {
+      getUserDataFromStorage();
+    }, 500);
+
+    return () => clearInterval(intervalId);
+  }, [userFullName, userEmail]);
 
   const [isFocused, setIsFocused] = useState(false);
 
@@ -217,20 +238,23 @@ const AccountSetup = () => {
     }
   };
 
-  const handleWebsiteLink = (event: { target: { value: any } }) => {
-    let input = event.target.value;
+  const handleWebsiteLink = (event: { target: { value: string } }) => {
+    let input = event.target.value.trim();
   
-    // Удаляем префикс www.
-    const sanitizedInput = input.replace(/^www\./, '');
+    const hasWWW = input.startsWith("www.");
   
-    // Добавляем https:// если его нет
-    if (!sanitizedInput.startsWith("https://")) {
-      input = `https://${sanitizedInput}`;
-    } else {
-      input = sanitizedInput;
+    const sanitizedInput = hasWWW ? input.replace(/^www\./, '') : input;
+  
+    const domainPattern = /^[\w-]+\.[a-z]{2,}$/i;
+    const isValidDomain = domainPattern.test(sanitizedInput);
+  
+    let finalInput = input;
+  
+    if (isValidDomain) {
+      finalInput = hasWWW ? `https://www.${sanitizedInput}` : `https://${sanitizedInput}`;
     }
   
-    setWebsiteLink(input);
+    setWebsiteLink(finalInput);
   
     const websiteError = validateField(input, "website");
     setErrors((prevErrors) => ({
@@ -238,6 +262,7 @@ const AccountSetup = () => {
       websiteLink: websiteError,
     }));
   };
+  
   
 
   const isFormValid = () => {
@@ -346,7 +371,7 @@ const AccountSetup = () => {
             }}
           >
             <Box sx={{ p: 2 }}>
-              <Typography variant="h6">{full_name}</Typography>
+              <Typography variant="h6">{fullName}</Typography>
               <Typography variant="body2" color="textSecondary">
                 {email}
               </Typography>
@@ -422,6 +447,9 @@ const AccountSetup = () => {
                 fontWeight: "600",
                 pointerEvents: "none",
                 lineHeight: "21.82px",
+                padding: 0,
+                marginRight: 1.5,
+                marginLeft: activeTab === 0 ? 2.5 : 0,
                 color:
                   activeTab === 0
                     ? "rgba(50, 50, 50, 1)"
@@ -429,7 +457,6 @@ const AccountSetup = () => {
                 "&.Mui-selected": {
                   color: "rgba(244, 87, 69, 1)",
                 },
-                '@media (max-width: 400px)': { padding: 1.25 },
               }}
             />
             <Tab
@@ -441,6 +468,7 @@ const AccountSetup = () => {
                 fontWeight: "600",
                 pointerEvents: "none",
                 lineHeight: "21.82px",
+                padding: 0,
                 color:
                   activeTab === 1
                     ? "rgba(244, 87, 69, 1)"
@@ -448,7 +476,7 @@ const AccountSetup = () => {
                 "&.Mui-selected": {
                   color: "rgba(244, 87, 69, 1)",
                 },
-                '@media (max-width: 400px)': { padding: 1.25 },
+                '@media (max-width: 400px)': { padding: 1, },
               }}
             />
           </Tabs>
@@ -482,7 +510,7 @@ const AccountSetup = () => {
           }}
         >
           <Box sx={{ p: 2 }}>
-            <Typography variant="h6">{full_name}</Typography>
+            <Typography variant="h6">{fullName}</Typography>
             <Typography variant="body2" color="textSecondary">
               {email}
             </Typography>
@@ -505,7 +533,7 @@ const AccountSetup = () => {
             }}
           >
             <Typography variant="h5" component="h1" sx={styles.title}>
-              Welcome {full_name},
+              Welcome {fullName},
             </Typography>
             <Typography variant="body1" component="h2" sx={styles.subtitle}>
               Let&apos;s set up your account
@@ -517,14 +545,17 @@ const AccountSetup = () => {
                 What is your organization&apos;s name
               </Typography>
               <TextField
+                InputProps={{ sx: styles.formInput }}
                 fullWidth
                 label="Organization name"
                 variant="outlined"
+                margin="normal"
                 sx={styles.formField}
                 value={organizationName}
                 onChange={(e) => setOrganizationName(e.target.value)}
                 error={!!errors.organizationName}
                 helperText={errors.organizationName}
+                InputLabelProps={{ sx: styles.inputLabel }}
               />
               <Typography variant="body1" component="h3" sx={styles.text}>
                 Share your company website
@@ -535,7 +566,7 @@ const AccountSetup = () => {
                 variant="outlined"
                 placeholder={isFocused ? "example.com" : ""}
                 sx={styles.formField}
-                InputLabelProps={{ sx: accountStyles.inputLabel }}
+                InputLabelProps={{ sx: styles.inputLabel }}
                 value={websiteLink.replace(/^https?:\/\//, "")}
                 onChange={handleWebsiteLink}
                 onFocus={handleFocus}

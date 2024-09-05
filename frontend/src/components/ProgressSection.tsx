@@ -47,6 +47,13 @@ const CustomButton = styled(Button)(({ theme }) => ({
     padding: "8px",
     height: "auto",
   },
+  "& .MuiListItemText-root span": {
+    fontFamily: "Nunito",
+    fontSize: "14px",
+    color: "#4a4a4a",
+    fontWeight: "600",
+    lineHeight: "20px"
+  }
 }));
 
 const CustomListItemIcon = styled(ListItemIcon)(({ theme }) => ({
@@ -188,7 +195,7 @@ export const ProgressSection: React.FC = () => {
               },
             }}
           >
-            {percentSteps}% complete
+            {percentSteps ? percentSteps : 0} % complete
           </Typography>
         </Box>
         <List sx={{ mt: "8px", p: "0" }}>

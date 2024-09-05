@@ -79,13 +79,18 @@ const NavigationMenu = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const router = useRouter();
   const pathname = usePathname();
-  const { full_name, email } = useUser();
+  const { full_name: userFullName, email: userEmail } = useUser();
+  const meItem = typeof window !== 'undefined' ? sessionStorage.getItem('me') : null;
+  const meData = meItem ? JSON.parse(meItem) : { full_name: '', email: '' };
+  const full_name = userFullName || meData.full_name;
+  const email = userEmail || meData.email;
 
   const toggleDrawer = () => {
     setOpen(!open);
   };
   const handleNavigation = (path: string) => {
     router.push(path);
+    setOpen(!open);
   };
 
   const isActive = (path: string) => pathname === path;  
@@ -174,7 +179,7 @@ const NavigationMenu = () => {
             ...navigationmenuStyles.mobileDrawerList
           }}>
             <ListItemIcon><PeopleIcon /></ListItemIcon>
-            <ListItemText primary="Leads" />
+            <ListItemText primary="Contacts" />
           </ListItem>
           <ListItem button onClick={() => handleNavigation('/audience')}
           sx={{
@@ -184,7 +189,17 @@ const NavigationMenu = () => {
               <ListItemIcon>
                   <CategoryIcon />
               </ListItemIcon>
-              <ListItemText primary="Audience" />
+              <ListItemText primary="Data Sync" />
+          </ListItem>
+          <ListItem button onClick={() => handleNavigation('/prospect')}
+          sx={{
+            ...(isActive('/prospect') ? navigationmenuStyles.activeItem : {}),
+            ...navigationmenuStyles.mobileDrawerList
+            }}>
+              <ListItemIcon>
+              <Image src="/profile-circle-filled.svg" alt="profile-circle" height={20} width={20} />
+              </ListItemIcon>
+              <ListItemText primary="Prospect" />
           </ListItem>
           <ListItem button onClick={() => handleNavigation('/integrations')}
           sx={{
@@ -194,14 +209,14 @@ const NavigationMenu = () => {
             <ListItemIcon><IntegrationIcon /></ListItemIcon>
             <ListItemText primary="Integrations" />
           </ListItem>
-          <ListItem button onClick={() => handleNavigation('/analytics')}
+          {/* <ListItem button onClick={() => handleNavigation('/analytics')}
           sx={{
             ...(isActive('/analytics') ? navigationmenuStyles.activeItem : {}),
             ...navigationmenuStyles.mobileDrawerList
           }}>
             <ListItemIcon><AnalyticsIcon /></ListItemIcon>
             <ListItemText primary="Analytics" />
-          </ListItem>
+          </ListItem> */}
           <ListItem button onClick={() => handleNavigation('/suppressions')}
           sx={{
             ...(isActive('/suppressions') ? navigationmenuStyles.activeItem : {}),
@@ -210,14 +225,14 @@ const NavigationMenu = () => {
             <ListItemIcon><FeaturedPlayListIcon /></ListItemIcon>
             <ListItemText primary="Suppressions" />
           </ListItem>
-          <ListItem button onClick={() => handleNavigation('/rules')}
+          {/* <ListItem button onClick={() => handleNavigation('/rules')}
           sx={{
             ...(isActive('/rules') ? navigationmenuStyles.activeItem : {}),
             ...navigationmenuStyles.mobileDrawerList
             }}>
             <ListItemIcon><RuleFolderIcon /></ListItemIcon>
             <ListItemText primary="Rules" />
-          </ListItem>
+          </ListItem> */}
           <ListItem button onClick={() => handleNavigation('/partners')}
             sx={{
               ...(isActive('/partners') ? navigationmenuStyles.activeItem : {}),

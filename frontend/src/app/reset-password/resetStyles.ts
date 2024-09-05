@@ -1,3 +1,4 @@
+import { red } from '@mui/material/colors';
 import { SxProps, Theme } from '@mui/system';
 
 export const resetStyles: { [key: string]: SxProps<Theme> } = {
@@ -120,8 +121,7 @@ export const resetStyles: { [key: string]: SxProps<Theme> } = {
         backgroundColor: '#F45745',
         color: '#FFFFFF',
         '&:hover': {
-          borderColor: '#000000',
-          backgroundColor: 'lightgreen',
+          backgroundColor: red[700],
         },
         fontWeight: 'bold',
         padding: '10px 8px',

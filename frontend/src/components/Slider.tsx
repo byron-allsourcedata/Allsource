@@ -1,6 +1,6 @@
 "use client"
 import React, { useEffect, useState } from 'react';
-import { Drawer, Box, Typography, IconButton, Backdrop } from '@mui/material';
+import { Drawer, Box, Typography, IconButton, Backdrop, Button } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { useSlider } from '../context/SliderContext';
 import { PopupButton, useCalendlyEventListener } from "react-calendly";
@@ -76,7 +76,7 @@ const Slider: React.FC = () => {
 
   return (
     <>
-      <Backdrop open={showSlider} sx={{ zIndex: 1200, color: '#fff' }} />
+      <Backdrop open={showSlider} onClick={handleClose} sx={{ zIndex: 1200, color: '#fff' }} />
       <Drawer
         anchor="right"
         open={showSlider}
@@ -85,7 +85,7 @@ const Slider: React.FC = () => {
           sx: {
             width: '45%',
             position: 'fixed',
-            zIndex: 1301,
+            zIndex: 1300,
             top: 0,
             bottom: 0,
             '@media (max-width: 600px)': {
@@ -108,7 +108,7 @@ const Slider: React.FC = () => {
           '@media (max-width: 600px)': { pl: 2, pr: 2 }
         }}>
           <img src="/slider-bookcall.png" alt="Setup" style={{ width: '40%', marginBottom: '0.5em', marginTop: '0.5em', }} />
-          <div id='calendly-popup-wrapper' className="book-call-button__wrapper"> </div>
+          <div id='calendly-popup-wrapper' className="book-call-button__wrapper" style={{ zIndex: 2000 }}> </div>
           {prefillData ? (
             <>
               <Typography
@@ -152,6 +152,7 @@ const Slider: React.FC = () => {
               >
                 Need help? Connect with us directly to activate your account.
               </Typography>
+              <Button onClick={handleClose} sx={{width: '100%'}}>
               <PopupButton
                 className="book-call-button"
                 styles={{
@@ -174,6 +175,7 @@ const Slider: React.FC = () => {
                 rootElement={document.getElementById("calendly-popup-wrapper")!}
                 text="Reschedule a Call"
               />
+              </Button>
             </>
           ) : (
             <>
@@ -244,6 +246,7 @@ const Slider: React.FC = () => {
                   </Typography>
                 </Box>
               </Box>
+              <Button onClick={handleClose} sx={{width: '100%'}}>
               <PopupButton
                 className="book-call-button"
                 styles={{
@@ -265,6 +268,7 @@ const Slider: React.FC = () => {
                 rootElement={document.getElementById("calendly-popup-wrapper")!}
                 text="Get Started"
               />
+              </Button>
             </>
           )}
         </Box>

@@ -22,8 +22,8 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO)
 
 BUCKET_NAME = 'trovo-coop-shakespeare'
-QUEUE_IMPORT_NAME = '5x5_import'
-QUEUE_USERS_IMPORT_NAME = '5x5_users_rows'
+QUEUE_USERS_FILES = '5x5_users_files'
+QUEUE_USERS_ROWS = '5x5_users_rows'
 
 
 def create_sts_client(key_id, key_secret):
@@ -44,8 +44,10 @@ def assume_role(role_arn, sts_client):
     return credentials
 
 
-async def on_message_received(message, s3_session, credentials, rmq_connection):
+async def on_message_received(message, s3_session, rmq_connection):
     try:
+        sts_client = create_sts_client(os.getenv('S3_KEY_ID'), os.getenv('S3_KEY_SECRET'))
+        credentials = assume_role(os.getenv('S3_ROLE_ARN'), sts_client)
         message_json = json.loads(message.body)
         logging.info(f"{message_json['file_name']} started")
         async with s3_session.client(
@@ -67,7 +69,7 @@ async def on_message_received(message, s3_session, credentials, rmq_connection):
                     for _, row in df.iterrows():
                         await publish_rabbitmq_message(
                             connection=rmq_connection,
-                            queue_name=QUEUE_USERS_IMPORT_NAME,
+                            queue_name=QUEUE_USERS_ROWS,
                             message_body={'user': row.to_dict()}
                         )
                         rows_counter += 1
@@ -75,7 +77,6 @@ async def on_message_received(message, s3_session, credentials, rmq_connection):
         logging.info(f"{message_json['file_name']} processed")
         await message.ack()
     except Exception as e:
-        logging.error("excepted message. error", body, exc_info=True)
         logging.error("excepted message. error", exc_info=True)
         await asyncio.sleep(5)
         await message.reject(requeue=True)
@@ -85,27 +86,27 @@ async def on_message_received(message, s3_session, credentials, rmq_connection):
 async def main():
     logging.info("Started")
     try:
-        sts_client = create_sts_client(os.getenv('S3_KEY_ID'), os.getenv('S3_KEY_SECRET'))
-        credentials = assume_role(os.getenv('S3_ROLE_ARN'), sts_client)
-
         rabbitmq_connection = RabbitMQConnection()
         connection = await rabbitmq_connection.connect()
         channel = await connection.channel()
         await channel.set_qos(prefetch_count=1)
         queue = await channel.declare_queue(
-            name=QUEUE_IMPORT_NAME,
+            name=QUEUE_USERS_FILES,
             durable=True,
             arguments={
-                'x-message-ttl': 300000
+                'x-consumer-timeout': 3600000,
             }
         )
         await channel.declare_queue(
-            name=QUEUE_USERS_IMPORT_NAME,
-            durable=True
+            name=QUEUE_USERS_ROWS,
+            durable=True,
+            arguments={
+                'x-consumer-timeout': 3600000,
+            }
         )
         session = aioboto3.Session()
         await queue.consume(
-            functools.partial(on_message_received, s3_session=session, credentials=credentials,
+            functools.partial(on_message_received, s3_session=session,
                               rmq_connection=connection)
         )
         await asyncio.Future()

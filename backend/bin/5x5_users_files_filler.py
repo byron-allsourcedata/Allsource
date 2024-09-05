@@ -19,7 +19,7 @@ BUCKET_NAME = 'trovo-coop-shakespeare'
 FILE_PATH = 'outgoing/universal_person_2_7_0/'
 REGION_NAME = 'us-west-2'
 DB_NAME = '5x5_users'
-
+QUEUE_USERS_FILES = '5x5_users_files'
 
 def create_sts_client(key_id, key_secret):
     return boto3.client('sts',
@@ -45,7 +45,7 @@ async def process_files(sts_client, rmq_conn):
         async for s3_object in bucket.objects.filter(Prefix=FILE_PATH):
             await publish_rabbitmq_message(
                 connection=rmq_conn,
-                queue_name='5x5_import',
+                queue_name=QUEUE_USERS_FILES,
                 message_body={'file_name': s3_object.key}
             )
             logging.info(f"write last processed file {s3_object.key}")
@@ -58,8 +58,11 @@ async def main():
     connection = await rabbitmq_connection.connect()
     channel = await connection.channel()
     await channel.declare_queue(
-        name='5x5_import_hems',
+        name=QUEUE_USERS_FILES,
         durable=True,
+        arguments={
+            'x-consumer-timeout': 3600000,
+        }
     )
     await process_files(sts_client, connection)
 

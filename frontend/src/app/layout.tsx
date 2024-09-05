@@ -8,6 +8,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { TrialProvider } from '../context/TrialProvider';
 import { SSEProvider } from '../context/SSEContext';
+import { ClientLayout } from "@/context/ClientLayout";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -35,7 +36,9 @@ export default function RootLayout({
           <SSEProvider>
             <TrialProvider>
               <UserProvider>
-                {children}
+                <ClientLayout>
+                  {children}
+                </ClientLayout>
               </UserProvider>
             </TrialProvider>
           </SSEProvider>
