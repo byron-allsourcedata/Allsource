@@ -140,33 +140,11 @@ class LeadsPersistence:
 
     def get_full_user_leads_by_ids(self, user_id, leads_ids):
         lead_users = (
-            self.db.query(
-                Lead.first_name,
-                Lead.last_name,
-                Lead.gender,
-                Lead.mobile_phone,
-                Lead.ip,
-                Lead.company_name,
-                Lead.company_city,
-                Lead.company_state,
-                Lead.company_zip,
-                Lead.business_email,
-                Lead.time_spent,
-                Lead.no_of_visits,
-                Lead.no_of_page_visits,
-                Lead.age_min,
-                Lead.age_max,
-                Lead.company_domain,
-                Lead.company_phone,
-                Lead.company_sic,
-                Lead.company_address,
-                Lead.company_revenue,
-                Lead.company_employee_count
-            )
-            .join(LeadUser, LeadUser.lead_id == Lead.id)
+            self.db.query(FiveXFiveUser)
+            .join(LeadUser, LeadUser.five_x_five_user_id == FiveXFiveUser.id)
             .filter(
                 LeadUser.user_id == user_id,
-                LeadUser.lead_id.in_(leads_ids)
+                FiveXFiveUser.id.in_(leads_ids)
             )
             .all()
         )
