@@ -32,15 +32,18 @@ class PixelInstallationService:
             )
             self.db.commit()
         script = f'''
-        <script id="acegm_pixel_script" type="text/javascript" defer="defer">
-        window.pixelClientId = "{client_id}";
-        var acegm_pixelScriptUrl = 'https://maximiz-data.s3.us-east-2.amazonaws.com/pixel.js'
-        var acegm_base_pixel_script = document.createElement('script');
-        acegm_base_pixel_script.src = acegm_pixelScriptUrl;
-        document.body.appendChild(acegm_base_pixel_script);
-        </script>
-        '''
-
+                <script id="acegm_pixel_script" type="text/javascript" defer="defer">
+                window.pixelClientId = "{client_id}";
+                var now = new Date();
+                var year = now.getFullYear();
+                var month = String(now.getMonth() + 1).padStart(2, '0');
+                var week = Math.ceil((now.getDate() + 6) / 7);
+                var acegm_pixelScriptUrl = 'https://maximiz-data.s3.us-east-2.amazonaws.com/pixel.js?v=' + year + '-' + month + '-' + week;
+                var acegm_base_pixel_script = document.createElement('script');
+                acegm_base_pixel_script.src = acegm_pixelScriptUrl;
+                document.body.appendChild(acegm_base_pixel_script);
+                </script>
+            '''
         return script, client_id
 
     def send_pixel_code_in_email(self, email, user):
