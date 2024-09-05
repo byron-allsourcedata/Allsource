@@ -19,6 +19,7 @@ sys.path.append(parent_dir)
 from models.leads_requests import LeadsRequests
 from models.leads_visits import LeadsVisits
 from models.five_x_five_hems import FiveXFiveHems
+from models.users_payments_transactions import UsersPaymentsTransactions
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from models.five_x_five_users import FiveXFiveUser
@@ -35,7 +36,7 @@ logging.basicConfig(level=logging.INFO)
 BUCKET_NAME = 'trovo-coop-shakespeare'
 FILES_PATH = 'outgoing/cookie_sync/resolved'
 LAST_PROCESSED_FILE_PATH = 'tmp/last_processed_file_resolved.txt'
-
+AMOUNT_CREDITS = 2
 
 def create_sts_client(key_id, key_secret):
     return boto3.client('sts', aws_access_key_id=key_id, aws_secret_access_key=key_secret, region_name='us-west-2')
@@ -79,6 +80,10 @@ def process_user_data(table, index, five_x_five_user, session: Session):
     partner_uid_dict = json.loads(partner_uid_decoded)
     partner_uid_client_id = partner_uid_dict.get('client_id')
     page = partner_uid_dict.get('current_page')
+    if page is None:
+        json_headers = json.loads(str(table['JSON_HEADERS'][index]).lower())
+        referer = json_headers.get('referer')[0]
+        page = referer
     behavior_type = None
     if partner_uid_dict.get('item'):
         behavior_type = 'viewed_product'
@@ -95,13 +100,13 @@ def process_user_data(table, index, five_x_five_user, session: Session):
         session.add(lead_user)
         session.flush()
 
+    user_payment_transactions = UsersPaymentsTransactions(user_id=user.id, status='success', amount_credits=AMOUNT_CREDITS, type='lead', lead_id=lead_user.id)
+    session.add(user_payment_transactions)
+    session.flush()
+
     requested_at_str = str(table['EVENT_DATE'][index].as_py())
     requested_at = datetime.fromisoformat(requested_at_str)
-    if requested_at.tzinfo is None:
-        requested_at = pytz.utc.localize(requested_at)
-
     thirty_minutes_ago = requested_at - timedelta(minutes=30)
-
     visit = session.query(LeadsRequests.visit_id).filter(
         LeadsRequests.lead_id == lead_user.id,
         LeadsRequests.requested_at >= thirty_minutes_ago
@@ -171,11 +176,16 @@ def normalize_url(url):
     normalized_url = scheme + path
     return normalized_url
 
+def convert_leads_requests_to_utc(leads_requests):
+    utc = pytz.utc
+    for request in leads_requests:
+        if request.requested_at.tzinfo is None:
+            request.requested_at = utc.localize(request.requested_at)
+        else:
+            request.requested_at = request.requested_at.astimezone(utc)
 
 def process_leads_requests(requested_at, page, leads_requests, lead_id, session: Session, behavior_type):
-    if requested_at.tzinfo is not None:
-        requested_at = requested_at.replace(tzinfo=None)
-        
+    convert_leads_requests_to_utc(leads_requests)
     new_request = LeadsRequests(
         lead_id=lead_id,
         page=normalize_url(page),
@@ -183,7 +193,7 @@ def process_leads_requests(requested_at, page, leads_requests, lead_id, session:
         time_sec=10
     )
     leads_requests.append(new_request)
-
+    
     leads_requests_sorted = sorted(leads_requests, key=lambda r: r.requested_at)
 
     start_date_time = leads_requests_sorted[0].requested_at
@@ -212,7 +222,10 @@ def process_leads_requests(requested_at, page, leads_requests, lead_id, session:
         pages_set.add(leads_requests_sorted[-1].page)
 
     pages_count = len(pages_set)
-    average_time_sec = total_time_sec // pages_count if pages_count > 0 else 0
+
+    num_intervals = len(leads_requests_sorted) - 1
+    average_time_sec = int(total_time_sec / num_intervals) if num_intervals > 0 else 10
+    
     session.query(LeadsVisits).filter_by(lead_id=lead_id).update({
         'start_date': start_date,
         'start_time': start_time,
@@ -228,7 +241,7 @@ def process_leads_requests(requested_at, page, leads_requests, lead_id, session:
 def add_new_leads_visits(visited_datetime, lead_id, session, behavior_type):
     start_date = visited_datetime.date()
     start_time = visited_datetime.time()
-    date_page = datetime.combine(start_date, start_time) + timedelta(seconds=10)
+    date_page = visited_datetime + timedelta(seconds=10)
     end_date = date_page.date()
     end_time = date_page.time()
 
