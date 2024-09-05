@@ -76,7 +76,7 @@ def process_table(table, session, file_key):
     update_last_processed_file(file_key)
 
 
-def process_user_data(table, index, five_x_five_user, session: Session):
+def process_user_data(table, index, five_x_five_user: FiveXFiveUser, session: Session):
     partner_uid_decoded = urllib.parse.unquote(str(table['PARTNER_UID'][index]).lower())
     partner_uid_dict = json.loads(partner_uid_decoded)
     partner_uid_client_id = partner_uid_dict.get('client_id')
@@ -99,10 +99,6 @@ def process_user_data(table, index, five_x_five_user, session: Session):
         lead_user = LeadUser(five_x_five_user_id=five_x_five_user.id, user_id=user.id)
         session.add(lead_user)
         session.flush()
-
-    user_payment_transactions = UsersPaymentsTransactions(user_id=user.id, status='success', amount_credits=AMOUNT_CREDITS, type='lead', lead_id=lead_user.id)
-    session.add(user_payment_transactions)
-    session.flush()
 
     requested_at_str = str(table['EVENT_DATE'][index].as_py())
     requested_at = datetime.fromisoformat(requested_at_str)
@@ -138,7 +134,11 @@ def process_user_data(table, index, five_x_five_user, session: Session):
                 session.commit()
         process_leads_requests(requested_at, page, leads_requests, lead_user.id, session, behavior_type)
     else:
-        logging.info("leads requests not exists")
+        logging.info("Leads Visits not exists")
+        user_payment_transactions = UsersPaymentsTransactions(user_id=user.id, status='success', amount_credits=AMOUNT_CREDITS, type='lead', lead_id=lead_user.id, five_x_five_up_id=five_x_five_user.up_id)
+        session.add(user_payment_transactions)
+        session.flush()
+
         lead_visits = add_new_leads_visits(requested_at, lead_user.id, session, behavior_type).id
         session.query(Users).filter(Users.id == user.id).update(
             {Users.is_pixel_installed: True},
