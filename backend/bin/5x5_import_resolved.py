@@ -186,7 +186,6 @@ def process_leads_requests(requested_at, page, leads_requests, lead_id, session:
         lead_id=lead_id,
         page=normalize_url(page),
         requested_at=requested_at,
-        time_sec=10
     )
     leads_requests.append(new_request)
     
@@ -199,28 +198,16 @@ def process_leads_requests(requested_at, page, leads_requests, lead_id, session:
     start_time = start_date_time.time()
     end_date = end_date_time.date()
     end_time = end_date_time.time()
-
-    total_time_sec = 0
+    total_time_sec = int((end_date_time - start_date_time).total_seconds() + 10)
     pages_set = set()
-
-    for i in range(len(leads_requests_sorted) - 1):
+    for i in range(len(leads_requests_sorted)):
         current_request = leads_requests_sorted[i]
-        next_request = leads_requests_sorted[i + 1]
-        
-        if current_request.requested_at and next_request.requested_at:
-            time_diff = next_request.requested_at - current_request.requested_at
-            total_time_sec += int(time_diff.total_seconds())
-
         if current_request.page:
             pages_set.add(normalize_url(current_request.page))
 
-    if leads_requests_sorted[-1].page:
-        pages_set.add(leads_requests_sorted[-1].page)
-
     pages_count = len(pages_set)
 
-    num_intervals = len(leads_requests_sorted) - 1
-    average_time_sec = int(total_time_sec / num_intervals) if num_intervals > 0 else 10
+    average_time_sec = int(total_time_sec / len(leads_requests_sorted))
     
     session.query(LeadsVisits).filter_by(lead_id=lead_id).update({
         'start_date': start_date,
@@ -228,6 +215,7 @@ def process_leads_requests(requested_at, page, leads_requests, lead_id, session:
         'end_date': end_date,
         'end_time': end_time,
         'pages_count': pages_count,
+        'full_time_sec': total_time_sec,
         'average_time_sec': average_time_sec,
         'behavior_type': behavior_type
     })
