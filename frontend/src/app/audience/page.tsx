@@ -754,56 +754,8 @@ const Audience: React.FC = () => {
                 </Box>
             )}
             <Box sx={{display: 'flex', flexDirection: 'column', minHeight: '100vh'}}>
-                <Box sx={{
-                    position: 'fixed',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    zIndex: 1100,
-                    backgroundColor: 'white',
-                    borderBottom: '1px solid rgba(235, 235, 235, 1)'
-                }}>
-                    <Box sx={audienceStyles.headers}>
-                        <Box sx={audienceStyles.logoContainer}>
-                            <Image src='/logo.svg' alt='logo' height={80} width={60}/>
-                        </Box>
-                        <Box sx={{display: 'flex', alignItems: 'center'}}>
-                            <TrialStatus/>
-                            <AccountButton/>
-                            <Button
-                                aria-controls={open ? 'profile-menu' : undefined}
-                                aria-haspopup="true"
-                                aria-expanded={open ? 'true' : undefined}
-                                onClick={handleProfileMenuClick}
-                            >
-                                <PersonIcon sx={audienceStyles.account}/>
-                            </Button>
-                            <Menu
-                                id="profile-menu"
-                                anchorEl={anchorEl}
-                                open={open}
-                                onClose={handleProfileMenuClose}
-                                MenuListProps={{
-                                    'aria-labelledby': 'profile-menu-button',
-                                }}
-                            >
-                                <Box sx={{p: 2}}>
-                                    <Typography variant="h6">{full_name}</Typography>
-                                    <Typography variant="body2" color="textSecondary">{email}</Typography>
-                                </Box>
-                                <MenuItem onClick={handleSettingsClick}>Settings</MenuItem>
-                                <MenuItem onClick={handleSignOut}>Sign Out</MenuItem>
-                            </Menu>
-                        </Box>
-                    </Box>
-                </Box>
-
-                <Box sx={{flex: 1, marginTop: '90px', display: 'flex', flexDirection: 'column'}}>
-                    <Grid container sx={{flex: 1}}>
-                        <Grid item xs={12} md={2} sx={{padding: '0px', position: 'relative'}}>
-                            <Sidebar/>
-                        </Grid>
-                        <Grid item xs={12} md={10} sx={{display: 'flex', flexDirection: 'column', flex: 1}}>
+                
+                    
                             <Box
                                 sx={{
                                     display: 'flex',
@@ -957,14 +909,11 @@ const Audience: React.FC = () => {
                                 )}
                                 {showSlider && <Slider/>}
                             </Box>
-                        </Grid>
                         <AudiencePopup open={audiencePopupOpen} onClose={handleAudiencePopupClose}
                                        selectedLeads={Array.from(selectedRows)}/>
                         <BuildAudience open={buildAudiencePopupOpen} onClose={handleBuildAudiencePopupClose}
                                        onDataFetch={handleDataFetch}/>
                         {/* <FilterPopup open={filterPopupOpen} onClose={handleFilterPopupClose}/> */}
-                    </Grid>
-                </Box>
             </Box>
         </>
     );

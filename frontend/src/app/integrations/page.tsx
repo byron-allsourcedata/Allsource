@@ -329,32 +329,13 @@ const Integrations: React.FC = () => {
 
     return (
         <>
-            <Box sx={integrationsStyle.headers}>
-                <Box sx={integrationsStyle.logoContainer}>
-                    <Image src='/logo.svg' alt='logo' height={80} width={60} />
-                </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <AccountButton />
-                    <Button>
-                        <PersonIcon sx={integrationsStyle.account} />
-                    </Button>
-                </Box>
-            </Box>
-            <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                <Grid container width='100%'>
-                    <Grid item xs={12} md={2} sx={{ padding: '0px' }}>
-                        <Sidebar />
-                    </Grid>
-                    <Grid item xs={12} md={10} sx={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+            
                         <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                             <Typography variant="h4" component="h1" sx={integrationsStyle.title}>
                                 Integrations
                             </Typography>
                         </Box>
                         <ServiceIntegrations service={integrationsService} />
-                    </Grid>
-                </Grid>
-            </Box>
         </>
     );
 };

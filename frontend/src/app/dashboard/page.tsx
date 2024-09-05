@@ -346,20 +346,8 @@ const Dashboard: React.FC = () => {
   return (
     <>
     
-      <Grid container spacing={{ md: 1, lg: 3 }} sx={dashboardStyles.mainItemContent}>
-        <Grid item xs={12} sx={{ padding: "0px", display: { xs: 'block', md: 'none' }  }}>
-          <TrialStatus />
-        </Grid>
-        <Grid item xs={12} md="auto" lg="auto" sx={{ 
-          padding: "0px",
-          display: { xs: 'none', md: 'block' },
-          width: '142px'
-          }}>
-          <Sidebar />
-        </Grid>
         {showCharts ? (
           <>
-            <Grid item xs={12} md lg sx={dashboardStyles.mainItemContentInner}>
               <Grid
                 spacing={2}
                 sx={{
@@ -437,12 +425,8 @@ const Dashboard: React.FC = () => {
                   </Grid>
                 </Grid>
               </Grid>
-            </Grid>
           </>
         ) : (
-          // <Box sx={dashboardStyles.mainItem}>
-          
-            <Grid item xs={12} md lg sx={dashboardStyles.mainItemContentInner}>
               <Grid container sx={{
                 height: '100%'
               }}>
@@ -484,9 +468,7 @@ const Dashboard: React.FC = () => {
                   <SupportSection />
                 </Grid>
               </Grid>
-            </Grid>
         )}
-      </Grid>
       {showSlider && <Slider />}
     </>
   );
