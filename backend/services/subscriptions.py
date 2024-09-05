@@ -16,6 +16,7 @@ from utils import get_utc_aware_date_for_postgres
 
 ACTIVE_STATUSES = ["active", "trialing", "completed"]
 TRIAL_STUB_PLAN_ID = '1'
+PRICE_CREDIT = 0.2
 logger = logging.getLogger(__name__)
 
 
@@ -133,14 +134,14 @@ class SubscriptionService:
         payment_intent = stripe_payload.get("data", {}).get("object", {})
         transaction_id = payment_intent.get("id")
         created_at = datetime.utcfromtimestamp(created_timestamp).isoformat() + "Z" if created_timestamp else None
-        amount = int(payment_intent.get("amount")) / 20
+        amount_credits = int(payment_intent.get("amount")) / 100 / PRICE_CREDIT
         status = payment_intent.get("status")
         payment_transaction_obj = UsersPaymentsTransactions(
             user_id=user_id,
             transaction_id=transaction_id,
             created_at=created_at,
             status=status,
-            amount=amount,
+            amount_credits=amount_credits,
             type='buy credits'
         )
         self.db.add(payment_transaction_obj)
@@ -224,13 +225,13 @@ class SubscriptionService:
     
     def create_payment_from_webhook(self, user_id, stripe_payload):
         payment_intent = stripe_payload.get("data", {}).get("object", {})
-        amount = int(payment_intent.get("amount")) / 20
+        amount_credits = int(payment_intent.get("amount")) / 100 / PRICE_CREDIT
         status = payment_intent.get("status")
         if status == "succeeded":
             user = self.db.query(User).filter(User.id == user_id).first()
             if user.prospect_credits is None:
                 user.prospect_credits = 0
-            user.prospect_credits += amount
+            user.prospect_credits += amount_credits
             self.db.commit()
         return user
         

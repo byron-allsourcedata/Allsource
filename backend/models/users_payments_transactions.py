@@ -12,6 +12,9 @@ class UsersPaymentsTransactions(Base):
     created_at = Column(TIMESTAMP(precision=6))
     transaction_id = Column(VARCHAR, nullable=True)
     status = Column(VARCHAR, nullable=True)
-    amount = Column(Integer, nullable=True)
+    amount_credits = Column(Integer, nullable=True)
     type = Column(VARCHAR, nullable=False)
-    lead_id = Column(Integer, nullable=True)
+    lead_id = Column(Integer, ForeignKey("leads_users.id"), nullable=True)
+    five_x_five_up_id = Column(VARCHAR, nullable=False)
+
+event.listen(UsersPaymentsTransactions, "before_insert", create_timestamps)
