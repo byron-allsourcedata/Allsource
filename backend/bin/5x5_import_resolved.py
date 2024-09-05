@@ -115,10 +115,10 @@ def process_user_data(table, index, five_x_five_user: FiveXFiveUser, session: Se
         visit_id = visit[0]
         leads_requests = session.query(LeadsRequests).filter(
         LeadsRequests.visit_id == visit_id).all()
-        
+
     if leads_requests:
-        lead_visits = leads_requests[0].visit_id
         logging.info("leads requests exists")
+        lead_visits = leads_requests[0].visit_id
         visit_first = session.query(LeadsVisits).filter(
             LeadsVisits.lead_id == lead_user.id
         ).order_by(
