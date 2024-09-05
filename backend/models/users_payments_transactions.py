@@ -16,3 +16,5 @@ class UsersPaymentsTransactions(Base):
     type = Column(VARCHAR, nullable=False)
     lead_id = Column(Integer, ForeignKey("leads_users.id"), nullable=True)
     five_x_five_up_id = Column(VARCHAR, nullable=False)
+
+event.listen(UsersPaymentsTransactions, "before_insert", create_timestamps)
