@@ -2,7 +2,7 @@
 import { Box, Grid, Typography, Button, Menu, MenuItem } from "@mui/material";
 import Image from "next/image";
 import dynamic from "next/dynamic";
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useState, useEffect, Suspense, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "../../context/UserContext";
 import axiosInstance from "../../axios/axiosInterceptorInstance";
@@ -12,14 +12,9 @@ import { ProgressSection } from "../../components/ProgressSection";
 import PixelInstallation from "../../components/PixelInstallation";
 import Slider from "../../components/Slider";
 import { SliderProvider } from "../../context/SliderContext";
-import PersonIcon from "@mui/icons-material/Person";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import TrialStatus from "../../components/TrialLabel";
 import { useTrial } from "../../context/TrialProvider";
 import StatsCards from "../../components/StatsCard";
-import AccountButton from "@/components/AccountButton";
 import { PopupButton } from "react-calendly";
-import NavigationMenu from "@/components/NavigationMenu";
 
 const Sidebar = dynamic(() => import("../../components/Sidebar"), {
   suspense: true,
@@ -139,7 +134,18 @@ const VerifyPixelIntegration: React.FC = () => {
   );
 };
 
-const SupportSection: React.FC = () => (
+const SupportSection: React.FC = () => {
+  const calendlyPopupRef = useRef<HTMLDivElement | null>(null);
+  const [rootElement, setRootElement] = useState<HTMLElement | null>(null);
+
+  useEffect(() => {
+    // Устанавливаем корневой элемент для модального окна после рендера
+    if (calendlyPopupRef.current) {
+      setRootElement(calendlyPopupRef.current);
+    }
+  }, []);
+
+  return (
   <Box sx={{
     position: "fixed", 
     bottom: 20,          
@@ -194,7 +200,8 @@ const SupportSection: React.FC = () => (
         justifyContent="flex-start"
         sx={{ rowGap: "24px", display: "flex" }}
       >
-        <div id="calendly-popup-wrapper"></div>
+        <div id="calendly-popup-wrapper" ref={calendlyPopupRef} />
+      {rootElement && (
         <PopupButton
           className="book-call-button"
           styles={{
@@ -210,10 +217,11 @@ const SupportSection: React.FC = () => (
             textTransform: "none",
             cursor: "pointer",
           }}
-          url="https://calendly.com/slava-lolly/123"
-          rootElement={document.getElementById("calendly-popup-wrapper")!}
+          url="https://calendly.com/nickit-schatalow09/maximiz"
+          rootElement={rootElement} // Теперь корневой элемент передается через состояние
           text="Schedule a call with us"
         />
+      )}
         <Image
             src={"/headphones.svg"}
             alt="headphones"
@@ -249,53 +257,18 @@ const SupportSection: React.FC = () => (
       </Grid>
     </Box>
     </Box>
-);
+)};
 
 const Dashboard: React.FC = () => {
   const router = useRouter();
-  const { full_name: userFullName, email: userEmail } = useUser();
-  const meItem = typeof window !== 'undefined' ? sessionStorage.getItem('me') : null;
-  const meData = meItem ? JSON.parse(meItem) : { full_name: '', email: '' };
-  const full_name = userFullName || meData.full_name;
-  const email = userEmail || meData.email;
   const { setTrial, setDaysLeft } = useTrial();
   const [data, setData] = useState<any>(null);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [dropdownEl, setDropdownEl] = useState<null | HTMLElement>(null);
   const [showSlider, setShowSlider] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const open = Boolean(anchorEl);
-  const dropdownOpen = Boolean(dropdownEl);
   const [showCharts, setShowCharts] = useState(false);
 
-  const handleSignOut = () => {
-    localStorage.clear();
-    sessionStorage.clear();
-    router.push("/signin");
-  };
-
-  const handleProfileMenuClick = (
-    event: React.MouseEvent<HTMLButtonElement>
-  ) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleProfileMenuClose = () => {
-    setAnchorEl(null);
-  };
-
-  const handleDropdownClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-    setDropdownEl(event.currentTarget);
-  };
-
-  const handleDropdownClose = () => {
-    setDropdownEl(null);
-  };
-
-  const handleSettingsClick = () => {
-    handleProfileMenuClose();
-    router.push("/settings");
-  };
 
   useEffect(() => {
     const accessToken = localStorage.getItem("token");

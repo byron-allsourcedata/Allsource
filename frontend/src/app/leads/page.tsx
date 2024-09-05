@@ -1157,11 +1157,14 @@ const Leads: React.FC = () => {
                                                                 onClick={() => handleSelectRow(row.lead.id)}
                                                                 sx={{
                                                                     backgroundColor: selectedRows.has(row.lead.id) ? 'rgba(235, 243, 254, 1)' : '#fff',
+                                                                    '&:hover':{
+                                                                        backgroundColor: 'rgba(235, 243, 254, 1)'
+                                                                    }
                                                                 }}
                                                             >
                                                                 <TableCell
-                                                                    sx={{ ...leadsStyles.table_array, cursor: 'pointer', position: 'sticky', left: '0', zIndex: 9,
-                                                                        backgroundColor: selectedRows.has(row.lead.id) ? 'rgba(235, 243, 254, 1)' : '#fff'
+                                                                    sx={{ ...leadsStyles.table_array, cursor: 'pointer', position: 'sticky', left: '0', zIndex: 9, color:'rgba(80, 82, 178, 1)',
+                                                                        
                                                                     }} onClick={(e) => {
                                                                         e.stopPropagation();
                                                                         handleOpenPopup(row);

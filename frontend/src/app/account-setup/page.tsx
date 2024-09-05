@@ -123,33 +123,33 @@ const AccountSetup = () => {
   const getButtonStyles = (isSelected: boolean): any => {
     return isSelected
       ? {
-          ...styles.employeeButton,
-          backgroundColor: "rgba(249, 189, 182, 1)",
-          color: "black",
-          pointerEvents: 'none',
-        }
+        ...styles.employeeButton,
+        backgroundColor: "rgba(249, 189, 182, 1)",
+        color: "black",
+        pointerEvents: 'none',
+      }
       : { ...styles.employeeButton, color: "black" };
   };
 
   const getButtonVisitsStyles = (isSelected: boolean): any => {
     return isSelected
       ? {
-          ...styles.visitButton,
-          backgroundColor: "rgba(249, 189, 182, 1)",
-          color: "black",
-          pointerEvents: 'none',
-        }
+        ...styles.visitButton,
+        backgroundColor: "rgba(249, 189, 182, 1)",
+        color: "black",
+        pointerEvents: 'none',
+      }
       : { ...styles.visitButton, color: "black" };
   };
 
   const getButtonRolesStyles = (isSelected: boolean): any => {
     return isSelected
       ? {
-          ...styles.roleButton,
-          backgroundColor: "rgba(249, 189, 182, 1)",
-          color: "black",
-          pointerEvents: 'none',
-        }
+        ...styles.roleButton,
+        backgroundColor: "rgba(249, 189, 182, 1)",
+        color: "black",
+        pointerEvents: 'none',
+      }
       : { ...styles.roleButton, color: "black" };
   };
 
@@ -240,30 +240,30 @@ const AccountSetup = () => {
 
   const handleWebsiteLink = (event: { target: { value: string } }) => {
     let input = event.target.value.trim();
-  
+
     const hasWWW = input.startsWith("www.");
-  
+
     const sanitizedInput = hasWWW ? input.replace(/^www\./, '') : input;
-  
+
     const domainPattern = /^[\w-]+\.[a-z]{2,}$/i;
     const isValidDomain = domainPattern.test(sanitizedInput);
-  
+
     let finalInput = input;
-  
+
     if (isValidDomain) {
       finalInput = hasWWW ? `https://www.${sanitizedInput}` : `https://${sanitizedInput}`;
     }
-  
+
     setWebsiteLink(finalInput);
-  
+
     const websiteError = validateField(input, "website");
     setErrors((prevErrors) => ({
       ...prevErrors,
       websiteLink: websiteError,
     }));
   };
-  
-  
+
+
 
   const isFormValid = () => {
     const errors = {
@@ -381,58 +381,56 @@ const AccountSetup = () => {
           </Menu>
         </Box>
         <Box sx={{ ...styles.nav, position: "relative" }}>
-          {activeTab === 1 && (
-            <Button
-              variant="outlined"
-              onClick={handleBackClick}
+          <Button
+            variant="outlined"
+            onClick={handleBackClick}
+            sx={{
+              position: "absolute",
+              left: -120,
+              top: 5,
+              marginRight: 2,
+              visibility: activeTab === 1 ? 'visible' : 'hidden',
+              color: "rgba(50, 50, 50, 1)",
+              border: "none",
+              fontFamily: "Nunito",
+              textTransform: "none",
+              fontSize: "16px",
+              "&:hover": {
+                border: "1px",
+                backgroundColor: "transparent",
+                fontWeight: 900,
+                "& .MuiSvgIcon-root": {
+                  transform: "translateX(-7px)",
+                },
+              },
+              "@media (max-width: 600px)": {
+                display: "flex",
+                mr: 0,
+                position: "inherit",
+                left: 0,
+                top: 0,
+              },
+              "@media (max-width: 400px)": {
+                display: "flex",
+                mr: 0,
+                position: "inherit",
+                left: 0,
+                top: 0,
+                padding: activeTab === 1 ? 1.25 : 0
+              },
+            }}
+          >
+            <ArrowBackIcon
               sx={{
-                position: "absolute",
-                left: -120,
-                top: 5,
-                marginRight: 2,
                 color: "rgba(50, 50, 50, 1)",
-                border: "none",
-                fontFamily: "Nunito",
-                textTransform: "none",
-                fontSize: "16px",
-                "&:hover": {
-                  border: "1px",
-                  backgroundColor: "transparent",
-                  fontWeight: 900,
-                  "& .MuiSvgIcon-root": {
-                    transform: "translateX(-7px)",
-                  },
-                },
-                "@media (max-width: 600px)": {
-                  display: "flex",
-                  mr: 0,
-                  position: "inherit",
-                  left: 0,
-                  top: 0,
-                },
-                "@media (max-width: 400px)": {
-                  display: "flex",
-                  mr: 0,
-                  position: "inherit",
-                  left: 0,
-                  top: 0,
-                  padding: 1.25
-                },
+                transition: "transform 0.4s ease",
               }}
-            >
-              <ArrowBackIcon
-                sx={{
-                  color: "rgba(50, 50, 50, 1)",
-                  transition: "transform 0.3s ease",
-                }}
-              />
-              Back
-            </Button>
-          )}
+            />
+            Back
+          </Button>
           <Tabs
             value={activeTab}
             sx={{
-              ...styles.tabs,
               "& .MuiTabs-indicator": {
                 backgroundColor: "rgba(244, 87, 69, 1)",
               },
@@ -449,7 +447,7 @@ const AccountSetup = () => {
                 lineHeight: "21.82px",
                 padding: 0,
                 marginRight: 1.5,
-                marginLeft: activeTab === 0 ? 2.5 : 0,
+                marginLeft: 2.5,
                 color:
                   activeTab === 0
                     ? "rgba(50, 50, 50, 1)"
@@ -457,6 +455,9 @@ const AccountSetup = () => {
                 "&.Mui-selected": {
                   color: "rgba(244, 87, 69, 1)",
                 },
+                "@media (max-width: 400px)": {
+                marginLeft: 0
+              },
               }}
             />
             <Tab
@@ -476,7 +477,6 @@ const AccountSetup = () => {
                 "&.Mui-selected": {
                   color: "rgba(244, 87, 69, 1)",
                 },
-                '@media (max-width: 400px)': { padding: 1, },
               }}
             />
           </Tabs>
@@ -567,7 +567,7 @@ const AccountSetup = () => {
                 placeholder={isFocused ? "example.com" : ""}
                 sx={styles.formField}
                 InputLabelProps={{ sx: styles.inputLabel }}
-                value={websiteLink.replace(/^https?:\/\//, "")}
+                value={isFocused ? websiteLink.replace(/^https?:\/\//, "") : `https://${websiteLink.replace(/^https?:\/\//, "")}`}
                 onChange={handleWebsiteLink}
                 onFocus={handleFocus}
                 onBlur={handleBlur}
@@ -579,6 +579,7 @@ const AccountSetup = () => {
                   ),
                 }}
               />
+
               <Typography variant="body1" sx={styles.text}>
                 How many monthly visits to your website?
               </Typography>
@@ -644,7 +645,7 @@ const AccountSetup = () => {
                     onMouseDown={() => handleEmployeeRangeChange(range.label)}
                     sx={getButtonStyles(selectedEmployees === range.label)}
                   >
-                    <Typography sx={{fontFamily: 'Nunito', fontWeight: 400, fontSize: '14px', lineHeight: '19.6px', padding: '3px'}}> {range.label}</Typography>
+                    <Typography sx={{ fontFamily: 'Nunito', fontWeight: 400, fontSize: '14px', lineHeight: '19.6px', padding: '3px' }}> {range.label}</Typography>
                   </Button>
                 ))}
               </Box>
@@ -666,7 +667,7 @@ const AccountSetup = () => {
                     onMouseDown={() => handleRolesChange(range.label)}
                     sx={getButtonRolesStyles(selectedRoles === range.label)}
                   >
-                    <Typography sx={{fontFamily: 'Nunito', fontWeight: 400, fontSize: '14px', lineHeight: '19.6px', padding: '3px'}}> {range.label}</Typography>
+                    <Typography sx={{ fontFamily: 'Nunito', fontWeight: 400, fontSize: '14px', lineHeight: '19.6px', padding: '3px' }}> {range.label}</Typography>
                   </Button>
                 ))}
               </Box>
