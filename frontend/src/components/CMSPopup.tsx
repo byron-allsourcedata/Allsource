@@ -13,7 +13,7 @@ const style = {
   position: 'fixed' as 'fixed',
   top: 0,
   right: 0,
-  width: '40%',
+  width: '45%',
   height: '100%',
   bgcolor: 'background.paper',
   boxShadow: 24,
@@ -25,7 +25,7 @@ const style = {
   '@media (max-width: 600px)': {
     width: '100%',
     height: '100%',
-    p: 0
+    p: 2
   },
 };
 
@@ -80,7 +80,7 @@ const typographyGoogle = {
 
 const maintext = {
   fontFamily: 'Nunito',
-  fontSize: '16px',
+  fontSize: '14px',
   fontWeight: '600',
   lineHeight: '19.6px',
   color: 'rgba(0, 0, 0, 1)',
@@ -96,7 +96,7 @@ const subtext = {
   textAlign: 'center',
   color: 'rgba(74, 74, 74, 1)',
   paddingTop: '0.25em',
-  '@media (max-width: 600px)': {textAlign: 'left', fontSize: '14px'} 
+  '@media (max-width: 600px)': { textAlign: 'left', fontSize: '14px' }
 };
 
 interface CmsData {
@@ -154,42 +154,42 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
 
   const handleSubmit = async () => {
     const newErrors = {
-        access_token: validateField(access_token, "access_token"),
-        shop_domain: validateField(shop_domain, "shop_domain"),
+      access_token: validateField(access_token, "access_token"),
+      shop_domain: validateField(shop_domain, "shop_domain"),
     };
     setErrors(newErrors);
 
     if (newErrors.access_token || newErrors.shop_domain) {
-        return;
+      return;
     }
 
     const accessToken = localStorage.getItem('token');
     if (!accessToken) return;
 
     const body: Record<string, any> = {
-        shop_domain: shop_domain.trim(),
-        access_token: access_token.trim(),
+      shop_domain: shop_domain.trim(),
+      access_token: access_token.trim(),
     };
 
     try {
-        const response = await axiosInstance.post("/integrations/", body, {
-            params: {
-                service_name: "shopify",
-            },
-        });
+      const response = await axiosInstance.post("/integrations/", body, {
+        params: {
+          service_name: "shopify",
+        },
+      });
 
-        if (response.status === 200) {
-            showToast('Successfully installed pixel');
-            handleClose
-        } else {
-            showErrorToast('Failed to install pixel');
-            handleClose
-        }
+      if (response.status === 200) {
+        showToast('Successfully installed pixel');
+        handleClose
+      } else {
+        showErrorToast('Failed to install pixel');
+        handleClose
+      }
     } catch (error) {
-        console.error("An error occurred:", error);
-        showErrorToast('An error occurred while installing the pixel');
+      console.error("An error occurred:", error);
+      showErrorToast('An error occurred while installing the pixel');
     }
-};
+  };
 
 
   const isFormValid = () => {
@@ -236,17 +236,26 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
           {selectedCMS ? (
             <>
               <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'start', height: '100%' }} >
-                <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start', gap: 1, pt:1 }}>
-                  <Button onClick={handleBackClick} sx={{ marginTop: '1em', p: 0 }}>
-                    <ArrowBackIcon sx={{ color: 'rgba(80, 82, 178, 1)' }} />
+                <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start', gap: 1, pt: 1 }}>
+                  <Button
+                    onClick={handleBackClick}
+                    sx={{
+                      marginTop: '1em',
+                      padding: 0,
+                      minWidth: 'auto',
+                      width: 'auto', 
+                    }}
+                  >
+                    <ArrowBackIcon sx={{ color: 'rgba(80, 82, 178, 1)', padding: 0 }} />
                   </Button>
                   <Typography sx={{ ...subtext, marginTop: '0.75em' }}>
                     Follow the instructions to install in Maximiz
                   </Typography>
                 </Box>
+
                 {selectedCMS === 'Shopify' ? (
                   <>
-                    <Box sx={{ flex: 1, overflowY: 'auto', paddingBottom: '1em', pl: 2.25, pr: 2.25, height: '100%' }}>
+                    <Box sx={{ flex: 1, overflowY: 'auto', paddingBottom: '1em', height: '100%' }}>
                       <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', padding: 0, justifyContent: 'start' }}>
                         <Image src='/1.svg' alt='1' width={28} height={28} />
                         <Typography sx={{ ...maintext, textAlign: 'left', padding: '1em 0em 1em 1em', fontWeight: '500' }}>Enter your Shopify shop domain in the designated field. This allows our system to identify your store.</Typography>
@@ -270,7 +279,7 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
                       </Box>
                       <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'start' }}>
                         <Image src='/2.svg' alt='2' width={28} height={28} />
-                        <Typography sx={{ ...maintext, textAlign: 'left', padding: '1em 0em 1em 1em', fontWeight: '500',  }}>Enter your Shopify API access token. This token is necessary for secure communication between your Shopify store and our application.</Typography>
+                        <Typography sx={{ ...maintext, textAlign: 'left', padding: '1em 0em 1em 1em', fontWeight: '500', }}>Enter your Shopify API access token. This token is necessary for secure communication between your Shopify store and our application.</Typography>
                       </Box>
                       <Box
                         component="pre"
@@ -291,36 +300,36 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
                       </Box>
                       <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'start' }}>
                         <Image src='/3.svg' alt='3' width={28} height={28} />
-                        <Typography sx={{ ...maintext, textAlign: 'left', padding: '2em 1em 1em', fontWeight: '500', '@media (max-width: 600px)': {padding: '1em'} }}>Once you have submitted the required information, our system will automatically install the script on your Shopify store. You don’t need to take any further action.</Typography>
+                        <Typography sx={{ ...maintext, textAlign: 'left', padding: '2em 1em 1em', fontWeight: '500', '@media (max-width: 600px)': { padding: '1em' } }}>Once you have submitted the required information, our system will automatically install the script on your Shopify store. You don’t need to take any further action.</Typography>
                       </Box>
                     </Box>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', maxHeight: '100%', padding: '0em 1em'}}>
-                        <Button
-                          fullWidth
-                          variant="contained"
-                          sx={{
-                            ...styles.submitButton,
-                            marginTop: 'auto', // This will push the button to the bottom
-                            opacity: isFormValid() ? 1 : 0.6,
-                            pointerEvents: isFormValid() ? "auto" : "none",
-                            backgroundColor: isFormValid()
-                              ? "rgba(80, 82, 178, 1)"
-                              : "rgba(80, 82, 178, 0.4)",
-                            "&.Mui-disabled": {
-                              backgroundColor: "rgba(80, 82, 178, 0.6)",
-                              color: "#fff",
-                            },
-                          }}
-                          onClick={handleSubmit}
-                          disabled={!isFormValid}
-                        >
-                          Install Pixel
-                        </Button>
-                      </Box>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', maxHeight: '100%', padding: '0em 1em' }}>
+                      <Button
+                        fullWidth
+                        variant="contained"
+                        sx={{
+                          ...styles.submitButton,
+                          marginTop: 'auto', 
+                          opacity: isFormValid() ? 1 : 0.6,
+                          pointerEvents: isFormValid() ? "auto" : "none",
+                          backgroundColor: isFormValid()
+                            ? "rgba(80, 82, 178, 1)"
+                            : "rgba(80, 82, 178, 0.4)",
+                          "&.Mui-disabled": {
+                            backgroundColor: "rgba(80, 82, 178, 0.6)",
+                            color: "#fff",
+                          },
+                        }}
+                        onClick={handleSubmit}
+                        disabled={!isFormValid}
+                      >
+                        Install Pixel
+                      </Button>
+                    </Box>
                   </>
                 ) : (
                   <>
-                    <Box sx={{ flex: 1, overflowY: 'auto', paddingBottom: '2em', pl: 2.25 }}>
+                    <Box sx={{ flex: 1, overflowY: 'auto', paddingBottom: '2em', }}>
                       <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', padding: '1em 0em 0em 0em', justifyContent: 'start' }}>
                         <Image src='/1.svg' alt='1' width={28} height={28} />
                         <Typography sx={{ ...maintext, textAlign: 'center', padding: '1em 0em 1em 1em', fontWeight: '500' }}>Add our offical Maximiz pixel plugin to your Wordpress site.</Typography>
@@ -338,7 +347,7 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
                             textAlign: 'left',
                             padding: '1em',
                             fontWeight: '500',
-                            maxWidth: '70%',
+                            maxWidth: '95%',
                             overflowWrap: 'break-word',
                             wordWrap: 'break-word',
                             whiteSpace: 'normal',
@@ -349,9 +358,6 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
                             style={{
                               fontWeight: '800',
                               cursor: 'pointer',
-                              overflowWrap: 'break-word',
-                              wordWrap: 'break-word',
-                              whiteSpace: 'normal',
                             }}
                             onClick={handleCopyToClipboard}
                           >
