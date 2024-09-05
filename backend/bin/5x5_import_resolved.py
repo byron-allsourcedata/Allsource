@@ -64,10 +64,11 @@ def process_table(table, session, file_key):
     for i in range(len(table)):
         up_id = table['UP_ID'][i]
         if not up_id.is_valid and str(up_id) == 'None':
-            up_id = session.query(FiveXFiveHems.up_id).filter(
-                FiveXFiveHems.sha256_lc_hem == str(table['SHA256_LOWER_CASE'][i])).scalar()
-            if not up_id:
+            up_ids = session.query(FiveXFiveHems.up_id).filter(
+                FiveXFiveHems.sha256_lc_hem == str(table['SHA256_LOWER_CASE'][i])).all()
+            if len(up_ids) != 1:
                 continue
+            up_id = up_ids[0][0]
         five_x_five_user = session.query(FiveXFiveUser).filter(FiveXFiveUser.up_id == str(up_id).lower()).first()
         if five_x_five_user:
             logging.info(f"UP_ID {up_id} found in table")
