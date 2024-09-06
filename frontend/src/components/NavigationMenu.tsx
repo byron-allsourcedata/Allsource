@@ -16,6 +16,10 @@ import PersonIcon from '@mui/icons-material/Person';
 import NotificationsNoneIcon from '@mui/icons-material/NotificationsNone';
 import Image from "next/image";
 import { useUser } from "../context/UserContext";
+import { useSlider } from '@/context/SliderContext';
+import { AxiosError } from 'axios';
+import axiosInstance from '@/axios/axiosInterceptorInstance';
+import Slider from "../components/Slider";
 
 const navigationmenuStyles = {
   mobileMenuHeader: {
@@ -84,14 +88,45 @@ const NavigationMenu = () => {
   const meData = meItem ? JSON.parse(meItem) : { full_name: '', email: '' };
   const full_name = userFullName || meData.full_name;
   const email = userEmail || meData.email;
+  const { setShowSlider } = useSlider();
+  const [showBookSlider, setShowBookSlider] = useState(false);
 
   const toggleDrawer = () => {
     setOpen(!open);
   };
-  const handleNavigation = (path: string) => {
-    router.push(path);
-    setOpen(!open);
-  };
+
+  const handleNavigation = async (path: string) => {
+    try {
+        const response = await axiosInstance.get("dashboard");
+        if (response.data.status === "NEED_BOOK_CALL") {
+            sessionStorage?.setItem("is_slider_opened", "true");
+            setShowSlider(true);
+            setShowBookSlider(true);
+            setOpen(!open);
+        } else {
+            setShowSlider(false);
+            setShowBookSlider(false);
+            setOpen(!open);
+            router.push(path);
+        }
+    } catch (error) {
+        if (error instanceof AxiosError && error.response?.status === 403) {
+            if (error.response.data.status === "NEED_BOOK_CALL") {
+                sessionStorage?.setItem("is_slider_opened", "true");
+                setShowSlider(true);
+                setShowBookSlider(true);
+                setOpen(!open);
+            } else {
+                setShowSlider(false);
+                setShowBookSlider(false);
+                setOpen(!open);
+                router.push(path);
+            }
+        } else {
+            console.error("Error fetching data:", error);
+        }
+    }
+};
 
   const isActive = (path: string) => pathname === path;  
 
@@ -251,6 +286,7 @@ const NavigationMenu = () => {
           </ListItem>
         </List>
       </Box>
+      {showBookSlider && <Slider />}
     </Box>
   );
 };

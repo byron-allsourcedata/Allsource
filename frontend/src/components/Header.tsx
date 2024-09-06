@@ -7,6 +7,7 @@ import { useUser } from "../context/UserContext";
 import TrialStatus from "./TrialLabel";
 import AccountButton from "@/components/AccountButton";
 import NavigationMenu from "@/components/NavigationMenu";
+import { SliderProvider } from "../context/SliderContext";
 
 const headerStyles = {
     headers: {
@@ -55,7 +56,7 @@ const Header = () => {
     return (
         <>
         <Box sx={{ display: { md: 'none' } }}>
-            <NavigationMenu/>
+            <SliderProvider><NavigationMenu/></SliderProvider>
         </Box>
 
 
