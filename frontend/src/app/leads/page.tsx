@@ -1099,13 +1099,16 @@ const Leads: React.FC = () => {
                                                             <TableRow
                                                                 key={row.lead.id}
                                                                 sx={{
-                                                                    '&:hover':{
-                                                                        backgroundColor: 'rgba(235, 243, 254, 1)'
+                                                                    '&:hover': {
+                                                                        backgroundColor: 'rgba(235, 243, 254, 1)',
+                                                                        '& .sticky-cell': {
+                                                                            backgroundColor: 'rgba(235, 243, 254, 1)', // Изменение цвета для фиксированной ячейки
+                                                                        }
                                                                     }
                                                                 }}
                                                             >
-                                                                <TableCell
-                                                                    sx={{ ...leadsStyles.table_array, cursor: 'pointer', position: 'sticky', left: '0', zIndex: 9, color:'rgba(80, 82, 178, 1)',
+                                                                <TableCell className="sticky-cell"
+                                                                    sx={{ ...leadsStyles.table_array, cursor: 'pointer', position: 'sticky', left: '0', zIndex: 9, color:'rgba(80, 82, 178, 1)', backgroundColor: '#fff'
                                                                         
                                                                     }} onClick={(e) => {
                                                                         e.stopPropagation();
