@@ -57,6 +57,9 @@ async def main():
     await channel.declare_queue(
         name='5x5_import_hems',
         durable=True,
+        arguments={
+            'x-consumer-timeout': 3600000,
+        }
     )
     await process_files(sts_client, connection)
 

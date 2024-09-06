@@ -19,6 +19,7 @@ from config.rmq_connection import RabbitMQConnection
 from models.five_x_five_hems import FiveXFiveHems
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.dialects.postgresql import insert
 
 # Load environment variables
 load_dotenv()
@@ -68,13 +69,15 @@ async def on_message_received(message, s3_session, credentials, db_session):
                         with gzip.open(temp_file.name, 'rt', encoding='utf-8') as f:
                             df = pd.read_csv(f)
                         for _, row in df.iterrows():
-                            five_x_five_hems = FiveXFiveHems(
+                            five_x_five_hems = insert(FiveXFiveHems).values(
                                 up_id=str(row['UP_ID']),
                                 sha256_lc_hem=str(row['SHA256_LC_HEM']),
                                 md5_lc_hem=str(row['MD5_LC_HEM']),
                                 sha1_lc_hem=str(row['SHA1_LC_HEM'])
-                            )
-                            db_session.add(five_x_five_hems)
+                            ).on_conflict_do_nothing()
+                            db_session.execute(five_x_five_hems)
+                            db_session.flush()
+
                         db_session.commit()
             logging.info(f"{message_json['file_name']} processed")
         except Exception as e:
@@ -94,6 +97,9 @@ async def main():
         queue = await channel.declare_queue(
             name='5x5_import_hems',
             durable=True,
+            arguments={
+            'x-consumer-timeout': 3600000,
+            }
         )
 
         engine = create_engine(
