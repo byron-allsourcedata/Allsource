@@ -99,33 +99,31 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
     }
   };
 
-  const handleAddTagEmails = (e: { key: string }) => {
-    if (e.key === "Enter" && email.trim()) {
-      setEmails([...emails, email.trim()]);
-      setEmail("");
+  const [selectedValues, setSelectedValues] = useState<string[]>([]);
+
+  const handleChangeRecurringVisits = (event: React.ChangeEvent<HTMLInputElement>) => {
+    let value = event.target.value;
+  
+    if (value === "4+") {
+      value = "5";
     }
+  
+    setSelectedValues((prevSelectedValues) => {
+      if (prevSelectedValues.includes(value)) {
+        return prevSelectedValues.filter((item) => item !== value);
+      } else {
+        return [...prevSelectedValues, value];
+      }
+    });
+  };
+  
+
+  const handleDeleteRecurringVisit = (valueToDelete: string) => {
+    setSelectedValues((prevSelectedValues) =>
+      prevSelectedValues.filter((value) => value !== valueToDelete)
+    );
   };
 
-
-const [selectedValues, setSelectedValues] = useState<string[]>([]);
-
-const handleChangeRecurringVisits = (event: React.ChangeEvent<HTMLInputElement>) => {
-  const value = event.target.value;
-
-  setSelectedValues((prevSelectedValues) => {
-    if (prevSelectedValues.includes(value)) {
-      // Remove the value if it is already selected
-      return prevSelectedValues.filter((item) => item !== value);
-    } else {
-      // Add the value if it is not selected
-      return [...prevSelectedValues, value];
-    }
-  });
-};
-
-const handleDeleteRecurringVisits = () => {
-  setSelectedValues([]);
-};
 
   const getButtonStyle = (label: string) => {
     switch (label) {
@@ -637,9 +635,8 @@ const handleDeleteRecurringVisits = () => {
           .unix()
         : toDateTime;
 
-    // Формирование объекта filters с учетом переданных buttonFilters
     const filters = {
-      ...buttonFilters, // Включаем фильтры, полученные из кнопки (если есть)
+      ...buttonFilters,
       dateRange: buttonFilters
         ? buttonFilters.dateRange
         : {
@@ -660,12 +657,12 @@ const handleDeleteRecurringVisits = () => {
       selectedValues,
       searchQuery,
     };
-
     return filters;
   };
 
   const handleApply = () => {
     const filters = handleFilters();
+    console.log(filters)
     onApply(filters);
     setSelectedButton("");
     setButtonFilters(null);
@@ -714,14 +711,14 @@ const handleDeleteRecurringVisits = () => {
 
   const handleRadioChange = (event: { target: { name: string } }) => {
     const { name } = event.target;
-  
+
     setCheckedFilters((prevFilters) => {
       // Explicitly type `prevFilters` for better TypeScript support
       const prevFiltersTyped = prevFilters as Record<string, boolean>;
-  
+
       // Find the previously selected radio button
       const previouslySelected = Object.keys(prevFiltersTyped).find((key) => prevFiltersTyped[key]);
-  
+
       // Reset all filters and select the new one
       const newFilters = {
         lastWeek: false,
@@ -730,22 +727,22 @@ const handleDeleteRecurringVisits = () => {
         allTime: false,
         [name]: true,
       };
-  
+
       const tagMap: { [key: string]: string } = {
         lastWeek: "Last week",
         last30Days: "Last 30 days",
         last6Months: "Last 6 months",
         allTime: "All time",
       };
-  
+
       // Remove the tag for the previously selected radio button, if any
       if (previouslySelected && previouslySelected !== name) {
         removeTag("visitedDate", tagMap[previouslySelected]);
       }
-  
+
       // Add the tag for the currently selected radio button
       addTag("visitedDate", tagMap[name]);
-  
+
       return newFilters;
     });
   };
@@ -753,14 +750,14 @@ const handleDeleteRecurringVisits = () => {
   const handleRadioChangeTime = (event: { target: { name: string } }) => {
 
     const { name } = event.target;
-  
+
     setCheckedFiltersTime((prevFiltersTime) => {
       // Explicitly type `prevFilters` for better TypeScript support
       const prevFiltersTimeTyped = prevFiltersTime as Record<string, boolean>;
-  
+
       // Find the previously selected radio button
       const previouslySelectedTime = Object.keys(prevFiltersTimeTyped).find((key) => prevFiltersTimeTyped[key]);
-  
+
       // Reset all filters and select the new one
       const newFiltersTime = {
         morning: false,
@@ -769,22 +766,22 @@ const handleDeleteRecurringVisits = () => {
         all_day: false,
         [name]: true,
       };
-  
+
       const tagMapTime: { [key: string]: string } = {
         morning: "Morning 12AM - 11AM",
         afternoon: "Afternoon 11AM - 5PM",
         evening: "Evening 5PM - 9PM",
         all_day: "All day",
       };
-  
+
       // Remove the tag for the previously selected radio button, if any
       if (previouslySelectedTime && previouslySelectedTime !== name) {
         removeTag("visitedTime", tagMapTime[previouslySelectedTime]);
       }
-  
+
       // Add the tag for the currently selected radio button
       addTag("visitedTime", tagMapTime[name]);
-  
+
       return newFiltersTime;
     });
   };
@@ -793,35 +790,35 @@ const handleDeleteRecurringVisits = () => {
   const handleLoadOpen = () => setOpenLoadDrawer(true);
   const handleLoadClose = () => setOpenLoadDrawer(false);
 
-// Function to determine if filters are selected
-const updateButtonState = () => {
-  const filters = handleFilters();
-  // console.log('Filters:', filters); // For debugging
+  // Function to determine if filters are selected
+  const updateButtonState = () => {
+    const filters = handleFilters();
+    // console.log('Filters:', filters); // For debugging
 
-  if (!filters || typeof filters !== 'object' || Object.keys(filters).length === 0) {
-    setIsButtonDisabled(true);
-    return;
-  }
-
-  const hasActiveFilters = Object.values(filters).some(value => {
-    if (Array.isArray(value)) {
-      return value.length > 0;
-    } else if (typeof value === 'object' && value !== null) {
-      return Object.values(value).some(val => {
-        if (val === null || val === '') return false;
-        if (Array.isArray(val)) return val.length > 0;
-        if (typeof val === 'boolean') return val;
-        return true;
-      });
-    } else {
-      if (typeof value === 'string') return value.trim() !== '';
-      if (typeof value === 'boolean') return value;
-      return value !== null;
+    if (!filters || typeof filters !== 'object' || Object.keys(filters).length === 0) {
+      setIsButtonDisabled(true);
+      return;
     }
-  });
 
-  setIsButtonDisabled(!hasActiveFilters);
-};
+    const hasActiveFilters = Object.values(filters).some(value => {
+      if (Array.isArray(value)) {
+        return value.length > 0;
+      } else if (typeof value === 'object' && value !== null) {
+        return Object.values(value).some(val => {
+          if (val === null || val === '') return false;
+          if (Array.isArray(val)) return val.length > 0;
+          if (typeof val === 'boolean') return val;
+          return true;
+        });
+      } else {
+        if (typeof value === 'string') return value.trim() !== '';
+        if (typeof value === 'boolean') return value;
+        return value !== null;
+      }
+    });
+
+    setIsButtonDisabled(!hasActiveFilters);
+  };
 
 
 
@@ -854,28 +851,28 @@ const updateButtonState = () => {
 
 
 
-const handleSave = () => {
-  try {
-    const filters = handleFilters();
+  const handleSave = () => {
+    try {
+      const filters = handleFilters();
 
-    // console.log('Filter:', filters);
+      // console.log('Filter:', filters);
 
-    const newFilter = { name: filterName, data: filters };
-    // console.log('New Filter:', newFilter);
+      const newFilter = { name: filterName, data: filters };
+      // console.log('New Filter:', newFilter);
 
-    setSavedFilters(prevFilters => {
-      // console.log('Previous Filters:', prevFilters);
-      return [...prevFilters, newFilter];
-    });
+      setSavedFilters(prevFilters => {
+        // console.log('Previous Filters:', prevFilters);
+        return [...prevFilters, newFilter];
+      });
 
-    setFilterName('');
-    handleClose(); // Close the modal
-  } catch (error) {
-    console.error('Error saving filter:', error);
-  }
-};
+      setFilterName('');
+      handleClose(); // Close the modal
+    } catch (error) {
+      console.error('Error saving filter:', error);
+    }
+  };
 
-  
+
   return (
     <>
       <Backdrop open={open} sx={{ zIndex: 1200, color: "#fff" }} />
@@ -934,135 +931,137 @@ const handleSave = () => {
                 Load
               </Typography>
             </Button>
-              <Drawer
-                anchor="right"
-                open={openLoadDrawer}
-                onClose={handleLoadClose}
-                PaperProps={{
-                  sx: {
-                    width: "40%",
-                    position: "fixed",
-                    zIndex: 1301,
-                    top: 0,
-                    bottom: 0,
-                    "@media (max-width: 600px)": {
-                      width: "100%",
-                    },
+            <Drawer
+              anchor="right"
+              open={openLoadDrawer}
+              onClose={handleLoadClose}
+              PaperProps={{
+                sx: {
+                  width: "40%",
+                  position: "fixed",
+                  zIndex: 1301,
+                  top: 0,
+                  bottom: 0,
+                  "@media (max-width: 600px)": {
+                    width: "100%",
                   },
+                },
+              }}
+            >
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  padding: "1.5em 1em",
+                  borderBottom: "1px solid #e4e4e4",
                 }}
               >
-                 <Box
-                    sx={{
+                <IconButton onClick={handleLoadClose}>
+                  <CloseIcon />
+                </IconButton>
+                <Typography
+                  variant="h6"
+                  sx={{
+                    textAlign: "center",
+                    color: "#4A4A4A",
+                    fontFamily: "Nunito",
+                    fontWeight: "600",
+                    fontSize: "16px",
+                    lineHeight: "22.4px",
+                  }}
+                >
+                  Load with saved filters
+                </Typography>
+              </Box>
+
+
+              {/* Display saved filters */}
+
+              {savedFilters.length > 0 ? (
+                savedFilters.map((filter, index) => (
+                  <Box key={index} sx={{
+                    padding: '1.5em', borderBottom: "1px solid #ebebeb", display: "flex",
+                    justifyContent: "space-between", alignItems: "center"
+                  }}>
+                    <Typography variant="h6" sx={{
+                      fontFamily: 'Nunito',
+                      color: '#3B3B3B',
+                      fontSize: '16px',
+                      fontWeight: '600',
+                      lineHeight: '22.4px'
+                    }}>
+                      {filter.name}
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontFamily: 'Nunito' }}>
+                      {/* {JSON.stringify(filter.data, null, 2)} */}
+                    </Typography>
+                    <Box sx={{
                       display: "flex",
                       justifyContent: "space-between",
-                      alignItems: "center",
-                      padding: "1.5em 1em",
-                      borderBottom: "1px solid #e4e4e4",
+                      gap: "22px"
+                    }}>
+                      <IconButton>
+                        <Image
+                          src="/edit.svg"
+                          height={18} width={18} // Adjust the size as needed
+                          alt="edit"
+                        />
+                      </IconButton>
+                      <IconButton>
+                        <Image
+                          src="/trash.svg"
+                          height={18} width={18} // Adjust the size as needed
+                          alt="trash"
+                        />
+                      </IconButton>
+                    </Box>
+                  </Box>
+                ))
+              ) : (
+                <Box
+                  sx={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    border: '1px solid rgba(235, 235, 235, 1)',
+                    borderRadius: 2,
+                    padding: 3,
+                    boxSizing: 'border-box',
+                    width: '100%',
+                    textAlign: 'center',
+                    flex: 1,
+                    '& img': {
+                      width: 'auto',
+                      height: 'auto',
+                      maxWidth: '100%',
+                    },
+                  }}
+                >
+                  <Typography
+                    variant="h5"
+                    sx={{
+                      mb: 3,
+                      fontFamily: 'Nunito',
+                      fontSize: '20px',
+                      color: '#4a4a4a',
+                      fontWeight: '600',
+                      lineHeight: '28px',
                     }}
                   >
-                    <IconButton onClick={handleLoadClose}>
-                    <CloseIcon />
-                  </IconButton>
-                    <Typography
-                      variant="h6"
-                      sx={{
-                        textAlign: "center",
-                        color: "#4A4A4A",
-                        fontFamily: "Nunito",
-                        fontWeight: "600",
-                        fontSize: "16px",
-                        lineHeight: "22.4px",
-                      }}
-                    >
-                      Load with saved filters
-                    </Typography>
-                  </Box>
+                    Data not Found
+                  </Typography>
+                  <Image
+                    src="/pixel_installation_needed.svg"
+                    alt="Need Pixel Install"
+                    height={250}
+                    width={300}
+                  />
+                </Box>
+              )}
 
-
-                {/* Display saved filters */}
-                
-                  {savedFilters.length > 0 ? (
-                    savedFilters.map((filter, index) => (
-                      <Box key={index} sx={{ padding: '1.5em', borderBottom: "1px solid #ebebeb", display: "flex",
-                        justifyContent: "space-between", alignItems: "center" }}>
-                        <Typography variant="h6" sx={{
-                          fontFamily: 'Nunito',
-                          color: '#3B3B3B',
-                          fontSize: '16px',
-                          fontWeight: '600',
-                          lineHeight: '22.4px'
-                          }}>
-                          {filter.name}
-                        </Typography>
-                        <Typography variant="body2" sx={{ fontFamily: 'Nunito' }}>
-                          {/* {JSON.stringify(filter.data, null, 2)} */}
-                        </Typography>
-                        <Box sx={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          gap: "22px"
-                        }}>
-                          <IconButton>
-                            <Image 
-                              src="/edit.svg"
-                              height={18} width={18} // Adjust the size as needed
-                              alt="edit"
-                            />
-                          </IconButton>
-                          <IconButton>
-                            <Image 
-                                src="/trash.svg"
-                                height={18} width={18} // Adjust the size as needed
-                                alt="trash"
-                              />
-                          </IconButton>
-                        </Box>
-                      </Box>
-                    ))
-                  ) : (
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        border: '1px solid rgba(235, 235, 235, 1)',
-                        borderRadius: 2,
-                        padding: 3,
-                        boxSizing: 'border-box',
-                        width: '100%',
-                        textAlign: 'center',
-                        flex: 1,
-                        '& img': {
-                          width: 'auto',
-                          height: 'auto',
-                          maxWidth: '100%',
-                        },
-                      }}
-                    >
-                      <Typography
-                        variant="h5"
-                        sx={{
-                          mb: 3,
-                          fontFamily: 'Nunito',
-                          fontSize: '20px',
-                          color: '#4a4a4a',
-                          fontWeight: '600',
-                          lineHeight: '28px',
-                        }}
-                      >
-                        Data not Found
-                      </Typography>
-                      <Image
-                        src="/pixel_installation_needed.svg"
-                        alt="Need Pixel Install"
-                        height={250}
-                        width={300}
-                      />
-                    </Box>
-                  )}
-
-              </Drawer>
+            </Drawer>
             <Typography
               sx={{
                 color: "rgba(228, 228, 228, 1)",
@@ -1084,7 +1083,7 @@ const handleSave = () => {
                   fontSize: "16px",
                   lineHeight: "22.4px",
                 }}
-                
+
               >
                 Save
               </Typography>
@@ -1359,17 +1358,18 @@ const handleSave = () => {
                 </Box>
               </Box>
               <Box sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  width: '100%',
-                  mt: '20px',
-                  mb: '20px',
-                  '@media (max-width: 440px)': {
-                      marginTop: '16px',
-                      marginBottom: '16px',
-                  }}}>
-              <Box sx={{ borderBottom: '1px solid #e4e4e4', flexGrow: 1 }} />
-                <Typography variant="body1" 
+                display: 'flex',
+                alignItems: 'center',
+                width: '100%',
+                mt: '20px',
+                mb: '20px',
+                '@media (max-width: 440px)': {
+                  marginTop: '16px',
+                  marginBottom: '16px',
+                }
+              }}>
+                <Box sx={{ borderBottom: '1px solid #e4e4e4', flexGrow: 1 }} />
+                <Typography variant="body1"
                   sx={{
                     px: '8px',
                     fontWeight: '400',
@@ -1533,17 +1533,18 @@ const handleSave = () => {
                 </Box>
               </Box>
               <Box sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  width: '100%',
-                  mt: '20px',
-                  mb: '20px',
-                  '@media (max-width: 440px)': {
-                      marginTop: '16px',
-                      marginBottom: '16px',
-                  }}}>
-              <Box sx={{ borderBottom: '1px solid #e4e4e4', flexGrow: 1 }} />
-                <Typography variant="body1" 
+                display: 'flex',
+                alignItems: 'center',
+                width: '100%',
+                mt: '20px',
+                mb: '20px',
+                '@media (max-width: 440px)': {
+                  marginTop: '16px',
+                  marginBottom: '16px',
+                }
+              }}>
+                <Box sx={{ borderBottom: '1px solid #e4e4e4', flexGrow: 1 }} />
+                <Typography variant="body1"
                   sx={{
                     px: '8px',
                     fontWeight: '400',
@@ -2130,15 +2131,16 @@ const handleSave = () => {
               >
                 Recurring Visists
               </Typography>
-              {selectedValues.length > 0 && 
+              {selectedValues.length > 0 &&
                 selectedValues.map((value) => (
                   <CustomChip
                     key={value}
                     label={value}
-                    onDelete={handleDeleteRecurringVisits}
+                    onDelete={() => handleDeleteRecurringVisit(value)}
                   />
                 ))
               }
+
               <IconButton
                 onClick={() => setIsRecurringVisits(!isRecurringVisits)}
                 aria-label="toggle-content"
@@ -2148,31 +2150,31 @@ const handleSave = () => {
             </Box>
             <Collapse in={isRecurringVisits}>
               <Divider sx={{ mb: 2 }} />
-              
-                <Box sx={{ display: "flex", justifyContent: "start", gap: 3 }}>
-                  {["1", "2", "3", "4", "4+"].map((label) => (
-                    <FormControlLabel
-                      key={label}
-                      control={
-                        <Checkbox
-                          checked={selectedValues.includes(label)}
-                          onChange={handleChangeRecurringVisits}
-                          value={label}
-                        />
-                      }
-                      label={label}
-                      sx={{
-                        display: "flex",
-                        color: "rgba(74, 74, 74, 1)",
-                        alignItems: "center",
-                        fontFamily: "Nunito",
-                        fontWeight: "600",
-                        fontSize: "16px",
-                        lineHeight: "25.2px",
-                      }}
-                    />
-                  ))}
-                </Box>
+
+              <Box sx={{ display: "flex", justifyContent: "start", gap: 3 }}>
+                {["1", "2", "3", "4", "4+"].map((label) => (
+                  <FormControlLabel
+                    key={label}
+                    control={
+                      <Checkbox
+                        checked={selectedValues.includes(label)}
+                        onChange={handleChangeRecurringVisits}
+                        value={label}
+                      />
+                    }
+                    label={label}
+                    sx={{
+                      display: "flex",
+                      color: "rgba(74, 74, 74, 1)",
+                      alignItems: "center",
+                      fontFamily: "Nunito",
+                      fontWeight: "600",
+                      fontSize: "16px",
+                      lineHeight: "25.2px",
+                    }}
+                  />
+                ))}
+              </Box>
             </Collapse>
           </Box>
         </Box>

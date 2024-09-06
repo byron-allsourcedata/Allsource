@@ -181,8 +181,12 @@ const Users: React.FC = () => {
                     setData(response.data);
                     setTotalItems(response.data.length);
                     setSortedData(response.data);
-                }
-            } finally {
+                }   
+            } 
+            catch {
+                console.log("error")
+            }
+            finally {
                 setIsLoading(false);
             }
         };
