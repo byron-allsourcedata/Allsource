@@ -35,6 +35,10 @@ class LeadsPersistence:
 
     def filter_leads(self, user_id, page, per_page, status, from_date, to_date, from_time, to_time, regions, page_visits, average_time_spent,
                      lead_funnels, recurring_visits, sort_by, sort_order, search_query):
+        
+        first_name_alias = aliased(FiveXFiveNames, name='first_name')
+        last_name_alias = aliased(FiveXFiveNames, name='last_name')
+
         subquery = (
             self.db.query(
                 LeadsVisits.lead_id,
@@ -61,12 +65,14 @@ class LeadsPersistence:
             .join(LeadUser, LeadUser.five_x_five_user_id == FiveXFiveUser.id)
             .join(FiveXFiveUsersLocations, FiveXFiveUsersLocations.five_x_five_user_id == FiveXFiveUser.id)
             .join(FiveXFiveLocations, FiveXFiveLocations.id == FiveXFiveUsersLocations.location_id)
-            .join(FiveXFiveNames, FiveXFiveNames.id == FiveXFiveUser.first_name_id)
-            .join(FiveXFiveNames, FiveXFiveNames.id == FiveXFiveUser.last_name_id)
-            .join(FiveXFiveUsersEmails, FiveXFiveUsersEmails.user_id == user_id)
+            
+            .join(first_name_alias, first_name_alias.id == FiveXFiveUser.first_name_id)
+            .join(last_name_alias, last_name_alias.id == FiveXFiveUser.last_name_id)
+            .join(FiveXFiveUsersEmails, FiveXFiveUsersEmails.user_id == FiveXFiveUser.id)
             .join(FiveXFiveEmails, FiveXFiveEmails.id == FiveXFiveUsersEmails.email_id)
-            .join(FiveXFiveUsersPhones, FiveXFiveUsersPhones.user_id == user_id)
+            .join(FiveXFiveUsersPhones, FiveXFiveUsersPhones.user_id == FiveXFiveUser.id)
             .join(FiveXFivePhones, FiveXFivePhones.id == FiveXFiveUsersPhones.phone_id)
+
             .outerjoin(subquery, LeadUser.id == subquery.c.lead_id)
             .filter(LeadUser.user_id == user_id)
         )
