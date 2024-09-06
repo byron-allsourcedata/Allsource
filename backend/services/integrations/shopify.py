@@ -3,6 +3,7 @@ from schemas.integrations.shopify import ShopifyCustomer, ShopifyOrderAPI
 from schemas.integrations.integrations import IntegrationCredentials
 from persistence.leads_persistence import LeadsPersistence
 from persistence.leads_order_persistence import LeadOrdersPersistence
+from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
 from models.integrations.users_integrations import UserIntegration
 from httpx import Client
@@ -14,10 +15,12 @@ class ShopifyIntegrationService:
 
     def __init__(self, integration_persistence: IntegrationsPresistence, 
                  lead_persistence: LeadsPersistence, lead_orders_persistence: LeadOrdersPersistence,
-                 client: Client, ):
+                 integrations_user_sync_persistence: IntegrationsUserSyncPersistence,
+                 client: Client):
         self.integration_persistence = integration_persistence
         self.lead_persistence = lead_persistence
         self.lead_orders_persistence = lead_orders_persistence
+        self.integrations_user_sync_persistence = integrations_user_sync_persistence
         self.client = client
 
 
@@ -154,17 +157,41 @@ class ShopifyIntegrationService:
                     'created_at_shopify': order.created_at_shopify
                 })
 
+
+    def create_sync(self, user_id: int, 
+                    integration_id: int, 
+                    sync_type: str,  
+                    supression: bool, 
+                    filter_by_contact_type: str):
+        data = {
+            'user_id': user_id,
+            'integration_id': integration_id,
+            'sync_type': sync_type,
+            'supression': supression,
+            'filter_by_contact_type': filter_by_contact_type
+        }
+
+        sync = self.integrations_user_sync_persistence.create_sync(data)
+        return {'status': 'Successfuly', 'detail': sync}
     
-    def __export_sync(self, user_id, filter_id: int, **filter):
-        credentials = self.__get_credentials(user_id)
-        if filter_id:
-            # сюда с фильтром нужно закинуть функицию какую-нибудь
-            ...
-        else: leads = self.lead_persistence.filter_leads(user_id, **filter)
-        customers = [self.__mapped_customer_for_shopify(lead) for lead in leads]
-        for customer in customers: 
-            self.__create_or_update_shopify_customer(customer, credentials.shop_domain, credentials.access_token)
+
+    def get_sync_user(self, user_id: int):
+        return self.integrations_user_sync_persistence.get_filter_by(user_id=user_id)
+    
+
+    def __export_sync(self, user_id: int):
+        credential = self.__get_credentials(user_id)
+        syncs = self.integrations_user_sync_persistence.get_filter_by(user_id=user_id)
+        for sync in syncs:
+            leads_list = self.lead_persistence.get_leads_user(user_id=sync.user_id, status=sync.filter_by_contact_type)
+            for lead in leads_list:
+                self.__create_or_update_shopify_customer(self.lead_persistence.get_lead_data(lead.five_x_five_user_id), 
+                                                         credential.shop_domain, credential.access_token)
+            self.integrations_user_sync_persistence.update_sync({
+                'last_sync_date': datetime.now()
+            }, id=sync.id)
         return {'status': 'Success'}
+
 
 
     def __import_sync(self, user_id: int):
@@ -242,7 +269,6 @@ class ShopifyIntegrationService:
                 "phone": customer.mobile_phone,
                 "last_name": customer.last_name,
                 "first_name": customer.first_name,
-                "country": "CA"
             }]}
     
     def __mapped_customer_shopify_order(self, order) -> ShopifyOrderAPI:

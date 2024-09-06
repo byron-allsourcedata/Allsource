@@ -126,10 +126,7 @@ class LeadsPersistence:
         return leads, count, max_page
 
     def get_lead_data(self, lead_id):
-        lead = self.db.query(Lead).filter(Lead.id == lead_id).first()
-        if lead:
-            return lead
-        return None
+        lead = self.db.query(FiveXFiveUser).filter(FiveXFiveUser.id == lead_id).first()
 
     def get_ids_user_leads_ids(self, user_id, leads_ids):
         lead_users = self.db.query(LeadUser).filter(LeadUser.user_id == user_id,
@@ -274,5 +271,5 @@ class LeadsPersistence:
         return self.db.query(LeadUser).join(Lead, Lead.id == LeadUser.lead_id).filter(LeadUser.user_id == user_id, 
                                                                                          Lead.business_email == email).all()
 
-        
-        
+    def get_leads_user(self, user_id: int, **filter_by):
+        return self.db.query(LeadUser).filter_by(**filter_by)
