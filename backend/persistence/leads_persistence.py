@@ -14,6 +14,11 @@ from models.audience import Audience
 from models.audience_leads import AudienceLeads
 from models.five_x_five_users import FiveXFiveUser
 from models.leads_visits import LeadsVisits
+from models.five_x_five_users_emails import FiveXFiveUsersEmails
+from models.five_x_five_names import FiveXFiveNames
+from models.five_x_five_emails import FiveXFiveEmails
+from models.five_x_five_users_phones import FiveXFiveUsersPhones
+from models.five_x_five_phones import FiveXFivePhones
 from models.leads import Lead
 from models.five_x_five_users_locations import FiveXFiveUsersLocations
 from models.leads_users import LeadUser
@@ -28,14 +33,16 @@ class LeadsPersistence:
     def __init__(self, db: Session):
         self.db = db
 
-    def filter_leads(self, user_id, page, per_page, status, from_date, to_date, regions, page_visits, average_time_spent,
-                     lead_funnel, emails, recurring_visits, sort_by, sort_order, search_query):
+    def filter_leads(self, user_id, page, per_page, status, from_date, to_date, from_time, to_time, regions, page_visits, average_time_spent,
+                     lead_funnels, recurring_visits, sort_by, sort_order, search_query):
         subquery = (
             self.db.query(
                 LeadsVisits.lead_id,
                 func.max(LeadsVisits.full_time_sec).label('time_on_site'),
                 func.max(LeadsVisits.start_date).label('start_date'),
-                func.max(LeadsVisits.start_time).label('start_time')
+                func.max(LeadsVisits.start_time).label('start_time'),
+                func.max(LeadsVisits.pages_count).label('pages_count'),
+                func.max(LeadsVisits.average_time_sec).label('average_time_sec'),
             )
             .group_by(LeadsVisits.lead_id)
             .subquery()
@@ -54,23 +61,26 @@ class LeadsPersistence:
             .join(LeadUser, LeadUser.five_x_five_user_id == FiveXFiveUser.id)
             .join(FiveXFiveUsersLocations, FiveXFiveUsersLocations.five_x_five_user_id == FiveXFiveUser.id)
             .join(FiveXFiveLocations, FiveXFiveLocations.id == FiveXFiveUsersLocations.location_id)
+            .join(FiveXFiveNames, FiveXFiveNames.id == FiveXFiveUser.first_name_id)
+            .join(FiveXFiveNames, FiveXFiveNames.id == FiveXFiveUser.last_name_id)
+            .join(FiveXFiveUsersEmails, FiveXFiveUsersEmails.user_id == user_id)
+            .join(FiveXFiveEmails, FiveXFiveEmails.id == FiveXFiveUsersEmails.email_id)
+            .join(FiveXFiveUsersPhones, FiveXFiveUsersPhones.user_id == user_id)
+            .join(FiveXFivePhones, FiveXFivePhones.id == FiveXFiveUsersPhones.phone_id)
             .outerjoin(subquery, LeadUser.id == subquery.c.lead_id)
             .filter(LeadUser.user_id == user_id)
         )
         sort_options = {
-            'name': Lead.first_name,
-            'business_email': Lead.business_email,
-            'mobile_phone': Lead.mobile_phone,
-            'time_spent': Lead.time_spent,
-            'no_of_visits': Lead.no_of_visits,
-            'no_of_page_visits': Lead.no_of_page_visits,
-            'gender': Lead.gender,
+            'name': FiveXFiveUser.first_name,
+            'business_email': FiveXFiveUser.business_email,
+            'mobile_phone': FiveXFiveUser.mobile_phone,
+            'gender': FiveXFiveUser.gender,
             'last_visited_date': subquery.c.start_date,
             'status': LeadUser.status,
             'funnel': LeadUser.funnel,
             'state': FiveXFiveLocations.state,
             'city': FiveXFiveLocations.city,
-            'age': Lead.age_min,
+            'age': FiveXFiveUser.age_min,
             'time_spent': subquery.c.start_date
         }
         if sort_by:
@@ -81,46 +91,62 @@ class LeadsPersistence:
                 query = query.order_by(desc(sort_column))
         else:
             query = query.order_by(desc(subquery.c.start_date))
+
         if from_date and to_date:
             start_date = datetime.fromtimestamp(from_date, tz=pytz.UTC)
             end_date = datetime.fromtimestamp(to_date, tz=pytz.UTC)
-            if start_date == end_date:
-                end_date += timedelta(days=1)
             query = query.filter(
                 and_(
-                    subquery.c.last_visited_at >= start_date,
-                    subquery.c.last_visited_at <= end_date
+                    subquery.c.start_date >= start_date,
+                    subquery.c.start_date <= end_date
                 )
             )
+        if from_time and to_time:
+            from_time = datetime.fromtimestamp(from_time, tz=pytz.UTC)
+            to_time = datetime.fromtimestamp(to_time, tz=pytz.UTC)
+            query = query.filter(
+                and_(
+                    subquery.c.start_time >= from_time,
+                    subquery.c.start_time <= to_time
+                )
+            )
+
+        if recurring_visits:
+            pages_count = int(recurring_visits)
+            if pages_count > 4:
+                query = query.filter(
+                    subquery.c.pages_count > pages_count
+            )
+            else:
+                query = query.filter(
+                        subquery.c.pages_count == pages_count
+                )
         if regions:
             region_list = regions.split(',')
             region_filters = [FiveXFiveLocations.city.ilike(f'%{region.strip()}%') for region in region_list]
             query = query.filter(or_(*region_filters))
-        if emails:
-            email_list = emails.split(',')
-            email_filters = [Lead.business_email.ilike(f'%{email.strip()}%') for email in email_list]
-            query = query.filter(or_(*email_filters))
+
         if status == 'new_customers':
             query = query.filter(LeadUser.status == 'New')
         elif status == 'existing_customers':
-            query = query.filter(LeadUser.status == 'Existing')
+            query = query.filter(LeadUser.status == 'Existing') 
 
-        if lead_funnel:
-            funnel_list = lead_funnel.split(',')
+        if lead_funnels:
+            funnel_list = lead_funnels.split(',')
             query = query.filter(LeadUser.funnel.in_(funnel_list))
 
         if page_visits:
-            query = query.filter(Lead.no_of_page_visits >= page_visits)
+            query = query.filter(subquery.c.pages_count >= page_visits)
 
         if average_time_spent:
-            query = query.filter(Lead.time_spent >= average_time_spent)
+            query = query.filter(subquery.c.average_time_sec >= average_time_spent)
 
         if search_query:
             search_conditions = or_(
-                Lead.first_name.ilike(f'%{search_query}%'),
-                Lead.last_name.ilike(f'%{search_query}%'),
-                Lead.business_email.ilike(f'%{search_query}%'),
-                Lead.mobile_phone.ilike(f'%{search_query}%'),
+                FiveXFiveNames.name.ilike(f'{search_query}%'),
+                FiveXFiveEmails.email.ilike(f'{search_query}%'),
+                FiveXFiveEmails.email_host.ilike(f'{search_query}%'),
+                FiveXFivePhones.number.ilike(f'{search_query}%'),
             )
             query = query.filter(search_conditions)
 
