@@ -33,7 +33,9 @@ class LeadsPersistence:
         subquery = (
             self.db.query(
                 LeadsVisits.lead_id,
-                func.max(LeadsVisits.start_date).label('last_visited_at')
+                func.max(LeadsVisits.full_time_sec).label('time_on_site'),
+                func.max(LeadsVisits.start_date).label('start_date'),
+                func.max(LeadsVisits.start_time).label('start_time')
             )
             .group_by(LeadsVisits.lead_id)
             .subquery()
@@ -45,14 +47,15 @@ class LeadsPersistence:
                 LeadUser.funnel,
                 FiveXFiveLocations.state,
                 FiveXFiveLocations.city,
-                subquery.c.last_visited_at
+                subquery.c.start_date,
+                subquery.c.start_time,
+                subquery.c.time_on_site
             )
             .join(LeadUser, LeadUser.five_x_five_user_id == FiveXFiveUser.id)
             .join(FiveXFiveUsersLocations, FiveXFiveUsersLocations.five_x_five_user_id == FiveXFiveUser.id)
             .join(FiveXFiveLocations, FiveXFiveLocations.id == FiveXFiveUsersLocations.location_id)
             .outerjoin(subquery, LeadUser.id == subquery.c.lead_id)
             .filter(LeadUser.user_id == user_id)
-            .order_by(subquery.c.last_visited_at.desc())
         )
         sort_options = {
             'name': Lead.first_name,
@@ -62,12 +65,13 @@ class LeadsPersistence:
             'no_of_visits': Lead.no_of_visits,
             'no_of_page_visits': Lead.no_of_page_visits,
             'gender': Lead.gender,
-            'last_visited_date': subquery.c.last_visited_at,
+            'last_visited_date': subquery.c.start_date,
             'status': LeadUser.status,
             'funnel': LeadUser.funnel,
             'state': FiveXFiveLocations.state,
             'city': FiveXFiveLocations.city,
-            'age': Lead.age_min
+            'age': Lead.age_min,
+            'time_spent': subquery.c.start_date
         }
         if sort_by:
             sort_column = sort_options[sort_by]
@@ -75,8 +79,8 @@ class LeadsPersistence:
                 query = query.order_by(asc(sort_column))
             elif sort_order == 'desc':
                 query = query.order_by(desc(sort_column))
-            else:
-                query = query.order_by(desc(subquery.c.last_visited_at))
+        else:
+            query = query.order_by(desc(subquery.c.start_date))
         if from_date and to_date:
             start_date = datetime.fromtimestamp(from_date, tz=pytz.UTC)
             end_date = datetime.fromtimestamp(to_date, tz=pytz.UTC)

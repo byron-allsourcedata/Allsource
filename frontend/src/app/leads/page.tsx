@@ -1141,7 +1141,7 @@ const Leads: React.FC = () => {
                                                                 </TableCell>
                                                                 
                                                                 <TableCell
-                                                                    sx={leadsStyles.table_array}>{row.lead.time_spent || 'N/A'}</TableCell>
+                                                                    sx={leadsStyles.table_array}>{row.time_spent || 'N/A'}</TableCell>
                                                             </TableRow>
                                                         ))}
                                                     </TableBody>
