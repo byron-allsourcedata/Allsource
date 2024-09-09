@@ -290,18 +290,6 @@ const Leads: React.FC = () => {
     const installPixel = () => {
         router.push('/dashboard');
     };
-    const handleProfileMenuClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-        setAnchorEl(event.currentTarget);
-    };
-
-    const handleProfileMenuClose = () => {
-        setAnchorEl(null);
-    };
-
-    const handleSettingsClick = () => {
-        handleProfileMenuClose();
-        router.push('/settings');
-    };
 
     const handleSelectRow = (id: number) => {
         setSelectedRows((prevSelectedRows) => {
