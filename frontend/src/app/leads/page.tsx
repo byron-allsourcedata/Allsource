@@ -158,18 +158,14 @@ const CustomTablePagination: React.FC<CustomTablePaginationProps> = ({
 
 const Leads: React.FC = () => {
     const router = useRouter();
-    const { full_name, email } = useUser();
     const [data, setData] = useState<any[]>([]);
     const [count_leads, setCount] = useState<number | null>(null);
     const [order, setOrder] = useState<'asc' | 'desc' | undefined>(undefined);
     const [orderBy, setOrderBy] = useState<string | undefined>(undefined);
     const [appliedDates, setAppliedDates] = useState<{ start: Date | null; end: Date | null }>({ start: null, end: null });
-    const [maxPage, setMaxPage] = useState<number>(0);
     const [status, setStatus] = useState<string | null>(null);
-    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [showSlider, setShowSlider] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
-    const open = Boolean(anchorEl);
     const [dropdownEl, setDropdownEl] = useState<null | HTMLElement>(null);
     const dropdownOpen = Boolean(dropdownEl);
     const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
@@ -196,7 +192,6 @@ const Leads: React.FC = () => {
     const handleClosePopup = () => {
         setOpenPopup(false);
     };
-
 
     interface FilterParams {
         dateRange: {
@@ -286,13 +281,6 @@ const Leads: React.FC = () => {
         }
     };
 
-
-    const handleSignOut = () => {
-        localStorage.clear();
-        sessionStorage.clear();
-        router.push('/signin');
-    };
-
     const handleFilterChange = (filter: string) => {
         setActiveFilter(filter);
         setSelectedFilters([]);
@@ -302,7 +290,6 @@ const Leads: React.FC = () => {
     const installPixel = () => {
         router.push('/dashboard');
     };
-
     const handleProfileMenuClick = (event: React.MouseEvent<HTMLButtonElement>) => {
         setAnchorEl(event.currentTarget);
     };
@@ -337,7 +324,6 @@ const Leads: React.FC = () => {
         }
         setSelectedRows(new Set());
     };
-
     const handleChangeRowsPerPage = (event: React.ChangeEvent<{ value: unknown }>) => {
         setRowsPerPage(parseInt(event.target.value as string, 10));
         setPage(0);
@@ -427,11 +413,10 @@ const Leads: React.FC = () => {
             }
 
             const response = await axiosInstance.get(url);
-            const [leads, count, max_page] = response.data;
+            const [leads, count] = response.data;
 
             setData(Array.isArray(leads) ? leads : []);
             setCount(count || 0);
-            setMaxPage(max_page || 0);
             setStatus(response.data.status);
         } catch (error) {
             if (error instanceof AxiosError && error.response?.status === 403) {
@@ -492,7 +477,6 @@ const Leads: React.FC = () => {
 
             setData(Array.isArray(leads) ? leads : []);
             setCount(count || 0);
-            setMaxPage(max_page || 0);
             setStatus(response.data.status);
             setSelectedFilters([]);
         } catch (error) {
@@ -797,12 +781,10 @@ const Leads: React.FC = () => {
                                             borderRadius: '4px',
                                             padding: '9px 16px',
                                             minWidth: 'auto',
-                                            opacity: selectedRows.size === 0 ? 0.4 : 1,
                                             '@media (max-width: 900px)': {
                                                 display: 'none'
                                             }
                                         }}
-                                        disabled={selectedRows.size === 0}
                                     >
                                         <Typography sx={{
                                             marginRight: '0.5em',
@@ -833,7 +815,6 @@ const Leads: React.FC = () => {
                                             }
                                         }}
                                         onClick={handleDownload}
-                                        disabled={selectedRows.size === 0}
                                     >
                                         <DownloadIcon fontSize='medium' />
                                     </Button>
@@ -919,8 +900,6 @@ const Leads: React.FC = () => {
                                                 display: 'none'
                                             }
                                         }}
-                                        disabled={selectedRows.size === 0}
-
                                     >
                                         <Image src='/add.svg' alt='logo' height={24} width={24} />
                                     </Button>
@@ -951,7 +930,6 @@ const Leads: React.FC = () => {
                                         <Typography variant="body2" sx={{...leadsStyles.subtitle,
                                             color: activeFilter === 'all' ? 'rgba(80, 82, 178, 1)' : 'rgba(89, 89, 89, 1)',
                                         }}
-                                        
                                         >All</Typography>
                                     </Button>
 
@@ -1162,8 +1140,8 @@ const Leads: React.FC = () => {
                                                                     }
                                                                 }}
                                                             >
-                                                                <TableCell
-                                                                    sx={{ ...leadsStyles.table_array, cursor: 'pointer', position: 'sticky', left: '0', zIndex: 9, color:'rgba(80, 82, 178, 1)',
+                                                                <TableCell className="sticky-cell"
+                                                                    sx={{ ...leadsStyles.table_array, cursor: 'pointer', position: 'sticky', left: '0', zIndex: 9, color:'rgba(80, 82, 178, 1)', backgroundColor: '#fff'
                                                                         
                                                                     }} onClick={(e) => {
                                                                         e.stopPropagation();
