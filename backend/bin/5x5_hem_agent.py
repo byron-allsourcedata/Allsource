@@ -50,37 +50,38 @@ def assume_role(role_arn, sts_client):
 
 
 async def on_message_received(message, s3_session, credentials, db_session):
-    async with message.process():
-        try:
-            message_json = json.loads(message.body)
-            async with s3_session.client(
-                    's3',
-                    region_name='us-west-2',
-                    aws_access_key_id=credentials['AccessKeyId'],
-                    aws_secret_access_key=credentials['SecretAccessKey'],
-                    aws_session_token=credentials['SessionToken']
-            ) as s3:
-                s3_obj = await s3.get_object(Bucket=BUCKET_NAME, Key=message_json['file_name'])
-                async with s3_obj["Body"] as body:
-                    with tempfile.NamedTemporaryFile(delete=True) as temp_file:
-                        file_data = await body.read()
-                        temp_file.write(file_data)
-                        temp_file.seek(0)
-                        with gzip.open(temp_file.name, 'rt', encoding='utf-8') as f:
-                            df = pd.read_csv(f)
-                        for _, row in df.iterrows():
-                            five_x_five_hems = insert(FiveXFiveHems).values(
-                                up_id=str(row['UP_ID']),
-                                sha256_lc_hem=str(row['SHA256_LC_HEM']),
-                                md5_lc_hem=str(row['MD5_LC_HEM']),
-                                sha1_lc_hem=str(row['SHA1_LC_HEM'])
-                            ).on_conflict_do_nothing()
-                            db_session.execute(five_x_five_hems)
-                            db_session.commit()
+    try:
+        message_json = json.loads(message.body)
+        async with s3_session.client(
+                's3',
+                region_name='us-west-2',
+                aws_access_key_id=credentials['AccessKeyId'],
+                aws_secret_access_key=credentials['SecretAccessKey'],
+                aws_session_token=credentials['SessionToken']
+        ) as s3:
+            s3_obj = await s3.get_object(Bucket=BUCKET_NAME, Key=message_json['file_name'])
+            async with s3_obj["Body"] as body:
+                with tempfile.NamedTemporaryFile(delete=True) as temp_file:
+                    file_data = await body.read()
+                    temp_file.write(file_data)
+                    temp_file.seek(0)
+                    with gzip.open(temp_file.name, 'rt', encoding='utf-8') as f:
+                        df = pd.read_csv(f)
+                    for _, row in df.iterrows():
+                        five_x_five_hems = insert(FiveXFiveHems).values(
+                            up_id=str(row['UP_ID']),
+                            sha256_lc_hem=str(row['SHA256_LC_HEM']),
+                            md5_lc_hem=str(row['MD5_LC_HEM']),
+                            sha1_lc_hem=str(row['SHA1_LC_HEM'])
+                        ).on_conflict_do_nothing()
+                        db_session.execute(five_x_five_hems)
+                        db_session.commit()
 
-            logging.info(f"{message_json['file_name']} processed")
-        except Exception as e:
-            logging.error(f"Error processing message: {e}", exc_info=True)
+        logging.info(f"{message_json['file_name']} processed")
+        await message.ack()
+    except Exception as e:
+        await message.reject(requeue=True)
+        logging.error(f"Error processing message: {e}", exc_info=True)
 
 
 async def main():
