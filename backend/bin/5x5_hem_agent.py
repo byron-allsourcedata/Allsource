@@ -76,9 +76,8 @@ async def on_message_received(message, s3_session, credentials, db_session):
                                 sha1_lc_hem=str(row['SHA1_LC_HEM'])
                             ).on_conflict_do_nothing()
                             db_session.execute(five_x_five_hems)
-                            db_session.flush()
+                            db_session.commit()
 
-                        db_session.commit()
             logging.info(f"{message_json['file_name']} processed")
         except Exception as e:
             logging.error(f"Error processing message: {e}", exc_info=True)
