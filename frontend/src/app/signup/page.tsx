@@ -272,9 +272,13 @@ const Signup: React.FC = () => {
                     get_me()
                     router.push('/dashboard');
                     break;
+                  case "EMAIL_ALREADY_EXISTS":
+                    router.push('/signin');
+                    showErrorToast('Email is associated with an account. Please login')
+                    break;
                   default:
                     get_me()
-                    router.push('/dahboard')
+                    router.push('/dashboard')
                     break;
                 }
               } catch (error) {
