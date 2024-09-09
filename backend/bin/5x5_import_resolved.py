@@ -8,6 +8,7 @@ import pytz
 import urllib.parse
 from datetime import time as dt_time
 import time
+from dateutil.relativedelta import relativedelta
 from sqlalchemy import func, and_, or_
 import boto3
 import pyarrow.parquet as pq
@@ -18,6 +19,7 @@ sys.path.append(parent_dir)
 
 from models.leads_requests import LeadsRequests
 from models.leads_visits import LeadsVisits
+from models.subscriptions import UserSubscriptions
 from models.five_x_five_hems import FiveXFiveHems
 from models.users_payments_transactions import UsersPaymentsTransactions
 from sqlalchemy import create_engine
@@ -111,10 +113,10 @@ def process_user_data(table, index, five_x_five_user: FiveXFiveUser, session: Se
         LeadsRequests.requested_at >= thirty_minutes_ago
         ).first()
     leads_requests = None
-    if visit:
-        visit_id = visit[0]
-        leads_requests = session.query(LeadsRequests).filter(
-        LeadsRequests.visit_id == visit_id).all()
+    # if visit:
+    #     visit_id = visit[0]
+    #     leads_requests = session.query(LeadsRequests).filter(
+    #     LeadsRequests.visit_id == visit_id).all()
 
     if leads_requests:
         logging.info("leads requests exists")
@@ -136,9 +138,14 @@ def process_user_data(table, index, five_x_five_user: FiveXFiveUser, session: Se
     else:
         logging.info("Leads Visits not exists")
         lead_visits = add_new_leads_visits(requested_at, lead_user.id, session, behavior_type).id
-        session.query(Users).filter(Users.id == user.id).update(
-            {Users.is_pixel_installed: True},
-            synchronize_session=False)
+        session.query(UserSubscriptions).filter(UserSubscriptions.user_id == user.id).update(
+            {
+                UserSubscriptions.plan_start: datetime.now(),
+                UserSubscriptions.plan_end: datetime.now() + relativedelta(months=1)
+            },
+            synchronize_session=False
+        )
+        session.flush()
     lead_request = insert(LeadsRequests).values(
         lead_id=lead_user.id,
         page=page, requested_at=requested_at, visit_id=lead_visits
