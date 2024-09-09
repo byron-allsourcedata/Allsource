@@ -8,6 +8,7 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider, DatePicker, TimePicker } from '@mui/x-date-pickers';
 import dayjs from 'dayjs';
 import Image from 'next/image';
+import { filterStyles } from '../css/filterSlider';
 
 
 interface FilterPopupProps {
@@ -103,11 +104,8 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
 
   const handleChangeRecurringVisits = (event: React.ChangeEvent<HTMLInputElement>) => {
     let value = event.target.value;
-  
-    if (value === "4+") {
-      value = "5";
-    }
-  
+
+
     setSelectedValues((prevSelectedValues) => {
       if (prevSelectedValues.includes(value)) {
         return prevSelectedValues.filter((item) => item !== value);
@@ -116,7 +114,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
       }
     });
   };
-  
+
 
   const handleDeleteRecurringVisit = (valueToDelete: string) => {
     setSelectedValues((prevSelectedValues) =>
@@ -635,14 +633,28 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
           .unix()
         : toDateTime;
 
+    // Отдельно вычисляем времена
+    const fromTime = timeRange.fromTime
+      ? dayjs(timeRange.fromTime).format('HH:mm') // Преобразуем время в нужный формат
+      : null;
+
+    const toTime = timeRange.toTime
+      ? dayjs(timeRange.toTime).format('HH:mm')
+      : null;
+
+    const convertedSelectedValues = selectedValues.map((value) => {
+      if (value === "4+") {
+        return 5;
+      }
+      return parseInt(value, 10);
+    });
+
     const filters = {
       ...buttonFilters,
-      dateRange: buttonFilters
-        ? buttonFilters.dateRange
-        : {
-          fromDate: fromDateTimeWithTime,
-          toDate: toDateTimeWithTime,
-        },
+      from_date: fromDateTime,
+      to_date: toDateTime,
+      from_time: fromTime, // Отправляем отдельно время
+      to_time: toTime,     // Отправляем отдельно время
       selectedFunnels: buttonFilters
         ? buttonFilters.selectedFunnels
         : selectedFunnels,
@@ -652,9 +664,8 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
       checkedFiltersPageVisits,
       regions,
       checkedFiltersTimeSpent,
-      emails,
       selectedStatus,
-      selectedValues,
+      recurringVisits: convertedSelectedValues,
       searchQuery,
     };
     return filters;
@@ -1257,11 +1268,8 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
             >
               <Box
                 sx={{
-                  width: "8px",
-                  height: "8px",
-                  borderRadius: "50%",
-                  backgroundColor: "rgba(80, 82, 178, 1)",
-                  visibility: isDateFilterActive() ? "visibility" : "hidden"
+                  ...filterStyles.active_filter_dote,
+                  visibility: isDateFilterActive() ? "visible" : "hidden"
                 }}
               />
               <Image
@@ -1272,12 +1280,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
               />
               <Typography
                 sx={{
-                  flexGrow: 1,
-                  color: "rgba(74, 74, 74, 1)",
-                  fontFamily: "Nunito",
-                  fontWeight: "500",
-                  fontSize: "16px",
-                  lineHeight: "25.2px",
+                  ...filterStyles.filter_name
                 }}
               >
                 Visited date
@@ -1306,10 +1309,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
               <Divider sx={{ mb: 2 }} />
               <Box
                 sx={{
-                  display: "flex",
-                  flexDirection: "rows",
-                  gap: 10,
-                  justifyContent: "start",
+                  ...filterStyles.filter_dropdown
                 }}
               >
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
@@ -1357,27 +1357,10 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                   />
                 </Box>
               </Box>
-              <Box sx={{
-                display: 'flex',
-                alignItems: 'center',
-                width: '100%',
-                mt: '20px',
-                mb: '20px',
-                '@media (max-width: 440px)': {
-                  marginTop: '16px',
-                  marginBottom: '16px',
-                }
-              }}>
+              <Box sx={filterStyles.date_time_formatted}>
                 <Box sx={{ borderBottom: '1px solid #e4e4e4', flexGrow: 1 }} />
                 <Typography variant="body1"
-                  sx={{
-                    px: '8px',
-                    fontWeight: '400',
-                    fontSize: '12px',
-                    fontFamily: 'Nunito',
-                    color: '4a4a4a',
-                    lineHeight: '16px'
-                  }}
+                  sx={filterStyles.or_text}
                 >
                   OR
                 </Typography>
@@ -1419,40 +1402,22 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
           </Box>
           {/* Visited time */}
           <Box
-            sx={{
-              width: "100%",
-              border: "1px solid rgba(228, 228, 228, 1)",
-              padding: "0.5em",
-            }}
+            sx={filterStyles.main_filter_form}
           >
             <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                width: "100%",
-                gap: 1,
-              }}
+              sx={filterStyles.filter_form}
               onClick={() => setIsVisitedTimeOpen(!isVisitedTimeOpen)}
             >
               <Box
                 sx={{
-                  width: "8px",
-                  height: "8px",
-                  borderRadius: "50%",
-                  backgroundColor: "rgba(80, 82, 178, 1)",
-                  visibility: isTimeFilterActive() ? "visibility" : "hidden"
+                  ...filterStyles.active_filter_dote,
+                  visibility: isTimeFilterActive() ? "visible" : "hidden"
                 }}
               />
               <Image src="/timer.svg" alt="timer" width={18} height={18} />
               <Typography
                 sx={{
-                  flexGrow: 1,
-                  color: "rgba(74, 74, 74, 1)",
-                  fontFamily: "Nunito",
-                  fontWeight: "500",
-                  fontSize: "16px",
-                  lineHeight: "25.2px",
+                  ...filterStyles.filter_name
                 }}
               >
                 Visited time
@@ -1481,10 +1446,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
               <Divider sx={{ mb: 2 }} />
               <Box
                 sx={{
-                  display: "flex",
-                  flexDirection: "rows",
-                  gap: 10,
-                  justifyContent: "start",
+                  ...filterStyles.filter_dropdown
                 }}
               >
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
@@ -1532,27 +1494,10 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                   />
                 </Box>
               </Box>
-              <Box sx={{
-                display: 'flex',
-                alignItems: 'center',
-                width: '100%',
-                mt: '20px',
-                mb: '20px',
-                '@media (max-width: 440px)': {
-                  marginTop: '16px',
-                  marginBottom: '16px',
-                }
-              }}>
+              <Box sx={filterStyles.date_time_formatted}>
                 <Box sx={{ borderBottom: '1px solid #e4e4e4', flexGrow: 1 }} />
                 <Typography variant="body1"
-                  sx={{
-                    px: '8px',
-                    fontWeight: '400',
-                    fontSize: '12px',
-                    fontFamily: 'Nunito',
-                    color: '4a4a4a',
-                    lineHeight: '16px'
-                  }}
+                  sx={filterStyles.or_text}
                 >
                   OR
                 </Typography>
@@ -1588,29 +1533,16 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
           </Box>
           {/* Region */}
           <Box
-            sx={{
-              width: "100%",
-              border: "1px solid rgba(228, 228, 228, 1)",
-              padding: "0.5em",
-            }}
+            sx={filterStyles.main_filter_form}
           >
             <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                width: "100%",
-                gap: 1,
-              }}
+              sx={filterStyles.filter_form}
               onClick={() => setIsRegionOpen(!isRegionOpen)}
             >
               <Box
                 sx={{
-                  width: 8,
-                  height: 8,
+                  ...filterStyles.active_filter_dote,
                   visibility: regions.length > 0 ? 'visible' : "hidden",
-                  backgroundColor: "rgba(80, 82, 178, 1)",
-                  borderRadius: "50%",
                 }}
               />
               <Image
@@ -1621,12 +1553,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
               />
               <Typography
                 sx={{
-                  flexGrow: 1,
-                  color: "rgba(74, 74, 74, 1)",
-                  fontFamily: "Nunito",
-                  fontWeight: "500",
-                  fontSize: "16px",
-                  lineHeight: "25.2px",
+                  ...filterStyles.filter_name
                 }}
               >
                 Region
@@ -1666,40 +1593,22 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
           </Box>
           {/* Page visits */}
           <Box
-            sx={{
-              width: "100%",
-              border: "1px solid rgba(228, 228, 228, 1)",
-              padding: "0.5em",
-            }}
+            sx={filterStyles.main_filter_form}
           >
             <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                width: "100%",
-                gap: 1,
-              }}
+              sx={filterStyles.filter_form}
               onClick={() => setIsVisitedPageOpen(!isVisitedPageOpen)}
             >
               <Box
                 sx={{
-                  width: '8px',
-                  height: '8px',
-                  backgroundColor: "rgba(80, 82, 178, 1)",
-                  borderRadius: "50%",
-                  visibility: isPageVisitsFilterActive() ? "visibility" : "hidden"
+                  ...filterStyles.active_filter_dote,
+                  visibility: isPageVisitsFilterActive() ? "visible" : "hidden"
                 }}
               />
               <Image src="/people.svg" alt="calendar" width={18} height={18} />
               <Typography
                 sx={{
-                  flexGrow: 1,
-                  color: "rgba(74, 74, 74, 1)",
-                  fontFamily: "Nunito",
-                  fontWeight: "500",
-                  fontSize: "16px",
-                  lineHeight: "25.2px",
+                  ...filterStyles.filter_name
                 }}
               >
                 Page visits
@@ -1722,14 +1631,11 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
               <Divider sx={{ mb: 2 }} />
               <Box
                 sx={{
-                  display: "flex",
-                  flexDirection: "rows",
-                  gap: 10,
-                  justifyContent: "start",
+                  ...filterStyles.filter_dropdown
                 }}
               >
-                <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-                  <FormControlLabel
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 1, pl: 2 }}>
+                  <FormControlLabel sx={{ fontFamily: 'Nunito', fontWeight: 100 }}
                     control={
                       <Checkbox
                         checked={checkedFiltersPageVisits.page}
@@ -1739,7 +1645,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                     }
                     label="1 page"
                   />
-                  <FormControlLabel
+                  <FormControlLabel sx={{ fontFamily: 'Nunito', fontWeight: 100 }}
                     control={
                       <Checkbox
                         checked={checkedFiltersPageVisits.two_page}
@@ -1751,7 +1657,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                   />
                 </Box>
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-                  <FormControlLabel
+                  <FormControlLabel sx={{ fontFamily: 'Nunito', fontWeight: 100 }}
                     control={
                       <Checkbox
                         checked={checkedFiltersPageVisits.three_page}
@@ -1761,7 +1667,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                     }
                     label="3 pages"
                   />
-                  <FormControlLabel
+                  <FormControlLabel sx={{ fontFamily: 'Nunito', fontWeight: 100 }}
                     control={
                       <Checkbox
                         checked={checkedFiltersPageVisits.more_three}
@@ -1777,29 +1683,16 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
           </Box>
           {/* Average time spent */}
           <Box
-            sx={{
-              width: "100%",
-              border: "1px solid rgba(228, 228, 228, 1)",
-              padding: "0.5em",
-            }}
+            sx={filterStyles.main_filter_form}
           >
             <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                width: "100%",
-                gap: 1,
-              }}
+              sx={filterStyles.filter_form}
               onClick={() => setIsTimeSpentOpen(!isTimeSpentOpen)}
             >
               <Box
                 sx={{
-                  width: '8px',
-                  height: '8px',
-                  backgroundColor: "rgba(80, 82, 178, 1)",
-                  borderRadius: "50%",
-                  visibility: isTimeSpentFilterActive() ? "visibility" : "hidden"
+                  ...filterStyles.active_filter_dote,
+                  visibility: isTimeSpentFilterActive() ? "visible" : "hidden"
                 }}
               />
               <Image
@@ -1810,12 +1703,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
               />
               <Typography
                 sx={{
-                  flexGrow: 1,
-                  color: "rgba(74, 74, 74, 1)",
-                  fontFamily: "Nunito",
-                  fontWeight: "500",
-                  fontSize: "16px",
-                  lineHeight: "25.2px",
+                  ...filterStyles.filter_name
                 }}
               >
                 Average time spent
@@ -1838,10 +1726,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
               <Divider sx={{ mb: 2 }} />
               <Box
                 sx={{
-                  display: "flex",
-                  flexDirection: "rows",
-                  gap: 10,
-                  justifyContent: "start",
+                  ...filterStyles.filter_dropdown
                 }}
               >
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
@@ -1893,40 +1778,22 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
           </Box>
           {/* Lead Funnel */}
           <Box
-            sx={{
-              width: "100%",
-              border: "1px solid rgba(228, 228, 228, 1)",
-              padding: "0.5em",
-            }}
+            sx={filterStyles.main_filter_form}
           >
             <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                width: "100%",
-                gap: 1,
-              }}
+              sx={filterStyles.filter_form}
               onClick={() => setIsLeadFunnel(!isLeadFunnel)}
             >
               <Box
                 sx={{
-                  width: '8px',
-                  height: '8px',
-                  backgroundColor: "rgba(80, 82, 178, 1)",
-                  borderRadius: "50%",
-                  visibility: isLeadFunnelActive() ? "visibility" : "hidden"
+                  ...filterStyles.active_filter_dote,
+                  visibility: isLeadFunnelActive() ? "visible" : "hidden"
                 }}
               />
               <Image src="/Leads.svg" alt="calendar" width={18} height={18} />
               <Typography
                 sx={{
-                  flexGrow: 1,
-                  color: "rgba(74, 74, 74, 1)",
-                  fontFamily: "Nunito",
-                  fontWeight: "500",
-                  fontSize: "16px",
-                  lineHeight: "25.2px",
+                  ...filterStyles.filter_name
                 }}
               >
                 Lead Funnel
@@ -1990,40 +1857,22 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
           </Box>
           {/* Status */}
           <Box
-            sx={{
-              width: "100%",
-              border: "1px solid rgba(228, 228, 228, 1)",
-              padding: "0.5em",
-            }}
+            sx={filterStyles.main_filter_form}
           >
             <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                width: "100%",
-                gap: 1,
-              }}
+              sx={filterStyles.filter_form}
               onClick={() => setIsStatus(!isStatus)}
             >
               <Box
                 sx={{
-                  width: '8px',
-                  height: '8px',
-                  backgroundColor: "rgba(80, 82, 178, 1)",
-                  borderRadius: "50%",
-                  visibility: isStatusFilterActive() ? "visibility" : "hidden"
+                  ...filterStyles.active_filter_dote,
+                  visibility: isStatusFilterActive() ? "visible" : "hidden"
                 }}
               />
               <Image src="/status.svg" alt="calendar" width={18} height={18} />
               <Typography
                 sx={{
-                  flexGrow: 1,
-                  color: "rgba(74, 74, 74, 1)",
-                  fontFamily: "Nunito",
-                  fontWeight: "500",
-                  fontSize: "16px",
-                  lineHeight: "25.2px",
+                  ...filterStyles.filter_name
                 }}
               >
                 Status
@@ -2095,22 +1944,13 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
             }}
           >
             <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                width: "100%",
-                gap: 1,
-              }}
+              sx={filterStyles.filter_form}
               onClick={() => setIsRecurringVisits(!isRecurringVisits)}
             >
               <Box
                 sx={{
-                  width: '8px',
-                  height: '8px',
-                  backgroundColor: "rgba(80, 82, 178, 1)",
-                  borderRadius: "50%",
-                  visibility: isRecurringVisitsFilterActive() ? "visibility" : "hidden"
+                  ...filterStyles.active_filter_dote,
+                  visibility: isRecurringVisitsFilterActive() ? "visible" : "hidden"
                 }}
               />
               <Image
@@ -2121,12 +1961,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
               />
               <Typography
                 sx={{
-                  flexGrow: 1,
-                  color: "rgba(74, 74, 74, 1)",
-                  fontFamily: "Nunito",
-                  fontWeight: "500",
-                  fontSize: "16px",
-                  lineHeight: "25.2px",
+                  ...filterStyles.filter_name
                 }}
               >
                 Recurring Visists

@@ -31,7 +31,19 @@ const TruncatedText: React.FC<{ text: string; limit: number }> = ({ text, limit 
 
 const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) => {
     const lead = rowData || {};
-    console.log(rowData)
+
+    const genderText = (gender: string) => {
+        switch (gender) {
+          case 'M':
+            return 'Male';
+          case 'F':
+            return 'Female';
+          case 'U':
+            return 'Unknown';
+          default:
+            return 'N/A';
+        }
+      };
 
     const handleDownload = async () => {
         const requestBody = {
@@ -283,7 +295,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                 Gender:
                             </Typography>
                             <Typography sx={{ ...accountStyles.text }}>
-                                {lead.gender || 'N/A'}
+                                {genderText(lead.gender || '')}
                             </Typography>
                         </Box>
 

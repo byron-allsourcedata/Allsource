@@ -158,7 +158,6 @@ const AccountSetup = () => {
     setErrors({ ...errors, selectedEmployees: "" });
   };
   const handleVisitsRangeChange = (label: string) => {
-    console.log(label);
     setSelectedVisits(label);
     setErrors({ ...errors, selectedVisits: "" });
   };
@@ -222,9 +221,6 @@ const AccountSetup = () => {
           break;
         case "NEED_EMAIL_VERIFIED":
           router.push("/email-verificate");
-          break;
-        case "DASHBOARD_ALLOWED":
-          router.push("/dashboard");
           break;
         case "NEED_CHOOSE_PLAN":
           router.push("/choose-plan");

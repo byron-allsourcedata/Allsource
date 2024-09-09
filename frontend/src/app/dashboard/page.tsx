@@ -15,10 +15,9 @@ import { SliderProvider } from "../../context/SliderContext";
 import { useTrial } from "../../context/TrialProvider";
 import StatsCards from "../../components/StatsCard";
 import { PopupButton } from "react-calendly";
+import CustomizedProgressBar from "@/components/CustomizedProgressBar";
+import { fetchUserData } from '../../services/meService';
 
-const Sidebar = dynamic(() => import("../../components/Sidebar"), {
-  suspense: true,
-});
 
 const VerifyPixelIntegration: React.FC = () => {
   const { website } = useUser();
@@ -270,6 +269,23 @@ const Dashboard: React.FC = () => {
   const [showCharts, setShowCharts] = useState(false);
 
 
+
+  useEffect(() => {
+    const fetchUserDataAndUpdateState = async () => {
+      try {
+        const userData = await fetchUserData();
+        if (userData) {
+          setTrial(userData.trial);
+          setDaysLeft(userData.days_left);
+        }
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+      }
+    };
+
+    fetchUserDataAndUpdateState();
+  }, []);
+
   useEffect(() => {
     const accessToken = localStorage.getItem("token");
     if (accessToken) {
@@ -313,7 +329,7 @@ const Dashboard: React.FC = () => {
   }, [setShowSlider, setTrial, setDaysLeft, router]);
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <CustomizedProgressBar />;
   }
 
   return (

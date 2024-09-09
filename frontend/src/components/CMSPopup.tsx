@@ -8,6 +8,7 @@ import styled from 'styled-components';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { showErrorToast, showToast } from './ToastNotification';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 
 const style = {
   position: 'fixed' as 'fixed',
@@ -123,7 +124,7 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
 
   const handleCopyToClipboard = () => {
     navigator.clipboard.writeText(pixel_client_id);
-    alert('Pixel ID copied to clipboard!');
+    alert('Site ID copied to clipboard!');
   };
 
   const handleButtonClick = async (cms: string) => {
@@ -332,15 +333,17 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
                     <Box sx={{ flex: 1, overflowY: 'auto', paddingBottom: '2em', }}>
                       <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', padding: '1em 0em 0em 0em', justifyContent: 'start' }}>
                         <Image src='/1.svg' alt='1' width={28} height={28} />
-                        <Typography sx={{ ...maintext, textAlign: 'center', padding: '1em 0em 1em 1em', fontWeight: '500' }}>Add our offical Maximiz pixel plugin to your Wordpress site.</Typography>
+                        <Typography sx={{ ...maintext, textAlign: 'center', padding: '1em 0em 1em 1em', fontWeight: '500', '@media (max-width: 600px)': {textAlign: 'left'}  }}>Add our offical Maximiz pixel plugin to your Wordpress site.</Typography>
                       </Box>
                       <Box>
                         <Button component={Link} href="https://maximiz-data.s3.us-east-2.amazonaws.com/maximiz.zip" variant="outlined" sx={{ ml: 5, backgroundColor: 'rgba(80, 82, 178, 1)', color: 'rgba(255, 255, 255, 1)', textTransform: 'none', padding: '1em 2em', border: '1px solid rgba(80, 82, 178, 1)', '&:hover': { backgroundColor: 'rgba(80, 82, 178, 1)' } }}>
                           <Typography sx={{ fontFamily: 'Nunito', fontSize: '16px', fontWeight: '600', lineHeight: '22.4px', textAlign: 'left', textWrap: 'wrap' }}>Get plugin</Typography>
                         </Button>
                       </Box>
-                      <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', padding: '1em 0em 0em 0em', justifyContent: 'start', maxWidth: '100%' }}>
-                        <Image src='/2.svg' alt='2' width={28} height={28} />
+                      <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', padding: '1em 0em 0em 0em', justifyContent: 'start', maxWidth: '100%', '@media (max-width: 600px)': {maxWidth: '95%'}  }}>
+                        <Box sx={{paddingBottom: 11.5}}>
+                        <Image src='/2.svg' alt='2' width={28} height={28}/>
+                        </Box>
                         <Typography
                           sx={{
                             ...maintext,
@@ -354,19 +357,47 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
                           }}
                         >
                           Enter your site ID:{" "}
-                          <span
-                            style={{
-                              fontWeight: '800',
-                              cursor: 'pointer',
-                            }}
-                            onClick={handleCopyToClipboard}
-                          >
-                            {pixel_client_id}
-                          </span>{" "}
-                          <br />during the checkout process
+                          <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1 }}>
+                            <Box
+                              component="pre"
+                              sx={{
+                                backgroundColor: '#ffffff',
+                                border: '1px solid rgba(228, 228, 228, 1)',
+                                borderRadius: '10px',
+                                maxHeight: '10em',
+                                overflowY: 'auto',
+                                position: 'relative',
+                                padding: '0.75em',
+                                maxWidth: '100%',
+                                '@media (max-width: 600px)': {
+                                  maxHeight: '14em',
+                                },
+                              }}
+                            >
+                              <code
+                                style={{
+                                  color: '#000000',
+                                  fontSize: '12px',
+                                  fontWeight: 600,
+                                  fontFamily: 'Nunito',
+                                  textWrap: 'nowrap',
+                                }}
+                              >
+                                {pixel_client_id}
+                              </code>
+
+                            </Box>
+                            <Box sx={{display: 'flex', padding: '0px'}}>
+                              <IconButton
+                                onClick={handleCopyToClipboard}
+                              >
+                                <ContentCopyIcon />
+                              </IconButton>
+                            </Box>
+                          </Box>
+                          during the checkout process
                         </Typography>
                       </Box>
-
                       <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', padding: '1em 0em 0em 0em', justifyContent: 'start' }}>
                         <Image src='/3.svg' alt='3' width={28} height={28} />
                         <Typography sx={{ ...maintext, textAlign: 'left', padding: '1em', fontWeight: '500' }}>Verify if Maximiz is receiving data from your site</Typography>
