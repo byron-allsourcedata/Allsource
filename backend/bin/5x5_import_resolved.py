@@ -317,6 +317,7 @@ def main():
             logging.info('Sleeping for 10 minutes...')
             time.sleep(60 * 10)
     except Exception as e:
+        session.rollback()
         logging.error(f"An error occurred: {str(e)}")
         traceback.print_exc()
     finally:
