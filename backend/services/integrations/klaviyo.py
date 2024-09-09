@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from schemas.integrations.klaviyo import KlaviyoCustomer, KlaviyoList
 from schemas.integrations.integrations import IntegrationCredentials
 from persistence.leads_persistence import LeadsPersistence
+from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.integrations.integrations_persistence import IntegrationsPresistence 
 from fastapi import HTTPException
 from datetime import datetime
@@ -12,10 +13,15 @@ from datetime import datetime
 
 class KlaviyoIntegrationsService:
 
-    def __init__(self, session: Session, integrations_persistence: IntegrationsPresistence, leads_persistence: LeadsPersistence, client: httpx.Client):
+    def __init__(self, session: Session, 
+                 integrations_persistence: IntegrationsPresistence, 
+                 leads_persistence: LeadsPersistence, 
+                 integrations_user_sync_persistence: IntegrationsUserSyncPersistence,
+                 client: httpx.Client):
         self.session = session
         self.integration_persistence = integrations_persistence
         self.leads_persistence = leads_persistence
+        self.integrations_user_sync_persistence = integrations_user_sync_persistence
         self.client = client
 
     def __get_credentials(self, user_id: int):
@@ -68,7 +74,7 @@ class KlaviyoIntegrationsService:
         return [self.__mapped_list(list) for list in response.get('data')]
     
 
-    def __create_list(self, list_name: str, api_key: str):
+    def create_list(self, list_name: str, api_key: str):
         response = self.client.post('https://a.klaviyo.com/api/lists', headers={
             'Authorization': f'Klaviyo-API-Key {api_key}',
             'revision': '2024-07-15',
@@ -88,7 +94,7 @@ class KlaviyoIntegrationsService:
         return customers_klaviyo_ids
     
 
-    def __create_or_update_klaviyo_cutomer(self, customer, customer_klaviyo_id: int, api_key: str):
+    def __create_or_update_klaviyo_customer(self, customer, customer_klaviyo_id: int, api_key: str):
         if customer_klaviyo_id:
             with self.integration_persistence as service:
                 customer_klaviyo = service.klaviyo.get_service_user_by_id(customer_klaviyo_id)
@@ -116,23 +122,41 @@ class KlaviyoIntegrationsService:
             raise HTTPException(status_code=response.status_code, detail=response.json().get('errors')[0].get('detail'))
         return response.json().get('data')
 
-    def export_sync(self, user, list_name: str = None, list_id: str = None, customers_ids: List[int] = None, filter_id: int = None):
-        credential = self.__get_credentials(user['id'])
-        if not list_id:
-            list_id = self.__create_list(list_name)
-        if not customers_ids:
-            if not filter_id:
-                raise HTTPException(status_code=400, detail={'status': 'error', 'detail': {'message': 'Filter is empty' } } )
-            customers_ids = self.leads_persistence.get_customer_by_filter_id(user['id'], filter_id)
-        customers_klaviyo_ids = self.__get_customers_klaiyo_ids(customers_ids, user['id'])
-        klaviyo_ids = [self.__create_or_update_klaviyo_cutomer(customer, customer_klaviyo_id) for (customer, customer_klaviyo_id) in zip([self.leads_persistence.get_lead_data(customer_id) for customer_id in customers_klaviyo_ids], customers_klaviyo_ids)]
-
-        for klaviyo_id in klaviyo_ids:
-            self.__add_customer_to_list(list_id, klaviyo_id, credential.access_token)
-        return {
-            'status': 'Success'
+    def create_sync(self, user_id: int, 
+                    integration_id: int, 
+                    sync_type: str,  
+                    supression: bool, 
+                    filter_by_contact_type: str,
+                    list_id: str,
+                    list_name: str):
+        data = {
+            'user_id': user_id,
+            'integration_id': integration_id,
+            'sync_type': sync_type,
+            'supression': supression,
+            'filter_by_contact_type': filter_by_contact_type,
+            'list_id': list_id if list_id else None,
+            'list_name': list_name if list_name else None
         }
-        
+
+        sync = self.integrations_user_sync_persistence.create_sync(data)
+        return {'status': 'Successfuly', 'detail': sync}
+    
+    def __export_sync(self, user_id: int):
+        credential = self.__get_credentials(user_id)
+        syncs = self.integrations_user_sync_persistence.get_filter_by(user_id=user_id)
+        for sync in syncs:
+            leads_list = self.leads_persistence.get_leads_user(user_id=sync.user_id, status=sync.filter_by_contact_type)
+            for lead in leads_list:
+                customer = self.leads_persistence.get_leads_users_by_lead_id(lead.id, user_id=user_id)
+                if customer.klaviyo_user_id:
+                    with self.integration_persistence as service:
+                        klaviyo_user = service.klaviyo.get_service_user_by_id(customer.klaviyo_user_id)
+                customer = self.__create_or_update_klaviyo_customer(lead, klaviyo_user.klaviyo_user_id, credential.access_token)
+                self.__add_customer_to_list(sync.list_id, customer, credential.access_token)
+        return {'status': 'Success'}
+
+
 # -------------------------------MAPPED-KLAVIYO-DATA------------------------------------ #
 
     def __mapped_customer(self, customer) -> KlaviyoCustomer:

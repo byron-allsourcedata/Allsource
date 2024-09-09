@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from models.leads_users import LeadUser
 from models.leads import Lead
 from sqlalchemy.orm import Session
+from models.five_x_five_users import FiveXFiveUser
 
 class IntegrationPersistenceABC(ABC):
 
@@ -23,8 +24,8 @@ class ServiceIntegrationsPersistence(IntegrationPersistenceABC):
     def save_customer(self, customer: dict, user_id: int) -> str:
         existing_lead_user = (
             self.session.query(LeadUser)
-            .join(Lead, Lead.id == LeadUser.lead_id)
-            .filter(Lead.business_email == customer['email'], LeadUser.user_id == user_id)
+            .join(FiveXFiveUser, FiveXFiveUser.id == LeadUser.five_x_five_user_id)
+            .filter(FiveXFiveUser.business_email == customer['email'], LeadUser.user_id == user_id)
             .first()
         )
 

@@ -32,6 +32,7 @@ from persistence.sendgrid_persistence import SendgridPersistence
 from persistence.plans_persistence import PlansPersistence
 from persistence.leads_persistence import LeadsPersistence
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
+from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.audience_persistence import AudiencePersistence
 from persistence.leads_order_persistence import LeadOrdersPersistence
 from models.users import Users as User
@@ -302,13 +303,19 @@ def get_user_integrations_presistence(db: Session = Depends(get_db)) -> Integrat
 def get_lead_orders_persistence(db: Session = Depends(get_db)) -> LeadsPersistence:
     return LeadsPersistence(db)
 
+def get_integrations_user_sync_persistence(db: Session = Depends(get_db)) -> IntegrationsUserSyncPersistence:
+    return IntegrationsUserSyncPersistence(db)
+
 def get_integration_service(db: Session = Depends(get_db), 
                             audience_persistence = Depends(get_audience_persistence),
                             integration_presistence: IntegrationsPresistence = Depends(get_user_integrations_presistence),
                             lead_presistence: LeadsPersistence = Depends(get_leads_persistence),
-                            lead_orders_persistence: LeadOrdersPersistence = Depends(get_lead_orders_persistence)):
+                            lead_orders_persistence: LeadOrdersPersistence = Depends(get_lead_orders_persistence),
+                            integrations_user_sync_persistence: IntegrationsUserSyncPersistence = Depends(get_integrations_user_sync_persistence)
+                            ):
     return IntegrationService(db, 
                               integration_presistence, 
                               lead_presistence, 
                               audience_persistence, 
-                              lead_orders_persistence)
+                              lead_orders_persistence,
+                              integrations_user_sync_persistence)

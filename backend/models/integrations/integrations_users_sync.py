@@ -4,7 +4,7 @@ from models.base import Base
 
 class IntegrationUserSync(Base):
 
-    __talename__ = 'integrations_users_sync'
+    __tablename__ = 'integrations_users_sync'
     id = Column(Integer, primary_key=True, autoincrement=True)
     user_id = Column(Integer)
     integration_id = Column(Integer)

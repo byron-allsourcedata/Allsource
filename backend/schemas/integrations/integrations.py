@@ -58,3 +58,10 @@ class Lead(BaseModel):
 
 class ExportLeads(BaseModel):
     list_name: str
+
+class SyncCreate(BaseModel):
+    integration_id: int
+    sync_type: str
+    supression: bool
+    filter_by_contact_type: str
+    list_id: Optional[int] = None

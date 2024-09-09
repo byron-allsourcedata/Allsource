@@ -60,7 +60,8 @@ class ShopifyIntegrationService:
 
 
     def __set_pixel(self, user, shop_domain: str, access_token: str):
-        script_url = f'https://maximiz-data.s3.us-east-2.amazonaws.com/pixel_shopify.js?client_id={user["data_provider_id"]}'
+        script_event_url = f'https://maximiz-data.s3.us-east-2.amazonaws.com/pixel_shopify.js?client_id={user["data_provider_id"]}'
+        script_pixel_url = f'https://maximiz-data.s3.us-east-2.amazonaws.com/pixel.js'
         url = f'https://{shop_domain}/admin/api/2024-07/script_tags.json'
         
         headers = {
@@ -68,14 +69,20 @@ class ShopifyIntegrationService:
             "Content-Type": "application/json"
         }
 
-        data = {
+        script_event_data = {
             "script_tag": {
                 "event": "onload",
-                "src": script_url
+                "src": script_event_url
             }
         }
-
-        self.__handle_request('POST', url, headers=headers, json=data)
+        script_pixel_data = {
+            "script_tag": {
+                "event": "onload",
+                "src": script_pixel_url
+            }
+        }
+        self.__handle_request('POST', url, headers=headers, json=script_event_data)
+        self.__handle_request('POST', url, headers=headers, json=script_pixel_data)
         return {'message': 'Successfully'}
 
 
@@ -128,8 +135,8 @@ class ShopifyIntegrationService:
             raise HTTPException(status_code=400, detail={'status': 'error', 'detail': {'message': 'Store Domain does not match the one you specified earlier'}})
 
         customers = [self.__mapped_customer(customer) for customer in self.__get_customers(credentials.shopify.shop_domain, credentials.shopify.access_token)]
-        self.__set_pixel(user, credentials.shopify.shop_domain, credentials.shopify.access_token)
         integration = self.__save_integration(credentials.shopify.shop_domain, credentials.shopify.access_token, user['id'])
+        self.__set_pixel(user, credentials.shopify.shop_domain, credentials.shopify.access_token)
 
         for customer in customers:
             self.__save_customer(customer, user['id'])
@@ -175,8 +182,7 @@ class ShopifyIntegrationService:
         return {'status': 'Successfuly', 'detail': sync}
     
 
-    def get_sync_user(self, user_id: int):
-        return self.integrations_user_sync_persistence.get_filter_by(user_id=user_id)
+
     
 
     def __export_sync(self, user_id: int):
