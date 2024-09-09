@@ -226,7 +226,6 @@ const AccountSetup = () => {
           router.push("/choose-plan");
           break;
         default:
-          console.log("Unhandled response status:", response.data.status);
           break;
       }
     } catch (error) {

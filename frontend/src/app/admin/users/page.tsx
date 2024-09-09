@@ -184,7 +184,6 @@ const Users: React.FC = () => {
                 }   
             } 
             catch {
-                console.log("error")
             }
             finally {
                 setIsLoading(false);
