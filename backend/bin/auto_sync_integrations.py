@@ -30,7 +30,9 @@ if __name__ == '__main__':
             serv = integrations_persistence.get_integrations_service()
             for platform in serv:
                 try:
-                    service = getattr(integ_service, platform.service_name)
-                    service.auto_sync()
+                    users_sync = integ_service.get_sync_users()
+                    for user in users_sync:
+                        service = getattr(integ_service, platform.service_name)
+                        service.sync(user.user_id)
                 except Exception as e: logging.info(e) 
             time.sleep(60*60)

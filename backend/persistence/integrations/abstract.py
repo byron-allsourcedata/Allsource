@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 from models.leads_users import LeadUser
-from models.leads import Lead
 from sqlalchemy.orm import Session
 from models.five_x_five_users import FiveXFiveUser
 

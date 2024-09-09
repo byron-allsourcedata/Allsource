@@ -35,6 +35,9 @@ class IntegrationService:
     def get_sync_user(self, user_id: int):
         return self.integrations_user_sync_persistence.get_filter_by(user_id=user_id)
 
+    def get_sync_users(self):
+        return self.integrations_user_sync_persistence.get_filter_by()
+
     def __enter__(self):
         self.shopify = ShopifyIntegrationService(self.integration_persistence, 
                                                  self.lead_persistence,
