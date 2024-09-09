@@ -30,7 +30,7 @@ const TruncatedText: React.FC<{ text: string; limit: number }> = ({ text, limit 
 };
 
 const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) => {
-    const lead = rowData?.lead || {};
+    const lead = rowData || {};
     console.log(rowData)
 
     const handleDownload = async () => {
@@ -135,28 +135,28 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                             <Image src={'/profile-circle.svg'} width={48} height={48} alt='Profile icon' />
                         </Box>
                         <Box sx={{ flex: 1, textAlign: 'start' }}>
-                            <Box sx={{display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'}}>
-                            <Typography variant="body1" gutterBottom sx={{ ...accountStyles.name, pb: 1 }}>
-                                {lead.first_name} {lead.last_name}
-                            </Typography>
-                            <Button
-                                        sx={{
-                                            textTransform: 'none',
-                                            color: 'rgba(80, 82, 178, 1)',
-                                            borderRadius: '4px',
-                                            padding: '4px',
-                                            mb: 2,
-                                            minWidth: 'auto',
-                                            '@media (max-width: 900px)': {
-                                                border: 'none',
-                                                padding: 0
-                                            }
-                                        }}
-                                        onClick={handleDownload}
-                                    >
-                                        <DownloadIcon fontSize='medium' />
-                                    </Button>
-                                    </Box>
+                            <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                                <Typography variant="body1" gutterBottom sx={{ ...accountStyles.name, pb: 1 }}>
+                                    {lead.first_name} {lead.last_name}
+                                </Typography>
+                                <Button
+                                    sx={{
+                                        textTransform: 'none',
+                                        color: 'rgba(80, 82, 178, 1)',
+                                        borderRadius: '4px',
+                                        padding: '4px',
+                                        mb: 2,
+                                        minWidth: 'auto',
+                                        '@media (max-width: 900px)': {
+                                            border: 'none',
+                                            padding: 0
+                                        }
+                                    }}
+                                    onClick={handleDownload}
+                                >
+                                    <DownloadIcon fontSize='medium' />
+                                </Button>
+                            </Box>
                             <Box sx={{ display: 'flex', flexDirection: 'row', gap: 5, '@media (max-width: 600px)': { flexDirection: 'column', gap: 1 }, }}>
                                 <Typography variant="body1" gutterBottom sx={{ ...accountStyles.header_text, display: 'flex', flexDirection: 'row', gap: 1 }}>
                                     <Image src={'/sms.svg'} width={18} height={18} alt='mail icon' />
@@ -245,7 +245,9 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                 Zip:
                             </Typography>
                             <Typography sx={{ ...accountStyles.text }}>
-                                {lead.zip || 'N/A'}
+                                {lead.personal_zip || lead.professional_zip || lead.company_zip
+                                    ? `${lead.personal_zip || ''} ${lead.professional_zip || ''} ${lead.company_zip || ''}`.trim()
+                                    : 'N/A'}
                             </Typography>
                         </Box>
 
@@ -254,7 +256,9 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                 Other emails:
                             </Typography>
                             <Typography sx={{ ...accountStyles.text }}>
-                                {lead.business_email || 'N/A'}
+                                {lead.business_email || lead.personal_emails || lead.additional_personal_emails
+                                    ? `${lead.business_email || ''} ${lead.personal_emails || ''} ${lead.additional_personal_emails || ''}`.trim()
+                                    : 'N/A'}
                             </Typography>
                         </Box>
 

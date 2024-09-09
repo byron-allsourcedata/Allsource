@@ -291,6 +291,27 @@ const Leads: React.FC = () => {
         router.push('/dashboard');
     };
 
+    const handleSelectRow = (id: number) => {
+        setSelectedRows((prevSelectedRows) => {
+            const newSelectedRows = new Set(prevSelectedRows);
+            if (newSelectedRows.has(id)) {
+                newSelectedRows.delete(id);
+            } else {
+                newSelectedRows.add(id);
+            }
+            return newSelectedRows;
+        });
+    };
+
+
+    const handleSelectAllClick = (event: React.ChangeEvent<HTMLInputElement>) => {
+        if (event.target.checked) {
+            const newSelecteds = data.map((row) => row.id);
+            setSelectedRows(new Set(newSelecteds));
+            return;
+        }
+        setSelectedRows(new Set());
+    };
     const handleChangeRowsPerPage = (event: React.ChangeEvent<{ value: unknown }>) => {
         setRowsPerPage(parseInt(event.target.value as string, 10));
         setPage(0);
@@ -1097,13 +1118,13 @@ const Leads: React.FC = () => {
                                                     <TableBody>
                                                         {data.map((row) => (
                                                             <TableRow
-                                                                key={row.lead.id}
+                                                                key={row.id}
+                                                                selected={selectedRows.has(row.id)}
+                                                                onClick={() => handleSelectRow(row.id)}
                                                                 sx={{
-                                                                    '&:hover': {
-                                                                        backgroundColor: 'rgba(235, 243, 254, 1)',
-                                                                        '& .sticky-cell': {
-                                                                            backgroundColor: 'rgba(235, 243, 254, 1)', // Изменение цвета для фиксированной ячейки
-                                                                        }
+                                                                    backgroundColor: selectedRows.has(row.id) ? 'rgba(235, 243, 254, 1)' : '#fff',
+                                                                    '&:hover':{
+                                                                        backgroundColor: 'rgba(235, 243, 254, 1)'
                                                                     }
                                                                 }}
                                                             >
@@ -1114,11 +1135,11 @@ const Leads: React.FC = () => {
                                                                         e.stopPropagation();
                                                                         handleOpenPopup(row);
 
-                                                                    }}>{row.lead.first_name} {row.lead.last_name}</TableCell>
+                                                                    }}>{row.first_name} {row.last_name}</TableCell>
                                                                 <TableCell
-                                                                    sx={{...leadsStyles.table_array, position: 'relative'}}>{row.lead.business_email || 'N/A'}</TableCell>
+                                                                    sx={{...leadsStyles.table_array, position: 'relative'}}>{row.business_email || 'N/A'}</TableCell>
                                                                 <TableCell
-                                                                    sx={leadsStyles.table_array_phone}>{row.lead.mobile_phone || 'N/A'}</TableCell>
+                                                                    sx={leadsStyles.table_array_phone}>{row.mobile_phone || 'N/A'}</TableCell>
                                                                 <TableCell
                                                                     sx={{...leadsStyles.table_array, position: 'relative'}}>{row.last_visited_date || 'N/A'}</TableCell>
                                                                 <TableCell
