@@ -16,6 +16,11 @@ interface FilterPopupProps {
   onClose: () => void;
   onApply: (filters: any) => void;
 }
+const CustomCalendarIcon = () => (
+  <IconButton sx={{ padding: 0 }}>
+    <Image src="/calendar-2.svg" alt="calendar" width={18} height={18} />
+  </IconButton>
+);
 
 const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => {
   const [selectedButton, setSelectedButton] = useState<string | null>(null);
@@ -123,48 +128,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
   };
 
 
-  const getButtonStyle = (label: string) => {
-    switch (label) {
-      case "Visitor":
-        return {
-          background: "rgba(235, 243, 254, 1)",
-          color: "rgba(20, 110, 246, 1)",
-        };
-      case "Converted":
-        return {
-          background: "rgba(244, 252, 238, 1)",
-          color: "rgba(110, 193, 37, 1)",
-        };
-      case "Added to cart":
-        return {
-          background: "rgba(241, 241, 249, 1)",
-          color: "rgba(80, 82, 178, 1)",
-        };
-      case "Cart abandoned":
-        return {
-          background: "rgba(254, 238, 236, 1)",
-          color: "rgba(244, 87, 69, 1)",
-        };
-      case "New":
-        return {
-          background: "rgba(254, 243, 205, 1)",
-          color: "rgba(250, 203, 36, 1)",
-        };
-      case "Existing":
-        return {
-          background: "rgba(228, 247, 212, 1)",
-          color: "rgba(110, 193, 37, 1)",
-        };
-      case "All":
-        return {
-          background: "rgba(228, 228, 228, 1)",
-          color: "rgba(74, 74, 74, 1)",
-        };
-
-      default:
-        return {};
-    }
-  };
 
   const handleButtonLeadFunnelClick = (label: string) => {
     setSelectedFunnels((prev) =>
@@ -185,9 +148,9 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
   };
 
   const statusMapping: Record<string, string> = {
-    New: "new_customers",
-    Existing: "existing_customers",
-    All: "all_customers",
+    Visitor: "visitor",
+    "View Product": "viewed_product",
+    "Add to cart": "product_added_to_cart",
   };
 
   const addTag = (category: string, tag: string) => {
@@ -257,9 +220,74 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
         }
       }
 
+      if (category === "pageVisits") {
+        const tagMap: { [key: string]: string } = {
+          "1 page": "page",
+          "2 pages": "two_page",
+          "3 pages": "three_page",
+          "More than 3 pages": "more_three",
+        };
+
+        const filterName = tagMap[tag];
+        if (filterName) {
+          setCheckedFiltersPageVisits((prevFilters) => ({
+            ...prevFilters,
+            [filterName]: false,
+          }));
+        }
+      }
+
       return { ...prevTags, [category]: updatedTags };
     });
   };
+
+  const handleDeletePageVisit = (valueToDelete: string) => {
+    setSelectedTags((prevTags) => {
+      const updatedTags = prevTags.pageVisits.filter((tag) => tag !== valueToDelete);
+  
+      const tagMap: { [key: string]: string } = {
+        "1 page": "page",
+        "2 pages": "two_page",
+        "3 pages": "three_page",
+        "More than 3 pages": "more_three",
+      };
+  
+      const filterName = tagMap[valueToDelete];
+      if (filterName) {
+        setCheckedFiltersPageVisits((prevFilters) => ({
+          ...prevFilters,
+          [filterName]: false,
+        }));
+      }
+  
+      return { ...prevTags, pageVisits: updatedTags };
+    });
+  };
+
+  const handleDeleteTimeSpent = (valueToDelete: string) => {
+    setSelectedTags((prevTags) => {
+      const updatedTags = prevTags.timeSpents.filter((tag) => tag !== valueToDelete);
+  
+      const tagMap: { [key: string]: string } = {
+        "under 10 secs": "under_10",
+        "10-30 secs": "over_10",
+        "30-60 secs": "over_30",
+        "Over 60 secs": "over_60",
+      };
+  
+      const filterName = tagMap[valueToDelete];
+      if (filterName) {
+        setCheckedFiltersTimeSpent((prevFilters) => ({
+          ...prevFilters,
+          [filterName]: false,
+        }));
+      }
+  
+      return { ...prevTags, timeSpents: updatedTags };
+    });
+  };
+  
+  
 
   interface TagMap {
     [key: string]: string;
@@ -312,9 +340,9 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
       sx={{
         display: "flex",
         alignItems: "center",
-        backgroundColor: "rgba(228, 228, 228, 1)",
-        color: "rgba(123, 123, 123, 1)",
-        borderRadius: 2,
+        backgroundColor: "rgba(255, 255, 255, 1)",
+        border: '1px solid rgba(229, 229, 229, 1)',
+        borderRadius: '3px',
         px: 1,
         mr: 1,
         py: 0.5,
@@ -322,16 +350,16 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
       }}
     >
       <IconButton
-        size="small"
+        size="medium"
         onClick={(e) => {
           e.stopPropagation();
           onDelete(e);
         }}
         sx={{ p: 0, mr: 0.5 }}
       >
-        <CloseIcon sx={{ fontSize: "12px" }} />
+        <CloseIcon sx={{ fontSize: "14px" }} />
       </IconButton>
-      <Typography sx={{ fontFamily: "Nunito", fontSize: "14px" }}>
+      <Typography sx={{ fontFamily: "Nunito", fontSize: "12px", fontWeight: 500, color: 'rgba(74, 74, 74, 1)' }}>
         {label}
       </Typography>
     </Box>
@@ -615,24 +643,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
         ? dayjs(dateRange.toDate).endOf("day").unix()
         : null;
 
-    const fromDateTimeWithTime =
-      fromDateTime && timeRange.fromTime
-        ? dayjs
-          .unix(fromDateTime)
-          .hour(dayjs(timeRange.fromTime).hour())
-          .minute(dayjs(timeRange.fromTime).minute())
-          .unix()
-        : fromDateTime;
-
-    const toDateTimeWithTime =
-      toDateTime && timeRange.toTime
-        ? dayjs
-          .unix(toDateTime)
-          .hour(dayjs(timeRange.toTime).hour())
-          .minute(dayjs(timeRange.toTime).minute())
-          .unix()
-        : toDateTime;
-
     // Отдельно вычисляем времена
     const fromTime = timeRange.fromTime
       ? dayjs(timeRange.fromTime).format('HH:mm') // Преобразуем время в нужный формат
@@ -653,8 +663,8 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
       ...buttonFilters,
       from_date: fromDateTime,
       to_date: toDateTime,
-      from_time: fromTime, // Отправляем отдельно время
-      to_time: toTime,     // Отправляем отдельно время
+      from_time: fromTime,
+      to_time: toTime,
       selectedFunnels: buttonFilters
         ? buttonFilters.selectedFunnels
         : selectedFunnels,
@@ -1185,7 +1195,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
           }}
         >
           <TextField
-            placeholder="Search people"
+            placeholder="Search by name, emails, phone"
             variant="outlined"
             fullWidth
             value={searchQuery}
@@ -1194,7 +1204,8 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
               startAdornment: (
                 <InputAdornment position="start">
                   <Button
-                    sx={{ textTransform: "none", textDecoration: "none" }}
+                    disabled={true}
+                    sx={{ textTransform: "none", textDecoration: "none", padding: 0, minWidth: 0, height: 'auto', width: 'auto' }}
                   >
                     <SearchIcon
                       sx={{ color: "rgba(101, 101, 101, 1)" }}
@@ -1204,7 +1215,17 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                 </InputAdornment>
               ),
             }}
-            sx={{ padding: "1em 1em 0em 1em" }}
+            sx={{
+              padding: "1em 1em 0em 1em",
+              '& .MuiInputBase-input::placeholder': {
+                fontFamily: 'Nunito',
+                fontSize: '12px',
+                fontWeight: 400,
+                lineHeight: '16.8px',
+                textAlign: 'left',
+                color: 'rgba(74, 74, 74, 1)',
+              },
+            }}
           />
           <Box
             sx={{ display: "flex", flexWrap: "wrap", gap: "10px", p: "1em" }}
@@ -1234,7 +1255,10 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                     selectedButton === label
                       ? "rgba(219, 219, 240, 1)"
                       : "#fff",
-                  color: "#000",
+                  color:
+                    selectedButton === label
+                      ? "rgba(80, 82, 178, 1)"
+                      : "rgba(74, 74, 74, 1)",
                   fontFamily: "Nunito",
                   opacity: 1,
                   display: "flex",
@@ -1306,7 +1330,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
               </IconButton>
             </Box>
             <Collapse in={isVisitedDateOpen}>
-              <Divider sx={{ mb: 2 }} />
               <Box
                 sx={{
                   ...filterStyles.filter_dropdown
@@ -1319,9 +1342,15 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                         checked={checkedFilters.lastWeek}
                         onChange={handleRadioChange}
                         name="lastWeek"
+                        size='small'
+                        sx={{
+                          '&.Mui-checked': {
+                            color: "rgba(80, 82, 178, 1)",
+                          },
+                        }}
                       />
                     }
-                    label="Last week"
+                    label={<Typography sx={{ ...filterStyles.collapse_font, color: checkedFilters.lastWeek ? "rgba(80, 82, 178, 1)" : "rgba(74, 74, 74, 1)" }}>Last week</Typography>}
                   />
                   <FormControlLabel
                     control={
@@ -1329,9 +1358,15 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                         checked={checkedFilters.last30Days}
                         onChange={handleRadioChange}
                         name="last30Days"
+                        size='small'
+                        sx={{
+                          '&.Mui-checked': {
+                            color: "rgba(80, 82, 178, 1)",
+                          },
+                        }}
                       />
                     }
-                    label="Last 30 days"
+                    label={<Typography sx={{ ...filterStyles.collapse_font, color: checkedFilters.last30Days ? "rgba(80, 82, 178, 1)" : "rgba(74, 74, 74, 1)" }}>Last 30 days</Typography>}
                   />
                 </Box>
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
@@ -1341,9 +1376,15 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                         checked={checkedFilters.last6Months}
                         onChange={handleRadioChange}
                         name="last6Months"
+                        size='small'
+                        sx={{
+                          '&.Mui-checked': {
+                            color: "rgba(80, 82, 178, 1)",
+                          },
+                        }}
                       />
                     }
-                    label="Last 6 months"
+                    label={<Typography sx={{ ...filterStyles.collapse_font, color: checkedFilters.last6Months ? "rgba(80, 82, 178, 1)" : "rgba(74, 74, 74, 1)" }}>Last 6 months</Typography>}
                   />
                   <FormControlLabel
                     control={
@@ -1351,9 +1392,15 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                         checked={checkedFilters.allTime}
                         onChange={handleRadioChange}
                         name="allTime"
+                        size='small'
+                        sx={{
+                          '&.Mui-checked': {
+                            color: "rgba(80, 82, 178, 1)",
+                          },
+                        }}
                       />
                     }
-                    label="All time"
+                    label={<Typography sx={{ ...filterStyles.collapse_font, color: checkedFilters.allTime ? "rgba(80, 82, 178, 1)" : "rgba(74, 74, 74, 1)" }}>All time</Typography>}
                   />
                 </Box>
               </Box>
@@ -1443,7 +1490,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
               </IconButton>
             </Box>
             <Collapse in={isVisitedTimeOpen}>
-              <Divider sx={{ mb: 2 }} />
               <Box
                 sx={{
                   ...filterStyles.filter_dropdown
@@ -1456,9 +1502,15 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                         checked={checkedFiltersTime.morning}
                         onChange={handleRadioChangeTime}
                         name="morning"
+                        size='small'
+                        sx={{
+                          '&.Mui-checked': {
+                            color: "rgba(80, 82, 178, 1)",
+                          },
+                        }}
                       />
                     }
-                    label="Morning 12AM - 11AM"
+                    label={<Typography sx={{ ...filterStyles.collapse_font, color: checkedFiltersTime.morning ? "rgba(80, 82, 178, 1)" : "rgba(74, 74, 74, 1)" }}>Morning 12AM - 11AM</Typography>}
                   />
                   <FormControlLabel
                     control={
@@ -1466,9 +1518,15 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                         checked={checkedFiltersTime.evening}
                         onChange={handleRadioChangeTime}
                         name="evening"
+                        size='small'
+                        sx={{
+                          '&.Mui-checked': {
+                            color: "rgba(80, 82, 178, 1)",
+                          },
+                        }}
                       />
                     }
-                    label="Evening 5PM - 9PM"
+                    label={<Typography sx={{ ...filterStyles.collapse_font, color: checkedFiltersTime.evening ? "rgba(80, 82, 178, 1)" : "rgba(74, 74, 74, 1)" }}>Evening 5PM - 9PM</Typography>}
                   />
                 </Box>
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
@@ -1478,9 +1536,15 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                         checked={checkedFiltersTime.afternoon}
                         onChange={handleRadioChangeTime}
                         name="afternoon"
+                        size='small'
+                        sx={{
+                          '&.Mui-checked': {
+                            color: "rgba(80, 82, 178, 1)",
+                          },
+                        }}
                       />
                     }
-                    label="Afternoon 11AM - 5PM"
+                    label={<Typography sx={{ ...filterStyles.collapse_font, color: checkedFiltersTime.afternoon ? "rgba(80, 82, 178, 1)" : "rgba(74, 74, 74, 1)" }}>Afternoon 11AM - 5PM</Typography>}
                   />
                   <FormControlLabel
                     control={
@@ -1488,9 +1552,15 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                         checked={checkedFiltersTime.all_day}
                         onChange={handleRadioChangeTime}
                         name="all_day"
+                        size='small'
+                        sx={{
+                          '&.Mui-checked': {
+                            color: "rgba(80, 82, 178, 1)",
+                          },
+                        }}
                       />
                     }
-                    label="All day"
+                    label={<Typography sx={{ ...filterStyles.collapse_font, color: checkedFiltersTime.all_day ? "rgba(80, 82, 178, 1)" : "rgba(74, 74, 74, 1)" }}>All day</Typography>}
                   />
                 </Box>
               </Box>
@@ -1556,7 +1626,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                   ...filterStyles.filter_name
                 }}
               >
-                Region
+                Location
               </Typography>
               <Box
                 sx={{ display: "flex", flexWrap: "wrap", gap: "8px", mb: 2 }}
@@ -1581,13 +1651,23 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
             <Collapse in={isRegionOpen}>
               <Divider sx={{ mb: 2 }} />
               <TextField
-                placeholder="Region"
+                placeholder="Search by town, city or state.."
                 variant="outlined"
                 fullWidth
                 value={region}
                 onChange={(e) => setRegions(e.target.value)}
                 onKeyDown={handleAddTag}
-                sx={{ mb: 2 }}
+                sx={{
+                  mb: 2,
+                  '& .MuiInputBase-input::placeholder': {
+                    fontFamily: 'Nunito',
+                    fontSize: '12px',
+                    fontWeight: 400,
+                    lineHeight: '16.8px',
+                    textAlign: 'left',
+                    color: 'rgba(74, 74, 74, 1)',
+                  },
+                }}
               />
             </Collapse>
           </Box>
@@ -1617,7 +1697,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                 <CustomChip
                   key={index}
                   label={tag}
-                  onDelete={() => removeTag("pageVisits", tag)}
+                  onDelete={() => handleDeletePageVisit(tag)}
                 />
               ))}
               <IconButton
@@ -1628,32 +1708,43 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
               </IconButton>
             </Box>
             <Collapse in={isVisitedPageOpen}>
-              <Divider sx={{ mb: 2 }} />
               <Box
                 sx={{
                   ...filterStyles.filter_dropdown
                 }}
               >
-                <Box sx={{ display: "flex", flexDirection: "column", gap: 1, pl: 2 }}>
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
                   <FormControlLabel sx={{ fontFamily: 'Nunito', fontWeight: 100 }}
                     control={
                       <Checkbox
                         checked={checkedFiltersPageVisits.page}
                         onChange={handleCheckboxChangePageVisits}
+                        size='small'
                         name="page"
+                        sx={{
+                          '&.Mui-checked': {
+                            color: "rgba(80, 82, 178, 1)",
+                          },
+                        }}
                       />
                     }
-                    label="1 page"
+                    label={<Typography sx={{ ...filterStyles.collapse_font, color: checkedFiltersPageVisits.page ? "rgba(80, 82, 178, 1)" : "rgba(74, 74, 74, 1)" }}>1 page</Typography>}
                   />
                   <FormControlLabel sx={{ fontFamily: 'Nunito', fontWeight: 100 }}
                     control={
                       <Checkbox
                         checked={checkedFiltersPageVisits.two_page}
                         onChange={handleCheckboxChangePageVisits}
+                        size='small'
                         name="two_page"
+                        sx={{
+                          '&.Mui-checked': {
+                            color: "rgba(80, 82, 178, 1)",
+                          },
+                        }}
                       />
                     }
-                    label="2 pages"
+                    label={<Typography sx={{ ...filterStyles.collapse_font, color: checkedFiltersPageVisits.two_page ? "rgba(80, 82, 178, 1)" : "rgba(74, 74, 74, 1)" }}>2 pages</Typography>}
                   />
                 </Box>
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
@@ -1662,20 +1753,32 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                       <Checkbox
                         checked={checkedFiltersPageVisits.three_page}
                         onChange={handleCheckboxChangePageVisits}
+                        size='small'
                         name="three_page"
+                        sx={{
+                          '&.Mui-checked': {
+                            color: "rgba(80, 82, 178, 1)",
+                          },
+                        }}
                       />
                     }
-                    label="3 pages"
+                    label={<Typography sx={{ ...filterStyles.collapse_font, color: checkedFiltersPageVisits.three_page ? "rgba(80, 82, 178, 1)" : "rgba(74, 74, 74, 1)" }}>3 pages</Typography>}
                   />
                   <FormControlLabel sx={{ fontFamily: 'Nunito', fontWeight: 100 }}
                     control={
                       <Checkbox
                         checked={checkedFiltersPageVisits.more_three}
                         onChange={handleCheckboxChangePageVisits}
+                        size='small'
                         name="more_three"
+                        sx={{
+                          '&.Mui-checked': {
+                            color: "rgba(80, 82, 178, 1)",
+                          },
+                        }}
                       />
                     }
-                    label="More than 3 pages"
+                    label={<Typography sx={{ ...filterStyles.collapse_font, color: checkedFiltersPageVisits.more_three ? "rgba(80, 82, 178, 1)" : "rgba(74, 74, 74, 1)" }}>More than 3 pages</Typography>}
                   />
                 </Box>
               </Box>
@@ -1712,7 +1815,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                 <CustomChip
                   key={index}
                   label={tag}
-                  onDelete={() => removeTag("timeSpents", tag)}
+                  onDelete={() => handleDeleteTimeSpent(tag)}
                 />
               ))}
               <IconButton
@@ -1723,7 +1826,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
               </IconButton>
             </Box>
             <Collapse in={isTimeSpentOpen}>
-              <Divider sx={{ mb: 2 }} />
               <Box
                 sx={{
                   ...filterStyles.filter_dropdown
@@ -1736,9 +1838,15 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                         checked={checkedFiltersTimeSpent.under_10}
                         onChange={handleCheckboxChangeTimeSpent}
                         name="under_10"
+                        size='small'
+                        sx={{
+                          '&.Mui-checked': {
+                            color: "rgba(80, 82, 178, 1)",
+                          },
+                        }}
                       />
                     }
-                    label="under 10 secs"
+                    label={<Typography sx={{ ...filterStyles.collapse_font, color: checkedFiltersTimeSpent.under_10 ? "rgba(80, 82, 178, 1)" : "rgba(74, 74, 74, 1)" }}>under 10 secs</Typography>}
                   />
                   <FormControlLabel
                     control={
@@ -1746,9 +1854,15 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                         checked={checkedFiltersTimeSpent.over_10}
                         onChange={handleCheckboxChangeTimeSpent}
                         name="over_10"
+                        size='small'
+                        sx={{
+                          '&.Mui-checked': {
+                            color: "rgba(80, 82, 178, 1)",
+                          },
+                        }}
                       />
                     }
-                    label="10-30 secs"
+                    label={<Typography sx={{ ...filterStyles.collapse_font, color: checkedFiltersTimeSpent.over_10 ? "rgba(80, 82, 178, 1)" : "rgba(74, 74, 74, 1)" }}>10-30 secs</Typography>}
                   />
                 </Box>
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
@@ -1758,9 +1872,15 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                         checked={checkedFiltersTimeSpent.over_30}
                         onChange={handleCheckboxChangeTimeSpent}
                         name="over_30"
+                        size='small'
+                        sx={{
+                          '&.Mui-checked': {
+                            color: "rgba(80, 82, 178, 1)",
+                          },
+                        }}
                       />
                     }
-                    label="30-60 secs"
+                    label={<Typography sx={{ ...filterStyles.collapse_font, color: checkedFiltersTimeSpent.over_30 ? "rgba(80, 82, 178, 1)" : "rgba(74, 74, 74, 1)" }}>30-60 secs</Typography>}
                   />
                   <FormControlLabel
                     control={
@@ -1768,9 +1888,15 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                         checked={checkedFiltersTimeSpent.over_60}
                         onChange={handleCheckboxChangeTimeSpent}
                         name="over_60"
+                        size='small'
+                        sx={{
+                          '&.Mui-checked': {
+                            color: "rgba(80, 82, 178, 1)",
+                          },
+                        }}
                       />
                     }
-                    label="Over 60 secs"
+                    label={<Typography sx={{ ...filterStyles.collapse_font, color: checkedFiltersTimeSpent.over_60 ? "rgba(80, 82, 178, 1)" : "rgba(74, 74, 74, 1)" }}>Over 60 secs</Typography>}
                   />
                 </Box>
               </Box>
@@ -1796,7 +1922,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                   ...filterStyles.filter_name
                 }}
               >
-                Lead Funnel
+                Lead Status
               </Typography>
               {selectedFunnels.map((label) => (
                 <CustomChip
@@ -1813,45 +1939,50 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
               </IconButton>
             </Box>
             <Collapse in={isLeadFunnel}>
-              <Divider sx={{ mb: 2 }} />
-              <Box sx={{ display: "flex", flexDirection: "rows", gap: 3 }}>
+              <Box sx={{ display: "flex", width: '100%', flexWrap: 'wrap', gap: 1, pt: 2, pl: 2 }}>
                 {[
-                  "Converted",
-                  "Visitor",
-                  "Added to cart",
-                  "Cart abandoned",
-                ].map((label) => (
-                  <Button
-                    key={label}
-                    onClick={() => handleButtonLeadFunnelClick(label)}
-                    sx={{
-                      width: "calc(50% - 5px)",
-                      height: "2em",
-                      textTransform: "none",
-                      padding: "1.25em",
-                      gap: "10px",
-                      textAlign: "center",
-                      borderRadius: "4px",
-                      border: "1px solid rgba(220, 220, 239, 1)",
-                      backgroundColor:
-                        selectedButton === label
-                          ? "rgba(219, 219, 240, 1)"
-                          : getButtonStyle(label).background,
-                      color:
-                        selectedButton === label
-                          ? "#000"
-                          : getButtonStyle(label).color,
-                      fontFamily: "Nunito",
-                      opacity: 1,
-                      display: "flex",
-                      alignItems: "center",
-                      textWrap: "nowrap",
-                      justifyContent: "center",
-                    }}
-                  >
-                    {label}
-                  </Button>
-                ))}
+                  "Converted sales",
+                  "Returning visitors",
+                  "Abandoned cart",
+                  "Landed to cart",
+                ].map((label) => {
+                  const isSelected = selectedFunnels.includes(label);
+                  return (
+                    <Button
+                      key={label}
+                      onClick={() => handleButtonLeadFunnelClick(label)}
+                      sx={{
+                        width: "calc(33% - 8px)",
+                        height: "2em",
+                        textTransform: "none",
+                        gap: "0px",
+                        padding: '1em 2em',
+                        textWrap: "nowrap",
+                        textAlign: "center",
+                        borderRadius: "4px",
+                        fontFamily: "Nunito",
+                        opacity: 1,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        border: isSelected
+                          ? "1px solid rgba(80, 82, 178, 1)"
+                          : "1px solid rgba(220, 220, 239, 1)",
+                        color: isSelected
+                          ? "rgba(80, 82, 178, 1)"
+                          : "rgba(74, 74, 74, 1)",
+                        background: isSelected
+                          ? "rgba(237, 237, 247, 1)"
+                          : "transparent",
+                        '@media (max-width:600px)': {
+                          width: '48%'
+                        }
+                      }}
+                    >
+                      {label}
+                    </Button>
+                  );
+                })}
               </Box>
             </Collapse>
           </Box>
@@ -1875,7 +2006,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                   ...filterStyles.filter_name
                 }}
               >
-                Status
+                Visitor type
               </Typography>
               {selectedStatus.map((mappedLabel) => {
                 const originalLabel = Object.keys(statusMapping).find(
@@ -1897,42 +2028,47 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
               </IconButton>
             </Box>
             <Collapse in={isStatus}>
-              <Divider sx={{ mb: 2 }} />
-              <Box sx={{ display: "flex", flexDirection: "rows", gap: 3 }}>
-                {["New", "Existing", "All"].map((label) => (
-                  <Button
-                    key={label}
-                    onClick={() => handleButtonStatusClick(label)}
-                    sx={{
-                      width: "calc(25% - 5px)",
-                      height: "2em",
-                      textTransform: "none",
-                      padding: "1.25em",
-                      gap: "10px",
-                      textAlign: "center",
-                      borderRadius: "4px",
-                      border: "1px solid rgba(220, 220, 239, 1)",
-                      backgroundColor: selectedStatus.includes(
-                        statusMapping[label]
-                      )
-                        ? "rgba(219, 219, 240, 1)"
-                        : getButtonStyle(label).background,
-                      color: selectedStatus.includes(statusMapping[label])
-                        ? "#000"
-                        : getButtonStyle(label).color,
-                      fontFamily: "Nunito",
-                      opacity: 1,
-                      display: "flex",
-                      alignItems: "center",
-                      textWrap: "nowrap",
-                      justifyContent: "center",
-                    }}
-                  >
-                    {label}
-                  </Button>
-                ))}
+              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, pt: 2, pl: 2 }}>
+                {["Visitor", "View Product", "Add to cart"].map((label) => {
+                  const mappedStatus = statusMapping[label];
+                  const isSelected = selectedStatus.includes(mappedStatus);
+
+                  return (
+                    <Button
+                      key={label}
+                      onClick={() => handleButtonStatusClick(label)}
+                      sx={{
+                        width: "calc(25% - 5px)",
+                        height: "2em",
+                        textTransform: "none",
+                        textWrap: 'nowrap',
+                        padding: "5px 0px",
+                        gap: "10px",
+                        textAlign: "center",
+                        borderRadius: "4px",
+                        fontFamily: "Nunito",
+                        opacity: 1,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        border: isSelected
+                          ? "1px solid rgba(80, 82, 178, 1)"
+                          : "1px solid rgba(220, 220, 239, 1)",
+                        color: isSelected
+                          ? "rgba(80, 82, 178, 1)"
+                          : "rgba(74, 74, 74, 1)",
+                        backgroundColor: isSelected
+                          ? "rgba(237, 237, 247, 1)"
+                          : "rgba(255, 255, 255, 1)",
+                      }}
+                    >
+                      {label}
+                    </Button>
+                  );
+                })}
               </Box>
             </Collapse>
+
           </Box>
           {/* Recurring Visits */}
           <Box
@@ -1984,9 +2120,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
               </IconButton>
             </Box>
             <Collapse in={isRecurringVisits}>
-              <Divider sx={{ mb: 2 }} />
-
-              <Box sx={{ display: "flex", justifyContent: "start", gap: 3 }}>
+              <Box sx={{ display: "flex", justifyContent: "start", gap: 3, pl: 2 }}>
                 {["1", "2", "3", "4", "4+"].map((label) => (
                   <FormControlLabel
                     key={label}
@@ -1995,9 +2129,15 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                         checked={selectedValues.includes(label)}
                         onChange={handleChangeRecurringVisits}
                         value={label}
+                        size='small'
+                        sx={{
+                          '&.Mui-checked': {
+                            color: "rgba(80, 82, 178, 1)",
+                          },
+                        }}
                       />
                     }
-                    label={label}
+                    label={<Typography sx={{ fontSize: '14px', fontFamily: 'Nunito', fontWeight: 400, color: selectedValues.includes(label) ? "rgba(80, 82, 178, 1)" : "rgba(74, 74, 74, 1)" }}>{label}</Typography>}
                     sx={{
                       display: "flex",
                       color: "rgba(74, 74, 74, 1)",

@@ -19,6 +19,7 @@ import { useUser } from "../../context/UserContext";
 import axiosInterceptorInstance from "../../axios/axiosInterceptorInstance";
 import { showErrorToast } from "../../components/ToastNotification";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 
 const AccountSetup = () => {
   const [organizationName, setOrganizationName] = useState("");
@@ -696,7 +697,7 @@ const AccountSetup = () => {
 
 const AccountSetupPage = () => {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<CustomizedProgressBar />}>
       <AccountSetup />
     </Suspense>
   );

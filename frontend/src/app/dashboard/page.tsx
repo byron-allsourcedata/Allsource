@@ -465,7 +465,7 @@ const Dashboard: React.FC = () => {
 
 const DashboardPage: React.FC = () => {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<CustomizedProgressBar />}>
       <SliderProvider>
         <Dashboard />
       </SliderProvider>

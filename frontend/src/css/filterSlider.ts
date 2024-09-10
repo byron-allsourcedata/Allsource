@@ -3,16 +3,17 @@ import { SxProps, Theme } from '@mui/system';
 export const filterStyles: { [key: string]: SxProps<Theme> } = {
     filter_name: {
         flexGrow: 1,
-        color: "rgba(74, 74, 74, 1)",
+        color: "rgba(115, 115, 115, 1)",
         fontFamily: "Nunito",
-        fontWeight: "500",
-        fontSize: "16px",
-        lineHeight: "25.2px",
+        fontWeight: "600",
+        fontSize: "14px",
+        lineHeight: "19.6px",
     },
     filter_dropdown:{
         display: "flex",
         flexDirection: "rows",
-        gap: 10,
+        gap: 4,
+        pl: 2,
         justifyContent: "start",
     },
     date_time_formatted:{
@@ -51,6 +52,13 @@ export const filterStyles: { [key: string]: SxProps<Theme> } = {
         height: '8px',
         backgroundColor: "rgba(80, 82, 178, 1)",
         borderRadius: "50%",
+    },
+    collapse_font: {
+        fontFamily: 'Nunito',
+        color: 'rgba(74, 74, 74, 1)',
+        fontSize: '12px',
+        fontWeight: 600,
+        lineHeight: '16.8px'
     }
 
 };
