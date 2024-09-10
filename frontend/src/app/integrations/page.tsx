@@ -11,7 +11,7 @@ import dynamic from "next/dynamic";
 import { useSlider, SliderProvider } from '../../context/SliderContext';
 import CloseIcon from '@mui/icons-material/Close';
 import { showToast, showErrorToast } from "../../components/ToastNotification";
-import FacebookLoginForm from "@/components/MetaButton";
+// import FacebookLoginForm from "@/components/MetaButton";
 const Sidebar = dynamic(() => import('../../components/Sidebar'), {
     suspense: true,
 });
