@@ -58,7 +58,7 @@ async def main():
         name=QUEUE_HEMS_FILES,
         durable=True,
         arguments={
-            'x-consumer-timeout': 7200000,
+            'x-consumer-timeout': 14400000,
         }
     )
     await process_files(sts_client, connection)

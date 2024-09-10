@@ -90,7 +90,7 @@ async def main():
             name=QUEUE_HEMS_FILES,
             durable=True,
             arguments={
-            'x-consumer-timeout': 7200000,
+            'x-consumer-timeout': 14400000,
             }
         )
         session = aioboto3.Session()
