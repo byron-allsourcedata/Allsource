@@ -40,7 +40,7 @@ class ShopifyIntegrationService:
 
 
     def __get_orders(self, shop_domain: str, access_token: str):
-        url = f'https://{shop_domain}/admin/api/2024-07/orders.json?fields=created_at,id,name,total-price,total_price_set,customer&status=closed'
+        url = f'{shop_domain}/admin/api/2024-07/orders.json?fields=created_at,id,name,total-price,total_price_set,customer&status=closed'
         params = {
             'status': 'closed',
             'fields': 'created_at,id,name,total_price'
@@ -63,7 +63,7 @@ class ShopifyIntegrationService:
     def __set_pixel(self, user, shop_domain: str, access_token: str):
         script_event_url = f'https://maximiz-data.s3.us-east-2.amazonaws.com/pixel_shopify.js?client_id={user["data_provider_id"]}'
         script_pixel_url = f'https://maximiz-data.s3.us-east-2.amazonaws.com/pixel.js'
-        url = f'https://{shop_domain}/admin/api/2024-07/script_tags.json'
+        url = f'{shop_domain}/admin/api/2024-07/script_tags.json'
         
         headers = {
             'X-Shopify-Access-Token': access_token,
@@ -88,7 +88,7 @@ class ShopifyIntegrationService:
 
 
     def __get_customers(self, shop_domain: str, access_token: str):
-        url = f'https://{shop_domain}/admin/api/2023-07/customers.json'
+        url = f'{shop_domain}/admin/api/2023-07/customers.json'
         headers = {'X-Shopify-Access-Token': access_token}
 
         response = self.__handle_request('GET', url, headers=headers)
@@ -120,7 +120,7 @@ class ShopifyIntegrationService:
 
     def __create_or_update_shopify_customer(self, customer, shop_domain: str, access_token: str):
         customer_json = self.__mapped_customer_for_shopify(customer)
-        url = f'https://{shop_domain}/admin/api/2024-07/customers.json'
+        url = f'{shop_domain}/admin/api/2024-07/customers.json'
 
         headers = {
             'X-Shopify-Token': access_token,
@@ -132,7 +132,7 @@ class ShopifyIntegrationService:
 
 
     def add_integration(self, user, credentials: IntegrationCredentials):
-        if user['company_website'] != f'https://{credentials.shopify.shop_domain}':
+        if user['company_website'] != f'{credentials.shopify.shop_domain}':
             raise HTTPException(status_code=400, detail={'status': 'error', 'detail': {'message': 'Store Domain does not match the one you specified earlier'}})
 
         customers = [self.__mapped_customer(customer) for customer in self.__get_customers(credentials.shopify.shop_domain, credentials.shopify.access_token)]
