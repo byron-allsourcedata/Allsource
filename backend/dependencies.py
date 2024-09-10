@@ -247,7 +247,7 @@ def get_pixel_installation_service(db: Session = Depends(get_db),
 
 def get_settings_service(db: Session = Depends(get_db),
                                    settings_persistence_service: SettingsPersistence = Depends(
-                                       get_send_grid_persistence_service),
+                                       get_settings_persistence_service),
                                    ):
     return SettingsService(db=db, settings_persistence_service=settings_persistence_service)
 

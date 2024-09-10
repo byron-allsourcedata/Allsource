@@ -1,23 +1,23 @@
-from typing import List
 from pydantic import BaseModel, Field
+from typing import Optional
 
 class ChangePassword(BaseModel):
-    current_password: str = Field(...)
-    new_password: str = Field(...)
+    current_password: Optional[str] = None
+    new_password: Optional[str] = None
 
-class Name(BaseModel):
-    full_name: str = Field(...)
-    email_address: str = Field(...)
+class Account(BaseModel):
+    full_name: Optional[str] = None
+    email_address: Optional[str] = None
 
 class BusinessInfo(BaseModel):
-    organization_name: str = Field(...)
-    company_website: str = Field(...)
-    visits_to_website: str = Field(...)
+    organization_name: Optional[str] = None
+    company_website: Optional[str] = None
+    visits_to_website: Optional[str] = None
 
 class AccountDetailsRequest(BaseModel):
-    name: Name = Field(...)
-    change_password: ChangePassword = Field(...)
-    business_info: BusinessInfo = Field(...)
+    account: Optional[Account] = None
+    change_password: Optional[ChangePassword] = None
+    business_info: Optional[BusinessInfo] = None
     
 class TeamsDetailsRequest(BaseModel):
     pending_invitation_revoke: str = Field(...)
