@@ -91,11 +91,7 @@ def process_user_data(table, index, five_x_five_user: FiveXFiveUser, session: Se
         json_headers = json.loads(str(table['JSON_HEADERS'][index]).lower())
         referer = json_headers.get('referer')[0]
         page = referer
-    behavior_type = 'visitor'
-    if partner_uid_dict.get('item'):
-        behavior_type = 'viewed_product'
-    if partner_uid_dict.get('addToCart'):
-        behavior_type = 'added_to_cart'
+    behavior_type = 'visitor' if not partner_uid_dict.get('action') else partner_uid_dict.get('action')
     lead_user = session.query(LeadUser).filter_by(five_x_five_user_id=five_x_five_user.id, user_id=user.id).first()
     if not lead_user:
         lead_user = LeadUser(five_x_five_user_id=five_x_five_user.id, user_id=user.id)
@@ -127,9 +123,7 @@ def process_user_data(table, index, five_x_five_user: FiveXFiveUser, session: Se
             LeadsVisits.id.asc()
         ).first()
         if visit_first.id == leads_requests[0].visit_id:
-            if lead_user.behavior_type in ('visitor', 'viewed_product') and behavior_type in (
-            'viewed_product', 'added_to_cart') \
-                    and lead_user.behavior_type != behavior_type:
+            if lead_user.behavior_type in ('visitor', 'viewed_product') and behavior_type in ('viewed_product', 'product_added_to_cart'):
                 session.query(LeadUser).filter(LeadUser.id == lead_user.id).update({
                     LeadUser.behavior_type: behavior_type
                 })
