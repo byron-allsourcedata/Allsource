@@ -17,6 +17,7 @@ import StatsCards from "../../components/StatsCard";
 import { PopupButton } from "react-calendly";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import { fetchUserData } from '../../services/meService';
+import { showErrorToast, showToast } from '@/components/ToastNotification';
 
 
 const VerifyPixelIntegration: React.FC = () => {
@@ -35,7 +36,18 @@ const VerifyPixelIntegration: React.FC = () => {
         url = "http://" + url;
       }
 
-      axiosInstance.post("/install-pixel/check-pixel-installed", { url });
+      axiosInstance.post("/install-pixel/check-pixel-installed-parse", { url })
+            .then(response => {
+                const status = response.data.status;
+                if (status === "PIXEL_CODE_INSTALLED") {
+                    showToast("Pixel code is installed successfully!");
+                } else if (status === "PIXEL_CODE_PARSE_FAILED") {
+                    showErrorToast("Could not find pixel code on your site");
+                }
+            })
+            .catch(error => {
+                showErrorToast("An error occurred while checking the pixel code.");
+            });
 
       const hasQuery = url.includes("?");
       const newUrl = url + (hasQuery ? "&" : "?") + "vge=true" + "&api=https://api-dev.maximiz.ai";
