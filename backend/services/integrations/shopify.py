@@ -69,7 +69,10 @@ class ShopifyIntegrationService:
             'X-Shopify-Access-Token': access_token,
             "Content-Type": "application/json"
         }
-
+        scrips_list = self.__handle_request("GET", url, headers=headers)
+        for script in scrips_list.json().get('script_tags'):
+            if script.get('src') == script_pixel_url:
+                return 
         script_event_data = {
             "script_tag": {
                 "event": "onload",
