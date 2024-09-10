@@ -1,5 +1,5 @@
 "use client";
-import { Box, Grid, Typography, Button, Menu, MenuItem } from "@mui/material";
+import { Box, Grid, Typography, Button, Menu, MenuItem, Modal } from "@mui/material";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import React, { useState, useEffect, Suspense, useRef } from "react";
@@ -23,6 +23,7 @@ import { showErrorToast, showToast } from '@/components/ToastNotification';
 const VerifyPixelIntegration: React.FC = () => {
   const { website } = useUser();
   const [inputValue, setInputValue] = useState<string>(website || "");
+  document.body.style.overflow =  'hidden';
 
   useEffect(() => {
     setInputValue(website || "");
@@ -65,6 +66,7 @@ const VerifyPixelIntegration: React.FC = () => {
         padding: "1rem",
         border: "1px solid #e4e4e4",
         borderRadius: "8px",
+        overflow: 'hidden',
         backgroundColor: "rgba(247, 247, 247, 1)",
         boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
         marginBottom: "2rem",
@@ -354,6 +356,7 @@ const Dashboard: React.FC = () => {
                 sx={{
                   display: "flex",
                   flexDirection: "column",
+                  overflow: 'hidden'
                 }}
               >
                 <Typography
@@ -429,9 +432,10 @@ const Dashboard: React.FC = () => {
           </>
         ) : (
               <Grid container sx={{
-                height: '100%'
+                height: '100%',
+                overflow: 'hidden'
               }}>
-                <Grid item xs={12} sx={{display: { md: 'none' }  }}>
+                <Grid item xs={12} sx={{display: { md: 'none' }, overflow: 'hidden' }}>
                 <Typography
                     variant="h4"
                     component="h1"
@@ -447,7 +451,7 @@ const Dashboard: React.FC = () => {
                   <PixelInstallation />
                   <VerifyPixelIntegration />
                 </Grid>
-                <Grid item xs={12} lg={8} sx={{display: { xs: 'none', md: 'block' }  }}>
+                <Grid item xs={12} lg={8} sx={{display: { xs: 'none', md: 'block' }, overflow: 'hidden'  }}>
                   <Typography
                     variant="h4"
                     component="h1"
