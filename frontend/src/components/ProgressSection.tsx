@@ -170,6 +170,7 @@ export const ProgressSection: React.FC = () => {
               sx={{
                 height: "8px",
                 borderRadius: "4px",
+                backgroundColor: "rgba(219, 219, 219, 1)",
                 "& .MuiLinearProgress-bar": {
                   backgroundColor: "rgba(110, 193, 37, 1)",
                 },

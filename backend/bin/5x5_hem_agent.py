@@ -45,7 +45,8 @@ def assume_role(role_arn, sts_client):
     return credentials
 
 
-async def on_message_received(message, s3_session, credentials, rmq_connection):
+async def on_message_received(message, s3_session, sts_client, rmq_connection):
+    credentials = assume_role(os.getenv('S3_ROLE_ARN'), sts_client)
     try:
         message_json = json.loads(message.body)
         async with s3_session.client(
@@ -80,8 +81,6 @@ async def main():
     logging.info("Started")
     try:
         sts_client = create_sts_client(os.getenv('S3_KEY_ID'), os.getenv('S3_KEY_SECRET'))
-        credentials = assume_role(os.getenv('S3_ROLE_ARN'), sts_client)
-
         rabbitmq_connection = RabbitMQConnection()
         connection = await rabbitmq_connection.connect()
         channel = await connection.channel()
@@ -95,7 +94,7 @@ async def main():
         )
         session = aioboto3.Session()
         await queue.consume(
-            functools.partial(on_message_received, s3_session=session, credentials=credentials, rmq_connection=connection)
+            functools.partial(on_message_received, s3_session=session, sts_client=sts_client, rmq_connection=connection)
         )
         await asyncio.Future()
     except Exception as err:

@@ -19,6 +19,7 @@ import { useUser } from "../../context/UserContext";
 import axiosInterceptorInstance from "../../axios/axiosInterceptorInstance";
 import { showErrorToast } from "../../components/ToastNotification";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 
 const AccountSetup = () => {
   const [organizationName, setOrganizationName] = useState("");
@@ -158,7 +159,6 @@ const AccountSetup = () => {
     setErrors({ ...errors, selectedEmployees: "" });
   };
   const handleVisitsRangeChange = (label: string) => {
-    console.log(label);
     setSelectedVisits(label);
     setErrors({ ...errors, selectedVisits: "" });
   };
@@ -223,14 +223,10 @@ const AccountSetup = () => {
         case "NEED_EMAIL_VERIFIED":
           router.push("/email-verificate");
           break;
-        case "DASHBOARD_ALLOWED":
-          router.push("/dashboard");
-          break;
         case "NEED_CHOOSE_PLAN":
           router.push("/choose-plan");
           break;
         default:
-          console.log("Unhandled response status:", response.data.status);
           break;
       }
     } catch (error) {
@@ -701,7 +697,7 @@ const AccountSetup = () => {
 
 const AccountSetupPage = () => {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<CustomizedProgressBar />}>
       <AccountSetup />
     </Suspense>
   );

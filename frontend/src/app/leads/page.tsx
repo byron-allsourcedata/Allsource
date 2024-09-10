@@ -25,6 +25,7 @@ import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import dayjs from 'dayjs';
 import PopupDetails from '@/components/AccountDetails';
 import CloseIcon from '@mui/icons-material/Close';
+import CustomizedProgressBar from '@/components/CustomizedProgressBar';
 
 
 const Sidebar = dynamic(() => import('../../components/Sidebar'), {
@@ -512,12 +513,9 @@ const Leads: React.FC = () => {
     }, [appliedDates, orderBy, order, page, rowsPerPage, activeFilter, filterParams]);
 
 
-
-
-
     if (isLoading) {
-        return <div>Loading...</div>;
-    }
+        return <CustomizedProgressBar />;
+      }
 
     const centerContainerStyles = {
         display: 'flex',
@@ -1124,7 +1122,10 @@ const Leads: React.FC = () => {
                                                                 sx={{
                                                                     backgroundColor: selectedRows.has(row.id) ? 'rgba(235, 243, 254, 1)' : '#fff',
                                                                     '&:hover':{
-                                                                        backgroundColor: 'rgba(235, 243, 254, 1)'
+                                                                        backgroundColor: 'rgba(235, 243, 254, 1)',
+                                                                        '& .sticky-cell': {
+                                                                            backgroundColor: 'rgba(235, 243, 254, 1)',
+                                                                        }
                                                                     }
                                                                 }}
                                                             >
