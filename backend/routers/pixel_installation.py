@@ -5,7 +5,7 @@ from models.users import User
 from schemas.pixel_installation import PixelInstallationRequest, EmailFormRequest, ManualFormResponse
 from schemas.users import PixelFormResponse
 from services.pixel_installation import PixelInstallationService
-from dependencies import get_pixel_installation_service, check_user_authorization_without_pixel
+from dependencies import get_pixel_installation_service, check_user_authorization_without_pixel, check_user_authentication
 from config.rmq_connection import publish_rabbitmq_message, RabbitMQConnection
 import logging
 
@@ -30,8 +30,11 @@ async def send_pixel_code_in_email(email_form: EmailFormRequest,
 
 @router.post("/check-pixel-installed", response_model=PixelFormResponse)
 async def manual(pixel_installation_request: PixelInstallationRequest,
-                 pixel_installation_service: PixelInstallationService = Depends(get_pixel_installation_service)):
-    result = pixel_installation_service.check_pixel_installed_via_api(pixel_installation_request.pixelClientId, pixel_installation_request.url)
+                 pixel_installation_service: PixelInstallationService = Depends(get_pixel_installation_service), user: User = Depends(check_user_authentication)):
+    if pixel_installation_request.pixelClientId is None:
+        result = pixel_installation_service.check_pixel_installed_via_parse(pixel_installation_request.url, user)
+    else:
+        result = pixel_installation_service.check_pixel_installed_via_api(pixel_installation_request.pixelClientId, pixel_installation_request.url)
     queue_name = f"sse_events_{str(result['user_id'])}"
     rabbitmq_connection = RabbitMQConnection()
     connection = await rabbitmq_connection.connect()
