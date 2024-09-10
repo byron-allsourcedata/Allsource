@@ -218,7 +218,7 @@ const ServiceIntegrations = ({ service }: { service: IntegrationService[] }) => 
 
         const fetchData = async () => {
             try {
-                const response = await axiosInstance.get('/integrations/credentials', {
+                const response = await axiosInstance.get('/integrations/credentials/', {
                     headers: { Authorization: `Bearer ${accessToken}` },
                 });
                 if (response.status === 200) {
