@@ -936,7 +936,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
           >
             Filter Search
           </Typography>
-          <Box sx={{ display: "flex", flexDirection: "row" }}>
+          {/* <Box sx={{ display: "flex", flexDirection: "row"}}>
             <Button onClick={handleLoadOpen}>
               <Typography
                 sx={{
@@ -997,8 +997,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
               </Box>
 
 
-              {/* Display saved filters */}
-
               {savedFilters.length > 0 ? (
                 savedFilters.map((filter, index) => (
                   <Box key={index} sx={{
@@ -1015,7 +1013,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                       {filter.name}
                     </Typography>
                     <Typography variant="body2" sx={{ fontFamily: 'Nunito' }}>
-                      {/* {JSON.stringify(filter.data, null, 2)} */}
                     </Typography>
                     <Box sx={{
                       display: "flex",
@@ -1184,7 +1181,8 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
             <IconButton onClick={onClose}>
               <CloseIcon />
             </IconButton>
-          </Box>
+          </Box> 
+          */}
         </Box>
         <Box
           sx={{
