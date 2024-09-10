@@ -24,8 +24,8 @@ logging.basicConfig(level=logging.INFO)
 BUCKET_NAME = 'trovo-coop-shakespeare'
 FILES_PATH = 'outgoing/upid_hem_1_6_0'
 LAST_PROCESSED_FILE_PATH = 'tmp/last_processed_file_hems.txt'
-QUEUE_EXPORT_HEMS = '5x5_export_hems'
-QUEUE_IMPORT_HEMS = '5x5_import_hems'
+QUEUE_HEMS_EXPORT = '5x5_hems_export'
+QUEUE_HEMS_FILES = '5x5_hems_files'
 
 def create_sts_client(key_id, key_secret):
     return boto3.client(
@@ -66,7 +66,7 @@ async def on_message_received(message, s3_session, credentials, rmq_connection):
                     for _, row in df.iterrows():
                         await publish_rabbitmq_message(
                             connection=rmq_connection,
-                            queue_name=QUEUE_EXPORT_HEMS,
+                            queue_name=QUEUE_HEMS_EXPORT,
                             message_body={'hem': row.to_dict()}
                         )
         logging.info(f"{message_json['file_name']} processed")
@@ -87,7 +87,7 @@ async def main():
         channel = await connection.channel()
         await channel.set_qos(prefetch_count=1)
         queue = await channel.declare_queue(
-            name=QUEUE_IMPORT_HEMS,
+            name=QUEUE_HEMS_FILES,
             durable=True,
             arguments={
             'x-consumer-timeout': 7200000,

@@ -25,7 +25,7 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO)
 
 # Configuration
-QUEUE_EXPORT_HEMS = '5x5_export_hems'
+QUEUE_HEMS_EXPORT = '5x5_hems_export'
 
 
 async def on_message_received(message, db_session):
@@ -41,7 +41,6 @@ async def on_message_received(message, db_session):
         db_session.execute(five_x_five_hems)
         db_session.commit()
 
-        logging.info(f"{hem_json.get('UP_ID')} processed")
         await message.ack()
     except Exception as e:
         await message.reject(requeue=True)
@@ -56,7 +55,7 @@ async def main():
         channel = await connection.channel()
         await channel.set_qos(prefetch_count=1)
         queue = await channel.declare_queue(
-            name=QUEUE_EXPORT_HEMS,
+            name=QUEUE_HEMS_EXPORT,
             durable=True,
             arguments={
             'x-consumer-timeout': 7200000,
