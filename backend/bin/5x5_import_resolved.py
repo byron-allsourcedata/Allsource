@@ -84,7 +84,6 @@ def process_user_data(table, index, five_x_five_user: FiveXFiveUser, session: Se
     partner_uid_dict = json.loads(partner_uid_decoded)
     partner_uid_client_id = partner_uid_dict.get('client_id')
     page = partner_uid_dict.get('current_page')
-    behavior_type = partner_uid_dict.get('action') if partner_uid_dict.get('action') else 'visitor'
     user = session.query(Users).filter(Users.data_provider_id == str(partner_uid_client_id)).first()
     if not user:
         logging.info(f"User not found with client_id {partner_uid_client_id}")

@@ -100,8 +100,8 @@ class ShopifyIntegrationService:
 
     def __save_integration(self, shop_domain: str, access_token: str, user_id: int):
         if self.integration_persistence.get_credentials_for_service(user_id, 'Shopify'):
-            raise HTTPException(status_code=409, detail={'status': 'error', 'detail': {'message': 'You already have Shopify integrations'}})
-
+            return
+        
         credentials = {
             'user_id': user_id, 
             'shop_domain': shop_domain,
@@ -141,9 +141,8 @@ class ShopifyIntegrationService:
         user_website = user['company_website'].lower().lstrip('http://').lstrip('https://')
         if user_website != shop_domain:
             raise HTTPException(status_code=400, detail={'status': 'error', 'detail': {'message': 'Store Domain does not match the one you specified earlier'}})
-
         customers = [self.__mapped_customer(customer) for customer in self.__get_customers(credentials.shopify.shop_domain, credentials.shopify.access_token)]
-        integration = self.__save_integration(credentials.shopify.shop_domain, credentials.shopify.access_token, user['id'])
+        self.__save_integration(credentials.shopify.shop_domain, credentials.shopify.access_token, user['id'])
         self.__set_pixel(user, credentials.shopify.shop_domain, credentials.shopify.access_token)
         
         for customer in customers:
@@ -152,7 +151,6 @@ class ShopifyIntegrationService:
         return {
             'status': 'Successfully',
             'detail': {
-                'id': integration.id,
                 'service_name': 'Shopify'
             }
         }

@@ -190,10 +190,10 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
 
       if (response.status === 200) {
         showToast('Successfully installed pixel');
-        handleClose
+        handleClose()
       } else {
         showErrorToast('Failed to install pixel');
-        handleClose
+        handleClose()
       }
     } catch (error) {
       console.error("An error occurred:", error);
