@@ -23,7 +23,7 @@ Eye.application 'maximiz.5x5_hem_export' do
         stop_on_delete true
 
 
-        check :memory, every: 20.seconds, below: 100000.megabytes, times: 3
+        check :memory, every: 20.seconds, below: 100.megabytes, times: 3
       end
     end
   end
