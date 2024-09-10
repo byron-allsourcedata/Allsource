@@ -40,7 +40,7 @@ async def manual(pixel_installation_request: PixelInstallationRequest,
 
 @router.post("/check-pixel-installed", response_model=PixelFormResponse)
 async def manual(pixel_installation_request: PixelInstallationRequest,
-                 pixel_installation_service: PixelInstallationService = Depends(get_pixel_installation_service), user: User = Depends(check_user_authentication)):
+                 pixel_installation_service: PixelInstallationService = Depends(get_pixel_installation_service)):
     result = pixel_installation_service.check_pixel_installed_via_api(pixel_installation_request.pixelClientId, pixel_installation_request.url)
     queue_name = f"sse_events_{str(result['user_id'])}"
     rabbitmq_connection = RabbitMQConnection()
