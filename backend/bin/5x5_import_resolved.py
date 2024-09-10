@@ -27,6 +27,7 @@ from sqlalchemy.orm import sessionmaker, Session
 from models.five_x_five_users import FiveXFiveUser
 from models.leads_users import LeadUser
 from models.users import Users
+from models.leads_orders import LeadOrders
 from dotenv import load_dotenv
 from sqlalchemy.dialects.postgresql import insert
 from collections import defaultdict
@@ -82,6 +83,8 @@ def process_user_data(table, index, five_x_five_user: FiveXFiveUser, session: Se
     partner_uid_decoded = urllib.parse.unquote(str(table['PARTNER_UID'][index]).lower())
     partner_uid_dict = json.loads(partner_uid_decoded)
     partner_uid_client_id = partner_uid_dict.get('client_id')
+    page = partner_uid_dict.get('current_page')
+    behavior_type = partner_uid_dict.get('action') if partner_uid_dict.get('action') else 'visitor'
     user = session.query(Users).filter(Users.data_provider_id == str(partner_uid_client_id)).first()
     if not user:
         logging.info(f"User not found with client_id {partner_uid_client_id}")
@@ -123,12 +126,19 @@ def process_user_data(table, index, five_x_five_user: FiveXFiveUser, session: Se
             LeadsVisits.id.asc()
         ).first()
         if visit_first.id == leads_requests[0].visit_id:
-            if lead_user.behavior_type in ('visitor', 'viewed_product') and behavior_type in ('viewed_product', 'product_added_to_cart'):
+            if lead_user.behavior_type in ('visitor', 'viewed_product') and behavior_type in (
+            'viewed_product', 'product_added_to_cart'):
                 session.query(LeadUser).filter(LeadUser.id == lead_user.id).update({
                     LeadUser.behavior_type: behavior_type
                 })
                 session.commit()
-        process_leads_requests(requested_at, page, leads_requests, lead_user.id, session, behavior_type)
+            if behavior_type == 'checkout_completed': 
+                order_detail = partner_uid_dict.get('order_detail')
+                session.add(LeadOrders(lead_user_id=lead_user.id, 
+                                       total_price=order_detail.get('total_price'), 
+                                       currency_code=order_detail.get('currency'),
+                                       created_at_shopify=datetime.now(), created_at=datetime.now()))
+        process_leads_requests(requested_at, leads_requests, lead_user.id, session, behavior_type)
     else:
         logging.info("Leads Visits not exists")
         lead_visits = add_new_leads_visits(requested_at, lead_user.id, session, behavior_type).id

@@ -121,7 +121,14 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
     access_token: "",
     shop_domain: "",
   });
+  const [isFocused, setIsFocused] = useState(false);
+  const handleFocus = () => {
+    setIsFocused(true);
+  };
 
+  const handleBlur = () => {
+    setIsFocused(false);
+  };
   const handleCopyToClipboard = () => {
     navigator.clipboard.writeText(pixel_client_id);
     alert('Site ID copied to clipboard!');
@@ -168,8 +175,10 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
     if (!accessToken) return;
 
     const body: Record<string, any> = {
-      shop_domain: shop_domain.trim(),
-      access_token: access_token.trim(),
+      shopify: {
+        shop_domain: shop_domain.trim(),
+        access_token: access_token.trim()
+      }
     };
 
     try {
@@ -266,16 +275,18 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
                         sx={{ display: 'flex', width: '100%', justifyContent: 'center', margin: 0, pl: 1 }}
                       >
                         <TextField
-                          InputProps={{ sx: styles.formInput }}
                           fullWidth
                           label="Shop Domain"
                           variant="outlined"
                           placeholder='Enter your Shop Domain'
                           margin="normal"
+                          value={isFocused ? shop_domain.replace(/^https?:\/\//, "") : `https://${shop_domain.replace(/^https?:\/\//, "")}`}
                           sx={styles.formField}
-                          value={shop_domain}
+                          onFocus={handleFocus}
+                          onBlur={handleBlur}
                           onChange={(e) => setDomain(e.target.value)}
                           InputLabelProps={{ sx: styles.inputLabel }}
+                        
                         />
                       </Box>
                       <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'start' }}>

@@ -13,18 +13,32 @@ class WoocommerceCredentials(BaseModel):
     consumer_secret: str
 
 
-class KlaviyoCredentials(BaseModel):
-    access_token: str 
+class KlaviyoOrSandlaneCredentials(BaseModel):
+    api_key: str 
+
+
+class MailchimpCredentials(BaseModel):
+    data_center: str
+    access_token: str
+
+
+class FacebookCredentials(BaseModel):
+    access_token: str
+    ad_account_id: str
+
 
 
 class IntegrationCredentials(BaseModel):
     shopify: Optional[ShopifyOrBigcommerceCredentials] = None
     woocommerce: Optional[WoocommerceCredentials] = None
     bigcommerce: Optional[ShopifyOrBigcommerceCredentials] = None
-    klaviyo: Optional[KlaviyoCredentials] = None
+    klaviyo: Optional[KlaviyoOrSandlaneCredentials] = None
+    mailchimp: Optional[MailchimpCredentials] = None
+    facebook: Optional[FacebookCredentials] = None
+    sendlane: Optional[KlaviyoOrSandlaneCredentials] = None
 
 
-class Customer(BaseModel):
+class Lead(BaseModel):
     first_name: Optional[str]
     last_name: Optional[str]
     mobile_phone: Optional[str]
@@ -40,3 +54,14 @@ class Customer(BaseModel):
     company_phone: Optional[str]
     company_revenue: Optional[float]
     company_employee_count: Optional[int]
+
+
+class ExportLeads(BaseModel):
+    list_name: str
+
+class SyncCreate(BaseModel):
+    integration_id: int
+    sync_type: str
+    supression: bool
+    filter_by_contact_type: str
+    list_id: Optional[int] = None
