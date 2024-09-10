@@ -30,7 +30,7 @@ const headerStyles = {
 const Header = () => {
     const router = useRouter();
     const { full_name: userFullName, email: userEmail } = useUser();
-    const meItem = typeof window !== 'undefined' ? sessionStorage.getItem('me') : null;
+    const meItem = typeof window !== "undefined" ? sessionStorage.getItem("me") : null;
     const meData = meItem ? JSON.parse(meItem) : { full_name: '', email: '' };
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const open = Boolean(anchorEl);
