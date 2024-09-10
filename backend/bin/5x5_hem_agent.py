@@ -6,7 +6,6 @@ import logging
 import os
 import sys
 import tempfile
-
 import aioboto3
 import boto3
 import pandas as pd
@@ -15,11 +14,7 @@ current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 from dotenv import load_dotenv
-from config.rmq_connection import RabbitMQConnection
-from models.five_x_five_hems import FiveXFiveHems
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.dialects.postgresql import insert
+from config.rmq_connection import publish_rabbitmq_message, RabbitMQConnection
 
 # Load environment variables
 load_dotenv()
@@ -29,7 +24,8 @@ logging.basicConfig(level=logging.INFO)
 BUCKET_NAME = 'trovo-coop-shakespeare'
 FILES_PATH = 'outgoing/upid_hem_1_6_0'
 LAST_PROCESSED_FILE_PATH = 'tmp/last_processed_file_hems.txt'
-
+QUEUE_EXPORT_HEMS = '5x5_export_hems'
+QUEUE_IMPORT_HEMS = '5x5_import_hems'
 
 def create_sts_client(key_id, key_secret):
     return boto3.client(
@@ -49,7 +45,7 @@ def assume_role(role_arn, sts_client):
     return credentials
 
 
-async def on_message_received(message, s3_session, credentials, db_session):
+async def on_message_received(message, s3_session, credentials, rmq_connection):
     try:
         message_json = json.loads(message.body)
         async with s3_session.client(
@@ -68,15 +64,11 @@ async def on_message_received(message, s3_session, credentials, db_session):
                     with gzip.open(temp_file.name, 'rt', encoding='utf-8') as f:
                         df = pd.read_csv(f)
                     for _, row in df.iterrows():
-                        five_x_five_hems = insert(FiveXFiveHems).values(
-                            up_id=str(row['UP_ID']),
-                            sha256_lc_hem=str(row['SHA256_LC_HEM']),
-                            md5_lc_hem=str(row['MD5_LC_HEM']),
-                            sha1_lc_hem=str(row['SHA1_LC_HEM'])
-                        ).on_conflict_do_nothing()
-                        db_session.execute(five_x_five_hems)
-                        db_session.commit()
-
+                        await publish_rabbitmq_message(
+                            connection=rmq_connection,
+                            queue_name=QUEUE_EXPORT_HEMS,
+                            message_body={'hem': row.to_dict()}
+                        )
         logging.info(f"{message_json['file_name']} processed")
         await message.ack()
     except Exception as e:
@@ -95,22 +87,15 @@ async def main():
         channel = await connection.channel()
         await channel.set_qos(prefetch_count=1)
         queue = await channel.declare_queue(
-            name='5x5_import_hems',
+            name=QUEUE_IMPORT_HEMS,
             durable=True,
             arguments={
-            'x-consumer-timeout': 3600000,
+            'x-consumer-timeout': 7200000,
             }
         )
-
-        engine = create_engine(
-            f"postgresql://{os.getenv('DB_USERNAME')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}"
-        )
-        Session = sessionmaker(bind=engine)
-        db_session = Session()
-
         session = aioboto3.Session()
         await queue.consume(
-            functools.partial(on_message_received, s3_session=session, credentials=credentials, db_session=db_session)
+            functools.partial(on_message_received, s3_session=session, credentials=credentials, rmq_connection=connection)
         )
         await asyncio.Future()
     except Exception as err:

@@ -18,7 +18,7 @@ logging.basicConfig(level=logging.INFO)
 BUCKET_NAME = 'trovo-coop-shakespeare'
 FILES_PATH = 'outgoing/upid_hem_1_6_0'
 LAST_PROCESSED_FILE_PATH = 'tmp/last_processed_file_hems.txt'
-
+QUEUE_IMPORT_HEMS = '5x5_import_hems'
 
 def create_sts_client(key_id, key_secret):
     return boto3.client('sts', aws_access_key_id=key_id, aws_secret_access_key=key_secret, region_name='us-west-2')
@@ -42,7 +42,7 @@ async def process_files(sts_client, rmq_conn):
         async for s3_object in bucket.objects.filter(Prefix=FILES_PATH):
             await publish_rabbitmq_message(
                 connection=rmq_conn,
-                queue_name='5x5_import_hems',
+                queue_name=QUEUE_IMPORT_HEMS,
                 message_body={'file_name': s3_object.key}
             )
             logging.info(f"write last processed file {s3_object.key}")
@@ -55,10 +55,10 @@ async def main():
     connection = await rabbitmq_connection.connect()
     channel = await connection.channel()
     await channel.declare_queue(
-        name='5x5_import_hems',
+        name=QUEUE_IMPORT_HEMS,
         durable=True,
         arguments={
-            'x-consumer-timeout': 3600000,
+            'x-consumer-timeout': 7200000,
         }
     )
     await process_files(sts_client, connection)
