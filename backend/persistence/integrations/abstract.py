@@ -19,7 +19,6 @@ class ServiceIntegrationsPersistence(IntegrationPersistenceABC):
 
     def __init__(self, session: Session):
         self.session = session
-
     def save_customer(self, customer: dict, user_id: int) -> str:
         existing_lead_user = (
             self.session.query(LeadUser)

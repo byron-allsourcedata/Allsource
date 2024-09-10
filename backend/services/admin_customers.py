@@ -95,7 +95,7 @@ class AdminCustomersService:
     def confirmation_customer(self, email, free_trial=None):
         user_data = self.get_user_by_email(email)
         if free_trial:
-            self.subscription_service.update_user_payment_status(user_id=user_data.id, is_success=True)
+            self.subscription_service.update_user_payment_status(user_id=user_data.id, status='active')
             self.subscription_service.create_subscription_from_free_trial(user_id=user_data.id)
         else:
             self.subscription_service.remove_trial(user_data.id)

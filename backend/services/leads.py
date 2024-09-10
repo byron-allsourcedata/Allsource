@@ -1,6 +1,6 @@
 import csv
 import io
-
+from datetime import datetime, time
 from models.users import Users
 from persistence.leads_persistence import LeadsPersistence
 
@@ -11,25 +11,82 @@ class LeadsService:
         self.user = user
 
     def get_leads(self, page, per_page, status, from_date, to_date, regions, page_visits, average_time_spent,
-                  lead_funnel, emails, recurring_visits, sort_by, sort_order, search_query):
-        leads, count, max_page = self.leads_persistence_service.filter_leads(self.user.get('id'), page, per_page, status,
-                                                                             from_date, to_date,
-                                                                             regions, page_visits, average_time_spent,
-                                                                             lead_funnel, emails, recurring_visits,
-                                                                             sort_by, sort_order, search_query)
+                  lead_funnels, recurring_visits, sort_by, sort_order, search_query,from_time, to_time):
+        leads, count, max_page = self.leads_persistence_service.filter_leads(user_id=self.user.get('id'), page=page, per_page=per_page, status=status,
+                                                                             from_date=from_date, to_date=to_date,
+                                                                             regions=regions, page_visits=page_visits, average_time_spent=average_time_spent,
+                                                                             lead_funnels=lead_funnels, recurring_visits=recurring_visits,
+                                                                             sort_by=sort_by, sort_order=sort_order, search_query=search_query,
+                                                                             from_time=from_time,to_time=to_time
+                                                                             )
         leads_list = [
-            {
-                'lead': lead,
-                'status': status,
-                'funnel': funnel,
-                'state': state,
-                'city': city,
-                'last_visited_date': last_visited_at.strftime('%d.%m.%Y') if last_visited_at else 'N/A',
-                'last_visited_time': last_visited_at.strftime('%H:%M') if last_visited_at else 'N/A'
-            }
-            for lead, status, funnel, state, city, last_visited_at in leads
-        ]
-
+        {
+        'id': lead[0],
+        'first_name': lead[1],
+        'programmatic_business_emails': lead[2],
+        'mobile_phone': lead[3],
+        'direct_number': lead[4],
+        'gender': lead[5],
+        'personal_phone': lead[6],
+        'business_email': lead[7],
+        'personal_emails': lead[8],
+        'last_name': lead[9],
+        'personal_city': lead[10],
+        'personal_state': lead[11],
+        'company_name': lead[12],
+        'company_domain': lead[13],
+        'company_phone': lead[14],
+        'company_sic': lead[15],
+        'company_address': lead[16],
+        'company_city': lead[17],
+        'company_state': lead[18],
+        'company_linkedin_url': lead[19],
+        'company_revenue': lead[20],
+        'company_employee_count': lead[21],
+        'net_worth': lead[22],
+        'job_title': lead[23],
+        'last_updated': lead[24].strftime('%d.%m.%Y %H:%M'),
+        'personal_emails_last_seen': lead[25].strftime('%d.%m.%Y %H:%M') if lead[25] else None,
+        'company_last_updated': lead[26].strftime('%d.%m.%Y %H:%M') if lead[26] else None,
+        'job_title_last_updated': lead[27].strftime('%d.%m.%Y %H:%M') if lead[27] else None,
+        'age_min': lead[28],
+        'age_max': lead[29],    
+        'additional_personal_emails': lead[30],
+        'linkedin_url': lead[31],
+        'personal_address': lead[32],
+        'personal_address_2': lead[33],
+        'married': lead[34],
+        'children': lead[35],
+        'income_range': lead[36],
+        'homeowner': lead[37],
+        'seniority_level': lead[38],
+        'department': lead[39],
+        'professional_address': lead[40],
+        'professional_address_2': lead[41],
+        'professional_city': lead[42],
+        'professional_state': lead[43],
+        'primary_industry': lead[44],
+        'business_email_validation_status': lead[45],
+        'business_email_last_seen': lead[46],
+        'personal_emails_validation_status': lead[47],
+        'work_history': lead[48],
+        'education_history': lead[49],
+        'company_description': lead[50],
+        'related_domains': lead[51],
+        'social_connections': lead[52],
+        'personal_zip': lead[53],
+        'professional_zip': lead[54],
+        'company_zip': lead[55],
+        'status': lead[56],
+        'funnel': lead[57],
+        'state': lead[58],
+        'city': lead[59],
+        'last_visited_date': lead[60].strftime('%d.%m.%Y') if lead[57] else None,
+        'last_visited_time': lead[61].strftime('%H:%M') if lead[58] else None,
+        'time_spent': lead[62]
+    }
+    for lead in leads
+    ]   
         return leads_list, count, max_page
 
     def download_leads(self, leads_ids):
@@ -41,9 +98,8 @@ class LeadsService:
         output = io.StringIO()
         writer = csv.writer(output)
         writer.writerow(
-            ['First Name', 'Last Name', 'Gender', 'Mobile Phone', 'IP', 'Company Name', 'Company City', 'Company State',
-             'Company Zip', 'Business Email', 'Time spent', 'No of visits',
-             'No of page visits', 'Age min', 'Age_max', 'Company domain', 'Company phone', 'Company sic',
+            ['First Name', 'Last Name', 'Gender', 'Mobile Phone', 'Company Name', 'Company City', 'Company State',
+             'Company Zip', 'Business Email', 'Age min', 'Age_max', 'Company domain', 'Company phone', 'Company sic',
              'Company address', 'Company revenue', 'Company employee count'])
         for lead_data in leads_data:
             if lead_data:
@@ -52,15 +108,11 @@ class LeadsService:
                     lead_data.last_name if lead_data.last_name is not None else 'None',
                     lead_data.gender if lead_data.gender is not None else 'None',
                     lead_data.mobile_phone if lead_data.mobile_phone is not None else 'None',
-                    lead_data.ip if lead_data.ip is not None else 'None',
                     lead_data.company_name if lead_data.company_name is not None else 'None',
                     lead_data.company_city if lead_data.company_city is not None else 'None',
                     lead_data.company_state if lead_data.company_state is not None else 'None',
                     lead_data.company_zip if lead_data.company_zip is not None else 'None',
                     lead_data.business_email if lead_data.business_email is not None else 'None',
-                    lead_data.time_spent if lead_data.time_spent is not None else 'None',
-                    lead_data.no_of_visits if lead_data.no_of_visits is not None else 'None',
-                    lead_data.no_of_page_visits if lead_data.no_of_page_visits is not None else 'None',
                     lead_data.age_min if lead_data.age_min is not None else 'None',
                     lead_data.age_max if lead_data.age_max is not None else 'None',
                     lead_data.company_domain if lead_data.company_domain is not None else 'None',

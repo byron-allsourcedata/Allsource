@@ -156,7 +156,7 @@ class KlaviyoIntegrationsService:
                 self.__add_customer_to_list(sync.list_id, customer, credential.access_token)
         return {'status': 'Success'}
 
-
+    
 # -------------------------------MAPPED-KLAVIYO-DATA------------------------------------ #
 
     def __mapped_customer(self, customer) -> KlaviyoCustomer:

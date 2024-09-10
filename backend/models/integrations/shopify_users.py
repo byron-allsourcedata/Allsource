@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, VARCHAR, Boolean, TIMESTAMP
+from sqlalchemy import Column, Integer, VARCHAR, Boolean, TIMESTAMP, BIGINT
 from models.base import Base
 from datetime import datetime
 
@@ -15,7 +15,7 @@ class ShopifyUser(Base):
     orders_count = Column(Integer, default=0)
     state = Column(VARCHAR)
     total_spent = Column(VARCHAR, default='0.00')
-    last_order_id = Column(Integer)
+    last_order_id = Column(BIGINT)
     note = Column(VARCHAR)
     verified_email = Column(Boolean, default=False)
     multipass_identifier = Column(VARCHAR)

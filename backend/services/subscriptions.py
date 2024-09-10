@@ -16,6 +16,7 @@ from utils import get_utc_aware_date_for_postgres
 
 ACTIVE_STATUSES = ["active", "trialing", "completed"]
 TRIAL_STUB_PLAN_ID = '1'
+PRICE_CREDIT = 0.2
 logger = logging.getLogger(__name__)
 
 
@@ -133,14 +134,14 @@ class SubscriptionService:
         payment_intent = stripe_payload.get("data", {}).get("object", {})
         transaction_id = payment_intent.get("id")
         created_at = datetime.utcfromtimestamp(created_timestamp).isoformat() + "Z" if created_timestamp else None
-        amount = int(payment_intent.get("amount")) / 20
+        amount_credits = int(payment_intent.get("amount")) / 100 / PRICE_CREDIT
         status = payment_intent.get("status")
         payment_transaction_obj = UsersPaymentsTransactions(
             user_id=user_id,
             transaction_id=transaction_id,
             created_at=created_at,
             status=status,
-            amount=amount,
+            amount_credits=amount_credits,
             type='buy credits'
         )
         self.db.add(payment_transaction_obj)
@@ -224,15 +225,15 @@ class SubscriptionService:
     
     def create_payment_from_webhook(self, user_id, stripe_payload):
         payment_intent = stripe_payload.get("data", {}).get("object", {})
-        amount = int(payment_intent.get("amount")) / 20
+        amount_credits = int(payment_intent.get("amount")) / 100 / PRICE_CREDIT
         status = payment_intent.get("status")
         if status == "succeeded":
             user = self.db.query(User).filter(User.id == user_id).first()
             if user.prospect_credits is None:
                 user.prospect_credits = 0
-            user.prospect_credits += amount
+            user.prospect_credits += amount_credits
             self.db.commit()
-        return user
+        return status
         
 
 
@@ -240,7 +241,7 @@ class SubscriptionService:
         plan = self.plans_persistence.get_free_trail_plan()
         status = 'active'
         created_at = datetime.strptime(get_utc_aware_date_for_postgres(), '%Y-%m-%dT%H:%M:%SZ')
-        domains_limit, users_limit, integrations_limit, audiences_limit = self.plans_persistence.get_plan_limit_by_id(
+        domains_limit, users_limit, integrations_limit, audiences_limit, leads_credits, prospect_credits = self.plans_persistence.get_plan_limit_by_id(
             plan_id=plan.id)
         add_subscription_obj = Subscription(
             domains_limit=domains_limit,
@@ -256,7 +257,10 @@ class SubscriptionService:
         )
         self.db.add(add_subscription_obj)
 
-        self.db.query(User).filter(User.id == user_id).update({User.activate_steps_percent: 50},
+        self.db.query(User).filter(User.id == user_id).update({User.activate_steps_percent: 50,
+                                                               User.leads_credits: leads_credits,
+                                                               User.prospect_credits: prospect_credits
+                                                               },
                                                               synchronize_session=False)
         self.db.commit()
 
@@ -288,7 +292,7 @@ class SubscriptionService:
         return stripe_price_id
 
     
-    def update_subscription_from_webhook(self, user_subscription, stripe_payload):
+    def update_subscription_from_webhook(self, user_subscription :UserSubscriptions, stripe_payload):
         start_date_timestamp = stripe_payload.get("data").get("object").get("current_period_start")
         stripe_request_created_timestamp = stripe_payload.get("created")
         stripe_request_created_at = datetime.utcfromtimestamp(stripe_request_created_timestamp).isoformat() + "Z"
@@ -307,18 +311,23 @@ class SubscriptionService:
         plan_type = self.determine_plan_name_from_price(
             stripe_payload.get("data").get("object").get("plan").get("product"))
         plan_id = self.plans_persistence.get_plan_by_title(plan_type)
-        domains_limit, users_limit, integrations_limit, audiences_limit = self.plans_persistence.get_plan_limit_by_id(
+        domains_limit, users_limit, integrations_limit, audiences_limit, leads_credits, prospect_credits = self.plans_persistence.get_plan_limit_by_id(
             plan_id=plan_id)
         if status != "canceled":
             user_subscription.plan_start = start_date
             user_subscription.plan_end = end_date
-            user_subscription.domains_limit += domains_limit
-            user_subscription.users_limit += users_limit
-            user_subscription.integrations_limit += integrations_limit
-            user_subscription.audiences_limit += audiences_limit,
+            user_subscription.domains_limit = user_subscription.domains_limit + domains_limit
+            user_subscription.users_limit = user_subscription.users_limit + users_limit
+            user_subscription.integrations_limit = user_subscription.integrations_limit + integrations_limit
+            user_subscription.audiences_limit = user_subscription.audiences_limit + audiences_limit,
             user_subscription.plan_id=plan_id,
         user_subscription.status = status
         user_subscription.stripe_request_created_at = stripe_request_created_at
+        self.db.flush()
+
+        user = self.db.query(User).filter(User.id == user_subscription.user_id).first()
+        user.leads_credits = leads_credits
+        user.prospect_credits = prospect_credits
         self.db.commit()
 
         return user_subscription

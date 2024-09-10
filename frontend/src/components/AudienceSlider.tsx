@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Drawer, Box, Typography, IconButton, Backdrop, TextField, InputAdornment, Divider, FormControlLabel, Radio, Collapse, Checkbox, Button } from '@mui/material';
+import { Drawer, Box, Typography, IconButton, Backdrop, TextField, InputAdornment, Divider, FormControlLabel, Radio, Collapse, Checkbox, Button, List, ListItem, ListItemIcon, ListItemButton, ListItemText } from '@mui/material';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import CloseIcon from '@mui/icons-material/Close';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { showToast } from './ToastNotification';
+import Image from 'next/image';
+import SearchIcon from '@mui/icons-material/Search';
 
 interface AudiencePopupProps {
     open: boolean;
@@ -25,6 +27,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
     const [listItems, setListItems] = useState<ListItem[]>([]);
     const [checkedItems, setCheckedItems] = useState<Set<number>>(new Set());
     const [listName, setListName] = useState<string>('');
+    const [plusIconPopupOpen, setPlusIconPopupOpen] = useState(false);
 
     const fetchListItems = async () => {
         try {
@@ -115,6 +118,14 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
         }
     };
 
+    const handlePlusIconPopupOpen = () => {
+        setPlusIconPopupOpen(true);
+    };
+
+    const handlePlusIconPopupClose = () => {
+        setPlusIconPopupOpen(false);
+    };
+
     return (
         <>
             <Backdrop open={open} sx={{ zIndex: 1200, color: '#fff' }} />
@@ -124,7 +135,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                 onClose={onClose}
                 PaperProps={{
                     sx: {
-                        width: '40%',
+                        width: '620px',
                         position: 'fixed',
                         zIndex: 1301,
                         top: 0,
@@ -135,49 +146,105 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                     },
                 }}
             >
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 2, borderBottom: '1px solid #e4e4e4' }}>
-                    <Typography variant="h6" sx={{ textAlign: 'center', color: '#4A4A4A', fontFamily: 'Nunito', fontWeight: '600', fontSize: '16px', lineHeight: '25.2px' }}>
-                        Add to Audience List
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 3.5, px: 2, borderBottom: '1px solid #e4e4e4' }}>
+                    <Typography variant="h6" sx={{ textAlign: 'center', color: '#1c1c1c', fontFamily: 'Nunito', fontWeight: '700', fontSize: '16px', lineHeight: 'normal' }}>
+                        Create contact sync
                     </Typography>
-                    <IconButton onClick={onClose}>
-                        <CloseIcon />
+                    <IconButton onClick={onClose} sx={{p: 0}}>
+                        <CloseIcon sx={{width: '20px', height: '20px'}} />
                     </IconButton>
                 </Box>
                 <Divider />
-                <Box sx={{ p: 3, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5 }}>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '90%', border: '1px solid rgba(228, 228, 228, 1)', borderRadius: '4px', padding: '2em' }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', mb: 2, borderBottom: '2px solid rgba(228, 228, 228, 1)' }}>
-                            <Box sx={{ flexGrow: 1, width: '100%' }}>
-                                <FormControlLabel
-                                    control={<Radio checked={selectedOption === 'create'} onChange={handleRadioChange} value="create" />}
-                                    label="Create a New List"
-                                    sx={{ width: '100%', display: 'flex', color: 'rgba(74, 74, 74, 1)', alignItems: 'center', fontFamily: 'Nunito', fontWeight: '600', fontSize: '16px', lineHeight: '25.2px' }}
-                                />
-                            </Box>
-                            <IconButton onClick={toggleFormVisibility} aria-label="toggle-content">
-                                {isFormOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                            </IconButton>
+                <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', gap: 5, height: '100%' }}>
+                    <Box sx={{px: 3, py: 2,  width: '100%'}}>
+                        <Box sx={{px: 2, py: 3, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)'}}>
+                            <Typography variant="h6" sx={{ color: '#4a4a4a', fontFamily: 'Nunito', fontWeight: '700', fontSize: '14px', lineHeight: 'normal' }}>
+                                Choose from integrated platform
+                            </Typography>
+                            <List sx={{ display: 'flex', gap: '16px', py: 2, flexWrap: 'wrap' }}>
+                                {/* HubSpot */}
+                                <ListItem sx={{p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',
+                                    '@media (max-width:600px)': {
+                                        flexBasis: 'calc(50% - 8px)'
+                                    }
+                                }}>
+                                    <ListItemButton sx={{p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center'}}>
+                                    <ListItemIcon sx={{minWidth: 'auto'}}>
+                                        <Image src="/hubspot.svg" alt="hubspot" height={28} width={27} />
+                                    </ListItemIcon>
+                                    <ListItemText primary="HubSpot" primaryTypographyProps={{
+                                            sx: {
+                                                fontFamily: "Nunito",
+                                                fontSize: "14px",
+                                                color: "#000",
+                                                fontWeight: "400",
+                                                lineHeight: "20px"
+                                            }
+                                        }}/>
+                                    </ListItemButton>
+                                </ListItem>
+
+                                {/* WordPress */}
+                                <ListItem sx={{p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',
+                                    '@media (max-width:600px)': {
+                                        flexBasis: 'calc(50% - 8px)'
+                                    }
+                                }}>
+                                    <ListItemButton sx={{p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center'}}>
+                                    <ListItemIcon sx={{minWidth: 'auto'}}>    
+                                        <Image src="/wordpress.svg" alt="wordpress" height={24} width={24} />
+                                    </ListItemIcon>
+                                    <ListItemText primary="WordPress" primaryTypographyProps={{
+                                            sx: {
+                                                fontFamily: "Nunito",
+                                                fontSize: "14px",
+                                                color: "#000",
+                                                fontWeight: "400",
+                                                lineHeight: "20px"
+                                            }
+                                        }} />
+                                    </ListItemButton>
+                                </ListItem>
+
+                                {/* Klaviyo */}
+                                <ListItem sx={{p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',
+                                    '@media (max-width:600px)': {
+                                        flexBasis: 'calc(50% - 8px)'
+                                    }
+                                }}>
+                                    <ListItemButton sx={{p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center'}}>
+                                        <ListItemIcon sx={{minWidth: 'auto'}}>
+                                            <Image src="/klaviyo.svg" alt="klaviyo" height={26} width={32} />
+                                        </ListItemIcon>
+                                        <ListItemText primary="Klaviyo" primaryTypographyProps={{
+                                            sx: {
+                                                fontFamily: "Nunito",
+                                                fontSize: "14px",
+                                                color: "#000",
+                                                fontWeight: "400",
+                                                lineHeight: "20px"
+                                            }
+                                        }}  />
+                                    </ListItemButton>
+                                </ListItem>
+                                <ListItem sx={{p: 0, borderRadius: '4px', border: '1px dotted #5052B2', width: 'auto', '@media (max-width:600px)': {
+                                        flexBasis: 'calc(50% - 8px)'
+                                    }}}>
+                                    <ListItemButton onClick={handlePlusIconPopupOpen} sx={{p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center'
+                                        
+                                    }}>
+                                        <ListItemIcon sx={{minWidth: 'auto'}}>
+                                            <Image src="/add-square.svg" alt="add-square" height={36} width={40} />
+                                        </ListItemIcon>
+                                        
+                                    </ListItemButton>
+                                </ListItem>
+
+                            </List>
+
                         </Box>
-                        <Collapse in={isFormOpen} sx={{ width: '100%' }}>
-                            <Box sx={{ width: '100%', pt: 1 }}>
-                                <TextField
-                                    placeholder="List Name"
-                                    variant="outlined"
-                                    fullWidth
-                                    value={listName}
-                                    onChange={handleListNameChange}
-                                    InputProps={{
-                                        startAdornment: (
-                                            <InputAdornment position="start">
-                                            </InputAdornment>
-                                        ),
-                                    }}
-                                    sx={{ mb: 2 }}
-                                />
-                            </Box>
-                        </Collapse>
                     </Box>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '90%', border: '1px solid rgba(228, 228, 228, 1)', borderRadius: '4px', padding: '2em' }}>
+                    {/* <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '90%', border: '1px solid rgba(228, 228, 228, 1)', borderRadius: '4px', padding: '2em' }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', mb: 2, borderBottom: '2px solid rgba(228, 228, 228, 1)' }}>
                             <Box sx={{ flexGrow: 1, width: '100%' }}>
                                 <FormControlLabel
@@ -203,31 +270,251 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                 ))}
                             </Box>
                         </Collapse>
-                    </Box>
-                    <Box sx={{ position: 'relative', width: '100%' }}>
-                        <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-end', paddingTop: '1em' }}>
+                    </Box> */}
+                    <Box sx={{ px: 2, py: 3.5, width: '100%', border: '1px solid #e4e4e4' }}>
+                        <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
                             <Button
                                 variant="contained"
-                                onClick={handleSave}
-                                disabled={isSaveButtonDisabled()}
+                                // onClick={handleSave}
                                 sx={{
-                                    backgroundColor: 'rgba(80, 82, 178, 1)',
+                                    backgroundColor: '#5052B2',
                                     fontFamily: "Nunito",
                                     fontSize: '16px',
+                                    fontWeight: '600',
+                                    lineHeight: '22px',
+                                    letterSpacing: 'normal',
+                                    color: "#fff",
                                     textTransform: 'none',
-                                    padding: '1em 2.5em',
+                                    padding: '10px 24px',
                                     '&:hover': {
-                                        backgroundColor: '#2124A1'
+                                        backgroundColor: '#5052B2'
                                     },
-                                    borderRadius: '8px',
+                                    borderRadius: '4px',
                                 }}
                             >
-                                Save
+                                Export
                             </Button>
                         </Box>
                     </Box>
                 </Box>
             </Drawer>
+
+            <Drawer
+                anchor="right"
+                open={plusIconPopupOpen}
+                onClose={handlePlusIconPopupClose}
+                PaperProps={{
+                    sx: {
+                        width: '620px',
+                        position: 'fixed',
+                        zIndex: 1301,
+                        top: 0,
+                        bottom: 0,
+                        '@media (max-width: 600px)': {
+                            width: '100%',
+                        }
+                    },
+                }}
+            >
+                
+                
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 3.5, px: 2, borderBottom: '1px solid #e4e4e4' }}>
+                    <Typography variant="h6" sx={{ textAlign: 'center', color: '#1c1c1c', fontFamily: 'Nunito', fontWeight: '700', fontSize: '16px', lineHeight: 'normal' }}>
+                        Add an Integration
+                    </Typography>
+                    <IconButton onClick={handlePlusIconPopupClose} sx={{p: 0}}>
+                        <CloseIcon sx={{width: '20px', height: '20px'}} />
+                    </IconButton>
+                </Box>
+                <Divider />
+                <Box>
+                <TextField
+                    placeholder="Search integrations"
+                    variant="outlined"
+                    fullWidth
+                    InputProps={{
+                    startAdornment: (
+                        <InputAdornment position="start" sx={{
+                            marginRight: "4px"
+                        }}>
+                        <Button
+                            sx={{ textTransform: "none", textDecoration: "none", minWidth: "auto", padding: "0" }}
+                        >
+                            <SearchIcon
+                            sx={{ color: "rgba(101, 101, 101, 1)" }}
+                            fontSize="medium"
+                            />
+                        </Button>
+                        </InputAdornment>
+                    ),
+                    sx: {
+                        paddingLeft: "12px",
+                        paddingRight: "12px",
+                        color: "#4a4a4a",
+                        fontFamily: "Nunito",
+                        fontSize: "14px",
+                        fontWeight: "400",
+                        lineHeight: "16px",
+                        "& .MuiOutlinedInput-notchedOutline": {
+                            borderColor: "#e4e4e4",
+                        },
+                        '& .MuiOutlinedInput-input': {
+                            padding: '16px 0',
+                            fontFamily: 'Nunito',
+                            height: 'auto',
+                            '@media (max-width:600px)': {
+                                padding: '13px 0',
+                            }
+                        }
+
+                    }
+                    }}
+                    sx={{ px: 3, py: 2, paddingBottom: '0' }}
+                />
+                </Box>
+                <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', gap: 5, height: '100%' }}>
+                    <Box sx={{px: 3, py: 2,  width: '100%'}}>
+                        <Box sx={{px: 2, py: 3, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)'}}>
+                            <Typography variant="h6" sx={{ color: '#4a4a4a', fontFamily: 'Nunito', fontWeight: '700', fontSize: '14px', lineHeight: 'normal' }}>
+                                Available integrations platform
+                            </Typography>
+                            <List sx={{ display: 'flex', gap: '16px', py: 2, flexWrap: 'wrap' }}>
+                                {/* WordPress */}
+                                <ListItem sx={{p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',
+                                    '@media (max-width:600px)': {
+                                        flexBasis: 'calc(50% - 8px)'
+                                    }
+                                }}>
+                                    <ListItemButton sx={{p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center'}}>
+                                    <ListItemIcon sx={{minWidth: 'auto'}}>    
+                                        <Image src="/wordpress.svg" alt="wordpress" height={24} width={24} />
+                                    </ListItemIcon>
+                                    <ListItemText primary="WordPress" primaryTypographyProps={{
+                                            sx: {
+                                                fontFamily: "Nunito",
+                                                fontSize: "14px",
+                                                color: "#000",
+                                                fontWeight: "400",
+                                                lineHeight: "20px"
+                                            }
+                                        }} />
+                                    </ListItemButton>
+                                </ListItem>
+
+                                {/* Klaviyo */}
+                                <ListItem sx={{p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',
+                                    '@media (max-width:600px)': {
+                                        flexBasis: 'calc(50% - 8px)'
+                                    }
+                                }}>
+                                    <ListItemButton sx={{p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center'}}>
+                                        <ListItemIcon sx={{minWidth: 'auto'}}>
+                                            <Image src="/klaviyo.svg" alt="klaviyo" height={26} width={32} />
+                                        </ListItemIcon>
+                                        <ListItemText primary="Klaviyo" primaryTypographyProps={{
+                                            sx: {
+                                                fontFamily: "Nunito",
+                                                fontSize: "14px",
+                                                color: "#000",
+                                                fontWeight: "400",
+                                                lineHeight: "20px"
+                                            }
+                                        }}  />
+                                    </ListItemButton>
+                                </ListItem>
+
+                                <ListItem sx={{p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',
+                                    '@media (max-width:600px)': {
+                                        flexBasis: 'calc(50% - 8px)'
+                                    }
+                                }}>
+                                    <ListItemButton sx={{p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center'}}>
+                                        <ListItemIcon sx={{minWidth: 'auto'}}>
+                                            <Image src="/zapier-icon.svg" alt="zapier" height={26} width={32} />
+                                        </ListItemIcon>
+                                        <ListItemText primary="Zapier" primaryTypographyProps={{
+                                            sx: {
+                                                fontFamily: "Nunito",
+                                                fontSize: "14px",
+                                                color: "#000",
+                                                fontWeight: "400",
+                                                lineHeight: "20px"
+                                            }
+                                        }}  />
+                                    </ListItemButton>
+                                </ListItem>
+
+                                <ListItem sx={{p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',
+                                    '@media (max-width:600px)': {
+                                        flexBasis: 'calc(50% - 8px)'
+                                    }
+                                }}>
+                                    <ListItemButton sx={{p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center'}}>
+                                        <ListItemIcon sx={{minWidth: 'auto'}}>
+                                            <Image src="/shopify-icon.svg" alt="shopify" height={26} width={32} />
+                                        </ListItemIcon>
+                                        <ListItemText primary="Shopify" primaryTypographyProps={{
+                                            sx: {
+                                                fontFamily: "Nunito",
+                                                fontSize: "14px",
+                                                color: "#000",
+                                                fontWeight: "400",
+                                                lineHeight: "20px"
+                                            }
+                                        }}  />
+                                    </ListItemButton>
+                                </ListItem>
+
+                                <ListItem sx={{p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',
+                                    '@media (max-width:600px)': {
+                                        flexBasis: 'calc(50% - 8px)'
+                                    }
+                                }}>
+                                    <ListItemButton sx={{p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center'}}>
+                                        <ListItemIcon sx={{minWidth: 'auto'}}>
+                                            <Image src="/elastic-icon.svg" alt="elastic" height={26} width={32} />
+                                        </ListItemIcon>
+                                        <ListItemText primary="Elastic" primaryTypographyProps={{
+                                            sx: {
+                                                fontFamily: "Nunito",
+                                                fontSize: "14px",
+                                                color: "#000",
+                                                fontWeight: "400",
+                                                lineHeight: "20px"
+                                            }
+                                        }}  />
+                                    </ListItemButton>
+                                </ListItem>
+
+                                <ListItem sx={{p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',
+                                    '@media (max-width:600px)': {
+                                        flexBasis: 'calc(50% - 8px)'
+                                    }
+                                }}>
+                                    <ListItemButton sx={{p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center'}}>
+                                        <ListItemIcon sx={{minWidth: 'auto'}}>
+                                            <Image src="/meta-icon.svg" alt="meta" height={26} width={32} />
+                                        </ListItemIcon>
+                                        <ListItemText primary="Meta" primaryTypographyProps={{
+                                            sx: {
+                                                fontFamily: "Nunito",
+                                                fontSize: "14px",
+                                                color: "#000",
+                                                fontWeight: "400",
+                                                lineHeight: "20px"
+                                            }
+                                        }}  />
+                                    </ListItemButton>
+                                </ListItem>
+
+                            </List>
+
+                        </Box>
+                    </Box>
+                    
+                </Box>
+            </Drawer>
+
         </>
     );
 };

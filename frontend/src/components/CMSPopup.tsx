@@ -1,32 +1,19 @@
 "use client";
 import React, { useState } from 'react';
-import {Box, Button, Typography, Modal, IconButton, Divider, Grid, Link} from '@mui/material';
+import { Box, Button, Typography, Modal, IconButton, Divider, Grid, Link, Input, TextField } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import Image from 'next/image';
-import axiosInterceptorInstance from '@/axios/axiosInterceptorInstance';
+import { styles } from '../css/cmsStyles';
 import styled from 'styled-components';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-
-const StyledOl = styled.ol`
-  list-style-type: decimal;
-  padding-left: 1.5em;
-`;
-
-const StyledLi = styled.li`
-  margin-bottom: 0.5em;
-`;
-
-const StyledLink = styled.a`
-  color: blue;
-  text-decoration: underline;
-`;
+import axiosInstance from '@/axios/axiosInterceptorInstance';
+import { showErrorToast, showToast } from './ToastNotification';
 
 const style = {
   position: 'fixed' as 'fixed',
   top: 0,
   right: 0,
-  width: '40%',
+  width: '45%',
   height: '100%',
   bgcolor: 'background.paper',
   boxShadow: 24,
@@ -38,7 +25,7 @@ const style = {
   '@media (max-width: 600px)': {
     width: '100%',
     height: '100%',
-    p: 0
+    p: 2
   },
 };
 
@@ -93,7 +80,7 @@ const typographyGoogle = {
 
 const maintext = {
   fontFamily: 'Nunito',
-  fontSize: '16px',
+  fontSize: '14px',
   fontWeight: '600',
   lineHeight: '19.6px',
   color: 'rgba(0, 0, 0, 1)',
@@ -109,6 +96,7 @@ const subtext = {
   textAlign: 'center',
   color: 'rgba(74, 74, 74, 1)',
   paddingTop: '0.25em',
+  '@media (max-width: 600px)': { textAlign: 'left', fontSize: '14px' }
 };
 
 interface CmsData {
@@ -123,13 +111,19 @@ interface PopupProps {
   pixel_client_id: string;
 }
 
-const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_client_id,  }) => {
+const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_client_id, }) => {
   const [selectedCMS, setSelectedCMS] = useState<string | null>(null);
   const [headerTitle, setHeaderTitle] = useState<string>('Install on CMS');
+  const [shop_domain, setDomain] = useState('');
+  const [access_token, setAccessToken] = useState('');
+  const [errors, setErrors] = useState({
+    access_token: "",
+    shop_domain: "",
+  });
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(pixelCode);
-    alert('Copied to clipboard');
+  const handleCopyToClipboard = () => {
+    navigator.clipboard.writeText(pixel_client_id);
+    alert('Pixel ID copied to clipboard!');
   };
 
   const handleButtonClick = async (cms: string) => {
@@ -140,6 +134,75 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
   const handleBackClick = () => {
     setSelectedCMS(null);
     setHeaderTitle('Install on CMS');
+  };
+
+  const validateField = (
+    value: string,
+    type: "access_token" | "shop_domain"
+  ): string => {
+    switch (type) {
+      case "access_token":
+        const access_token = value.trim();
+        return access_token ? "" : "Access Token is required";
+      case "shop_domain":
+        const shop_domain = value.trim();
+        return shop_domain ? "" : "Shop Domain is required";
+      default:
+        return "";
+    }
+  };
+
+  const handleSubmit = async () => {
+    const newErrors = {
+      access_token: validateField(access_token, "access_token"),
+      shop_domain: validateField(shop_domain, "shop_domain"),
+    };
+    setErrors(newErrors);
+
+    if (newErrors.access_token || newErrors.shop_domain) {
+      return;
+    }
+
+    const accessToken = localStorage.getItem('token');
+    if (!accessToken) return;
+
+    const body: Record<string, any> = {
+      shopify: {
+        shop_domain: shop_domain.trim(),
+        access_token: access_token.trim()
+      }
+    };
+
+    try {
+      const response = await axiosInstance.post("/integrations/", body, {
+        params: {
+          service_name: "shopify",
+        },
+      });
+
+      if (response.status === 200) {
+        showToast('Successfully installed pixel');
+        handleClose
+      } else {
+        showErrorToast('Failed to install pixel');
+        handleClose
+      }
+    } catch (error) {
+      console.error("An error occurred:", error);
+      showErrorToast('An error occurred while installing the pixel');
+    }
+  };
+
+
+  const isFormValid = () => {
+    const errors = {
+      access_token: validateField(access_token, "access_token"),
+      shop_domain: validateField(shop_domain, "shop_domain"),
+    };
+
+    return (
+      !errors.shop_domain && !errors.access_token
+    );
   };
 
   return (
@@ -154,7 +217,7 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
           <Typography
             sx={{
               fontFamily: 'Nunito',
-              fontSize: '14px',
+              fontSize: '20px',
               fontWeight: '600',
               lineHeight: '19.6px',
               textAlign: 'left',
@@ -171,87 +234,147 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
 
         <Divider />
 
-        <Box sx={{ flex: 1, overflowY: 'auto', paddingBottom: '4em' }}>
+        <Box sx={{ flex: 1, overflowY: 'auto', }}>
           {selectedCMS ? (
             <>
-              <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'start', }} >
-                <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start', gap: 1 }}>
-                  <Button onClick={handleBackClick} sx={{ marginTop: '1em', p: 0}}>
-                    <ArrowBackIcon sx={{color: 'rgba(80, 82, 178, 1)'}} />
+              <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'start', height: '100%' }} >
+                <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start', gap: 1, pt: 1 }}>
+                  <Button
+                    onClick={handleBackClick}
+                    sx={{
+                      marginTop: '1em',
+                      padding: 0,
+                      minWidth: 'auto',
+                      width: 'auto', 
+                    }}
+                  >
+                    <ArrowBackIcon sx={{ color: 'rgba(80, 82, 178, 1)', padding: 0 }} />
                   </Button>
                   <Typography sx={{ ...subtext, marginTop: '0.75em' }}>
                     Follow the instructions to install in Maximiz
                   </Typography>
                 </Box>
+
                 {selectedCMS === 'Shopify' ? (
                   <>
-                    <Box sx={{ flex: 1, overflowY: 'auto', paddingBottom: '2em', pl: 2.25  }}>
-                      <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', padding: '1em 0em 0em 0em', justifyContent: 'start' }}>
+                    <Box sx={{ flex: 1, overflowY: 'auto', paddingBottom: '1em', height: '100%' }}>
+                      <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', padding: 0, justifyContent: 'start' }}>
                         <Image src='/1.svg' alt='1' width={28} height={28} />
-                        <Typography sx={{ ...maintext, textAlign: 'center', padding: '1em' }}>Copy the pixel code</Typography>
+                        <Typography sx={{ ...maintext, textAlign: 'left', padding: '1em 0em 1em 1em', fontWeight: '500' }}>Enter your Shopify shop domain in the designated field. This allows our system to identify your store.</Typography>
                       </Box>
                       <Box
                         component="pre"
-                        sx={{
-                          backgroundColor: '#ffffff',
-                          p: 2,
-                          position: 'relative',
-                          wordWrap: 'break-word',
-                          whiteSpace: 'pre-wrap',
-                          border: '1px solid rgba(228, 228, 228, 1)',
-                          borderRadius: '10px',
-                          marginLeft: '3em',
-                          maxHeight: '20em',
-                          overflowY: 'auto',
-                          mr: 2
-                        }}
+                        sx={{ display: 'flex', width: '100%', justifyContent: 'center', margin: 0, pl: 1 }}
                       >
-                        <IconButton
-                          onClick={handleCopy}
-                          sx={{ position: 'absolute', right: '10px', top: '10px' }}
-                        >
-                          <ContentCopyIcon />
-                        </IconButton>
-                        <code style={{ color: '#000000' }}>{pixelCode}</code>
+                        <TextField
+                          InputProps={{ sx: styles.formInput }}
+                          fullWidth
+                          label="Shop Domain"
+                          variant="outlined"
+                          placeholder='Enter your Shop Domain'
+                          margin="normal"
+                          sx={styles.formField}
+                          value={shop_domain}
+                          onChange={(e) => setDomain(e.target.value)}
+                          InputLabelProps={{ sx: styles.inputLabel }}
+                        />
                       </Box>
-                      <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', padding: '1em 0em 0em 0em', justifyContent: 'start' }}>
+                      <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'start' }}>
                         <Image src='/2.svg' alt='2' width={28} height={28} />
-                        <Typography sx={{ ...maintext, textAlign: 'left', padding: '1em' }}>Follow installation guide</Typography>
+                        <Typography sx={{ ...maintext, textAlign: 'left', padding: '1em 0em 1em 1em', fontWeight: '500', }}>Enter your Shopify API access token. This token is necessary for secure communication between your Shopify store and our application.</Typography>
                       </Box>
-                      <Button variant="outlined" sx={{ml: 5,backgroundColor: 'rgba(255, 255, 255, 1)', color: 'rgba(80, 82, 178, 1)', textTransform: 'none', padding: '1em 2em', border: '1px solid rgba(80, 82, 178, 1)' }}>
-                        <Typography sx={{fontFamily: 'Nunito', fontSize: '16px', fontWeight: '600', lineHeight: '22.4px'}}>View installation guide</Typography>
-                      </Button>
-                      <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', padding: '1em 0em 0em 0em', justifyContent: 'start' }}>
+                      <Box
+                        component="pre"
+                        sx={{ display: 'flex', width: '100%', justifyContent: 'center', margin: 0, pl: 1 }}
+                      >
+                        <TextField
+                          InputProps={{ sx: styles.formInput }}
+                          fullWidth
+                          label="Access Token"
+                          variant="outlined"
+                          placeholder='Enter your Access Token'
+                          margin="normal"
+                          sx={styles.formField}
+                          value={access_token}
+                          onChange={(e) => setAccessToken(e.target.value)}
+                          InputLabelProps={{ sx: styles.inputLabel }}
+                        />
+                      </Box>
+                      <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'start' }}>
                         <Image src='/3.svg' alt='3' width={28} height={28} />
-                        <Typography sx={{ ...maintext, textAlign: 'left',  padding: '1em' }}>Verify if Maximiz is receiving data from your site</Typography>
+                        <Typography sx={{ ...maintext, textAlign: 'left', padding: '2em 1em 1em', fontWeight: '500', '@media (max-width: 600px)': { padding: '1em' } }}>Once you have submitted the required information, our system will automatically install the script on your Shopify store. You don’t need to take any further action.</Typography>
                       </Box>
-                      <Button variant="outlined" sx={{ml: 5,backgroundColor: 'rgba(255, 255, 255, 1)', color: 'rgba(80, 82, 178, 1)', textTransform: 'none', padding: '1em 2em', border: '1px solid rgba(80, 82, 178, 1)' }}>
-                        <Typography sx={{fontFamily: 'Nunito', fontSize: '16px', fontWeight: '600', lineHeight: '22.4px', textAlign: 'left', textWrap: 'wrap'}}>View installation</Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', maxHeight: '100%', padding: '0em 1em' }}>
+                      <Button
+                        fullWidth
+                        variant="contained"
+                        sx={{
+                          ...styles.submitButton,
+                          marginTop: 'auto', 
+                          opacity: isFormValid() ? 1 : 0.6,
+                          pointerEvents: isFormValid() ? "auto" : "none",
+                          backgroundColor: isFormValid()
+                            ? "rgba(80, 82, 178, 1)"
+                            : "rgba(80, 82, 178, 0.4)",
+                          "&.Mui-disabled": {
+                            backgroundColor: "rgba(80, 82, 178, 0.6)",
+                            color: "#fff",
+                          },
+                        }}
+                        onClick={handleSubmit}
+                        disabled={!isFormValid}
+                      >
+                        Install Pixel
                       </Button>
                     </Box>
                   </>
                 ) : (
                   <>
-                    <Box sx={{ flex: 1, overflowY: 'auto', paddingBottom: '2em', pl: 2.25  }}>
+                    <Box sx={{ flex: 1, overflowY: 'auto', paddingBottom: '2em', }}>
                       <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', padding: '1em 0em 0em 0em', justifyContent: 'start' }}>
                         <Image src='/1.svg' alt='1' width={28} height={28} />
-                        <Typography sx={{ ...maintext, textAlign: 'center', padding: '1em', fontWeight:'500' }}>Add our offical Maximiz pixel plugin to your Wordpress site.</Typography>
+                        <Typography sx={{ ...maintext, textAlign: 'center', padding: '1em 0em 1em 1em', fontWeight: '500' }}>Add our offical Maximiz pixel plugin to your Wordpress site.</Typography>
                       </Box>
                       <Box>
-                      <Button  component={Link} href="https://maximiz-data.s3.us-east-2.amazonaws.com/maximiz.zip" variant="outlined" sx={{ml: 5,backgroundColor: 'rgba(80, 82, 178, 1)', color: 'rgba(255, 255, 255, 1)', textTransform: 'none', padding: '1em 2em', border: '1px solid rgba(80, 82, 178, 1)', '&:hover': {backgroundColor: 'rgba(80, 82, 178, 1)'} }}>
-                        <Typography sx={{fontFamily: 'Nunito', fontSize: '16px', fontWeight: '600', lineHeight: '22.4px', textAlign: 'left', textWrap: 'wrap'}}>Get plugin</Typography>
-                      </Button>
+                        <Button component={Link} href="https://maximiz-data.s3.us-east-2.amazonaws.com/maximiz.zip" variant="outlined" sx={{ ml: 5, backgroundColor: 'rgba(80, 82, 178, 1)', color: 'rgba(255, 255, 255, 1)', textTransform: 'none', padding: '1em 2em', border: '1px solid rgba(80, 82, 178, 1)', '&:hover': { backgroundColor: 'rgba(80, 82, 178, 1)' } }}>
+                          <Typography sx={{ fontFamily: 'Nunito', fontSize: '16px', fontWeight: '600', lineHeight: '22.4px', textAlign: 'left', textWrap: 'wrap' }}>Get plugin</Typography>
+                        </Button>
                       </Box>
-                      <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', padding: '1em 0em 0em 0em', justifyContent: 'start' }}>
+                      <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', padding: '1em 0em 0em 0em', justifyContent: 'start', maxWidth: '100%' }}>
                         <Image src='/2.svg' alt='2' width={28} height={28} />
-                        <Typography sx={{ ...maintext, textAlign: 'left', padding: '1em', fontWeight:'500' }}>Enter your site ID: <span style={{fontWeight: '900'}}>{pixel_client_id}</span> during the checkout process</Typography>
+                        <Typography
+                          sx={{
+                            ...maintext,
+                            textAlign: 'left',
+                            padding: '1em',
+                            fontWeight: '500',
+                            maxWidth: '95%',
+                            overflowWrap: 'break-word',
+                            wordWrap: 'break-word',
+                            whiteSpace: 'normal',
+                          }}
+                        >
+                          Enter your site ID:{" "}
+                          <span
+                            style={{
+                              fontWeight: '800',
+                              cursor: 'pointer',
+                            }}
+                            onClick={handleCopyToClipboard}
+                          >
+                            {pixel_client_id}
+                          </span>{" "}
+                          <br />during the checkout process
+                        </Typography>
                       </Box>
+
                       <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', padding: '1em 0em 0em 0em', justifyContent: 'start' }}>
                         <Image src='/3.svg' alt='3' width={28} height={28} />
-                        <Typography sx={{ ...maintext, textAlign: 'left',  padding: '1em', fontWeight:'500' }}>Verify if Maximiz is receiving data from your site</Typography>
+                        <Typography sx={{ ...maintext, textAlign: 'left', padding: '1em', fontWeight: '500' }}>Verify if Maximiz is receiving data from your site</Typography>
                       </Box>
-                      <Button variant="outlined" sx={{ml: 5,backgroundColor: 'rgba(255, 255, 255, 1)', color: 'rgba(80, 82, 178, 1)', textTransform: 'none', padding: '1em 2em', border: '1px solid rgba(80, 82, 178, 1)' }}>
-                        <Typography sx={{fontFamily: 'Nunito', fontSize: '16px', fontWeight: '600', lineHeight: '22.4px', textAlign: 'left', textWrap: 'wrap'}}>View installation</Typography>
+                      <Button variant="outlined" sx={{ ml: 5, backgroundColor: 'rgba(255, 255, 255, 1)', color: 'rgba(80, 82, 178, 1)', textTransform: 'none', padding: '1em 2em', border: '1px solid rgba(80, 82, 178, 1)' }}>
+                        <Typography sx={{ fontFamily: 'Nunito', fontSize: '16px', fontWeight: '600', lineHeight: '22.4px', textAlign: 'left', textWrap: 'wrap' }}>View installation</Typography>
                       </Button>
                     </Box>
                   </>

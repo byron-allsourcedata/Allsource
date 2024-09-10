@@ -67,7 +67,7 @@ class SendlaneIntegration:
         return [self.__mapped_list(list) for list in response.get('data')]
 
     def __create_list(self, access_token: str, list_name: str):
-        data = {'name': list_name, 'sender_id': None}  # Я ПОКА НЕ ЗНАЮ ЧТО ЗА СЕНДЕР ИД 
+        data = {'name': list_name, 'sender_id': None} 
         response = self.client.post('https://api.sendlane.com/v2/lists', headers={
             'Authorization': f'Bearer {access_token}', 'Content-Type': 'application/json'
         })

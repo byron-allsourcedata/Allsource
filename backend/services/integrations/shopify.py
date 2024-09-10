@@ -5,6 +5,7 @@ from persistence.leads_persistence import LeadsPersistence
 from persistence.leads_order_persistence import LeadOrdersPersistence
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
+from persistence.user_persistence import UserPersistence
 from models.integrations.users_integrations import UserIntegration
 from httpx import Client
 from fastapi import HTTPException
@@ -50,7 +51,7 @@ class ShopifyIntegrationService:
             "Content-Type": "application/json"
         }
 
-        response = self.__handle_request('GET', url, headers=headers)
+        response = self.__handle_request('GET', url, headers=headers, params=params)
 
         return response.json().get('orders')
 
@@ -137,7 +138,7 @@ class ShopifyIntegrationService:
         customers = [self.__mapped_customer(customer) for customer in self.__get_customers(credentials.shopify.shop_domain, credentials.shopify.access_token)]
         integration = self.__save_integration(credentials.shopify.shop_domain, credentials.shopify.access_token, user['id'])
         self.__set_pixel(user, credentials.shopify.shop_domain, credentials.shopify.access_token)
-
+        
         for customer in customers:
             self.__save_customer(customer, user['id'])
 
@@ -180,9 +181,6 @@ class ShopifyIntegrationService:
 
         sync = self.integrations_user_sync_persistence.create_sync(data)
         return {'status': 'Successfuly', 'detail': sync}
-    
-
-
     
 
     def __export_sync(self, user_id: int):

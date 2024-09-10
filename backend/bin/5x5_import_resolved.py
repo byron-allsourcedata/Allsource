@@ -4,10 +4,11 @@ import os
 import sys
 import tempfile
 import traceback
-import time
 import pytz
 import urllib.parse
-from datetime import time
+from datetime import time as dt_time
+import time
+from dateutil.relativedelta import relativedelta
 from sqlalchemy import func, and_, or_
 import boto3
 import pyarrow.parquet as pq
@@ -18,7 +19,9 @@ sys.path.append(parent_dir)
 
 from models.leads_requests import LeadsRequests
 from models.leads_visits import LeadsVisits
+from models.subscriptions import UserSubscriptions
 from models.five_x_five_hems import FiveXFiveHems
+from models.users_payments_transactions import UsersPaymentsTransactions
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from models.five_x_five_users import FiveXFiveUser
@@ -36,7 +39,7 @@ logging.basicConfig(level=logging.INFO)
 BUCKET_NAME = 'trovo-coop-shakespeare'
 FILES_PATH = 'outgoing/cookie_sync/resolved'
 LAST_PROCESSED_FILE_PATH = 'tmp/last_processed_file_resolved.txt'
-
+AMOUNT_CREDITS = 1
 
 def create_sts_client(key_id, key_secret):
     return boto3.client('sts', aws_access_key_id=key_id, aws_secret_access_key=key_secret, region_name='us-west-2')
@@ -64,10 +67,11 @@ def process_table(table, session, file_key):
     for i in range(len(table)):
         up_id = table['UP_ID'][i]
         if not up_id.is_valid and str(up_id) == 'None':
-            up_id = session.query(FiveXFiveHems.up_id).filter(
-                FiveXFiveHems.sha256_lc_hem == str(table['SHA256_LOWER_CASE'][i])).scalar()
-            if not up_id:
+            up_ids = session.query(FiveXFiveHems.up_id).filter(
+                FiveXFiveHems.sha256_lc_hem == str(table['SHA256_LOWER_CASE'][i])).all()
+            if len(up_ids) != 1:
                 continue
+            up_id = up_ids[0][0]
         five_x_five_user = session.query(FiveXFiveUser).filter(FiveXFiveUser.up_id == str(up_id).lower()).first()
         if five_x_five_user:
             logging.info(f"UP_ID {up_id} found in table")
@@ -75,47 +79,47 @@ def process_table(table, session, file_key):
     update_last_processed_file(file_key)
 
 
-def process_user_data(table, index, five_x_five_user, session: Session):
+def process_user_data(table, index, five_x_five_user: FiveXFiveUser, session: Session):
     partner_uid_decoded = urllib.parse.unquote(str(table['PARTNER_UID'][index]).lower())
     partner_uid_dict = json.loads(partner_uid_decoded)
     partner_uid_client_id = partner_uid_dict.get('client_id')
-    page = partner_uid_dict.get('current_page') 
-    behavior_type = None
+    page = partner_uid_dict.get('current_page')
     behavior_type = partner_uid_dict.get('action') if partner_uid_dict.get('action') else 'visitor'
     user = session.query(Users).filter(Users.data_provider_id == str(partner_uid_client_id)).first()
     if not user:
         logging.info(f"User not found with client_id {partner_uid_client_id}")
         return
-
+    page = partner_uid_dict.get('current_page')
+    if page is None:
+        json_headers = json.loads(str(table['JSON_HEADERS'][index]).lower())
+        referer = json_headers.get('referer')[0]
+        page = referer
+    behavior_type = 'visitor' if not partner_uid_dict.get('action') else partner_uid_dict.get('action')
     lead_user = session.query(LeadUser).filter_by(five_x_five_user_id=five_x_five_user.id, user_id=user.id).first()
     if not lead_user:
         lead_user = LeadUser(five_x_five_user_id=five_x_five_user.id, user_id=user.id)
         session.add(lead_user)
         session.flush()
+        user_payment_transactions = UsersPaymentsTransactions(user_id=user.id, status='success', amount_credits=AMOUNT_CREDITS, type='lead', lead_id=lead_user.id, five_x_five_up_id=five_x_five_user.up_id)
+        session.add(user_payment_transactions)
+        session.flush()
 
     requested_at_str = str(table['EVENT_DATE'][index].as_py())
     requested_at = datetime.fromisoformat(requested_at_str)
-    if requested_at.tzinfo is None:
-        requested_at = pytz.utc.localize(requested_at)
-
     thirty_minutes_ago = requested_at - timedelta(minutes=30)
-
     visit = session.query(LeadsRequests.visit_id).filter(
         LeadsRequests.lead_id == lead_user.id,
         LeadsRequests.requested_at >= thirty_minutes_ago
         ).first()
+    leads_requests = None
     if visit:
         visit_id = visit[0]
-    else:
-        visit_id = None
-
-    leads_requests = session.query(LeadsRequests).filter(
-        LeadsRequests.visit_id == visit_id
-    ).all()
+        leads_requests = session.query(LeadsRequests).filter(
+        LeadsRequests.visit_id == visit_id).all()
 
     if leads_requests:
-        lead_visits = leads_requests[0].visit_id
         logging.info("leads requests exists")
+        lead_visits = leads_requests[0].visit_id
         visit_first = session.query(LeadsVisits).filter(
             LeadsVisits.lead_id == lead_user.id
         ).order_by(
@@ -123,8 +127,7 @@ def process_user_data(table, index, five_x_five_user, session: Session):
         ).first()
         if visit_first.id == leads_requests[0].visit_id:
             if lead_user.behavior_type in ('visitor', 'viewed_product') and behavior_type in (
-            'viewed_product', 'product_added_to_cart') \
-                    and lead_user.behavior_type != behavior_type:
+            'viewed_product', 'product_added_to_cart'):
                 session.query(LeadUser).filter(LeadUser.id == lead_user.id).update({
                     LeadUser.behavior_type: behavior_type
                 })
@@ -137,11 +140,16 @@ def process_user_data(table, index, five_x_five_user, session: Session):
                                        created_at_shopify=datetime.now(), created_at=datetime.now()))
         process_leads_requests(requested_at, leads_requests, lead_user.id, session, behavior_type)
     else:
-        logging.info("leads requests not exists")
+        logging.info("Leads Visits not exists")
         lead_visits = add_new_leads_visits(requested_at, lead_user.id, session, behavior_type).id
-        session.query(Users).filter(Users.id == user.id).update(
-            {Users.is_pixel_installed: True},
-            synchronize_session=False)
+        session.query(UserSubscriptions).filter(UserSubscriptions.user_id == user.id).update(
+            {
+                UserSubscriptions.plan_start: datetime.now(),
+                UserSubscriptions.plan_end: datetime.now() + relativedelta(months=1)
+            },
+            synchronize_session=False
+        )
+        session.flush()
     lead_request = insert(LeadsRequests).values(
         lead_id=lead_user.id,
         page=page, requested_at=requested_at, visit_id=lead_visits
@@ -149,24 +157,77 @@ def process_user_data(table, index, five_x_five_user, session: Session):
     session.execute(lead_request)
     session.commit()
 
+def normalize_url(url):
+    """
+    Normalize the URL by removing all query parameters and trailing slashes.
+    """
+    if not url:
+        return url
+    
+    scheme_end = url.find('://')
+    if scheme_end != -1:
+        scheme_end += 3
+        scheme = url[:scheme_end]
+        remainder = url[scheme_end:]
+    else:
+        scheme = ''
+        remainder = url
+    
+    path_end = remainder.find('?')
+    if path_end != -1:
+        path = remainder[:path_end]
+    else:
+        path = remainder
 
-def process_leads_requests(requested_at, leads_requests, lead_id, session, behavior_type):
-    start_date, start_time, end_time, pages_count, average_time_sec = requested_at.date(), requested_at.time(), 10, 1, 10
-    for lead_request in leads_requests:
-        request_date = lead_request.requested_at
-        if request_date < datetime.combine(start_date, start_time):
-            start_date = request_date.date()
-            start_time = request_date.time()
-        pages_count += 1
-        end_time += 10
-        average_time_sec += 10
+    path = path.rstrip('/')
+    normalized_url = scheme + path
+    return normalized_url
 
-    date_page = datetime.combine(start_date, start_time) + timedelta(seconds=end_time)
-    end_date = date_page.date()
-    end_time = date_page.time()
+def convert_leads_requests_to_utc(leads_requests):
+    utc = pytz.utc
+    for request in leads_requests:
+        if request.requested_at.tzinfo is None:
+            request.requested_at = utc.localize(request.requested_at)
+        else:
+            request.requested_at = request.requested_at.astimezone(utc)
+
+def process_leads_requests(requested_at, page, leads_requests, lead_id, session: Session, behavior_type):
+    convert_leads_requests_to_utc(leads_requests)
+    new_request = LeadsRequests(
+        lead_id=lead_id,
+        page=normalize_url(page),
+        requested_at=requested_at,
+    )
+    leads_requests.append(new_request)
+    
+    leads_requests_sorted = sorted(leads_requests, key=lambda r: r.requested_at)
+
+    start_date_time = leads_requests_sorted[0].requested_at
+    end_date_time = leads_requests_sorted[-1].requested_at
+
+    start_date = start_date_time.date()
+    start_time = start_date_time.time()
+    end_date = end_date_time.date()
+    end_time = end_date_time.time()
+    total_time_sec = int((end_date_time - start_date_time).total_seconds() + 10)
+    pages_set = set()
+    for i in range(len(leads_requests_sorted)):
+        current_request = leads_requests_sorted[i]
+        if current_request.page:
+            pages_set.add(normalize_url(current_request.page))
+
+    pages_count = len(pages_set)
+
+    average_time_sec = int(total_time_sec / len(leads_requests_sorted))
+    
     session.query(LeadsVisits).filter_by(lead_id=lead_id).update({
-        'start_date': start_date, 'start_time': start_time, 'end_date': end_date,
-        'end_time': end_time, 'pages_count': pages_count, 'average_time_sec': average_time_sec,
+        'start_date': start_date,
+        'start_time': start_time,
+        'end_date': end_date,
+        'end_time': end_time,
+        'pages_count': pages_count,
+        'full_time_sec': total_time_sec,
+        'average_time_sec': average_time_sec,
         'behavior_type': behavior_type
     })
     session.flush()
@@ -175,13 +236,13 @@ def process_leads_requests(requested_at, leads_requests, lead_id, session, behav
 def add_new_leads_visits(visited_datetime, lead_id, session, behavior_type):
     start_date = visited_datetime.date()
     start_time = visited_datetime.time()
-    date_page = datetime.combine(start_date, start_time) + timedelta(seconds=10)
+    date_page = visited_datetime + timedelta(seconds=10)
     end_date = date_page.date()
     end_time = date_page.time()
 
     leads_visits = LeadsVisits(
         start_date=start_date, start_time=start_time, end_date=end_date, end_time=end_time,
-        pages_count=1, average_time_sec=10, lead_id=lead_id, behavior_type=behavior_type
+        pages_count=1, lead_id=lead_id, behavior_type=behavior_type
     )
     session.add(leads_visits)
     session.flush()
@@ -260,6 +321,7 @@ def main():
             logging.info('Sleeping for 10 minutes...')
             time.sleep(60 * 10)
     except Exception as e:
+        session.rollback()
         logging.error(f"An error occurred: {str(e)}")
         traceback.print_exc()
     finally:

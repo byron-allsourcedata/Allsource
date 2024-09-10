@@ -20,12 +20,13 @@ async def get_leads(
         regions: str = Query(None, description="Comma-separated list of regions"),
         page_visits: int = Query(None, description="Minimum number of page visits"),
         average_time_spent: float = Query(None, description="Average time spent on the page in minutes"),
-        lead_funnel: str = Query(None, description="Lead funnel stage"),
-        emails: str = Query(None, description="Comma-separated list of emails"),
+        lead_funnels: str = Query(None, description="Lead funnels stage"),
         recurring_visits: int = Query(None, description="Minimum number of recurring visits"),
         sort_by: str = Query(None, description="Field"),
         sort_order: str = Query(None, description="Field to sort by: 'asc' or 'desc'"),
         search_query: str = Query(None, description="Search for email, first name, lastname and phone number"),
+        from_time: int = Query(None, description="Start time in integer format"),
+        to_time: int = Query(None, description="End time in integer format"),
         leads_service: LeadsService = Depends(get_leads_service)
 ):
     return leads_service.get_leads(
@@ -39,10 +40,11 @@ async def get_leads(
         regions=regions,
         page_visits=page_visits,
         average_time_spent=average_time_spent,
-        lead_funnel=lead_funnel,
-        emails=emails,
+        lead_funnels=lead_funnels,
         recurring_visits=recurring_visits,
         search_query=search_query,
+        from_time=from_time, 
+        to_time=to_time
     )
 
 

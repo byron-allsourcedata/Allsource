@@ -1,3 +1,4 @@
+import { red } from '@mui/material/colors';
 import { SxProps, Theme } from '@mui/system';
 
 export const updatepasswordStyles: { [key: string]: SxProps<Theme> } = {
@@ -99,8 +100,7 @@ export const updatepasswordStyles: { [key: string]: SxProps<Theme> } = {
       backgroundColor: '#F45745',
       color: '#FFFFFF',
       '&:hover': {
-          borderColor: '#000000',
-          backgroundColor: 'lightgreen',
+          backgroundColor: red[700],
       },
       fontWeight: 'bold',
       marginTop: '2.5rem',

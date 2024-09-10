@@ -3,6 +3,8 @@ import { Drawer, Backdrop, Box, Typography, IconButton, Button, Divider, Link } 
 import CloseIcon from '@mui/icons-material/Close';
 import { accountStyles } from '../css/accountDetails';
 import Image from 'next/image'
+import DownloadIcon from '@mui/icons-material/Download';
+import axiosInstance from '@/axios/axiosInterceptorInstance';
 
 interface PopupDetailsProps {
     open: boolean;
@@ -28,10 +30,38 @@ const TruncatedText: React.FC<{ text: string; limit: number }> = ({ text, limit 
 };
 
 const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) => {
-    const lead = rowData?.lead || {};
+    const lead = rowData || {};
+    console.log(rowData)
+
+    const handleDownload = async () => {
+        const requestBody = {
+            leads_ids: lead.id ? [lead.id] : []
+        };
+        try {
+            const response = await axiosInstance.post('/leads/download_leads', requestBody, {
+                responseType: 'blob'
+            });
+
+            if (response.status === 200) {
+                const url = window.URL.createObjectURL(new Blob([response.data]));
+                const link = document.createElement('a');
+                link.href = url;
+                link.setAttribute('download', 'data.csv');
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                window.URL.revokeObjectURL(url);
+            } else {
+                console.error('Error downloading file:', response.statusText);
+            }
+        } catch (error) {
+            console.error('Error during the download process:', error);
+        }
+    };
+
     return (
         <>
-            <Backdrop open={open} sx={{ zIndex: 1200, color: '#fff' }} />
+            <Backdrop open={open} onClick={onClose} sx={{ zIndex: 1200, color: '#fff' }} />
             <Drawer
                 anchor="right"
                 open={open}
@@ -105,9 +135,28 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                             <Image src={'/profile-circle.svg'} width={48} height={48} alt='Profile icon' />
                         </Box>
                         <Box sx={{ flex: 1, textAlign: 'start' }}>
-                            <Typography variant="body1" gutterBottom sx={{ ...accountStyles.name, pb: 1 }}>
-                                {lead.first_name} {lead.last_name}
-                            </Typography>
+                            <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                                <Typography variant="body1" gutterBottom sx={{ ...accountStyles.name, pb: 1 }}>
+                                    {lead.first_name} {lead.last_name}
+                                </Typography>
+                                <Button
+                                    sx={{
+                                        textTransform: 'none',
+                                        color: 'rgba(80, 82, 178, 1)',
+                                        borderRadius: '4px',
+                                        padding: '4px',
+                                        mb: 2,
+                                        minWidth: 'auto',
+                                        '@media (max-width: 900px)': {
+                                            border: 'none',
+                                            padding: 0
+                                        }
+                                    }}
+                                    onClick={handleDownload}
+                                >
+                                    <DownloadIcon fontSize='medium' />
+                                </Button>
+                            </Box>
                             <Box sx={{ display: 'flex', flexDirection: 'row', gap: 5, '@media (max-width: 600px)': { flexDirection: 'column', gap: 1 }, }}>
                                 <Typography variant="body1" gutterBottom sx={{ ...accountStyles.header_text, display: 'flex', flexDirection: 'row', gap: 1 }}>
                                     <Image src={'/sms.svg'} width={18} height={18} alt='mail icon' />
@@ -196,7 +245,9 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                 Zip:
                             </Typography>
                             <Typography sx={{ ...accountStyles.text }}>
-                                {lead.zip || 'N/A'}
+                                {lead.personal_zip || lead.professional_zip || lead.company_zip
+                                    ? `${lead.personal_zip || ''} ${lead.professional_zip || ''} ${lead.company_zip || ''}`.trim()
+                                    : 'N/A'}
                             </Typography>
                         </Box>
 
@@ -205,7 +256,9 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                 Other emails:
                             </Typography>
                             <Typography sx={{ ...accountStyles.text }}>
-                                {lead.business_email || 'N/A'}
+                                {lead.business_email || lead.personal_emails || lead.additional_personal_emails
+                                    ? `${lead.business_email || ''} ${lead.personal_emails || ''} ${lead.additional_personal_emails || ''}`.trim()
+                                    : 'N/A'}
                             </Typography>
                         </Box>
 
