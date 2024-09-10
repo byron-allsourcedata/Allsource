@@ -11,6 +11,7 @@ import { signupStyles } from './signupStyles';
 import { showErrorToast } from '../../components/ToastNotification';
 import { GoogleLogin } from '@react-oauth/google';
 import { fetchUserData } from '@/services/meService';
+import CustomizedProgressBar from '@/components/CustomizedProgressBar';
 
 const Signup: React.FC = () => {
   const router = useRouter();
@@ -431,7 +432,7 @@ const Signup: React.FC = () => {
 
 const SignupPage = () => {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<CustomizedProgressBar />}>
       <Signup />
     </Suspense>
   );

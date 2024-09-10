@@ -18,6 +18,7 @@ import { AxiosError } from 'axios';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { Height } from '@mui/icons-material';
 import Slider from "../components/Slider";
+import { useUser } from '@/context/UserContext';
 
 const sidebarStyles = {
     container: {
@@ -139,6 +140,7 @@ const SetupSection: React.FC<ProgressSectionProps> = ({ meData }) => {
                 sx={{
                     height: '8px',
                     borderRadius: '4px',
+                    backgroundColor: "rgba(219, 219, 219, 1)",
                     '& .MuiLinearProgress-bar': {
                         backgroundColor: 'rgba(110, 193, 37, 1)',
                     },
@@ -158,8 +160,11 @@ const SetupSection: React.FC<ProgressSectionProps> = ({ meData }) => {
 
 
 const Sidebar: React.FC = () => {
-    const meItem = typeof window !== 'undefined' ? sessionStorage.getItem('me') : null;
+    const { percent_steps: userPercentSteps } = useUser();
+    const meItem =
+      typeof window !== "undefined" ? sessionStorage.getItem("me") : null;
     const meData = meItem ? JSON.parse(meItem) : { percent_steps: 0 };
+    const percentSteps = userPercentSteps || meData.percent_steps;
     const { setShowSlider } = useSlider();
     const router = useRouter();
     const pathname = usePathname();

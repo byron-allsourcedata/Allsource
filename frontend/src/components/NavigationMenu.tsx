@@ -1,3 +1,4 @@
+"use client";
 import React, { useState } from 'react';
 import { Box, colors, IconButton, List, ListItem, ListItemIcon, ListItemText, Menu, MenuItem, Typography } from '@mui/material';
 import { useRouter, usePathname } from 'next/navigation';

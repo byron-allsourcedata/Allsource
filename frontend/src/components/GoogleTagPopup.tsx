@@ -163,7 +163,6 @@ const GoogleTagPopup: React.FC<PopupProps> = ({open, handleClose}) => {
                 { headers: { Authorization: `Bearer ${accessToken}` } }
             );
 
-            console.log('Tag updated successfully with trigger!');
         } catch (error) {
             if (axios.isAxiosError(error)) {
                 console.error('Error updating tag with trigger:', error.message);
