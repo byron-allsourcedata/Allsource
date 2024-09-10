@@ -133,7 +133,7 @@ class LeadsPersistence:
             'state': FiveXFiveLocations.state,
             'city': FiveXFiveLocations.city,
             'age': FiveXFiveUser.age_min,
-            'time_spent': subquery.c.start_date
+            'time_spent': subquery.c.time_on_site
         }
         if sort_by:
             sort_column = sort_options[sort_by]
