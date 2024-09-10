@@ -137,7 +137,9 @@ class ShopifyIntegrationService:
     def add_integration(self, user, credentials: IntegrationCredentials):
         if not credentials.shopify.shop_domain.startswith('https://'):
             credentials.shopify.shop_domain = f'https://{credentials.shopify.shop_domain}'
-        if user['company_website'] != credentials.shopify.shop_domain:
+        shop_domain = credentials.shopify.shop_domain.lower().lstrip('http://').lstrip('https://')
+        user_website = user['company_website'].lower().lstrip('http://').lstrip('https://')
+        if user_website != shop_domain:
             raise HTTPException(status_code=400, detail={'status': 'error', 'detail': {'message': 'Store Domain does not match the one you specified earlier'}})
 
         customers = [self.__mapped_customer(customer) for customer in self.__get_customers(credentials.shopify.shop_domain, credentials.shopify.access_token)]
