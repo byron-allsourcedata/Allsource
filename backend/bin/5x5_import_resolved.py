@@ -144,10 +144,11 @@ def process_user_data(table, index, five_x_five_user: FiveXFiveUser, session: Se
             if len(lead_users) == 1:
                 last_subscription = session.query(UserSubscriptions).filter(UserSubscriptions.user_id == user.id).order_by(UserSubscriptions.id.desc()).first()
                 if last_subscription and last_subscription.plan_start is None and last_subscription.plan_end is None:
-                    last_subscription.plan_start = datetime.now()
                     trial_days = session.query(SubscriptionPlan.trial_days).filter(SubscriptionPlan.is_free_trial == True).scalar()
                     if trial_days:
-                        last_subscription.plan_end = datetime.now() + relativedelta(days=trial_days)
+                        date_now = datetime.now()
+                        last_subscription.plan_start = date_now
+                        last_subscription.plan_end = date_now + relativedelta(days=trial_days)
                         session.flush()
     
     lead_request = insert(LeadsRequests).values(
