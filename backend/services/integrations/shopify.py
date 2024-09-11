@@ -244,7 +244,7 @@ if (Shopify.checkout) {{
         }
         scrips_list = self.__handle_request("GET", url, headers=headers)
         for script in scrips_list.json().get('script_tags'):
-            if script.get('src') in (script_event_url, script_pixel_url):
+            if script.get('src') in script_pixel_url or 'shopify-pixel-code' in script.get('src'):
                 self.__handle_request('DELETE', f"{shop_domain}/admin/api/2024-07/script_tags/{script.get('id')}.json", headers=headers)
 
         script_event_data = {
