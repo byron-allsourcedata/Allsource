@@ -74,12 +74,8 @@ file_list = [
 async def on_message_received(message_body, s3_session, sts_client, rmq_connection):
     message_body_json = json.loads(message_body)
     file_name = message_body_json['file_name']
-    print(file_name)
+    logging.info(f"{file_name}")
     if file_name in file_list:
-        print('return')
-        if file_name =='outgoing/upid_hem_1_6_0/upid_hem_10_3_0.csv.gz':
-            print('all')
-            await asyncio.sleep(50000)
         return
     credentials = assume_role(os.getenv('S3_ROLE_ARN'), sts_client)
     try:
