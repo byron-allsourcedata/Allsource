@@ -95,7 +95,9 @@ def process_user_data(table, index, five_x_five_user: FiveXFiveUser, session: Se
         page = referer
     behavior_type = 'visitor' if not partner_uid_dict.get('action') else partner_uid_dict.get('action')
     lead_user = session.query(LeadUser).filter_by(five_x_five_user_id=five_x_five_user.id, user_id=user.id).first()
+    is_first_visit = False
     if not lead_user:
+        is_first_visit = True
         lead_user = LeadUser(five_x_five_user_id=five_x_five_user.id, user_id=user.id)
         session.add(lead_user)
         session.flush()
@@ -118,7 +120,7 @@ def process_user_data(table, index, five_x_five_user: FiveXFiveUser, session: Se
 
     if leads_requests:
         logging.info("leads requests exists")
-        lead_visits = leads_requests[0].visit_id
+        lead_visits_id = leads_requests[0].visit_id
         visit_first = session.query(LeadsVisits).filter(
             LeadsVisits.lead_id == lead_user.id
         ).order_by(
@@ -140,7 +142,17 @@ def process_user_data(table, index, five_x_five_user: FiveXFiveUser, session: Se
         process_leads_requests(requested_at, page, leads_requests, lead_user.id, session, behavior_type)
     else:
         logging.info("Leads Visits not exists")
-        lead_visits = add_new_leads_visits(requested_at, lead_user.id, session, behavior_type).id
+        lead_visits_id = add_new_leads_visits(visited_datetime=requested_at, lead_id=lead_user.id, session=session, behavior_type=behavior_type).id
+        
+        
+    if is_first_visit == True:
+        session.query(LeadUser).filter(LeadUser.user_id == user.id).update(
+            {
+                LeadUser.first_visit_id: lead_visits_id,
+            },
+            synchronize_session=False
+        )
+        session.flush()
         session.query(UserSubscriptions).filter(UserSubscriptions.user_id == user.id).update(
             {
                 UserSubscriptions.plan_start: datetime.now(),
@@ -149,11 +161,14 @@ def process_user_data(table, index, five_x_five_user: FiveXFiveUser, session: Se
             synchronize_session=False
         )
         session.flush()
+    
     lead_request = insert(LeadsRequests).values(
         lead_id=lead_user.id,
-        page=page, requested_at=requested_at, visit_id=lead_visits
+        page=page, requested_at=requested_at, visit_id=lead_visits_id
     ).on_conflict_do_nothing()
     session.execute(lead_request)
+    session.flush()
+    
     session.commit()
 
 def normalize_url(url):
