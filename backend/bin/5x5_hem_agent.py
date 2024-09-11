@@ -131,7 +131,7 @@ async def main():
                 await message.ack()
                 await on_message_received(message.body, session, sts_client, connection)
             else:
-                print("No message returned")
+                logging.info("No message returned")
                 await asyncio.sleep(5) 
                 break
             await channel.close()
