@@ -122,7 +122,7 @@ def process_user_data(table, index, five_x_five_user: FiveXFiveUser, session: Se
         lead_visits_id = leads_requests[0].visit_id
         if first_visit_id == leads_requests[0].visit_id:
             if lead_user.behavior_type in ('visitor', 'viewed_product') and behavior_type in (
-            'viewed_product', 'product_added_to_cart'):
+            'viewed_product', 'product_added_to_cart') and lead_user.behavior_type != behavior_type:
                 session.query(LeadUser).filter(LeadUser.id == lead_user.id).update({
                     LeadUser.behavior_type: behavior_type
                 })
