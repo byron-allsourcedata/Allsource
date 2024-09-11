@@ -881,7 +881,6 @@ const Leads: React.FC = () => {
                                             padding: '0',
                                             border: 'none',
                                             minWidth: 'auto',
-                                            opacity: selectedRows.size === 0 ? 0.4 : 1,
                                             '@media (min-width: 901px)': {
                                                 display: 'none'
                                             }
