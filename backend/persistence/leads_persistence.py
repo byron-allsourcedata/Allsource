@@ -33,7 +33,7 @@ class LeadsPersistence:
         self.db = db
 
     def filter_leads(self, user_id, page, per_page, from_date, to_date, from_time, to_time, regions, page_visits, average_time_spent,
-                     behavior_type, recurring_visits, sort_by, sort_order, search_query):
+                     behavior_type, recurring_visits, sort_by, sort_order, search_query, status):
         
         recurring_visits_subquery = (
         self.db.query(
@@ -103,8 +103,7 @@ class LeadsPersistence:
             FiveXFiveUser.personal_zip,
             FiveXFiveUser.professional_zip,
             FiveXFiveUser.company_zip,
-            LeadUser.status,
-            LeadUser.funnel,
+            LeadUser.behavior_type,
             FiveXFiveLocations.state,
             FiveXFiveLocations.city,
             LeadsVisits.start_date.label('start_date'),
@@ -129,7 +128,8 @@ class LeadsPersistence:
             'state': FiveXFiveLocations.state,
             'city': FiveXFiveLocations.city,
             'age': FiveXFiveUser.age_min,
-            'time_spent': LeadsVisits.full_time_sec
+            'time_spent': LeadsVisits.full_time_sec,
+            'funnel': LeadUser.behavior_type
         }
         if sort_by:
             sort_column = sort_options[sort_by]
