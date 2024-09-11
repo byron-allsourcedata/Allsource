@@ -27,6 +27,7 @@ from sqlalchemy.orm import sessionmaker, Session
 from models.five_x_five_users import FiveXFiveUser
 from models.leads_users import LeadUser
 from models.users import Users
+from models.subscriptions import SubscriptionPlan
 from models.leads_orders import LeadOrders
 from dotenv import load_dotenv
 from sqlalchemy.dialects.postgresql import insert
@@ -141,14 +142,12 @@ def process_user_data(table, index, five_x_five_user: FiveXFiveUser, session: Se
             session.flush()
             lead_users = session.query(LeadUser).filter_by(user_id=user.id).limit(2).all()
             if len(lead_users) == 1:
-                session.query(UserSubscriptions).filter(UserSubscriptions.user_id == user.id).update(
-                    {
-                        UserSubscriptions.plan_start: datetime.now(),
-                        UserSubscriptions.plan_end: datetime.now() + relativedelta(months=1)
-                    },
-                    synchronize_session=False
-                )
-                session.flush()
+                last_subscription = session.query(UserSubscriptions).filter(UserSubscriptions.user_id == user.id).order_by(UserSubscriptions.id.desc()).first()
+                if last_subscription.plan_start is None and last_subscription.plan_end is None:
+                    last_subscription.plan_start = datetime.now()
+                    trial_days = session.query(SubscriptionPlan.trial_days).filter(SubscriptionPlan.is_free_trial == True).scalar()
+                    last_subscription.plan_end = datetime.now() + relativedelta(days=trial_days)
+                    session.flush()
     
     lead_request = insert(LeadsRequests).values(
         lead_id=lead_user.id,
