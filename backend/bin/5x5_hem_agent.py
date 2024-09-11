@@ -45,10 +45,41 @@ def assume_role(role_arn, sts_client):
     return credentials
 
 
-async def on_message_received(message, s3_session, sts_client, rmq_connection):
+file_list = [
+        "outgoing/upid_hem_1_6_0/upid_hem_0_0_0.csv.gz",
+        "outgoing/upid_hem_1_6_0/upid_hem_0_0_1.csv.gz",
+        "outgoing/upid_hem_1_6_0/upid_hem_0_1_0.csv.gz",
+        "outgoing/upid_hem_1_6_0/upid_hem_0_1_1.csv.gz",
+        "outgoing/upid_hem_1_6_0/upid_hem_0_2_0.csv.gz",
+        "outgoing/upid_hem_1_6_0/upid_hem_0_3_0.csv.gz",
+        "outgoing/upid_hem_1_6_0/upid_hem_0_4_1.csv.gz",
+        "outgoing/upid_hem_1_6_0/upid_hem_0_6_1.csv.gz",
+        "outgoing/upid_hem_1_6_0/upid_hem_10_0_1.csv.gz",
+        "outgoing/upid_hem_1_6_0/upid_hem_0_1_1.csv.gz",
+        "outgoing/upid_hem_1_6_0/upid_hem_0_3_1.csv.gz",
+        "outgoing/upid_hem_1_6_0/upid_hem_0_5_1.csv.gz",
+        "outgoing/upid_hem_1_6_0/upid_hem_0_7_0.csv.gz",
+        "outgoing/upid_hem_1_6_0/upid_hem_10_0_0.csv.gz",
+        "outgoing/upid_hem_1_6_0/upid_hem_10_1_1.csv.gz",
+        "outgoing/upid_hem_1_6_0/upid_hem_10_3_1.csv.gz",
+        "outgoing/upid_hem_1_6_0/upid_hem_0_2_1.csv.gz",
+        "outgoing/upid_hem_1_6_0/upid_hem_0_4_0.csv.gz",
+        "outgoing/upid_hem_1_6_0/upid_hem_0_5_0.csv.gz",
+        "outgoing/upid_hem_1_6_0/upid_hem_0_6_0.csv.gz",
+        "outgoing/upid_hem_1_6_0/upid_hem_0_7_1.csv.gz",
+        "outgoing/upid_hem_1_6_0/upid_hem_10_1_0.csv.gz",
+        "outgoing/upid_hem_1_6_0/upid_hem_10_3_0.csv.gz"
+    ]
+
+async def on_message_received(message_body, s3_session, sts_client, rmq_connection):
+    message_body_json = json.loads(message_body)
+    file_name = message_body_json['file_name']
+    logging.info(f"{file_name}")
+    if file_name in file_list:
+        return
     credentials = assume_role(os.getenv('S3_ROLE_ARN'), sts_client)
     try:
-        message_json = json.loads(message.body)
+        message_json = json.loads(message_body)
         async with s3_session.client(
                 's3',
                 region_name='us-west-2',
@@ -71,12 +102,9 @@ async def on_message_received(message, s3_session, sts_client, rmq_connection):
                             message_body={'hem': row.to_dict()}
                         )
         logging.info(f"{message_json['file_name']} processed")
-        await message.ack()
     except Exception as e:
-        await message.reject(requeue=True)
         logging.error(f"Error processing message: {e}", exc_info=True)
-
-
+        
 async def main():
     logging.info("Started")
     try:
@@ -93,10 +121,22 @@ async def main():
             }
         )
         session = aioboto3.Session()
-        await queue.consume(
-            functools.partial(on_message_received, s3_session=session, sts_client=sts_client, rmq_connection=connection)
-        )
-        await asyncio.Future()
+        
+        connection = await rabbitmq_connection.connect()
+        while(True):
+            channel = await connection.channel()
+            queue = await channel.get_queue(QUEUE_HEMS_FILES)
+            message = await queue.get(no_ack=False)
+            if message:
+                await message.ack()
+                await on_message_received(message.body, session, sts_client, connection)
+            else:
+                logging.info("No message returned")
+                await asyncio.sleep(5) 
+                break
+            await channel.close()
+        await connection.close()
+        
     except Exception as err:
         logging.error('Unhandled Exception:', exc_info=True)
     finally:
