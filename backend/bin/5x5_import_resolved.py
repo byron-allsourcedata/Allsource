@@ -139,7 +139,7 @@ def process_user_data(table, index, five_x_five_user: FiveXFiveUser, session: Se
         if is_first_request == True:
             lead_user.first_visit_id = lead_visits_id
             session.flush()
-            lead_users = session.query(LeadUser).filter_by(user_id=user.id).all()
+            lead_users = session.query(LeadUser).filter_by(user_id=user.id).limit(2).all()
             if len(lead_users) == 1:
                 session.query(UserSubscriptions).filter(UserSubscriptions.user_id == user.id).update(
                     {
