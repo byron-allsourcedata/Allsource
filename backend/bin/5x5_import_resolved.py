@@ -136,21 +136,19 @@ def process_user_data(table, index, five_x_five_user: FiveXFiveUser, session: Se
         process_leads_requests(requested_at, page, leads_requests, lead_user.id, session, behavior_type)
     else:
         lead_visits_id = add_new_leads_visits(visited_datetime=requested_at, lead_id=lead_user.id, session=session, behavior_type=behavior_type).id
-        
-        
-    if is_first_request == True:
-        lead_user.first_visit_id = lead_visits_id
-        session.flush()
-        lead_users = session.query(LeadUser).filter_by(user_id=user.id).all()
-        if len(lead_users) == 1:
-            session.query(UserSubscriptions).filter(UserSubscriptions.user_id == user.id).update(
-                {
-                    UserSubscriptions.plan_start: datetime.now(),
-                    UserSubscriptions.plan_end: datetime.now() + relativedelta(months=1)
-                },
-                synchronize_session=False
-            )
+        if is_first_request == True:
+            lead_user.first_visit_id = lead_visits_id
             session.flush()
+            lead_users = session.query(LeadUser).filter_by(user_id=user.id).all()
+            if len(lead_users) == 1:
+                session.query(UserSubscriptions).filter(UserSubscriptions.user_id == user.id).update(
+                    {
+                        UserSubscriptions.plan_start: datetime.now(),
+                        UserSubscriptions.plan_end: datetime.now() + relativedelta(months=1)
+                    },
+                    synchronize_session=False
+                )
+                session.flush()
     
     lead_request = insert(LeadsRequests).values(
         lead_id=lead_user.id,
