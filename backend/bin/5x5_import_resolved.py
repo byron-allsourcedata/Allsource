@@ -104,6 +104,8 @@ def process_user_data(table, index, five_x_five_user: FiveXFiveUser, session: Se
         user_payment_transactions = UsersPaymentsTransactions(user_id=user.id, status='success', amount_credits=AMOUNT_CREDITS, type='lead', lead_id=lead_user.id, five_x_five_up_id=five_x_five_user.up_id)
         session.add(user_payment_transactions)
         session.flush()
+    else:
+        first_visit_id = lead_user.first_visit_id
 
     requested_at_str = str(table['EVENT_DATE'][index].as_py())
     requested_at = datetime.fromisoformat(requested_at_str)
@@ -118,12 +120,7 @@ def process_user_data(table, index, five_x_five_user: FiveXFiveUser, session: Se
         leads_requests = session.query(LeadsRequests).filter(
         LeadsRequests.visit_id == visit_id).all()
         lead_visits_id = leads_requests[0].visit_id
-        visit_first = session.query(LeadsVisits).filter(
-            LeadsVisits.lead_id == lead_user.id
-        ).order_by(
-            LeadsVisits.id.asc()
-        ).first()
-        if visit_first.id == leads_requests[0].visit_id:
+        if first_visit_id == leads_requests[0].visit_id:
             if lead_user.behavior_type in ('visitor', 'viewed_product') and behavior_type in (
             'viewed_product', 'product_added_to_cart'):
                 session.query(LeadUser).filter(LeadUser.id == lead_user.id).update({
