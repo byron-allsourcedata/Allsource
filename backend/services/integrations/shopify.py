@@ -16,13 +16,13 @@ class ShopifyIntegrationService:
     def __init__(self, integration_persistence: IntegrationsPresistence, 
                  lead_persistence: LeadsPersistence, lead_orders_persistence: LeadOrdersPersistence,
                  integrations_user_sync_persistence: IntegrationsUserSyncPersistence,
-                 client: Client):
+                 client: Client, aws_service: AWSService):
         self.integration_persistence = integration_persistence
         self.lead_persistence = lead_persistence
         self.lead_orders_persistence = lead_orders_persistence
         self.integrations_user_sync_persistence = integrations_user_sync_persistence
         self.client = client
-        self.AWS = AWSService()
+        self.AWS = aws_service
 
 
     def __handle_request(self, method: str, url: str, headers: dict = None, json: dict = None, data: dict = None, params: dict = None):
