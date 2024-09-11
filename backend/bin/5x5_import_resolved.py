@@ -137,7 +137,7 @@ def process_user_data(table, index, five_x_five_user: FiveXFiveUser, session: Se
                                        total_price=order_detail.get('total_price'), 
                                        currency_code=order_detail.get('currency'),
                                        created_at_shopify=datetime.now(), created_at=datetime.now()))
-        process_leads_requests(requested_at, leads_requests, lead_user.id, session, behavior_type)
+        process_leads_requests(requested_at, page, leads_requests, lead_user.id, session, behavior_type)
     else:
         logging.info("Leads Visits not exists")
         lead_visits = add_new_leads_visits(requested_at, lead_user.id, session, behavior_type).id
