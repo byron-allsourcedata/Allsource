@@ -10,8 +10,7 @@ from persistence.integrations.integrations_persistence import IntegrationsPresis
 from httpx import Client
 from fastapi import HTTPException
 from datetime import datetime
-from services.AWS import AWSService
-
+from config.aws import AWSClient
 class ShopifyIntegrationService:
 
     def __init__(self, integration_persistence: IntegrationsPresistence, 
@@ -23,7 +22,7 @@ class ShopifyIntegrationService:
         self.lead_orders_persistence = lead_orders_persistence
         self.integrations_user_sync_persistence = integrations_user_sync_persistence
         self.client = client
-        self.AWS = AWSService()
+        self.AWS = AWSClient()
 
 
     def __handle_request(self, method: str, url: str, headers: dict = None, json: dict = None, data: dict = None, params: dict = None):
