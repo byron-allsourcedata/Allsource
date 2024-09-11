@@ -108,13 +108,13 @@ def process_user_data(table, index, five_x_five_user: FiveXFiveUser, session: Se
     requested_at_str = str(table['EVENT_DATE'][index].as_py())
     requested_at = datetime.fromisoformat(requested_at_str)
     thirty_minutes_ago = requested_at - timedelta(minutes=30)
-    visit = session.query(LeadsRequests.visit_id).filter(
+    current_visit_request = session.query(LeadsRequests.visit_id).filter(
         LeadsRequests.lead_id == lead_user.id,
         LeadsRequests.requested_at >= thirty_minutes_ago
         ).first()
     leads_requests = None
-    if visit:
-        visit_id = visit[0]
+    if current_visit_request:
+        visit_id = current_visit_request[0]
         leads_requests = session.query(LeadsRequests).filter(
         LeadsRequests.visit_id == visit_id).all()
 
