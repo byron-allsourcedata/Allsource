@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Drawer, Box, Typography, Button, IconButton, Backdrop, TextField, InputAdornment, Collapse, Divider, FormControlLabel, Checkbox, RadioGroup, Radio, Modal } from '@mui/material';
+import React, { useState} from 'react';
+import { Drawer, Box, Typography, Button, IconButton, Backdrop, TextField, InputAdornment, Collapse, Divider, FormControlLabel, Checkbox, Radio } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import CloseIcon from '@mui/icons-material/Close';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
@@ -16,11 +16,6 @@ interface FilterPopupProps {
   onClose: () => void;
   onApply: (filters: any) => void;
 }
-const CustomCalendarIcon = () => (
-  <IconButton sx={{ padding: 0 }}>
-    <Image src="/calendar-2.svg" alt="calendar" width={18} height={18} />
-  </IconButton>
-);
 
 const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => {
   const [selectedButton, setSelectedButton] = useState<string | null>(null);
@@ -32,7 +27,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
   const [isLeadFunnel, setIsLeadFunnel] = useState(false);
   const [isStatus, setIsStatus] = useState(false);
   const [isRecurringVisits, setIsRecurringVisits] = useState(false);
-  const [email, setEmail] = useState("");
   const [region, setRegions] = useState("");
   const [selectedDateRange, setSelectedDateRange] = useState<string | null>(
     null
@@ -50,15 +44,16 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
     }
   );
   const [regions, setTags] = useState<string[]>([]);
-  const [emails, setEmails] = useState<string[]>([]);
   const [selectedFunnels, setSelectedFunnels] = useState<string[]>([]);
   const [selectedStatus, setSelectedStatus] = useState<string[]>([]);
   const [buttonFilters, setButtonFilters] = useState<ButtonFilters>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [open_save, setOpen] = useState(false);
-  const [openLoadDrawer, setOpenLoadDrawer] = useState(false);
+  // const [open_save, setOpen] = useState(false);
+  // const [openLoadDrawer, setOpenLoadDrawer] = useState(false);
   const [filterName, setFilterName] = useState("");
-  const [isButtonDisabled, setIsButtonDisabled] = useState(true);
+  // const [isButtonDisabled, setIsButtonDisabled] = useState(true);
+  const [timeSelectionMethod, setTimeSelectionMethod] = useState<'radio' | 'timePicker' | null>(null);
+
   type SavedFilter = {
     name: string;
     data: ReturnType<typeof handleFilters>; // Use the return type of handleFilters directly
@@ -69,8 +64,8 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
     setFilterName("");
   };
 
-  const handleOpen = () => setOpen(true);
-  const handleClose = () => setOpen(false);
+  // const handleOpen = () => setOpen(true);
+  // const handleClose = () => setOpen(false);
 
   const style = {
     position: "absolute" as "absolute",
@@ -148,7 +143,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
   };
 
   const statusMapping: Record<string, string> = {
-    Visitor: "visitor",
+    Visitor: "Visitor",
     "View Product": "viewed_product",
     "Add to cart": "product_added_to_cart",
   };
@@ -370,10 +365,10 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
     let funnel = "";
     switch (label) {
       case "Abandoned cart":
-        funnel = "Cart abandoned";
+        funnel = "cart_abandoned";
         break;
       case "Converters sales":
-        funnel = "Converted";
+        funnel = "converted";
         break;
       case "Returning visitors":
         funnel = "Visitor";
@@ -620,66 +615,85 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
   };
 
   const handleFilters = () => {
-    const filterDates = getFilterDates();
-    const isButtonChecked = Object.values(checkedFilters).some(
-      (value) => value
-    );
+    const filterDates = getFilterDates(); // Функция для получения диапазонов дат, например lastWeek, last30Days и т.д.
+    
+    // Проверка, что хотя бы один из фильтров по времени активен
+    const isDateFilterChecked = Object.values(checkedFilters).some((value) => value);
 
-    const fromDateTime = isButtonChecked
-      ? (checkedFilters.lastWeek && filterDates.lastWeek.from) ||
-      (checkedFilters.last30Days && filterDates.last30Days.from) ||
-      (checkedFilters.last6Months && filterDates.last6Months.from) ||
-      (checkedFilters.allTime && filterDates.allTime.from)
-      : dateRange.fromDate
-        ? dayjs(dateRange.fromDate).startOf("day").unix()
-        : null;
+    let fromTime = timeRange.fromTime ? dayjs(timeRange.fromTime).format('HH:mm') : null;
+    let toTime = timeRange.toTime ? dayjs(timeRange.toTime).format('HH:mm') : null;
 
-    const toDateTime = isButtonChecked
-      ? (checkedFilters.lastWeek && filterDates.lastWeek.to) ||
-      (checkedFilters.last30Days && filterDates.last30Days.to) ||
-      (checkedFilters.last6Months && filterDates.last6Months.to) ||
-      (checkedFilters.allTime && filterDates.allTime.to)
-      : dateRange.toDate
-        ? dayjs(dateRange.toDate).endOf("day").unix()
-        : null;
+    // Обработка фильтров по времени (утро, день, вечер, весь день)
+    if (checkedFiltersTime.morning) {
+        fromTime = "00:00"; // 12AM
+        toTime = "11:00";   // 11AM
+    } else if (checkedFiltersTime.afternoon) {
+        fromTime = "11:00"; // 11AM
+        toTime = "17:00";   // 5PM
+    } else if (checkedFiltersTime.evening) {
+        fromTime = "17:00"; // 5PM
+        toTime = "21:00";   // 9PM
+    } else if (checkedFiltersTime.all_day) {
+        fromTime = "00:00"; // 12AM
+        toTime = "23:59";   // 11:59PM
+    }
 
-    // Отдельно вычисляем времена
-    const fromTime = timeRange.fromTime
-      ? dayjs(timeRange.fromTime).format('HH:mm') // Преобразуем время в нужный формат
-      : null;
+    // Определение значений from_date и to_date на основе активных фильтров
+    let fromDateTime = null;
+    let toDateTime = null;
 
-    const toTime = timeRange.toTime
-      ? dayjs(timeRange.toTime).format('HH:mm')
-      : null;
+    // Если активен хотя бы один фильтр по дате, используем его диапазоны
+    if (isDateFilterChecked) {
+        if (checkedFilters.lastWeek) {
+            fromDateTime = filterDates.lastWeek.from;
+            toDateTime = filterDates.lastWeek.to;
+        } else if (checkedFilters.last30Days) {
+            fromDateTime = filterDates.last30Days.from;
+            toDateTime = filterDates.last30Days.to;
+        } else if (checkedFilters.last6Months) {
+            fromDateTime = filterDates.last6Months.from;
+            toDateTime = filterDates.last6Months.to;
+        } else if (checkedFilters.allTime) {
+            fromDateTime = filterDates.allTime.from;
+            toDateTime = filterDates.allTime.to;
+        }
+    } else {
+        // Если не выбран ни один фильтр, используем диапазон из dateRange
+        fromDateTime = dateRange.fromDate
+            ? dayjs(dateRange.fromDate).startOf("day").unix()
+            : null;
+        toDateTime = dateRange.toDate
+            ? dayjs(dateRange.toDate).endOf("day").unix()
+            : null;
+    }
 
+    // Преобразование выбранных значений в числа (если это необходимо)
     const convertedSelectedValues = selectedValues.map((value) => {
-      if (value === "4+") {
-        return 5;
-      }
-      return parseInt(value, 10);
+        return value === "4+" ? 5 : parseInt(value, 10);
     });
 
+    // Составление объекта с фильтрами
     const filters = {
-      ...buttonFilters,
-      from_date: fromDateTime,
-      to_date: toDateTime,
-      from_time: fromTime,
-      to_time: toTime,
-      selectedFunnels: buttonFilters
-        ? buttonFilters.selectedFunnels
-        : selectedFunnels,
-      button: buttonFilters ? buttonFilters.button : selectedButton,
-      checkedFilters,
-      checkedFiltersTime,
-      checkedFiltersPageVisits,
-      regions,
-      checkedFiltersTimeSpent,
-      selectedStatus,
-      recurringVisits: convertedSelectedValues,
-      searchQuery,
+        ...buttonFilters, // Существующие фильтры кнопок
+        from_date: fromDateTime, // Установленное значение from_date
+        to_date: toDateTime,     // Установленное значение to_date
+        from_time: fromTime,     // Установленное значение времени начала
+        to_time: toTime,         // Установленное значение времени окончания
+        selectedFunnels: buttonFilters ? buttonFilters.selectedFunnels : selectedFunnels,
+        button: buttonFilters ? buttonFilters.button : selectedButton,
+        checkedFiltersTime,      // Фильтры по времени (утро, день, вечер и т.д.)
+        checkedFiltersPageVisits,
+        regions,
+        checkedFiltersTimeSpent,
+        selectedStatus,
+        recurringVisits: convertedSelectedValues, // Преобразованные выбранные значения
+        searchQuery, // Запрос для поиска
     };
+
     return filters;
-  };
+};
+
+
 
   const handleApply = () => {
     const filters = handleFilters();
@@ -808,90 +822,90 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
   };
 
 
-  const handleLoadOpen = () => setOpenLoadDrawer(true);
-  const handleLoadClose = () => setOpenLoadDrawer(false);
+  // const handleLoadOpen = () => setOpenLoadDrawer(true);
+  // const handleLoadClose = () => setOpenLoadDrawer(false);
 
-  // Function to determine if filters are selected
-  const updateButtonState = () => {
-    const filters = handleFilters();
-    // console.log('Filters:', filters); // For debugging
+  // // Function to determine if filters are selected
+  // const updateButtonState = () => {
+  //   const filters = handleFilters();
+  //   // console.log('Filters:', filters); // For debugging
 
-    if (!filters || typeof filters !== 'object' || Object.keys(filters).length === 0) {
-      setIsButtonDisabled(true);
-      return;
-    }
+  //   if (!filters || typeof filters !== 'object' || Object.keys(filters).length === 0) {
+  //     setIsButtonDisabled(true);
+  //     return;
+  //   }
 
-    const hasActiveFilters = Object.values(filters).some(value => {
-      if (Array.isArray(value)) {
-        return value.length > 0;
-      } else if (typeof value === 'object' && value !== null) {
-        return Object.values(value).some(val => {
-          if (val === null || val === '') return false;
-          if (Array.isArray(val)) return val.length > 0;
-          if (typeof val === 'boolean') return val;
-          return true;
-        });
-      } else {
-        if (typeof value === 'string') return value.trim() !== '';
-        if (typeof value === 'boolean') return value;
-        return value !== null;
-      }
-    });
+  //   const hasActiveFilters = Object.values(filters).some(value => {
+  //     if (Array.isArray(value)) {
+  //       return value.length > 0;
+  //     } else if (typeof value === 'object' && value !== null) {
+  //       return Object.values(value).some(val => {
+  //         if (val === null || val === '') return false;
+  //         if (Array.isArray(val)) return val.length > 0;
+  //         if (typeof val === 'boolean') return val;
+  //         return true;
+  //       });
+  //     } else {
+  //       if (typeof value === 'string') return value.trim() !== '';
+  //       if (typeof value === 'boolean') return value;
+  //       return value !== null;
+  //     }
+  //   });
 
-    setIsButtonDisabled(!hasActiveFilters);
-  };
-
-
-
-  // Call updateButtonState when filter states change
-  useEffect(() => {
-    updateButtonState();
-  }, [
-    selectedButton,
-    isVisitedDateOpen,
-    isVisitedPageOpen,
-    isTimeSpentOpen,
-    isVisitedTimeOpen,
-    isRegionOpen,
-    isLeadFunnel,
-    isStatus,
-    isRecurringVisits,
-    email,
-    region,
-    selectedDateRange,
-    selectedTimeRange,
-    selectedTags,
-    regions,
-    emails,
-    selectedFunnels,
-    selectedStatus,
-    buttonFilters,
-    selectedValues,
-    searchQuery
-  ]);
+  //   setIsButtonDisabled(!hasActiveFilters);
+  // };
 
 
 
-  const handleSave = () => {
-    try {
-      const filters = handleFilters();
+  // // Call updateButtonState when filter states change
+  // useEffect(() => {
+  //   updateButtonState();
+  // }, [
+  //   selectedButton,
+  //   isVisitedDateOpen,
+  //   isVisitedPageOpen,
+  //   isTimeSpentOpen,
+  //   isVisitedTimeOpen,
+  //   isRegionOpen,
+  //   isLeadFunnel,
+  //   isStatus,
+  //   isRecurringVisits,
+  //   email,
+  //   region,
+  //   selectedDateRange,
+  //   selectedTimeRange,
+  //   selectedTags,
+  //   regions,
+  //   emails,
+  //   selectedFunnels,
+  //   selectedStatus,
+  //   buttonFilters,
+  //   selectedValues,
+  //   searchQuery
+  // ]);
 
-      // console.log('Filter:', filters);
 
-      const newFilter = { name: filterName, data: filters };
-      // console.log('New Filter:', newFilter);
 
-      setSavedFilters(prevFilters => {
-        // console.log('Previous Filters:', prevFilters);
-        return [...prevFilters, newFilter];
-      });
+  // const handleSave = () => {
+  //   try {
+  //     const filters = handleFilters();
 
-      setFilterName('');
-      handleClose(); // Close the modal
-    } catch (error) {
-      console.error('Error saving filter:', error);
-    }
-  };
+  //     // console.log('Filter:', filters);
+
+  //     const newFilter = { name: filterName, data: filters };
+  //     // console.log('New Filter:', newFilter);
+
+  //     setSavedFilters(prevFilters => {
+  //       // console.log('Previous Filters:', prevFilters);
+  //       return [...prevFilters, newFilter];
+  //     });
+
+  //     setFilterName('');
+  //     handleClose(); // Close the modal
+  //   } catch (error) {
+  //     console.error('Error saving filter:', error);
+  //   }
+  // };
 
 
   return (
@@ -936,8 +950,8 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
           >
             Filter Search
           </Typography>
-          {/* <Box sx={{ display: "flex", flexDirection: "row"}}>
-            <Button onClick={handleLoadOpen}>
+          <Box sx={{ display: "flex", flexDirection: "row"}}>
+            {/* <Button onClick={handleLoadOpen}>
               <Typography
                 sx={{
                   textAlign: "center",
@@ -951,8 +965,8 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
               >
                 Load
               </Typography>
-            </Button>
-            <Drawer
+            </Button> */}
+            {/* <Drawer
               anchor="right"
               open={openLoadDrawer}
               onClose={handleLoadClose}
@@ -968,8 +982,8 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                   },
                 },
               }}
-            >
-              <Box
+            > */}
+              {/* <Box
                 sx={{
                   display: "flex",
                   justifyContent: "space-between",
@@ -994,10 +1008,10 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                 >
                   Load with saved filters
                 </Typography>
-              </Box>
+              </Box> */}
 
 
-              {savedFilters.length > 0 ? (
+              {/* {savedFilters.length > 0 ? (
                 savedFilters.map((filter, index) => (
                   <Box key={index} sx={{
                     padding: '1.5em', borderBottom: "1px solid #ebebeb", display: "flex",
@@ -1077,10 +1091,10 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                     width={300}
                   />
                 </Box>
-              )}
+              )} */}
 
-            </Drawer>
-            <Typography
+            {/* </Drawer> */}
+            {/* <Typography
               sx={{
                 color: "rgba(228, 228, 228, 1)",
                 pt: 0.5,
@@ -1105,8 +1119,8 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
               >
                 Save
               </Typography>
-            </Button>
-            <Modal
+            </Button> */}
+            {/* <Modal
               open={open_save}
               onClose={handleClose}
               aria-labelledby="modal-title"
@@ -1177,12 +1191,12 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                   </Button>
                 </Box>
               </Box>
-            </Modal>
+            </Modal> */}
             <IconButton onClick={onClose}>
               <CloseIcon />
             </IconButton>
           </Box> 
-          */}
+         
         </Box>
         <Box
           sx={{

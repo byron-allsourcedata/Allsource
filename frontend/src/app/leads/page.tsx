@@ -1,18 +1,13 @@
 "use client";
 import React, { useState, useEffect, Suspense } from 'react';
-import { Box, Grid, Typography, Button, Menu, MenuItem, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Checkbox, IconButton, Chip } from '@mui/material';
+import { Box, Grid, Typography, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Chip } from '@mui/material';
 import Image from 'next/image';
-import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
-import { useUser } from '../../context/UserContext';
 import axiosInstance from '../../axios/axiosInterceptorInstance';
 import { AxiosError } from 'axios';
 import { leadsStyles } from './leadsStyles';
 import Slider from '../../components/Slider';
 import { SliderProvider } from '../../context/SliderContext';
-import PersonIcon from '@mui/icons-material/Person';
-import TrialStatus from '@/components/TrialLabel';
-import AccountButton from '@/components/AccountButton';
 import { ChevronLeft, ChevronRight } from '@mui/icons-material';
 import DownloadIcon from '@mui/icons-material/Download';
 import DateRangeIcon from '@mui/icons-material/DateRange';
@@ -28,9 +23,6 @@ import CloseIcon from '@mui/icons-material/Close';
 import CustomizedProgressBar from '@/components/CustomizedProgressBar';
 
 
-const Sidebar = dynamic(() => import('../../components/Sidebar'), {
-    suspense: true,
-});
 
 
 interface CustomTablePaginationProps {
@@ -172,7 +164,7 @@ const Leads: React.FC = () => {
     const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(15);
-    const [activeFilter, setActiveFilter] = useState<string>('all');
+    const [activeFilter, setActiveFilter] = useState<string>('');
     const [calendarAnchorEl, setCalendarAnchorEl] = useState<null | HTMLElement>(null);
     const [selectedDates, setSelectedDates] = useState<{ start: Date | null; end: Date | null }>({ start: null, end: null });
     const isCalendarOpen = Boolean(calendarAnchorEl);
@@ -181,9 +173,15 @@ const Leads: React.FC = () => {
     const [audiencePopupOpen, setAudiencePopupOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const [selectedFilters, setSelectedFilters] = useState<{ label: string, value: string }[]>([]);
-
     const [openPopup, setOpenPopup] = React.useState(false);
     const [popupData, setPopupData] = React.useState<any>(null);
+
+    useEffect(() => {
+        document.body.style.overflow = 'hidden';
+        return () => {
+          document.body.style.overflow = 'auto';
+        };
+      }, []);
 
     const handleOpenPopup = (row: any) => {
         setPopupData(row);
@@ -195,24 +193,58 @@ const Leads: React.FC = () => {
     };
 
     interface FilterParams {
-        dateRange: {
-            fromDate: number | null;
-            toDate: number | null;
-        };
+        from_date: number | null;
+        to_date: number | null;
+        from_time: string | null;
+        to_time: string | null;
         selectedStatus: string[];
         regions: string[];
         emails: string[];
         selectedFunnels: string[];
         searchQuery: string | null;
+        checkedFilters: {
+            lastWeek: boolean;
+            last30Days: boolean;
+            last6Months: boolean;
+            allTime: boolean;
+        };
+        checkedFiltersPageVisits: {
+            page: boolean;
+            two_page: boolean;
+            three_page: boolean;
+            more_three: boolean;
+        };
+        checkedFiltersTime: {
+            morning: boolean;
+            evening: boolean;
+            afternoon: boolean;
+            all_day: boolean;
+        };
+        checkedFiltersTimeSpent: {
+            under_10: boolean;
+            over_10: boolean;
+            over_30: boolean;
+            over_60: boolean;
+        };
+        recurringVisits: any[];
     }
     const [filterParams, setFilterParams] = useState<FilterParams>({
-        dateRange: { fromDate: null, toDate: null },
+        from_date: null, 
+        to_date: null,
+        from_time: '',
+        to_time: '',
         selectedStatus: [],
         regions: [],
         emails: [],
         selectedFunnels: [],
         searchQuery: '',
+        checkedFilters: { lastWeek: false, last30Days: false, last6Months: false, allTime: false },
+        checkedFiltersPageVisits: { page: false, two_page: false, three_page: false, more_three: false },
+        checkedFiltersTime: { morning: false, evening: false, afternoon: false, all_day: false },
+        checkedFiltersTimeSpent: { under_10: false, over_10: false, over_30: false, over_60: false },
+        recurringVisits: [],
     });
+    
 
     const handleFilterPopupOpen = () => {
         setFilterPopupOpen(true);
@@ -304,15 +336,6 @@ const Leads: React.FC = () => {
         });
     };
 
-
-    const handleSelectAllClick = (event: React.ChangeEvent<HTMLInputElement>) => {
-        if (event.target.checked) {
-            const newSelecteds = data.map((row) => row.id);
-            setSelectedRows(new Set(newSelecteds));
-            return;
-        }
-        setSelectedRows(new Set());
-    };
     const handleChangeRowsPerPage = (event: React.ChangeEvent<{ value: unknown }>) => {
         setRowsPerPage(parseInt(event.target.value as string, 10));
         setPage(0);
@@ -323,8 +346,8 @@ const Leads: React.FC = () => {
             rowsPerPage: parseInt(event.target.value as string, 10),
             activeFilter,
             appliedDates: {
-                start: filterParams.dateRange.fromDate ? dayjs.unix(filterParams.dateRange.fromDate).toDate() : null,
-                end: filterParams.dateRange.toDate ? dayjs.unix(filterParams.dateRange.toDate).toDate() : null,
+                start: filterParams.from_date ? dayjs.unix(filterParams.from_date).toDate() : null,
+                end: filterParams.to_date ? dayjs.unix(filterParams.to_date).toDate() : null,
             }
         });
     };
@@ -338,18 +361,22 @@ const Leads: React.FC = () => {
                 return;
             }
 
+    
             // Processing "Date Calendly"
             const startEpoch = appliedDates.start ? Math.floor(appliedDates.start.getTime() / 1000) : null;
             const endEpoch = appliedDates.end ? Math.floor(appliedDates.end.getTime() / 1000) : null;
-
-            let url = `/leads?page=${page + 1}&per_page=${rowsPerPage}&status=${activeFilter}`;
+    
+            let url = `/leads?page=${page + 1}&per_page=${rowsPerPage}`;
             if (startEpoch !== null && endEpoch !== null) {
                 url += `&from_date=${startEpoch}&to_date=${endEpoch}`;
+            }
+            if (activeFilter) {
+                url += `&behavior_type=${activeFilter}`;
             }
             if (sortBy) {
                 url += `&sort_by=${sortBy}&sort_order=${sortOrder}`;
             }
-
+    
             // Include other filter parameters if necessary
             // Processing "Regions"
             if (selectedFilters.some(filter => filter.label === 'Regions')) {
@@ -358,15 +385,7 @@ const Leads: React.FC = () => {
                     url += `&regions=${encodeURIComponent(regions.join(','))}`;
                 }
             }
-
-            // Processing "Emails"
-            if (selectedFilters.some(filter => filter.label === 'Emails')) {
-                const emails = selectedFilters.find(filter => filter.label === 'Emails')?.value.split(', ') || [];
-                if (emails.length > 0) {
-                    url += `&emails=${encodeURIComponent(emails.join(','))}`;
-                }
-            }
-
+    
             // Processing "From Date"
             if (selectedFilters.some(filter => filter.label === 'From Date')) {
                 const fromDate = selectedFilters.find(filter => filter.label === 'From Date')?.value || '';
@@ -375,7 +394,7 @@ const Leads: React.FC = () => {
                     url += `&from_date=${fromDateEpoch}`;
                 }
             }
-
+    
             // Processing "To Date"
             if (selectedFilters.some(filter => filter.label === 'To Date')) {
                 const toDate = selectedFilters.find(filter => filter.label === 'To Date')?.value || '';
@@ -384,15 +403,15 @@ const Leads: React.FC = () => {
                     url += `&to_date=${toDateEpoch}`;
                 }
             }
-
-            // Processing "Funnels"
+    
+            // Processing "Visitor type"
             if (selectedFilters.some(filter => filter.label === 'Funnels')) {
                 const funnels = selectedFilters.find(filter => filter.label === 'Funnels')?.value.split(', ') || [];
                 if (funnels.length > 0) {
-                    url += `&lead_funnel=${encodeURIComponent(funnels.join(','))}`;
+                    url += `&status=${encodeURIComponent(funnels.join(','))}`;
                 }
             }
-
+    
             // Search string processing
             if (selectedFilters.some(filter => filter.label === 'Search')) {
                 const searchQuery = selectedFilters.find(filter => filter.label === 'Search')?.value || '';
@@ -400,10 +419,24 @@ const Leads: React.FC = () => {
                     url += `&search_query=${encodeURIComponent(searchQuery)}`;
                 }
             }
-
+    
+            // Add time filters if provided
+            if (selectedFilters.some(filter => filter.label === 'From Time')) {
+                const fromTime = selectedFilters.find(filter => filter.label === 'From Time')?.value || '';
+                if (fromTime) {
+                    url += `&from_time=${encodeURIComponent(fromTime)}`;
+                }
+            }
+            if (selectedFilters.some(filter => filter.label === 'To Time')) {
+                const toTime = selectedFilters.find(filter => filter.label === 'To Time')?.value || '';
+                if (toTime) {
+                    url += `&to_time=${encodeURIComponent(toTime)}`;
+                }
+            }
+    
             const response = await axiosInstance.get(url);
             const [leads, count] = response.data;
-
+    
             setData(Array.isArray(leads) ? leads : []);
             setCount(count || 0);
             setStatus(response.data.status);
@@ -424,39 +457,54 @@ const Leads: React.FC = () => {
             setIsLoading(false);
         }
     };
+    
 
 
     const handleApplyFilters = (filters: FilterParams) => {
         const newSelectedFilters: { label: string; value: string }[] = [];
+        console.log(filters)
+        
+        const dateFormat = 'YYYY-MM-DD';
 
-        if (filters.dateRange.fromDate) {
-            newSelectedFilters.push({ label: 'From Date', value: dayjs.unix(filters.dateRange.fromDate).format('YYYY-MM-DD') });
-        }
-        if (filters.dateRange.toDate) {
-            newSelectedFilters.push({ label: 'To Date', value: dayjs.unix(filters.dateRange.toDate).format('YYYY-MM-DD') });
-        }
-        if (filters.selectedStatus && filters.selectedStatus.length > 0) {
-            newSelectedFilters.push({ label: 'Status', value: filters.selectedStatus.join(', ') });
-        }
-        if (filters.regions && filters.regions.length > 0) {
-            newSelectedFilters.push({ label: 'Regions', value: filters.regions.join(', ') });
-        }
-        if (filters.emails && filters.emails.length > 0) {
-            newSelectedFilters.push({ label: 'Emails', value: filters.emails.join(', ') });
-        }
-        if (filters.selectedFunnels && filters.selectedFunnels.length > 0) {
-            newSelectedFilters.push({ label: 'Funnels', value: filters.selectedFunnels.join(', ') });
-        }
-        if (filters.searchQuery && filters.searchQuery.trim() !== '') {
-            newSelectedFilters.push({ label: 'Search', value: filters.searchQuery });
-        }
+        // Map of filter conditions to their labels
+        const filterMappings: { condition: boolean | string | string[] | number | null, label: string, value: string | ((f: any) => string) }[] = [
+            { condition: filters.from_date, label: 'From Date', value: () => dayjs.unix(filters.from_date!).format(dateFormat) },
+            { condition: filters.to_date, label: 'To Date', value: () => dayjs.unix(filters.to_date!).format(dateFormat) },
+            { condition: filters.checkedFiltersPageVisits.page, label: 'Page Visits', value: 'Page' },
+            { condition: filters.checkedFiltersPageVisits.two_page, label: 'Page Visits', value: '2 Pages' },
+            { condition: filters.checkedFiltersPageVisits.three_page, label: 'Page Visits', value: '3 Pages' },
+            { condition: filters.checkedFiltersPageVisits.more_three, label: 'Page Visits', value: 'More than 3 Pages' },
+            { condition: filters.selectedStatus?.length, label: 'Status', value: () => filters.selectedStatus!.join(', ') },
+            { condition: filters.selectedFunnels?.length, label: 'Funnels', value: () => filters.selectedFunnels!.join(', ') },
+            { condition: filters.regions?.length, label: 'Regions', value: () => filters.regions!.join(', ') },
+            { condition: filters.checkedFiltersTime.morning, label: 'Time of Day', value: 'Morning' },
+            { condition: filters.checkedFiltersTime.evening, label: 'Time of Day', value: 'Evening' },
+            { condition: filters.checkedFiltersTime.afternoon, label: 'Time of Day', value: 'Afternoon' },
+            { condition: filters.checkedFiltersTime.all_day, label: 'Time of Day', value: 'All Day' },
+            { condition: filters.checkedFiltersTimeSpent.under_10, label: 'Time Spent', value: 'Under 10 Minutes' },
+            { condition: filters.checkedFiltersTimeSpent.over_10, label: 'Time Spent', value: 'Over 10 Minutes' },
+            { condition: filters.checkedFiltersTimeSpent.over_30, label: 'Time Spent', value: 'Over 30 Minutes' },
+            { condition: filters.checkedFiltersTimeSpent.over_60, label: 'Time Spent', value: 'Over 60 Minutes' },
+            { condition: filters.recurringVisits?.length, label: 'Recurring Visits', value: () => filters.recurringVisits!.join(', ') },
+            { condition: filters.searchQuery?.trim() !== '', label: 'Search', value: filters.searchQuery || '' },
+            { condition: filters.from_time, label: 'From Time', value: filters.from_time! },
+            { condition: filters.to_time, label: 'To Time', value: filters.to_time! },
+        ];
 
+        // Iterate over the mappings to populate newSelectedFilters
+        filterMappings.forEach(({ condition, label, value }) => {
+            if (condition) {
+                newSelectedFilters.push({ label, value: typeof value === 'function' ? value(filters) : value });
+            }
+        });
+
+        console.log(newSelectedFilters)
+        
         setSelectedFilters(newSelectedFilters);
-        setActiveFilter(filters.selectedStatus?.length > 0 ? filters.selectedStatus[0] : 'all');
+        setActiveFilter(filters.selectedStatus?.[0] || '');
         setFilterParams(filters);
     };
-
-
+    
     const handleResetFilters = async () => {
         const url = `/leads`;
 
@@ -475,28 +523,55 @@ const Leads: React.FC = () => {
 
     const handleDeleteFilter = (filterToDelete: { label: string; value: string }) => {
         const updatedFilters = selectedFilters.filter(filter => filter.label !== filterToDelete.label);
-
+    
         setSelectedFilters(updatedFilters);
-
+    
         if (filterToDelete.label === 'Dates') {
             setAppliedDates({ start: null, end: null });
-            setFormattedDates('')
+            setFormattedDates('');
         }
-
-        const newFilters = {
-            dateRange: {
-                fromDate: updatedFilters.find(f => f.label === 'From Date') ? Number(updatedFilters.find(f => f.label === 'From Date')!.value) : null,
-                toDate: updatedFilters.find(f => f.label === 'To Date') ? Number(updatedFilters.find(f => f.label === 'To Date')!.value) : null
-            },
+    
+        const newFilters: FilterParams = {
+            from_date: updatedFilters.find(f => f.label === 'From Date') ? Number(updatedFilters.find(f => f.label === 'From Date')!.value) : null,
+            to_date: updatedFilters.find(f => f.label === 'To Date') ? Number(updatedFilters.find(f => f.label === 'To Date')!.value) : null,
             selectedStatus: updatedFilters.find(f => f.label === 'Status') ? updatedFilters.find(f => f.label === 'Status')!.value.split(', ') : [],
             regions: updatedFilters.find(f => f.label === 'Regions') ? updatedFilters.find(f => f.label === 'Regions')!.value.split(', ') : [],
             emails: updatedFilters.find(f => f.label === 'Emails') ? updatedFilters.find(f => f.label === 'Emails')!.value.split(', ') : [],
             selectedFunnels: updatedFilters.find(f => f.label === 'Funnels') ? updatedFilters.find(f => f.label === 'Funnels')!.value.split(', ') : [],
             searchQuery: updatedFilters.find(f => f.label === 'Search') ? updatedFilters.find(f => f.label === 'Search')!.value : '',
-        };
 
+            checkedFilters: {
+                lastWeek: false,
+                last30Days: false,
+                last6Months: false,
+                allTime: false
+            },
+            checkedFiltersPageVisits: {
+                page: false,
+                two_page: false,
+                three_page: false,
+                more_three: false
+            },
+            checkedFiltersTime: {
+                morning: false,
+                evening: false,
+                afternoon: false,
+                all_day: false
+            },
+            checkedFiltersTimeSpent: {
+                under_10: false,
+                over_10: false,
+                over_30: false,
+                over_60: false
+            },
+            recurringVisits: [],
+            from_time: null,
+            to_time: null
+        };
+    
         handleApplyFilters(newFilters);
     };
+    
 
     useEffect(() => {
         fetchData({
@@ -615,8 +690,8 @@ const Leads: React.FC = () => {
             rowsPerPage,
             activeFilter,
             appliedDates: {
-                start: filterParams.dateRange.fromDate ? dayjs.unix(filterParams.dateRange.fromDate).toDate() : null,
-                end: filterParams.dateRange.toDate ? dayjs.unix(filterParams.dateRange.toDate).toDate() : null,
+                start: filterParams.from_date ? dayjs.unix(filterParams.from_date).toDate() : null,
+                end: filterParams.to_date ? dayjs.unix(filterParams.to_date).toDate() : null,
             }
         });
     };
@@ -637,6 +712,7 @@ const Leads: React.FC = () => {
                         justifyContent: 'center',
                         alignItems: 'center',
                         zIndex: 1000,
+                        overflow: 'hidden'
                     }}
                 >
                     <Box
@@ -662,8 +738,7 @@ const Leads: React.FC = () => {
 
                 }
              }}>
-
-                <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
                             <Box
                                 sx={{
                                     display: 'flex',
@@ -681,7 +756,7 @@ const Leads: React.FC = () => {
                                     <Typography variant="h4" component="h1" sx={leadsStyles.title}>
                                         Resolved Contacts ({count_leads ? count_leads : 0})
                                     </Typography>
-                                    {status != 'PIXEL_INSTALLATION_NEEDED' && data.length != 0 && (
+                                    {/* {status != 'PIXEL_INSTALLATION_NEEDED' && (
                                     <Button
                                         disabled={status === 'PIXEL_INSTALLATION_NEEDED'}
                                         onClick={() => handleFilterChange('all')}
@@ -705,8 +780,8 @@ const Leads: React.FC = () => {
                                         >All</Typography>
                                     </Button>
 
-                                    )}
-                                    {status != 'PIXEL_INSTALLATION_NEEDED' && data.length != 0 && (
+                                    )} */}
+                                    {/* {status != 'PIXEL_INSTALLATION_NEEDED' && (
                                     <Button
                                         disabled={status === 'PIXEL_INSTALLATION_NEEDED'}
                                         onClick={() => handleFilterChange('new_customers')}
@@ -727,8 +802,8 @@ const Leads: React.FC = () => {
                                             color: activeFilter === 'new_customers' ? 'rgba(80, 82, 178, 1)' : 'rgba(89, 89, 89, 1)',
                                         }}>New Customers</Typography>
                                     </Button>
-                                    )}
-                                    {status != 'PIXEL_INSTALLATION_NEEDED' && data.length != 0 && (
+                                    )} */}
+                                    {/* {status != 'PIXEL_INSTALLATION_NEEDED' && (
                                     <Button
                                         disabled={status === 'PIXEL_INSTALLATION_NEEDED'}
                                         onClick={() => handleFilterChange('existing_customers')}
@@ -750,7 +825,7 @@ const Leads: React.FC = () => {
                                         }}>Existing
                                             Customers</Typography>
                                     </Button>
-                                    )}
+                                    )} */}
                                 </Box>
                                 <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '15px',
                                     '@media (max-width: 900px)': {
@@ -969,7 +1044,7 @@ const Leads: React.FC = () => {
                                 {selectedFilters.map(filter => (
                                     <Chip
                                         key={filter.label}
-                                        label={`${filter.value}`}
+                                        label={`${filter.label}: ${filter.value}`}
                                         onDelete={() => handleDeleteFilter(filter)}
                                         deleteIcon={
                                             <CloseIcon 
@@ -1205,7 +1280,7 @@ const Leads: React.FC = () => {
 
 const LeadsPage: React.FC = () => {
     return (
-        <Suspense fallback={<div>Loading...</div>}>
+        <Suspense fallback={<CustomizedProgressBar />}>
             <SliderProvider>
                 <Leads />
             </SliderProvider>

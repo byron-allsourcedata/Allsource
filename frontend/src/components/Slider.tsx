@@ -190,7 +190,7 @@ const Slider: React.FC = () => {
                       cursor: 'pointer',
                     }}
                     prefill={prefillData}
-                    url="https://calendly.com/nickit-schatalow09/maximiz"
+                    url="https://calendly.com/maximiz-support/30min"
                     rootElement={document.getElementById("calendly-popup-wrapper")!}
                     text="Reschedule a Call"
                   />
@@ -285,7 +285,7 @@ const Slider: React.FC = () => {
                       textTransform: 'none',
                       cursor: 'pointer',
                     }}
-                    url="https://calendly.com/nickit-schatalow09/maximiz"
+                    url="https://calendly.com/maximiz-support/30min"
                     rootElement={document.getElementById("calendly-popup-wrapper")!}
                     text="Get Started"
                   />
