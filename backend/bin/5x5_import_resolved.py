@@ -117,9 +117,6 @@ def process_user_data(table, index, five_x_five_user: FiveXFiveUser, session: Se
         visit_id = current_visit_request[0]
         leads_requests = session.query(LeadsRequests).filter(
         LeadsRequests.visit_id == visit_id).all()
-
-    if leads_requests:
-        logging.info("leads requests exists")
         lead_visits_id = leads_requests[0].visit_id
         visit_first = session.query(LeadsVisits).filter(
             LeadsVisits.lead_id == lead_user.id
@@ -141,7 +138,6 @@ def process_user_data(table, index, five_x_five_user: FiveXFiveUser, session: Se
                                        created_at_shopify=datetime.now(), created_at=datetime.now()))
         process_leads_requests(requested_at, page, leads_requests, lead_user.id, session, behavior_type)
     else:
-        logging.info("Leads Visits not exists")
         lead_visits_id = add_new_leads_visits(visited_datetime=requested_at, lead_id=lead_user.id, session=session, behavior_type=behavior_type).id
         
         
