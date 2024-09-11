@@ -6,8 +6,6 @@ class LeadUser(Base):
     id = Column(Integer, primary_key=True, nullable=False)
     user_id = Column(Integer, nullable=False)
     five_x_five_user_id = Column(Integer, nullable=False)
-    status = Column(VARCHAR, default='New', nullable=False)
-    funnel = Column(VARCHAR, default='Visitor', nullable=False)
     five_x_five_user_id = Column(Integer, nullable=True)
     klaviyo_user_id = Column(Integer, nullable=True)
     shopify_user_id = Column(Integer, nullable=True)

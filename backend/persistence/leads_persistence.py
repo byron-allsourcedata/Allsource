@@ -32,8 +32,8 @@ class LeadsPersistence:
     def __init__(self, db: Session):
         self.db = db
 
-    def filter_leads(self, user_id, page, per_page, status, from_date, to_date, from_time, to_time, regions, page_visits, average_time_spent,
-                     lead_funnels, recurring_visits, sort_by, sort_order, search_query):
+    def filter_leads(self, user_id, page, per_page, from_date, to_date, from_time, to_time, regions, page_visits, average_time_spent,
+                     behavior_type, recurring_visits, sort_by, sort_order, search_query):
         
         recurring_visits_subquery = (
         self.db.query(
@@ -126,8 +126,6 @@ class LeadsPersistence:
             'mobile_phone': FiveXFiveUser.mobile_phone,
             'gender': FiveXFiveUser.gender,
             'last_visited_date': LeadsVisits.start_date,
-            'status': LeadUser.status,
-            'funnel': LeadUser.funnel,
             'state': FiveXFiveLocations.state,
             'city': FiveXFiveLocations.city,
             'age': FiveXFiveUser.age_min,
@@ -178,14 +176,9 @@ class LeadsPersistence:
             region_filters = [FiveXFiveLocations.city.ilike(f'%{region.strip()}%') for region in region_list]
             query = query.filter(or_(*region_filters))
 
-        if status == 'new_customers':
-            query = query.filter(LeadUser.status == 'New')
-        elif status == 'existing_customers':
-            query = query.filter(LeadUser.status == 'Existing') 
-
-        if lead_funnels:
-            funnel_list = lead_funnels.split(',')
-            query = query.filter(LeadUser.funnel.in_(funnel_list))
+        if behavior_type:
+            behavior_type_list = behavior_type.split(',')
+            query = query.filter(LeadUser.behavior_type_list.in_(behavior_type_list))
 
         if page_visits:
             page_visits_list = [int(visit) for visit in page_visits.split(',')]
