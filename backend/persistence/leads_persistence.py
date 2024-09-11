@@ -163,7 +163,7 @@ class LeadsPersistence:
             recurring_visits_list = recurring_visits.split(',')
             filters = []
             for recurring_visit in recurring_visits_list:
-                if recurring_visit > 4:
+                if recurring_visit > 4: #is 4+ in the frontend
                     filters.append(recurring_visits_subquery.c.recurring_visits > recurring_visit)
                 else:
                      filters.append(recurring_visits_subquery.c.recurring_visits == recurring_visit)
