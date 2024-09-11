@@ -23,7 +23,6 @@ import { showErrorToast, showToast } from '@/components/ToastNotification';
 const VerifyPixelIntegration: React.FC = () => {
   const { website } = useUser();
   const [inputValue, setInputValue] = useState<string>(website || "");
-  document.body.style.overflow =  'hidden';
 
   useEffect(() => {
     setInputValue(website || "");
@@ -230,8 +229,8 @@ const SupportSection: React.FC = () => {
             textTransform: "none",
             cursor: "pointer",
           }}
-          url="https://calendly.com/nickit-schatalow09/maximiz"
-          rootElement={rootElement} // Теперь корневой элемент передается через состояние
+          url="https://calendly.com/maximiz-support/30min"
+          rootElement={rootElement} 
           text="Schedule a call with us"
         />
       )}
@@ -282,7 +281,12 @@ const Dashboard: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [showCharts, setShowCharts] = useState(false);
 
-
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, []);
 
   useEffect(() => {
     const fetchUserDataAndUpdateState = async () => {

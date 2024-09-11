@@ -23,6 +23,13 @@ const Signup: React.FC = () => {
   const [formValues, setFormValues] = useState({ full_name: '', email: '', password: '', is_without_card: isWithoutCard ? 'true' : 'false', termsAccepted: false });
   const [formSubmitted, setFormSubmitted] = useState(false);
 
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, []);
+
 
   const navigateTo = (path: string) => {
     window.location.href = path;

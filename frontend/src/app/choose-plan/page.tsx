@@ -42,6 +42,13 @@ const PlanPage: React.FC = () => {
   const [plans, setPlans] = useState<any[]>([]);
 
   useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, []);
+
+  useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await axiosInterceptorInstance.get('/subscriptions/stripe-plans');

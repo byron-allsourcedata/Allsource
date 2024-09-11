@@ -39,6 +39,13 @@ const AccountSetup = () => {
 
   const { full_name: userFullName, email: userEmail } = useUser();
 
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, []);
+
   const getUserDataFromStorage = () => {
     const meItem = typeof window !== 'undefined' ? sessionStorage.getItem('me') : null;
     if (meItem) {

@@ -175,7 +175,7 @@ class LeadsPersistence:
 
         if behavior_type:
             behavior_type_list = behavior_type.split(',')
-            query = query.filter(LeadUser.behavior_type_list.in_(behavior_type_list))
+            query = query.filter(LeadUser.behavior_type.in_(behavior_type_list))
 
         if page_visits:
             page_visits_list = [int(visit) for visit in page_visits.split(',')]
