@@ -95,9 +95,9 @@ def process_user_data(table, index, five_x_five_user: FiveXFiveUser, session: Se
         page = referer
     behavior_type = 'visitor' if not partner_uid_dict.get('action') else partner_uid_dict.get('action')
     lead_user = session.query(LeadUser).filter_by(five_x_five_user_id=five_x_five_user.id, user_id=user.id).first()
-    is_first_visit = False
+    is_first_request = False
     if not lead_user:
-        is_first_visit = True
+        is_first_request = True
         lead_user = LeadUser(five_x_five_user_id=five_x_five_user.id, user_id=user.id)
         session.add(lead_user)
         session.flush()
@@ -145,7 +145,7 @@ def process_user_data(table, index, five_x_five_user: FiveXFiveUser, session: Se
         lead_visits_id = add_new_leads_visits(visited_datetime=requested_at, lead_id=lead_user.id, session=session, behavior_type=behavior_type).id
         
         
-    if is_first_visit == True:
+    if is_first_request == True:
         session.query(LeadUser).filter(LeadUser.user_id == user.id).update(
             {
                 LeadUser.first_visit_id: lead_visits_id,
