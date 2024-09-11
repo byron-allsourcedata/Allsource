@@ -8,6 +8,7 @@ import pytz
 import urllib.parse
 from datetime import time as dt_time
 import time
+from dateutil.relativedelta import relativedelta
 from sqlalchemy import func, and_, or_
 import boto3
 import pyarrow.parquet as pq
@@ -18,6 +19,7 @@ sys.path.append(parent_dir)
 
 from models.leads_requests import LeadsRequests
 from models.leads_visits import LeadsVisits
+from models.subscriptions import UserSubscriptions
 from models.five_x_five_hems import FiveXFiveHems
 from models.users_payments_transactions import UsersPaymentsTransactions
 from sqlalchemy import create_engine
@@ -25,6 +27,7 @@ from sqlalchemy.orm import sessionmaker, Session
 from models.five_x_five_users import FiveXFiveUser
 from models.leads_users import LeadUser
 from models.users import Users
+from models.leads_orders import LeadOrders
 from dotenv import load_dotenv
 from sqlalchemy.dialects.postgresql import insert
 from collections import defaultdict
@@ -80,6 +83,7 @@ def process_user_data(table, index, five_x_five_user: FiveXFiveUser, session: Se
     partner_uid_decoded = urllib.parse.unquote(str(table['PARTNER_UID'][index]).lower())
     partner_uid_dict = json.loads(partner_uid_decoded)
     partner_uid_client_id = partner_uid_dict.get('client_id')
+    page = partner_uid_dict.get('current_page')
     user = session.query(Users).filter(Users.data_provider_id == str(partner_uid_client_id)).first()
     if not user:
         logging.info(f"User not found with client_id {partner_uid_client_id}")
@@ -89,11 +93,7 @@ def process_user_data(table, index, five_x_five_user: FiveXFiveUser, session: Se
         json_headers = json.loads(str(table['JSON_HEADERS'][index]).lower())
         referer = json_headers.get('referer')[0]
         page = referer
-    behavior_type = 'visitor'
-    if partner_uid_dict.get('item'):
-        behavior_type = 'viewed_product'
-    if partner_uid_dict.get('addToCart'):
-        behavior_type = 'added_to_cart'
+    behavior_type = 'visitor' if not partner_uid_dict.get('action') else partner_uid_dict.get('action')
     lead_user = session.query(LeadUser).filter_by(five_x_five_user_id=five_x_five_user.id, user_id=user.id).first()
     if not lead_user:
         lead_user = LeadUser(five_x_five_user_id=five_x_five_user.id, user_id=user.id)
@@ -126,19 +126,29 @@ def process_user_data(table, index, five_x_five_user: FiveXFiveUser, session: Se
         ).first()
         if visit_first.id == leads_requests[0].visit_id:
             if lead_user.behavior_type in ('visitor', 'viewed_product') and behavior_type in (
-            'viewed_product', 'added_to_cart') \
-                    and lead_user.behavior_type != behavior_type:
+            'viewed_product', 'product_added_to_cart'):
                 session.query(LeadUser).filter(LeadUser.id == lead_user.id).update({
                     LeadUser.behavior_type: behavior_type
                 })
                 session.commit()
+            if behavior_type == 'checkout_completed': 
+                order_detail = partner_uid_dict.get('order_detail')
+                session.add(LeadOrders(lead_user_id=lead_user.id, 
+                                       total_price=order_detail.get('total_price'), 
+                                       currency_code=order_detail.get('currency'),
+                                       created_at_shopify=datetime.now(), created_at=datetime.now()))
         process_leads_requests(requested_at, page, leads_requests, lead_user.id, session, behavior_type)
     else:
         logging.info("Leads Visits not exists")
         lead_visits = add_new_leads_visits(requested_at, lead_user.id, session, behavior_type).id
-        session.query(Users).filter(Users.id == user.id).update(
-            {Users.is_pixel_installed: True},
-            synchronize_session=False)
+        session.query(UserSubscriptions).filter(UserSubscriptions.user_id == user.id).update(
+            {
+                UserSubscriptions.plan_start: datetime.now(),
+                UserSubscriptions.plan_end: datetime.now() + relativedelta(months=1)
+            },
+            synchronize_session=False
+        )
+        session.flush()
     lead_request = insert(LeadsRequests).values(
         lead_id=lead_user.id,
         page=page, requested_at=requested_at, visit_id=lead_visits
@@ -310,6 +320,7 @@ def main():
             logging.info('Sleeping for 10 minutes...')
             time.sleep(60 * 10)
     except Exception as e:
+        session.rollback()
         logging.error(f"An error occurred: {str(e)}")
         traceback.print_exc()
     finally:

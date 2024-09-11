@@ -1,9 +1,9 @@
 from pydantic import BaseModel, Field
-
+from typing import Optional
 
 class PixelInstallationRequest(BaseModel):
-    pixelClientId: str = Field(...)
-    url: str = Field(...)
+    pixelClientId: Optional[str] = Field(None)
+    url: str = Field(...)      
 
 
 class EmailFormRequest(BaseModel):

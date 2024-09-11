@@ -1,3 +1,4 @@
+"use client";
 import { Box, Grid, Typography, Button } from "@mui/material";
 import Image from "next/image";
 import axiosInterceptorInstance from "../axios/axiosInterceptorInstance";

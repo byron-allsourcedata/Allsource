@@ -24,7 +24,6 @@ from models.five_x_five_users_locations import FiveXFiveUsersLocations
 from models.leads_users import LeadUser
 from models.five_x_five_locations import FiveXFiveLocations
 
-from schemas.integrations import Customer
 
 logger = logging.getLogger(__name__)
 
@@ -133,7 +132,7 @@ class LeadsPersistence:
             'state': FiveXFiveLocations.state,
             'city': FiveXFiveLocations.city,
             'age': FiveXFiveUser.age_min,
-            'time_spent': subquery.c.start_date
+            'time_spent': subquery.c.time_on_site
         }
         if sort_by:
             sort_column = sort_options[sort_by]
@@ -237,10 +236,7 @@ class LeadsPersistence:
         return leads, count, max_page
 
     def get_lead_data(self, lead_id):
-        lead = self.db.query(Lead).filter(Lead.id == lead_id).first()
-        if lead:
-            return lead
-        return None
+        lead = self.db.query(FiveXFiveUser).filter(FiveXFiveUser.id == lead_id).first()
 
     def get_ids_user_leads_ids(self, user_id, leads_ids):
         lead_users = self.db.query(LeadUser).filter(LeadUser.user_id == user_id,
@@ -356,14 +352,12 @@ class LeadsPersistence:
         max_page = math.ceil(count / per_page) if per_page > 0 else 1
         return leads_data, count, max_page
     
-    def update_leads_by_customer(self, customer: Customer, user_id: int):
-        existing_lead_user = self.db.query(LeadUser).join(Lead, Lead.id == LeadUser.lead_id).filter(
-                                    Lead.business_email == customer.business_email, LeadUser.user_id == user_id).first()
-        if existing_lead_user:
-            self.db.query(LeadUser).filter(LeadUser.id == existing_lead_user.id).update({LeadUser.status: 'Existing'})
-        else:
-            lead = Lead(**customer.__dict__)
-            self.db.add(lead)
-            self.db.commit()
-            self.db.add(LeadUser(lead_id=lead.id, user_id=user_id, status='New', funnel='Converted'))
-            self.db.commit()
+    def get_leads_users_by_lead_id(self, lead_id: int, user_id: int) -> LeadUser:
+        return self.db.query(LeadUser).filter(LeadUser.five_x_five_user_id == lead_id, LeadUser.user_id == user_id).first()
+    
+    def get_leads_user_filter_by_email(self, user_id: int, email: str):
+        return self.db.query(LeadUser).join(FiveXFiveUser, FiveXFiveUser.id == LeadUser.five_x_five_user_id).filter(LeadUser.user_id == user_id, 
+                                                                                         FiveXFiveUser.business_email == email).all()
+
+    def get_leads_user(self, user_id: int, **filter_by):
+        return self.db.query(LeadUser).filter_by(**filter_by)

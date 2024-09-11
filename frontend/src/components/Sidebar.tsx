@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Box, List, ListItem, ListItemIcon, ListItemText, Divider, LinearProgress, Typography } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import { usePathname } from 'next/navigation';
@@ -18,6 +18,7 @@ import { AxiosError } from 'axios';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { Height } from '@mui/icons-material';
 import Slider from "../components/Slider";
+import { useUser } from '@/context/UserContext';
 
 const sidebarStyles = {
     container: {
@@ -99,7 +100,7 @@ const sidebarStyles = {
         boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
     },
     ListItem: {
-        minHeight: '4.5em' 
+        minHeight: '4.5em'
     },
     activeItem: {
         borderLeft: '3px solid rgba(80, 82, 178, 1)',
@@ -116,9 +117,6 @@ interface ProgressSectionProps {
 }
 
 const SetupSection: React.FC<ProgressSectionProps> = ({ meData }) => {
-    const percent_steps = meData?.percent_steps ?? 0;
-
-
     return (
         <Box sx={sidebarStyles.setupSection}>
             <Box display="flex" alignItems="center" mb={2}>
@@ -130,8 +128,8 @@ const SetupSection: React.FC<ProgressSectionProps> = ({ meData }) => {
                     color: '#000',
                     fontSize: '0.875rem'
                 }}>
-                Setup
-            </Typography>
+                    Setup
+                </Typography>
             </Box>
             <LinearProgress
                 variant="determinate"
@@ -139,17 +137,18 @@ const SetupSection: React.FC<ProgressSectionProps> = ({ meData }) => {
                 sx={{
                     height: '8px',
                     borderRadius: '4px',
+                    backgroundColor: "rgba(219, 219, 219, 1)",
                     '& .MuiLinearProgress-bar': {
                         backgroundColor: 'rgba(110, 193, 37, 1)',
                     },
                 }}
             />
             <Typography variant="body2" color="textSecondary" mt={1} sx={{
-                        fontFamily: 'Nunito',
-                        lineHeight: 'normal',
-                        color: '#000',
-                        fontSize: '0.625rem'
-                    }}>
+                fontFamily: 'Nunito',
+                lineHeight: 'normal',
+                color: '#000',
+                fontSize: '0.625rem'
+            }}>
                 {meData.percent_steps ? meData.percent_steps : 0}% complete
             </Typography>
         </Box>
@@ -158,8 +157,15 @@ const SetupSection: React.FC<ProgressSectionProps> = ({ meData }) => {
 
 
 const Sidebar: React.FC = () => {
-    const meItem = typeof window !== 'undefined' ? sessionStorage.getItem('me') : null;
-    const meData = meItem ? JSON.parse(meItem) : { percent_steps: 0 };
+    const [meData, setMeData] = useState({ percent_steps: 0 });
+    useEffect(() => {
+        if (typeof window !== "undefined") {
+            const meItem = sessionStorage.getItem("me");
+            if (meItem) {
+                setMeData(JSON.parse(meItem));
+            }
+        }
+    }, []);
     const { setShowSlider } = useSlider();
     const router = useRouter();
     const pathname = usePathname();

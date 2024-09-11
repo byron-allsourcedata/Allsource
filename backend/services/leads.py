@@ -45,7 +45,7 @@ class LeadsService:
         'company_employee_count': lead[21],
         'net_worth': lead[22],
         'job_title': lead[23],
-        'last_updated': lead[24].strftime('%d.%m.%Y %H:%M'),
+        'last_updated': lead[24].strftime('%d.%m.%Y %H:%M') if lead[24] else None,
         'personal_emails_last_seen': lead[25].strftime('%d.%m.%Y %H:%M') if lead[25] else None,
         'company_last_updated': lead[26].strftime('%d.%m.%Y %H:%M') if lead[26] else None,
         'job_title_last_updated': lead[27].strftime('%d.%m.%Y %H:%M') if lead[27] else None,

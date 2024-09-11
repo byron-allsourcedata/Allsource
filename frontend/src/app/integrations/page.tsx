@@ -11,6 +11,7 @@ import dynamic from "next/dynamic";
 import { useSlider, SliderProvider } from '../../context/SliderContext';
 import CloseIcon from '@mui/icons-material/Close';
 import { showToast, showErrorToast } from "../../components/ToastNotification";
+// import FacebookLoginForm from "@/components/MetaButton";
 const Sidebar = dynamic(() => import('../../components/Sidebar'), {
     suspense: true,
 });
@@ -23,8 +24,9 @@ interface IntegrationService {
 
 interface Credential {
     id: number;
-    shop_domain: string;
-    access_token: string | null;
+    shop_domain?: string;
+    access_token?: string;
+    data_center?: string,
     service_name: string;
 }
 
@@ -48,6 +50,7 @@ const SliderIntegration = ({ credential, service, open, onClose, onSave, onDelet
             setFormData({
                 shop_domain: credential.shop_domain || '',
                 access_token: credential.access_token || '',
+                data_center: credential.data_center || ''
             });
         } else {
             setFormData({});
@@ -87,6 +90,7 @@ const SliderIntegration = ({ credential, service, open, onClose, onSave, onDelet
                     id: -1,
                     shop_domain: formData.shop_domain || '',
                     access_token: formData.access_token || '',
+                    data_center: formData.access_token || '',
                     service_name: service.service_name,
                 };
                 onSave(newCredential);
@@ -214,7 +218,7 @@ const ServiceIntegrations = ({ service }: { service: IntegrationService[] }) => 
 
         const fetchData = async () => {
             try {
-                const response = await axiosInstance.get('/integrations/credentials', {
+                const response = await axiosInstance.get('/integrations/credentials/', {
                     headers: { Authorization: `Bearer ${accessToken}` },
                 });
                 if (response.status === 200) {
@@ -329,13 +333,12 @@ const Integrations: React.FC = () => {
 
     return (
         <>
-            
-                        <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                            <Typography variant="h4" component="h1" sx={integrationsStyle.title}>
-                                Integrations
-                            </Typography>
-                        </Box>
-                        <ServiceIntegrations service={integrationsService} />
+        <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Typography variant="h4" component="h1" sx={integrationsStyle.title}>
+                Integrations
+            </Typography>
+        </Box>
+        <ServiceIntegrations service={integrationsService} />
         </>
     );
 };
