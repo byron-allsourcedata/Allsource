@@ -201,20 +201,19 @@ class SubscriptionService:
             stripe_payload.get("data").get("object").get("plan").get("product"))
         payment_platform_subscription_id = stripe_payload.get("data").get("object").get("id")
         plan_id = self.plans_persistence.get_plan_by_title(plan_type)
-        domains_limit, users_limit, integrations_limit, audiences_limit, leads_credits, prospect_credits = self.plans_persistence.get_plan_limit_by_id(
+        domains_limit, users_limit, integrations_limit, leads_credits, prospect_credits = self.plans_persistence.get_plan_limit_by_id(
             plan_id=plan_id)
         subscription_obj = Subscription(
             user_id=user_id,
             plan_start=start_date,
             plan_end=end_date,
             status=status,
+            users_limit=users_limit,
             platform_subscription_id=payment_platform_subscription_id,
             plan_id=plan_id,
             stripe_request_created_at=stripe_request_created_at,
             domains_limit=domains_limit,
-            users_limit=users_limit,
-            integrations_limit=integrations_limit,
-            audiences_limit=audiences_limit
+            integrations_limit=integrations_limit
         )
         self.db.add(subscription_obj)
         user = self.db.query(User).filter(User.id == user_id).first()
@@ -241,14 +240,13 @@ class SubscriptionService:
         plan = self.plans_persistence.get_free_trail_plan()
         status = 'active'
         created_at = datetime.strptime(get_utc_aware_date_for_postgres(), '%Y-%m-%dT%H:%M:%SZ')
-        domains_limit, users_limit, integrations_limit, audiences_limit, leads_credits, prospect_credits = self.plans_persistence.get_plan_limit_by_id(
+        domains_limit, users_limit, integrations_limit, leads_credits, prospect_credits = self.plans_persistence.get_plan_limit_by_id(
             plan_id=plan.id)
         add_subscription_obj = Subscription(
             domains_limit=domains_limit,
             integrations_limit=integrations_limit,
-            audiences_limit=audiences_limit,
-            users_limit=users_limit,
             user_id=user_id,
+            users_limit=users_limit,
             updated_at=created_at.isoformat() + "Z",
             created_at=created_at.isoformat() + "Z",
             status=status,
@@ -311,7 +309,7 @@ class SubscriptionService:
         plan_type = self.determine_plan_name_from_price(
             stripe_payload.get("data").get("object").get("plan").get("product"))
         plan_id = self.plans_persistence.get_plan_by_title(plan_type)
-        domains_limit, users_limit, integrations_limit, audiences_limit, leads_credits, prospect_credits = self.plans_persistence.get_plan_limit_by_id(
+        domains_limit, users_limit, integrations_limit, leads_credits, prospect_credits = self.plans_persistence.get_plan_limit_by_id(
             plan_id=plan_id)
         if status != "canceled":
             user_subscription.plan_start = start_date
@@ -319,7 +317,6 @@ class SubscriptionService:
             user_subscription.domains_limit = user_subscription.domains_limit + domains_limit
             user_subscription.users_limit = user_subscription.users_limit + users_limit
             user_subscription.integrations_limit = user_subscription.integrations_limit + integrations_limit
-            user_subscription.audiences_limit = user_subscription.audiences_limit + audiences_limit,
             user_subscription.plan_id=plan_id,
         user_subscription.status = status
         user_subscription.stripe_request_created_at = stripe_request_created_at

@@ -129,7 +129,7 @@ class LeadsPersistence:
             'city': FiveXFiveLocations.city,
             'age': FiveXFiveUser.age_min,
             'time_spent': LeadsVisits.full_time_sec,
-            'funnel': LeadUser.behavior_type
+            'behavior_type': LeadUser.behavior_type
         }
         if sort_by:
             sort_column = sort_options[sort_by]
@@ -161,16 +161,13 @@ class LeadsPersistence:
 
         if recurring_visits:
             recurring_visits_list = recurring_visits.split(',')
+            filters = []
             for recurring_visit in recurring_visits_list:
                 if recurring_visit > 4:
-                    query = query.filter(
-                        recurring_visits_subquery.c.recurring_visits > recurring_visit
-                    )
+                    filters.append(recurring_visits_subquery.c.recurring_visits > recurring_visit)
                 else:
-                    query = query.filter(
-                        recurring_visits_subquery.c.recurring_visits == recurring_visit
-                    )
-            query = query.filter(or_(*region_filters))
+                     filters.append(recurring_visits_subquery.c.recurring_visits == recurring_visit)
+            query = query.filter(or_(*filters))
         if regions:
             region_list = regions.split(',')
             region_filters = [FiveXFiveLocations.city.ilike(f'%{region.strip()}%') for region in region_list]
