@@ -167,7 +167,7 @@ class LeadsPersistence:
                 if status_data == 'converted_sales':
                     filters.append(LeadUser.is_converted_sales == True)
                 elif status_data == 'returning_visitors':
-                    filters.append(LeadUser.is_returning_visitors == True)
+                    filters.append(LeadUser.is_returning_visitor == True)
                 elif status_data == 'abandoned_cart':
                     filters.append(LeadUser.is_abandoned_cart == True)
             query = query.filter(or_(*filters))
@@ -200,13 +200,17 @@ class LeadsPersistence:
             query = query.filter(LeadUser.behavior_type.in_(behavior_type_list))
 
         if page_visits:
-            page_visits_list = [int(visit) for visit in page_visits.split(',')]
+            page_visits_list = page_visits.split(',')
             filters = []
             for visit in page_visits_list:
                 if visit == 'more_than_3_pages':
                     filters.append(LeadsVisits.pages_count > 3)
-                else:
-                    filters.append(LeadsVisits.pages_count == visit)
+                elif visit == '2_pages':
+                    filters.append(LeadsVisits.pages_count == 2)
+                elif visit == '3_pages':
+                    filters.append(LeadsVisits.pages_count == 3)
+                elif visit == '1_pages':
+                    filters.append(LeadsVisits.pages_count == 1)
             query = query.filter(or_(*filters))
 
         if average_time_spent:

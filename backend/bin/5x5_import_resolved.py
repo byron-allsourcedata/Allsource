@@ -18,6 +18,8 @@ parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 
 from models.leads_requests import LeadsRequests
+from models.leads_users_added_to_cart import LeadsUsersAddedToCart
+from models.leads_users_ordered import LeadsUsersOrdered
 from models.leads_visits import LeadsVisits
 from models.subscriptions import UserSubscriptions
 from models.five_x_five_hems import FiveXFiveHems
@@ -135,12 +137,16 @@ def process_user_data(table, index, five_x_five_user: FiveXFiveUser, session: Se
                                        currency_code=order_detail.get('currency'),
                                        created_at_shopify=datetime.now(), created_at=datetime.now()))
         process_leads_requests(requested_at=requested_at, page=page, leads_requests=leads_requests, visit_id=visit_id, session=session, behavior_type=behavior_type)
-        if behavior_type == 'product_added_to_cart':
+        if lead_user.is_abandoned_cart == False and behavior_type == 'product_added_to_cart':
             lead_user.is_abandoned_cart = True
-        if behavior_type == 'checkout_completed':
+            session.add(LeadsUsersOrdered(lead_user_id=lead_user.id, 
+                                    ordered_at=datetime.now()))
+        if lead_user.is_converted_sales == False and behavior_type == 'checkout_completed':
             lead_user.is_converted_sales = True
-        if lead_user.is_returning_visitors == False:
-            lead_user.is_returning_visitors = True        
+            session.add(LeadsUsersAddedToCart(lead_user_id=lead_user.id, 
+                                    added_at=datetime.now()))
+        if lead_user.is_returning_visitor == False:
+            lead_user.is_returning_visitor = True        
         session.flush()
     else:
         lead_visits_id = add_new_leads_visits(visited_datetime=requested_at, lead_id=lead_user.id, session=session, behavior_type=behavior_type).id

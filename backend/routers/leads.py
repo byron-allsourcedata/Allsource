@@ -21,7 +21,7 @@ async def get_leads(
         average_time_spent: float = Query(None, description="Average time spent on the page in minutes"),
         behavior_type: str = Query(None, description="funnel type stage"),
         status: str = Query(None, status="status type stage"),
-        recurring_visits: int = Query(None, description="Minimum number of recurring visits"),
+        recurring_visits: str = Query(None, description="Minimum number of recurring visits"),
         sort_by: str = Query(None, description="Field"),
         sort_order: str = Query(None, description="Field to sort by: 'asc' or 'desc'"),
         search_query: str = Query(None, description="Search for email, first name, lastname and phone number"),
