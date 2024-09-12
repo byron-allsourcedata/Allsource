@@ -71,3 +71,15 @@ body::-webkit-scrollbar {
     top: 90px;
   }
 }
+
+input:-webkit-autofill, textarea:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 1000px white inset !important;
+  box-shadow: 0 0 0 1000px white inset !important;
+  background-color: transparent !important;
+  -webkit-text-fill-color: #000 !important;
+}
+
+.MuiFormLabel-root.Mui-focused {
+  transform: translate(0, -1.5rem) scale(0.75);
+}
+
