@@ -360,6 +360,7 @@ const Leads: React.FC = () => {
                 router.push('/signin');
                 return;
             }
+            console.log(selectedFilters)
 
     
             // Processing "Date Calendly"
