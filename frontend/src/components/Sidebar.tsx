@@ -31,6 +31,7 @@ const sidebarStyles = {
         borderRight: '1px solid rgba(228, 228, 228, 1)',
         height: '90.99vh',
         display: 'flex',
+        overflow: 'hidden',
         flexDirection: 'column',
         justifyContent: 'start',
         position: 'relative'

@@ -1,16 +1,22 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { Box, Button, TextField, Typography, Link, IconButton, InputAdornment } from '@mui/material';
+import { Box, Button, TextField, Typography } from '@mui/material';
 import { AxiosError } from 'axios';
 import axiosInstance from '../../axios/axiosInterceptorInstance';
 import { resetStyles } from './resetStyles';
 import { showToast } from '../../components/ToastNotification';
 
 
-const Signup: React.FC = () => {
+const ResetPassword: React.FC = () => {
   const router = useRouter();
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, []);
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [formValues, setFormValues] = useState({ email: '', password: '' });
@@ -118,4 +124,4 @@ const Signup: React.FC = () => {
   );
 };
 
-export default Signup;
+export default ResetPassword;

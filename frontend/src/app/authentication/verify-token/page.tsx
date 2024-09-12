@@ -12,6 +12,13 @@ const VerifyToken = () => {
   const token = searchParams.get('token');
 
   useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, []);
+
+  useEffect(() => {
     const verifyToken = async () => {
       if (token) {
         try {

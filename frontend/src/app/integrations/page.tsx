@@ -67,7 +67,7 @@ const SliderIntegration = ({ credential, service, open, onClose, onSave, onDelet
         if (!accessToken) return;
 
         const body: Record<string, any> = {
-            [service.service_name]: {
+            [service.service_name.toLowerCase()]: {
                 ...formData,
             },
         };

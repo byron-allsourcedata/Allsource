@@ -11,7 +11,7 @@ class LeadUser(Base):
     shopify_user_id = Column(Integer, nullable=True)
     bigcommerce_user_id = Column(Integer, nullable=True)
     mailchimp_user_id = Column(Integer, nullable=True)
-    behavior_type = Column(VARCHAR, default='Visitor', nullable=False)
+    behavior_type = Column(VARCHAR, nullable=False)
     created_at = Column(TIMESTAMP, nullable=True)
     first_visit_id = Column(Integer, ForeignKey('leads_visits.id'), nullable=False)
 

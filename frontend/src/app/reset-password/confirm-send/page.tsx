@@ -10,6 +10,13 @@ import { confirmStyles } from './confirmStyles';
 const ConfirmSend: React.FC = () => {
   const router = useRouter();
   const [email, setEmail] = useState<string | null>(null);
+  
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, []);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
