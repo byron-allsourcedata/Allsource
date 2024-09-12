@@ -36,6 +36,7 @@ export const styles: { [key: string]: SxProps<Theme> } = {
   formField: {
     maxHeight: '56px',
     maxWidth: '100%',
+    fontFamily: 'Nunito',
     '& .MuiInputBase-root': {
       maxHeight: '48px',
     },

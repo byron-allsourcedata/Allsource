@@ -13,6 +13,22 @@ import CustomizedProgressBar from './CustomizedProgressBar';
 const Slider: React.FC = () => {
   const [prefillData, setPrefillData] = useState<{ email: '', name: '' } | null>(null);
   const [isPrefillLoaded, setIsPrefillLoaded] = useState(false);
+  const [fullName, setFullName] = useState<string | null>(null);
+  const [email, setEmail] = useState<string | null>(null);
+
+  useEffect(() => {
+    const meItem = typeof window !== 'undefined' ? sessionStorage.getItem('me') : null;
+    if (meItem) {
+      const meData = JSON.parse(meItem);
+      setFullName(meData.full_name);
+      setEmail(meData.email);
+    }
+  },); 
+  
+  const prefillDataStorage = {
+    name: fullName || '',
+    email: email || '',
+  };
 
   const fetchPrefillData = async () => {
     try {
@@ -288,6 +304,7 @@ const Slider: React.FC = () => {
                     url="https://calendly.com/maximiz-support/30min"
                     rootElement={document.getElementById("calendly-popup-wrapper")!}
                     text="Get Started"
+                    prefill={prefillDataStorage}
                   />
                 </Button>
               </Box>

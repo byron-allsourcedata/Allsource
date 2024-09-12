@@ -295,9 +295,9 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
                           sx={styles.formField}
                           onFocus={handleFocus}
                           onBlur={handleBlur}
+                          InputProps={{ sx: styles.formInput }}
                           onChange={(e) => setDomain(e.target.value)}
                           InputLabelProps={{ sx: styles.inputLabel }}
-                        
                         />
                       </Box>
                       <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'start' }}>
