@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, VARCHAR, event, TIMESTAMP, ForeignKey
+from sqlalchemy import Column, Integer, VARCHAR, event, TIMESTAMP, ForeignKey, Boolean
 from .base import Base, create_timestamps
 
 class LeadUser(Base):
@@ -11,8 +11,12 @@ class LeadUser(Base):
     shopify_user_id = Column(Integer, nullable=True)
     bigcommerce_user_id = Column(Integer, nullable=True)
     mailchimp_user_id = Column(Integer, nullable=True)
-    behavior_type = Column(VARCHAR, nullable=False)
+    behavior_type = Column(VARCHAR, nullable=False, default='visitor')
     created_at = Column(TIMESTAMP, nullable=True)
     first_visit_id = Column(Integer, ForeignKey('leads_visits.id'), nullable=False)
+    is_converted_sales = Column(Boolean, nullable=False, default=False)
+    is_returning_visitors = Column(Boolean, nullable=False, default=False)
+    is_abandoned_cart = Column(Boolean, nullable=False, default=False)
+    is_landed_to_cart = Column(Boolean, nullable=False, default=False)
 
 event.listen(LeadUser, "before_insert", create_timestamps)
