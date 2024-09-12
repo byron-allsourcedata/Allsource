@@ -130,27 +130,8 @@ def process_user_data(table, index, five_x_five_user: FiveXFiveUser, session: Se
                     LeadUser.behavior_type: behavior_type
                 })
                 session.commit()
-            if behavior_type == 'checkout_completed': 
-                order_detail = partner_uid_dict.get('order_detail')
-                session.add(LeadOrders(lead_user_id=lead_user.id, 
-                                       total_price=order_detail.get('total_price'), 
-                                       currency_code=order_detail.get('currency'),
-                                       created_at_shopify=datetime.now(), created_at=datetime.now()))
+
         process_leads_requests(requested_at=requested_at, page=page, leads_requests=leads_requests, visit_id=visit_id, session=session, behavior_type=behavior_type)
-        if  behavior_type == 'product_added_to_cart':
-            existing_record = session.query(LeadsUsersOrdered).filter_by(lead_user_id=lead_user.id).first()
-            if existing_record:
-                existing_record.ordered_at = datetime.now()
-            else:
-                new_record = LeadsUsersOrdered(lead_user_id=lead_user.id, ordered_at=datetime.now())
-                session.add(new_record)
-        if  behavior_type == 'product_added_to_cart':
-            existing_record = session.query(LeadsUsersAddedToCart).filter_by(lead_user_id=lead_user.id).first()
-            if existing_record:
-                existing_record.added_at = datetime.now()
-            else:
-                new_record = LeadsUsersOrdered(lead_user_id=lead_user.id, added_at=datetime.now())
-                session.add(new_record)
         if lead_user.is_returning_visitor == False:
             lead_user.is_returning_visitor = True
         session.flush()
@@ -170,7 +151,25 @@ def process_user_data(table, index, five_x_five_user: FiveXFiveUser, session: Se
                         last_subscription.plan_end = date_now + relativedelta(days=trial_days)
                         session.flush()
                 
-    
+    if behavior_type == 'checkout_completed': 
+        order_detail = partner_uid_dict.get('order_detail')
+        session.add(LeadOrders(lead_user_id=lead_user.id, 
+                                total_price=order_detail.get('total_price'), 
+                                currency_code=order_detail.get('currency'),
+                                created_at_shopify=datetime.now(), created_at=datetime.now()))
+        existing_record = session.query(LeadsUsersOrdered).filter_by(lead_user_id=lead_user.id).first()
+        if existing_record:
+            existing_record.ordered_at = datetime.now()
+        else:
+            new_record = LeadsUsersOrdered(lead_user_id=lead_user.id, ordered_at=datetime.now())
+            session.add(new_record)
+    if  behavior_type == 'product_added_to_cart':
+        existing_record = session.query(LeadsUsersAddedToCart).filter_by(lead_user_id=lead_user.id).first()
+        if existing_record:
+            existing_record.added_at = datetime.now()
+        else:
+            new_record = LeadsUsersAddedToCart(lead_user_id=lead_user.id, added_at=datetime.now())
+            session.add(new_record)
     lead_request = insert(LeadsRequests).values(
         lead_id=lead_user.id,
         page=page, requested_at=requested_at, visit_id=lead_visits_id
