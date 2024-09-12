@@ -130,11 +130,7 @@ def process_user_data(table, index, five_x_five_user: FiveXFiveUser, session: Se
                     LeadUser.behavior_type: behavior_type
                 })
                 session.commit()
-
         process_leads_requests(requested_at=requested_at, page=page, leads_requests=leads_requests, visit_id=visit_id, session=session, behavior_type=behavior_type)
-        if lead_user.is_returning_visitor == False:
-            lead_user.is_returning_visitor = True
-        session.flush()
     else:
         lead_visits_id = add_new_leads_visits(visited_datetime=requested_at, lead_id=lead_user.id, session=session, behavior_type=behavior_type).id
         if is_first_request == True:
@@ -150,13 +146,17 @@ def process_user_data(table, index, five_x_five_user: FiveXFiveUser, session: Se
                         last_subscription.plan_start = date_now
                         last_subscription.plan_end = date_now + relativedelta(days=trial_days)
                         session.flush()
+            else:
+                if lead_user.is_returning_visitor == False:
+                    lead_user.is_returning_visitor = True
+                    session.flush()
                 
     if behavior_type == 'checkout_completed': 
         order_detail = partner_uid_dict.get('order_detail')
         session.add(LeadOrders(lead_user_id=lead_user.id, 
                                 total_price=order_detail.get('total_price'), 
                                 currency_code=order_detail.get('currency'),
-                                created_at_shopify=datetime.now(), created_at=datetime.now()))
+                                created_at_shopify=datetime.now(), created_at=requested_at))
         existing_record = session.query(LeadsUsersOrdered).filter_by(lead_user_id=lead_user.id).first()
         if existing_record:
             existing_record.ordered_at = datetime.now()
@@ -168,7 +168,7 @@ def process_user_data(table, index, five_x_five_user: FiveXFiveUser, session: Se
         if existing_record:
             existing_record.added_at = datetime.now()
         else:
-            new_record = LeadsUsersAddedToCart(lead_user_id=lead_user.id, added_at=datetime.now())
+            new_record = LeadsUsersAddedToCart(lead_user_id=lead_user.id, added_at=requested_at)
             session.add(new_record)
     lead_request = insert(LeadsRequests).values(
         lead_id=lead_user.id,
