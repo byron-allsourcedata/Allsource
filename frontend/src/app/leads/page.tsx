@@ -1211,7 +1211,7 @@ const Leads: React.FC = () => {
                                                         { key: 'name', label: 'Name' },
                                                         { key: 'business_email', label: 'Email' },
                                                         { key: 'mobile_phone', label: 'Phone number' },
-                                                        { key: 'last_visited_date', label: 'Visited date', sortable: true },
+                                                        { key: 'first_visited_date', label: 'Visited date', sortable: true },
                                                         { key: 'funnel', label: 'Visitor Type' },
                                                         { key: 'time_spent', label: 'Time on site' },
                                                     ].map(({ key, label, sortable = true }) => (
@@ -1281,7 +1281,7 @@ const Leads: React.FC = () => {
                                                         <TableCell
                                                             sx={leadsStyles.table_array_phone}>{row.mobile_phone || 'N/A'}</TableCell>
                                                         <TableCell
-                                                            sx={{ ...leadsStyles.table_array, position: 'relative' }}>{row.last_visited_date || 'N/A'}</TableCell>
+                                                            sx={{ ...leadsStyles.table_array, position: 'relative' }}>{row.first_visited_date || 'N/A'}</TableCell>
                                                         <TableCell
                                                             sx={{ ...leadsStyles.table_column, position: 'relative' }}
                                                         >

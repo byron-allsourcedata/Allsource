@@ -45,7 +45,7 @@ class LeadsService:
         'company_employee_count': lead[21],
         'net_worth': lead[22],
         'job_title': lead[23],
-        'last_updated': lead[24].strftime('%d.%m.%Y %H:%M') if lead[24] else None,
+        'last_updated': lead[24],
         'personal_emails_last_seen': lead[25].strftime('%d.%m.%Y %H:%M') if lead[25] else None,
         'company_last_updated': lead[26].strftime('%d.%m.%Y %H:%M') if lead[26] else None,
         'job_title_last_updated': lead[27].strftime('%d.%m.%Y %H:%M') if lead[27] else None,
@@ -80,8 +80,8 @@ class LeadsService:
         'funnel': lead[56],
         'state': lead[57],
         'city': lead[58],
-        'last_visited_date': lead[59].strftime('%d.%m.%Y') if lead[57] else None,
-        'last_visited_time': lead[60].strftime('%H:%M') if lead[58] else None,
+        'first_visited_date': lead[59].strftime('%d.%m.%Y'),
+        'first_visited_time': lead[60].strftime('%H:%M'),
         'time_spent': lead[61]
     }
     for lead in leads
