@@ -14,9 +14,7 @@ class LeadUser(Base):
     behavior_type = Column(VARCHAR, nullable=False, default='visitor')
     created_at = Column(TIMESTAMP, nullable=True)
     first_visit_id = Column(Integer, ForeignKey('leads_visits.id'), nullable=False)
-    is_converted_sales = Column(Boolean, nullable=False, default=False)
     is_returning_visitor = Column(Boolean, nullable=False, default=False)
-    is_abandoned_cart = Column(Boolean, nullable=False, default=False)
     is_landed_to_cart = Column(Boolean, nullable=False, default=False)
 
 event.listen(LeadUser, "before_insert", create_timestamps)

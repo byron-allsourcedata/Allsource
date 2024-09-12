@@ -139,14 +139,22 @@ def process_user_data(table, index, five_x_five_user: FiveXFiveUser, session: Se
         process_leads_requests(requested_at=requested_at, page=page, leads_requests=leads_requests, visit_id=visit_id, session=session, behavior_type=behavior_type)
         if lead_user.is_abandoned_cart == False and behavior_type == 'product_added_to_cart':
             lead_user.is_abandoned_cart = True
-            session.add(LeadsUsersOrdered(lead_user_id=lead_user.id, 
-                                    ordered_at=datetime.now()))
+            existing_record = session.query(LeadsUsersOrdered).filter_by(lead_user_id=lead_user.id).first()
+            if existing_record:
+                existing_record.ordered_at = datetime.now()
+            else:
+                new_record = LeadsUsersOrdered(lead_user_id=lead_user.id, ordered_at=datetime.now())
+                session.add(new_record)
         if lead_user.is_converted_sales == False and behavior_type == 'checkout_completed':
             lead_user.is_converted_sales = True
-            session.add(LeadsUsersAddedToCart(lead_user_id=lead_user.id, 
-                                    added_at=datetime.now()))
+            existing_record = session.query(LeadsUsersAddedToCart).filter_by(lead_user_id=lead_user.id).first()
+            if existing_record:
+                existing_record.added_at = datetime.now()
+            else:
+                new_record = LeadsUsersOrdered(lead_user_id=lead_user.id, added_at=datetime.now())
+                session.add(new_record)
         if lead_user.is_returning_visitor == False:
-            lead_user.is_returning_visitor = True        
+            lead_user.is_returning_visitor = True
         session.flush()
     else:
         lead_visits_id = add_new_leads_visits(visited_datetime=requested_at, lead_id=lead_user.id, session=session, behavior_type=behavior_type).id
