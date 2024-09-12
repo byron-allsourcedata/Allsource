@@ -143,7 +143,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
   };
 
   const statusMapping: Record<string, string> = {
-    Visitor: "Visitor",
+    Visitor: "visitor",
     "View Product": "viewed_product",
     "Add to cart": "product_added_to_cart",
   };
@@ -187,6 +187,13 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
             ...prevFilters,
             [filterName]: false,
           }));
+        }
+      }
+
+      if (category === "visitedTime") {
+        if (updatedTags.length === 0) {
+          setTimeRange({ fromTime: null, toTime: null });
+          setSelectedTimeRange(null);
         }
       }
 
@@ -408,6 +415,13 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
         ...prevRange,
         [name]: newValue,
       };
+
+       setCheckedFilters({
+        lastWeek: false,
+        last30Days: false,
+        last6Months: false,
+        allTime: false,
+      });
   
       // Определяем старый диапазон дат
       const oldFromDate = prevRange.fromDate
