@@ -12,6 +12,12 @@ import { fetchUserData } from '@/services/meService';
 
 const Signup: React.FC = () => {
   const router = useRouter();
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, []);
 
   useEffect(() => {
     const token = localStorage.getItem('token');

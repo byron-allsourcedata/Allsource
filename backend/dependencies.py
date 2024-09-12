@@ -54,6 +54,8 @@ from persistence.leads_order_persistence import LeadOrdersPersistence
 from models.users import Users as User
 from exceptions import InvalidToken
 from enums import UserAuthorizationStatus
+from config.aws import get_s3_client
+from services.aws import AWSService
 
 logger = logging.getLogger(__name__)
 
@@ -333,16 +335,21 @@ def get_lead_orders_persistence(db: Session = Depends(get_db)) -> LeadsPersisten
 def get_integrations_user_sync_persistence(db: Session = Depends(get_db)) -> IntegrationsUserSyncPersistence:
     return IntegrationsUserSyncPersistence(db)
 
+def get_aws_service(s3_client = Depends(get_s3_client)) -> AWSService:
+    return AWSService(s3_client)
+
 def get_integration_service(db: Session = Depends(get_db), 
                             audience_persistence = Depends(get_audience_persistence),
                             integration_presistence: IntegrationsPresistence = Depends(get_user_integrations_presistence),
                             lead_presistence: LeadsPersistence = Depends(get_leads_persistence),
                             lead_orders_persistence: LeadOrdersPersistence = Depends(get_lead_orders_persistence),
-                            integrations_user_sync_persistence: IntegrationsUserSyncPersistence = Depends(get_integrations_user_sync_persistence)
+                            integrations_user_sync_persistence: IntegrationsUserSyncPersistence = Depends(get_integrations_user_sync_persistence),
+                            aws_service: AWSService = Depends(get_aws_service)
                             ):
     return IntegrationService(db, 
                               integration_presistence, 
                               lead_presistence, 
                               audience_persistence, 
                               lead_orders_persistence,
-                              integrations_user_sync_persistence)
+                              integrations_user_sync_persistence,
+                              aws_service)

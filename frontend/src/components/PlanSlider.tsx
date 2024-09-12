@@ -182,7 +182,7 @@ const PlanSlider: React.FC<PopupProps> = ({ open, handleClose, handleChoosePlan 
                                 width: '100%'
 
                             }}
-                            url="https://calendly.com/nickit-schatalow09/maximiz"
+                            url="https://calendly.com/maximiz-support/30min"
                             rootElement={document.getElementById("calendly-popup-wrapper")!}
                             text="Book a call"
                         />

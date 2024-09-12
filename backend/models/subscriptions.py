@@ -23,7 +23,6 @@ class UserSubscriptions(Base):
     domains_limit = Column(Integer, nullable=True)
     users_limit = Column(Integer, nullable=True)
     integrations_limit = Column(Integer, nullable=True)
-    audiences_limit = Column(Integer, nullable=True)
 
 
 Subscription = UserSubscriptions

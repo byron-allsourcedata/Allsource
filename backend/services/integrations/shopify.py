@@ -1,28 +1,28 @@
-from typing import List
+import hashlib
+import os
+from models.users import Users
 from schemas.integrations.shopify import ShopifyCustomer, ShopifyOrderAPI
 from schemas.integrations.integrations import IntegrationCredentials
 from persistence.leads_persistence import LeadsPersistence
 from persistence.leads_order_persistence import LeadOrdersPersistence
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
-from persistence.user_persistence import UserPersistence
-from models.integrations.users_integrations import UserIntegration
 from httpx import Client
 from fastapi import HTTPException
 from datetime import datetime
-
-
+from services.aws import AWSService
 class ShopifyIntegrationService:
 
     def __init__(self, integration_persistence: IntegrationsPresistence, 
                  lead_persistence: LeadsPersistence, lead_orders_persistence: LeadOrdersPersistence,
                  integrations_user_sync_persistence: IntegrationsUserSyncPersistence,
-                 client: Client):
+                 client: Client, aws_service: AWSService):
         self.integration_persistence = integration_persistence
         self.lead_persistence = lead_persistence
         self.lead_orders_persistence = lead_orders_persistence
         self.integrations_user_sync_persistence = integrations_user_sync_persistence
         self.client = client
+        self.AWS = aws_service
 
 
     def __handle_request(self, method: str, url: str, headers: dict = None, json: dict = None, data: dict = None, params: dict = None):
@@ -61,14 +61,191 @@ class ShopifyIntegrationService:
 
 
     def __set_pixel(self, user, shop_domain: str, access_token: str):
-        script_event_url = f'https://maximiz-data.s3.us-east-2.amazonaws.com/pixel_shopify.js?client_id={user["data_provider_id"]}'
+        client_id = user.get('data_provider_id')
+        if client_id is None:
+            client_id = hashlib.sha256((str(user.get('id')) + os.getenv('SECRET_SALT')).encode()).hexdigest()
+            self.db.query(Users).filter(Users.id == user.get('id')).update(
+                {Users.data_provider_id: client_id},
+                synchronize_session=False
+            )
+            self.db.commit()
+        script_shopify = f"""
+window.pixelClientId = '{client_id}';
+
+let addedToCartHandler;
+let viewedProductHandler;
+
+(function() {{
+let cartEventCalled = false;
+let productViewedEventCalled = false;
+let productData = null;
+const productUrl = location.protocol + '//' + location.host + location.pathname.replace(/\/$/, '');
+
+if (productUrl.includes("/products/")) {{
+    fetch(productUrl + '.js')
+        .then(res => res.json())
+        .then(data => {{
+            productData = data;
+        }})
+        .catch(error => {{
+            console.error('Error fetching product data:', error);
+        }});
+}}
+
+function getProductData(item) {{
+    let itemAdded = null;
+    const defaultImageUrl = getImageUrl();
+
+    if (item) {{
+        if (item.items && Array.isArray(item.items)) {{
+            item = item.items[0];
+        }}
+        productData = item;
+    }}
+
+    if (productData) {{
+        itemAdded = {{
+            name: productData.title,
+            product_id: productData.id,
+            product_url: productUrl,
+            price: productData.price,
+            image_url: getImageUrl() || defaultImageUrl,
+            currency: window.Shopify?.currency?.active
+        }};
+
+        if (productData.variant_id) {{
+            itemAdded.product_id = productData.product_id || itemAdded.product_id;
+            itemAdded.VariantID = productData.variant_id;
+            itemAdded.Variant = productData.title || productData.variant_title;
+        }} else {{
+            const variantId = new URLSearchParams(window.location.search).get('variant');
+            if (variantId) {{
+                const variant = productData.variants?.find(v => v.id.toString() === variantId);
+                if (variant) {{
+                    itemAdded.price = variant.price;
+                    itemAdded.VariantID = variant.id;
+                    itemAdded.Variant = variant.name;
+                }}
+            }}
+        }}
+    }}
+
+    return itemAdded;
+}}
+
+function getImageUrl() {{
+    if (productData) {{
+        if (typeof productData.featured_image === 'string') {{
+            return productData.featured_image;
+        }} else if (typeof productData.featured_image === 'object') {{
+            return productData.featured_image.url;
+        }}
+        const variantId = new URLSearchParams(window.location.search).get('variant');
+        if (variantId) {{
+            const variant = productData.variants?.find(v => v.id.toString() === variantId);
+            return variant?.featured_image?.src || null;
+        }}
+    }}
+    return null;
+}}
+
+addedToCartHandler = function(item) {{
+    if (!cartEventCalled && productData) {{
+        const itemAdded = getProductData(item);
+        if (itemAdded && typeof addToCart === 'function') {{
+            addToCart(itemAdded);
+            cartEventCalled = true;
+            console.log(item);
+        }}
+    }} else if (!productData) {{
+        console.warn('Product data not yet loaded for cart event.');
+    }}
+}};
+
+viewedProductHandler = function() {{
+    if (productData && !productViewedEventCalled) {{
+        const itemAdded = getProductData();
+        if (itemAdded && typeof viewedProduct === 'function') {{
+            viewedProduct(itemAdded);
+            productViewedEventCalled = true;
+        }}
+    }} else if (!productData) {{
+        console.warn('Product data not yet loaded for viewed product event.');
+    }}
+}};
+
+setTimeout(viewedProductHandler, 6000);
+}})();
+
+(function(ns, fetch) {{
+ns.fetch = function() {{
+    const response = fetch.apply(this, arguments);
+    response.then(async (res) => {{
+        const clonedResponse = res.clone();
+        if (clonedResponse.ok && clonedResponse.url && (window.location.origin + '/cart/add.js').includes(clonedResponse.url)) {{
+            if (!location.pathname.includes("/cart")) {{
+            try {{
+                const data = await clonedResponse.json();
+                if (data) {{
+                    addedToCartHandler(data);
+                }}
+            }} catch (error) {{
+                console.error('Error parsing cart data:', error);
+            }}
+            }}
+        }}
+    }}).catch(error => {{
+        console.error('Fetch error:', error);
+    }});
+
+    return response;
+}};
+}}(window, window.fetch));
+
+
+!function () {{
+if (Shopify.checkout) {{
+    function trackCheckout() {{
+        if (typeof geq !== 'undefined') {{
+            var event = Shopify.checkout;
+            var totalPrice = event.total_price;
+            if (totalPrice !== undefined && !totalPrice.toString().includes('.')) {{
+                totalPrice = (totalPrice / 100);
+            }}
+            var order_data = {{
+                order_id: event.order_id,
+                order_amount: totalPrice,
+                currency: Shopify.currency.active, 
+                created_at_shopify: Date.now()    
+            }};
+            checkoutCompleted(order_data);
+        }}
+    }}
+    document.addEventListener('DOMContentLoaded', function() {{
+        if (typeof checkoutCompleted === 'undefined') {{
+            setTimeout(trackCheckout, 3000);
+        }} else {{
+            trackCheckout();
+        }}
+    }});
+
+}}
+}}();
+        """
+
+        self.AWS.upload_string(script_shopify, f'shopify-pixel-code/{client_id}.js')
+        script_event_url = f'https://maximiz-data.s3.us-east-2.amazonaws.com/shopify-pixel-code/{client_id}.js'
         script_pixel_url = f'https://maximiz-data.s3.us-east-2.amazonaws.com/pixel.js'
         url = f'{shop_domain}/admin/api/2024-07/script_tags.json'
-        
+
         headers = {
             'X-Shopify-Access-Token': access_token,
             "Content-Type": "application/json"
         }
+        scrips_list = self.__handle_request("GET", url, headers=headers)
+        for script in scrips_list.json().get('script_tags'):
+            if script.get('src') in script_pixel_url or 'shopify-pixel-code' in script.get('src'):
+                self.__handle_request('DELETE', f"{shop_domain}/admin/api/2024-07/script_tags/{script.get('id')}.json", headers=headers)
 
         script_event_data = {
             "script_tag": {
@@ -97,8 +274,8 @@ class ShopifyIntegrationService:
 
     def __save_integration(self, shop_domain: str, access_token: str, user_id: int):
         if self.integration_persistence.get_credentials_for_service(user_id, 'Shopify'):
-            raise HTTPException(status_code=409, detail={'status': 'error', 'detail': {'message': 'You already have Shopify integrations'}})
-
+            return
+        
         credentials = {
             'user_id': user_id, 
             'shop_domain': shop_domain,
@@ -132,20 +309,22 @@ class ShopifyIntegrationService:
 
 
     def add_integration(self, user, credentials: IntegrationCredentials):
-        if user['company_website'] != f'{credentials.shopify.shop_domain}':
+        if not credentials.shopify.shop_domain.startswith('https://'):
+            credentials.shopify.shop_domain = f'https://{credentials.shopify.shop_domain}'
+        shop_domain = credentials.shopify.shop_domain.lower().lstrip('http://').lstrip('https://')
+        user_website = user['company_website'].lower().lstrip('http://').lstrip('https://')
+        if user_website != shop_domain:
             raise HTTPException(status_code=400, detail={'status': 'error', 'detail': {'message': 'Store Domain does not match the one you specified earlier'}})
-
-        customers = [self.__mapped_customer(customer) for customer in self.__get_customers(credentials.shopify.shop_domain, credentials.shopify.access_token)]
-        integration = self.__save_integration(credentials.shopify.shop_domain, credentials.shopify.access_token, user['id'])
+        # customers = [self.__mapped_customer(customer) for customer in self.__get_customers(credentials.shopify.shop_domain, credentials.shopify.access_token)]
+        self.__save_integration(credentials.shopify.shop_domain, credentials.shopify.access_token, user['id'])
         self.__set_pixel(user, credentials.shopify.shop_domain, credentials.shopify.access_token)
         
-        for customer in customers:
-            self.__save_customer(customer, user['id'])
+        # for customer in customers:
+        #     self.__save_customer(customer, user['id'])
 
         return {
             'status': 'Successfully',
             'detail': {
-                'id': integration.id,
                 'service_name': 'Shopify'
             }
         }

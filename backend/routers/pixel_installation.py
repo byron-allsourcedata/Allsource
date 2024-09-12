@@ -5,7 +5,7 @@ from models.users import User
 from schemas.pixel_installation import PixelInstallationRequest, EmailFormRequest, ManualFormResponse
 from schemas.users import PixelFormResponse
 from services.pixel_installation import PixelInstallationService
-from dependencies import get_pixel_installation_service, check_user_authorization_without_pixel
+from dependencies import get_pixel_installation_service, check_user_authorization_without_pixel, check_user_authentication
 from config.rmq_connection import publish_rabbitmq_message, RabbitMQConnection
 import logging
 
@@ -26,6 +26,16 @@ async def send_pixel_code_in_email(email_form: EmailFormRequest,
                                        get_pixel_installation_service),
                                    user: User = Depends(check_user_authorization_without_pixel)):
     return pixel_installation_service.send_pixel_code_in_email(email_form.email, user)
+
+@router.post("/check-pixel-installed-parse", response_model=PixelFormResponse)
+async def manual(pixel_installation_request: PixelInstallationRequest,
+                 pixel_installation_service: PixelInstallationService = Depends(get_pixel_installation_service), user: User = Depends(check_user_authentication)):
+    result = pixel_installation_service.check_pixel_installed_via_parse(pixel_installation_request.url, user)
+    if result['success']:
+        status = PixelStatus.PIXEL_CODE_INSTALLED
+    else:
+        status = PixelStatus.PIXEL_CODE_PARSE_FAILED
+    return PixelFormResponse(status=status)
 
 
 @router.post("/check-pixel-installed", response_model=PixelFormResponse)

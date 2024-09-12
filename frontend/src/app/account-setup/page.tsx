@@ -12,12 +12,10 @@ import {
   Typography,
 } from "@mui/material";
 import Image from "next/image";
-import PersonIcon from "@mui/icons-material/Person";
 import { styles } from "./accountStyles";
 import { useRouter } from "next/navigation";
 import { useUser } from "../../context/UserContext";
 import axiosInterceptorInstance from "../../axios/axiosInterceptorInstance";
-import { showErrorToast } from "../../components/ToastNotification";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 
@@ -38,6 +36,13 @@ const AccountSetup = () => {
   const [email, setEmail] = useState<string | null>(null);
 
   const { full_name: userFullName, email: userEmail } = useUser();
+
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, []);
 
   const getUserDataFromStorage = () => {
     const meItem = typeof window !== 'undefined' ? sessionStorage.getItem('me') : null;

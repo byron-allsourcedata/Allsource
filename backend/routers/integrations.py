@@ -14,8 +14,6 @@ async def get_integrations_service(persistence: IntegrationsPresistence = Depend
 async def get_integrations_credentials(integration_serivce: IntegrationService = Depends(get_integration_service), 
                                        user = Depends(check_user_authentication)):
     integration = integration_serivce.get_user_service_credentials(user)
-    if not integration:
-        raise HTTPException(status_code=404, detail='don`t have integrations')
     return integration
 
 
@@ -34,7 +32,7 @@ async def create_integration(creditional: IntegrationCredentials, service_name: 
                              integration_service: IntegrationService = Depends(get_integration_service),
                              user = Depends(check_user_authentication)):
     with integration_service as service:
-        service = getattr(service, service_name)
+        service = getattr(service, service_name.lower())
         if not service:
             raise HTTPException(status_code=404, detail=f'Service {service_name} not found') 
         service.add_integration(user, creditional)

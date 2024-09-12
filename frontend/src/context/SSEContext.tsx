@@ -1,6 +1,6 @@
 "use client";
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { showErrorToast } from '@/components/ToastNotification';
+import { showErrorToast, showToast } from '@/components/ToastNotification';
 
 interface Data {
   num: number;
@@ -39,6 +39,7 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
           showErrorToast("Could not find pixel code on your site")
         }
         else {
+          showToast("Pixel code is installed successfully!");
           if (data.percent) {
             const meItem = sessionStorage.getItem('me');
             const meData = meItem ? JSON.parse(meItem) : {};
