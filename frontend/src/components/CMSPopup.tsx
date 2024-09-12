@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Box, Button, Typography, Modal, IconButton, Divider, Grid, Link, Input, TextField } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import Image from 'next/image';
@@ -121,6 +121,17 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
     access_token: "",
     shop_domain: "",
   });
+
+  useEffect(() => {
+    const fetchCredentials = async() => {
+      const response = await axiosInstance.get('/integrations/credentials/shopify')
+      if(response.status == 200) {
+        setDomain(response.data.shop_domain)
+        setAccessToken(response.data.access_token)
+      }
+    }
+    fetchCredentials()
+  }, [])
   const [isFocused, setIsFocused] = useState(false);
   const handleFocus = () => {
     setIsFocused(true);
