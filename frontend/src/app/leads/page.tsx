@@ -179,9 +179,9 @@ const Leads: React.FC = () => {
     useEffect(() => {
         document.body.style.overflow = 'hidden';
         return () => {
-          document.body.style.overflow = 'auto';
+            document.body.style.overflow = 'auto';
         };
-      }, []);
+    }, []);
 
     const handleOpenPopup = (row: any) => {
         setPopupData(row);
@@ -229,7 +229,7 @@ const Leads: React.FC = () => {
         recurringVisits: any[];
     }
     const [filterParams, setFilterParams] = useState<FilterParams>({
-        from_date: null, 
+        from_date: null,
         to_date: null,
         from_time: '',
         to_time: '',
@@ -244,7 +244,7 @@ const Leads: React.FC = () => {
         checkedFiltersTimeSpent: { under_10: false, over_10: false, over_30: false, over_60: false },
         recurringVisits: [],
     });
-    
+
 
     const handleFilterPopupOpen = () => {
         setFilterPopupOpen(true);
@@ -360,24 +360,29 @@ const Leads: React.FC = () => {
                 router.push('/signin');
                 return;
             }
-            console.log(selectedFilters)
 
-    
+
             // Processing "Date Calendly"
             const startEpoch = appliedDates.start ? Math.floor(appliedDates.start.getTime() / 1000) : null;
             const endEpoch = appliedDates.end ? Math.floor(appliedDates.end.getTime() / 1000) : null;
-    
+
             let url = `/leads?page=${page + 1}&per_page=${rowsPerPage}`;
             if (startEpoch !== null && endEpoch !== null) {
                 url += `&from_date=${startEpoch}&to_date=${endEpoch}`;
             }
-            if (activeFilter) {
-                url += `&behavior_type=${activeFilter}`;
-            }
             if (sortBy) {
                 url += `&sort_by=${sortBy}&sort_order=${sortOrder}`;
             }
-    
+
+
+            // Processing "Visitor Type"
+            if (selectedFilters.some(filter => filter.label === 'Visitor Type')) {
+                const status = selectedFilters.find(filter => filter.label === 'Visitor Type')?.value.split(', ') || [];
+                if (status.length > 0) {
+                    url += `&behavior_type=${encodeURIComponent(status.join(','))}`;
+                }
+            }
+
             // Include other filter parameters if necessary
             // Processing "Regions"
             if (selectedFilters.some(filter => filter.label === 'Regions')) {
@@ -386,7 +391,7 @@ const Leads: React.FC = () => {
                     url += `&regions=${encodeURIComponent(regions.join(','))}`;
                 }
             }
-    
+
             // Processing "From Date"
             if (selectedFilters.some(filter => filter.label === 'From Date')) {
                 const fromDate = selectedFilters.find(filter => filter.label === 'From Date')?.value || '';
@@ -395,7 +400,7 @@ const Leads: React.FC = () => {
                     url += `&from_date=${fromDateEpoch}`;
                 }
             }
-    
+
             // Processing "To Date"
             if (selectedFilters.some(filter => filter.label === 'To Date')) {
                 const toDate = selectedFilters.find(filter => filter.label === 'To Date')?.value || '';
@@ -404,15 +409,16 @@ const Leads: React.FC = () => {
                     url += `&to_date=${toDateEpoch}`;
                 }
             }
-    
-            // Processing "Visitor type"
-            if (selectedFilters.some(filter => filter.label === 'Funnels')) {
-                const funnels = selectedFilters.find(filter => filter.label === 'Funnels')?.value.split(', ') || [];
+
+            // Processing "Lead Status"
+            if (selectedFilters.some(filter => filter.label === 'Lead Status')) {
+                const funnels = selectedFilters.find(filter => filter.label === 'Lead Status')?.value.split(', ') || [];
                 if (funnels.length > 0) {
-                    url += `&status=${encodeURIComponent(funnels.join(','))}`;
+                    const formattedFunnels = funnels.map(funnel => funnel.toLowerCase().replace(/\s+/g, '_'));
+                    url += `&status=${encodeURIComponent(formattedFunnels.join(','))}`;
                 }
             }
-    
+
             // Search string processing
             if (selectedFilters.some(filter => filter.label === 'Search')) {
                 const searchQuery = selectedFilters.find(filter => filter.label === 'Search')?.value || '';
@@ -420,7 +426,7 @@ const Leads: React.FC = () => {
                     url += `&search_query=${encodeURIComponent(searchQuery)}`;
                 }
             }
-    
+
             // Add time filters if provided
             if (selectedFilters.some(filter => filter.label === 'From Time')) {
                 const fromTime = selectedFilters.find(filter => filter.label === 'From Time')?.value || '';
@@ -434,10 +440,38 @@ const Leads: React.FC = () => {
                     url += `&to_time=${encodeURIComponent(toTime)}`;
                 }
             }
-    
+
+            // Processing "Time Spent"
+            if (selectedFilters.some(filter => filter.label === 'Time Spent')) {
+                const timeSpent = selectedFilters.find(filter => filter.label === 'Time Spent')?.value.split(', ') || [];
+                if (timeSpent.length > 0) {
+                    const formattedTimeSpent = timeSpent.map(value => value.replace(/\s+/g, '_'));
+                    url += `&time_spent=${encodeURIComponent(formattedTimeSpent.join(','))}`;
+                }
+            }
+
+            // Processing "Recurring Visits"
+            if (selectedFilters.some(filter => filter.label === 'Recurring Visits')) {
+                const recurringVisits = selectedFilters.find(filter => filter.label === 'Recurring Visits')?.value.split(', ') || [];
+                if (recurringVisits.length > 0) {
+                    const formattedRecurringVisits = recurringVisits.map(value => value.replace(/\s+/g, '_'));
+                    url += `&recurring_visits=${encodeURIComponent(formattedRecurringVisits.join(','))}`;
+                }
+            }
+
+            // Processing "Page Visits"
+            if (selectedFilters.some(filter => filter.label === 'Page Visits')) {
+                const pageVisits = selectedFilters.find(filter => filter.label === 'Page Visits')?.value.split(', ') || [];
+                if (pageVisits.length > 0) {
+                    const formattedPageVisits = pageVisits.map(value => value.replace(/\s+/g, '_'));
+                    url += `&page_visits=${encodeURIComponent(formattedPageVisits.join(','))}`;
+                }
+            }
+
+
             const response = await axiosInstance.get(url);
             const [leads, count] = response.data;
-    
+
             setData(Array.isArray(leads) ? leads : []);
             setCount(count || 0);
             setStatus(response.data.status);
@@ -458,39 +492,56 @@ const Leads: React.FC = () => {
             setIsLoading(false);
         }
     };
-    
+
 
 
     const handleApplyFilters = (filters: FilterParams) => {
         const newSelectedFilters: { label: string; value: string }[] = [];
-        console.log(filters)
-        
+
         const dateFormat = 'YYYY-MM-DD';
 
         // Map of filter conditions to their labels
         const filterMappings: { condition: boolean | string | string[] | number | null, label: string, value: string | ((f: any) => string) }[] = [
             { condition: filters.from_date, label: 'From Date', value: () => dayjs.unix(filters.from_date!).format(dateFormat) },
             { condition: filters.to_date, label: 'To Date', value: () => dayjs.unix(filters.to_date!).format(dateFormat) },
-            { condition: filters.checkedFiltersPageVisits.page, label: 'Page Visits', value: 'Page' },
-            { condition: filters.checkedFiltersPageVisits.two_page, label: 'Page Visits', value: '2 Pages' },
-            { condition: filters.checkedFiltersPageVisits.three_page, label: 'Page Visits', value: '3 Pages' },
-            { condition: filters.checkedFiltersPageVisits.more_three, label: 'Page Visits', value: 'More than 3 Pages' },
-            { condition: filters.selectedStatus?.length, label: 'Status', value: () => filters.selectedStatus!.join(', ') },
-            { condition: filters.selectedFunnels?.length, label: 'Funnels', value: () => filters.selectedFunnels!.join(', ') },
+            { condition: filters.selectedStatus?.length, label: 'Visitor Type', value: () => filters.selectedStatus!.join(', ') },
+            { condition: filters.selectedFunnels?.length, label: 'Lead Status', value: () => filters.selectedFunnels!.join(', ') },
             { condition: filters.regions?.length, label: 'Regions', value: () => filters.regions!.join(', ') },
-            { condition: filters.checkedFiltersTime.morning, label: 'Time of Day', value: 'Morning' },
-            { condition: filters.checkedFiltersTime.evening, label: 'Time of Day', value: 'Evening' },
-            { condition: filters.checkedFiltersTime.afternoon, label: 'Time of Day', value: 'Afternoon' },
-            { condition: filters.checkedFiltersTime.all_day, label: 'Time of Day', value: 'All Day' },
-            { condition: filters.checkedFiltersTimeSpent.under_10, label: 'Time Spent', value: 'Under 10 Minutes' },
-            { condition: filters.checkedFiltersTimeSpent.over_10, label: 'Time Spent', value: 'Over 10 Minutes' },
-            { condition: filters.checkedFiltersTimeSpent.over_30, label: 'Time Spent', value: 'Over 30 Minutes' },
-            { condition: filters.checkedFiltersTimeSpent.over_60, label: 'Time Spent', value: 'Over 60 Minutes' },
             { condition: filters.recurringVisits?.length, label: 'Recurring Visits', value: () => filters.recurringVisits!.join(', ') },
             { condition: filters.searchQuery?.trim() !== '', label: 'Search', value: filters.searchQuery || '' },
             { condition: filters.from_time, label: 'From Time', value: filters.from_time! },
             { condition: filters.to_time, label: 'To Time', value: filters.to_time! },
         ];
+
+        const pageVisitFilters = [
+            filters.checkedFiltersPageVisits.page && '1 page',
+            filters.checkedFiltersPageVisits.two_page && '2 pages',
+            filters.checkedFiltersPageVisits.three_page && '3 pages',
+            filters.checkedFiltersPageVisits.more_three && 'more than 3 pages',
+        ].filter(Boolean).join(', ');
+
+        if (pageVisitFilters) {
+            filterMappings.push({
+                condition: true,
+                label: 'Page Visits',
+                value: pageVisitFilters,
+            });
+        }
+
+        const timeSpentFilters = [
+            filters.checkedFiltersTimeSpent.under_10 && 'under 10',
+            filters.checkedFiltersTimeSpent.over_10 && '10-30 secs',
+            filters.checkedFiltersTimeSpent.over_30 && '30-60 secs',
+            filters.checkedFiltersTimeSpent.over_60 && 'over 60 secs',
+        ].filter(Boolean).join(', ');
+
+        if (timeSpentFilters) {
+            filterMappings.push({
+                condition: true,
+                label: 'Time Spent',
+                value: timeSpentFilters,
+            });
+        }
 
         // Iterate over the mappings to populate newSelectedFilters
         filterMappings.forEach(({ condition, label, value }) => {
@@ -499,13 +550,12 @@ const Leads: React.FC = () => {
             }
         });
 
-        console.log(newSelectedFilters)
-        
+
         setSelectedFilters(newSelectedFilters);
         setActiveFilter(filters.selectedStatus?.[0] || '');
         setFilterParams(filters);
     };
-    
+
     const handleResetFilters = async () => {
         const url = `/leads`;
 
@@ -524,14 +574,14 @@ const Leads: React.FC = () => {
 
     const handleDeleteFilter = (filterToDelete: { label: string; value: string }) => {
         const updatedFilters = selectedFilters.filter(filter => filter.label !== filterToDelete.label);
-    
+
         setSelectedFilters(updatedFilters);
-    
+
         if (filterToDelete.label === 'Dates') {
             setAppliedDates({ start: null, end: null });
             setFormattedDates('');
         }
-    
+
         const newFilters: FilterParams = {
             from_date: updatedFilters.find(f => f.label === 'From Date') ? Number(updatedFilters.find(f => f.label === 'From Date')!.value) : null,
             to_date: updatedFilters.find(f => f.label === 'To Date') ? Number(updatedFilters.find(f => f.label === 'To Date')!.value) : null,
@@ -569,10 +619,10 @@ const Leads: React.FC = () => {
             from_time: null,
             to_time: null
         };
-    
+
         handleApplyFilters(newFilters);
     };
-    
+
 
     useEffect(() => {
         fetchData({
@@ -591,7 +641,7 @@ const Leads: React.FC = () => {
 
     if (isLoading) {
         return <CustomizedProgressBar />;
-      }
+    }
 
     const centerContainerStyles = {
         display: 'flex',
@@ -614,6 +664,11 @@ const Leads: React.FC = () => {
 
     const getStatusStyle = (funnel: any) => {
         switch (funnel) {
+            case 'visitor':
+                return {
+                    background: 'rgba(235, 243, 254, 1)',
+                    color: 'rgba(20, 110, 246, 1)',
+                };
             case 'Visitor':
                 return {
                     background: 'rgba(235, 243, 254, 1)',
@@ -732,32 +787,33 @@ const Leads: React.FC = () => {
                     />
                 </Box>
             )}
-            <Box sx={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', height: '100%',
-            '@media (max-width: 900px)': {
+            <Box sx={{
+                display: 'flex', flexDirection: 'column', overflow: 'hidden', height: '100%',
+                '@media (max-width: 900px)': {
                     paddingRight: 0,
                     minHeight: '100vh'
 
                 }
-             }}>
+            }}>
                 <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-                            <Box
-                                sx={{
-                                    display: 'flex',
-                                    flexDirection: 'row',
-                                    alignItems: 'center',
-                                    justifyContent: 'space-between',
-                                    marginTop: '1rem',
-                                    flexWrap: 'wrap',
-                                    gap: '15px',
-                                    '@media (max-width: 900px)': {
-                                        marginTop: '1.125rem'
-                                    }
-                                }}>
-                                <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
-                                    <Typography variant="h4" component="h1" sx={leadsStyles.title}>
-                                        Resolved Contacts ({count_leads ? count_leads : 0})
-                                    </Typography>
-                                    {/* {status != 'PIXEL_INSTALLATION_NEEDED' && (
+                    <Box
+                        sx={{
+                            display: 'flex',
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            marginTop: '1rem',
+                            flexWrap: 'wrap',
+                            gap: '15px',
+                            '@media (max-width: 900px)': {
+                                marginTop: '1.125rem'
+                            }
+                        }}>
+                        <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+                            <Typography variant="h4" component="h1" sx={leadsStyles.title}>
+                                Resolved Contacts ({count_leads ? count_leads : 0})
+                            </Typography>
+                            {/* {status != 'PIXEL_INSTALLATION_NEEDED' && (
                                     <Button
                                         disabled={status === 'PIXEL_INSTALLATION_NEEDED'}
                                         onClick={() => handleFilterChange('all')}
@@ -782,7 +838,7 @@ const Leads: React.FC = () => {
                                     </Button>
 
                                     )} */}
-                                    {/* {status != 'PIXEL_INSTALLATION_NEEDED' && (
+                            {/* {status != 'PIXEL_INSTALLATION_NEEDED' && (
                                     <Button
                                         disabled={status === 'PIXEL_INSTALLATION_NEEDED'}
                                         onClick={() => handleFilterChange('new_customers')}
@@ -804,7 +860,7 @@ const Leads: React.FC = () => {
                                         }}>New Customers</Typography>
                                     </Button>
                                     )} */}
-                                    {/* {status != 'PIXEL_INSTALLATION_NEEDED' && (
+                            {/* {status != 'PIXEL_INSTALLATION_NEEDED' && (
                                     <Button
                                         disabled={status === 'PIXEL_INSTALLATION_NEEDED'}
                                         onClick={() => handleFilterChange('existing_customers')}
@@ -827,452 +883,460 @@ const Leads: React.FC = () => {
                                             Customers</Typography>
                                     </Button>
                                     )} */}
-                                </Box>
-                                <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '15px',
+                        </Box>
+                        <Box sx={{
+                            display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '15px',
+                            '@media (max-width: 900px)': {
+                                gap: '8px'
+                            }
+                        }}>
+                            <Button
+                                onClick={handleAudiencePopupOpen}
+                                aria-haspopup="true"
+                                sx={{
+                                    textTransform: 'none',
+                                    color: selectedRows.size === 0 ? 'rgba(128, 128, 128, 1)' : 'rgba(80, 82, 178, 1)',
+                                    border: '1px solid rgba(80, 82, 178, 1)',
+                                    borderRadius: '4px',
+                                    padding: '9px 16px',
+                                    minWidth: 'auto',
                                     '@media (max-width: 900px)': {
-                                        gap: '8px'
+                                        display: 'none'
                                     }
+                                }}
+                            >
+                                <Typography sx={{
+                                    marginRight: '0.5em',
+                                    fontFamily: 'Nunito',
+                                    lineHeight: '22px',
+                                    fontSize: '16px',
+                                    textAlign: 'left',
+                                    fontWeight: '600',
+                                    color: '#5052B2'
                                 }}>
-                                    <Button
-                                        onClick={handleAudiencePopupOpen}
-                                        aria-haspopup="true"
-                                        sx={{
-                                            textTransform: 'none',
-                                            color: selectedRows.size === 0 ? 'rgba(128, 128, 128, 1)' : 'rgba(80, 82, 178, 1)',
-                                            border: '1px solid rgba(80, 82, 178, 1)',
-                                            borderRadius: '4px',
-                                            padding: '9px 16px',
-                                            minWidth: 'auto',
-                                            '@media (max-width: 900px)': {
-                                                display: 'none'
-                                            }
-                                        }}
-                                    >
-                                        <Typography sx={{
-                                            marginRight: '0.5em',
-                                            fontFamily: 'Nunito',
-                                            lineHeight: '22px',
-                                            fontSize: '16px',
-                                            textAlign: 'left',
-                                            fontWeight: '600',
-                                            color: '#5052B2'
-                                        }}>
-                                            Create Contact Sync
-                                        </Typography>
-                                    </Button>
-                                    <Button
-                                        aria-controls={dropdownOpen ? 'account-dropdown' : undefined}
-                                        aria-haspopup="true"
-                                        aria-expanded={dropdownOpen ? 'true' : undefined}
-                                        sx={{
-                                            textTransform: 'none',
-                                            color: 'rgba(128, 128, 128, 1)',
-                                            border: '1px solid rgba(184, 184, 184, 1)',
-                                            borderRadius: '4px',
-                                            padding: '8px',
-                                            minWidth: 'auto',
-                                            '@media (max-width: 900px)': {
-                                                border: 'none',
-                                                padding: 0
-                                            }
-                                        }}
-                                        onClick={handleDownload}
-                                    >
-                                        <DownloadIcon fontSize='medium' />
-                                    </Button>
-                                    <Button
-                                        onClick={handleFilterPopupOpen}
-                                        disabled={status === 'PIXEL_INSTALLATION_NEEDED'}
-                                        aria-controls={dropdownOpen ? 'account-dropdown' : undefined}
-                                        aria-haspopup="true"
-                                        aria-expanded={dropdownOpen ? 'true' : undefined}
-                                        sx={{
-                                            textTransform: 'none',
-                                            color: selectedFilters.length > 0 ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)',
-                                            border: selectedFilters.length > 0 ? '1px solid rgba(80, 82, 178, 1)' : '1px solid rgba(184, 184, 184, 1)',
-                                            borderRadius: '4px',
-                                            padding: '8px',
-                                            minWidth: 'auto',
-                                            position: 'relative', 
-                                            '@media (max-width: 900px)': {
-                                                border: 'none',
-                                                padding: 0
-                                            }
-                                        }}
-                                    >
-                                        <FilterListIcon fontSize='medium' sx={{ color: selectedFilters.length > 0 ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)' }} />
+                                    Create Contact Sync
+                                </Typography>
+                            </Button>
+                            <Button
+                                aria-controls={dropdownOpen ? 'account-dropdown' : undefined}
+                                aria-haspopup="true"
+                                aria-expanded={dropdownOpen ? 'true' : undefined}
+                                sx={{
+                                    textTransform: 'none',
+                                    color: 'rgba(128, 128, 128, 1)',
+                                    border: '1px solid rgba(184, 184, 184, 1)',
+                                    borderRadius: '4px',
+                                    padding: '8px',
+                                    minWidth: 'auto',
+                                    '@media (max-width: 900px)': {
+                                        border: 'none',
+                                        padding: 0
+                                    }
+                                }}
+                                onClick={handleDownload}
+                            >
+                                <DownloadIcon fontSize='medium' />
+                            </Button>
+                            <Button
+                                onClick={handleFilterPopupOpen}
+                                disabled={status === 'PIXEL_INSTALLATION_NEEDED'}
+                                aria-controls={dropdownOpen ? 'account-dropdown' : undefined}
+                                aria-haspopup="true"
+                                aria-expanded={dropdownOpen ? 'true' : undefined}
+                                sx={{
+                                    textTransform: 'none',
+                                    color: selectedFilters.length > 0 ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)',
+                                    border: selectedFilters.length > 0 ? '1px solid rgba(80, 82, 178, 1)' : '1px solid rgba(184, 184, 184, 1)',
+                                    borderRadius: '4px',
+                                    padding: '8px',
+                                    minWidth: 'auto',
+                                    position: 'relative',
+                                    '@media (max-width: 900px)': {
+                                        border: 'none',
+                                        padding: 0
+                                    }
+                                }}
+                            >
+                                <FilterListIcon fontSize='medium' sx={{ color: selectedFilters.length > 0 ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)' }} />
 
-                                        {selectedFilters.length > 0 && (
-                                            <Box
-                                                sx={{
-                                                    position: 'absolute',
-                                                    top: 3,
-                                                    right: 10,
-                                                    width: '10px',
-                                                    height: '10px',
-                                                    backgroundColor: 'red',
-                                                    borderRadius: '50%',
-                                                }}
-                                            />
-                                        )}
-                                    </Button>
-
-                                    <Button
-                                        aria-controls={isCalendarOpen ? 'calendar-popup' : undefined}
-                                        aria-haspopup="true"
-                                        disabled={status === 'PIXEL_INSTALLATION_NEEDED'}
-                                        aria-expanded={isCalendarOpen ? 'true' : undefined}
-                                        onClick={handleCalendarClick}
-                                        sx={{
-                                            textTransform: 'none',
-                                            color: 'rgba(128, 128, 128, 1)',
-                                            border: '1px solid rgba(184, 184, 184, 1)',
-                                            borderRadius: '4px',
-                                            padding: '8px',
-                                            minWidth: 'auto',
-                                            '@media (max-width: 900px)': {
-                                                border: 'none',
-                                                padding: 0
-                                            }
-                                        }}
-                                    >
-                                        <DateRangeIcon fontSize='medium' />
-                                        <Typography variant="body1" sx={{
-                                            fontFamily: 'Nunito',
-                                            fontSize: '14px',
-                                            fontWeight: '600',
-                                            lineHeight: '19.6px',
-                                            textAlign: 'left'
-                                        }}>
-                                            {formattedDates}
-                                        </Typography>
-                                    </Button>
-                                    <Button
-                                        onClick={handleAudiencePopupOpen}
-                                        aria-haspopup="true"
-                                        sx={{
-                                            textTransform: 'none',
-                                            color: selectedRows.size === 0 ? 'rgba(128, 128, 128, 1)' : 'rgba(80, 82, 178, 1)',
-                                            borderRadius: '4px',
-                                            padding: '0',
-                                            border: 'none',
-                                            minWidth: 'auto',
-                                            opacity: selectedRows.size === 0 ? 0.4 : 1,
-                                            '@media (min-width: 901px)': {
-                                                display: 'none'
-                                            }
-                                        }}
-                                    >
-                                        <Image src='/add.svg' alt='logo' height={24} width={24} />
-                                    </Button>
-                                </Box>
-                            </Box>
-                            <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center',
-                                flexWrap: 'wrap',
-                                marginTop: '1.125rem',
-                                marginBottom: '0.25rem',
-                                '@media (min-width: 1200px)': {
-                                    display: 'none'
-                                }
-                                 }}>
-                                    
-                                    {status != 'PIXEL_INSTALLATION_NEEDED' && data.length != 0 && (
-                                    <Button
-                                        disabled={status === 'PIXEL_INSTALLATION_NEEDED'}
-                                        onClick={() => handleFilterChange('all')}
-                                        sx={{
-                                            color: activeFilter === 'all' ? 'rgba(80, 82, 178, 1)' : 'rgba(89, 89, 89, 1)',
-                                            borderBottom: activeFilter === 'all' && status !== 'PIXEL_INSTALLATION_NEEDED' ? '2px solid rgba(80, 82, 178, 1)' : '0px solid transparent',
-                                            textTransform: 'none',
-                                            borderRadius: '0px',
-                                            minWidth: 'auto',
-                                            padding: '0.25em 1em 0.25em 1em'
-                                        }}
-                                    >
-                                        <Typography variant="body2" sx={{...leadsStyles.subtitle,
-                                            color: activeFilter === 'all' ? 'rgba(80, 82, 178, 1)' : 'rgba(89, 89, 89, 1)',
-                                        }}
-                                        >All</Typography>
-                                    </Button>
-
-                                    )}
-                                    {status != 'PIXEL_INSTALLATION_NEEDED' && data.length != 0 && (
-                                    <Button
-                                        disabled={status === 'PIXEL_INSTALLATION_NEEDED'}
-                                        onClick={() => handleFilterChange('new_customers')}
-                                        sx={{
-                                            color: activeFilter === 'new_customers' ? 'rgba(80, 82, 178, 1)' : 'rgba(89, 89, 89, 1)',
-                                            borderBottom: activeFilter === 'new_customers' ? '2px solid rgba(80, 82, 178, 1)' : '0px solid transparent',
-                                            textTransform: 'none',
-                                            borderRadius: '0px',
-                                            minWidth: 'auto',
-                                            padding: '0.25em 1em 0.25em 1em'
-                                        }}
-                                    >
-                                        <Typography variant="body2" sx={{...leadsStyles.subtitle,
-                                            color: activeFilter === 'new_customers' ? 'rgba(80, 82, 178, 1)' : 'rgba(89, 89, 89, 1)',
-                                        }}>New Customers</Typography>
-                                    </Button>
-                                    )}
-                                    {status != 'PIXEL_INSTALLATION_NEEDED' && data.length != 0 && (
-                                    <Button
-                                        disabled={status === 'PIXEL_INSTALLATION_NEEDED'}
-                                        onClick={() => handleFilterChange('existing_customers')}
-                                        sx={{
-                                            color: activeFilter === 'existing_customers' ? 'rgba(80, 82, 178, 1)' : 'rgba(89, 89, 89, 1)',
-                                            borderBottom: activeFilter === 'existing_customers' ? '2px solid rgba(80, 82, 178, 1)' : '0px solid transparent',
-                                            textTransform: 'none',
-                                            borderRadius: '0px',
-                                            minWidth: 'auto',
-                                            padding: '0.25em 1em 0.25em 1em'
-                                        }}
-                                    >
-                                        <Typography variant="body2" sx={{...leadsStyles.subtitle,
-                                            color: activeFilter === 'existing_customers' ? 'rgba(80, 82, 178, 1)' : 'rgba(89, 89, 89, 1)',
-                                        }}>Existing
-                                            Customers</Typography>
-                                    </Button>
-                                    )}
-                                </Box>
-                            <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, mt: 2 }}>
                                 {selectedFilters.length > 0 && (
-                                    <Chip
-                                        label="Clear all"
-                                        onClick={handleResetFilters}
-                                        sx={{ backgroundColor: 'rgba(255, 255, 255, 1)', color: 'rgba(80, 82, 178, 1)', borderRadius: '3px', fontFamily: 'Nunito', fontWeight: '600', fontSize: '12px' }}
+                                    <Box
+                                        sx={{
+                                            position: 'absolute',
+                                            top: 3,
+                                            right: 10,
+                                            width: '10px',
+                                            height: '10px',
+                                            backgroundColor: 'red',
+                                            borderRadius: '50%',
+                                        }}
                                     />
                                 )}
-                                {selectedFilters.map(filter => (
-                                    <Chip
-                                        key={filter.label}
-                                        label={`${filter.label}: ${filter.value}`}
-                                        onDelete={() => handleDeleteFilter(filter)}
-                                        deleteIcon={
-                                            <CloseIcon 
-                                                sx={{ 
-                                                    backgroundColor: 'transparent', 
-                                                    color: 'rgba(74, 74, 74, 1)', 
-                                                    fontSize: '14px' 
-                                                }} 
-                                            />
-                                        }
-                                        sx={{ borderRadius: '4.5px', backgroundColor: 'rgba(237, 237, 247, 1)', color: 'rgba(74, 74, 74, 1)', fontFamily: 'Nunito', fontWeight: '600', fontSize: '12px' }}
-                                    />
-                                ))}
-                            </Box>
-                            <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', maxWidth: '100%', pl: 0, pr: 0, pt: '14px', pb: '20px',
-                                '@media (max-width: 900px)': {
-                                    pt: '2px',
-                                    pb: '18px'
-                                }
-                             }}>
-                                {status === 'PIXEL_INSTALLATION_NEEDED' ? (
-                                    <Box sx={centerContainerStyles}>
-                                        <Typography variant="h5" sx={{
-                                            mb: 3,
-                                            fontFamily: "Nunito",
-                                            fontSize: "20px",
-                                            color: "#4a4a4a",
-                                            fontWeight: "600",
-                                            lineHeight: "28px"
-                                            }}>
-                                            Pixel Integration isn&apos;t completed yet!
-                                        </Typography>
-                                        <Image src='/pixel_installation_needed.svg' alt='Need Pixel Install'
-                                            height={250} width={300} />
-                                        <Typography variant="body1" color="textSecondary" sx={{
-                                            mt: 3,
-                                            fontFamily: "Nunito",
-                                            fontSize: "14px",
-                                            color: "#808080",
-                                            fontWeight: "600",
-                                            lineHeight: "20px"
-                                            }}>
-                                            Install the pixel to unlock and gain valuable insights! Start viewing your leads now
-                                        </Typography>
-                                        <Button
-                                            variant="contained"
-                                            onClick={installPixel}
-                                            sx={{
-                                                backgroundColor: 'rgba(80, 82, 178, 1)',
-                                                fontFamily: "Nunito",
-                                                textTransform: 'none',
-                                                padding: '10px 24px',
-                                                fontSize: '16px',
-                                                mt: 3,
-                                                lineHeight: '22px'
-                                            }}
-                                        >
-                                            Setup Pixel
-                                        </Button>
-                                    </Box>
-                                ) : data.length === 0 ? (
-                                    <Box sx={centerContainerStyles}>
-                                        <Typography variant="h5" sx={{ 
-                                             mb: 3,
-                                             fontFamily: "Nunito",
-                                             fontSize: "20px",
-                                             color: "#4a4a4a",
-                                             fontWeight: "600",
-                                             lineHeight: "28px"
-                                         }}>
-                                            Data not matched yet!
-                                        </Typography>
-                                        <Image src='/no-data.svg' alt='No Data' height={250} width={300} />
-                                        <Typography variant="body1" color="textSecondary"
+                            </Button>
+
+                            <Button
+                                aria-controls={isCalendarOpen ? 'calendar-popup' : undefined}
+                                aria-haspopup="true"
+                                disabled={status === 'PIXEL_INSTALLATION_NEEDED'}
+                                aria-expanded={isCalendarOpen ? 'true' : undefined}
+                                onClick={handleCalendarClick}
+                                sx={{
+                                    textTransform: 'none',
+                                    color: 'rgba(128, 128, 128, 1)',
+                                    border: '1px solid rgba(184, 184, 184, 1)',
+                                    borderRadius: '4px',
+                                    padding: '8px',
+                                    minWidth: 'auto',
+                                    '@media (max-width: 900px)': {
+                                        border: 'none',
+                                        padding: 0
+                                    }
+                                }}
+                            >
+                                <DateRangeIcon fontSize='medium' />
+                                <Typography variant="body1" sx={{
+                                    fontFamily: 'Nunito',
+                                    fontSize: '14px',
+                                    fontWeight: '600',
+                                    lineHeight: '19.6px',
+                                    textAlign: 'left'
+                                }}>
+                                    {formattedDates}
+                                </Typography>
+                            </Button>
+                            <Button
+                                onClick={handleAudiencePopupOpen}
+                                aria-haspopup="true"
+                                sx={{
+                                    textTransform: 'none',
+                                    color: selectedRows.size === 0 ? 'rgba(128, 128, 128, 1)' : 'rgba(80, 82, 178, 1)',
+                                    borderRadius: '4px',
+                                    padding: '0',
+                                    border: 'none',
+                                    minWidth: 'auto',
+                                    opacity: selectedRows.size === 0 ? 0.4 : 1,
+                                    '@media (min-width: 901px)': {
+                                        display: 'none'
+                                    }
+                                }}
+                            >
+                                <Image src='/add.svg' alt='logo' height={24} width={24} />
+                            </Button>
+                        </Box>
+                    </Box>
+                    <Box sx={{
+                        display: 'flex', flexDirection: 'row', alignItems: 'center',
+                        flexWrap: 'wrap',
+                        marginTop: '1.125rem',
+                        marginBottom: '0.25rem',
+                        '@media (min-width: 1200px)': {
+                            display: 'none'
+                        }
+                    }}>
+
+                        {status != 'PIXEL_INSTALLATION_NEEDED' && data.length != 0 && (
+                            <Button
+                                disabled={status === 'PIXEL_INSTALLATION_NEEDED'}
+                                onClick={() => handleFilterChange('all')}
+                                sx={{
+                                    color: activeFilter === 'all' ? 'rgba(80, 82, 178, 1)' : 'rgba(89, 89, 89, 1)',
+                                    borderBottom: activeFilter === 'all' && status !== 'PIXEL_INSTALLATION_NEEDED' ? '2px solid rgba(80, 82, 178, 1)' : '0px solid transparent',
+                                    textTransform: 'none',
+                                    borderRadius: '0px',
+                                    minWidth: 'auto',
+                                    padding: '0.25em 1em 0.25em 1em'
+                                }}
+                            >
+                                <Typography variant="body2" sx={{
+                                    ...leadsStyles.subtitle,
+                                    color: activeFilter === 'all' ? 'rgba(80, 82, 178, 1)' : 'rgba(89, 89, 89, 1)',
+                                }}
+                                >All</Typography>
+                            </Button>
+
+                        )}
+                        {status != 'PIXEL_INSTALLATION_NEEDED' && data.length != 0 && (
+                            <Button
+                                disabled={status === 'PIXEL_INSTALLATION_NEEDED'}
+                                onClick={() => handleFilterChange('new_customers')}
+                                sx={{
+                                    color: activeFilter === 'new_customers' ? 'rgba(80, 82, 178, 1)' : 'rgba(89, 89, 89, 1)',
+                                    borderBottom: activeFilter === 'new_customers' ? '2px solid rgba(80, 82, 178, 1)' : '0px solid transparent',
+                                    textTransform: 'none',
+                                    borderRadius: '0px',
+                                    minWidth: 'auto',
+                                    padding: '0.25em 1em 0.25em 1em'
+                                }}
+                            >
+                                <Typography variant="body2" sx={{
+                                    ...leadsStyles.subtitle,
+                                    color: activeFilter === 'new_customers' ? 'rgba(80, 82, 178, 1)' : 'rgba(89, 89, 89, 1)',
+                                }}>New Customers</Typography>
+                            </Button>
+                        )}
+                        {status != 'PIXEL_INSTALLATION_NEEDED' && data.length != 0 && (
+                            <Button
+                                disabled={status === 'PIXEL_INSTALLATION_NEEDED'}
+                                onClick={() => handleFilterChange('existing_customers')}
+                                sx={{
+                                    color: activeFilter === 'existing_customers' ? 'rgba(80, 82, 178, 1)' : 'rgba(89, 89, 89, 1)',
+                                    borderBottom: activeFilter === 'existing_customers' ? '2px solid rgba(80, 82, 178, 1)' : '0px solid transparent',
+                                    textTransform: 'none',
+                                    borderRadius: '0px',
+                                    minWidth: 'auto',
+                                    padding: '0.25em 1em 0.25em 1em'
+                                }}
+                            >
+                                <Typography variant="body2" sx={{
+                                    ...leadsStyles.subtitle,
+                                    color: activeFilter === 'existing_customers' ? 'rgba(80, 82, 178, 1)' : 'rgba(89, 89, 89, 1)',
+                                }}>Existing
+                                    Customers</Typography>
+                            </Button>
+                        )}
+                    </Box>
+                    <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, mt: 2 }}>
+                        {selectedFilters.length > 0 && (
+                            <Chip
+                                label="Clear all"
+                                onClick={handleResetFilters}
+                                sx={{ backgroundColor: 'rgba(255, 255, 255, 1)', color: 'rgba(80, 82, 178, 1)', borderRadius: '3px', fontFamily: 'Nunito', fontWeight: '600', fontSize: '12px' }}
+                            />
+                        )}
+                        {selectedFilters.map(filter => (
+                            <Chip
+                                key={filter.label}
+                                label={`${filter.label}: ${filter.value}`}
+                                onDelete={() => handleDeleteFilter(filter)}
+                                deleteIcon={
+                                    <CloseIcon
                                         sx={{
-                                            mt: 3,
-                                            fontFamily: "Nunito",
-                                            fontSize: "14px",
-                                            color: "#808080",
-                                            fontWeight: "600",
-                                            lineHeight: "20px"
-                                            }}>
-                                            Please check back later.
-                                        </Typography>
-                                    </Box>
-                                ) : (
-                                    <Grid container spacing={1} sx={{ flex: 1 }}>
-                                        <Grid item xs={12}>
-                                            <TableContainer
-                                                component={Paper}
-                                                sx={{
-                                                    border: '1px solid rgba(235, 235, 235, 1)',
-                                                    maxHeight: selectedFilters.length < 0 ? '70vh' : '67vh',
-                                                    overflowY: 'auto'
-                                                }}
-                                            >
-                                                <Table stickyHeader aria-label="leads table">
-                                                    <TableHead>
-                                                        <TableRow>
-                                                            {[
-                                                                { key: 'name', label: 'Name' },
-                                                                { key: 'business_email', label: 'Email' },
-                                                                { key: 'mobile_phone', label: 'Phone number' },
-                                                                { key: 'last_visited_date', label: 'Visited date', sortable: true },
-                                                                { key: 'funnel', label: 'Visitor Type' },
-                                                                { key: 'time_spent', label: 'Time on site' },
-                                                            ].map(({ key, label, sortable = true }) => (
-                                                                <TableCell
-                                                                    key={key}
-                                                                    sx={{
-                                                                        ...leadsStyles.table_column,
-                                                                        ...(key === 'name' && {
-                                                                            position: 'sticky', // Make the Name column sticky
-                                                                            left: 0, // Stick it to the left
-                                                                            zIndex: 99
-                                                                        }),
-                                                                        ...(key === 'time_spent' && {
-                                                                            '::after' : {
-                                                                                content: 'none'
-                                                                            }
-                                                                        })
-                                                                    }}
-                                                                    onClick={sortable ? () => handleSortRequest(key) : undefined}
-                                                                    style={{ cursor: sortable ? 'pointer' : 'default' }}
-                                                                >
-                                                                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                                                        <Typography variant="body2" sx={{...leadsStyles.table_column, borderRight: '0'}}>{label}</Typography>
-                                                                        {sortable && orderBy === key && (
-                                                                            <IconButton size="small" sx={{ ml: 1 }}>
-                                                                                {order === 'asc' ? (
-                                                                                    <ArrowUpwardIcon
-                                                                                        fontSize="inherit" />
-                                                                                ) : (
-                                                                                    <ArrowDownwardIcon
-                                                                                        fontSize="inherit" />
-                                                                                )}
-                                                                            </IconButton>
-                                                                        )}
-                                                                    </Box>
-                                                                </TableCell>
-                                                            ))}
-                                                        </TableRow>
-                                                    </TableHead>
-                                                    <TableBody>
-                                                        {data.map((row) => (
-                                                            <TableRow
-                                                                key={row.id}
-                                                                selected={selectedRows.has(row.id)}
-                                                                onClick={() => handleSelectRow(row.id)}
-                                                                sx={{
-                                                                    backgroundColor: selectedRows.has(row.id) ? 'rgba(235, 243, 254, 1)' : '#fff',
-                                                                    '&:hover':{
-                                                                        backgroundColor: 'rgba(235, 243, 254, 1)',
-                                                                        '& .sticky-cell': {
-                                                                            backgroundColor: 'rgba(235, 243, 254, 1)',
-                                                                        }
+                                            backgroundColor: 'transparent',
+                                            color: 'rgba(74, 74, 74, 1)',
+                                            fontSize: '14px'
+                                        }}
+                                    />
+                                }
+                                sx={{ borderRadius: '4.5px', backgroundColor: 'rgba(237, 237, 247, 1)', color: 'rgba(74, 74, 74, 1)', fontFamily: 'Nunito', fontWeight: '600', fontSize: '12px' }}
+                            />
+                        ))}
+                    </Box>
+                    <Box sx={{
+                        flex: 1, display: 'flex', flexDirection: 'column', maxWidth: '100%', pl: 0, pr: 0, pt: '14px', pb: '20px',
+                        '@media (max-width: 900px)': {
+                            pt: '2px',
+                            pb: '18px'
+                        }
+                    }}>
+                        {status === 'PIXEL_INSTALLATION_NEEDED' ? (
+                            <Box sx={centerContainerStyles}>
+                                <Typography variant="h5" sx={{
+                                    mb: 3,
+                                    fontFamily: "Nunito",
+                                    fontSize: "20px",
+                                    color: "#4a4a4a",
+                                    fontWeight: "600",
+                                    lineHeight: "28px"
+                                }}>
+                                    Pixel Integration isn&apos;t completed yet!
+                                </Typography>
+                                <Image src='/pixel_installation_needed.svg' alt='Need Pixel Install'
+                                    height={250} width={300} />
+                                <Typography variant="body1" color="textSecondary" sx={{
+                                    mt: 3,
+                                    fontFamily: "Nunito",
+                                    fontSize: "14px",
+                                    color: "#808080",
+                                    fontWeight: "600",
+                                    lineHeight: "20px"
+                                }}>
+                                    Install the pixel to unlock and gain valuable insights! Start viewing your leads now
+                                </Typography>
+                                <Button
+                                    variant="contained"
+                                    onClick={installPixel}
+                                    sx={{
+                                        backgroundColor: 'rgba(80, 82, 178, 1)',
+                                        fontFamily: "Nunito",
+                                        textTransform: 'none',
+                                        padding: '10px 24px',
+                                        fontSize: '16px',
+                                        mt: 3,
+                                        lineHeight: '22px'
+                                    }}
+                                >
+                                    Setup Pixel
+                                </Button>
+                            </Box>
+                        ) : data.length === 0 ? (
+                            <Box sx={centerContainerStyles}>
+                                <Typography variant="h5" sx={{
+                                    mb: 3,
+                                    fontFamily: "Nunito",
+                                    fontSize: "20px",
+                                    color: "#4a4a4a",
+                                    fontWeight: "600",
+                                    lineHeight: "28px"
+                                }}>
+                                    Data not matched yet!
+                                </Typography>
+                                <Image src='/no-data.svg' alt='No Data' height={250} width={300} />
+                                <Typography variant="body1" color="textSecondary"
+                                    sx={{
+                                        mt: 3,
+                                        fontFamily: "Nunito",
+                                        fontSize: "14px",
+                                        color: "#808080",
+                                        fontWeight: "600",
+                                        lineHeight: "20px"
+                                    }}>
+                                    Please check back later.
+                                </Typography>
+                            </Box>
+                        ) : (
+                            <Grid container spacing={1} sx={{ flex: 1 }}>
+                                <Grid item xs={12}>
+                                    <TableContainer
+                                        component={Paper}
+                                        sx={{
+                                            border: '1px solid rgba(235, 235, 235, 1)',
+                                            maxHeight: selectedFilters.length < 0 ? '70vh' : '67vh',
+                                            overflowY: 'auto'
+                                        }}
+                                    >
+                                        <Table stickyHeader aria-label="leads table">
+                                            <TableHead>
+                                                <TableRow>
+                                                    {[
+                                                        { key: 'name', label: 'Name' },
+                                                        { key: 'business_email', label: 'Email' },
+                                                        { key: 'mobile_phone', label: 'Phone number' },
+                                                        { key: 'last_visited_date', label: 'Visited date', sortable: true },
+                                                        { key: 'funnel', label: 'Visitor Type' },
+                                                        { key: 'time_spent', label: 'Time on site' },
+                                                    ].map(({ key, label, sortable = true }) => (
+                                                        <TableCell
+                                                            key={key}
+                                                            sx={{
+                                                                ...leadsStyles.table_column,
+                                                                ...(key === 'name' && {
+                                                                    position: 'sticky', // Make the Name column sticky
+                                                                    left: 0, // Stick it to the left
+                                                                    zIndex: 99
+                                                                }),
+                                                                ...(key === 'time_spent' && {
+                                                                    '::after': {
+                                                                        content: 'none'
                                                                     }
+                                                                })
+                                                            }}
+                                                            onClick={sortable ? () => handleSortRequest(key) : undefined}
+                                                            style={{ cursor: sortable ? 'pointer' : 'default' }}
+                                                        >
+                                                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                                                <Typography variant="body2" sx={{ ...leadsStyles.table_column, borderRight: '0' }}>{label}</Typography>
+                                                                {sortable && orderBy === key && (
+                                                                    <IconButton size="small" sx={{ ml: 1 }}>
+                                                                        {order === 'asc' ? (
+                                                                            <ArrowUpwardIcon
+                                                                                fontSize="inherit" />
+                                                                        ) : (
+                                                                            <ArrowDownwardIcon
+                                                                                fontSize="inherit" />
+                                                                        )}
+                                                                    </IconButton>
+                                                                )}
+                                                            </Box>
+                                                        </TableCell>
+                                                    ))}
+                                                </TableRow>
+                                            </TableHead>
+                                            <TableBody>
+                                                {data.map((row) => (
+                                                    <TableRow
+                                                        key={row.id}
+                                                        selected={selectedRows.has(row.id)}
+                                                        onClick={() => handleSelectRow(row.id)}
+                                                        sx={{
+                                                            backgroundColor: selectedRows.has(row.id) ? 'rgba(235, 243, 254, 1)' : '#fff',
+                                                            '&:hover': {
+                                                                backgroundColor: 'rgba(235, 243, 254, 1)',
+                                                                '& .sticky-cell': {
+                                                                    backgroundColor: 'rgba(235, 243, 254, 1)',
+                                                                }
+                                                            }
+                                                        }}
+                                                    >
+                                                        <TableCell className="sticky-cell"
+                                                            sx={{
+                                                                ...leadsStyles.table_array, cursor: 'pointer', position: 'sticky', left: '0', zIndex: 9, color: 'rgba(80, 82, 178, 1)', backgroundColor: '#fff'
+
+                                                            }} onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleOpenPopup(row);
+
+                                                            }}>{row.first_name} {row.last_name}</TableCell>
+                                                        <TableCell
+                                                            sx={{ ...leadsStyles.table_array, position: 'relative' }}>{row.business_email || 'N/A'}</TableCell>
+                                                        <TableCell
+                                                            sx={leadsStyles.table_array_phone}>{row.mobile_phone || 'N/A'}</TableCell>
+                                                        <TableCell
+                                                            sx={{ ...leadsStyles.table_array, position: 'relative' }}>{row.last_visited_date || 'N/A'}</TableCell>
+                                                        <TableCell
+                                                            sx={{ ...leadsStyles.table_column, position: 'relative' }}
+                                                        >
+                                                            <Box
+                                                                sx={{
+                                                                    display: 'flex',
+                                                                    padding: '2px 8px',
+                                                                    borderRadius: '2px',
+                                                                    fontFamily: 'Nunito',
+                                                                    fontSize: '12px',
+                                                                    fontWeight: '700',
+                                                                    lineHeight: 'normal',
+                                                                    backgroundColor: getStatusStyle(row.funnel).background,
+                                                                    color: getStatusStyle(row.funnel).color,
+                                                                    justifyContent: 'center',
+                                                                    minWidth: '130px',
+                                                                    textTransform: 'capitalize'
                                                                 }}
                                                             >
-                                                                <TableCell className="sticky-cell"
-                                                                    sx={{ ...leadsStyles.table_array, cursor: 'pointer', position: 'sticky', left: '0', zIndex: 9, color:'rgba(80, 82, 178, 1)', backgroundColor: '#fff'
-                                                                        
-                                                                    }} onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        handleOpenPopup(row);
+                                                                {row.funnel || 'N/A'}
+                                                            </Box>
+                                                        </TableCell>
 
-                                                                    }}>{row.first_name} {row.last_name}</TableCell>
-                                                                <TableCell
-                                                                    sx={{...leadsStyles.table_array, position: 'relative'}}>{row.business_email || 'N/A'}</TableCell>
-                                                                <TableCell
-                                                                    sx={leadsStyles.table_array_phone}>{row.mobile_phone || 'N/A'}</TableCell>
-                                                                <TableCell
-                                                                    sx={{...leadsStyles.table_array, position: 'relative'}}>{row.last_visited_date || 'N/A'}</TableCell>
-                                                                <TableCell
-                                                                    sx={{...leadsStyles.table_column, position: 'relative'}}
-                                                                >
-                                                                    <Box
-                                                                        sx={{
-                                                                            display: 'flex',
-                                                                            padding: '2px 8px',
-                                                                            borderRadius: '2px',
-                                                                            fontFamily: 'Nunito',
-                                                                            fontSize: '12px',
-                                                                            fontWeight: '700',
-                                                                            lineHeight: 'normal',
-                                                                            backgroundColor: getStatusStyle(row.funnel).background,
-                                                                            color: getStatusStyle(row.funnel).color,
-                                                                            justifyContent: 'center',
-                                                                            minWidth: '130px'
-                                                                        }}
-                                                                    >
-                                                                        {row.funnel || 'N/A'}
-                                                                    </Box>
-                                                                </TableCell>
-                                                                
-                                                                <TableCell
-                                                                    sx={leadsStyles.table_array}>{row.time_spent || 'N/A'}</TableCell>
-                                                            </TableRow>
-                                                        ))}
-                                                    </TableBody>
-                                                </Table>
-                                            </TableContainer>
-                                            <CustomTablePagination
-                                                count={count_leads ?? 0}
-                                                page={page}
-                                                rowsPerPage={rowsPerPage}
-                                                onPageChange={handleChangePage}
-                                                onRowsPerPageChange={handleChangeRowsPerPage}
-                                            />
-                                        </Grid>
-                                    </Grid>
-                                )}
-                                {showSlider && <Slider />}
-                            </Box>
-                        <PopupDetails open={openPopup}
-                            onClose={handleClosePopup}
-                            rowData={popupData} />
-                        <FilterPopup open={filterPopupOpen} onClose={handleFilterPopupClose} onApply={handleApplyFilters} />
-                        <AudiencePopup open={audiencePopupOpen} onClose={handleAudiencePopupClose}
-                            selectedLeads={Array.from(selectedRows)} />
-                        <CalendarPopup
-                            anchorEl={calendarAnchorEl}
-                            open={isCalendarOpen}
-                            onClose={handleCalendarClose}
-                            onDateChange={handleDateChange}
-                            onApply={handleApply}
-                        />
+                                                        <TableCell
+                                                            sx={leadsStyles.table_array}>{row.time_spent || 'N/A'}</TableCell>
+                                                    </TableRow>
+                                                ))}
+                                            </TableBody>
+                                        </Table>
+                                    </TableContainer>
+                                    <CustomTablePagination
+                                        count={count_leads ?? 0}
+                                        page={page}
+                                        rowsPerPage={rowsPerPage}
+                                        onPageChange={handleChangePage}
+                                        onRowsPerPageChange={handleChangeRowsPerPage}
+                                    />
+                                </Grid>
+                            </Grid>
+                        )}
+                        {showSlider && <Slider />}
+                    </Box>
+                    <PopupDetails open={openPopup}
+                        onClose={handleClosePopup}
+                        rowData={popupData} />
+                    <FilterPopup open={filterPopupOpen} onClose={handleFilterPopupClose} onApply={handleApplyFilters} />
+                    <AudiencePopup open={audiencePopupOpen} onClose={handleAudiencePopupClose}
+                        selectedLeads={Array.from(selectedRows)} />
+                    <CalendarPopup
+                        anchorEl={calendarAnchorEl}
+                        open={isCalendarOpen}
+                        onClose={handleCalendarClose}
+                        onDateChange={handleDateChange}
+                        onApply={handleApply}
+                    />
                 </Box>
             </Box>
         </>
