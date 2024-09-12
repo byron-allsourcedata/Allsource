@@ -8,6 +8,7 @@ import { showToast } from './ToastNotification';
 import Image from 'next/image';
 import SearchIcon from '@mui/icons-material/Search';
 import ConnectKlaviyo from './ConnectKlaviyo';
+import ConnectMeta from './ConnectMeta';
 
 interface AudiencePopupProps {
     open: boolean;
@@ -30,6 +31,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
     const [listName, setListName] = useState<string>('');
     const [plusIconPopupOpen, setPlusIconPopupOpen] = useState(false);
     const [klaviyoIconPopupOpen, setKlaviyoIconPopupOpen] = useState(false);
+    const [metaIconPopupOpen, setMetaIconPopupOpen] = useState(false);
 
     const fetchListItems = async () => {
         try {
@@ -134,6 +136,14 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
 
     const handleKlaviyoIconPopupClose = () => {
         setKlaviyoIconPopupOpen(false);
+    };
+
+    const handleMetaIconPopupOpen = () => {
+        setMetaIconPopupOpen(true);
+    };
+
+    const handleMetaIconPopupClose = () => {
+        setMetaIconPopupOpen(false);
     };
 
     return (
@@ -474,7 +484,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                         flexBasis: 'calc(50% - 8px)'
                                     }
                                 }}>
-                                    <ListItemButton sx={{p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center'}}>
+                                    <ListItemButton onClick={handleMetaIconPopupOpen} sx={{p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center'}}>
                                         <ListItemIcon sx={{minWidth: 'auto'}}>
                                             <Image src="/meta-icon.svg" alt="meta" height={26} width={32} />
                                         </ListItemIcon>
@@ -499,6 +509,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
             </Drawer>
 
             <ConnectKlaviyo open={klaviyoIconPopupOpen} onClose={handleKlaviyoIconPopupClose} />
+            <ConnectMeta open={metaIconPopupOpen} onClose={handleMetaIconPopupClose} />
         </>
     );
 };
