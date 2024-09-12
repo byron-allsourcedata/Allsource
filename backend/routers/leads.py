@@ -17,7 +17,7 @@ async def get_leads(
         from_date: int = Query(None, description="Start date in integer format"),
         to_date: int = Query(None, description="End date in integer format"),
         regions: str = Query(None, description="Comma-separated list of regions"),
-        page_visits: int = Query(None, description="Minimum number of page visits"),
+        page_visits: str = Query(None, description="Minimum number of page visits"),
         average_time_spent: float = Query(None, description="Average time spent on the page in minutes"),
         behavior_type: str = Query(None, description="funnel type stage"),
         status: str = Query(None, status="status type stage"),
