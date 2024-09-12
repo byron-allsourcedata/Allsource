@@ -1278,6 +1278,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                 width: "100%",
                 mb: 0,
                 gap: 1,
+                cursor: 'pointer'
               }}
               onClick={() => setIsVisitedDateOpen(!isVisitedDateOpen)}
             >

@@ -41,6 +41,7 @@ export const filterStyles: { [key: string]: SxProps<Theme> } = {
         justifyContent: "space-between",
         width: "100%",
         gap: 1,
+        cursor: 'pointer'
     },
     main_filter_form: {
         width: "100%",
