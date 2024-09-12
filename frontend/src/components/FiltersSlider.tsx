@@ -372,7 +372,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
       case "Returning visitors":
         funnel = "Returning visitors";
         break;
-git       case "Landed to cart":
+      case "Landed to cart":
         funnel = "Added to cart";
         break;
     }
