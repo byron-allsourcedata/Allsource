@@ -364,16 +364,16 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
     let funnel = "";
     switch (label) {
       case "Abandoned cart":
-        funnel = "abandoned_cart";
+        funnel = "Abandoned cart";
         break;
       case "Converters sales":
-        funnel = "converted_sales";
+        funnel = "Converted sales";
         break;
       case "Returning visitors":
-        funnel = "returning_visitors";
+        funnel = "Returning visitors";
         break;
       case "Landed to cart":
-        funnel = "added_to_cart";
+        funnel = "Added to cart";
         break;
     }
 
