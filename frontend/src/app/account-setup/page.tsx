@@ -12,12 +12,10 @@ import {
   Typography,
 } from "@mui/material";
 import Image from "next/image";
-import PersonIcon from "@mui/icons-material/Person";
 import { styles } from "./accountStyles";
 import { useRouter } from "next/navigation";
 import { useUser } from "../../context/UserContext";
 import axiosInterceptorInstance from "../../axios/axiosInterceptorInstance";
-import { showErrorToast } from "../../components/ToastNotification";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 
