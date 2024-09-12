@@ -1205,12 +1205,20 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                   </Button>
                 </InputAdornment>
               ),
+              sx: {
+                fontFamily: 'Nunito',
+                fontSize: '0.95em',
+                fontWeight: 400,
+                lineHeight: '16.8px',
+                textAlign: 'left',
+                color: 'rgba(74, 74, 74, 1)',
+              },
             }}
             sx={{
               padding: "1em 1em 0em 1em",
               '& .MuiInputBase-input::placeholder': {
                 fontFamily: 'Nunito',
-                fontSize: '12px',
+                fontSize: '1em',
                 fontWeight: 400,
                 lineHeight: '16.8px',
                 textAlign: 'left',
