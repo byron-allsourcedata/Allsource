@@ -215,9 +215,9 @@ class LeadsPersistence:
             for visit in page_visits_list:
                 if visit == 'under_10_secs':
                     filters.append(LeadsVisits.average_time_sec < 10)
-                elif visit == '10-30 secs':
+                elif visit == '10-30_secs':
                     filters.append(LeadsVisits.average_time_sec >= 10 and LeadsVisits.average_time_sec <= 30)
-                elif visit == '30-60 secs':
+                elif visit == '30-60_secs':
                     filters.append(LeadsVisits.average_time_sec >= 30 and LeadsVisits.average_time_sec <= 60)
                 else:
                     filters.append(LeadsVisits.average_time_sec > 60)
