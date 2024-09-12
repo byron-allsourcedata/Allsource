@@ -145,8 +145,8 @@ def process_user_data(table, index, five_x_five_user: FiveXFiveUser, session: Se
             else:
                 new_record = LeadsUsersOrdered(lead_user_id=lead_user.id, ordered_at=datetime.now())
                 session.add(new_record)
-        if lead_user.is_converted_sales == False and behavior_type == 'checkout_completed':
-            lead_user.is_converted_sales = True
+        if lead_user.is_landed_to_cart == False and behavior_type == 'product_added_to_cart':
+            lead_user.is_landed_to_cart = True
             existing_record = session.query(LeadsUsersAddedToCart).filter_by(lead_user_id=lead_user.id).first()
             if existing_record:
                 existing_record.added_at = datetime.now()
