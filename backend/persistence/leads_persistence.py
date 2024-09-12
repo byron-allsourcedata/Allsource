@@ -32,25 +32,22 @@ class LeadsPersistence:
     def __init__(self, db: Session):
         self.db = db
 
-    def filter_leads(self, user_id, page, per_page, status, from_date, to_date, from_time, to_time, regions, page_visits, average_time_spent,
-                     lead_funnels, recurring_visits, sort_by, sort_order, search_query):
+    def filter_leads(self, user_id, page, per_page, from_date, to_date, from_time, to_time, regions, page_visits, average_time_spent,
+                     behavior_type, recurring_visits, sort_by, sort_order, search_query, status):
         
-        subquery = (
-            self.db.query(
-                LeadsVisits.lead_id,
-                func.count(LeadsVisits.id).label('record_count'),
-                func.max(LeadsVisits.full_time_sec).label('time_on_site'),
-                func.max(LeadsVisits.start_date).label('start_date'),
-                func.max(LeadsVisits.start_time).label('start_time'),
-                func.max(LeadsVisits.pages_count).label('pages_count'),
-                func.max(LeadsVisits.average_time_sec).label('average_time_sec'),
-            )
-            .group_by(LeadsVisits.lead_id)
-            .subquery()
+        recurring_visits_subquery = (
+        self.db.query(
+            LeadsVisits.lead_id,
+            func.count().label('recurring_visits')
         )
+        .group_by(LeadsVisits.lead_id)
+        .subquery()
+        )
+        
         query = (
             self.db.query(
-            distinct(FiveXFiveUser.id),
+            # distinct(FiveXFiveUser.id),
+            FiveXFiveUser.id,
             FiveXFiveUser.first_name,
             FiveXFiveUser.programmatic_business_emails,
             FiveXFiveUser.mobile_phone,
@@ -106,19 +103,20 @@ class LeadsPersistence:
             FiveXFiveUser.personal_zip,
             FiveXFiveUser.professional_zip,
             FiveXFiveUser.company_zip,
-            LeadUser.status,
-            LeadUser.funnel,
+            LeadUser.behavior_type,
             FiveXFiveLocations.state,
             FiveXFiveLocations.city,
-            subquery.c.start_date,
-            subquery.c.start_time,
-            subquery.c.time_on_site
+            LeadsVisits.start_date.label('start_date'),
+            LeadsVisits.start_time.label('start_time'),
+            LeadsVisits.full_time_sec.label('time_on_site'),
+            recurring_visits_subquery.c.recurring_visits
             )
             .join(LeadUser, LeadUser.five_x_five_user_id == FiveXFiveUser.id)    
-            .join(FiveXFiveNames, FiveXFiveNames.id == FiveXFiveUser.first_name_id)       
+            .join(FiveXFiveNames, FiveXFiveNames.id == FiveXFiveUser.first_name_id)
+            .join(LeadsVisits, LeadsVisits.id == LeadUser.first_visit_id)  
             .outerjoin(FiveXFiveUsersLocations, FiveXFiveUsersLocations.five_x_five_user_id == FiveXFiveUser.id)
-            .outerjoin(FiveXFiveLocations, FiveXFiveLocations.id == FiveXFiveUsersLocations.location_id)     
-            .outerjoin(subquery, LeadUser.id == subquery.c.lead_id)
+            .outerjoin(FiveXFiveLocations, FiveXFiveLocations.id == FiveXFiveUsersLocations.location_id)
+            .outerjoin(recurring_visits_subquery, recurring_visits_subquery.c.lead_id == LeadUser.id) 
             .filter(LeadUser.user_id == user_id)
         )
         sort_options = {
@@ -126,13 +124,12 @@ class LeadsPersistence:
             'business_email': FiveXFiveUser.business_email,
             'mobile_phone': FiveXFiveUser.mobile_phone,
             'gender': FiveXFiveUser.gender,
-            'last_visited_date': subquery.c.start_date,
-            'status': LeadUser.status,
-            'funnel': LeadUser.funnel,
+            'last_visited_date': LeadsVisits.start_date,
             'state': FiveXFiveLocations.state,
             'city': FiveXFiveLocations.city,
             'age': FiveXFiveUser.age_min,
-            'time_spent': subquery.c.time_on_site
+            'time_spent': LeadsVisits.full_time_sec,
+            'funnel': LeadUser.behavior_type
         }
         if sort_by:
             sort_column = sort_options[sort_by]
@@ -141,15 +138,15 @@ class LeadsPersistence:
             elif sort_order == 'desc':
                 query = query.order_by(desc(sort_column))
         else:
-            query = query.order_by(desc(subquery.c.start_date))
+            query = query.order_by(desc(LeadsVisits.start_date))
 
         if from_date and to_date:
             start_date = datetime.fromtimestamp(from_date, tz=pytz.UTC)
             end_date = datetime.fromtimestamp(to_date, tz=pytz.UTC)
             query = query.filter(
                 and_(
-                    subquery.c.start_date >= start_date,
-                    subquery.c.start_date <= end_date
+                    LeadsVisits.start_date >= start_date,
+                    LeadsVisits.start_date <= end_date
                 )
             )
         if from_time and to_time:
@@ -157,8 +154,8 @@ class LeadsPersistence:
             to_time = datetime.strptime(to_time, '%H:%M').time()
             query = query.filter(
                 and_(
-                    subquery.c.start_time >= from_time,
-                    subquery.c.start_time <= to_time
+                    LeadsVisits.start_time >= from_time,
+                    LeadsVisits.start_time <= to_time
                 )
             )
 
@@ -167,11 +164,11 @@ class LeadsPersistence:
             for recurring_visit in recurring_visits_list:
                 if recurring_visit > 4:
                     query = query.filter(
-                        subquery.c.record_count > recurring_visit
+                        recurring_visits_subquery.c.recurring_visits > recurring_visit
                     )
                 else:
                     query = query.filter(
-                        subquery.c.record_count == recurring_visit
+                        recurring_visits_subquery.c.recurring_visits == recurring_visit
                     )
             query = query.filter(or_(*region_filters))
         if regions:
@@ -179,23 +176,18 @@ class LeadsPersistence:
             region_filters = [FiveXFiveLocations.city.ilike(f'%{region.strip()}%') for region in region_list]
             query = query.filter(or_(*region_filters))
 
-        if status == 'new_customers':
-            query = query.filter(LeadUser.status == 'New')
-        elif status == 'existing_customers':
-            query = query.filter(LeadUser.status == 'Existing') 
-
-        if lead_funnels:
-            funnel_list = lead_funnels.split(',')
-            query = query.filter(LeadUser.funnel.in_(funnel_list))
+        if behavior_type:
+            behavior_type_list = behavior_type.split(',')
+            query = query.filter(LeadUser.behavior_type_list.in_(behavior_type_list))
 
         if page_visits:
             page_visits_list = [int(visit) for visit in page_visits.split(',')]
             filters = []
             for visit in page_visits_list:
                 if visit > 3:
-                    filters.append(subquery.c.pages_count > visit)
+                    filters.append(LeadsVisits.pages_count > visit)
                 else:
-                    filters.append(subquery.c.pages_count == visit)
+                    filters.append(LeadsVisits.pages_count == visit)
             query = query.filter(or_(*filters))
 
         if average_time_spent:
@@ -203,13 +195,13 @@ class LeadsPersistence:
             filters = []
             for visit in page_visits_list:
                 if visit == 'under_10_secs':
-                    filters.append(subquery.c.average_time_sec < 10)
+                    filters.append(LeadsVisits.average_time_sec < 10)
                 elif visit == '10-30 secs':
-                    filters.append(subquery.c.average_time_sec >= 10 and subquery.c.average_time_sec <= 30)
+                    filters.append(LeadsVisits.average_time_sec >= 10 and LeadsVisits.average_time_sec <= 30)
                 elif visit == '30-60 secs':
-                    filters.append(subquery.c.average_time_sec >= 30 and subquery.c.average_time_sec <= 60)
+                    filters.append(LeadsVisits.average_time_sec >= 30 and LeadsVisits.average_time_sec <= 60)
                 else:
-                    filters.append(subquery.c.average_time_sec > 60)
+                    filters.append(LeadsVisits.average_time_sec > 60)
             query = query.filter(or_(*filters))
 
         if search_query:

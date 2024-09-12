@@ -27,6 +27,7 @@ from sqlalchemy.orm import sessionmaker, Session
 from models.five_x_five_users import FiveXFiveUser
 from models.leads_users import LeadUser
 from models.users import Users
+from models.subscriptions import SubscriptionPlan
 from models.leads_orders import LeadOrders
 from dotenv import load_dotenv
 from sqlalchemy.dialects.postgresql import insert
@@ -95,38 +96,34 @@ def process_user_data(table, index, five_x_five_user: FiveXFiveUser, session: Se
         page = referer
     behavior_type = 'visitor' if not partner_uid_dict.get('action') else partner_uid_dict.get('action')
     lead_user = session.query(LeadUser).filter_by(five_x_five_user_id=five_x_five_user.id, user_id=user.id).first()
+    is_first_request = False
     if not lead_user:
+        is_first_request = True
         lead_user = LeadUser(five_x_five_user_id=five_x_five_user.id, user_id=user.id)
         session.add(lead_user)
         session.flush()
         user_payment_transactions = UsersPaymentsTransactions(user_id=user.id, status='success', amount_credits=AMOUNT_CREDITS, type='lead', lead_id=lead_user.id, five_x_five_up_id=five_x_five_user.up_id)
         session.add(user_payment_transactions)
         session.flush()
+    else:
+        first_visit_id = lead_user.first_visit_id
 
     requested_at_str = str(table['EVENT_DATE'][index].as_py())
     requested_at = datetime.fromisoformat(requested_at_str)
     thirty_minutes_ago = requested_at - timedelta(minutes=30)
-    visit = session.query(LeadsRequests.visit_id).filter(
+    current_visit_request = session.query(LeadsRequests.visit_id).filter(
         LeadsRequests.lead_id == lead_user.id,
         LeadsRequests.requested_at >= thirty_minutes_ago
         ).first()
     leads_requests = None
-    if visit:
-        visit_id = visit[0]
+    if current_visit_request:
+        visit_id = current_visit_request[0]
         leads_requests = session.query(LeadsRequests).filter(
         LeadsRequests.visit_id == visit_id).all()
-
-    if leads_requests:
-        logging.info("leads requests exists")
-        lead_visits = leads_requests[0].visit_id
-        visit_first = session.query(LeadsVisits).filter(
-            LeadsVisits.lead_id == lead_user.id
-        ).order_by(
-            LeadsVisits.id.asc()
-        ).first()
-        if visit_first.id == leads_requests[0].visit_id:
+        lead_visits_id = leads_requests[0].visit_id
+        if first_visit_id == leads_requests[0].visit_id:
             if lead_user.behavior_type in ('visitor', 'viewed_product') and behavior_type in (
-            'viewed_product', 'product_added_to_cart'):
+            'viewed_product', 'product_added_to_cart') and lead_user.behavior_type != behavior_type:
                 session.query(LeadUser).filter(LeadUser.id == lead_user.id).update({
                     LeadUser.behavior_type: behavior_type
                 })
@@ -139,21 +136,28 @@ def process_user_data(table, index, five_x_five_user: FiveXFiveUser, session: Se
                                        created_at_shopify=datetime.now(), created_at=datetime.now()))
         process_leads_requests(requested_at, page, leads_requests, lead_user.id, session, behavior_type)
     else:
-        logging.info("Leads Visits not exists")
-        lead_visits = add_new_leads_visits(requested_at, lead_user.id, session, behavior_type).id
-        session.query(UserSubscriptions).filter(UserSubscriptions.user_id == user.id).update(
-            {
-                UserSubscriptions.plan_start: datetime.now(),
-                UserSubscriptions.plan_end: datetime.now() + relativedelta(months=1)
-            },
-            synchronize_session=False
-        )
-        session.flush()
+        lead_visits_id = add_new_leads_visits(visited_datetime=requested_at, lead_id=lead_user.id, session=session, behavior_type=behavior_type).id
+        if is_first_request == True:
+            lead_user.first_visit_id = lead_visits_id
+            session.flush()
+            lead_users = session.query(LeadUser).filter_by(user_id=user.id).limit(2).all()
+            if len(lead_users) == 1:
+                last_subscription = session.query(UserSubscriptions).filter(UserSubscriptions.user_id == user.id).order_by(UserSubscriptions.id.desc()).first()
+                if last_subscription and last_subscription.plan_start is None and last_subscription.plan_end is None:
+                    trial_days = session.query(SubscriptionPlan.trial_days).filter(SubscriptionPlan.is_free_trial == True).scalar()
+                    if trial_days:
+                        date_now = datetime.now()
+                        last_subscription.plan_start = date_now
+                        last_subscription.plan_end = date_now + relativedelta(days=trial_days)
+                        session.flush()
+    
     lead_request = insert(LeadsRequests).values(
         lead_id=lead_user.id,
-        page=page, requested_at=requested_at, visit_id=lead_visits
+        page=page, requested_at=requested_at, visit_id=lead_visits_id
     ).on_conflict_do_nothing()
     session.execute(lead_request)
+    session.flush()
+    
     session.commit()
 
 def normalize_url(url):

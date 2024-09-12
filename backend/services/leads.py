@@ -10,14 +10,14 @@ class LeadsService:
         self.leads_persistence_service = leads_persistence_service
         self.user = user
 
-    def get_leads(self, page, per_page, status, from_date, to_date, regions, page_visits, average_time_spent,
-                  lead_funnels, recurring_visits, sort_by, sort_order, search_query,from_time, to_time):
-        leads, count, max_page = self.leads_persistence_service.filter_leads(user_id=self.user.get('id'), page=page, per_page=per_page, status=status,
+    def get_leads(self, page, per_page, from_date, to_date, regions, page_visits, average_time_spent,
+                  recurring_visits, sort_by, sort_order, search_query,from_time, to_time, behavior_type, status):
+        leads, count, max_page = self.leads_persistence_service.filter_leads(user_id=self.user.get('id'), page=page, per_page=per_page,
                                                                              from_date=from_date, to_date=to_date,
                                                                              regions=regions, page_visits=page_visits, average_time_spent=average_time_spent,
-                                                                             lead_funnels=lead_funnels, recurring_visits=recurring_visits,
+                                                                             behavior_type=behavior_type, recurring_visits=recurring_visits,
                                                                              sort_by=sort_by, sort_order=sort_order, search_query=search_query,
-                                                                             from_time=from_time,to_time=to_time
+                                                                             from_time=from_time,to_time=to_time, status=status
                                                                              )
         leads_list = [
         {
@@ -77,13 +77,12 @@ class LeadsService:
         'personal_zip': lead[53],
         'professional_zip': lead[54],
         'company_zip': lead[55],
-        'status': lead[56],
-        'funnel': lead[57],
-        'state': lead[58],
-        'city': lead[59],
-        'last_visited_date': lead[60].strftime('%d.%m.%Y') if lead[57] else None,
-        'last_visited_time': lead[61].strftime('%H:%M') if lead[58] else None,
-        'time_spent': lead[62]
+        'funnel': lead[56],
+        'state': lead[57],
+        'city': lead[58],
+        'last_visited_date': lead[59].strftime('%d.%m.%Y') if lead[57] else None,
+        'last_visited_time': lead[60].strftime('%H:%M') if lead[58] else None,
+        'time_spent': lead[61]
     }
     for lead in leads
     ]   
