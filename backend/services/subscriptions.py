@@ -142,7 +142,7 @@ class SubscriptionService:
             created_at=created_at,
             status=status,
             amount_credits=amount_credits,
-            type='buy credits'
+            type='buy_credits'
         )
         self.db.add(payment_transaction_obj)
         self.db.commit()
@@ -314,9 +314,9 @@ class SubscriptionService:
         if status != "canceled":
             user_subscription.plan_start = start_date
             user_subscription.plan_end = end_date
-            user_subscription.domains_limit = user_subscription.domains_limit + domains_limit
-            user_subscription.users_limit = user_subscription.users_limit + users_limit
-            user_subscription.integrations_limit = user_subscription.integrations_limit + integrations_limit
+            user_subscription.domains_limit = domains_limit
+            user_subscription.users_limit = users_limit
+            user_subscription.integrations_limit = integrations_limit
             user_subscription.plan_id=plan_id,
         user_subscription.status = status
         user_subscription.stripe_request_created_at = stripe_request_created_at
