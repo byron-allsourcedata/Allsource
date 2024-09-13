@@ -561,6 +561,7 @@ const Leads: React.FC = () => {
         const url = `/leads`;
 
         try {
+            setIsLoading(true)
             const response = await axiosInstance.get(url);
             const [leads, count, max_page] = response.data;
 
@@ -571,58 +572,68 @@ const Leads: React.FC = () => {
         } catch (error) {
             console.error('Error fetching leads:', error);
         }
+        finally{
+            setIsLoading(false)
+        }
     };
 
     const handleDeleteFilter = (filterToDelete: { label: string; value: string }) => {
+        // Обновляем выбранные фильтры, удаляя только тот, который нужно удалить
         const updatedFilters = selectedFilters.filter(filter => filter.label !== filterToDelete.label);
-
+    
+        // Обновляем состояние выбранных фильтров
         setSelectedFilters(updatedFilters);
-
+    
+        // Если фильтр даты удален, сбрасываем состояние даты
         if (filterToDelete.label === 'Dates') {
             setAppliedDates({ start: null, end: null });
             setFormattedDates('');
         }
-
+    
+        // Обновляем фильтры для применения
         const newFilters: FilterParams = {
             from_date: updatedFilters.find(f => f.label === 'From Date') ? Number(updatedFilters.find(f => f.label === 'From Date')!.value) : null,
             to_date: updatedFilters.find(f => f.label === 'To Date') ? Number(updatedFilters.find(f => f.label === 'To Date')!.value) : null,
-            selectedStatus: updatedFilters.find(f => f.label === 'Status') ? updatedFilters.find(f => f.label === 'Status')!.value.split(', ') : [],
+            selectedStatus: updatedFilters.find(f => f.label === 'Visitor Type') ? updatedFilters.find(f => f.label === 'Visitor Type')!.value.split(', ') : [],
             regions: updatedFilters.find(f => f.label === 'Regions') ? updatedFilters.find(f => f.label === 'Regions')!.value.split(', ') : [],
             emails: updatedFilters.find(f => f.label === 'Emails') ? updatedFilters.find(f => f.label === 'Emails')!.value.split(', ') : [],
-            selectedFunnels: updatedFilters.find(f => f.label === 'Funnels') ? updatedFilters.find(f => f.label === 'Funnels')!.value.split(', ') : [],
+            selectedFunnels: updatedFilters.find(f => f.label === 'Lead Status') ? updatedFilters.find(f => f.label === 'Lead Status')!.value.split(', ') : [],
             searchQuery: updatedFilters.find(f => f.label === 'Search') ? updatedFilters.find(f => f.label === 'Search')!.value : '',
-
+            
+            // Сбрасываем флаги фильтров, если они удалены
             checkedFilters: {
-                lastWeek: false,
-                last30Days: false,
-                last6Months: false,
-                allTime: false
+                lastWeek: updatedFilters.some(f => f.label === 'Date Range' && f.value === 'lastWeek'),
+                last30Days: updatedFilters.some(f => f.label === 'Date Range' && f.value === 'last30Days'),
+                last6Months: updatedFilters.some(f => f.label === 'Date Range' && f.value === 'last6Months'),
+                allTime: updatedFilters.some(f => f.label === 'Date Range' && f.value === 'allTime')
             },
             checkedFiltersPageVisits: {
-                page: false,
-                two_page: false,
-                three_page: false,
-                more_three: false
+                page: updatedFilters.some(f => f.label === 'Page Visits' && f.value === '1 page'),
+                two_page: updatedFilters.some(f => f.label === 'Page Visits' && f.value === '2 pages'),
+                three_page: updatedFilters.some(f => f.label === 'Page Visits' && f.value === '3 pages'),
+                more_three: updatedFilters.some(f => f.label === 'Page Visits' && f.value === 'more than 3 pages')
             },
             checkedFiltersTime: {
-                morning: false,
-                evening: false,
-                afternoon: false,
-                all_day: false
+                morning: updatedFilters.some(f => f.label === 'Time of Day' && f.value === 'morning'),
+                evening: updatedFilters.some(f => f.label === 'Time of Day' && f.value === 'evening'),
+                afternoon: updatedFilters.some(f => f.label === 'Time of Day' && f.value === 'afternoon'),
+                all_day: updatedFilters.some(f => f.label === 'Time of Day' && f.value === 'all_day')
             },
             checkedFiltersTimeSpent: {
-                under_10: false,
-                over_10: false,
-                over_30: false,
-                over_60: false
+                under_10: updatedFilters.some(f => f.label === 'Time Spent' && f.value === 'under 10'),
+                over_10: updatedFilters.some(f => f.label === 'Time Spent' && f.value === '10-30 secs'),
+                over_30: updatedFilters.some(f => f.label === 'Time Spent' && f.value === '30-60 secs'),
+                over_60: updatedFilters.some(f => f.label === 'Time Spent' && f.value === 'over 60 secs')
             },
-            recurringVisits: [],
-            from_time: null,
-            to_time: null
+            recurringVisits: updatedFilters.find(f => f.label === 'Recurring Visits') ? updatedFilters.find(f => f.label === 'Recurring Visits')!.value.split(', ') : [],
+            from_time: updatedFilters.find(f => f.label === 'From Time') ? updatedFilters.find(f => f.label === 'From Time')!.value : null,
+            to_time: updatedFilters.find(f => f.label === 'To Time') ? updatedFilters.find(f => f.label === 'To Time')!.value : null
         };
-
+    
+        // Применяем обновленные фильтры
         handleApplyFilters(newFilters);
     };
+    
 
 
     useEffect(() => {
@@ -1333,7 +1344,7 @@ const Leads: React.FC = () => {
                                                         </TableCell>
 
                                                         <TableCell
-                                                            sx={leadsStyles.table_array}>{row.time_spent || 'N/A'}</TableCell>
+                                                            sx={leadsStyles.table_array}>{`${row.time_spent} sec` || 'N/A'}</TableCell>
                                                     </TableRow>
                                                 ))}
                                             </TableBody>
