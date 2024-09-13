@@ -28,6 +28,10 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose }) => {
     const textFieldRef = useRef<HTMLDivElement>(null);
     const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
     const [openDropdown, setOpenDropdown] = useState<number | null>(null);
+    const [isDropdownValid, setIsDropdownValid] = useState(false);
+    const [adId, setAdId] = useState('');
+    const [adIdError, setAdIdError] = useState(false);
+    const [listNameError, setListNameError] = useState(false);
 
       // Handle click outside to unshrink the label if input is empty
   useEffect(() => {
@@ -93,11 +97,23 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose }) => {
             setSelectedOption(value);
             handleClose();
         }
+        setIsDropdownValid(value !== '');
     };
 
     // Handle Save action for the create new list form
     const handleSave = () => {
-        if (newListName.trim()) { // Only save if newListName is not empty
+        let valid = true;
+    
+        // Validate List Name
+        if (newListName.trim() === '') {
+            setListNameError(true);
+            valid = false;
+        } else {
+            setListNameError(false);
+        }
+    
+        // If valid, save and close
+        if (valid) {
             setSelectedOption(newListName); // Update selected option with new list name
             handleClose();
         }
@@ -127,6 +143,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose }) => {
             padding: 0,
             minWidth: 'auto',
             px: 2,
+            pointerEvents: 'none',
             '@media (max-width: 600px)': {
                 alignItems: 'flex-start',
                 p: 0
@@ -177,6 +194,8 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose }) => {
                 return (
                     <Button
                         variant="contained"
+                        onClick={handleNextTab}
+                        disabled={adIdError || !adId || !isDropdownValid}
                         sx={{
                             backgroundColor: '#5052B2',
                             fontFamily: "Nunito",
@@ -276,6 +295,31 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose }) => {
         setOpenDropdown(null); // Reset when dropdown closes
     };
 
+    const handleAdIdChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setAdId(event.target.value);
+        setAdIdError(event.target.value === ''); // Set error if API Key is empty
+    };
+    
+    const validateAdId = () => {
+        // Your logic to validate the API key
+        if (adId.trim() === '') {
+          setAdIdError(true);
+          return false;
+        }
+        setAdIdError(false);
+        return true;
+    };
+
+    const handleNextTab = () => {
+        if (value === '2') {
+            // Validate Tab 3
+            if (isDropdownValid && validateAdId()) {
+                // Proceed to next tab
+                setValue((prevValue) => String(Number(prevValue) + 1));
+            }
+        }
+      };
+
     return (
         <Drawer
             anchor="right"
@@ -317,7 +361,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose }) => {
                 <Box sx={{ width: '100%', padding: '16px 24px 24px 24px', position: 'relative' }}>
                 <TabContext value={value}>
                     <Box sx={{pb: 4}}>
-                        <TabList onChange={handleChange} centered aria-label="Connect to Meta Tabs"
+                        <TabList centered aria-label="Connect to Meta Tabs"
                         TabIndicatorProps={{sx: {backgroundColor: "#5052b2" } }} 
                         sx={{
                             "& .MuiTabs-scroller": {
@@ -395,6 +439,10 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose }) => {
                                     variant="outlined"
                                     fullWidth
                                     margin="normal"
+                                    error={adIdError}
+                                    helperText={adIdError ? 'AD ID is required' : ''}
+                                    value={adId}
+                                    onChange={handleAdIdChange}
                                     InputLabelProps={{ sx: metaStyles.inputLabel }}
                                     InputProps={{ sx: metaStyles.formInput }}
                                     sx={{ margin: 0}}
@@ -511,6 +559,8 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose }) => {
                                                             size="small"
                                                             fullWidth
                                                             onKeyDown={(e) => e.stopPropagation()}
+                                                            error={listNameError}
+                                                            helperText={listNameError ? 'List Name is required' : ''}
                                                             InputLabelProps={{
                                                                 sx: {
                                                                 fontFamily: 'Nunito',
@@ -568,7 +618,9 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose }) => {
                                                         
                                                     </Box>
                                                         <Box sx={{textAlign: 'right'}}>
-                                                        <Button variant="contained" onClick={handleSave} sx={{
+                                                        <Button variant="contained" onClick={handleSave}
+                                                        disabled={listNameError || !newListName}
+                                                        sx={{
                                                             borderRadius: '4px',
                                                             border: '1px solid #5052B2',
                                                             background: '#fff',

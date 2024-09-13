@@ -32,6 +32,8 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
     const [plusIconPopupOpen, setPlusIconPopupOpen] = useState(false);
     const [klaviyoIconPopupOpen, setKlaviyoIconPopupOpen] = useState(false);
     const [metaIconPopupOpen, setMetaIconPopupOpen] = useState(false);
+    const [selectedIntegration, setSelectedIntegration] = useState<string | null>(null);
+    const [isExportDisabled, setIsExportDisabled] = useState(true);
 
     const fetchListItems = async () => {
         try {
@@ -124,6 +126,9 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
 
     const handlePlusIconPopupOpen = () => {
         setPlusIconPopupOpen(true);
+        setSelectedIntegration(null); // Reset the selection
+        setIsExportDisabled(true); // Disable export button when the plus icon is clicked
+
     };
 
     const handlePlusIconPopupClose = () => {
@@ -145,6 +150,11 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
     const handleMetaIconPopupClose = () => {
         setMetaIconPopupOpen(false);
     };
+
+    const handleIntegrationSelect = (integration: string) => {
+        setSelectedIntegration(integration);
+        setIsExportDisabled(false); // Enable export button when an integration is selected
+      };
 
     return (
         <>
@@ -183,12 +193,14 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                             </Typography>
                             <List sx={{ display: 'flex', gap: '16px', py: 2, flexWrap: 'wrap' }}>
                                 {/* HubSpot */}
-                                <ListItem sx={{p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',
+                                <ListItem sx={{p: 0, borderRadius: '4px', border: selectedIntegration === 'HubSpot' ? '1px solid #5052B2' : '1px solid #e4e4e4', width: 'auto',
                                     '@media (max-width:600px)': {
                                         flexBasis: 'calc(50% - 8px)'
                                     }
                                 }}>
-                                    <ListItemButton sx={{p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center'}}>
+                                    <ListItemButton onClick={() => handleIntegrationSelect('HubSpot')} sx={{p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center',
+                                        backgroundColor: selectedIntegration === 'HubSpot' ? 'rgba(80, 82, 178, 0.10)' : 'transparent'
+                                    }}>
                                     <ListItemIcon sx={{minWidth: 'auto'}}>
                                         <Image src="/hubspot.svg" alt="hubspot" height={28} width={27} />
                                     </ListItemIcon>
@@ -205,12 +217,14 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                 </ListItem>
 
                                 {/* WordPress */}
-                                <ListItem sx={{p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',
+                                <ListItem sx={{p: 0, borderRadius: '4px', border: selectedIntegration === 'WordPress' ? '1px solid #5052B2' : '1px solid #e4e4e4', width: 'auto',
                                     '@media (max-width:600px)': {
                                         flexBasis: 'calc(50% - 8px)'
                                     }
                                 }}>
-                                    <ListItemButton sx={{p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center'}}>
+                                    <ListItemButton onClick={() => handleIntegrationSelect('WordPress')} sx={{p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center',
+                                        backgroundColor: selectedIntegration === 'WordPress' ? 'rgba(80, 82, 178, 0.10)' : 'transparent'
+                                    }}>
                                     <ListItemIcon sx={{minWidth: 'auto'}}>    
                                         <Image src="/wordpress.svg" alt="wordpress" height={24} width={24} />
                                     </ListItemIcon>
@@ -227,12 +241,14 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                 </ListItem>
 
                                 {/* Klaviyo */}
-                                <ListItem sx={{p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',
+                                <ListItem sx={{p: 0, borderRadius: '4px', border: selectedIntegration === 'Klaviyo' ? '1px solid #5052B2' : '1px solid #e4e4e4', width: 'auto',
                                     '@media (max-width:600px)': {
                                         flexBasis: 'calc(50% - 8px)'
                                     }
                                 }}>
-                                    <ListItemButton onClick={handleKlaviyoIconPopupOpen} sx={{p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center'}}>
+                                    <ListItemButton onClick={() => handleIntegrationSelect('Klaviyo')}  sx={{p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center',
+                                        backgroundColor: selectedIntegration === 'Klaviyo' ? 'rgba(80, 82, 178, 0.10)' : 'transparent'
+                                    }}>
                                         <ListItemIcon sx={{minWidth: 'auto'}}>
                                             <Image src="/klaviyo.svg" alt="klaviyo" height={26} width={32} />
                                         </ListItemIcon>
@@ -268,6 +284,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                         <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
                             <Button
                                 variant="contained"
+                                disabled={isExportDisabled} 
                                 // onClick={handleSave}
                                 sx={{
                                     backgroundColor: '#5052B2',

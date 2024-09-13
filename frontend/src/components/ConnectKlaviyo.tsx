@@ -28,6 +28,12 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
     const textFieldRef = useRef<HTMLDivElement>(null);
     const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
     const [openDropdown, setOpenDropdown] = useState<number | null>(null);
+    const [apiKey, setApiKey] = useState('');
+    const [apiKeyError, setApiKeyError] = useState(false);
+    const [tab2Error, setTab2Error] = useState(false);
+    const [isDropdownValid, setIsDropdownValid] = useState(false);
+    const [listNameError, setListNameError] = useState(false);
+    const [tagNameError, setTagNameError] = useState(false);
 
       // Handle click outside to unshrink the label if input is empty
   useEffect(() => {
@@ -76,6 +82,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
         setShowCreateForm(false);
         setIsDropdownOpen(false);
         setNewListName(''); // Clear new list name when closing
+        setTagName(''); // Clear new list name when closing
     };
 
     // Handle option selection
@@ -93,15 +100,36 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
             setSelectedOption(value);
             handleClose();
         }
+        setIsDropdownValid(value !== '');
     };
 
     // Handle Save action for the create new list form
     const handleSave = () => {
-        if (newListName.trim()) { // Only save if newListName is not empty
+        let valid = true;
+    
+        // Validate List Name
+        if (newListName.trim() === '') {
+            setListNameError(true);
+            valid = false;
+        } else {
+            setListNameError(false);
+        }
+    
+        // Validate Tag Name
+        if (tagName.trim() === '') {
+            setTagNameError(true);
+            valid = false;
+        } else {
+            setTagNameError(false);
+        }
+    
+        // If valid, save and close
+        if (valid) {
             setSelectedOption(newListName); // Update selected option with new list name
             handleClose();
         }
     };
+    
 
 
 
@@ -127,6 +155,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
             padding: 0,
             minWidth: 'auto',
             px: 2,
+            pointerEvents: 'none',
             '@media (max-width: 600px)': {
                 alignItems: 'flex-start',
                 p: 0
@@ -242,6 +271,8 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                 return (
                     <Button
                         variant="contained"
+                        disabled={!apiKey || apiKeyError}
+                        onClick={handleNextTab}
                         sx={{
                             backgroundColor: '#5052B2',
                             fontFamily: "Nunito",
@@ -265,6 +296,8 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                 return (
                     <Button
                         variant="contained"
+                        onClick={handleNextTab}
+                        disabled={!selectedRadioValue}
                         sx={{
                             backgroundColor: '#5052B2',
                             fontFamily: "Nunito",
@@ -288,6 +321,8 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                 return (
                     <Button
                         variant="contained"
+                        disabled={!isDropdownValid}
+                        onClick={handleNextTab}
                         sx={{
                             backgroundColor: '#5052B2',
                             fontFamily: "Nunito",
@@ -387,6 +422,52 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
         setOpenDropdown(null); // Reset when dropdown closes
     };
 
+    const handleApiKeyChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setApiKey(event.target.value);
+        setApiKeyError(event.target.value === ''); // Set error if API Key is empty
+    };
+    
+    const validateApiKey = () => {
+        // Your logic to validate the API key
+        if (apiKey.trim() === '') {
+          setApiKeyError(true);
+          return false;
+        }
+        setApiKeyError(false);
+        return true;
+    };
+
+    const validateTab2 = () => {
+        if (selectedRadioValue === null) {
+          setTab2Error(true);
+          return false;
+        }
+        setTab2Error(false);
+        return true;
+      };
+
+
+
+    const handleNextTab = () => {
+        if (validateApiKey()) {
+          // Increment tab value
+          setValue((prevValue) => {
+            const nextValue = String(Number(prevValue) + 1);
+            return nextValue;
+          });
+        } else if (value === '2') {
+            if (validateTab2()) {
+              setValue((prevValue) => String(Number(prevValue) + 1));
+            }
+          } else if (value === '3') {
+            // Validate Tab 3
+            if (isDropdownValid) {
+                // Proceed to next tab
+                setValue((prevValue) => String(Number(prevValue) + 1));
+            }
+        }
+      };
+
     return (
         <Drawer
             anchor="right"
@@ -428,7 +509,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                 <Box sx={{ width: '100%', padding: '16px 24px 24px 24px', position: 'relative' }}>
                 <TabContext value={value}>
                     <Box sx={{pb: 4}}>
-                        <TabList onChange={handleChange} centered aria-label="Connect to Klaviyo Tabs"
+                        <TabList centered aria-label="Connect to Klaviyo Tabs"
                         TabIndicatorProps={{sx: {backgroundColor: "#5052b2" } }} 
                         sx={{
                             "& .MuiTabs-scroller": {
@@ -467,6 +548,10 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                                     variant="outlined"
                                     fullWidth
                                     margin="normal"
+                                    error={apiKeyError}
+                                    helperText={apiKeyError ? 'API Key is required' : ''}
+                                    value={apiKey}
+                                    onChange={handleApiKeyChange}
                                     InputLabelProps={{ sx: klaviyoStyles.inputLabel }}
                                     InputProps={{ sx: klaviyoStyles.formInput }}
                                 />
@@ -670,7 +755,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                                         lineHeight: '20px'
                                     }}>Synchronise data gathered from this moment onward in real-time.</Typography>
                                     
-                                    <FormControl sx={{gap: '16px'}}>
+                                    <FormControl sx={{gap: '16px'}} error={tab2Error}>
                                         <FormLabel id="contact-type-radio-buttons-group-label" sx={{
                                             fontFamily: 'Nunito',
                                             fontSize: '14px',
@@ -678,7 +763,8 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                                             color: '#000',
                                             lineHeight: 'normal',
                                             '&.Mui-focused': {
-                                                color: '#000'
+                                                color: '#000',
+                                                transform: 'none !important'
                                             }
                                         }}>Filter by Contact type</FormLabel>
                                         <RadioGroup
@@ -929,6 +1015,8 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                                                             size="small"
                                                             fullWidth
                                                             onKeyDown={(e) => e.stopPropagation()}
+                                                            error={listNameError}
+                                                            helperText={listNameError ? 'List Name is required' : ''}
                                                             InputLabelProps={{
                                                                 sx: {
                                                                 fontFamily: 'Nunito',
@@ -991,6 +1079,8 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                                                             size="small"
                                                             fullWidth
                                                             onKeyDown={(e) => e.stopPropagation()}
+                                                            error={tagNameError}
+                                                            helperText={tagNameError ? 'Tag Name is required' : ''}
                                                             InputLabelProps={{
                                                                 sx: {
                                                                 fontFamily: 'Nunito',
@@ -1043,7 +1133,9 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                                                         />
                                                     </Box>
                                                         <Box sx={{textAlign: 'right'}}>
-                                                        <Button variant="contained" onClick={handleSave} sx={{
+                                                        <Button variant="contained" onClick={handleSave}
+                                                        disabled={listNameError || tagNameError || !newListName || !tagName}
+                                                        sx={{
                                                             borderRadius: '4px',
                                                             border: '1px solid #5052B2',
                                                             background: '#fff',
