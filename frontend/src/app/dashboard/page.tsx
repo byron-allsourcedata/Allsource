@@ -11,13 +11,15 @@ import { dashboardStyles } from "./dashboardStyles";
 import { ProgressSection } from "../../components/ProgressSection";
 import PixelInstallation from "../../components/PixelInstallation";
 import Slider from "../../components/Slider";
-import { SliderProvider } from "../../context/SliderContext";
+import { SliderProvider, useSlider } from "../../context/SliderContext";
 import { useTrial } from "../../context/TrialProvider";
 import StatsCards from "../../components/StatsCard";
 import { PopupButton } from "react-calendly";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import { fetchUserData } from '../../services/meService';
 import { showErrorToast, showToast } from '@/components/ToastNotification';
+import axiosInterceptorInstance from "../../axios/axiosInterceptorInstance";
+import ManualPopup from "@/components/ManualPopup";
 
 
 const VerifyPixelIntegration: React.FC = () => {
@@ -116,7 +118,7 @@ const VerifyPixelIntegration: React.FC = () => {
             borderRadius: "4px",
             fontFamily: "Nunito",
             fontSize: "16px",
-            fontWeight: "600",
+            fontWeight: "500",
             lineHeight: "22.4px",
             textAlign: "left"
           }}
@@ -156,6 +158,42 @@ const SupportSection: React.FC = () => {
       setRootElement(calendlyPopupRef.current);
     }
   }, []);
+
+  const [openmanually, setOpen] = useState(false);
+  const [pixelCode, setPixelCode] = useState('');
+  const { setShowSlider } = useSlider();
+  const [isLoading, setIsLoading] = useState(false);
+
+  const installManually = async () => {
+    try {
+      setIsLoading(true)
+      const response = await axiosInterceptorInstance.get('/install-pixel/manually');
+      setPixelCode(response.data.manual);
+      setOpen(true);
+    } catch (error) {
+      if (error instanceof AxiosError && error.response?.status === 403) {
+        if (error.response.data.status === 'NEED_BOOK_CALL') {
+          sessionStorage.setItem('is_slider_opened', 'true');
+          setShowSlider(true);
+        } else {
+          sessionStorage.setItem('is_slider_opened', 'false');
+          setShowSlider(false); 
+        }
+      } else {
+        console.error('Error fetching data:', error);
+      }
+    }
+    finally {
+      setIsLoading(false)
+    }
+  };
+
+
+  const sendEmail = () => {
+    installManually()
+    
+  }
+  const handleManualClose = () => setOpen(false);
 
   return (
   <Box sx={{
@@ -242,6 +280,7 @@ const SupportSection: React.FC = () => {
             
           />
         <Button
+          onClick={sendEmail}
           sx={{
             textWrap: "nowrap",
             pt:'0.5em',
@@ -266,6 +305,23 @@ const SupportSection: React.FC = () => {
             height={20}
           />
         </Button>
+        <ManualPopup open={openmanually} handleClose={handleManualClose} pixelCode={pixelCode} />
+        {isLoading && (
+            <Box sx={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              backgroundColor: 'rgba(255, 255, 255, 0.8)',
+              zIndex: 1,
+            }}>
+              <CustomizedProgressBar />
+            </Box>
+          )}
       </Grid>
     </Box>
     </Box>

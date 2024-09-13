@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from 'react';
-import { Box, Button, Typography, Modal, IconButton, Divider, Input } from '@mui/material';
+import { Box, Button, Typography, Modal, IconButton, Divider, Input, InputBase } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import Image from 'next/image';
@@ -95,7 +95,7 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode }) => {
           </IconButton>
         </Box>
         <Divider />
-        <Box sx={{ flex: 1, overflowY: 'auto', paddingBottom: '30px', '@media (max-width: 600px)': {p: 2} }}>
+        <Box sx={{ flex: 1, overflowY: 'auto', paddingBottom: '30px', '@media (max-width: 600px)': { p: 2 } }}>
           <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', padding: '1em 0em 0em 0em', justifyContent: 'start' }}>
             <Image src='/1.svg' alt='1' width={28} height={28} />
             <Typography sx={maintext}>Copy the pixel code</Typography>
@@ -124,7 +124,7 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode }) => {
             >
               <ContentCopyIcon />
             </IconButton>
-            <code style={{ color: '#000000', fontSize: '12px', fontWeight: 600, fontFamily: 'Nunito', textWrap: 'nowrap'}}>{pixelCode}</code>
+            <code style={{ color: '#000000', fontSize: '12px', fontWeight: 600, fontFamily: 'Nunito', textWrap: 'nowrap' }}>{pixelCode}</code>
           </Box>
           <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', padding: '0.5em 0em 0em 0em', justifyContent: 'start' }}>
             <Image src='/2.svg' alt='2' width={28} height={28} />
@@ -136,77 +136,84 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode }) => {
             <Typography sx={maintext}>Verify Your Pixel</Typography>
           </Box>
           <Typography sx={subtext}>Once the pixel is pasted in your website, wait for 10-15 mins and verify your pixel.</Typography>
-            <Box sx={{ position: 'relative', width: '100%', pt: 5, '@media (max-width: 600px)': {pt: 2}}}>
+          <Box sx={{ position: 'relative', width: '100%', pt: 5, '@media (max-width: 600px)': { pt: 2 } }}>
             <Box
-          sx={{
-            padding: '1.1em',
-            border: '1px solid #e4e4e4',
-            borderRadius: '8px',
-            backgroundColor: 'rgba(247, 247, 247, 1)',
-            boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
-            marginBottom: '3em',
-            '@media (max-width: 600px)': { m: 2 }
-          }}
-        >
-          <Typography
-            variant="h6"
-            component="div"
-            mb={2}
-            sx={{
-              fontFamily: 'Nunito',
-              fontWeight: '700',
-              lineHeight: '21.82px',
-              textAlign: 'left',
-              fontSize: '16px'
-            }}
-          >
-            Send this to my developer
-          </Typography>
-          <Box display="flex" alignItems="center" justifyContent="space-between" flexDirection="row" sx={{'@media (max-width: 600px)': { flexDirection: 'column', display: 'flex', alignContent: 'flex-start', alignItems: 'flex-start', gap: 1}}}>
-            <Input
-              id="email_send"
-              type="text"
-              placeholder="Enter Email ID"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              sx={{padding: '0.5rem 2em 0.5em 1em',
-                width: '65%',
-                border: '1px solid #e4e4e4',
-                borderRadius: '4px',
-                maxHeight: '2.5em',
-                fontFamily: 'Nunito',
-                fontSize: '16px',
-                fontWeight: '700',
-                lineHeight: '21.82px',
-                textAlign: 'left',
-                '@media (max-width: 600px)': {
-                  width: '100%',
-                },
-              }}
-            />
-            <Button
-              onClick={handleButtonClick}
               sx={{
-                ml: 2,
-                border: '1px solid rgba(80, 82, 178, 1)',
-                textTransform: 'none',
-                background: '#fff',
-                color: 'rgba(80, 82, 178, 1)',
-                fontFamily: 'Nunito',
-                padding: '0.65em 2em',
-                mr: 1,
-                '@media (max-width: 600px)': {padding: '0.5em 1.5em', mr: 0, ml: 0, left: 0}
+                padding: '1.1em',
+                border: '1px solid #e4e4e4',
+                borderRadius: '8px',
+                backgroundColor: 'rgba(247, 247, 247, 1)',
+                boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
+                marginBottom: '3em',
+                '@media (max-width: 600px)': { m: 2 }
               }}
             >
-              <Typography sx={{
-                fontFamily: 'Nunito', fontSize: '16px', fontWeight: '600', lineHeight: '22.4px', textAlign: 'left'
-              }}>
-                Send
+              <Typography
+                variant="h6"
+                component="div"
+                mb={2}
+                sx={{
+                  fontFamily: 'Nunito',
+                  fontWeight: '700',
+                  lineHeight: '21.82px',
+                  textAlign: 'left',
+                  fontSize: '16px'
+                }}
+              >
+                Send this to my developer
               </Typography>
-            </Button>
-          </Box>
-        </Box>
+              <Box display="flex" alignItems="center" justifyContent="space-between" flexDirection="row" sx={{ '@media (max-width: 600px)': { flexDirection: 'column', display: 'flex', alignContent: 'flex-start', alignItems: 'flex-start', gap: 1 } }}>
+                <InputBase
+                  id="email_send"
+                  type="text"
+                  placeholder="Enter Email ID"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  sx={{
+                    padding: '0.5rem 2em 0.5em 1em',
+                    width: '65%',
+                    border: '1px solid #e4e4e4',
+                    borderRadius: '4px',
+                    maxHeight: '2.5em',
+                    fontFamily: 'Nunito',
+                    fontSize: '16px',
+                    fontWeight: '500',
+                    lineHeight: '21.82px',
+                    textAlign: 'left',
+                    boxShadow: 'none',
+                    outline: 'none',  
+                    '&:focus': {
+                      borderColor: '#3f51b5',
+                    },
+                    '@media (max-width: 600px)': {
+                      width: '100%',
+                    },
+                  }}
+                />
+
+                <Button
+                  onClick={handleButtonClick}
+                  sx={{
+                    ml: 2,
+                    border: '1px solid rgba(80, 82, 178, 1)',
+                    textTransform: 'none',
+                    background: '#fff',
+                    color: 'rgba(80, 82, 178, 1)',
+                    fontFamily: 'Nunito',
+                    padding: '0.65em 2em',
+                    mr: 1,
+                    '@media (max-width: 600px)': { padding: '0.5em 1.5em', mr: 0, ml: 0, left: 0 }
+                  }}
+                >
+                  <Typography sx={{
+                    fontFamily: 'Nunito', fontSize: '16px', fontWeight: '600', lineHeight: '22.4px', textAlign: 'left'
+                  }}>
+                    Send
+                  </Typography>
+                </Button>
+              </Box>
             </Box>
+          </Box>
         </Box>
 
         <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-end', paddingBottom: '0em', '@media (max-width: 600px)': { justifyContent: 'center', pb: 3, width: '94%', pl: 2 } }}>
