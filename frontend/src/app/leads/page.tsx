@@ -355,6 +355,7 @@ const Leads: React.FC = () => {
 
     const fetchData = async ({ sortBy, sortOrder, page, rowsPerPage, activeFilter, appliedDates }: FetchDataParams) => {
         try {
+            setIsLoading(true);
             const accessToken = localStorage.getItem("token");
             if (!accessToken) {
                 router.push('/signin');
@@ -560,6 +561,7 @@ const Leads: React.FC = () => {
         const url = `/leads`;
 
         try {
+            setIsLoading(true)
             const response = await axiosInstance.get(url);
             const [leads, count, max_page] = response.data;
 
@@ -570,58 +572,68 @@ const Leads: React.FC = () => {
         } catch (error) {
             console.error('Error fetching leads:', error);
         }
+        finally{
+            setIsLoading(false)
+        }
     };
 
     const handleDeleteFilter = (filterToDelete: { label: string; value: string }) => {
+        // Обновляем выбранные фильтры, удаляя только тот, который нужно удалить
         const updatedFilters = selectedFilters.filter(filter => filter.label !== filterToDelete.label);
-
+    
+        // Обновляем состояние выбранных фильтров
         setSelectedFilters(updatedFilters);
-
+    
+        // Если фильтр даты удален, сбрасываем состояние даты
         if (filterToDelete.label === 'Dates') {
             setAppliedDates({ start: null, end: null });
             setFormattedDates('');
         }
-
+    
+        // Обновляем фильтры для применения
         const newFilters: FilterParams = {
             from_date: updatedFilters.find(f => f.label === 'From Date') ? Number(updatedFilters.find(f => f.label === 'From Date')!.value) : null,
             to_date: updatedFilters.find(f => f.label === 'To Date') ? Number(updatedFilters.find(f => f.label === 'To Date')!.value) : null,
-            selectedStatus: updatedFilters.find(f => f.label === 'Status') ? updatedFilters.find(f => f.label === 'Status')!.value.split(', ') : [],
+            selectedStatus: updatedFilters.find(f => f.label === 'Visitor Type') ? updatedFilters.find(f => f.label === 'Visitor Type')!.value.split(', ') : [],
             regions: updatedFilters.find(f => f.label === 'Regions') ? updatedFilters.find(f => f.label === 'Regions')!.value.split(', ') : [],
             emails: updatedFilters.find(f => f.label === 'Emails') ? updatedFilters.find(f => f.label === 'Emails')!.value.split(', ') : [],
-            selectedFunnels: updatedFilters.find(f => f.label === 'Funnels') ? updatedFilters.find(f => f.label === 'Funnels')!.value.split(', ') : [],
+            selectedFunnels: updatedFilters.find(f => f.label === 'Lead Status') ? updatedFilters.find(f => f.label === 'Lead Status')!.value.split(', ') : [],
             searchQuery: updatedFilters.find(f => f.label === 'Search') ? updatedFilters.find(f => f.label === 'Search')!.value : '',
-
+            
+            // Сбрасываем флаги фильтров, если они удалены
             checkedFilters: {
-                lastWeek: false,
-                last30Days: false,
-                last6Months: false,
-                allTime: false
+                lastWeek: updatedFilters.some(f => f.label === 'Date Range' && f.value === 'lastWeek'),
+                last30Days: updatedFilters.some(f => f.label === 'Date Range' && f.value === 'last30Days'),
+                last6Months: updatedFilters.some(f => f.label === 'Date Range' && f.value === 'last6Months'),
+                allTime: updatedFilters.some(f => f.label === 'Date Range' && f.value === 'allTime')
             },
             checkedFiltersPageVisits: {
-                page: false,
-                two_page: false,
-                three_page: false,
-                more_three: false
+                page: updatedFilters.some(f => f.label === 'Page Visits' && f.value === '1 page'),
+                two_page: updatedFilters.some(f => f.label === 'Page Visits' && f.value === '2 pages'),
+                three_page: updatedFilters.some(f => f.label === 'Page Visits' && f.value === '3 pages'),
+                more_three: updatedFilters.some(f => f.label === 'Page Visits' && f.value === 'more than 3 pages')
             },
             checkedFiltersTime: {
-                morning: false,
-                evening: false,
-                afternoon: false,
-                all_day: false
+                morning: updatedFilters.some(f => f.label === 'Time of Day' && f.value === 'morning'),
+                evening: updatedFilters.some(f => f.label === 'Time of Day' && f.value === 'evening'),
+                afternoon: updatedFilters.some(f => f.label === 'Time of Day' && f.value === 'afternoon'),
+                all_day: updatedFilters.some(f => f.label === 'Time of Day' && f.value === 'all_day')
             },
             checkedFiltersTimeSpent: {
-                under_10: false,
-                over_10: false,
-                over_30: false,
-                over_60: false
+                under_10: updatedFilters.some(f => f.label === 'Time Spent' && f.value === 'under 10'),
+                over_10: updatedFilters.some(f => f.label === 'Time Spent' && f.value === '10-30 secs'),
+                over_30: updatedFilters.some(f => f.label === 'Time Spent' && f.value === '30-60 secs'),
+                over_60: updatedFilters.some(f => f.label === 'Time Spent' && f.value === 'over 60 secs')
             },
-            recurringVisits: [],
-            from_time: null,
-            to_time: null
+            recurringVisits: updatedFilters.find(f => f.label === 'Recurring Visits') ? updatedFilters.find(f => f.label === 'Recurring Visits')!.value.split(', ') : [],
+            from_time: updatedFilters.find(f => f.label === 'From Time') ? updatedFilters.find(f => f.label === 'From Time')!.value : null,
+            to_time: updatedFilters.find(f => f.label === 'To Time') ? updatedFilters.find(f => f.label === 'To Time')!.value : null
         };
-
+    
+        // Применяем обновленные фильтры
         handleApplyFilters(newFilters);
     };
+    
 
 
     useEffect(() => {
@@ -662,8 +674,8 @@ const Leads: React.FC = () => {
         }
     };
 
-    const getStatusStyle = (funnel: any) => {
-        switch (funnel) {
+    const getStatusStyle = (behavior_type: any) => {
+        switch (behavior_type) {
             case 'visitor':
                 return {
                     background: 'rgba(235, 243, 254, 1)',
@@ -674,20 +686,35 @@ const Leads: React.FC = () => {
                     background: 'rgba(235, 243, 254, 1)',
                     color: 'rgba(20, 110, 246, 1)',
                 };
-            case 'Converted':
-                return {
-                    background: 'rgba(244, 252, 238, 1)',
-                    color: 'rgba(110, 193, 37, 1)',
-                };
-            case 'Added to cart':
+            case 'product_added_to_cart':
                 return {
                     background: 'rgba(241, 241, 249, 1)',
                     color: 'rgba(80, 82, 178, 1)',
                 };
-            case 'Cart abandoned':
+            case 'Add_to_cart':
                 return {
-                    background: 'rgba(254, 238, 236, 1)',
-                    color: 'rgba(244, 87, 69, 1)',
+                    background: 'rgba(241, 241, 249, 1)',
+                    color: 'rgba(80, 82, 178, 1)',
+                };
+            case 'Add to cart':
+                return {
+                    background: 'rgba(241, 241, 249, 1)',
+                    color: 'rgba(80, 82, 178, 1)',
+                };
+            case 'Viewed Product':
+                return {
+                    background: 'rgba(244, 252, 238, 1)',
+                    color: 'rgba(43, 91, 0, 1)',
+                };
+            case 'Viewed_product':
+                return {
+                    background: 'rgba(244, 252, 238, 1)',
+                    color: 'rgba(43, 91, 0, 1)',
+                };
+            case 'viewed_product':
+                return {
+                    background: 'rgba(244, 252, 238, 1)',
+                    color: 'rgba(43, 91, 0, 1)',
                 };
             case 'Existing':
                 return {
@@ -705,6 +732,18 @@ const Leads: React.FC = () => {
                     color: 'inherit',
                 };
         }
+    };
+
+    const formatFunnelText = (text: string) => {
+        if (text === 'product_added_to_cart') {
+            return 'Add to cart';
+        }        
+        // Заменяем символ подчеркивания пробелом и делаем первую букву каждого слова заглавной
+        return text
+            .replace(/_/g, ' ') // Заменяем подчеркивания пробелами
+            .split(' ')         // Разделяем строку по пробелам
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()) // Каждое слово с заглавной буквы
+            .join(' ');
     };
 
     const handleDownload = async () => {
@@ -908,10 +947,10 @@ const Leads: React.FC = () => {
                                 <Typography sx={{
                                     marginRight: '0.5em',
                                     fontFamily: 'Nunito',
-                                    lineHeight: '22px',
+                                    lineHeight: '22.4px',
                                     fontSize: '16px',
                                     textAlign: 'left',
-                                    fontWeight: '600',
+                                    fontWeight: '500',
                                     color: '#5052B2'
                                 }}>
                                     Create Contact Sync
@@ -1211,7 +1250,7 @@ const Leads: React.FC = () => {
                                                         { key: 'business_email', label: 'Email' },
                                                         { key: 'mobile_phone', label: 'Phone number' },
                                                         { key: 'first_visited_date', label: 'Visited date', sortable: true },
-                                                        { key: 'funnel', label: 'Visitor Type' },
+                                                        { key: 'behavior_type', label: 'Visitor Type' },
                                                         { key: 'time_spent', label: 'Time on site' },
                                                     ].map(({ key, label, sortable = true }) => (
                                                         <TableCell
@@ -1255,13 +1294,12 @@ const Leads: React.FC = () => {
                                                     <TableRow
                                                         key={row.id}
                                                         selected={selectedRows.has(row.id)}
-                                                        onClick={() => handleSelectRow(row.id)}
                                                         sx={{
-                                                            backgroundColor: selectedRows.has(row.id) ? 'rgba(235, 243, 254, 1)' : '#fff',
+                                                            backgroundColor: selectedRows.has(row.id) ? 'rgba(247, 247, 247, 1)' : '#fff',
                                                             '&:hover': {
-                                                                backgroundColor: 'rgba(235, 243, 254, 1)',
+                                                                backgroundColor: 'rgba(247, 247, 247, 1)',
                                                                 '& .sticky-cell': {
-                                                                    backgroundColor: 'rgba(235, 243, 254, 1)',
+                                                                    backgroundColor: 'rgba(247, 247, 247, 1)',
                                                                 }
                                                             }
                                                         }}
@@ -1293,19 +1331,19 @@ const Leads: React.FC = () => {
                                                                     fontSize: '12px',
                                                                     fontWeight: '700',
                                                                     lineHeight: 'normal',
-                                                                    backgroundColor: getStatusStyle(row.funnel).background,
-                                                                    color: getStatusStyle(row.funnel).color,
+                                                                    backgroundColor: getStatusStyle(row.behavior_type).background,
+                                                                    color: getStatusStyle(row.behavior_type).color,
                                                                     justifyContent: 'center',
                                                                     minWidth: '130px',
                                                                     textTransform: 'capitalize'
                                                                 }}
                                                             >
-                                                                {row.funnel || 'N/A'}
+                                                                {formatFunnelText(row.behavior_type) || 'N/A'}
                                                             </Box>
                                                         </TableCell>
 
                                                         <TableCell
-                                                            sx={leadsStyles.table_array}>{row.time_spent || 'N/A'}</TableCell>
+                                                            sx={leadsStyles.table_array}>{`${row.time_spent} sec` || 'N/A'}</TableCell>
                                                     </TableRow>
                                                 ))}
                                             </TableBody>

@@ -77,7 +77,7 @@ class LeadsService:
         'personal_zip': lead[53],
         'professional_zip': lead[54],
         'company_zip': lead[55],
-        'funnel': lead[56],
+        'behavior_type': lead[56],
         'state': lead[57],
         'city': lead[58],
         'first_visited_date': lead[59].strftime('%d.%m.%Y'),

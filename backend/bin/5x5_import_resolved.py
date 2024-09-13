@@ -151,7 +151,10 @@ def process_user_data(table, index, five_x_five_user: FiveXFiveUser, session: Se
                 lead_user.is_returning_visitor = True
                 session.flush()
                 
-    if behavior_type == 'checkout_completed': 
+    if behavior_type == 'checkout_completed':
+        if lead_user.is_converted_sales == False:
+                lead_user.is_converted_sales = True
+                session.flush()
         order_detail = partner_uid_dict.get('order_detail')
         session.add(LeadOrders(lead_user_id=lead_user.id, 
                                 total_price=order_detail.get('total_price'), 
