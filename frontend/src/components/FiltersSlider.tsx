@@ -165,7 +165,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
       const updatedTags = prevTags[category].filter((t) => t !== tag);
 
       const isLastTagRemoved = updatedTags.length === 0;
-  
+
       // Если удалена последняя метка и категория "visitedDate", очищаем состояние
       if (category === "visitedDate" && isLastTagRemoved) {
         setDateRange({ fromDate: null, toDate: null });
@@ -414,13 +414,13 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
         [name]: newValue,
       };
 
-       setCheckedFilters({
+      setCheckedFilters({
         lastWeek: false,
         last30Days: false,
         last6Months: false,
         allTime: false,
       });
-  
+
       // Определяем старый диапазон дат
       const oldFromDate = prevRange.fromDate
         ? dayjs(prevRange.fromDate).format('MMM DD, YYYY')
@@ -428,7 +428,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
       const oldToDate = prevRange.toDate
         ? dayjs(prevRange.toDate).format('MMM DD, YYYY')
         : '';
-  
+
       // Форматируем новый диапазон дат
       const fromDate = updatedRange.fromDate
         ? dayjs(updatedRange.fromDate).format('MMM DD, YYYY')
@@ -436,22 +436,22 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
       const toDate = updatedRange.toDate
         ? dayjs(updatedRange.toDate).format('MMM DD, YYYY')
         : '';
-  
+
       // Устанавливаем новый диапазон дат и метку
       const newTag = fromDate && toDate ? `From ${fromDate} to ${toDate}` : null;
-  
+
       // Сначала обновляем метку
       setSelectedTags((prevTags) => {
         const updatedTags = {
           ...prevTags,
           visitedDate: newTag ? [newTag] : [],
         };
-  
+
         // Если новая метка существует, добавляем ее
         if (newTag) {
           addTag("visitedDate", newTag);
         }
-  
+
         // Если метка была заменена или удалена, очищаем диапазон дат
         if (!newTag && prevTags.visitedDate.length > 0) {
           setDateRange({ fromDate: null, toDate: null });
@@ -459,10 +459,10 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
         } else if (newTag && oldFromDate && oldToDate) {
           removeTag("visitedDate", `From ${oldFromDate} to ${oldToDate}`);
         }
-  
+
         return updatedTags;
       });
-  
+
       return updatedRange;
     });
   };
@@ -886,6 +886,77 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
   //   }
   // };
 
+  const handleClearFilters = () => {
+    setSelectedButton(null);
+    setIsVisitedDateOpen(false);
+    setIsVisitedPageOpen(false);
+    setIsTimeSpentOpen(false);
+    setIsVisitedTimeOpen(false);
+    setIsRegionOpen(false);
+    setIsLeadFunnel(false);
+    setIsStatus(false);
+    setIsRecurringVisits(false);
+
+    setCheckedFiltersPageVisits({
+      page: false,
+      two_page: false,
+      three_page: false,
+      more_three: false,
+    });
+
+    setTimeRange({
+      fromTime: null,
+      toTime: null,
+    });
+
+    setCheckedFiltersTimeSpent({
+      under_10: false,
+      over_10: false,
+      over_30: false,
+      over_60: false,
+    });
+
+    // Сброс состояния дат
+    setDateRange({
+      fromDate: null,
+      toDate: null,
+    });
+
+    setCheckedFilters({
+      lastWeek: false,
+      last30Days: false,
+      last6Months: false,
+      allTime: false,
+    });
+
+    // Сброс значений фильтров для времени
+    setCheckedFiltersTime({
+      morning: false,
+      evening: false,
+      afternoon: false,
+      all_day: false,
+    });
+
+    setSelectedValues([]);
+
+    // Сброс значений фильтров
+    setRegions("");
+    setSelectedDateRange(null);
+    setSelectedTimeRange(null);
+    setSelectedTags({
+      visitedDate: [],
+      visitedTime: [],
+      region: [],
+      pageVisits: [],
+      timeSpents: [],
+    });
+    setTags([]);
+    setSelectedFunnels([]);
+    setSelectedStatus([]);
+    setButtonFilters(null);
+    setSearchQuery("");
+  };
+
 
   return (
     <>
@@ -1183,6 +1254,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
+            pb: 2
           }}
         >
           <TextField
@@ -1329,7 +1401,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                   ...filterStyles.filter_dropdown
                 }}
               >
-                <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 0 }}>
                   <FormControlLabel
                     control={
                       <Radio
@@ -1363,7 +1435,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                     label={<Typography sx={{ ...filterStyles.collapse_font, color: checkedFilters.last30Days ? "rgba(80, 82, 178, 1)" : "rgba(74, 74, 74, 1)" }}>Last 30 days</Typography>}
                   />
                 </Box>
-                <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 0 }}>
                   <FormControlLabel
                     control={
                       <Radio
@@ -1420,7 +1492,22 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                     sx={{ width: "100%" }}
                     slots={{
                       textField: (props) => (
-                        <TextField {...props} variant="outlined" fullWidth />
+                        <TextField {...props} variant="outlined" fullWidth sx={{
+                          '& .MuiInputBase-input': {
+                            fontFamily: 'Nunito',
+                            fontSize: '14px',
+                            fontWeight: 400,
+                            lineHeight: '19.6px',
+                            textAlign: 'left',
+                          },
+                          '& .MuiInputLabel-root': {
+                            fontFamily: 'Nunito',
+                            fontSize: '14px',
+                            fontWeight: 400,
+                            lineHeight: '19.6px',
+                            textAlign: 'left',
+                          }
+                        }} />
                       ),
                     }}
                   />
@@ -1433,7 +1520,23 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                     sx={{ width: "100%" }}
                     slots={{
                       textField: (props) => (
-                        <TextField {...props} variant="outlined" fullWidth />
+                        <TextField {...props} variant="outlined" fullWidth
+                          sx={{
+                            '& .MuiInputBase-input': {
+                              fontFamily: 'Nunito',
+                              fontSize: '14px',
+                              fontWeight: 400,
+                              lineHeight: '19.6px',
+                              textAlign: 'left',
+                            },
+                            '& .MuiInputLabel-root': {
+                              fontFamily: 'Nunito',
+                              fontSize: '14px',
+                              fontWeight: 400,
+                              lineHeight: '19.6px',
+                              textAlign: 'left',
+                            }
+                          }} />
                       ),
                     }}
                   />
@@ -1489,7 +1592,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                   ...filterStyles.filter_dropdown
                 }}
               >
-                <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 0 }}>
                   <FormControlLabel
                     control={
                       <Radio
@@ -1523,7 +1626,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                     label={<Typography sx={{ ...filterStyles.collapse_font, color: checkedFiltersTime.evening ? "rgba(80, 82, 178, 1)" : "rgba(74, 74, 74, 1)" }}>Evening 5PM - 9PM</Typography>}
                   />
                 </Box>
-                <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 0 }}>
                   <FormControlLabel
                     control={
                       <Radio
@@ -1577,7 +1680,22 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                     onChange={handleTimeChange("fromTime")}
                     slots={{
                       textField: (props) => (
-                        <TextField {...props} variant="outlined" fullWidth />
+                        <TextField {...props} variant="outlined" fullWidth sx={{
+                          '& .MuiInputBase-input': {
+                            fontFamily: 'Nunito',
+                            fontSize: '14px',
+                            fontWeight: 400,
+                            lineHeight: '19.6px',
+                            textAlign: 'left',
+                          },
+                          '& .MuiInputLabel-root': {
+                            fontFamily: 'Nunito',
+                            fontSize: '14px',
+                            fontWeight: 400,
+                            lineHeight: '19.6px',
+                            textAlign: 'left',
+                          }
+                        }} />
                       ),
                     }}
                   />
@@ -1587,7 +1705,22 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                     onChange={handleTimeChange("toTime")}
                     slots={{
                       textField: (props) => (
-                        <TextField {...props} variant="outlined" fullWidth />
+                        <TextField {...props} variant="outlined" fullWidth sx={{
+                          '& .MuiInputBase-input': {
+                            fontFamily: 'Nunito',
+                            fontSize: '14px',
+                            fontWeight: 400,
+                            lineHeight: '19.6px',
+                            textAlign: 'left',
+                          },
+                          '& .MuiInputLabel-root': {
+                            fontFamily: 'Nunito',
+                            fontSize: '14px',
+                            fontWeight: 400,
+                            lineHeight: '19.6px',
+                            textAlign: 'left',
+                          }
+                        }} />
                       ),
                     }}
                   />
@@ -1707,7 +1840,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                   ...filterStyles.filter_dropdown
                 }}
               >
-                <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 0 }}>
                   <FormControlLabel sx={{ fontFamily: 'Nunito', fontWeight: 100 }}
                     control={
                       <Checkbox
@@ -1741,7 +1874,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                     label={<Typography sx={{ ...filterStyles.collapse_font, color: checkedFiltersPageVisits.two_page ? "rgba(80, 82, 178, 1)" : "rgba(74, 74, 74, 1)" }}>2 pages</Typography>}
                   />
                 </Box>
-                <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 0 }}>
                   <FormControlLabel sx={{ fontFamily: 'Nunito', fontWeight: 100 }}
                     control={
                       <Checkbox
@@ -1825,7 +1958,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                   ...filterStyles.filter_dropdown
                 }}
               >
-                <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 0 }}>
                   <FormControlLabel
                     control={
                       <Checkbox
@@ -1859,7 +1992,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                     label={<Typography sx={{ ...filterStyles.collapse_font, color: checkedFiltersTimeSpent.over_10 ? "rgba(80, 82, 178, 1)" : "rgba(74, 74, 74, 1)" }}>10-30 secs</Typography>}
                   />
                 </Box>
-                <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 0 }}>
                   <FormControlLabel
                     control={
                       <Checkbox
@@ -2114,7 +2247,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
               </IconButton>
             </Box>
             <Collapse in={isRecurringVisits}>
-              <Box sx={{ display: "flex", justifyContent: "start", gap: 3, pl: 2 }}>
+              <Box sx={{ display: "flex", justifyContent: "start", gap: 2, pl: 2 }}>
                 {["1", "2", "3", "4", "4+"].map((label) => (
                   <FormControlLabel
                     key={label}
@@ -2152,12 +2285,13 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
             marginRight: "2em",
             display: "flex",
             justifyContent: "end",
+            pb: 2,
             gap: 3
           }}
         >
           <Button
             variant="contained"
-            onClick={handleApply}
+            onClick={handleClearFilters}
             sx={{
               color: "rgba(80, 82, 178, 1)",
               backgroundColor: '#fff',
@@ -2166,6 +2300,9 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
               fontSize: "16px",
               textTransform: "none",
               padding: "0.75em 2.5em",
+              '&:hover': {
+                backgroundColor: 'transparent'
+              }
             }}
           >
             Clear all
@@ -2179,6 +2316,9 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
               fontSize: "16px",
               textTransform: "none",
               padding: "0.75em 2.5em",
+              '&:hover': {
+                backgroundColor: 'rgba(80, 82, 178, 1)'
+              }
             }}
           >
             Apply
