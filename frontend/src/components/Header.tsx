@@ -104,16 +104,21 @@ const Header = () => {
             MenuListProps={{
               "aria-labelledby": "profile-menu-button",
             }}
+            sx={{ 
+              mt: 0.5,
+              ml: -1
+            }}
           >
-            <Box sx={{ paddingTop: 1, paddingLeft: 2, paddingRight: 2, paddingBottom: 1
-             }}>
+            <Box sx={{ paddingTop: 1, paddingLeft: 2, paddingRight: 2, paddingBottom: 1 }}>
               <Typography
                 variant="h6"
                 sx={{
                   fontFamily: 'Nunito',
                   fontSize: '14px',
-                  fontWeight: 400,
+                  fontWeight: 600,
                   lineHeight: '19.6px',
+                  color: 'rgba(0, 0, 0, 0.89)',
+                  mb:0.25
                 }}
               >
                 {full_name}
@@ -124,8 +129,9 @@ const Header = () => {
                 sx={{
                   fontFamily: 'Nunito',
                   fontSize: '14px',
-                  fontWeight: 400,
+                  fontWeight: 600,
                   lineHeight: '19.6px',
+                  color: 'rgba(0, 0, 0, 0.89)',
                 }}
               >
                 {email}
@@ -135,7 +141,7 @@ const Header = () => {
               sx={{
                 fontFamily: 'Nunito',
                 fontSize: '14px',
-                fontWeight: 400,
+                fontWeight: 500,
                 lineHeight: '19.6px',
               }}
               onClick={handleSettingsClick}
@@ -146,7 +152,7 @@ const Header = () => {
               sx={{
                 fontFamily: 'Nunito',
                 fontSize: '14px',
-                fontWeight: 400,
+                fontWeight: 500,
                 lineHeight: '19.6px',
               }}
               onClick={handleSignOut}
