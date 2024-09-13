@@ -18,6 +18,8 @@ parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 
 from models.leads_requests import LeadsRequests
+from models.leads_users_added_to_cart import LeadsUsersAddedToCart
+from models.leads_users_ordered import LeadsUsersOrdered
 from models.leads_visits import LeadsVisits
 from models.subscriptions import UserSubscriptions
 from models.five_x_five_hems import FiveXFiveHems
@@ -109,7 +111,7 @@ def process_user_data(table, index, five_x_five_user: FiveXFiveUser, session: Se
         first_visit_id = lead_user.first_visit_id
 
     requested_at_str = str(table['EVENT_DATE'][index].as_py())
-    requested_at = datetime.fromisoformat(requested_at_str)
+    requested_at = datetime.fromisoformat(requested_at_str).replace(tzinfo=None)
     thirty_minutes_ago = requested_at - timedelta(minutes=30)
     current_visit_request = session.query(LeadsRequests.visit_id).filter(
         LeadsRequests.lead_id == lead_user.id,
@@ -128,13 +130,7 @@ def process_user_data(table, index, five_x_five_user: FiveXFiveUser, session: Se
                     LeadUser.behavior_type: behavior_type
                 })
                 session.commit()
-            if behavior_type == 'checkout_completed': 
-                order_detail = partner_uid_dict.get('order_detail')
-                session.add(LeadOrders(lead_user_id=lead_user.id, 
-                                       total_price=order_detail.get('total_price'), 
-                                       currency_code=order_detail.get('currency'),
-                                       created_at_shopify=datetime.now(), created_at=datetime.now()))
-        process_leads_requests(requested_at, page, leads_requests, lead_user.id, session, behavior_type)
+        process_leads_requests(requested_at=requested_at, page=page, leads_requests=leads_requests, visit_id=visit_id, session=session, behavior_type=behavior_type)
     else:
         lead_visits_id = add_new_leads_visits(visited_datetime=requested_at, lead_id=lead_user.id, session=session, behavior_type=behavior_type).id
         if is_first_request == True:
@@ -150,7 +146,30 @@ def process_user_data(table, index, five_x_five_user: FiveXFiveUser, session: Se
                         last_subscription.plan_start = date_now
                         last_subscription.plan_end = date_now + relativedelta(days=trial_days)
                         session.flush()
-    
+        else:
+            if lead_user.is_returning_visitor == False:
+                lead_user.is_returning_visitor = True
+                session.flush()
+                
+    if behavior_type == 'checkout_completed': 
+        order_detail = partner_uid_dict.get('order_detail')
+        session.add(LeadOrders(lead_user_id=lead_user.id, 
+                                total_price=order_detail.get('total_price'), 
+                                currency_code=order_detail.get('currency'),
+                                created_at_shopify=requested_at, created_at=datetime.now()))
+        existing_record = session.query(LeadsUsersOrdered).filter_by(lead_user_id=lead_user.id).first()
+        if existing_record:
+            existing_record.ordered_at = requested_at
+        else:
+            new_record = LeadsUsersOrdered(lead_user_id=lead_user.id, ordered_at=requested_at)
+            session.add(new_record)
+    if  behavior_type == 'product_added_to_cart':
+        existing_record = session.query(LeadsUsersAddedToCart).filter_by(lead_user_id=lead_user.id).first()
+        if existing_record:
+            existing_record.added_at = requested_at
+        else:
+            new_record = LeadsUsersAddedToCart(lead_user_id=lead_user.id, added_at=requested_at)
+            session.add(new_record)
     lead_request = insert(LeadsRequests).values(
         lead_id=lead_user.id,
         page=page, requested_at=requested_at, visit_id=lead_visits_id
@@ -194,10 +213,8 @@ def convert_leads_requests_to_utc(leads_requests):
         else:
             request.requested_at = request.requested_at.astimezone(utc)
 
-def process_leads_requests(requested_at, page, leads_requests, lead_id, session: Session, behavior_type):
-    convert_leads_requests_to_utc(leads_requests)
+def process_leads_requests(requested_at, page, leads_requests, visit_id, session: Session, behavior_type):
     new_request = LeadsRequests(
-        lead_id=lead_id,
         page=normalize_url(page),
         requested_at=requested_at,
     )
@@ -223,7 +240,7 @@ def process_leads_requests(requested_at, page, leads_requests, lead_id, session:
 
     average_time_sec = int(total_time_sec / len(leads_requests_sorted))
     
-    session.query(LeadsVisits).filter_by(lead_id=lead_id).update({
+    session.query(LeadsVisits).filter_by(id=visit_id).update({
         'start_date': start_date,
         'start_time': start_time,
         'end_date': end_date,

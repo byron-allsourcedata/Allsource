@@ -56,8 +56,8 @@ class ShopifyIntegrationService:
         return response.json().get('orders')
 
 
-    def __get_credentials(self, user_id: int):
-        return self.integration_persistence.get_credentials_for_service(user_id, 'shopify')
+    def get_credentials(self, user_id: int):
+        return self.integration_persistence.get_credentials_for_service(user_id, 'Shopify')
 
 
     def __set_pixel(self, user, shop_domain: str, access_token: str):
@@ -315,13 +315,9 @@ if (Shopify.checkout) {{
         user_website = user['company_website'].lower().lstrip('http://').lstrip('https://')
         if user_website != shop_domain:
             raise HTTPException(status_code=400, detail={'status': 'error', 'detail': {'message': 'Store Domain does not match the one you specified earlier'}})
-        # customers = [self.__mapped_customer(customer) for customer in self.__get_customers(credentials.shopify.shop_domain, credentials.shopify.access_token)]
         self.__save_integration(credentials.shopify.shop_domain, credentials.shopify.access_token, user['id'])
-        self.__set_pixel(user, credentials.shopify.shop_domain, credentials.shopify.access_token)
-        
-        # for customer in customers:
-        #     self.__save_customer(customer, user['id'])
-
+        if not user['is_pixel_installed']:
+            self.__set_pixel(user, credentials.shopify.shop_domain, credentials.shopify.access_token)
         return {
             'status': 'Successfully',
             'detail': {
@@ -330,7 +326,7 @@ if (Shopify.checkout) {{
         }
     
     def __order_sync(self, user_id):
-        credential = self.__get_credentials(user_id)
+        credential = self.get_credentials(user_id)
         orders = [self.__mapped_customer_shopify_order(order) for order in self.__get_orders(credential.shop_domain, credential.access_token)]
         for order in orders:
             lead_user = self.lead_persistence.get_leads_user_filter_by_email(user_id, order.email)
@@ -363,7 +359,7 @@ if (Shopify.checkout) {{
     
 
     def __export_sync(self, user_id: int):
-        credential = self.__get_credentials(user_id)
+        credential = self.get_credentials(user_id)
         syncs = self.integrations_user_sync_persistence.get_filter_by(user_id=user_id)
         for sync in syncs:
             leads_list = self.lead_persistence.get_leads_user(user_id=sync.user_id, status=sync.filter_by_contact_type)
@@ -378,7 +374,7 @@ if (Shopify.checkout) {{
 
 
     def __import_sync(self, user_id: int):
-        credentials = self.__get_credentials(user_id)
+        credentials = self.get_credentials(user_id)
         customers = [self.__mapped_customer(customer) 
                      for customer in self.__get_customers(credentials.shopify.shop_domain, 
                                                           credentials.shopify.access_token)]

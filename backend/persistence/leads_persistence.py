@@ -34,97 +34,108 @@ class LeadsPersistence:
 
     def filter_leads(self, user_id, page, per_page, from_date, to_date, from_time, to_time, regions, page_visits, average_time_spent,
                      behavior_type, recurring_visits, sort_by, sort_order, search_query, status):
+        FirstNameAlias = aliased(FiveXFiveNames)
+        LastNameAlias = aliased(FiveXFiveNames)
         
         recurring_visits_subquery = (
-        self.db.query(
-            LeadsVisits.lead_id,
-            func.count().label('recurring_visits')
+            self.db.query(
+                LeadsVisits.lead_id,
+                func.count().label('recurring_visits')
+            )
+            .group_by(LeadsVisits.lead_id)
+            .subquery()
         )
-        .group_by(LeadsVisits.lead_id)
-        .subquery()
-        )
-        
         query = (
             self.db.query(
-            # distinct(FiveXFiveUser.id),
-            FiveXFiveUser.id,
-            FiveXFiveUser.first_name,
-            FiveXFiveUser.programmatic_business_emails,
-            FiveXFiveUser.mobile_phone,
-            FiveXFiveUser.direct_number,
-            FiveXFiveUser.gender,
-            FiveXFiveUser.personal_phone,
-            FiveXFiveUser.business_email,
-            FiveXFiveUser.personal_emails,
-            FiveXFiveUser.last_name,
-            FiveXFiveUser.personal_city,
-            FiveXFiveUser.personal_state,
-            FiveXFiveUser.company_name,
-            FiveXFiveUser.company_domain,
-            FiveXFiveUser.company_phone,
-            FiveXFiveUser.company_sic,
-            FiveXFiveUser.company_address,
-            FiveXFiveUser.company_city,
-            FiveXFiveUser.company_state,
-            FiveXFiveUser.company_linkedin_url,
-            FiveXFiveUser.company_revenue,
-            FiveXFiveUser.company_employee_count,
-            FiveXFiveUser.net_worth,
-            FiveXFiveUser.job_title,
-            FiveXFiveUser.last_updated,
-            FiveXFiveUser.personal_emails_last_seen,
-            FiveXFiveUser.company_last_updated,
-            FiveXFiveUser.job_title_last_updated,
-            FiveXFiveUser.age_min,
-            FiveXFiveUser.age_max,
-            FiveXFiveUser.additional_personal_emails,
-            FiveXFiveUser.linkedin_url,
-            FiveXFiveUser.personal_address,
-            FiveXFiveUser.personal_address_2,
-            FiveXFiveUser.married,
-            FiveXFiveUser.children,
-            FiveXFiveUser.income_range,
-            FiveXFiveUser.homeowner,
-            FiveXFiveUser.seniority_level,
-            FiveXFiveUser.department,
-            FiveXFiveUser.professional_address,
-            FiveXFiveUser.professional_address_2,
-            FiveXFiveUser.professional_city,
-            FiveXFiveUser.professional_state,
-            FiveXFiveUser.primary_industry,
-            FiveXFiveUser.business_email_validation_status,
-            FiveXFiveUser.business_email_last_seen,
-            FiveXFiveUser.personal_emails_validation_status,
-            FiveXFiveUser.work_history,
-            FiveXFiveUser.education_history,
-            FiveXFiveUser.company_description,
-            FiveXFiveUser.related_domains,
-            FiveXFiveUser.social_connections,
-            FiveXFiveUser.personal_zip,
-            FiveXFiveUser.professional_zip,
-            FiveXFiveUser.company_zip,
-            LeadUser.behavior_type,
-            FiveXFiveLocations.state,
-            FiveXFiveLocations.city,
-            LeadsVisits.start_date.label('start_date'),
-            LeadsVisits.start_time.label('start_time'),
-            LeadsVisits.full_time_sec.label('time_on_site'),
-            recurring_visits_subquery.c.recurring_visits
+                FiveXFiveUser.id,
+                FiveXFiveUser.first_name,
+                FiveXFiveUser.programmatic_business_emails,
+                FiveXFiveUser.mobile_phone,
+                FiveXFiveUser.direct_number,
+                FiveXFiveUser.gender,
+                FiveXFiveUser.personal_phone,
+                FiveXFiveUser.business_email,
+                FiveXFiveUser.personal_emails,
+                FiveXFiveUser.last_name,
+                FiveXFiveUser.personal_city,
+                FiveXFiveUser.personal_state,
+                FiveXFiveUser.company_name,
+                FiveXFiveUser.company_domain,
+                FiveXFiveUser.company_phone,
+                FiveXFiveUser.company_sic,
+                FiveXFiveUser.company_address,
+                FiveXFiveUser.company_city,
+                FiveXFiveUser.company_state,
+                FiveXFiveUser.company_linkedin_url,
+                FiveXFiveUser.company_revenue,
+                FiveXFiveUser.company_employee_count,
+                FiveXFiveUser.net_worth,
+                FiveXFiveUser.job_title,
+                FiveXFiveUser.last_updated,
+                FiveXFiveUser.personal_emails_last_seen,
+                FiveXFiveUser.company_last_updated,
+                FiveXFiveUser.job_title_last_updated,
+                FiveXFiveUser.age_min,
+                FiveXFiveUser.age_max,
+                FiveXFiveUser.additional_personal_emails,
+                FiveXFiveUser.linkedin_url,
+                FiveXFiveUser.personal_address,
+                FiveXFiveUser.personal_address_2,
+                FiveXFiveUser.married,
+                FiveXFiveUser.children,
+                FiveXFiveUser.income_range,
+                FiveXFiveUser.homeowner,
+                FiveXFiveUser.seniority_level,
+                FiveXFiveUser.department,
+                FiveXFiveUser.professional_address,
+                FiveXFiveUser.professional_address_2,
+                FiveXFiveUser.professional_city,
+                FiveXFiveUser.professional_state,
+                FiveXFiveUser.primary_industry,
+                FiveXFiveUser.business_email_validation_status,
+                FiveXFiveUser.business_email_last_seen,
+                FiveXFiveUser.personal_emails_validation_status,
+                FiveXFiveUser.work_history,
+                FiveXFiveUser.education_history,
+                FiveXFiveUser.company_description,
+                FiveXFiveUser.related_domains,
+                FiveXFiveUser.social_connections,
+                FiveXFiveUser.personal_zip,
+                FiveXFiveUser.professional_zip,
+                FiveXFiveUser.company_zip,
+                LeadUser.behavior_type,
+                FiveXFiveLocations.state,
+                FiveXFiveLocations.city,
+                LeadsVisits.start_date.label('start_date'),
+                LeadsVisits.start_time.label('start_time'),
+                LeadsVisits.full_time_sec.label('time_on_site'),
+                recurring_visits_subquery.c.recurring_visits
             )
             .join(LeadUser, LeadUser.five_x_five_user_id == FiveXFiveUser.id)    
-            .join(FiveXFiveNames, FiveXFiveNames.id == FiveXFiveUser.first_name_id)
-            .join(LeadsVisits, LeadsVisits.id == LeadUser.first_visit_id)  
+            .join(FirstNameAlias, FirstNameAlias.id == FiveXFiveUser.first_name_id)
+            .join(LastNameAlias, LastNameAlias.id == FiveXFiveUser.last_name_id)
+            .join(LeadsVisits, LeadsVisits.id == LeadUser.first_visit_id)
             .outerjoin(FiveXFiveUsersLocations, FiveXFiveUsersLocations.five_x_five_user_id == FiveXFiveUser.id)
             .outerjoin(FiveXFiveLocations, FiveXFiveLocations.id == FiveXFiveUsersLocations.location_id)
             .outerjoin(recurring_visits_subquery, recurring_visits_subquery.c.lead_id == LeadUser.id) 
             .filter(LeadUser.user_id == user_id)
+            .group_by(
+                FiveXFiveUser.id,
+                LeadUser.behavior_type,
+                FiveXFiveLocations.state,
+                FiveXFiveLocations.city,
+                LeadsVisits.start_date,
+                LeadsVisits.start_time,
+                LeadsVisits.full_time_sec,
+                recurring_visits_subquery.c.recurring_visits
+            )
         )
         sort_options = {
             'name': FiveXFiveUser.first_name,
             'business_email': FiveXFiveUser.business_email,
             'mobile_phone': FiveXFiveUser.mobile_phone,
             'gender': FiveXFiveUser.gender,
-            'last_visited_date': LeadsVisits.start_date,
+            'first_visited_date': LeadsVisits.start_date,
             'state': FiveXFiveLocations.state,
             'city': FiveXFiveLocations.city,
             'age': FiveXFiveUser.age_min,
@@ -149,6 +160,17 @@ class LeadsPersistence:
                     LeadsVisits.start_date <= end_date
                 )
             )
+        if status:
+            status_list = status.split(',')
+            filters = []
+            for status_data in status_list:
+                if status_data == 'converted_sales':
+                    filters.append(LeadUser.is_converted_sales == True)
+                elif status_data == 'returning_visitors':
+                    filters.append(LeadUser.is_returning_visitor == True)
+                elif status_data == 'abandoned_cart':
+                    filters.append(LeadUser.is_abandoned_cart == True)
+            query = query.filter(or_(*filters))
         if from_time and to_time:
             from_time = datetime.strptime(from_time, '%H:%M').time()
             to_time = datetime.strptime(to_time, '%H:%M').time()
@@ -163,8 +185,8 @@ class LeadsPersistence:
             recurring_visits_list = recurring_visits.split(',')
             filters = []
             for recurring_visit in recurring_visits_list:
-                if recurring_visit > 4: #is 4+ in the frontend
-                    filters.append(recurring_visits_subquery.c.recurring_visits > recurring_visit)
+                if recurring_visit == '4+':
+                    filters.append(recurring_visits_subquery.c.recurring_visits > 4)
                 else:
                      filters.append(recurring_visits_subquery.c.recurring_visits == recurring_visit)
             query = query.filter(or_(*filters))
@@ -178,13 +200,17 @@ class LeadsPersistence:
             query = query.filter(LeadUser.behavior_type.in_(behavior_type_list))
 
         if page_visits:
-            page_visits_list = [int(visit) for visit in page_visits.split(',')]
+            page_visits_list = page_visits.split(',')
             filters = []
             for visit in page_visits_list:
-                if visit > 3:
-                    filters.append(LeadsVisits.pages_count > visit)
-                else:
-                    filters.append(LeadsVisits.pages_count == visit)
+                if visit == 'more_than_3_pages':
+                    filters.append(LeadsVisits.pages_count > 3)
+                elif visit == '2_pages':
+                    filters.append(LeadsVisits.pages_count == 2)
+                elif visit == '3_pages':
+                    filters.append(LeadsVisits.pages_count == 3)
+                elif visit == '1_pages':
+                    filters.append(LeadsVisits.pages_count == 1)
             query = query.filter(or_(*filters))
 
         if average_time_spent:
@@ -193,9 +219,9 @@ class LeadsPersistence:
             for visit in page_visits_list:
                 if visit == 'under_10_secs':
                     filters.append(LeadsVisits.average_time_sec < 10)
-                elif visit == '10-30 secs':
+                elif visit == '10-30_secs':
                     filters.append(LeadsVisits.average_time_sec >= 10 and LeadsVisits.average_time_sec <= 30)
-                elif visit == '30-60 secs':
+                elif visit == '30-60_secs':
                     filters.append(LeadsVisits.average_time_sec >= 30 and LeadsVisits.average_time_sec <= 60)
                 else:
                     filters.append(LeadsVisits.average_time_sec > 60)
@@ -211,7 +237,8 @@ class LeadsPersistence:
             )
 
             search_conditions = or_(
-                FiveXFiveNames.name.ilike(f'{search_query}%'),
+                FirstNameAlias.name.ilike(f'{search_query}%'),
+                LastNameAlias.name.ilike(f'{search_query}%'),
                 FiveXFiveEmails.email.ilike(f'{search_query}%'),
                 FiveXFiveEmails.email_host.ilike(f'{search_query}%'),
                 FiveXFivePhones.number.ilike(f'{search_query}%'),

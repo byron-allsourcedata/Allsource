@@ -16,6 +16,14 @@ async def get_integrations_credentials(integration_serivce: IntegrationService =
     integration = integration_serivce.get_user_service_credentials(user)
     return integration
 
+@router.get('/credentials/{platform}')
+async def get_credential_service(platform: str, 
+                                 integration_service: IntegrationService = Depends(get_integration_service),
+                                 user = Depends(check_user_authentication)
+                                 ):
+    with integration_service as service:
+        service = getattr(service, platform)
+        return service.get_credentials(user['id'])
 
 @router.post('/export/')
 async def export(export_query: ExportLeads, service_name: str = Query(...),
@@ -70,3 +78,4 @@ async def create_sync(data: SyncCreate, service_name: str = Query(...),
     with integration_service as service:
         service = getattr(service, service_name)
         service.create_sync(user['id'], **data.model_dump())
+

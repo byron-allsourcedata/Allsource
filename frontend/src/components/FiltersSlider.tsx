@@ -143,7 +143,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
   };
 
   const statusMapping: Record<string, string> = {
-    Visitor: "Visitor",
+    Visitor: "visitor",
     "View Product": "viewed_product",
     "Add to cart": "product_added_to_cart",
   };
@@ -187,6 +187,13 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
             ...prevFilters,
             [filterName]: false,
           }));
+        }
+      }
+
+      if (category === "visitedTime") {
+        if (updatedTags.length === 0) {
+          setTimeRange({ fromTime: null, toTime: null });
+          setSelectedTimeRange(null);
         }
       }
 
@@ -357,19 +364,17 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
     let funnel = "";
     switch (label) {
       case "Abandoned cart":
-        funnel = "cart_abandoned";
+        funnel = "Abandoned cart";
         break;
       case "Converters sales":
-        funnel = "converted";
+        funnel = "Converted sales";
         break;
       case "Returning visitors":
-        funnel = "Visitor";
+        funnel = "Returning visitors";
         break;
       case "Landed to cart":
         funnel = "Added to cart";
         break;
-      default:
-        funnel = "";
     }
 
     const now = dayjs();
@@ -408,6 +413,13 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
         ...prevRange,
         [name]: newValue,
       };
+
+       setCheckedFilters({
+        lastWeek: false,
+        last30Days: false,
+        last6Months: false,
+        allTime: false,
+      });
   
       // Определяем старый диапазон дат
       const oldFromDate = prevRange.fromDate
@@ -1193,12 +1205,20 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                   </Button>
                 </InputAdornment>
               ),
+              sx: {
+                fontFamily: 'Nunito',
+                fontSize: '0.95em',
+                fontWeight: 400,
+                lineHeight: '16.8px',
+                textAlign: 'left',
+                color: 'rgba(74, 74, 74, 1)',
+              },
             }}
             sx={{
               padding: "1em 1em 0em 1em",
               '& .MuiInputBase-input::placeholder': {
                 fontFamily: 'Nunito',
-                fontSize: '12px',
+                fontSize: '1em',
                 fontWeight: 400,
                 lineHeight: '16.8px',
                 textAlign: 'left',
@@ -1266,6 +1286,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                 width: "100%",
                 mb: 0,
                 gap: 1,
+                cursor: 'pointer'
               }}
               onClick={() => setIsVisitedDateOpen(!isVisitedDateOpen)}
             >
