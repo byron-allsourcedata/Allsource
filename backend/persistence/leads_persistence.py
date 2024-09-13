@@ -23,6 +23,8 @@ from models.leads import Lead
 from models.five_x_five_users_locations import FiveXFiveUsersLocations
 from models.leads_users import LeadUser
 from models.five_x_five_locations import FiveXFiveLocations
+from models.leads_users_added_to_cart import LeadsUsersAddedToCart
+from models.leads_users_ordered import LeadsUsersOrdered
 
 
 logger = logging.getLogger(__name__)
@@ -169,7 +171,21 @@ class LeadsPersistence:
                 elif status_data == 'returning_visitors':
                     filters.append(LeadUser.is_returning_visitor == True)
                 elif status_data == 'abandoned_cart':
-                    filters.append(LeadUser.is_abandoned_cart == True)
+                    query = (
+                        query
+                        .join(LeadsUsersAddedToCart, LeadsUsersAddedToCart.lead_user_id == LeadUser.id)
+                        .outerjoin(LeadsUsersOrdered, LeadsUsersOrdered.lead_user_id == LeadUser.id)
+                        .where(
+                            LeadsUsersAddedToCart.added_at.isnot(None),
+                            or_(
+                                LeadsUsersAddedToCart.added_at > LeadsUsersOrdered.ordered_at,
+                                and_(
+                                    LeadsUsersOrdered.ordered_at.is_(None),
+                                    LeadsUsersAddedToCart.added_at.isnot(None)
+                                )
+                            )
+                        )
+                    )
             query = query.filter(or_(*filters))
         if from_time and to_time:
             from_time = datetime.strptime(from_time, '%H:%M').time()

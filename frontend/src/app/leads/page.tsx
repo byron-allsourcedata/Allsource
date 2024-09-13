@@ -662,8 +662,8 @@ const Leads: React.FC = () => {
         }
     };
 
-    const getStatusStyle = (funnel: any) => {
-        switch (funnel) {
+    const getStatusStyle = (behavior_type: any) => {
+        switch (behavior_type) {
             case 'visitor':
                 return {
                     background: 'rgba(235, 243, 254, 1)',
@@ -1212,7 +1212,7 @@ const Leads: React.FC = () => {
                                                         { key: 'business_email', label: 'Email' },
                                                         { key: 'mobile_phone', label: 'Phone number' },
                                                         { key: 'first_visited_date', label: 'Visited date', sortable: true },
-                                                        { key: 'funnel', label: 'Visitor Type' },
+                                                        { key: 'behavior_type', label: 'Visitor Type' },
                                                         { key: 'time_spent', label: 'Time on site' },
                                                     ].map(({ key, label, sortable = true }) => (
                                                         <TableCell
@@ -1294,14 +1294,14 @@ const Leads: React.FC = () => {
                                                                     fontSize: '12px',
                                                                     fontWeight: '700',
                                                                     lineHeight: 'normal',
-                                                                    backgroundColor: getStatusStyle(row.funnel).background,
-                                                                    color: getStatusStyle(row.funnel).color,
+                                                                    backgroundColor: getStatusStyle(row.behavior_type).background,
+                                                                    color: getStatusStyle(row.behavior_type).color,
                                                                     justifyContent: 'center',
                                                                     minWidth: '130px',
                                                                     textTransform: 'capitalize'
                                                                 }}
                                                             >
-                                                                {row.funnel || 'N/A'}
+                                                                {row.behavior_type || 'N/A'}
                                                             </Box>
                                                         </TableCell>
 
