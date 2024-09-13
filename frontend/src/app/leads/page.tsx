@@ -355,6 +355,7 @@ const Leads: React.FC = () => {
 
     const fetchData = async ({ sortBy, sortOrder, page, rowsPerPage, activeFilter, appliedDates }: FetchDataParams) => {
         try {
+            setIsLoading(true);
             const accessToken = localStorage.getItem("token");
             if (!accessToken) {
                 router.push('/signin');
@@ -674,20 +675,35 @@ const Leads: React.FC = () => {
                     background: 'rgba(235, 243, 254, 1)',
                     color: 'rgba(20, 110, 246, 1)',
                 };
-            case 'Converted':
-                return {
-                    background: 'rgba(244, 252, 238, 1)',
-                    color: 'rgba(110, 193, 37, 1)',
-                };
-            case 'Added to cart':
+            case 'product_added_to_cart':
                 return {
                     background: 'rgba(241, 241, 249, 1)',
                     color: 'rgba(80, 82, 178, 1)',
                 };
-            case 'Cart abandoned':
+            case 'Add_to_cart':
                 return {
-                    background: 'rgba(254, 238, 236, 1)',
-                    color: 'rgba(244, 87, 69, 1)',
+                    background: 'rgba(241, 241, 249, 1)',
+                    color: 'rgba(80, 82, 178, 1)',
+                };
+            case 'Add to cart':
+                return {
+                    background: 'rgba(241, 241, 249, 1)',
+                    color: 'rgba(80, 82, 178, 1)',
+                };
+            case 'Viewed Product':
+                return {
+                    background: 'rgba(244, 252, 238, 1)',
+                    color: 'rgba(43, 91, 0, 1)',
+                };
+            case 'Viewed_product':
+                return {
+                    background: 'rgba(244, 252, 238, 1)',
+                    color: 'rgba(43, 91, 0, 1)',
+                };
+            case 'viewed_product':
+                return {
+                    background: 'rgba(244, 252, 238, 1)',
+                    color: 'rgba(43, 91, 0, 1)',
                 };
             case 'Existing':
                 return {
@@ -705,6 +721,18 @@ const Leads: React.FC = () => {
                     color: 'inherit',
                 };
         }
+    };
+
+    const formatFunnelText = (text: string) => {
+        if (text === 'product_added_to_cart') {
+            return 'Add to cart';
+        }        
+        // Заменяем символ подчеркивания пробелом и делаем первую букву каждого слова заглавной
+        return text
+            .replace(/_/g, ' ') // Заменяем подчеркивания пробелами
+            .split(' ')         // Разделяем строку по пробелам
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()) // Каждое слово с заглавной буквы
+            .join(' ');
     };
 
     const handleDownload = async () => {
@@ -908,10 +936,10 @@ const Leads: React.FC = () => {
                                 <Typography sx={{
                                     marginRight: '0.5em',
                                     fontFamily: 'Nunito',
-                                    lineHeight: '22px',
+                                    lineHeight: '22.4px',
                                     fontSize: '16px',
                                     textAlign: 'left',
-                                    fontWeight: '600',
+                                    fontWeight: '500',
                                     color: '#5052B2'
                                 }}>
                                     Create Contact Sync
@@ -1256,13 +1284,12 @@ const Leads: React.FC = () => {
                                                     <TableRow
                                                         key={row.id}
                                                         selected={selectedRows.has(row.id)}
-                                                        onClick={() => handleSelectRow(row.id)}
                                                         sx={{
-                                                            backgroundColor: selectedRows.has(row.id) ? 'rgba(235, 243, 254, 1)' : '#fff',
+                                                            backgroundColor: selectedRows.has(row.id) ? 'rgba(247, 247, 247, 1)' : '#fff',
                                                             '&:hover': {
-                                                                backgroundColor: 'rgba(235, 243, 254, 1)',
+                                                                backgroundColor: 'rgba(247, 247, 247, 1)',
                                                                 '& .sticky-cell': {
-                                                                    backgroundColor: 'rgba(235, 243, 254, 1)',
+                                                                    backgroundColor: 'rgba(247, 247, 247, 1)',
                                                                 }
                                                             }
                                                         }}
@@ -1301,7 +1328,7 @@ const Leads: React.FC = () => {
                                                                     textTransform: 'capitalize'
                                                                 }}
                                                             >
-                                                                {row.behavior_type || 'N/A'}
+                                                                {formatFunnelText(row.behavior_type) || 'N/A'}
                                                             </Box>
                                                         </TableCell>
 

@@ -9,22 +9,22 @@ export const filterStyles: { [key: string]: SxProps<Theme> } = {
         fontSize: "14px",
         lineHeight: "19.6px",
     },
-    filter_dropdown:{
+    filter_dropdown: {
         display: "flex",
         flexDirection: "rows",
         gap: 4,
         pl: 2,
         justifyContent: "start",
     },
-    date_time_formatted:{
+    date_time_formatted: {
         display: 'flex',
         alignItems: 'center',
         width: '100%',
-        mt: '20px',
-        mb: '20px',
+        mt: '10px',
+        mb: '10px',
         '@media (max-width: 440px)': {
-          marginTop: '16px',
-          marginBottom: '16px',
+            marginTop: '16px',
+            marginBottom: '16px',
         }
     },
     or_text: {
@@ -60,6 +60,23 @@ export const filterStyles: { [key: string]: SxProps<Theme> } = {
         fontSize: '12px',
         fontWeight: 600,
         lineHeight: '16.8px'
+    },
+    datetime_picker: {
+        '& .MuiInputBase-input': {
+            fontFamily: 'Nunito',
+            fontSize: '14px',
+            fontWeight: 400,
+            lineHeight: '19.6px',
+            textAlign: 'left',
+        },
+        '& .MuiInputLabel-root': {
+            fontFamily: 'Nunito',
+            fontSize: '14px',
+            fontWeight: 400,
+            lineHeight: '19.6px',
+            textAlign: 'left',
+        }
+
     }
 
 };
