@@ -18,6 +18,8 @@ import { useState } from "react";
 import axiosInterceptorInstance from "@/axios/axiosInterceptorInstance";
 import { AxiosError } from "axios";
 import { useUser } from "@/context/UserContext";
+import { useRouter } from "next/navigation"; 
+import CustomizedProgressBar from "./CustomizedProgressBar";
 
 const CustomButton = styled(Button)(({ theme }) => ({
   width: "100%",
@@ -66,6 +68,7 @@ const CustomListItemIcon = styled(ListItemIcon)(({ theme }) => ({
 }));
 
 export const ProgressSection: React.FC = () => {
+  const router = useRouter();
   const { setShowSlider } = useSlider();
   const { percent_steps: userPercentSteps } = useUser();
   const meItem =
@@ -74,9 +77,11 @@ export const ProgressSection: React.FC = () => {
   const percentSteps = userPercentSteps || meData.percent_steps;
   const isIntegrateDisabled = percentSteps < 90;
   const isSetupDisabled = percentSteps < 50;
+  const [isLoading, setIsLoading] = useState(false);
 
   const installManually = async () => {
     try {
+      setIsLoading(true)
       const response = await axiosInterceptorInstance.get(
         "/install-pixel/manually"
       );
@@ -95,11 +100,18 @@ export const ProgressSection: React.FC = () => {
         console.error("Error fetching data:", error);
       }
     }
+    finally {
+      setIsLoading(false)
+    }
   };
 
   const ActivateTrial = () => {
     setShowSlider(true);
   };
+
+  const integrations = () => {
+    router.push('/integrations')
+  }
 
   const [openmanually, setOpen] = useState(false);
   const handleManualClose = () => setOpen(false);
@@ -240,6 +252,7 @@ export const ProgressSection: React.FC = () => {
             />
           <CustomButton
             disabled={isIntegrateDisabled}
+            onClick={integrations}
             sx={{
               marginBottom: "0",
               borderRadius: "4px",
@@ -261,6 +274,21 @@ export const ProgressSection: React.FC = () => {
           </CustomButton>
         </List>
       </Box>
+      {isLoading && (
+            <Box sx={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              zIndex: 1,
+            }}>
+              <CustomizedProgressBar />
+            </Box>
+          )}
     </Box>
   );
 };
