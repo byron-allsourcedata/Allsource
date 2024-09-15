@@ -676,8 +676,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
     const filters = handleFilters();
     console.log(filters)
     onApply(filters);
-    setSelectedButton("");
-    setButtonFilters(null);
     onClose();
   };
 
