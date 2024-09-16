@@ -1,0 +1,25 @@
+from pydantic import BaseModel, Field
+from typing import Optional
+
+class ChangePassword(BaseModel):
+    current_password: Optional[str] = None
+    new_password: Optional[str] = None
+
+class Account(BaseModel):
+    full_name: Optional[str] = None
+    email_address: Optional[str] = None
+
+class BusinessInfo(BaseModel):
+    organization_name: Optional[str] = None
+    company_website: Optional[str] = None
+    visits_to_website: Optional[str] = None
+
+class AccountDetailsRequest(BaseModel):
+    account: Optional[Account] = None
+    change_password: Optional[ChangePassword] = None
+    business_info: Optional[BusinessInfo] = None
+    
+class TeamsDetailsRequest(BaseModel):
+    pending_invitation_revoke: str = Field(...)
+    invite_user: str = Field(...)
+    remove_user: str = Field(...)

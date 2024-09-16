@@ -158,9 +158,10 @@ def process_user_data(table, index, five_x_five_user: FiveXFiveUser, session: Se
                 session.flush()
         order_detail = partner_uid_dict.get('order_detail')
         session.add(LeadOrders(lead_user_id=lead_user.id, 
-                                total_price=order_detail.get('total_price'), 
-                                currency_code=order_detail.get('currency'),
-                                created_at_shopify=requested_at, created_at=datetime.now()))
+                               shopify_order_id=order_detail.get('order_id'),
+                               total_price=order_detail.get('total_price'), 
+                               currency_code=order_detail.get('currency'),
+                               created_at_shopify=order_detail['created_at_shopify'], created_at=datetime.now()))
         existing_record = session.query(LeadsUsersOrdered).filter_by(lead_user_id=lead_user.id).first()
         if existing_record:
             existing_record.ordered_at = requested_at

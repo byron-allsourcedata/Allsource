@@ -76,163 +76,165 @@ let addedToCartHandler;
 let viewedProductHandler;
 
 (function() {{
-let cartEventCalled = false;
-let productViewedEventCalled = false;
-let productData = null;
-const productUrl = location.protocol + '//' + location.host + location.pathname.replace(/\/$/, '');
+    let cartEventCalled = false;
+    let productViewedEventCalled = false;
+    let productData = null;
+    const productUrl = location.protocol + '//' + location.host + location.pathname.replace(/\/$/, '');
 
-if (productUrl.includes("/products/")) {{
-    fetch(productUrl + '.js')
-        .then(res => res.json())
-        .then(data => {{
-            productData = data;
-        }})
-        .catch(error => {{
-            console.error('Error fetching product data:', error);
-        }});
-}}
-
-function getProductData(item) {{
-    let itemAdded = null;
-    const defaultImageUrl = getImageUrl();
-
-    if (item) {{
-        if (item.items && Array.isArray(item.items)) {{
-            item = item.items[0];
-        }}
-        productData = item;
+    if (productUrl.includes("/products/")) {{
+        fetch(productUrl + '.js')
+            .then(res => res.json())
+            .then(data => {{
+                productData = data;
+            }});
     }}
 
-    if (productData) {{
-        itemAdded = {{
-            name: productData.title,
-            product_id: productData.id,
-            product_url: productUrl,
-            price: productData.price,
-            image_url: getImageUrl() || defaultImageUrl,
-            currency: window.Shopify?.currency?.active
-        }};
+    function getProductData(item) {{
+        let itemAdded = null;
+        const defaultImageUrl = getImageUrl();
 
-        if (productData.variant_id) {{
-            itemAdded.product_id = productData.product_id || itemAdded.product_id;
-            itemAdded.VariantID = productData.variant_id;
-            itemAdded.Variant = productData.title || productData.variant_title;
-        }} else {{
+        if (item) {{
+            if (item.items && Array.isArray(item.items)) {{
+                item = item.items[0];
+            }}
+            productData = item;
+        }}
+
+        if (productData) {{
+            itemAdded = {{
+                name: productData.title,
+                product_id: productData.id,
+                product_url: productUrl,
+                price: productData.price,
+                image_url: getImageUrl() || defaultImageUrl,
+                currency: window.Shopify?.currency?.active
+            }};
+
+            if (productData.variant_id) {{
+                itemAdded.product_id = productData.product_id || itemAdded.product_id;
+                itemAdded.VariantID = productData.variant_id;
+                itemAdded.Variant = productData.title || productData.variant_title;
+            }} else {{
+                const variantId = new URLSearchParams(window.location.search).get('variant');
+                if (variantId) {{
+                    const variant = productData.variants?.find(v => v.id.toString() === variantId);
+                    if (variant) {{
+                        itemAdded.price = variant.price;
+                        itemAdded.VariantID = variant.id;
+                        itemAdded.Variant = variant.name;
+                    }}
+                }}
+            }}
+        }}
+
+        return itemAdded;
+    }}
+
+    function getImageUrl() {{
+        if (productData) {{
+            if (typeof productData.featured_image === 'string') {{
+                return productData.featured_image;
+            }} else if (typeof productData.featured_image === 'object') {{
+                return productData.featured_image.url;
+            }}
             const variantId = new URLSearchParams(window.location.search).get('variant');
             if (variantId) {{
                 const variant = productData.variants?.find(v => v.id.toString() === variantId);
-                if (variant) {{
-                    itemAdded.price = variant.price;
-                    itemAdded.VariantID = variant.id;
-                    itemAdded.Variant = variant.name;
-                }}
+                return variant?.featured_image?.src || null;
             }}
         }}
+        return null;
     }}
 
-    return itemAdded;
-}}
-
-function getImageUrl() {{
-    if (productData) {{
-        if (typeof productData.featured_image === 'string') {{
-            return productData.featured_image;
-        }} else if (typeof productData.featured_image === 'object') {{
-            return productData.featured_image.url;
+    addedToCartHandler = function(item) {{
+        if (!cartEventCalled && productData) {{
+            const itemAdded = getProductData(item);
+            if (itemAdded && typeof addToCart === 'function') {{
+                addToCart(itemAdded);
+                cartEventCalled = true;
+            }}
         }}
-        const variantId = new URLSearchParams(window.location.search).get('variant');
-        if (variantId) {{
-            const variant = productData.variants?.find(v => v.id.toString() === variantId);
-            return variant?.featured_image?.src || null;
-        }}
-    }}
-    return null;
-}}
+    }};
 
-addedToCartHandler = function(item) {{
-    if (!cartEventCalled && productData) {{
-        const itemAdded = getProductData(item);
-        if (itemAdded && typeof addToCart === 'function') {{
-            addToCart(itemAdded);
-            cartEventCalled = true;
-            console.log(item);
+    viewedProductHandler = function() {{
+        if (productData && !productViewedEventCalled) {{
+            const itemAdded = getProductData();
+            if (itemAdded && typeof viewedProduct === 'function') {{
+                viewedProduct(itemAdded);
+                productViewedEventCalled = true;
+            }}
         }}
-    }} else if (!productData) {{
-        console.warn('Product data not yet loaded for cart event.');
-    }}
-}};
+    }};
 
-viewedProductHandler = function() {{
-    if (productData && !productViewedEventCalled) {{
-        const itemAdded = getProductData();
-        if (itemAdded && typeof viewedProduct === 'function') {{
-            viewedProduct(itemAdded);
-            productViewedEventCalled = true;
-        }}
-    }} else if (!productData) {{
-        console.warn('Product data not yet loaded for viewed product event.');
-    }}
-}};
-
-setTimeout(viewedProductHandler, 6000);
+    setTimeout(viewedProductHandler, 6000);
 }})();
 
 (function(ns, fetch) {{
-ns.fetch = function() {{
-    const response = fetch.apply(this, arguments);
-    response.then(async (res) => {{
-        const clonedResponse = res.clone();
-        if (clonedResponse.ok && clonedResponse.url && (window.location.origin + '/cart/add.js').includes(clonedResponse.url)) {{
-            if (!location.pathname.includes("/cart")) {{
-            try {{
-                const data = await clonedResponse.json();
-                if (data) {{
-                    addedToCartHandler(data);
+    ns.fetch = function() {{
+        const response = fetch.apply(this, arguments);
+        response.then(async (res) => {{
+            const clonedResponse = res.clone();
+            if (clonedResponse.ok && clonedResponse.url && (window.location.origin + '/cart/add.js').includes(clonedResponse.url)) {{
+                if (!location.pathname.includes("/cart")) {{
+                    try {{
+                        const data = await clonedResponse.json();
+                        if (data) {{
+                            addedToCartHandler(data);
+                        }}
+                    }} catch (error) {{}}
                 }}
-            }} catch (error) {{
-                console.error('Error parsing cart data:', error);
             }}
-            }}
-        }}
-    }}).catch(error => {{
-        console.error('Fetch error:', error);
-    }});
+        }});
 
-    return response;
-}};
+        return response;
+    }};
 }}(window, window.fetch));
 
-
 !function () {{
-if (Shopify.checkout) {{
     function trackCheckout() {{
-        if (typeof geq !== 'undefined') {{
-            var event = Shopify.checkout;
-            var totalPrice = event.total_price;
-            if (totalPrice !== undefined && !totalPrice.toString().includes('.')) {{
-                totalPrice = (totalPrice / 100);
+        if (typeof Shopify === 'undefined') {{
+            return;
+        }}
+
+        if (typeof Shopify.checkout === 'undefined') {{
+            return;
+        }}
+
+        var event = Shopify.checkout;
+        var totalPrice = event.total_price;
+        if (typeof totalPrice !== 'undefined') {{
+            if (!totalPrice.toString().includes('.')) {{
+                totalPrice = (totalPrice / 100).toFixed(2);
             }}
-            var order_data = {{
-                order_id: event.order_id,
-                order_amount: totalPrice,
-                currency: Shopify.currency.active, 
-                created_at_shopify: Date.now()    
-            }};
+        }} else {{
+            return;
+        }}
+
+        var order_data = {{
+            order_id: event.order_id,
+            total_price: totalPrice,
+            currency: event.currency,
+            created_at_shopify: event.created_at    
+        }};
+
+        if (typeof checkoutCompleted === 'function') {{
             checkoutCompleted(order_data);
         }}
     }}
-    document.addEventListener('DOMContentLoaded', function() {{
-        if (typeof checkoutCompleted === 'undefined') {{
-            setTimeout(trackCheckout, 3000);
-        }} else {{
+
+    function checkForCheckout() {{
+        if (typeof Shopify !== 'undefined' && typeof Shopify.checkout !== 'undefined') {{
+            clearInterval(checkInterval);
             trackCheckout();
         }}
-    }});
+    }}
 
-}}
+    var checkInterval = setInterval(checkForCheckout, 1000);
+    setTimeout(function() {{
+        clearInterval(checkInterval);
+    }}, 30000);
 }}();
         """
-
         self.AWS.upload_string(script_shopify, f'shopify-pixel-code/{client_id}.js')
         script_event_url = f'https://maximiz-data.s3.us-east-2.amazonaws.com/shopify-pixel-code/{client_id}.js'
         script_pixel_url = f'https://maximiz-data.s3.us-east-2.amazonaws.com/pixel.js'
