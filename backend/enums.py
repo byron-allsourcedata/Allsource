@@ -18,6 +18,10 @@ class SubscriptionStatus(Enum):
     PAST_DUE = "PAST_DUE"
     CANCELED = "CANCELED"
     UNKNOWN = "UNKNOWN"
+    
+class SettingStatus(Enum):
+    SUCCESS = "SUCCESS"
+    INCORRECT_PASSWORD = "INCORRECT_PASSWORD"
 
 
 class VerificationEmail(Enum):
