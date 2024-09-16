@@ -442,13 +442,11 @@ class LeadsPersistence:
     def search_location(self, start_letter, user_id):
         query = (
             self.db.query(
-                FiveXFiveUser.id,
                 FiveXFiveLocations.city,
                 FiveXFiveLocations.state
             )
-            .join(LeadUser, LeadUser.five_x_five_user_id == FiveXFiveUser.id)
-            .join(FiveXFiveUsersLocations, FiveXFiveUsersLocations.five_x_five_user_id == FiveXFiveUser.id)
-            .join(FiveXFiveLocations, FiveXFiveLocations.id == FiveXFiveUsersLocations.location_id)
+            .join(FiveXFiveUsersLocations, FiveXFiveUsersLocations.location_id == FiveXFiveLocations.id)
+            .join(LeadUser, LeadUser.five_x_five_user_id == FiveXFiveUsersLocations.five_x_five_user_id)
             .filter(
                 LeadUser.user_id == user_id,
                 or_(
@@ -456,7 +454,7 @@ class LeadsPersistence:
                     FiveXFiveLocations.state.ilike(f'{start_letter}%')
                 )
             )
-            .group_by(FiveXFiveUser.id, FiveXFiveLocations.id)
+            .group_by(FiveXFiveLocations.id)
         )
         locations = query.all()
         return locations

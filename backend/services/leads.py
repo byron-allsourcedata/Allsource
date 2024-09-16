@@ -174,8 +174,8 @@ class LeadsService:
 
         for location in location_data:
             results_hash = {
-                'city': location[1],
-                'state': location[2]
+                'city': location[0],
+                'state': location[1]
             }
             
             results_set.add(frozenset(results_hash.items()))
