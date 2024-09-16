@@ -47,6 +47,15 @@ async def get_leads(
         to_time=to_time
     )
 
+@router.get("/search-location")
+async def search_location(start_letter: str = Query(..., min_length=3),
+                         leads_service: LeadsService = Depends(get_leads_service)):
+    return leads_service.search_location(start_letter)
+
+@router.get("/search-contact")
+async def search_contact(start_letter: str = Query(..., min_length=3),
+                         leads_service: LeadsService = Depends(get_leads_service)):
+    return leads_service.search_contact(start_letter)
 
 @router.post("/download_leads")
 async def download_leads(leads_request: LeadsRequest,
