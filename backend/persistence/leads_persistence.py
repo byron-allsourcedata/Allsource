@@ -407,17 +407,16 @@ class LeadsPersistence:
                 FiveXFiveEmails.email,
                 FiveXFivePhones.number
             )
-            .distinct()
             .join(LeadUser, LeadUser.five_x_five_user_id == FiveXFiveUser.id)
             .join(FirstNameAlias, FirstNameAlias.id == FiveXFiveUser.first_name_id)
             .join(LastNameAlias, LastNameAlias.id == FiveXFiveUser.last_name_id)
-            .outerjoin(FiveXFiveUsersEmails, FiveXFiveUsersEmails.user_id == FiveXFiveUser.id)
-            .outerjoin(FiveXFiveEmails, FiveXFiveEmails.id == FiveXFiveUsersEmails.email_id)
-            .outerjoin(FiveXFiveUsersPhones, FiveXFiveUsersPhones.user_id == FiveXFiveUser.id)
-            .outerjoin(FiveXFivePhones, FiveXFivePhones.id == FiveXFiveUsersPhones.phone_id)
+            .join(FiveXFiveUsersEmails, FiveXFiveUsersEmails.user_id == FiveXFiveUser.id)
+            .join(FiveXFiveEmails, FiveXFiveEmails.id == FiveXFiveUsersEmails.email_id)
+            .join(FiveXFiveUsersPhones, FiveXFiveUsersPhones.user_id == FiveXFiveUser.id)
+            .join(FiveXFivePhones, FiveXFivePhones.id == FiveXFiveUsersPhones.phone_id)
             .filter(
                 LeadUser.user_id == user_id,
-            )
+            ).group_by(FiveXFiveUser.first_name, FiveXFiveUser.last_name, FiveXFiveEmails.email, FiveXFivePhones.number, LeadUser.five_x_five_user_id)
         )
         filters = [
             FiveXFiveEmails.email.ilike(f'{start_letter}%'),
@@ -444,22 +443,20 @@ class LeadsPersistence:
         query = (
             self.db.query(
                 FiveXFiveUser.id,
-                FiveXFiveLocations.country,
                 FiveXFiveLocations.city,
                 FiveXFiveLocations.state
             )
-            .distinct()
             .join(LeadUser, LeadUser.five_x_five_user_id == FiveXFiveUser.id)
-            .outerjoin(FiveXFiveUsersLocations, FiveXFiveUsersLocations.five_x_five_user_id == FiveXFiveUser.id)
-            .outerjoin(FiveXFiveLocations, FiveXFiveLocations.id == FiveXFiveUsersLocations.location_id)
+            .join(FiveXFiveUsersLocations, FiveXFiveUsersLocations.five_x_five_user_id == FiveXFiveUser.id)
+            .join(FiveXFiveLocations, FiveXFiveLocations.id == FiveXFiveUsersLocations.location_id)
             .filter(
                 LeadUser.user_id == user_id,
                 or_(
                     FiveXFiveLocations.city.ilike(f'{start_letter}%'),
-                    FiveXFiveLocations.country.ilike(f'{start_letter}%'),
                     FiveXFiveLocations.state.ilike(f'{start_letter}%')
                 )
             )
+            .group_by(FiveXFiveUser.id, FiveXFiveLocations.id)
         )
         locations = query.all()
         return locations
