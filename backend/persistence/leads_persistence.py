@@ -16,6 +16,7 @@ from models.five_x_five_users import FiveXFiveUser
 from models.leads_visits import LeadsVisits
 from models.five_x_five_users_emails import FiveXFiveUsersEmails
 from models.five_x_five_names import FiveXFiveNames
+from models.state import State
 from models.five_x_five_emails import FiveXFiveEmails
 from models.five_x_five_users_phones import FiveXFiveUsersPhones
 from models.five_x_five_phones import FiveXFivePhones
@@ -207,9 +208,18 @@ class LeadsPersistence:
                      filters.append(recurring_visits_subquery.c.recurring_visits == recurring_visit)
             query = query.filter(or_(*filters))
         if regions:
+            query = (
+            query
+                .outerjoin(State, State.id == FiveXFiveLocations.state_id)
+            )
+            filters = []
             region_list = regions.split(',')
-            region_filters = [FiveXFiveLocations.city.ilike(f'%{region.strip()}%') for region in region_list]
-            query = query.filter(or_(*region_filters))
+            for region_data in region_list:
+                region_data = region_data.split('-')
+                filters.append(FiveXFiveLocations.city.ilike(f'{region_data[0]}%'))
+                if region_data[1]:
+                    filters.append(State.state_name.ilike(f'{region_data[1]}%'))
+                query = query.filter(or_(*filters))
 
         if behavior_type:
             behavior_type_list = behavior_type.split(',')
@@ -443,18 +453,20 @@ class LeadsPersistence:
         query = (
             self.db.query(
                 FiveXFiveLocations.city,
-                FiveXFiveLocations.state
+                State.state_name
             )
             .join(FiveXFiveUsersLocations, FiveXFiveUsersLocations.location_id == FiveXFiveLocations.id)
             .join(LeadUser, LeadUser.five_x_five_user_id == FiveXFiveUsersLocations.five_x_five_user_id)
+            .join(State, State.id == FiveXFiveLocations.state_id)
             .filter(
                 LeadUser.user_id == user_id,
                 or_(
                     FiveXFiveLocations.city.ilike(f'{start_letter}%'),
-                    FiveXFiveLocations.state.ilike(f'{start_letter}%')
+                    State.state_name.ilike(f'{start_letter}%')
                 )
             )
-            .group_by(FiveXFiveLocations.id)
+            .group_by(FiveXFiveLocations.id, State.state_name)
+            .limit(10)
         )
         locations = query.all()
         return locations
