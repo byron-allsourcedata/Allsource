@@ -7,9 +7,28 @@ import { PopupButton, useCalendlyEventListener } from "react-calendly";
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { showToast } from './ToastNotification';
+import CustomizedProgressBar from './CustomizedProgressBar';
+
 
 const Slider: React.FC = () => {
   const [prefillData, setPrefillData] = useState<{ email: '', name: '' } | null>(null);
+  const [isPrefillLoaded, setIsPrefillLoaded] = useState(false);
+  const [fullName, setFullName] = useState<string | null>(null);
+  const [email, setEmail] = useState<string | null>(null);
+
+  useEffect(() => {
+    const meItem = typeof window !== 'undefined' ? sessionStorage.getItem('me') : null;
+    if (meItem) {
+      const meData = JSON.parse(meItem);
+      setFullName(meData.full_name);
+      setEmail(meData.email);
+    }
+  },); 
+  
+  const prefillDataStorage = {
+    name: fullName || '',
+    email: email || '',
+  };
 
   const fetchPrefillData = async () => {
     try {
@@ -28,38 +47,47 @@ const Slider: React.FC = () => {
     } catch (error) {
       console.error('Error fetching prefill data:', error);
       setPrefillData(null);
+    } finally {
+      setIsPrefillLoaded(true);
     }
   };
+
   const { showSlider, setShowSlider } = useSlider();
 
   useEffect(() => {
     if (showSlider) {
+      setIsPrefillLoaded(false);
       fetchPrefillData();
     }
   }, [showSlider]);
 
+  useEffect(() => {
+    if (isPrefillLoaded && showSlider) {
+      setShowSlider(true);
+    }
+  }, [isPrefillLoaded]);
+
   useCalendlyEventListener({
     onEventScheduled: async (e) => {
-
       const eventUri = e.data.payload.event.uri;
-      const inviteeUri = e.data.payload.invitee.uri
+      const inviteeUri = e.data.payload.invitee.uri;
       const uuidMatch = eventUri.match(/scheduled_events\/([a-zA-Z0-9-]+)/);
       const uuidInvitee = inviteeUri.match(/invitees\/([a-zA-Z0-9-]+)/);
       const eventUUID = uuidMatch ? uuidMatch[1] : null;
       const inviteesUUID = uuidInvitee ? uuidInvitee[1] : null;
 
       if (eventUUID && inviteesUUID) {
-
         try {
           const response = await axiosInstance.post('/calendly', {
             uuid: eventUUID,
             invitees: inviteesUUID
           });
-          response
+          response;
         } catch (error) {
+          console.error(error);
         }
-        handleClose()
-        showToast('You have successfully signed up for a call')
+        handleClose();
+        showToast('You have successfully signed up for a call');
       }
     },
   });
@@ -74,12 +102,16 @@ const Slider: React.FC = () => {
     setShowSlider(isSliderOpened === 'true');
   }, [setShowSlider]);
 
+  if (!isPrefillLoaded && showSlider) {
+    return <CustomizedProgressBar />;
+  }
+
   return (
     <>
       <Backdrop open={showSlider} onClick={handleClose} sx={{ zIndex: 1200, color: '#fff' }} />
       <Drawer
         anchor="right"
-        open={showSlider}
+        open={showSlider && isPrefillLoaded}
         variant="persistent"
         PaperProps={{
           sx: {
@@ -141,7 +173,7 @@ const Slider: React.FC = () => {
                   fontWeight: '500',
                   fontSize: '22px',
                   lineHeight: '25.2px',
-                  marginBottom: '2em', 
+                  marginBottom: '2em',
                   marginLeft: '0',
                   '@media (max-width: 600px)': {
                     fontSize: '18px',
@@ -153,32 +185,32 @@ const Slider: React.FC = () => {
               >
                 Need help? Connect with us directly to activate your account.
               </Typography>
-              <Box sx={{width: '100%', height: '100%', display: 'flex', alignItems: 'end', pb: 5}}>
-              <Button onClick={handleClose} sx={{width: '100%'}}>
-              <PopupButton
-                className="book-call-button"
-                styles={{
-                  width: '100%',
-                  textWrap: 'nowrap',
-                  color: '#fff',
-                  padding: '1em',
-                  fontFamily: 'Nunito',
-                  fontWeight: '700',
-                  fontSize: '16px',
-                  textAlign: 'center',
-                  borderRadius: '4px',
-                  border: 'none',
-                  lineHeight: '22.4px',
-                  backgroundColor: '#5052B2',
-                  textTransform: 'none',
-                  cursor: 'pointer',
-                }}
-                prefill={prefillData}
-                url="https://calendly.com/nickit-schatalow09/maximiz"
-                rootElement={document.getElementById("calendly-popup-wrapper")!}
-                text="Reschedule a Call"
-              />
-              </Button>              
+              <Box sx={{ width: '100%', height: '100%', display: 'flex', alignItems: 'end', pb: 5 }}>
+                <Button onClick={handleClose} sx={{ width: '100%' }}>
+                  <PopupButton
+                    className="book-call-button"
+                    styles={{
+                      width: '100%',
+                      textWrap: 'nowrap',
+                      color: '#fff',
+                      padding: '1em',
+                      fontFamily: 'Nunito',
+                      fontWeight: '700',
+                      fontSize: '16px',
+                      textAlign: 'center',
+                      borderRadius: '4px',
+                      border: 'none',
+                      lineHeight: '22.4px',
+                      backgroundColor: '#5052B2',
+                      textTransform: 'none',
+                      cursor: 'pointer',
+                    }}
+                    prefill={prefillData}
+                    url="https://calendly.com/maximiz-support/30min"
+                    rootElement={document.getElementById("calendly-popup-wrapper")!}
+                    text="Reschedule a Call"
+                  />
+                </Button>
               </Box>
             </>
           ) : (
@@ -250,33 +282,35 @@ const Slider: React.FC = () => {
                   </Typography>
                 </Box>
               </Box>
-              <Box sx={{width: '100%', height: '100%', display: 'flex', alignItems: 'end', pb: 5}}>
-              <Button onClick={handleClose} sx={{width: '100%'}}>
-              <PopupButton
-                className="book-call-button"
-                styles={{
-                  width: '100%',
-                  textWrap: 'nowrap',
-                  color: '#fff',
-                  padding: '1em 8em',
-                  fontFamily: 'Nunito',
-                  fontWeight: '700',
-                  fontSize: '16px',
-                  borderRadius: '4px',
-                  border: 'none',
-                  lineHeight: '22.4px',
-                  backgroundColor: '#5052B2',
-                  textTransform: 'none',
-                  cursor: 'pointer',
-                }}
-                url="https://calendly.com/nickit-schatalow09/maximiz"
-                rootElement={document.getElementById("calendly-popup-wrapper")!}
-                text="Get Started"
-              />
-              </Button>
+              <Box sx={{ width: '100%', height: '100%', display: 'flex', alignItems: 'end', pb: 5 }}>
+                <Button onClick={handleClose} sx={{ width: '100%' }}>
+                  <PopupButton
+                    className="book-call-button"
+                    styles={{
+                      width: '100%',
+                      textWrap: 'nowrap',
+                      color: '#fff',
+                      padding: '1em 8em',
+                      fontFamily: 'Nunito',
+                      fontWeight: '700',
+                      fontSize: '16px',
+                      borderRadius: '4px',
+                      border: 'none',
+                      lineHeight: '22.4px',
+                      backgroundColor: '#5052B2',
+                      textTransform: 'none',
+                      cursor: 'pointer',
+                    }}
+                    url="https://calendly.com/maximiz-support/30min"
+                    rootElement={document.getElementById("calendly-popup-wrapper")!}
+                    text="Get Started"
+                    prefill={prefillDataStorage}
+                  />
+                </Button>
               </Box>
             </>
           )}
+
         </Box>
       </Drawer>
     </>

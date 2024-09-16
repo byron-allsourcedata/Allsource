@@ -1,5 +1,5 @@
 "use client";
-import { Box, Grid, Typography, Button, Menu, MenuItem } from "@mui/material";
+import { Box, Grid, Typography, Button, Menu, MenuItem, Modal } from "@mui/material";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import React, { useState, useEffect, Suspense, useRef } from "react";
@@ -11,14 +11,16 @@ import { dashboardStyles } from "./dashboardStyles";
 import { ProgressSection } from "../../components/ProgressSection";
 import PixelInstallation from "../../components/PixelInstallation";
 import Slider from "../../components/Slider";
-import { SliderProvider } from "../../context/SliderContext";
+import { SliderProvider, useSlider } from "../../context/SliderContext";
 import { useTrial } from "../../context/TrialProvider";
 import StatsCards from "../../components/StatsCard";
 import { PopupButton } from "react-calendly";
+import CustomizedProgressBar from "@/components/CustomizedProgressBar";
+import { fetchUserData } from '../../services/meService';
+import { showErrorToast, showToast } from '@/components/ToastNotification';
+import axiosInterceptorInstance from "../../axios/axiosInterceptorInstance";
+import ManualPopup from "@/components/ManualPopup";
 
-const Sidebar = dynamic(() => import("../../components/Sidebar"), {
-  suspense: true,
-});
 
 const VerifyPixelIntegration: React.FC = () => {
   const { website } = useUser();
@@ -36,7 +38,18 @@ const VerifyPixelIntegration: React.FC = () => {
         url = "http://" + url;
       }
 
-      axiosInstance.post("/install-pixel/check-pixel-installed", { url });
+      axiosInstance.post("/install-pixel/check-pixel-installed-parse", { url })
+            .then(response => {
+                const status = response.data.status;
+                if (status === "PIXEL_CODE_INSTALLED") {
+                    showToast("Pixel code is installed successfully!");
+                } else if (status === "PIXEL_CODE_PARSE_FAILED") {
+                    showErrorToast("Could not find pixel code on your site");
+                }
+            })
+            .catch(error => {
+                showErrorToast("An error occurred while checking the pixel code.");
+            });
 
       const hasQuery = url.includes("?");
       const newUrl = url + (hasQuery ? "&" : "?") + "vge=true" + "&api=https://api-dev.maximiz.ai";
@@ -54,6 +67,7 @@ const VerifyPixelIntegration: React.FC = () => {
         padding: "1rem",
         border: "1px solid #e4e4e4",
         borderRadius: "8px",
+        overflow: 'hidden',
         backgroundColor: "rgba(247, 247, 247, 1)",
         boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
         marginBottom: "2rem",
@@ -104,7 +118,7 @@ const VerifyPixelIntegration: React.FC = () => {
             borderRadius: "4px",
             fontFamily: "Nunito",
             fontSize: "16px",
-            fontWeight: "600",
+            fontWeight: "500",
             lineHeight: "22.4px",
             textAlign: "left"
           }}
@@ -144,6 +158,42 @@ const SupportSection: React.FC = () => {
       setRootElement(calendlyPopupRef.current);
     }
   }, []);
+
+  const [openmanually, setOpen] = useState(false);
+  const [pixelCode, setPixelCode] = useState('');
+  const { setShowSlider } = useSlider();
+  const [isLoading, setIsLoading] = useState(false);
+
+  const installManually = async () => {
+    try {
+      setIsLoading(true)
+      const response = await axiosInterceptorInstance.get('/install-pixel/manually');
+      setPixelCode(response.data.manual);
+      setOpen(true);
+    } catch (error) {
+      if (error instanceof AxiosError && error.response?.status === 403) {
+        if (error.response.data.status === 'NEED_BOOK_CALL') {
+          sessionStorage.setItem('is_slider_opened', 'true');
+          setShowSlider(true);
+        } else {
+          sessionStorage.setItem('is_slider_opened', 'false');
+          setShowSlider(false); 
+        }
+      } else {
+        console.error('Error fetching data:', error);
+      }
+    }
+    finally {
+      setIsLoading(false)
+    }
+  };
+
+
+  const sendEmail = () => {
+    installManually()
+    
+  }
+  const handleManualClose = () => setOpen(false);
 
   return (
   <Box sx={{
@@ -217,8 +267,8 @@ const SupportSection: React.FC = () => {
             textTransform: "none",
             cursor: "pointer",
           }}
-          url="https://calendly.com/nickit-schatalow09/maximiz"
-          rootElement={rootElement} // Теперь корневой элемент передается через состояние
+          url="https://calendly.com/maximiz-support/30min"
+          rootElement={rootElement} 
           text="Schedule a call with us"
         />
       )}
@@ -230,6 +280,7 @@ const SupportSection: React.FC = () => {
             
           />
         <Button
+          onClick={sendEmail}
           sx={{
             textWrap: "nowrap",
             pt:'0.5em',
@@ -254,6 +305,22 @@ const SupportSection: React.FC = () => {
             height={20}
           />
         </Button>
+        <ManualPopup open={openmanually} handleClose={handleManualClose} pixelCode={pixelCode} />
+        {isLoading && (
+            <Box sx={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              zIndex: 1,
+            }}>
+              <CustomizedProgressBar />
+            </Box>
+          )}
       </Grid>
     </Box>
     </Box>
@@ -269,6 +336,28 @@ const Dashboard: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [showCharts, setShowCharts] = useState(false);
 
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, []);
+
+  useEffect(() => {
+    const fetchUserDataAndUpdateState = async () => {
+      try {
+        const userData = await fetchUserData();
+        if (userData) {
+          setTrial(userData.trial);
+          setDaysLeft(userData.days_left);
+        }
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+      }
+    };
+
+    fetchUserDataAndUpdateState();
+  }, []);
 
   useEffect(() => {
     const accessToken = localStorage.getItem("token");
@@ -313,7 +402,7 @@ const Dashboard: React.FC = () => {
   }, [setShowSlider, setTrial, setDaysLeft, router]);
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <CustomizedProgressBar />;
   }
 
   return (
@@ -326,6 +415,7 @@ const Dashboard: React.FC = () => {
                 sx={{
                   display: "flex",
                   flexDirection: "column",
+                  overflow: 'hidden'
                 }}
               >
                 <Typography
@@ -401,9 +491,10 @@ const Dashboard: React.FC = () => {
           </>
         ) : (
               <Grid container sx={{
-                height: '100%'
+                height: '100%',
+                overflow: 'hidden'
               }}>
-                <Grid item xs={12} sx={{display: { md: 'none' }  }}>
+                <Grid item xs={12} sx={{display: { md: 'none' }, overflow: 'hidden' }}>
                 <Typography
                     variant="h4"
                     component="h1"
@@ -419,7 +510,7 @@ const Dashboard: React.FC = () => {
                   <PixelInstallation />
                   <VerifyPixelIntegration />
                 </Grid>
-                <Grid item xs={12} lg={8} sx={{display: { xs: 'none', md: 'block' }  }}>
+                <Grid item xs={12} lg={8} sx={{display: { xs: 'none', md: 'block' }, overflow: 'hidden'  }}>
                   <Typography
                     variant="h4"
                     component="h1"
@@ -449,7 +540,7 @@ const Dashboard: React.FC = () => {
 
 const DashboardPage: React.FC = () => {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<CustomizedProgressBar />}>
       <SliderProvider>
         <Dashboard />
       </SliderProvider>

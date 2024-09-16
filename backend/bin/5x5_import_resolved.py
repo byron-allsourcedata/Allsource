@@ -8,6 +8,7 @@ import pytz
 import urllib.parse
 from datetime import time as dt_time
 import time
+from dateutil.relativedelta import relativedelta
 from sqlalchemy import func, and_, or_
 import boto3
 import pyarrow.parquet as pq
@@ -16,8 +17,12 @@ current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 
+from utils import normalize_url
 from models.leads_requests import LeadsRequests
+from models.leads_users_added_to_cart import LeadsUsersAddedToCart
+from models.leads_users_ordered import LeadsUsersOrdered
 from models.leads_visits import LeadsVisits
+from models.subscriptions import UserSubscriptions
 from models.five_x_five_hems import FiveXFiveHems
 from models.users_payments_transactions import UsersPaymentsTransactions
 from sqlalchemy import create_engine
@@ -25,6 +30,8 @@ from sqlalchemy.orm import sessionmaker, Session
 from models.five_x_five_users import FiveXFiveUser
 from models.leads_users import LeadUser
 from models.users import Users
+from models.subscriptions import SubscriptionPlan
+from models.leads_orders import LeadOrders
 from dotenv import load_dotenv
 from sqlalchemy.dialects.postgresql import insert
 from collections import defaultdict
@@ -80,6 +87,7 @@ def process_user_data(table, index, five_x_five_user: FiveXFiveUser, session: Se
     partner_uid_decoded = urllib.parse.unquote(str(table['PARTNER_UID'][index]).lower())
     partner_uid_dict = json.loads(partner_uid_decoded)
     partner_uid_client_id = partner_uid_dict.get('client_id')
+    page = partner_uid_dict.get('current_page')
     user = session.query(Users).filter(Users.data_provider_id == str(partner_uid_client_id)).first()
     if not user:
         logging.info(f"User not found with client_id {partner_uid_client_id}")
@@ -89,88 +97,91 @@ def process_user_data(table, index, five_x_five_user: FiveXFiveUser, session: Se
         json_headers = json.loads(str(table['JSON_HEADERS'][index]).lower())
         referer = json_headers.get('referer')[0]
         page = referer
-    behavior_type = 'visitor'
-    if partner_uid_dict.get('item'):
-        behavior_type = 'viewed_product'
-    if partner_uid_dict.get('addToCart'):
-        behavior_type = 'added_to_cart'
+    behavior_type = 'visitor' if not partner_uid_dict.get('action') else partner_uid_dict.get('action')
     lead_user = session.query(LeadUser).filter_by(five_x_five_user_id=five_x_five_user.id, user_id=user.id).first()
+    is_first_request = False
     if not lead_user:
+        is_first_request = True
         lead_user = LeadUser(five_x_five_user_id=five_x_five_user.id, user_id=user.id)
         session.add(lead_user)
         session.flush()
         user_payment_transactions = UsersPaymentsTransactions(user_id=user.id, status='success', amount_credits=AMOUNT_CREDITS, type='lead', lead_id=lead_user.id, five_x_five_up_id=five_x_five_user.up_id)
         session.add(user_payment_transactions)
         session.flush()
+    else:
+        first_visit_id = lead_user.first_visit_id
 
     requested_at_str = str(table['EVENT_DATE'][index].as_py())
-    requested_at = datetime.fromisoformat(requested_at_str)
+    requested_at = datetime.fromisoformat(requested_at_str).replace(tzinfo=None)
     thirty_minutes_ago = requested_at - timedelta(minutes=30)
-    visit = session.query(LeadsRequests.visit_id).filter(
+    current_visit_request = session.query(LeadsRequests.visit_id).filter(
         LeadsRequests.lead_id == lead_user.id,
         LeadsRequests.requested_at >= thirty_minutes_ago
         ).first()
     leads_requests = None
-    if visit:
-        visit_id = visit[0]
+    if current_visit_request:
+        visit_id = current_visit_request[0]
         leads_requests = session.query(LeadsRequests).filter(
         LeadsRequests.visit_id == visit_id).all()
-
-    if leads_requests:
-        logging.info("leads requests exists")
-        lead_visits = leads_requests[0].visit_id
-        visit_first = session.query(LeadsVisits).filter(
-            LeadsVisits.lead_id == lead_user.id
-        ).order_by(
-            LeadsVisits.id.asc()
-        ).first()
-        if visit_first.id == leads_requests[0].visit_id:
+        lead_visits_id = leads_requests[0].visit_id
+        if first_visit_id == leads_requests[0].visit_id:
             if lead_user.behavior_type in ('visitor', 'viewed_product') and behavior_type in (
-            'viewed_product', 'added_to_cart') \
-                    and lead_user.behavior_type != behavior_type:
+            'viewed_product', 'product_added_to_cart') and lead_user.behavior_type != behavior_type:
                 session.query(LeadUser).filter(LeadUser.id == lead_user.id).update({
                     LeadUser.behavior_type: behavior_type
                 })
                 session.commit()
-        process_leads_requests(requested_at, page, leads_requests, lead_user.id, session, behavior_type)
+        process_leads_requests(requested_at=requested_at, page=page, leads_requests=leads_requests, visit_id=visit_id, session=session, behavior_type=behavior_type)
     else:
-        logging.info("Leads Visits not exists")
-        lead_visits = add_new_leads_visits(requested_at, lead_user.id, session, behavior_type).id
-        session.query(Users).filter(Users.id == user.id).update(
-            {Users.is_pixel_installed: True},
-            synchronize_session=False)
+        lead_visits_id = add_new_leads_visits(visited_datetime=requested_at, lead_id=lead_user.id, session=session, behavior_type=behavior_type).id
+        if is_first_request == True:
+            lead_user.first_visit_id = lead_visits_id
+            session.flush()
+            lead_users = session.query(LeadUser).filter_by(user_id=user.id).limit(2).all()
+            if len(lead_users) == 1:
+                last_subscription = session.query(UserSubscriptions).filter(UserSubscriptions.user_id == user.id).order_by(UserSubscriptions.id.desc()).first()
+                if last_subscription and last_subscription.plan_start is None and last_subscription.plan_end is None:
+                    trial_days = session.query(SubscriptionPlan.trial_days).filter(SubscriptionPlan.is_free_trial == True).scalar()
+                    if trial_days:
+                        date_now = datetime.now()
+                        last_subscription.plan_start = date_now
+                        last_subscription.plan_end = date_now + relativedelta(days=trial_days)
+                        session.flush()
+        else:
+            if lead_user.is_returning_visitor == False:
+                lead_user.is_returning_visitor = True
+                session.flush()
+                
+    if behavior_type == 'checkout_completed':
+        if lead_user.is_converted_sales == False:
+                lead_user.is_converted_sales = True
+                session.flush()
+        order_detail = partner_uid_dict.get('order_detail')
+        session.add(LeadOrders(lead_user_id=lead_user.id, 
+                                total_price=order_detail.get('total_price'), 
+                                currency_code=order_detail.get('currency'),
+                                created_at_shopify=requested_at, created_at=datetime.now()))
+        existing_record = session.query(LeadsUsersOrdered).filter_by(lead_user_id=lead_user.id).first()
+        if existing_record:
+            existing_record.ordered_at = requested_at
+        else:
+            new_record = LeadsUsersOrdered(lead_user_id=lead_user.id, ordered_at=requested_at)
+            session.add(new_record)
+    if  behavior_type == 'product_added_to_cart':
+        existing_record = session.query(LeadsUsersAddedToCart).filter_by(lead_user_id=lead_user.id).first()
+        if existing_record:
+            existing_record.added_at = requested_at
+        else:
+            new_record = LeadsUsersAddedToCart(lead_user_id=lead_user.id, added_at=requested_at)
+            session.add(new_record)
     lead_request = insert(LeadsRequests).values(
         lead_id=lead_user.id,
-        page=page, requested_at=requested_at, visit_id=lead_visits
+        page=page, requested_at=requested_at, visit_id=lead_visits_id
     ).on_conflict_do_nothing()
     session.execute(lead_request)
+    session.flush()
+    
     session.commit()
-
-def normalize_url(url):
-    """
-    Normalize the URL by removing all query parameters and trailing slashes.
-    """
-    if not url:
-        return url
-    
-    scheme_end = url.find('://')
-    if scheme_end != -1:
-        scheme_end += 3
-        scheme = url[:scheme_end]
-        remainder = url[scheme_end:]
-    else:
-        scheme = ''
-        remainder = url
-    
-    path_end = remainder.find('?')
-    if path_end != -1:
-        path = remainder[:path_end]
-    else:
-        path = remainder
-
-    path = path.rstrip('/')
-    normalized_url = scheme + path
-    return normalized_url
 
 def convert_leads_requests_to_utc(leads_requests):
     utc = pytz.utc
@@ -180,10 +191,8 @@ def convert_leads_requests_to_utc(leads_requests):
         else:
             request.requested_at = request.requested_at.astimezone(utc)
 
-def process_leads_requests(requested_at, page, leads_requests, lead_id, session: Session, behavior_type):
-    convert_leads_requests_to_utc(leads_requests)
+def process_leads_requests(requested_at, page, leads_requests, visit_id, session: Session, behavior_type):
     new_request = LeadsRequests(
-        lead_id=lead_id,
         page=normalize_url(page),
         requested_at=requested_at,
     )
@@ -209,7 +218,7 @@ def process_leads_requests(requested_at, page, leads_requests, lead_id, session:
 
     average_time_sec = int(total_time_sec / len(leads_requests_sorted))
     
-    session.query(LeadsVisits).filter_by(lead_id=lead_id).update({
+    session.query(LeadsVisits).filter_by(id=visit_id).update({
         'start_date': start_date,
         'start_time': start_time,
         'end_date': end_date,
@@ -310,6 +319,7 @@ def main():
             logging.info('Sleeping for 10 minutes...')
             time.sleep(60 * 10)
     except Exception as e:
+        session.rollback()
         logging.error(f"An error occurred: {str(e)}")
         traceback.print_exc()
     finally:

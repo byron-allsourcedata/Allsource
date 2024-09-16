@@ -1,3 +1,4 @@
+"use client";
 import { Box, Grid, Typography, Button } from "@mui/material";
 import Image from "next/image";
 import axiosInterceptorInstance from "../axios/axiosInterceptorInstance";
@@ -7,6 +8,7 @@ import React, {useEffect, useState} from "react";
 import ManualPopup from '../components/ManualPopup';
 import GoogleTagPopup from '../components/GoogleTagPopup';
 import CRMPopup from "./CMSPopup";
+import CustomizedProgressBar from "./CustomizedProgressBar";
 
 
 
@@ -17,9 +19,11 @@ interface CmsData {
 
 const PixelInstallation: React.FC = () => {
   const { setShowSlider } = useSlider();
+  const [isLoading, setIsLoading] = useState(false);
 
   const installManually = async () => {
     try {
+      setIsLoading(true)
       const response = await axiosInterceptorInstance.get('/install-pixel/manually');
       setPixelCode(response.data.manual);
       setOpen(true);
@@ -36,10 +40,14 @@ const PixelInstallation: React.FC = () => {
         console.error('Error fetching data:', error);
       }
     }
+    finally {
+      setIsLoading(false)
+    }
   };
 
   const installGoogleTag = async () => {
     try {
+      setIsLoading(true)
       const response = await axiosInterceptorInstance.get('/install-pixel/google-tag');
       setGoogleOpen(true)
     } catch (error) {
@@ -54,6 +62,9 @@ const PixelInstallation: React.FC = () => {
       } else {
         console.error('Error fetching data:', error);
       }
+    }
+    finally {
+      setIsLoading(false)
     }
   };
 
@@ -86,8 +97,10 @@ const PixelInstallation: React.FC = () => {
   const handleCRMClose = () => setCMSOpen(false);
 
 
+
   const installCMS = async () => {
     try {
+      setIsLoading(true)
       const response = await axiosInterceptorInstance.get('/install-pixel/cms');
       setCmsData(response.data);
       setCMSOpen(true);
@@ -103,6 +116,9 @@ const PixelInstallation: React.FC = () => {
       } else {
         console.error('Error fetching data:', error);
       }
+    }
+    finally {
+      setIsLoading(false)
     }
   };
 
@@ -179,6 +195,21 @@ const PixelInstallation: React.FC = () => {
         </Grid>
         </Box>
       </Grid>
+      {isLoading && (
+            <Box sx={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              zIndex: 1,
+            }}>
+              <CustomizedProgressBar />
+            </Box>
+          )}
     </Box>
   );
 };

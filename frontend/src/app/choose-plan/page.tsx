@@ -7,6 +7,7 @@ import PersonIcon from '@mui/icons-material/Person';
 import { planStyles } from './planStyles';
 import { useUser } from '../../context/UserContext'; // Assuming you have a UserContext to provide user information
 import axiosInterceptorInstance from '@/axios/axiosInterceptorInstance';
+import CustomizedProgressBar from '@/components/CustomizedProgressBar';
 
 const PlanCard = ({ plan, onChoose }: { plan: any; onChoose: (stripePriceId: string) => void }) => {
   return (
@@ -39,6 +40,13 @@ const PlanPage: React.FC = () => {
   const router = useRouter();
   const { full_name, email } = useUser(); 
   const [plans, setPlans] = useState<any[]>([]);
+
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -134,7 +142,7 @@ const PlanPage: React.FC = () => {
 
 const ChoosePlanPage = () => {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<CustomizedProgressBar />}>
       <PlanPage />
     </Suspense>
   );

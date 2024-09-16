@@ -40,9 +40,10 @@ class WebhookService:
         self.subscription_service.update_user_payment_status(user_id=user_data.id, status=status)
         logger.info(f"updated the payment status of user to completed {user_data.email}")
         platform_subscription_id = payload.get("data").get("object").get("id")
-
-        if self.subscription_service.subscription_exists(platform_subscription_id):
-            user_subscription = self.subscription_service.update_subscription_from_webhook(platform_subscription_id, stripe_payload=payload)
+        user_subscription = self.subscription_service.get_user_subscription_by_platform_subscription_id(platform_subscription_id)
+        if user_subscription:
+            user_subscription = self.subscription_service.update_subscription_from_webhook(user_subscription=user_subscription, stripe_payload=payload)
+            return user_subscription
         else:
             user_subscription = self.subscription_service.create_subscription_from_webhook(user_id=user_data.id, stripe_payload=payload)
             if user_subscription:

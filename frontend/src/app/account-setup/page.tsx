@@ -12,13 +12,12 @@ import {
   Typography,
 } from "@mui/material";
 import Image from "next/image";
-import PersonIcon from "@mui/icons-material/Person";
 import { styles } from "./accountStyles";
 import { useRouter } from "next/navigation";
 import { useUser } from "../../context/UserContext";
 import axiosInterceptorInstance from "../../axios/axiosInterceptorInstance";
-import { showErrorToast } from "../../components/ToastNotification";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 
 const AccountSetup = () => {
   const [organizationName, setOrganizationName] = useState("");
@@ -37,6 +36,13 @@ const AccountSetup = () => {
   const [email, setEmail] = useState<string | null>(null);
 
   const { full_name: userFullName, email: userEmail } = useUser();
+
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, []);
 
   const getUserDataFromStorage = () => {
     const meItem = typeof window !== 'undefined' ? sessionStorage.getItem('me') : null;
@@ -158,7 +164,6 @@ const AccountSetup = () => {
     setErrors({ ...errors, selectedEmployees: "" });
   };
   const handleVisitsRangeChange = (label: string) => {
-    console.log(label);
     setSelectedVisits(label);
     setErrors({ ...errors, selectedVisits: "" });
   };
@@ -223,14 +228,10 @@ const AccountSetup = () => {
         case "NEED_EMAIL_VERIFIED":
           router.push("/email-verificate");
           break;
-        case "DASHBOARD_ALLOWED":
-          router.push("/dashboard");
-          break;
         case "NEED_CHOOSE_PLAN":
           router.push("/choose-plan");
           break;
         default:
-          console.log("Unhandled response status:", response.data.status);
           break;
       }
     } catch (error) {
@@ -701,7 +702,7 @@ const AccountSetup = () => {
 
 const AccountSetupPage = () => {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<CustomizedProgressBar />}>
       <AccountSetup />
     </Suspense>
   );

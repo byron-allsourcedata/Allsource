@@ -11,6 +11,7 @@ import { signupStyles } from './signupStyles';
 import { showErrorToast } from '../../components/ToastNotification';
 import { GoogleLogin } from '@react-oauth/google';
 import { fetchUserData } from '@/services/meService';
+import CustomizedProgressBar from '@/components/CustomizedProgressBar';
 
 const Signup: React.FC = () => {
   const router = useRouter();
@@ -21,6 +22,13 @@ const Signup: React.FC = () => {
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [formValues, setFormValues] = useState({ full_name: '', email: '', password: '', is_without_card: isWithoutCard ? 'true' : 'false', termsAccepted: false });
   const [formSubmitted, setFormSubmitted] = useState(false);
+
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, []);
 
 
   const navigateTo = (path: string) => {
@@ -431,7 +439,7 @@ const Signup: React.FC = () => {
 
 const SignupPage = () => {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<CustomizedProgressBar />}>
       <Signup />
     </Suspense>
   );

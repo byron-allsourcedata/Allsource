@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Drawer, Box, Typography, IconButton, Backdrop, TextField, InputAdornment, Divider, FormControlLabel, Radio, Collapse, Checkbox, Button, List, ListItem, ListItemIcon, ListItemButton, ListItemText } from '@mui/material';
+import { Drawer, Box, Typography, IconButton, Backdrop, TextField, InputAdornment, Divider, FormControlLabel, Radio, Collapse, Checkbox, Button, List, ListItem, ListItemIcon, ListItemButton, ListItemText, Link, Tab, Tooltip  } from '@mui/material';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import CloseIcon from '@mui/icons-material/Close';
@@ -7,6 +7,8 @@ import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { showToast } from './ToastNotification';
 import Image from 'next/image';
 import SearchIcon from '@mui/icons-material/Search';
+import ConnectKlaviyo from './ConnectKlaviyo';
+import ConnectMeta from './ConnectMeta';
 
 interface AudiencePopupProps {
     open: boolean;
@@ -28,6 +30,10 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
     const [checkedItems, setCheckedItems] = useState<Set<number>>(new Set());
     const [listName, setListName] = useState<string>('');
     const [plusIconPopupOpen, setPlusIconPopupOpen] = useState(false);
+    const [klaviyoIconPopupOpen, setKlaviyoIconPopupOpen] = useState(false);
+    const [metaIconPopupOpen, setMetaIconPopupOpen] = useState(false);
+    const [selectedIntegration, setSelectedIntegration] = useState<string | null>(null);
+    const [isExportDisabled, setIsExportDisabled] = useState(true);
 
     const fetchListItems = async () => {
         try {
@@ -120,11 +126,35 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
 
     const handlePlusIconPopupOpen = () => {
         setPlusIconPopupOpen(true);
+        setSelectedIntegration(null); // Reset the selection
+        setIsExportDisabled(true); // Disable export button when the plus icon is clicked
+
     };
 
     const handlePlusIconPopupClose = () => {
         setPlusIconPopupOpen(false);
     };
+
+    const handleKlaviyoIconPopupOpen = () => {
+        setKlaviyoIconPopupOpen(true);
+    };
+
+    const handleKlaviyoIconPopupClose = () => {
+        setKlaviyoIconPopupOpen(false);
+    };
+
+    const handleMetaIconPopupOpen = () => {
+        setMetaIconPopupOpen(true);
+    };
+
+    const handleMetaIconPopupClose = () => {
+        setMetaIconPopupOpen(false);
+    };
+
+    const handleIntegrationSelect = (integration: string) => {
+        setSelectedIntegration(integration);
+        setIsExportDisabled(false); // Enable export button when an integration is selected
+      };
 
     return (
         <>
@@ -163,12 +193,14 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                             </Typography>
                             <List sx={{ display: 'flex', gap: '16px', py: 2, flexWrap: 'wrap' }}>
                                 {/* HubSpot */}
-                                <ListItem sx={{p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',
+                                <ListItem sx={{p: 0, borderRadius: '4px', border: selectedIntegration === 'HubSpot' ? '1px solid #5052B2' : '1px solid #e4e4e4', width: 'auto',
                                     '@media (max-width:600px)': {
                                         flexBasis: 'calc(50% - 8px)'
                                     }
                                 }}>
-                                    <ListItemButton sx={{p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center'}}>
+                                    <ListItemButton onClick={() => handleIntegrationSelect('HubSpot')} sx={{p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center',
+                                        backgroundColor: selectedIntegration === 'HubSpot' ? 'rgba(80, 82, 178, 0.10)' : 'transparent'
+                                    }}>
                                     <ListItemIcon sx={{minWidth: 'auto'}}>
                                         <Image src="/hubspot.svg" alt="hubspot" height={28} width={27} />
                                     </ListItemIcon>
@@ -185,12 +217,14 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                 </ListItem>
 
                                 {/* WordPress */}
-                                <ListItem sx={{p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',
+                                <ListItem sx={{p: 0, borderRadius: '4px', border: selectedIntegration === 'WordPress' ? '1px solid #5052B2' : '1px solid #e4e4e4', width: 'auto',
                                     '@media (max-width:600px)': {
                                         flexBasis: 'calc(50% - 8px)'
                                     }
                                 }}>
-                                    <ListItemButton sx={{p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center'}}>
+                                    <ListItemButton onClick={() => handleIntegrationSelect('WordPress')} sx={{p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center',
+                                        backgroundColor: selectedIntegration === 'WordPress' ? 'rgba(80, 82, 178, 0.10)' : 'transparent'
+                                    }}>
                                     <ListItemIcon sx={{minWidth: 'auto'}}>    
                                         <Image src="/wordpress.svg" alt="wordpress" height={24} width={24} />
                                     </ListItemIcon>
@@ -207,12 +241,14 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                 </ListItem>
 
                                 {/* Klaviyo */}
-                                <ListItem sx={{p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',
+                                <ListItem sx={{p: 0, borderRadius: '4px', border: selectedIntegration === 'Klaviyo' ? '1px solid #5052B2' : '1px solid #e4e4e4', width: 'auto',
                                     '@media (max-width:600px)': {
                                         flexBasis: 'calc(50% - 8px)'
                                     }
                                 }}>
-                                    <ListItemButton sx={{p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center'}}>
+                                    <ListItemButton onClick={() => handleIntegrationSelect('Klaviyo')}  sx={{p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center',
+                                        backgroundColor: selectedIntegration === 'Klaviyo' ? 'rgba(80, 82, 178, 0.10)' : 'transparent'
+                                    }}>
                                         <ListItemIcon sx={{minWidth: 'auto'}}>
                                             <Image src="/klaviyo.svg" alt="klaviyo" height={26} width={32} />
                                         </ListItemIcon>
@@ -244,37 +280,11 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
 
                         </Box>
                     </Box>
-                    {/* <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '90%', border: '1px solid rgba(228, 228, 228, 1)', borderRadius: '4px', padding: '2em' }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', mb: 2, borderBottom: '2px solid rgba(228, 228, 228, 1)' }}>
-                            <Box sx={{ flexGrow: 1, width: '100%' }}>
-                                <FormControlLabel
-                                    control={<Radio checked={selectedOption === 'existing'} onChange={handleRadioChange} value="existing" />}
-                                    label="Existing Lists"
-                                    sx={{ width: '100%', display: 'flex', color: 'rgba(74, 74, 74, 1)', alignItems: 'center', fontFamily: 'Nunito', fontWeight: '600', fontSize: '16px', lineHeight: '25.2px' }}
-                                />
-                            </Box>
-                            <IconButton onClick={toggleExistingListsVisibility} aria-label="toggle-content">
-                                {isExistingListsOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                            </IconButton>
-                        </Box>
-                        <Collapse in={isExistingListsOpen} sx={{ width: '100%' }}>
-                            <Box sx={{ width: '100%', pt: 1 }}>
-                                {listItems.map(({ audience_id, audience_name, leads_count }) => (
-                                    <Box key={audience_id} sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                                        <Checkbox
-                                            checked={checkedItems.has(audience_id)}
-                                            onChange={() => handleCheckboxChange(audience_id)}
-                                        />
-                                        <Typography sx={{ ml: 1 }}>{audience_name} ({leads_count})</Typography>
-                                    </Box>
-                                ))}
-                            </Box>
-                        </Collapse>
-                    </Box> */}
                     <Box sx={{ px: 2, py: 3.5, width: '100%', border: '1px solid #e4e4e4' }}>
                         <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
                             <Button
                                 variant="contained"
+                                disabled={isExportDisabled} 
                                 // onClick={handleSave}
                                 sx={{
                                     backgroundColor: '#5052B2',
@@ -407,7 +417,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                         flexBasis: 'calc(50% - 8px)'
                                     }
                                 }}>
-                                    <ListItemButton sx={{p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center'}}>
+                                    <ListItemButton onClick={handleKlaviyoIconPopupOpen} sx={{p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center'}}>
                                         <ListItemIcon sx={{minWidth: 'auto'}}>
                                             <Image src="/klaviyo.svg" alt="klaviyo" height={26} width={32} />
                                         </ListItemIcon>
@@ -491,7 +501,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                         flexBasis: 'calc(50% - 8px)'
                                     }
                                 }}>
-                                    <ListItemButton sx={{p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center'}}>
+                                    <ListItemButton onClick={handleMetaIconPopupOpen} sx={{p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center'}}>
                                         <ListItemIcon sx={{minWidth: 'auto'}}>
                                             <Image src="/meta-icon.svg" alt="meta" height={26} width={32} />
                                         </ListItemIcon>
@@ -515,6 +525,8 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                 </Box>
             </Drawer>
 
+            <ConnectKlaviyo open={klaviyoIconPopupOpen} onClose={handleKlaviyoIconPopupClose} />
+            <ConnectMeta open={metaIconPopupOpen} onClose={handleMetaIconPopupClose} />
         </>
     );
 };

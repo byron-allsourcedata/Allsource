@@ -4,11 +4,19 @@ import { useEffect, useState, Suspense } from 'react';
 import axiosInstance from '../../../axios/axiosInterceptorInstance';
 import { showErrorToast, showInfoToast, showToast } from '@/components/ToastNotification';
 import { Pause } from '@mui/icons-material';
+import CustomizedProgressBar from '@/components/CustomizedProgressBar';
 
 const VerifyToken = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
+
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, []);
 
   useEffect(() => {
     const verifyToken = async () => {
@@ -58,7 +66,7 @@ const VerifyToken = () => {
 };
 
 const VerifyTokenWithSuspense = () => (
-  <Suspense fallback={<div>Loading...</div>}>
+  <Suspense fallback={<CustomizedProgressBar />}>
     <VerifyToken />
   </Suspense>
 );
