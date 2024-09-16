@@ -36,19 +36,47 @@ class PaymentsService:
         else:
             return SubscriptionStatus.UNKNOWN
     
-    def upgrade_and_downgrade_user_subscription(self, price_id: str):
+    def upgrade_and_downgrade_user_subscription(self, price_id: str) -> str:
         subscription_id = self.plans_service.get_subscription_id()
         subscription = stripe.Subscription.retrieve(subscription_id)
         subscription_item_id = subscription['items']['data'][0]['id']
-        subscription_data = stripe.Subscription.modify(
-            subscription_id,
-            items=[{
-                'id': subscription_item_id,
-                'price': price_id,
-            }],
-            proration_behavior='create_prorations'
-        )
-        status = subscription_data['status']
+        is_downgrade = self.is_downgrade(price_id)
+        if is_downgrade:
+            stripe.Subscription.modify(
+                subscription_id,
+                cancel_at_period_end=True
+            )
+            new_subscription_data = stripe.Subscription.create(
+                customer=self.plans_service.get_customer_id(),
+                items=[{
+                    'price': price_id,
+                }],
+                proration_behavior='none'
+            )
+            return self.get_subscription_status(new_subscription_data['id'])
+        
+        else:
+            subscription_data = stripe.Subscription.modify(
+                subscription_id,
+                items=[{
+                    'id': subscription_item_id,
+                    'price': price_id,
+                }],
+                proration_behavior='create_prorations'
+            )
+            return self.get_subscription_status(subscription_data['id'])
+
+    def is_downgrade(self, price_id: str) -> bool:
+        current_price = self.plans_service.get_current_price()
+        new_price = self.plans_service.get_plan_price(price_id)
+        return self.compare_prices(new_price, current_price) < 0
+
+    def compare_prices(self, price_id1: str, price_id2: str) -> int:
+        return price_id1 - price_id2
+
+    def get_subscription_status(self, subscription_id: str) -> str:
+        subscription = stripe.Subscription.retrieve(subscription_id)
+        status = subscription['status']
         if status == 'active':
             return SubscriptionStatus.SUCCESS
         elif status == 'incomplete':
@@ -59,6 +87,8 @@ class PaymentsService:
             return SubscriptionStatus.CANCELED
         else:
             return SubscriptionStatus.UNKNOWN
+
+
         
     def charge_user_for_extra_credits(self, quantity: int):
         return self.create_stripe_checkout_session(

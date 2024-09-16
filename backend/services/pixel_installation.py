@@ -10,7 +10,7 @@ from enums import BaseEnum, SendgridTemplate
 from models.subscriptions import UserSubscriptions
 from models.users import Users
 from datetime import datetime, timedelta
-
+from utils import normalize_url
 from persistence.sendgrid_persistence import SendgridPersistence
 from services.sendgrid import SendgridHandler
 
@@ -89,7 +89,7 @@ class PixelInstallationService:
         result_parser = self.parse_website(url, user)
         if result_parser:
             self.db.query(Users).filter(Users.id == user.get('id')).update(
-                {Users.company_website: url},
+                {Users.company_website: normalize_url(url), Users.is_pixel_installed: True},
                 synchronize_session=False)
             self.db.commit()
             result['success'] = True
@@ -101,7 +101,7 @@ class PixelInstallationService:
         user = self.db.query(Users).filter(Users.data_provider_id == pixelClientId).first()
         if user:
             user.is_pixel_installed = True
-            user.company_website = url
+            user.company_website = normalize_url(url)
             self.db.commit()
             
             result['success'] = True
@@ -109,4 +109,6 @@ class PixelInstallationService:
         else:
             result['success'] = False
         return result
+    
+    
 

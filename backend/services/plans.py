@@ -54,3 +54,8 @@ class PlansService:
     def get_subscription_id(self):
         return self.subscription_service.get_subscription_id_by_user_id(self.user.get('id'))
     
+    def get_current_price(self):
+        return self.plans_persistence.get_current_price(user_id=self.user.id)
+    
+    def get_plan_price(self, price_id):
+        return self.plans_persistence.get_plan_price(price_id=price_id)
