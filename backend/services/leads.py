@@ -151,3 +151,35 @@ class LeadsService:
             'count_leads': count_leads,
             'max_page': max_page,
         }
+        
+    def search_contact(self, start_letter):
+        start_letter = start_letter.replace('+', '').strip()
+        if start_letter.split()[0].isdecimal():
+            start_letter = start_letter.replace(' ', '')
+        leads_data = self.leads_persistence_service.search_contact(start_letter=start_letter, user_id=self.user.get('id'))
+        results = set()
+        for lead in leads_data:
+            if '@' in start_letter:
+                results.add(lead.email)
+            elif start_letter.isdecimal():
+                results.add(lead.number)
+            else:
+                results.add(f"{lead.first_name} {lead.last_name}")
+        limited_results = list(results)[:10]
+        return limited_results
+        
+    def search_location(self, start_letter):
+        location_data = self.leads_persistence_service.search_location(start_letter=start_letter, user_id=self.user.get('id'))
+        results_set = set()
+
+        for location in location_data:
+            results_hash = {
+                'city': location[0],
+                'state': location[1]
+            }
+            
+            results_set.add(frozenset(results_hash.items()))
+        results = [dict(item) for item in results_set]
+        limited_results = list(results)[:10]
+        return limited_results
+
