@@ -1034,13 +1034,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
           params: { start_letter: searchValue },
         });
         setCities(response.data);
-        const fakeResponse = [
-          { city: 'New York', state: 'NY' },
-          { city: 'Los Angeles', state: 'CA' },
-          { city: 'Chicago', state: 'IL' },
-        ];
-
-        setCities(fakeResponse);
       } catch {
       }
     } else {
