@@ -258,15 +258,26 @@ class LeadsPersistence:
             .outerjoin(FiveXFiveUsersPhones, FiveXFiveUsersPhones.user_id == FiveXFiveUser.id)
             .outerjoin(FiveXFivePhones, FiveXFivePhones.id == FiveXFiveUsersPhones.phone_id)
             )
-
-            search_conditions = or_(
-                FirstNameAlias.name.ilike(f'{search_query}%'),
-                LastNameAlias.name.ilike(f'{search_query}%'),
+            
+            filters = [
                 FiveXFiveEmails.email.ilike(f'{search_query}%'),
                 FiveXFiveEmails.email_host.ilike(f'{search_query}%'),
-                FiveXFivePhones.number.ilike(f'{search_query}%'),
-            )
-            query = query.filter(search_conditions)
+                FiveXFivePhones.number.ilike(f'{search_query}%')
+            ]
+            search_query = search_query.split()
+            if len(search_query) == 1:
+                filters.extend([
+                    FirstNameAlias.name.ilike(f'{search_query[0].strip()}%'),
+                    LastNameAlias.name.ilike(f'{search_query[0].strip()}%')
+                ])
+            elif len(search_query) == 2:
+                name_filter = and_(
+                    FirstNameAlias.name.ilike(f'{search_query[0].strip()}%'),
+                    LastNameAlias.name.ilike(f'{search_query[1].strip()}%')
+                )
+                filters.append(name_filter)
+            
+            query = query.filter(or_(*filters))
 
         offset = (page - 1) * per_page
         leads = query.limit(per_page).offset(offset).all()
