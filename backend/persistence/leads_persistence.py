@@ -417,16 +417,20 @@ class LeadsPersistence:
             .join(LeadUser, LeadUser.five_x_five_user_id == FiveXFiveUser.id)
             .join(FirstNameAlias, FirstNameAlias.id == FiveXFiveUser.first_name_id)
             .join(LastNameAlias, LastNameAlias.id == FiveXFiveUser.last_name_id)
-            .join(FiveXFiveUsersEmails, FiveXFiveUsersEmails.user_id == FiveXFiveUser.id)
-            .join(FiveXFiveEmails, FiveXFiveEmails.id == FiveXFiveUsersEmails.email_id)
-            .join(FiveXFiveUsersPhones, FiveXFiveUsersPhones.user_id == FiveXFiveUser.id)
-            .join(FiveXFivePhones, FiveXFivePhones.id == FiveXFiveUsersPhones.phone_id)
+            .outerjoin(FiveXFiveUsersEmails, FiveXFiveUsersEmails.user_id == FiveXFiveUser.id)
+            .outerjoin(FiveXFiveEmails, FiveXFiveEmails.id == FiveXFiveUsersEmails.email_id)
+            .outerjoin(FiveXFiveUsersPhones, FiveXFiveUsersPhones.user_id == FiveXFiveUser.id)
+            .outerjoin(FiveXFivePhones, FiveXFivePhones.id == FiveXFiveUsersPhones.phone_id)
             .filter(
                 LeadUser.user_id == user_id,
             ).group_by(FiveXFiveUser.first_name, FiveXFiveUser.last_name, FiveXFiveEmails.email, FiveXFivePhones.number, LeadUser.five_x_five_user_id)
         )
+        email_host = start_letter.split('@')
+        if len(email_host) == 2:
+            email_host = email_host[1]
         filters = [
             FiveXFiveEmails.email.ilike(f'{start_letter}%'),
+            FiveXFiveEmails.email_host.ilike(f'{email_host}%'),
             FiveXFivePhones.number.ilike(f'{start_letter}%')
         ]
         if len(letters) == 1:
@@ -454,7 +458,7 @@ class LeadsPersistence:
             )
             .join(FiveXFiveUsersLocations, FiveXFiveUsersLocations.location_id == FiveXFiveLocations.id)
             .join(LeadUser, LeadUser.five_x_five_user_id == FiveXFiveUsersLocations.five_x_five_user_id)
-            .join(States, States.id == FiveXFiveLocations.state_id)
+            .outerjoin(States, States.id == FiveXFiveLocations.state_id)
             .filter(
                 LeadUser.user_id == user_id,
                 or_(
