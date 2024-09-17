@@ -4,8 +4,8 @@ from sqlalchemy.dialects.postgresql import BOOLEAN, INTEGER, NUMERIC, TIMESTAMP,
 from .base import Base, create_timestamps, update_timestamps
 
 
-class State(Base):
-    __tablename__ = "state"
+class States(Base):
+    __tablename__ = "states"
 
     id = Column(Integer, primary_key=True, nullable=False)
     state_code = Column(VARCHAR(16), nullable=False, unique=True)

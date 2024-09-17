@@ -11,7 +11,7 @@ parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 
 from sqlalchemy.orm import sessionmaker
-from models.state import State
+from models.state import States
 from models.five_x_five_locations import FiveXFiveLocations
 from dotenv import load_dotenv
 
@@ -40,8 +40,8 @@ def save_state_to_user(session, state_code, city_name):
     logging.info(f"state code {state_code}")
     logging.info(f"state name {state_name}")
     if state_name:
-        session.query(State).filter(State.state_code == state_code).update({
-                        State.state_name: state_name
+        session.query(States).filter(States.state_code == state_code).update({
+                        States.state_name: state_name
                     })
         session.flush()
 
@@ -51,17 +51,17 @@ async def process_state(session, batch_size=100):
     while True:
         subquery = (
             session.query(
-                State.state_code,
-                func.min(State.id).label('id')
+                States.state_code,
+                func.min(States.id).label('id')
             )
-            .filter(State.state_name.is_(None))
-            .group_by(State.state_code)
+            .filter(States.state_name.is_(None))
+            .group_by(States.state_code)
             .subquery()
         )
         
         states = (
-            session.query(State)
-            .join(subquery, State.id == subquery.c.id)
+            session.query(States)
+            .join(subquery, States.id == subquery.c.id)
             .offset(offset)
             .limit(batch_size)
             .all()
