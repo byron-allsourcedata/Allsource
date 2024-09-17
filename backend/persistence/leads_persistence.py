@@ -104,7 +104,7 @@ class LeadsPersistence:
                 FiveXFiveUser.professional_zip,
                 FiveXFiveUser.company_zip,
                 LeadUser.behavior_type,
-                FiveXFiveLocations.state,
+                FiveXFiveLocations.state_id,
                 FiveXFiveLocations.city,
                 LeadsVisits.start_date.label('start_date'),
                 LeadsVisits.start_time.label('start_time'),
@@ -122,7 +122,7 @@ class LeadsPersistence:
             .group_by(
                 FiveXFiveUser.id,
                 LeadUser.behavior_type,
-                FiveXFiveLocations.state,
+                FiveXFiveLocations.state_id,
                 FiveXFiveLocations.city,
                 LeadsVisits.start_date,
                 LeadsVisits.start_time,
@@ -136,7 +136,7 @@ class LeadsPersistence:
             'mobile_phone': FiveXFiveUser.mobile_phone,
             'gender': FiveXFiveUser.gender,
             'first_visited_date': LeadsVisits.start_date,
-            'state': FiveXFiveLocations.state,
+            'state': FiveXFiveLocations.state_id,
             'city': FiveXFiveLocations.city,
             'age': FiveXFiveUser.age_min,
             'time_spent': LeadsVisits.full_time_sec,
@@ -320,7 +320,7 @@ class LeadsPersistence:
                 Lead.age_min,
                 Lead.age_max,
                 Lead.job_title,
-                FiveXFiveLocations.state,
+                FiveXFiveLocations.state_id,
                 FiveXFiveLocations.city,
             )
             .join(FiveXFiveUsersLocations, FiveXFiveUsersLocations.five_x_five_user_id == Lead.id)

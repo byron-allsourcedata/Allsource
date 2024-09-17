@@ -5,7 +5,7 @@ import React, { useState, useEffect, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "../context/UserContext";
 import TrialStatus from "./TrialLabel";
-import AccountButton from "@/components/AccountButton";
+import DomainButton from "@/components/DomainsButton";
 import NavigationMenu from "@/components/NavigationMenu";
 import { SliderProvider } from "../context/SliderContext";
 
@@ -64,7 +64,7 @@ const Header = () => {
       <Box sx={{ ...headerStyles.headers, display: { xs: 'none', md: 'flex' } }}>
         <Box sx={headerStyles.logoContainer}>
           <Image src="/logo.svg" alt="logo" height={30} width={50} />
-          <AccountButton />
+          <DomainButton />
         </Box>
         <Box sx={{ display: "flex", alignItems: "center" }}>
           <TrialStatus />

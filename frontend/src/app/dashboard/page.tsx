@@ -110,6 +110,7 @@ const VerifyPixelIntegration: React.FC = () => {
           type="text"
           value={inputValue}
           onChange={handleInputChange}
+          disabled={true}
           placeholder="https://yourdomain.com"
           style={{
             padding: "0.5rem 3em 0.5em 1em",
@@ -371,7 +372,7 @@ const Dashboard: React.FC = () => {
       }
       const fetchData = async () => {
         try {
-          const response = await axiosInstance.get("dashboard");
+          const response = await axiosInstance.get("dashboard" ,{withCredentials: true});
           setData(response.data);
           if (response.status === 200) {
             setShowCharts(true); // Set to true if response is 200

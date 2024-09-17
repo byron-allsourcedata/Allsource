@@ -123,13 +123,20 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
   });
 
   useEffect(() => {
-    const fetchCredentials = async() => {
-      const response = await axiosInstance.get('/integrations/credentials/shopify')
-      if(response.status == 200) {
-        setDomain(response.data.shop_domain)
-        setAccessToken(response.data.access_token)
+    const fetchCredentials = async () => {
+      try {
+        const response = await axiosInstance.get('/integrations/credentials/shopify');
+        if (response.status === 200) {
+          setDomain(response.data.shop_domain);
+          setAccessToken(response.data.access_token);
+        } else {
+          console.error(`Unexpected status code: ${response.status}`);
+        }
+      } catch (error) {
+        console.error('Error fetching credentials:', error);
       }
-    }
+    };
+    
     fetchCredentials()
   }, [])
   const [isFocused, setIsFocused] = useState(false);
@@ -189,7 +196,8 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
       shopify: {
         shop_domain: shop_domain.trim(),
         access_token: access_token.trim()
-      }
+      },
+      pixel_install: true
     };
 
     try {

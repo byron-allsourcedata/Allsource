@@ -47,16 +47,16 @@ class BigcommerceIntegrationsService:
         return response.json()
     
 
-    def add_integration(self, credentials: IntegrationCredentials, user):
+    def add_integration(self, user, domain, credentials: IntegrationCredentials):
         shop_info = self.__get_shop_info()
         if user['company_website '] != shop_info['domain']:
             raise HTTPException(status_code=400, detail={'status': 'error', 'detail': {
                 'message': 'This Store does not match the one you specified earlier'
             }})
         customers = [self.__mapped_customer(customer) for customer in self.__get_customers(credentials.bigcommerce.shop_domain, credentials.bigcommerce.access_token)]
-        integration = self.__save_integration(credentials.bigcommerce.shop_domain, credentials.bigcommerce.access_token, user['id'])
-        for customer in customers:
-            self.__save_customer(customer, user['id'])
+        integration = self.__save_integration(credentials.bigcommerce.shop_domain, credentials.bigcommerce.access_token, domain.id)
+        # for customer in customers:
+        #     self.__save_customer(customer, user['id'])
         return {
             'status': 'Successfully added',
             'detail': {

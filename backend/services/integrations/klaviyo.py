@@ -51,11 +51,11 @@ class KlaviyoIntegrationsService:
             serivce.klaviyo.save_customer(customer.model_dump(), user_id)
 
 
-    def add_integration(self, credentials: IntegrationCredentials, user):
+    def add_integration(self, credentials: IntegrationCredentials, user, domain):
         customers = [self.__mapped_customer(customer) for customer in self.__get_customers(credentials.klaviyo.api_key)]
-        integrataion = self.__save_integration(credentials.klaviyo.api_key, user['id'])
-        for customer in customers:
-            self.__save_customer(customer, user['id'])
+        integrataion = self.__save_integration(credentials.klaviyo.api_key, domain.id)
+        # for customer in customers:
+        #     self.__save_customer(customer, user['id'])
         return {
             'status': 'Successfuly',
             'detail': {

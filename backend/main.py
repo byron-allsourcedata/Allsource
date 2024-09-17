@@ -58,7 +58,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 app.add_middleware(
     CORSMiddleware,
     #allow_origins=Base.allowed_origins,
-    allow_origins=['*'],
+    allow_origins=['http://localhost:3000'],
     allow_credentials=True,
     allow_methods=["GET", "POST", "OPTIONS", "PUT", "DELETE"],
     allow_headers=["*"]

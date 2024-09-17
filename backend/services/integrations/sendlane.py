@@ -46,11 +46,11 @@ class SendlaneIntegration:
             service.sendlane.save_customer(customer)
 
 
-    def add_integration(self, user, credentials: IntegrationCredentials):
+    def add_integration(self, user, domain, credentials: IntegrationCredentials):
         customers = [self.__mapped_customer(customer) for customer in self.__get_customers(credentials.sendlane.access_token)]
-        integrataion = self.__save_integration(credentials.sendlane.access_token, user['id'])
-        for customer in customers:
-            self.__save_customer(customer, user['id'])
+        integrataion = self.__save_integration(credentials.sendlane.access_token, domain.id)
+        # for customer in customers:
+        #     self.__save_customer(customer, user['id'])
         return {
             'status': 'Successfuly',
             'detail': {

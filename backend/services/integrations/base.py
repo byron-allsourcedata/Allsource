@@ -29,8 +29,8 @@ class IntegrationService:
         self.integrations_user_sync_persistence = integrations_user_sync_persistence
         self.aws_service = aws_service
 
-    def get_user_service_credentials(self, user):
-        return self.integration_persistence.get_integration_by_user(user['id'])
+    def get_user_service_credentials(self, domain_id):
+        return self.integration_persistence.get_integration_by_user(domain_id)
 
     def delete_integration(self, serivce_name: str, user):
         self.integration_persistence.delete_integration(user['id'], serivce_name)
@@ -46,7 +46,7 @@ class IntegrationService:
                                                  self.lead_persistence,
                                                  self.lead_orders_persistence,
                                                  self.integrations_user_sync_persistence,
-                                                 self.client, self.aws_service)
+                                                 self.client, self.aws_service, self.db)
         self.bigcommerce = BigcommerceIntegrationsService(self.integration_persistence, 
                                                           self.lead_persistence, 
                                                           self.client)

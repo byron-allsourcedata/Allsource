@@ -9,6 +9,7 @@ import requests
 from enums import BaseEnum, SendgridTemplate
 from models.subscriptions import UserSubscriptions
 from models.users import Users
+from models.users_domains import UserDomains
 from datetime import datetime, timedelta
 
 from persistence.sendgrid_persistence import SendgridPersistence
@@ -22,15 +23,15 @@ class PixelInstallationService:
         self.db = db
         self.send_grid_persistence_service = send_grid_persistence_service
 
-    def get_manual(self, user):
-        client_id = user.get('data_provider_id')
+    def get_manual(self, user, domain):
+        client_id = domain.data_provider_id
         if client_id is None:
-            client_id = hashlib.sha256((str(user.get('id')) + os.getenv('SECRET_SALT')).encode()).hexdigest()
-            self.db.query(Users).filter(Users.id == user.get('id')).update(
-                {Users.data_provider_id: client_id},
+            client_id = hashlib.sha256((str(domain.id) + os.getenv('SECRET_SALT')).encode()).hexdigest()
+            self.db.query(UserDomains).filter(UserDomains.user_id == user.get('id'), UserDomains.domain == domain.domain).update(
+                {UserDomains.data_provider_id: client_id},
                 synchronize_session=False
             )
-            self.db.commit()
+            self.db.commit() 
         script = f'''
                 <script id="acegm_pixel_script" type="text/javascript" defer="defer">
                 window.pixelClientId = "{client_id}";
@@ -65,7 +66,7 @@ class PixelInstallationService:
         )
         return BaseEnum.SUCCESS
 
-    def parse_website(self, url, user):
+    def parse_website(self, url, domain):
         try:
             response = requests.get(url)
         except:
@@ -80,28 +81,32 @@ class PixelInstallationService:
             client_id_match = re.search(r'window\.pixelClientId\s*=\s*"([^"]+)"', script_content)
             if client_id_match:
                 pixel_client_id = client_id_match.group(1).strip()
-                if user.get('data_provider_id') == pixel_client_id:
+                if domain.data_provider_id == pixel_client_id:
                     return True
         return False
 
-    def check_pixel_installed_via_parse(self, url, user):
+    def check_pixel_installed_via_parse(self, url, pixelClientId):
         result = {'success': False}
-        result_parser = self.parse_website(url, user)
-        if result_parser:
-            self.db.query(Users).filter(Users.id == user.get('id')).update(
-                {Users.company_website: url},
-                synchronize_session=False)
-            self.db.commit()
-            result['success'] = True
-        result['user_id'] = user.get('id')
+        domain = self.db.query(UserDomains).filter(UserDomains.data_provider_id == pixelClientId).first()
+        if domain:
+            is_pixel_installed = self.parse_website(url, domain)
+            if is_pixel_installed:
+                domain.is_pixel_installed = True
+                domain.domain = url
+                self.db.commit()
+                user = self.db.query(Users).filter(Users.id == domain.user_id).first()
+                if user:
+                    result['success'] = True
+                    result['user_id'] = user.id
         return result
     
     def check_pixel_installed_via_api(self, pixelClientId, url):
         result = {'success': False}
-        user = self.db.query(Users).filter(Users.data_provider_id == pixelClientId).first()
-        if user:
-            user.is_pixel_installed = True
-            user.company_website = url
+        domain = self.db.query(UserDomains).filter(UserDomains.data_provider_id == pixelClientId).first()
+        user = self.db.query(Users).filter(Users.id == domain.user_id).first()
+        if domain:
+            domain.is_pixel_installed = True
+            domain.domain = url
             self.db.commit()
             
             result['success'] = True

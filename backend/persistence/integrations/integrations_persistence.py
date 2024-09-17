@@ -1,4 +1,4 @@
-from models.integrations.users_integrations import UserIntegration, Integration
+from models.integrations.users_domains_integrations import UserIntegration, Integration
 from sqlalchemy.orm import Session
 from .klaviyo import KlaviyoPersistence
 from .bigcommerce import BigcommercePersistence
@@ -19,17 +19,17 @@ class IntegrationsPresistence:
         self.db.commit()
         return integration
 
-    def get_integration_by_user(self, user_id: int) -> UserIntegration:
-        return self.db.query(UserIntegration).filter(UserIntegration.user_id == user_id).all()
+    def get_integration_by_user(self, domain_id: int) -> UserIntegration:
+        return self.db.query(UserIntegration).filter(UserIntegration.domain_id == domain_id).all()
     
 
-    def get_credentials_for_service(self, user_id: int, service_name: str) -> UserIntegration:
+    def get_credentials_for_service(self, domain_id: int, service_name: str) -> UserIntegration:
         return self.db.query(UserIntegration) \
-            .filter(UserIntegration.user_id == user_id, UserIntegration.service_name == service_name).first()
+            .filter(UserIntegration.domain_id == domain_id, UserIntegration.service_name == service_name).first()
 
-    def delete_integration(self, user_id: int, service_name: str):
+    def delete_integration(self, domain_id: int, service_name: str):
         self.db.query(UserIntegration) \
-            .filter(UserIntegration.user_id == user_id, UserIntegration.service_name == service_name).delete()
+            .filter(UserIntegration.domain_id == domain_id, UserIntegration.service_name == service_name).delete()
 
     def edit_integrations(self, id: int, data: dict) -> UserIntegration:
         result = self.db.query(UserIntegration) \

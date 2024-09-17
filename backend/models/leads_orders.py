@@ -7,7 +7,7 @@ class LeadOrders(Base):
     __tablename__ = 'leads_user'
     id = Column(Integer, primary_key=True, autoincrement=True)
     lead_user_id = Column(Integer)
-    shopify_order_id = Column(Integer)
+    order_id = Column(Integer)
     shopify_user_id = Column(Integer)
     total_price = Column(Float)
     currency_code = Column(VARCHAR(8))

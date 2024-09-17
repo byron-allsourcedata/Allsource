@@ -6,9 +6,10 @@ from persistence.leads_persistence import LeadsPersistence
 
 
 class LeadsService:
-    def __init__(self, leads_persistence_service: LeadsPersistence, user):
+    def __init__(self, leads_persistence_service: LeadsPersistence, user, domain):
         self.leads_persistence_service = leads_persistence_service
         self.user = user
+        self.domain = domain
 
     def get_leads(self, page, per_page, from_date, to_date, regions, page_visits, average_time_spent,
                   recurring_visits, sort_by, sort_order, search_query,from_time, to_time, behavior_type, status):

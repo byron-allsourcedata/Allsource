@@ -100,7 +100,7 @@ def save_city_and_state_to_user(session, personal_city, personal_state, five_x_f
         state = convert_to_none(personal_state).lower()
     location = session.query(FiveXFiveLocations).filter(FiveXFiveLocations.country == 'us',
                                                FiveXFiveLocations.city == city,
-                                               FiveXFiveLocations.state == state).first()
+                                               FiveXFiveLocations.state_id == state).first()
     if not location:
         location = FiveXFiveLocations(
             country='us',

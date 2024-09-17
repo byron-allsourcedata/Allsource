@@ -483,6 +483,7 @@ const Leads: React.FC = () => {
                     setShowSlider(true);
                 } else if (error.response.data.status === 'PIXEL_INSTALLATION_NEEDED') {
                     setStatus(error.response.data.status || null);
+                    console.log(status)
                 } else {
                     setShowSlider(false);
                 }

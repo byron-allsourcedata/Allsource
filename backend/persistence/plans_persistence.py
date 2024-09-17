@@ -35,3 +35,7 @@ class PlansPersistence:
 
     def get_free_trail_plan(self):
         return self.db.query(SubscriptionPlan).filter(SubscriptionPlan.is_free_trial == True).first()
+    
+        
+    def get_plan_info(self, user_id):
+        return self.db.query(UserSubscriptions).filter(UserSubscriptions.user_id == user_id).first()
