@@ -88,10 +88,11 @@ class LeadsService:
     ]   
         return leads_list, count, max_page
 
-    def download_leads(self, leads_ids):
+    def download_leads(self, leads_ids = 0):
         if len(leads_ids) == 0:
-            return None
-        leads_data = self.leads_persistence_service.get_full_user_leads_by_ids(self.user.get('id'), leads_ids)
+            leads_data = self.leads_persistence_service.get_full_user_leads(self.user.get('id'))
+        else:
+            leads_data = self.leads_persistence_service.get_full_user_leads_by_ids(self.user.get('id'), leads_ids)
         if len(leads_data) == 0:
             return None
         output = io.StringIO()

@@ -306,6 +306,17 @@ class LeadsPersistence:
         )
         return lead_users
     
+    def get_full_user_leads(self, user_id):
+        lead_users = (
+            self.db.query(FiveXFiveUser)
+            .join(LeadUser, LeadUser.five_x_five_user_id == FiveXFiveUser.id)
+            .filter(
+                LeadUser.user_id == user_id
+            )
+            .all()
+        )
+        return lead_users
+    
     def create_age_conditions(self, age_str: str):
         filters = []
         for part in age_str:
