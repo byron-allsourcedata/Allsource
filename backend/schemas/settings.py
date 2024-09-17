@@ -19,6 +19,9 @@ class AccountDetailsRequest(BaseModel):
     change_password: Optional[ChangePassword] = None
     business_info: Optional[BusinessInfo] = None
     
+class ResetEmailForm(BaseModel):
+    email: str = Field(...)
+    
 class TeamsDetailsRequest(BaseModel):
     pending_invitation_revoke: str = Field(...)
     invite_user: str = Field(...)

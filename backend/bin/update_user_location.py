@@ -74,7 +74,7 @@ async def process_users(session, batch_size=1000):
         for user in users:
             if user.personal_city and user.personal_state:
                 save_city_and_state_to_user(session, user.personal_city, user.personal_state, user.id)
-        session.commit()
+                session.commit()
         offset += batch_size
 
 
