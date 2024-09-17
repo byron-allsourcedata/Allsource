@@ -384,10 +384,21 @@ const Leads: React.FC = () => {
                 }
             }
 
-            // Include other filter parameters if necessary
+
             // Processing "Regions"
             if (selectedFilters.some(filter => filter.label === 'Regions')) {
+                console.log(selectedFilters.find(filter => filter.label === 'Regions'))
                 const regions = selectedFilters.find(filter => filter.label === 'Regions')?.value.split(', ') || [];
+
+                const regionsFilter = selectedFilters.find(filter => filter.label === 'Regions');
+                const region = regionsFilter?.value.split(', ') || [];
+                const formattedRegions = region.map(region => {
+                    const [name] = region.split('-');
+                    return name;
+                });
+                if (regionsFilter) {
+                    regionsFilter.value = formattedRegions.join(', ');
+                }
                 if (regions.length > 0) {
                     url += `&regions=${encodeURIComponent(regions.join(','))}`;
                 }
@@ -747,15 +758,9 @@ const Leads: React.FC = () => {
     };
 
     const handleDownload = async () => {
-        const selectedRowsArray = Array.from(selectedRows);
-        const requestBody = {
-            leads_ids: selectedRowsArray
-        };
         setLoading(true);
         try {
-            const response = await axiosInstance.post('/leads/download_leads', requestBody, {
-                responseType: 'blob'
-            });
+            const response = await axiosInstance.get('/leads/download_leads');
 
             if (response.status === 200) {
                 const url = window.URL.createObjectURL(new Blob([response.data]));
@@ -1002,8 +1007,8 @@ const Leads: React.FC = () => {
                                     <Box
                                         sx={{
                                             position: 'absolute',
-                                            top: 3,
-                                            right: 10,
+                                            top: 6,
+                                            right: 8,
                                             width: '10px',
                                             height: '10px',
                                             backgroundColor: 'red',
@@ -1316,7 +1321,7 @@ const Leads: React.FC = () => {
                                                         <TableCell
                                                             sx={{ ...leadsStyles.table_array, position: 'relative' }}>{row.business_email || 'N/A'}</TableCell>
                                                         <TableCell
-                                                            sx={leadsStyles.table_array_phone}>{row.mobile_phone || 'N/A'}</TableCell>
+                                                            sx={leadsStyles.table_array_phone}>{row.mobile_phone?.split(',')[0] || 'N/A'}</TableCell>
                                                         <TableCell
                                                             sx={{ ...leadsStyles.table_array, position: 'relative' }}>{row.first_visited_date || 'N/A'}</TableCell>
                                                         <TableCell
