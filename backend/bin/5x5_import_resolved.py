@@ -68,7 +68,7 @@ def process_file(bucket, file_key, session):
 
 
 def process_table(table, session, file_key):
-    for i in range(len(table)):
+    for i in reversed(range(len(table))):
         up_id = table['UP_ID'][i]
         if not up_id.is_valid and str(up_id) == 'None':
             up_ids = session.query(FiveXFiveHems.up_id).filter(
@@ -80,6 +80,7 @@ def process_table(table, session, file_key):
         if five_x_five_user:
             logging.info(f"UP_ID {up_id} found in table")
             process_user_data(table, i, five_x_five_user, session)
+            break
     update_last_processed_file(file_key)
 
 
