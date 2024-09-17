@@ -65,3 +65,11 @@ async def download_leads(leads_request: LeadsRequest,
         return StreamingResponse(result, media_type="text/csv",
                                  headers={"Content-Disposition": "attachment; filename=data.csv"})
     return BaseEnum.FAILURE
+
+@router.get("/download_leads")
+async def download_leads(leads_service: LeadsService = Depends(get_leads_service)):
+    result = leads_service.download_leads()
+    if result:
+        return StreamingResponse(result, media_type="text/csv",
+                                 headers={"Content-Disposition": "attachment; filename=data.csv"})
+    return BaseEnum.FAILURE
