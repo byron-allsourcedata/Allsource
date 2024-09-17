@@ -9,13 +9,30 @@ from config.database import SessionLocal
 from sqlalchemy.orm import Session
 from typing_extensions import Annotated
 from fastapi import Depends, Header, HTTPException, status, Request
+from enums import UserAuthorizationStatus
+from exceptions import InvalidToken
+from persistence.audience_persistence import AudiencePersistence
+from persistence.settings_persistence import SettingsPersistence
+from persistence.leads_persistence import LeadsPersistence
+from persistence.plans_persistence import PlansPersistence
+from schemas.auth_token import Token
+from services.admin_customers import AdminCustomersService
+from services.audience import AudienceService
+from services.company_info import CompanyInfoService
+from services.dashboard import DashboardService
+from services.leads import LeadsService
+from services.payments import PaymentsService
+from services.payments_plans import PaymentsPlans
+from persistence.sendgrid_persistence import SendgridPersistence
+from services.plans import PlansService
+from services.subscriptions import SubscriptionService
 from services.webhook import WebhookService
 from services.users_email_verification import UsersEmailVerificationService
 from services.users_auth import UsersAuth
 from services.users import UsersService
 from services.subscriptions import SubscriptionService
 from services.sse_events import SseEventsService
-from services.plans import PlansService
+from services.settings import SettingsService
 from services.pixel_installation import PixelInstallationService
 from services.payments_plans import PaymentsPlans
 from services.payments import PaymentsService
@@ -63,6 +80,9 @@ def get_leads_persistence(db: Session = Depends(get_db)):
 
 def get_send_grid_persistence_service(db: Session = Depends(get_db)):
     return SendgridPersistence(db=db)
+
+def get_settings_persistence_service(db: Session = Depends(get_db)):
+    return SettingsPersistence(db=db)
 
 
 def get_user_persistence_service(db: Session = Depends(get_db)):
@@ -269,6 +289,14 @@ def get_pixel_installation_service(db: Session = Depends(get_db),
                                        get_send_grid_persistence_service),
                                    ):
     return PixelInstallationService(db=db, send_grid_persistence_service=send_grid_persistence_service)
+
+
+
+def get_settings_service(db: Session = Depends(get_db),
+                                   settings_persistence_service: SettingsPersistence = Depends(
+                                       get_settings_persistence_service),
+                                   ):
+    return SettingsService(db=db, settings_persistence_service=settings_persistence_service)
 
 
 def get_plans_service(user=Depends(check_user_authentication),

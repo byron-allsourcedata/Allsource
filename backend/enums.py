@@ -18,6 +18,13 @@ class SubscriptionStatus(Enum):
     PAST_DUE = "PAST_DUE"
     CANCELED = "CANCELED"
     UNKNOWN = "UNKNOWN"
+    
+class SettingStatus(Enum):
+    SUCCESS = "SUCCESS"
+    INCORRECT_PASSWORD = "INCORRECT_PASSWORD"
+    RESEND_TOO_SOON = "RESEND_TOO_SOON"
+    EMAIL_NOT_CONFIRMED = "EMAIL_NOT_CONFIRMED"
+    FAILED = 'FAILED'
 
 
 class VerificationEmail(Enum):
@@ -77,6 +84,7 @@ class SendgridTemplate(Enum):
     EMAIL_VERIFICATION_TEMPLATE = 'email_verification_template'
     FORGOT_PASSWORD_TEMPLATE = 'forgot_password_template'
     SEND_PIXEL_CODE_TEMPLATE = 'send_pixel_code_template'
+    CHANGE_EMAIL_TEMPLATE = 'change_email_template'
 
 
 class ResetPasswordEnum(Enum):

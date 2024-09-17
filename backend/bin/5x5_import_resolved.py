@@ -17,6 +17,7 @@ current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 
+from utils import normalize_url
 from models.leads_requests import LeadsRequests
 from models.leads_users_added_to_cart import LeadsUsersAddedToCart
 from models.leads_users_ordered import LeadsUsersOrdered
@@ -67,7 +68,7 @@ def process_file(bucket, file_key, session):
 
 
 def process_table(table, session, file_key):
-    for i in range(len(table)):
+    for i in reversed(range(len(table))):
         up_id = table['UP_ID'][i]
         if not up_id.is_valid and str(up_id) == 'None':
             up_ids = session.query(FiveXFiveHems.up_id).filter(
@@ -79,6 +80,7 @@ def process_table(table, session, file_key):
         if five_x_five_user:
             logging.info(f"UP_ID {up_id} found in table")
             process_user_data(table, i, five_x_five_user, session)
+            break
     update_last_processed_file(file_key)
 
 
@@ -101,7 +103,7 @@ def process_user_data(table, index, five_x_five_user: FiveXFiveUser, session: Se
     is_first_request = False
     if not lead_user:
         is_first_request = True
-        lead_user = LeadUser(five_x_five_user_id=five_x_five_user.id, user_id=user.id)
+        lead_user = LeadUser(five_x_five_user_id=five_x_five_user.id, user_id=user.id, behavior_type=behavior_type)
         session.add(lead_user)
         session.flush()
         user_payment_transactions = UsersPaymentsTransactions(user_id=user.id, status='success', amount_credits=AMOUNT_CREDITS, type='lead', lead_id=lead_user.id, five_x_five_up_id=five_x_five_user.up_id)
@@ -151,12 +153,16 @@ def process_user_data(table, index, five_x_five_user: FiveXFiveUser, session: Se
                 lead_user.is_returning_visitor = True
                 session.flush()
                 
-    if behavior_type == 'checkout_completed': 
+    if behavior_type == 'checkout_completed':
+        if lead_user.is_converted_sales == False:
+                lead_user.is_converted_sales = True
+                session.flush()
         order_detail = partner_uid_dict.get('order_detail')
         session.add(LeadOrders(lead_user_id=lead_user.id, 
-                                total_price=order_detail.get('total_price'), 
-                                currency_code=order_detail.get('currency'),
-                                created_at_shopify=requested_at, created_at=datetime.now()))
+                               shopify_order_id=order_detail.get('order_id'),
+                               total_price=order_detail.get('total_price'), 
+                               currency_code=order_detail.get('currency'),
+                               created_at_shopify=order_detail['created_at_shopify'], created_at=datetime.now()))
         existing_record = session.query(LeadsUsersOrdered).filter_by(lead_user_id=lead_user.id).first()
         if existing_record:
             existing_record.ordered_at = requested_at
@@ -178,32 +184,6 @@ def process_user_data(table, index, five_x_five_user: FiveXFiveUser, session: Se
     session.flush()
     
     session.commit()
-
-def normalize_url(url):
-    """
-    Normalize the URL by removing all query parameters and trailing slashes.
-    """
-    if not url:
-        return url
-    
-    scheme_end = url.find('://')
-    if scheme_end != -1:
-        scheme_end += 3
-        scheme = url[:scheme_end]
-        remainder = url[scheme_end:]
-    else:
-        scheme = ''
-        remainder = url
-    
-    path_end = remainder.find('?')
-    if path_end != -1:
-        path = remainder[:path_end]
-    else:
-        path = remainder
-
-    path = path.rstrip('/')
-    normalized_url = scheme + path
-    return normalized_url
 
 def convert_leads_requests_to_utc(leads_requests):
     utc = pytz.utc

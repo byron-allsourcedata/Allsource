@@ -384,10 +384,21 @@ const Leads: React.FC = () => {
                 }
             }
 
-            // Include other filter parameters if necessary
+
             // Processing "Regions"
             if (selectedFilters.some(filter => filter.label === 'Regions')) {
+                console.log(selectedFilters.find(filter => filter.label === 'Regions'))
                 const regions = selectedFilters.find(filter => filter.label === 'Regions')?.value.split(', ') || [];
+
+                const regionsFilter = selectedFilters.find(filter => filter.label === 'Regions');
+                const region = regionsFilter?.value.split(', ') || [];
+                const formattedRegions = region.map(region => {
+                    const [name] = region.split('-');
+                    return name;
+                });
+                if (regionsFilter) {
+                    regionsFilter.value = formattedRegions.join(', ');
+                }
                 if (regions.length > 0) {
                     url += `&regions=${encodeURIComponent(regions.join(','))}`;
                 }
@@ -562,6 +573,7 @@ const Leads: React.FC = () => {
         const url = `/leads`;
 
         try {
+            setIsLoading(true)
             const response = await axiosInstance.get(url);
             const [leads, count, max_page] = response.data;
 
@@ -572,58 +584,68 @@ const Leads: React.FC = () => {
         } catch (error) {
             console.error('Error fetching leads:', error);
         }
+        finally{
+            setIsLoading(false)
+        }
     };
 
     const handleDeleteFilter = (filterToDelete: { label: string; value: string }) => {
+        // Обновляем выбранные фильтры, удаляя только тот, который нужно удалить
         const updatedFilters = selectedFilters.filter(filter => filter.label !== filterToDelete.label);
-
+    
+        // Обновляем состояние выбранных фильтров
         setSelectedFilters(updatedFilters);
-
+    
+        // Если фильтр даты удален, сбрасываем состояние даты
         if (filterToDelete.label === 'Dates') {
             setAppliedDates({ start: null, end: null });
             setFormattedDates('');
         }
-
+    
+        // Обновляем фильтры для применения
         const newFilters: FilterParams = {
             from_date: updatedFilters.find(f => f.label === 'From Date') ? Number(updatedFilters.find(f => f.label === 'From Date')!.value) : null,
             to_date: updatedFilters.find(f => f.label === 'To Date') ? Number(updatedFilters.find(f => f.label === 'To Date')!.value) : null,
-            selectedStatus: updatedFilters.find(f => f.label === 'Status') ? updatedFilters.find(f => f.label === 'Status')!.value.split(', ') : [],
+            selectedStatus: updatedFilters.find(f => f.label === 'Visitor Type') ? updatedFilters.find(f => f.label === 'Visitor Type')!.value.split(', ') : [],
             regions: updatedFilters.find(f => f.label === 'Regions') ? updatedFilters.find(f => f.label === 'Regions')!.value.split(', ') : [],
             emails: updatedFilters.find(f => f.label === 'Emails') ? updatedFilters.find(f => f.label === 'Emails')!.value.split(', ') : [],
-            selectedFunnels: updatedFilters.find(f => f.label === 'Funnels') ? updatedFilters.find(f => f.label === 'Funnels')!.value.split(', ') : [],
+            selectedFunnels: updatedFilters.find(f => f.label === 'Lead Status') ? updatedFilters.find(f => f.label === 'Lead Status')!.value.split(', ') : [],
             searchQuery: updatedFilters.find(f => f.label === 'Search') ? updatedFilters.find(f => f.label === 'Search')!.value : '',
-
+            
+            // Сбрасываем флаги фильтров, если они удалены
             checkedFilters: {
-                lastWeek: false,
-                last30Days: false,
-                last6Months: false,
-                allTime: false
+                lastWeek: updatedFilters.some(f => f.label === 'Date Range' && f.value === 'lastWeek'),
+                last30Days: updatedFilters.some(f => f.label === 'Date Range' && f.value === 'last30Days'),
+                last6Months: updatedFilters.some(f => f.label === 'Date Range' && f.value === 'last6Months'),
+                allTime: updatedFilters.some(f => f.label === 'Date Range' && f.value === 'allTime')
             },
             checkedFiltersPageVisits: {
-                page: false,
-                two_page: false,
-                three_page: false,
-                more_three: false
+                page: updatedFilters.some(f => f.label === 'Page Visits' && f.value === '1 page'),
+                two_page: updatedFilters.some(f => f.label === 'Page Visits' && f.value === '2 pages'),
+                three_page: updatedFilters.some(f => f.label === 'Page Visits' && f.value === '3 pages'),
+                more_three: updatedFilters.some(f => f.label === 'Page Visits' && f.value === 'more than 3 pages')
             },
             checkedFiltersTime: {
-                morning: false,
-                evening: false,
-                afternoon: false,
-                all_day: false
+                morning: updatedFilters.some(f => f.label === 'Time of Day' && f.value === 'morning'),
+                evening: updatedFilters.some(f => f.label === 'Time of Day' && f.value === 'evening'),
+                afternoon: updatedFilters.some(f => f.label === 'Time of Day' && f.value === 'afternoon'),
+                all_day: updatedFilters.some(f => f.label === 'Time of Day' && f.value === 'all_day')
             },
             checkedFiltersTimeSpent: {
-                under_10: false,
-                over_10: false,
-                over_30: false,
-                over_60: false
+                under_10: updatedFilters.some(f => f.label === 'Time Spent' && f.value === 'under 10'),
+                over_10: updatedFilters.some(f => f.label === 'Time Spent' && f.value === '10-30 secs'),
+                over_30: updatedFilters.some(f => f.label === 'Time Spent' && f.value === '30-60 secs'),
+                over_60: updatedFilters.some(f => f.label === 'Time Spent' && f.value === 'over 60 secs')
             },
-            recurringVisits: [],
-            from_time: null,
-            to_time: null
+            recurringVisits: updatedFilters.find(f => f.label === 'Recurring Visits') ? updatedFilters.find(f => f.label === 'Recurring Visits')!.value.split(', ') : [],
+            from_time: updatedFilters.find(f => f.label === 'From Time') ? updatedFilters.find(f => f.label === 'From Time')!.value : null,
+            to_time: updatedFilters.find(f => f.label === 'To Time') ? updatedFilters.find(f => f.label === 'To Time')!.value : null
         };
-
+    
+        // Применяем обновленные фильтры
         handleApplyFilters(newFilters);
     };
+    
 
 
     useEffect(() => {
@@ -664,8 +686,8 @@ const Leads: React.FC = () => {
         }
     };
 
-    const getStatusStyle = (funnel: any) => {
-        switch (funnel) {
+    const getStatusStyle = (behavior_type: any) => {
+        switch (behavior_type) {
             case 'visitor':
                 return {
                     background: 'rgba(235, 243, 254, 1)',
@@ -737,15 +759,9 @@ const Leads: React.FC = () => {
     };
 
     const handleDownload = async () => {
-        const selectedRowsArray = Array.from(selectedRows);
-        const requestBody = {
-            leads_ids: selectedRowsArray
-        };
         setLoading(true);
         try {
-            const response = await axiosInstance.post('/leads/download_leads', requestBody, {
-                responseType: 'blob'
-            });
+            const response = await axiosInstance.get('/leads/download_leads');
 
             if (response.status === 200) {
                 const url = window.URL.createObjectURL(new Blob([response.data]));
@@ -992,8 +1008,8 @@ const Leads: React.FC = () => {
                                     <Box
                                         sx={{
                                             position: 'absolute',
-                                            top: 3,
-                                            right: 10,
+                                            top: 6,
+                                            right: 8,
                                             width: '10px',
                                             height: '10px',
                                             backgroundColor: 'red',
@@ -1043,7 +1059,6 @@ const Leads: React.FC = () => {
                                     padding: '0',
                                     border: 'none',
                                     minWidth: 'auto',
-                                    opacity: selectedRows.size === 0 ? 0.4 : 1,
                                     '@media (min-width: 901px)': {
                                         display: 'none'
                                     }
@@ -1241,7 +1256,7 @@ const Leads: React.FC = () => {
                                                         { key: 'business_email', label: 'Email' },
                                                         { key: 'mobile_phone', label: 'Phone number' },
                                                         { key: 'first_visited_date', label: 'Visited date', sortable: true },
-                                                        { key: 'funnel', label: 'Visitor Type' },
+                                                        { key: 'behavior_type', label: 'Visitor Type' },
                                                         { key: 'time_spent', label: 'Time on site' },
                                                     ].map(({ key, label, sortable = true }) => (
                                                         <TableCell
@@ -1307,7 +1322,7 @@ const Leads: React.FC = () => {
                                                         <TableCell
                                                             sx={{ ...leadsStyles.table_array, position: 'relative' }}>{row.business_email || 'N/A'}</TableCell>
                                                         <TableCell
-                                                            sx={leadsStyles.table_array_phone}>{row.mobile_phone || 'N/A'}</TableCell>
+                                                            sx={leadsStyles.table_array_phone}>{row.mobile_phone?.split(',')[0] || 'N/A'}</TableCell>
                                                         <TableCell
                                                             sx={{ ...leadsStyles.table_array, position: 'relative' }}>{row.first_visited_date || 'N/A'}</TableCell>
                                                         <TableCell
@@ -1322,19 +1337,19 @@ const Leads: React.FC = () => {
                                                                     fontSize: '12px',
                                                                     fontWeight: '700',
                                                                     lineHeight: 'normal',
-                                                                    backgroundColor: getStatusStyle(row.funnel).background,
-                                                                    color: getStatusStyle(row.funnel).color,
+                                                                    backgroundColor: getStatusStyle(row.behavior_type).background,
+                                                                    color: getStatusStyle(row.behavior_type).color,
                                                                     justifyContent: 'center',
                                                                     minWidth: '130px',
                                                                     textTransform: 'capitalize'
                                                                 }}
                                                             >
-                                                                {formatFunnelText(row.funnel) || 'N/A'}
+                                                                {formatFunnelText(row.behavior_type) || 'N/A'}
                                                             </Box>
                                                         </TableCell>
 
                                                         <TableCell
-                                                            sx={leadsStyles.table_array}>{row.time_spent || 'N/A'}</TableCell>
+                                                            sx={leadsStyles.table_array}>{`${row.time_spent} sec` || 'N/A'}</TableCell>
                                                     </TableRow>
                                                 ))}
                                             </TableBody>

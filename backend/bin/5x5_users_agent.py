@@ -18,6 +18,7 @@ from models.five_x_five_phones import FiveXFivePhones
 from models.five_x_five_users_phones import FiveXFiveUsersPhones
 from models.five_x_five_emails import FiveXFiveEmails
 from models.five_x_five_names import FiveXFiveNames
+from models.state import States
 from models.five_x_five_users_emails import FiveXFiveUsersEmails
 from config.rmq_connection import RabbitMQConnection
 from sqlalchemy.dialects.postgresql import insert
@@ -92,20 +93,29 @@ def save_phones_to_user(session, phones, five_x_five_user_id, type):
 def save_city_and_state_to_user(session, personal_city, personal_state, five_x_five_user_id):
     city = convert_to_none(personal_city)
     state = convert_to_none(personal_state)
+    state_id = None
     if city is None and state is None:
         return False
     if city:
         city = convert_to_none(personal_city).lower()
     if state:
         state = convert_to_none(personal_state).lower()
-    location = session.query(FiveXFiveLocations).filter(FiveXFiveLocations.country == 'us',
+        state_id = session.query(States.id).filter(States.state_code == state).scalar()
+        if state_id is None:
+            state_data = States(
+            state_code=state,
+            )
+            session.add(state_data)
+            session.flush()
+            state_id = state_data.id
+    location = session.query(FiveXFiveLocations).filter(
                                                FiveXFiveLocations.city == city,
                                                FiveXFiveLocations.state_id == state).first()
     if not location:
         location = FiveXFiveLocations(
             country='us',
             city=city,
-            state=state,
+            state_id=state_id,
         )
         session.add(location)
         session.flush()

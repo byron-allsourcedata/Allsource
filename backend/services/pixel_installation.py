@@ -11,7 +11,7 @@ from models.subscriptions import UserSubscriptions
 from models.users import Users
 from models.users_domains import UserDomains
 from datetime import datetime, timedelta
-
+from utils import normalize_url
 from persistence.sendgrid_persistence import SendgridPersistence
 from services.sendgrid import SendgridHandler
 
@@ -87,6 +87,18 @@ class PixelInstallationService:
 
     def check_pixel_installed_via_parse(self, url, pixelClientId):
         result = {'success': False}
+        result_parser = self.parse_website(url, user)
+        if result_parser:
+            self.db.query(Users).filter(Users.id == user.get('id')).update(
+                {Users.company_website: url},
+                synchronize_session=False)
+            self.db.commit()
+            result['success'] = True
+        result['user_id'] = user.get('id')
+        return result
+    
+    def check_pixel_installed_via_api(self, pixelClientId, url):
+        result = {'success': False}
         domain = self.db.query(UserDomains).filter(UserDomains.data_provider_id == pixelClientId).first()
         if domain:
             is_pixel_installed = self.parse_website(url, domain)
@@ -98,15 +110,6 @@ class PixelInstallationService:
                 if user:
                     result['success'] = True
                     result['user_id'] = user.id
-        return result
-    
-    def check_pixel_installed_via_api(self, pixelClientId, url):
-        result = {'success': False}
-        domain = self.db.query(UserDomains).filter(UserDomains.data_provider_id == pixelClientId).first()
-        user = self.db.query(Users).filter(Users.id == domain.user_id).first()
-        if domain:
-            domain.is_pixel_installed = True
-            domain.domain = url
             self.db.commit()
             
             result['success'] = True
@@ -114,4 +117,6 @@ class PixelInstallationService:
         else:
             result['success'] = False
         return result
+    
+    
 

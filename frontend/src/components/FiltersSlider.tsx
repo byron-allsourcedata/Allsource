@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Drawer, Box, Typography, Button, IconButton, Backdrop, TextField, InputAdornment, Collapse, Divider, FormControlLabel, Checkbox, Radio } from '@mui/material';
+import React, { useEffect, useState } from 'react';
+import { Drawer, Box, Typography, Button, IconButton, Backdrop, TextField, InputAdornment, Collapse, Divider, FormControlLabel, Checkbox, Radio, List, ListItem, ListItemText } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import CloseIcon from '@mui/icons-material/Close';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
@@ -9,6 +9,8 @@ import { LocalizationProvider, DatePicker, TimePicker } from '@mui/x-date-picker
 import dayjs from 'dayjs';
 import Image from 'next/image';
 import { filterStyles } from '../css/filterSlider';
+import debounce from 'lodash/debounce';
+import axiosInstance from '@/axios/axiosInterceptorInstance';
 
 
 interface FilterPopupProps {
@@ -34,6 +36,8 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
   const [selectedTimeRange, setSelectedTimeRange] = useState<string | null>(
     null
   );
+  const [cities, setCities] = useState<{ city: string, state: string }[]>([]);
+  const [contacts, setContacts] = useState<{ name: string }[]>([]);
   const [selectedTags, setSelectedTags] = useState<{ [key: string]: string[] }>(
     {
       visitedDate: [],
@@ -52,7 +56,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
   // const [openLoadDrawer, setOpenLoadDrawer] = useState(false);
   const [filterName, setFilterName] = useState("");
   // const [isButtonDisabled, setIsButtonDisabled] = useState(true);
-  const [timeSelectionMethod, setTimeSelectionMethod] = useState<'radio' | 'timePicker' | null>(null);
+
 
   type SavedFilter = {
     name: string;
@@ -667,17 +671,83 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
       searchQuery, // Запрос для поиска
     };
 
+    saveFiltersToSessionStorage(filters);
+
+
     return filters;
   };
 
+
+  const saveFiltersToSessionStorage = (filters: {
+      from_date: number | null;
+      to_date: number | null;
+      from_time: string | null;
+      to_time: string | null;
+      selectedFunnels: string[]; button: string | null; 
+      checkedFiltersTime: { morning: boolean; evening: boolean; afternoon: boolean; all_day: boolean; };
+      checkedFiltersPageVisits: { page: boolean; two_page: boolean; three_page: boolean; more_three: boolean; }; 
+      regions: string[]; 
+      checkedFiltersTimeSpent: { under_10: boolean; over_10: boolean; over_30: boolean; over_60: boolean; }; 
+      selectedStatus: string[]; recurringVisits: string[];
+      searchQuery: string; dateRange?: { fromDate: number; toDate: number; } | undefined;
+    }) => {
+    sessionStorage.setItem('filters', JSON.stringify(filters));
+  };
+
+  const loadFiltersFromSessionStorage = () => {
+    const savedFilters = sessionStorage.getItem('filters');
+    if (savedFilters) {
+      return JSON.parse(savedFilters);
+    }
+    return null;
+  };
+
+  const initializeFilters = () => {
+    const savedFilters = loadFiltersFromSessionStorage();
+    if (savedFilters) {
+      setCheckedFiltersPageVisits(savedFilters.checkedFiltersPageVisits || {
+        page: false,
+        two_page: false,
+        three_page: false,
+        more_three: false,
+      });
+      setCheckedFiltersTime(savedFilters.checkedFiltersTime || {
+        morning: false,
+        afternoon: false,
+        evening: false,
+        all_day: false,
+      });
+      setCheckedFilters(savedFilters.checkedFilters || {
+        lastWeek: false,
+        last30Days: false,
+        last6Months: false,
+        allTime: false,
+      });
+      setCheckedFiltersTimeSpent(savedFilters.checkedFiltersTimeSpent || {
+        under_10: false,
+        over_10: false,
+        over_30: false,
+        over_60: false,
+      });
+      setRegions(savedFilters.regions || []);
+      setSelectedFunnels(savedFilters.selectedFunnels || []);
+      setSelectedStatus(savedFilters.selectedStatus || []);
+      setSelectedValues(savedFilters.recurringVisits || []);
+      setSearchQuery(savedFilters.searchQuery || '');
+      setButtonFilters(savedFilters.button)
+  };
+}
+  
+  useEffect(() => {
+    initializeFilters();
+  }, [open]);
+  
 
 
   const handleApply = () => {
     const filters = handleFilters();
     console.log(filters)
     onApply(filters);
-    setSelectedButton("");
-    setButtonFilters(null);
     onClose();
   };
 
@@ -957,6 +1027,60 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
     setSearchQuery("");
   };
 
+  const fetchCities = debounce(async (searchValue: string) => {
+    if (searchValue.length >= 3) {
+      try {
+        const response = await axiosInstance.get('leads/search-location', {
+          params: { start_letter: searchValue },
+        });
+        setCities(response.data);
+      } catch {
+      }
+    } else {
+      setCities([]);
+    }
+  }, 300);
+
+
+  const handleRegionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setRegions(value);
+    fetchCities(value);
+  };
+
+  const handleSelectCity = (city: { city: string, state: string }) => {
+    setTags((prevTags) => [...prevTags, `${city.city}-${city.state}`]);
+    setRegions('');
+    setCities([]);
+    setIsRegionOpen(false);
+  };
+
+
+  const fetchContacts = debounce(async (query: string) => {
+    if (query.length >= 3) {
+      try {
+        const response = await axiosInstance.get('/leads/search-contact', {
+          params: { start_letter: query },
+        });
+        const formattedContacts = response.data.map((contact: string) => ({ name: contact }));
+        setContacts(formattedContacts);
+      } catch {
+      }
+    } else {
+      setContacts([]);
+    }
+  }, 300);
+
+  const handleSearchQueryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchQuery(value);
+    fetchContacts(value);
+  };
+
+  const handleSelectContact = (contact: { name: string }) => {
+    setSearchQuery(contact.name);
+    setContacts([]);
+  };
 
   return (
     <>
@@ -1257,47 +1381,71 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
             pb: 2
           }}
         >
-          <TextField
-            placeholder="Search by name, emails, phone"
-            variant="outlined"
-            fullWidth
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <Button
-                    disabled={true}
-                    sx={{ textTransform: "none", textDecoration: "none", padding: 0, minWidth: 0, height: 'auto', width: 'auto' }}
-                  >
-                    <SearchIcon
-                      sx={{ color: "rgba(101, 101, 101, 1)" }}
-                      fontSize="medium"
-                    />
-                  </Button>
-                </InputAdornment>
-              ),
-              sx: {
-                fontFamily: 'Nunito',
-                fontSize: '0.95em',
-                fontWeight: 400,
-                lineHeight: '16.8px',
-                textAlign: 'left',
-                color: 'rgba(74, 74, 74, 1)',
-              },
-            }}
-            sx={{
-              padding: "1em 1em 0em 1em",
-              '& .MuiInputBase-input::placeholder': {
-                fontFamily: 'Nunito',
-                fontSize: '1em',
-                fontWeight: 400,
-                lineHeight: '16.8px',
-                textAlign: 'left',
-                color: 'rgba(74, 74, 74, 1)',
-              },
-            }}
-          />
+          <Box sx={{ display: 'flex', width: '100%', flexDirection: 'column' }}>
+            <TextField
+              placeholder="Search by name, emails, phone"
+              variant="outlined"
+              fullWidth
+              value={searchQuery}
+              onChange={handleSearchQueryChange}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Button
+                      disabled={true}
+                      sx={{ textTransform: "none", textDecoration: "none", padding: 0, minWidth: 0, height: 'auto', width: 'auto' }}
+                    >
+                      <SearchIcon
+                        sx={{ color: "rgba(101, 101, 101, 1)" }}
+                        fontSize="medium"
+                      />
+                    </Button>
+                  </InputAdornment>
+                ),
+                sx: {
+                  fontFamily: 'Nunito',
+                  fontSize: '0.95em',
+                  fontWeight: 400,
+                  lineHeight: '16.8px',
+                  textAlign: 'left',
+                  color: 'rgba(74, 74, 74, 1)',
+                },
+              }}
+              sx={{
+                padding: "1em 1em 0em 1em",
+                '& .MuiInputBase-input::placeholder': {
+                  fontFamily: 'Nunito',
+                  fontSize: '1em',
+                  fontWeight: 400,
+                  lineHeight: '16.8px',
+                  textAlign: 'left',
+                  color: 'rgba(74, 74, 74, 1)',
+                },
+              }}
+            />
+            <Box sx={{ paddingLeft: 2, paddingRight: 2, pt: '3px' }}>
+              {contacts?.length > 0 && (
+                <List sx={{ maxHeight: 200, overflow: 'auto', border: '1px solid #ccc', borderRadius: '4px', display: 'flex', flexDirection: 'column', padding: 0 }}>
+                  {contacts.map((contact, index) => (
+                    <ListItem button key={index} onClick={() => handleSelectContact(contact)} sx={{ pl: 1 }}>
+                      <ListItemText
+                        primaryTypographyProps={{
+                          sx: {
+                            fontFamily: 'Nunito',
+                            fontSize: '12px',
+                            fontWeight: 600,
+                            lineHeight: '16.8px',
+                            textAlign: 'left',
+                          },
+                        }}
+                        primary={`${contact.name}`}
+                      />
+                    </ListItem>
+                  ))}
+                </List>
+              )}
+            </Box>
+          </Box>
           <Box
             sx={{ display: "flex", flexWrap: "wrap", gap: "10px", p: "1em" }}
           >
@@ -1728,7 +1876,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
               </Box>
             </Collapse>
           </Box>
-          {/* Region */}
+          {/* Location */}
           <Box
             sx={filterStyles.main_filter_form}
           >
@@ -1776,19 +1924,28 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
               </IconButton>
             </Box>
             <Collapse in={isRegionOpen}>
-              <Divider sx={{ mb: 2 }} />
               <TextField
                 placeholder="Search by town, city or state.."
                 variant="outlined"
                 fullWidth
                 value={region}
-                onChange={(e) => setRegions(e.target.value)}
+                onChange={handleRegionChange}
                 onKeyDown={handleAddTag}
+                InputProps={{
+                  sx: {
+                    fontFamily: 'Nunito',
+                    fontSize: '0.95em',
+                    fontWeight: 400,
+                    lineHeight: '16.8px',
+                    textAlign: 'left',
+                    color: 'rgba(74, 74, 74, 1)',
+                  },
+                }}
                 sx={{
-                  mb: 2,
+                  mb: '3px',
                   '& .MuiInputBase-input::placeholder': {
                     fontFamily: 'Nunito',
-                    fontSize: '12px',
+                    fontSize: '14px',
                     fontWeight: 400,
                     lineHeight: '16.8px',
                     textAlign: 'left',
@@ -1796,6 +1953,22 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                   },
                 }}
               />
+              {cities.map((city, index) => (
+                <ListItem button key={index} onClick={() => handleSelectCity(city)}>
+                  <ListItemText
+                    primary={
+                      <span style={{ fontFamily: 'Nunito', fontSize: '12px', fontWeight: 600, lineHeight: '16.8px', textAlign: 'left', color: 'rgba(74, 74, 74, 1)' }}>
+                        {city.city},{' '}
+                        <span style={{ color: 'rgba(200, 202, 203, 1)' }}>
+                          {city.state}
+                        </span>
+                      </span>
+                    }
+                  />
+                </ListItem>
+              ))}
+
+
             </Collapse>
           </Box>
           {/* Page visits */}

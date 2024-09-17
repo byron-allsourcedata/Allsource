@@ -136,7 +136,6 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
         console.error('Error fetching credentials:', error);
       }
     };
-    
     fetchCredentials()
   }, [])
   const [isFocused, setIsFocused] = useState(false);
@@ -163,20 +162,21 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
   };
 
   const validateField = (
-    value: string,
+    value: string | undefined,
     type: "access_token" | "shop_domain"
   ): string => {
+    const stringValue = value ? value.trim() : "";
+
     switch (type) {
       case "access_token":
-        const access_token = value.trim();
-        return access_token ? "" : "Access Token is required";
+        return stringValue ? "" : "Access Token is required";
       case "shop_domain":
-        const shop_domain = value.trim();
-        return shop_domain ? "" : "Shop Domain is required";
+        return stringValue ? "" : "Shop Domain is required";
       default:
         return "";
     }
   };
+
 
   const handleSubmit = async () => {
     const newErrors = {
@@ -272,7 +272,7 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
                       marginTop: '1em',
                       padding: 0,
                       minWidth: 'auto',
-                      width: 'auto', 
+                      width: 'auto',
                     }}
                   >
                     <ArrowBackIcon sx={{ color: 'rgba(80, 82, 178, 1)', padding: 0 }} />
@@ -299,7 +299,10 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
                           variant="outlined"
                           placeholder='Enter your Shop Domain'
                           margin="normal"
-                          value={isFocused ? shop_domain.replace(/^https?:\/\//, "") : `https://${shop_domain.replace(/^https?:\/\//, "")}`}
+                          value={isFocused
+                            ? (shop_domain ? shop_domain.replace(/^https?:\/\//, "") : "")
+                            : (shop_domain ? `https://${shop_domain.replace(/^https?:\/\//, "")}` : "https://")
+                          }
                           sx={styles.formField}
                           onFocus={handleFocus}
                           onBlur={handleBlur}
@@ -340,7 +343,7 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
                         variant="contained"
                         sx={{
                           ...styles.submitButton,
-                          marginTop: 'auto', 
+                          marginTop: 'auto',
                           opacity: isFormValid() ? 1 : 0.6,
                           pointerEvents: isFormValid() ? "auto" : "none",
                           backgroundColor: isFormValid()
@@ -363,16 +366,16 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
                     <Box sx={{ flex: 1, overflowY: 'auto', paddingBottom: '2em', }}>
                       <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', padding: '1em 0em 0em 0em', justifyContent: 'start' }}>
                         <Image src='/1.svg' alt='1' width={28} height={28} />
-                        <Typography sx={{ ...maintext, textAlign: 'center', padding: '1em 0em 1em 1em', fontWeight: '500', '@media (max-width: 600px)': {textAlign: 'left'}  }}>Add our offical Maximiz pixel plugin to your Wordpress site.</Typography>
+                        <Typography sx={{ ...maintext, textAlign: 'center', padding: '1em 0em 1em 1em', fontWeight: '500', '@media (max-width: 600px)': { textAlign: 'left' } }}>Add our offical Maximiz pixel plugin to your Wordpress site.</Typography>
                       </Box>
                       <Box>
                         <Button component={Link} href="https://maximiz-data.s3.us-east-2.amazonaws.com/maximiz.zip" variant="outlined" sx={{ ml: 5, backgroundColor: 'rgba(80, 82, 178, 1)', color: 'rgba(255, 255, 255, 1)', textTransform: 'none', padding: '1em 2em', border: '1px solid rgba(80, 82, 178, 1)', '&:hover': { backgroundColor: 'rgba(80, 82, 178, 1)' } }}>
                           <Typography sx={{ fontFamily: 'Nunito', fontSize: '16px', fontWeight: '600', lineHeight: '22.4px', textAlign: 'left', textWrap: 'wrap' }}>Get plugin</Typography>
                         </Button>
                       </Box>
-                      <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', padding: '1em 0em 0em 0em', justifyContent: 'start', maxWidth: '100%', '@media (max-width: 600px)': {maxWidth: '95%'}  }}>
-                        <Box sx={{paddingBottom: 11.5}}>
-                        <Image src='/2.svg' alt='2' width={28} height={28}/>
+                      <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', padding: '1em 0em 0em 0em', justifyContent: 'start', maxWidth: '100%', '@media (max-width: 600px)': { maxWidth: '95%' } }}>
+                        <Box sx={{ paddingBottom: 11.5 }}>
+                          <Image src='/2.svg' alt='2' width={28} height={28} />
                         </Box>
                         <Typography
                           sx={{
@@ -417,7 +420,7 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
                               </code>
 
                             </Box>
-                            <Box sx={{display: 'flex', padding: '0px'}}>
+                            <Box sx={{ display: 'flex', padding: '0px' }}>
                               <IconButton
                                 onClick={handleCopyToClipboard}
                               >

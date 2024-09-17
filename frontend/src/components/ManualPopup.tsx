@@ -180,6 +180,7 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode }) => {
                     fontWeight: '500',
                     lineHeight: '21.82px',
                     textAlign: 'left',
+                    backgroundColor: 'rgba(255, 255, 255, 1)',
                     boxShadow: 'none',
                     outline: 'none',  
                     '&:focus': {
