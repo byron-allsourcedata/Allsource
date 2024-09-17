@@ -103,7 +103,7 @@ def process_user_data(table, index, five_x_five_user: FiveXFiveUser, session: Se
     is_first_request = False
     if not lead_user:
         is_first_request = True
-        lead_user = LeadUser(five_x_five_user_id=five_x_five_user.id, user_id=user.id)
+        lead_user = LeadUser(five_x_five_user_id=five_x_five_user.id, user_id=user.id, behavior_type=behavior_type)
         session.add(lead_user)
         session.flush()
         user_payment_transactions = UsersPaymentsTransactions(user_id=user.id, status='success', amount_credits=AMOUNT_CREDITS, type='lead', lead_id=lead_user.id, five_x_five_up_id=five_x_five_user.up_id)
