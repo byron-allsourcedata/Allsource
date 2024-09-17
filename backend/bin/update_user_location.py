@@ -14,6 +14,7 @@ from models.five_x_five_users_locations import FiveXFiveUsersLocations
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import sessionmaker
 from models.five_x_five_users import FiveXFiveUser
+from models.state import States
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -27,22 +28,31 @@ def convert_to_none(value):
 def save_city_and_state_to_user(session, personal_city, personal_state, five_x_five_user_id):
     city = convert_to_none(personal_city)
     state = convert_to_none(personal_state)
+    state_id = None
     if city is None and state is None:
         return False
     if city:
         city = city.lower()
     if state:
         state = state.lower()
+        state_id = session.query(States.id).filter(States.state_code == state).scalar()
+        if state_id is None:
+            state_data = States(
+            state_code=state
+            )
+            session.add(state_data)
+            session.flush()
+            state_id = state_data.id
     location = session.query(FiveXFiveLocations).filter(
         FiveXFiveLocations.country == 'us',
         FiveXFiveLocations.city == city,
-        FiveXFiveLocations.state == state
+        FiveXFiveLocations.state_id == state_id
     ).first()
     if not location:
         location = FiveXFiveLocations(
             country='us',
             city=city,
-            state=state
+            state_id=state_id
         )
         session.add(location)
         session.flush()
