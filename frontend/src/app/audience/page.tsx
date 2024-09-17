@@ -506,6 +506,7 @@ const Audience: React.FC = () => {
                 if (!value) {
                     return 'You need to write something!';
                 }
+                return null;
             },
             customClass: {
                 popup: 'animated-popup'
