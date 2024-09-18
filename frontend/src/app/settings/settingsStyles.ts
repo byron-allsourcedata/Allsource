@@ -34,11 +34,18 @@ export const planStyles: { [key: string]: SxProps<Theme> } = {
     marginTop: '2em'
   },
   title: {
-    fontFamily: 'Nunito',
-    fontSize: '40px',
-    marginBottom: '2em',
-    fontWeight: '700',
-    textAlign: 'center',
+    mb: 2,
+    fontWeight: '600',
+    fontSize: '16px',
+    whiteSpace: 'nowrap',
+    textAlign: 'start',
+    padding: '1.5rem 0rem 0',
+    lineHeight: '22px',
+    color: '#000',
+    fontFamily: 'Nunito Sans',
+    '@media (max-width: 1199px)': {
+      paddingTop: '1rem'
+    }
   },
   formContainer: {
     display: 'flex',
@@ -118,5 +125,116 @@ export const planStyles: { [key: string]: SxProps<Theme> } = {
       borderColor: 'rgba(244, 87, 69, 1)',
       color: 'rgba(255, 255, 255, 1)'
     },
+  },
+  buttonHeading: {
+        fontFamily: 'Nunito Sans',
+        fontSize: '14px',
+        color: '#4a4a4a',
+        fontWeight: '600',
+        textTransform: 'none',
+        padding: '0 10px 10px',
+        minWidth: 'auto',
+        boxShadow: 'none',
+        borderRadius: 0,
+        border: 'none',
+        background: 'none',
+        lineHeight: '20px',
+        '@media (max-width: 600px)': {
+            alignItems: 'flex-start',
+            p: 0,
+            whiteSpace: 'nowrap'
+        },
+        '&:hover': {
+          border: 'none',
+          background: 'none',
+        },
+        '&.MuiButton-contained': {
+            color: '#5052b2',
+            background: 'transparent',
+            borderBottom: '2px solid #5052b2',
+            fontWeight: '700',
+            '&:hover': {
+              boxShadow: 'none'
+            }
+        }
+  },
+  formField: {
+    margin: '0',
+},
+inputLabel: {
+    fontFamily: 'Nunito Sans',
+    fontSize: '12px',
+    lineHeight: '16px',
+    color: 'rgba(17, 17, 19, 0.60)',
+    '&.Mui-focused': {
+        color: '#0000FF',
+      },
+},
+formInput: {
+    '&.MuiFormControl-root': {
+        margin: 0,
+    },
+    '&.MuiOutlinedInput-root': {
+      height: '48px',
+      '& .MuiOutlinedInput-input': {
+        padding: '12px 16px 13px 16px',
+        fontFamily: 'Roboto',
+        color: '#202124',
+        fontSize: '14px',
+        lineHeight: '20px'
+      },
+      '& .MuiOutlinedInput-notchedOutline': {
+        borderColor: '#A3B0C2',
+      },
+      '&:hover .MuiOutlinedInput-notchedOutline': {
+        borderColor: '#A3B0C2',
+      },
+      '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+        borderColor: '#0000FF',
+      },
+    },
+    '&+.MuiFormHelperText-root': {
+        marginLeft: '0',
+    },
+  },
+  orDivider: {
+    display: 'flex',
+    alignItems: 'center',
+    margin: '0 -40px'
+  },
+  passwordValidationText: {
+    '& .MuiTypography-root' : {
+      fontFamily: 'Nunito',
+      fontSize: '12px',
+      fontWeight: '400',
+      color: 'rgba(17, 17, 19, 0.60)',
+    }
+  },
+  passwordValidationTextSuccess: {
+    '& .MuiTypography-root' : {
+      fontFamily: 'Nunito',
+      fontSize: '12px',
+      fontWeight: '400',
+      color: '#111113',
+    }
+  },
+  passwordContentList: {
+    display: 'flex',
+    padding: '0',
+    margin: '-24px 0 0'
+  },
+  passwordContentListItem: {
+    width: 'auto',
+    padding: '0 16px 0 0',
+    '@media (max-width: 440px)': {
+      padding: '0 8px 0 0',
+    },
+    '&:last-child' : {
+      padding: 0
+    }
+  },
+  passwordContentListItemIcon: {
+    minWidth: '0',
+    marginRight: '4px'
   },
 };
