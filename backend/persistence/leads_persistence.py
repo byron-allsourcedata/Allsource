@@ -113,7 +113,7 @@ class LeadsPersistence:
                 LeadsVisits.start_time.label('start_time'),
                 LeadsVisits.full_time_sec.label('time_on_site'),
                 recurring_visits_subquery.c.recurring_visits,
-                LeadUser.is_returning_visitor,
+                LeadUser.is_returning_visitor
             )
                 .join(LeadUser, LeadUser.five_x_five_user_id == FiveXFiveUser.id)
                 .join(FirstNameAlias, FirstNameAlias.id == FiveXFiveUser.first_name_id)
@@ -133,6 +133,7 @@ class LeadsPersistence:
                 LeadsVisits.start_date,
                 LeadsVisits.start_time,
                 LeadsVisits.full_time_sec,
+                LeadUser.is_returning_visitor,
                 recurring_visits_subquery.c.recurring_visits
             )
         )
