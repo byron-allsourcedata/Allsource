@@ -25,7 +25,7 @@ def convert_to_none(value):
     return value if value not in (None, '', 'None') else None
 
 
-def save_city_and_state_to_user(session, personal_city, personal_state, five_x_five_user_id):
+def save_city_and_state_to_user(session, personal_city, personal_state, five_x_five_user_id, states_dict):
     city = convert_to_none(personal_city)
     state = convert_to_none(personal_state)
     state_id = None
@@ -35,7 +35,7 @@ def save_city_and_state_to_user(session, personal_city, personal_state, five_x_f
         city = city.lower()
     if state:
         state = state.lower()
-        state_id = session.query(States.id).filter(States.state_code == state).scalar()
+        state_id = states_dict[state]
         if state_id is None:
             state_data = States(
             state_code=state
@@ -67,13 +67,15 @@ def save_city_and_state_to_user(session, personal_city, personal_state, five_x_f
 
 async def process_users(session, batch_size=1000):
     offset = 0
+    states = session.query(States).all()
+    states_dict = {state.state_code: state.id for state in states}
     while True:
-        users = session.query(FiveXFiveUser).offset(offset).limit(batch_size).all()
-        if not users:
+        five_x_five_users = session.query(FiveXFiveUser).offset(offset).limit(batch_size).all()
+        if not five_x_five_users:
             break
-        for user in users:
-            if user.personal_city and user.personal_state:
-                save_city_and_state_to_user(session, user.personal_city, user.personal_state, user.id)
+        for five_x_five_user in five_x_five_users:
+            if five_x_five_user.personal_city and five_x_five_user.personal_state:
+                save_city_and_state_to_user(session=session, personal_city=five_x_five_user.personal_city, personal_state=five_x_five_user.personal_state, five_x_five_user_id=five_x_five_user.id, states_dict=states_dict)
                 session.commit()
         offset += batch_size
 
