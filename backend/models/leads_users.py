@@ -5,6 +5,7 @@ class LeadUser(Base):
     __tablename__ = 'leads_users'
     id = Column(Integer, primary_key=True, nullable=False)
     domain_id = Column(Integer, nullable=False)
+    user_id = Column(Integer, nullable=False)
     five_x_five_user_id = Column(Integer, nullable=False)
     five_x_five_user_id = Column(Integer, nullable=True)
     klaviyo_user_id = Column(Integer, nullable=True)

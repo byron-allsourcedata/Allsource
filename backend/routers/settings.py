@@ -28,10 +28,15 @@ def change_teams(teams_details: TeamsDetailsRequest, settings_service: SettingsS
 
 @router.get("/billing")
 def get_billing(
+    settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authorization_without_pixel)):
+    return settings_service.get_billing(user=user)
+
+@router.get("/billing-history")
+def get_billing_history(
     page: int = Query(1, alias="page", ge=1, description="Page number"),
     per_page: int = Query(15, alias="per_page", ge=1, le=100, description="Items per page"),
     settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authorization_without_pixel)):
-    return settings_service.get_billing(page=page, per_page=per_page, user=user)
+    return settings_service.get_billing_history(page=page, per_page=per_page, user=user)
 
 @router.put("/billing")
 def change_billing(settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authorization_without_pixel)):

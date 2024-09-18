@@ -4,7 +4,6 @@ from datetime import datetime, timedelta
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
-from enums import StripePaymentStatusEnum
 from models.plans import SubscriptionPlan
 from models.subscription_transactions import SubscriptionTransactions
 from models.subscriptions import Subscription, UserSubscriptions
@@ -13,6 +12,7 @@ from models.users import Users, User
 from persistence.plans_persistence import PlansPersistence
 from persistence.user_persistence import UserPersistence
 from utils import get_utc_aware_date_for_postgres
+from .stripe_service import determine_plan_name_from_product_id
 
 ACTIVE_STATUSES = ["active", "trialing", "completed"]
 TRIAL_STUB_PLAN_ID = '1'
@@ -66,30 +66,6 @@ class SubscriptionService:
         )
         self.db.commit()
 
-    def save_payment_details_in_stripe(self, customer_id):
-        import stripe
-
-        try:
-            payment_method_id = (
-                stripe.PaymentMethod.list(
-                    customer=customer_id,
-                    type="card",
-                )
-                .data[0]
-                .get("id")
-            )
-
-            stripe.Customer.modify(
-                customer_id,
-                invoice_settings={"default_payment_method": payment_method_id},
-            )
-
-            return True
-        except Exception as e:
-
-            logger.info(f"Getting error while saving the info of default payment details {str(e)}")
-            return False
-
     def construct_webhook_response(self, subscription):
         response = {
             "success_msg": {
@@ -123,11 +99,6 @@ class SubscriptionService:
             else:
                 return True
         return False
-
-    def determine_plan_name_from_price(self, product_id):
-        import stripe
-        product = stripe.Product.retrieve(product_id)
-        return product.name
     
     def create_payments_transaction(self, user_id, stripe_payload):
         created_timestamp = stripe_payload.get("created")
@@ -159,7 +130,7 @@ class SubscriptionService:
         price = int(stripe_payload.get("data").get("object").get("plan").get("amount_decimal")) / 100
         price_id = stripe_payload.get("data").get("object").get("plan").get("id")
         status = stripe_payload.get("data").get("object").get("status")
-        plan_type = self.determine_plan_name_from_price(
+        plan_type = determine_plan_name_from_product_id(
             stripe_payload.get("data").get("object").get("plan").get("product"))
         payment_platform_subscription_id = stripe_payload.get("data").get("object").get("id")
         plan_name = f"{plan_type} at ${price}"
@@ -197,7 +168,7 @@ class SubscriptionService:
             status = "inactive"
         else:
             status = "canceled"
-        plan_type = self.determine_plan_name_from_price(
+        plan_type = determine_plan_name_from_product_id(
             stripe_payload.get("data").get("object").get("plan").get("product"))
         payment_platform_subscription_id = stripe_payload.get("data").get("object").get("id")
         plan_id = self.plans_persistence.get_plan_by_title(plan_type)
@@ -306,7 +277,7 @@ class SubscriptionService:
         else:
             status = "canceled"
 
-        plan_type = self.determine_plan_name_from_price(
+        plan_type = determine_plan_name_from_product_id(
             stripe_payload.get("data").get("object").get("plan").get("product"))
         plan_id = self.plans_persistence.get_plan_by_title(plan_type)
         domains_limit, users_limit, integrations_limit, leads_credits, prospect_credits = self.plans_persistence.get_plan_limit_by_id(

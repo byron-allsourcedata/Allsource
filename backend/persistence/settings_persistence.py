@@ -22,4 +22,4 @@ class SettingsPersistence:
             {Users.change_email_sent_at: send_message_expiration_time},
             synchronize_session=False)
         self.db.commit()
-
+        

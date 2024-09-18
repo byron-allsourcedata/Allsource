@@ -52,3 +52,14 @@ class PlansPersistence:
         price = self.db.query(SubscriptionPlan.price).filter(
             SubscriptionPlan.stripe_price_id == price_id).scalar()
         return price
+    
+    def get_current_plan(self, user_id):
+        subscription_plan = self.db.query(SubscriptionPlan).join(
+            UserSubscriptions,
+            UserSubscriptions.plan_id == SubscriptionPlan.id
+        ).filter(
+            UserSubscriptions.user_id == user_id
+        ).order_by(
+            UserSubscriptions.id.desc()
+        ).first()
+        return subscription_plan

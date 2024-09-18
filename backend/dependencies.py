@@ -79,7 +79,7 @@ def get_leads_persistence(db: Session = Depends(get_db)):
 def get_send_grid_persistence_service(db: Session = Depends(get_db)):
     return SendgridPersistence(db=db)
 
-def get_settings_persistence_service(db: Session = Depends(get_db)):
+def get_settings_persistence(db: Session = Depends(get_db)):
     return SettingsPersistence(db=db)
 
 
@@ -264,10 +264,13 @@ def get_pixel_installation_service(db: Session = Depends(get_db),
 
 
 def get_settings_service(db: Session = Depends(get_db),
-                                   settings_persistence_service: SettingsPersistence = Depends(
-                                       get_settings_persistence_service),
+                                   settings_persistence: SettingsPersistence = Depends(
+                                       get_settings_persistence),
+                                    plan_persistence: PlansPersistence = Depends(
+                                       get_plans_persistence
+                                       )
                                    ):
-    return SettingsService(db=db, settings_persistence_service=settings_persistence_service)
+    return SettingsService(db=db, settings_persistence=settings_persistence, plan_persistence=plan_persistence)
 
 
 def get_plans_service(user=Depends(check_user_authentication),

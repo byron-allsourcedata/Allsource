@@ -3,6 +3,7 @@ import os
 
 from persistence.settings_persistence import SettingsPersistence
 from models.users import User
+from persistence.plans_persistence import PlansPersistence
 from sqlalchemy.orm import Session
 from schemas.settings import AccountDetailsRequest
 logger = logging.getLogger(__name__)
@@ -12,14 +13,17 @@ from .sendgrid import SendgridHandler
 from enums import SettingStatus, SendgridTemplate
 from services.stripe_service import *
 
+OVERAGE_CONTACT = 1
+
 class SettingsService:
 
-    def __init__(self, db: Session, settings_persistence_service: SettingsPersistence,):
-        self.settings_persistence_service = settings_persistence_service
+    def __init__(self, db: Session, settings_persistence: SettingsPersistence, plan_persistence: PlansPersistence):
+        self.settings_persistence = settings_persistence
+        self.plan_persistence = plan_persistence
 
 
     def get_account_details(self, user):
-        user_info = self.settings_persistence_service.get_account_details(user.get('id'))
+        user_info = self.settings_persistence.get_account_details(user.get('id'))
         if user_info:
             return {
                 'full_name': user_info.full_name,
@@ -62,7 +66,7 @@ class SettingsService:
                     template_placeholder={"full_name": user.get('full_name'), "link": confirm_email_url,
                                             },
                 )
-                self.settings_persistence_service.set_reset_email_sent_now(user.get('id'))
+                self.settings_persistence.set_reset_email_sent_now(user.get('id'))
                 logger.info("Confirmation Email Sent")
             
         if account_details.change_password:
@@ -81,7 +85,7 @@ class SettingsService:
                 changes['company_website_visits'] = account_details.business_info.visits_to_website
 
         if changes:
-            self.settings_persistence_service.change_columns_data_by_userid(changes, user.get('id'))
+            self.settings_persistence.change_columns_data_by_userid(changes, user.get('id'))
 
         return SettingStatus.SUCCESS
     
@@ -90,11 +94,49 @@ class SettingsService:
         changes['email'] = email
 
         if changes:
-            self.settings_persistence_service.change_columns_data_by_userid(changes, user.get('id'))
+            self.settings_persistence.change_columns_data_by_userid(changes, user.get('id'))
+    
+    def timestamp_to_date(self, timestamp):
+        return datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d')
             
-    def get_billing(self, user: User, page, per_page):
-        card_details = get_card_details_by_customer_id(user.get('customer_id'))
-        # billing_details = self.get_billing_details_by_userid(user)
-        # usages_credits = self.get_usages_credits_by_userid(user)
-        # billing_history = self.get_billing_history_by_userid(user, page, per_page)
-        return card_details
+    def extract_subscription_details(self, customer_id):
+        subscription = get_billing_details_by_userid(customer_id)
+        plan = subscription['items']['data'][0]['plan']
+        subscription_details = {
+            'Billing Cycle': f"{plan['interval_count']} {plan['interval']}(s)",
+            'Plan Name': determine_plan_name_from_product_id(plan['product']),
+            'Domains': 'N/A',
+            'Prospect Credits': 'N/A',
+            'Overage': OVERAGE_CONTACT,
+            'Next Billing Date': self.timestamp_to_date(subscription['current_period_end']),
+            'Monthly Total': f"{plan['amount'] / 100:.2f} {plan['currency']}"
+        }
+        
+        return subscription_details
+            
+    def get_billing(self, user: dict):
+        result = {}
+        result['card_details'] = get_card_details_by_customer_id(user.get('customer_id'))
+        result['billing_details'] = self.extract_subscription_details(user.get('customer_id'))
+        result['usages_credits'] = {'leads_credits': user.get('leads_credits'),
+                          'plan_leads_credits': self.plan_persistence.get_current_plan(user_id=user.get('id')).leads_credits,
+                          'prospect_credits': user.get('prospect_credits')
+                          }
+        return result
+    
+    def extract_billing_history(self, customer_id, page, per_page):
+        result = []
+        billing_history = get_billing_history_by_userid(customer_id=customer_id, page=page, per_page=per_page)
+        for billing_data in billing_history:
+            billing_hash = {}
+            billing_hash['date'] = ''
+            billing_hash['invoice_id'] = ''
+            billing_hash['pricing_plan'] = ''
+            billing_hash['total'] = ''
+            billing_hash['status'] = ''
+           
+    
+    def get_billing_history(self, user: dict, page, per_page):
+        result = {}
+        result['billing_history'] = self.extract_billing_history(user.get('customer_id'), page, per_page)
+        return result
