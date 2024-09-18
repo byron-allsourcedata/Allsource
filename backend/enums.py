@@ -18,6 +18,7 @@ class SubscriptionStatus(Enum):
     PAST_DUE = "PAST_DUE"
     CANCELED = "CANCELED"
     UNKNOWN = "UNKNOWN"
+    NEED_UPGRADE_PLAN = 'NEED_UPGRADE_PLAN'
     
 class SettingStatus(Enum):
     SUCCESS = "SUCCESS"

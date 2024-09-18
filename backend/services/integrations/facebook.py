@@ -21,10 +21,10 @@ class FacebookIntegrations:
             raise HTTPException(status_code=400, detail='Getting Long Live Token failed')
         return response.json()
     
-    def __save_integration(self, short_live_access_token: str, ad_account_id: str, page_id: str, user_id: int):
+    def __save_integration(self, short_live_access_token: str, ad_account_id: str, page_id: str, domain_id: int):
         long_live_token = self.__get_longLiveToken(short_live_access_token)
         with self.integration_persistence as service: 
-            crendentials = {'user_id': user_id, 'service_name': 'Facebook', 
+            crendentials = {'domain_id': domain_id, 'service_name': 'Facebook', 
                             'access_token': long_live_token['access_token'],
                             'expires_in': long_live_token['expires_in'],
                             'ad_account_id': ad_account_id, 'page_id': page_id}

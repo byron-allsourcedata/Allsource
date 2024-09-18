@@ -13,6 +13,7 @@ from sqlalchemy.orm import sessionmaker
 from persistence.sendgrid_persistence import SendgridPersistence
 from services.pixel_installation import PixelInstallationService
 from models.users import Users
+from models.users_domains import UserDomains
 from dotenv import load_dotenv
 
 
@@ -28,18 +29,18 @@ async def check_and_update_pixel_installations(db_session):
         sendgrid_persistence_service = SendgridPersistence(db_session)
         pixel_service = PixelInstallationService(db_session, sendgrid_persistence_service)
 
-        users = db_session.query(Users).filter(Users.is_pixel_installed == False).all()
+        domains = db_session.query(UserDomains).filter(UserDomains.is_pixel_installed == False).all()
 
-        for user in users:
-            company_website = user.company_website
+        for domain in domains:
+            company_website = domain.domain
             if company_website:
-                result = pixel_service.check_pixel_installed_via_parse(company_website, user.__dict__)
+                result = pixel_service.check_pixel_installed_via_parse(company_website, domain.__dict__)
                 if result['success']:
-                    logger.info(f"Pixel confirmed for user {user.id}. Subscription updated.")
+                    logger.info(f"Pixel confirmed for user {domain.id}. Subscription updated.")
                 else:
-                    logger.info(f"Pixel not confirmed for user {user.id}.")
+                    logger.info(f"Pixel not confirmed for user {domain.id}.")
             else:
-                logger.info(f"User {user.id} has no company website.")
+                logger.info(f"User {domain.id} has no company website.")
 
     except Exception as e:
         logger.error(f"An error occurred: {e}")

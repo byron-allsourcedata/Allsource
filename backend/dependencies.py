@@ -214,19 +214,19 @@ def check_user_authentication(Authorization: Annotated[str, Header()],
     return user
 
 
-def get_cookie_domain(request: Request):
-    return request.cookies.get('current_domain')
-
-
 def get_user_domain_persistence(db: Session = Depends(get_db)) -> UserDomainsPersistence:
     return UserDomainsPersistence(db)
 
 
-def check_domain(user = Depends(check_user_authentication), domain: str = Depends(get_cookie_domain),
-                 domain_persistence: UserDomainsPersistence = Depends(get_user_domain_persistence)) -> UserDomains:
-    current_domain = domain_persistence.get_domain_by_user(user.get('id'), domain_substr=domain)
-    if not current_domain and len(current_domain) < 1:
-        raise HTTPException(status_code=404, detail='domain not found')
+def check_domain(
+    CurrentDomain: Annotated[str, Header()],
+    user=Depends(check_user_authentication), 
+    domain_persistence: UserDomainsPersistence = Depends(get_user_domain_persistence)
+) -> UserDomains:
+    current_domain = domain_persistence.get_domain_by_user(user.get('id'), domain_substr=CurrentDomain)
+
+    if not current_domain or len(current_domain) == 0:
+        raise HTTPException(status_code=404, detail={'status': "DOMAIN NOT FOUND"})
     return current_domain[0]
 
 

@@ -31,8 +31,9 @@ async def send_pixel_code_in_email(email_form: EmailFormRequest,
 
 @router.post("/check-pixel-installed-parse", response_model=PixelFormResponse)
 async def manual(pixel_installation_request: PixelInstallationRequest,
-                 pixel_installation_service: PixelInstallationService = Depends(get_pixel_installation_service), user: User = Depends(check_user_authentication)):
-    result = pixel_installation_service.check_pixel_installed_via_parse(pixel_installation_request.url, user)
+                 pixel_installation_service: PixelInstallationService = Depends(get_pixel_installation_service), 
+                 user: User = Depends(check_user_authentication), domain = Depends(check_domain)):
+    result = pixel_installation_service.check_pixel_installed_via_parse(pixel_installation_request.url, user, domain)
     if result['success']:
         status = PixelStatus.PIXEL_CODE_INSTALLED
     else:
