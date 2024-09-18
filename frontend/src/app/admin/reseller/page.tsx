@@ -8,7 +8,7 @@ import dynamic from 'next/dynamic'
 import React, { useState } from 'react'
 import { resellerStyle } from './resellerStyle'
 import PersonIcon from '@mui/icons-material/Person'
-import AccountButton from '@/components/AccountButton'
+import DomainButton from '@/components/DomainsButton'
 import TrialStatus from '../../../components/TrialLabel'
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -141,7 +141,7 @@ const Reseller: React.FC = () => {
           </Box>
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
         <TrialStatus />
-          <AccountButton />
+          <DomainButton />
           <Button
             aria-controls={open ? 'profile-menu' : undefined}
             aria-haspopup="true"

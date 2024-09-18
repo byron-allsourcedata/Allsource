@@ -299,5 +299,3 @@ class SubscriptionService:
         self.db.commit()
 
         return user_subscription
-    
-

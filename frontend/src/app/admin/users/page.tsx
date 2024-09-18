@@ -9,7 +9,7 @@ import {
 } from "@mui/material";
 import Image from "next/image";
 import PersonIcon from '@mui/icons-material/Person'
-import AccountButton from "@/components/AccountButton";
+import DomainButton from "@/components/DomainsButton";
 import dynamic from "next/dynamic"; 
 import { styled } from '@mui/material/styles';
 import axiosInstance from '../../../axios/axiosInterceptorInstance';
@@ -258,7 +258,7 @@ const Users: React.FC = () => {
                     </Link>
                 </Box>
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <AccountButton />
+                    <DomainButton />
                     <Button
                         aria-controls={open ? 'profile-menu' : undefined}
                         aria-haspopup="true"

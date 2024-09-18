@@ -36,7 +36,6 @@ class PlansPersistence:
 
     def get_free_trail_plan(self):
         return self.db.query(SubscriptionPlan).filter(SubscriptionPlan.is_free_trial == True).first()
-    
     def get_current_price(self, user_id):
         price = self.db.query(SubscriptionPlan.price).join(
             UserSubscriptions,
@@ -52,7 +51,7 @@ class PlansPersistence:
         price = self.db.query(SubscriptionPlan.price).filter(
             SubscriptionPlan.stripe_price_id == price_id).scalar()
         return price
-    
+
     def get_current_plan(self, user_id):
         subscription_plan = self.db.query(SubscriptionPlan).join(
             UserSubscriptions,
@@ -63,3 +62,6 @@ class PlansPersistence:
             UserSubscriptions.id.desc()
         ).first()
         return subscription_plan
+
+    def get_plan_info(self, user_id):
+            return self.db.query(UserSubscriptions).filter(UserSubscriptions.user_id == user_id).first()

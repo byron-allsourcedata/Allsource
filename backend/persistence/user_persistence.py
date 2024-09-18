@@ -1,7 +1,7 @@
 from datetime import datetime
 from sqlalchemy import func
 from sqlalchemy.orm import Session
-
+from models.users_domains import UserDomains
 from models.plans import SubscriptionPlan
 from models.users import Users
 from models.subscriptions import UserSubscriptions
@@ -52,6 +52,7 @@ class UserPersistence:
 
     def get_user_by_id(self, user_id):
         user = self.db.query(Users).filter(Users.id == user_id).first()
+        users_domain = self.db.query(UserDomains).filter(UserDomains.user_id == user.id, UserDomains.is_pixel_installed == True).first()
         result_user = None
         if user:
             result_user = {
@@ -76,8 +77,6 @@ class UserPersistence:
                 "verified_email_sent_at": user.verified_email_sent_at,
                 "is_book_call_passed": user.is_book_call_passed,
                 "stripe_payment_url": user.stripe_payment_url,
-                "data_provider_id": user.data_provider_id,
-                "is_pixel_installed": user.is_pixel_installed,
                 'role': user.role,
                 'calendly_uuid': user.calendly_uuid,
                 'calendly_invitee_uuid': user.calendly_invitee_uuid,
