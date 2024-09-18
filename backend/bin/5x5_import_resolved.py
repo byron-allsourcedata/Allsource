@@ -19,6 +19,7 @@ sys.path.append(parent_dir)
 
 from utils import normalize_url
 from models.leads_requests import LeadsRequests
+from models.users_domains import UserDomains
 from models.leads_users_added_to_cart import LeadsUsersAddedToCart
 from models.leads_users_ordered import LeadsUsersOrdered
 from models.leads_visits import LeadsVisits
@@ -68,9 +69,10 @@ def process_file(bucket, file_key, session):
 
 
 def process_table(table, session, file_key):
-    for i in range(len(table)):
+    for i in reversed(range(len(table))):
         up_id = table['UP_ID'][i]
-        if not up_id.is_valid and str(up_id) == 'None':
+        five_x_five_user = 1
+        if not up_id.is_valid:
             up_ids = session.query(FiveXFiveHems.up_id).filter(
                 FiveXFiveHems.sha256_lc_hem == str(table['SHA256_LOWER_CASE'][i])).all()
             if len(up_ids) != 1:
@@ -80,6 +82,7 @@ def process_table(table, session, file_key):
         if five_x_five_user:
             logging.info(f"UP_ID {up_id} found in table")
             process_user_data(table, i, five_x_five_user, session)
+            break
     update_last_processed_file(file_key)
 
 
@@ -88,7 +91,14 @@ def process_user_data(table, index, five_x_five_user: FiveXFiveUser, session: Se
     partner_uid_dict = json.loads(partner_uid_decoded)
     partner_uid_client_id = partner_uid_dict.get('client_id')
     page = partner_uid_dict.get('current_page')
-    user = session.query(Users).filter(Users.data_provider_id == str(partner_uid_client_id)).first()
+    result = session.query(Users, UserDomains.id) \
+                .join(UserDomains, UserDomains.user_id == Users.id) \
+                .filter(UserDomains.data_provider_id == str(partner_uid_client_id)) \
+                .first()
+    if not result:
+        logging.info(f"result not found with client_id {partner_uid_client_id}")
+        return
+    user, user_domain_id = result
     if not user:
         logging.info(f"User not found with client_id {partner_uid_client_id}")
         return
@@ -102,7 +112,7 @@ def process_user_data(table, index, five_x_five_user: FiveXFiveUser, session: Se
     is_first_request = False
     if not lead_user:
         is_first_request = True
-        lead_user = LeadUser(five_x_five_user_id=five_x_five_user.id, user_id=user.id)
+        lead_user = LeadUser(five_x_five_user_id=five_x_five_user.id, user_id=user.id, behavior_type=behavior_type, domain_id=user_domain_id)
         session.add(lead_user)
         session.flush()
         user_payment_transactions = UsersPaymentsTransactions(user_id=user.id, status='success', amount_credits=AMOUNT_CREDITS, type='lead', lead_id=lead_user.id, five_x_five_up_id=five_x_five_user.up_id)
@@ -121,21 +131,33 @@ def process_user_data(table, index, five_x_five_user: FiveXFiveUser, session: Se
     leads_requests = None
     if current_visit_request:
         visit_id = current_visit_request[0]
-        leads_requests = session.query(LeadsRequests).filter(
-        LeadsRequests.visit_id == visit_id).all()
-        lead_visits_id = leads_requests[0].visit_id
-        if first_visit_id == leads_requests[0].visit_id:
+        leads_result = session.query(LeadsRequests, LeadsVisits.id, LeadsVisits.behavior_type) \
+            .join(LeadsVisits, LeadsRequests.visit_id == LeadsVisits.id) \
+            .filter(LeadsRequests.visit_id == visit_id) \
+            .all()
+        leads_requests = [leads_request for leads_request, _, _ in leads_result]
+        lead_visit_id = leads_result[0][1]
+        lead_behavior_type = leads_result[0][2]
+        if first_visit_id == lead_visit_id:
             if lead_user.behavior_type in ('visitor', 'viewed_product') and behavior_type in (
             'viewed_product', 'product_added_to_cart') and lead_user.behavior_type != behavior_type:
                 session.query(LeadUser).filter(LeadUser.id == lead_user.id).update({
                     LeadUser.behavior_type: behavior_type
                 })
-                session.commit()
-        process_leads_requests(requested_at=requested_at, page=page, leads_requests=leads_requests, visit_id=visit_id, session=session, behavior_type=behavior_type)
+                session.flush()
+        if lead_behavior_type == 'visitor':
+            if behavior_type == 'viewed_product':
+                lead_behavior_type = behavior_type
+            elif behavior_type == 'product_added_to_cart':
+                lead_behavior_type = behavior_type
+        elif lead_behavior_type == 'viewed_product':
+            if behavior_type == 'product_added_to_cart':
+                lead_behavior_type = behavior_type
+        process_leads_requests(requested_at=requested_at, page=page, leads_requests=leads_requests, visit_id=visit_id, session=session, behavior_type=lead_behavior_type)
     else:
-        lead_visits_id = add_new_leads_visits(visited_datetime=requested_at, lead_id=lead_user.id, session=session, behavior_type=behavior_type).id
+        lead_visit_id = add_new_leads_visits(visited_datetime=requested_at, lead_id=lead_user.id, session=session, behavior_type=behavior_type).id
         if is_first_request == True:
-            lead_user.first_visit_id = lead_visits_id
+            lead_user.first_visit_id = lead_visit_id
             session.flush()
             lead_users = session.query(LeadUser).filter_by(user_id=user.id).limit(2).all()
             if len(lead_users) == 1:
@@ -177,7 +199,7 @@ def process_user_data(table, index, five_x_five_user: FiveXFiveUser, session: Se
             session.add(new_record)
     lead_request = insert(LeadsRequests).values(
         lead_id=lead_user.id,
-        page=page, requested_at=requested_at, visit_id=lead_visits_id
+        page=page, requested_at=requested_at, visit_id=lead_visit_id
     ).on_conflict_do_nothing()
     session.execute(lead_request)
     session.flush()
@@ -238,7 +260,6 @@ def add_new_leads_visits(visited_datetime, lead_id, session, behavior_type):
     date_page = visited_datetime + timedelta(seconds=10)
     end_date = date_page.date()
     end_time = date_page.time()
-
     leads_visits = LeadsVisits(
         start_date=start_date, start_time=start_time, end_date=end_date, end_time=end_time,
         pages_count=1, lead_id=lead_id, behavior_type=behavior_type

@@ -6,13 +6,13 @@ from persistence.leads_persistence import LeadsPersistence
 
 
 class LeadsService:
-    def __init__(self, leads_persistence_service: LeadsPersistence, user):
+    def __init__(self, leads_persistence_service: LeadsPersistence, domain):
         self.leads_persistence_service = leads_persistence_service
-        self.user = user
+        self.domain = domain
 
     def get_leads(self, page, per_page, from_date, to_date, regions, page_visits, average_time_spent,
                   recurring_visits, sort_by, sort_order, search_query,from_time, to_time, behavior_type, status):
-        leads, count, max_page = self.leads_persistence_service.filter_leads(user_id=self.user.get('id'), page=page, per_page=per_page,
+        leads, count, max_page = self.leads_persistence_service.filter_leads(domain_id=self.domain.id, page=page, per_page=per_page,
                                                                              from_date=from_date, to_date=to_date,
                                                                              regions=regions, page_visits=page_visits, average_time_spent=average_time_spent,
                                                                              behavior_type=behavior_type, recurring_visits=recurring_visits,
@@ -88,10 +88,11 @@ class LeadsService:
     ]   
         return leads_list, count, max_page
 
-    def download_leads(self, leads_ids):
+    def download_leads(self, leads_ids = 0):
         if len(leads_ids) == 0:
-            return None
-        leads_data = self.leads_persistence_service.get_full_user_leads_by_ids(self.user.get('id'), leads_ids)
+            leads_data = self.leads_persistence_service.get_full_user_leads(self.domain.id)
+        else:
+            leads_data = self.leads_persistence_service.get_full_user_leads_by_ids(self.domain.id, leads_ids)
         if len(leads_data) == 0:
             return None
         output = io.StringIO()
@@ -151,3 +152,36 @@ class LeadsService:
             'count_leads': count_leads,
             'max_page': max_page,
         }
+        
+    def search_contact(self, start_letter):
+        start_letter = start_letter.replace('+', '').strip().lower()
+        if start_letter.split()[0].isdecimal():
+            start_letter = start_letter.replace(' ', '')
+        leads_data = self.leads_persistence_service.search_contact(start_letter=start_letter, domain_id=self.domain.id)
+        results = set()
+        for lead in leads_data:
+            if start_letter.isdecimal():
+                results.add(lead.number)
+            else:
+                if start_letter in (f"{lead.first_name} {lead.last_name}").lower():
+                    results.add(f"{lead.first_name} {lead.last_name}")
+                if start_letter in (lead.email).lower():
+                    results.add(lead.email)
+        limited_results = list(results)[:10]
+        return limited_results
+        
+    def search_location(self, start_letter):
+        location_data = self.leads_persistence_service.search_location(start_letter=start_letter, dommain_id=self.domain.id)
+        results_set = set()
+
+        for location in location_data:
+            results_hash = {
+                'city': location[0],
+                'state': location[1]
+            }
+            
+            results_set.add(frozenset(results_hash.items()))
+        results = [dict(item) for item in results_set]
+        limited_results = list(results)[:10]
+        return limited_results
+

@@ -23,7 +23,7 @@ class ServiceIntegrationsPersistence(IntegrationPersistenceABC):
         existing_lead_user = (
             self.session.query(LeadUser)
             .join(FiveXFiveUser, FiveXFiveUser.id == LeadUser.five_x_five_user_id)
-            .filter(FiveXFiveUser.business_email == customer['email'], LeadUser.user_id == user_id)
+            .filter(FiveXFiveUser.business_email == customer['email'], LeadUser.domain_id == user_id)
             .first()
         )
 

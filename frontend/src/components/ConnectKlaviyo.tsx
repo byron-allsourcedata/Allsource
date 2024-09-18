@@ -736,7 +736,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                                         fontWeight: '400',
                                         color: '#4a4a4a',
                                         lineHeight: '16px'
-                                    }}>By performing this action, all your Klaviyo contacts will be added to your Grow suppression list, and new contacts will be imported daily around 6pm EST."</Typography>
+                                    }}>By performing this action, all your Klaviyo contacts will be added to your Grow suppression list, and new contacts will be imported daily around 6pm EST.</Typography>
                                 </Box>
                             </Box>
                             <Box sx={{p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)', display: 'flex', flexDirection:'column', gap: '16px'}}>

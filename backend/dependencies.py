@@ -8,7 +8,7 @@ from config.auth import AuthConfig
 from config.database import SessionLocal
 from sqlalchemy.orm import Session
 from typing_extensions import Annotated
-from fastapi import Depends, Header, HTTPException, status
+from fastapi import Depends, Header, HTTPException, status, Request
 from enums import UserAuthorizationStatus
 from exceptions import InvalidToken
 from persistence.audience_persistence import AudiencePersistence
@@ -42,6 +42,7 @@ from services.dashboard import DashboardService
 from services.company_info import CompanyInfoService
 from services.audience import AudienceService
 from services.admin_customers import AdminCustomersService
+from services.domains import UserDomainsService
 from schemas.auth_token import Token
 from persistence.user_persistence import UserPersistence
 from persistence.sendgrid_persistence import SendgridPersistence
@@ -51,6 +52,7 @@ from persistence.integrations.integrations_persistence import IntegrationsPresis
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.audience_persistence import AudiencePersistence
 from persistence.leads_order_persistence import LeadOrdersPersistence
+from persistence.domains import UserDomainsPersistence, UserDomains
 from models.users import Users as User
 from exceptions import InvalidToken
 from enums import UserAuthorizationStatus
@@ -137,8 +139,6 @@ def get_user_authorization_status_without_pixel(user, subscription_service):
 
 def get_user_authorization_status(user, subscription_service):
     status = get_user_authorization_status_without_pixel(user, subscription_service)
-    if status == UserAuthorizationStatus.SUCCESS and not user.get('is_pixel_installed'):
-        return UserAuthorizationStatus.PIXEL_INSTALLATION_NEEDED
     return status
 
 
@@ -214,6 +214,33 @@ def check_user_authentication(Authorization: Annotated[str, Header()],
     return user
 
 
+def get_cookie_domain(request: Request):
+    return request.cookies.get('current_domain')
+
+
+def get_user_domain_persistence(db: Session = Depends(get_db)) -> UserDomainsPersistence:
+    return UserDomainsPersistence(db)
+
+
+def check_domain(user = Depends(check_user_authentication), domain: str = Depends(get_cookie_domain),
+                 domain_persistence: UserDomainsPersistence = Depends(get_user_domain_persistence)) -> UserDomains:
+    current_domain = domain_persistence.get_domain_by_user(user.get('id'), domain_substr=domain)
+    if not current_domain and len(current_domain) < 1:
+        raise HTTPException(status_code=404, detail='domain not found')
+    return current_domain[0]
+
+
+def check_pixel_install_domain(domain: UserDomains = Depends(check_domain)):
+    if not domain.is_pixel_installed:
+        raise HTTPException(status_code=403, detail={'status': UserAuthorizationStatus.PIXEL_INSTALLATION_NEEDED.value})
+    else: return domain
+
+
+def get_domain_service(user_domain_persistence: UserDomainsPersistence = Depends(get_user_domain_persistence), 
+                       plan_persistence: PlansPersistence = Depends(get_plans_persistence)):
+    return UserDomainsService(user_domain_persistence, plan_persistence)
+
+
 def get_payments_plans_service(db: Session = Depends(get_db),
                                subscription_service: SubscriptionService = Depends(get_subscription_service),
                                user_persistence_service: UserPersistence = Depends(get_user_persistence_service)):
@@ -233,13 +260,15 @@ def get_users_auth_service(db: Session = Depends(get_db),
 
 
 def get_users_service(user=Depends(check_user_authentication),
+                      domain=Depends(check_domain),
                       user_persistence_service: UserPersistence = Depends(get_user_persistence_service)):
-    return UsersService(user=user, user_persistence_service=user_persistence_service)
+    return UsersService(user=user, domain=domain, user_persistence_service=user_persistence_service)
 
 
-def get_leads_service(user: User = Depends(check_user_authorization),
+def get_leads_service(user = Depends(check_user_authorization),
+                      domain: UserDomains = Depends(check_pixel_install_domain),
                       leads_persistence_service: LeadsPersistence = Depends(get_leads_persistence)):
-    return LeadsService(user=user, leads_persistence_service=leads_persistence_service)
+    return LeadsService(domain=domain, leads_persistence_service=leads_persistence_service)
 
 
 def get_audience_service(user: User = Depends(check_user_authorization),
@@ -251,7 +280,7 @@ def get_sse_events_service(user_persistence_service: UserPersistence = Depends(g
     return SseEventsService(user_persistence_service=user_persistence_service)
 
 
-def get_dashboard_service(user: User = Depends(check_user_authorization)):
+def get_dashboard_service(user= Depends(check_user_authorization), data = Depends(check_pixel_install_domain)):
     return DashboardService(user=user)
 
 
@@ -353,3 +382,5 @@ def get_integration_service(db: Session = Depends(get_db),
                               lead_orders_persistence,
                               integrations_user_sync_persistence,
                               aws_service)
+
+

@@ -5,6 +5,7 @@ from config.stripe import StripeConfig
 from services.plans import PlansService
 from enums import SubscriptionStatus
 
+stripe.api_key = StripeConfig.api_key
 logger = logging.getLogger(__name__)
 
 

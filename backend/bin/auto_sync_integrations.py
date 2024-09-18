@@ -33,6 +33,6 @@ if __name__ == '__main__':
                     users_sync = integ_service.get_sync_users()
                     for user in users_sync:
                         service = getattr(integ_service, platform.service_name)
-                        service.sync(user.user_id)
+                        service.sync(user.domain_id)
                 except Exception as e: logging.info(e) 
             time.sleep(60*60)

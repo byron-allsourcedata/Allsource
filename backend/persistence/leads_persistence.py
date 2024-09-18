@@ -16,6 +16,7 @@ from models.five_x_five_users import FiveXFiveUser
 from models.leads_visits import LeadsVisits
 from models.five_x_five_users_emails import FiveXFiveUsersEmails
 from models.five_x_five_names import FiveXFiveNames
+from models.state import States
 from models.five_x_five_emails import FiveXFiveEmails
 from models.five_x_five_users_phones import FiveXFiveUsersPhones
 from models.five_x_five_phones import FiveXFivePhones
@@ -34,7 +35,7 @@ class LeadsPersistence:
     def __init__(self, db: Session):
         self.db = db
 
-    def filter_leads(self, user_id, page, per_page, from_date, to_date, from_time, to_time, regions, page_visits, average_time_spent,
+    def filter_leads(self, domain_id, page, per_page, from_date, to_date, from_time, to_time, regions, page_visits, average_time_spent,
                      behavior_type, recurring_visits, sort_by, sort_order, search_query, status):
         FirstNameAlias = aliased(FiveXFiveNames)
         LastNameAlias = aliased(FiveXFiveNames)
@@ -106,7 +107,7 @@ class LeadsPersistence:
                 FiveXFiveUser.professional_zip,
                 FiveXFiveUser.company_zip,
                 LeadUser.behavior_type,
-                FiveXFiveLocations.state,
+                FiveXFiveLocations.state_id,
                 FiveXFiveLocations.city,
                 LeadsVisits.start_date.label('start_date'),
                 LeadsVisits.start_time.label('start_time'),
@@ -119,12 +120,13 @@ class LeadsPersistence:
             .join(LeadsVisits, LeadsVisits.id == LeadUser.first_visit_id)
             .outerjoin(FiveXFiveUsersLocations, FiveXFiveUsersLocations.five_x_five_user_id == FiveXFiveUser.id)
             .outerjoin(FiveXFiveLocations, FiveXFiveLocations.id == FiveXFiveUsersLocations.location_id)
+            .outerjoin(States, States.id == FiveXFiveLocations.state_id)
             .outerjoin(recurring_visits_subquery, recurring_visits_subquery.c.lead_id == LeadUser.id) 
-            .filter(LeadUser.user_id == user_id)
+            .filter(LeadUser.domain_id == domain_id)
             .group_by(
                 FiveXFiveUser.id,
                 LeadUser.behavior_type,
-                FiveXFiveLocations.state,
+                FiveXFiveLocations.state_id,
                 FiveXFiveLocations.city,
                 LeadsVisits.start_date,
                 LeadsVisits.start_time,
@@ -138,7 +140,7 @@ class LeadsPersistence:
             'mobile_phone': FiveXFiveUser.mobile_phone,
             'gender': FiveXFiveUser.gender,
             'first_visited_date': LeadsVisits.start_date,
-            'state': FiveXFiveLocations.state,
+            'state': FiveXFiveLocations.state_id,
             'city': FiveXFiveLocations.city,
             'age': FiveXFiveUser.age_min,
             'time_spent': LeadsVisits.full_time_sec,
@@ -207,9 +209,14 @@ class LeadsPersistence:
                      filters.append(recurring_visits_subquery.c.recurring_visits == recurring_visit)
             query = query.filter(or_(*filters))
         if regions:
+            filters = []
             region_list = regions.split(',')
-            region_filters = [FiveXFiveLocations.city.ilike(f'%{region.strip()}%') for region in region_list]
-            query = query.filter(or_(*region_filters))
+            for region_data in region_list:
+                region_data = region_data.split('-')
+                filters.append(FiveXFiveLocations.city.ilike(f'{region_data[0]}%'))
+                if region_data[1]:
+                    filters.append(States.state_name.ilike(f'{region_data[1]}%'))
+                query = query.filter(or_(*filters))
 
         if behavior_type:
             behavior_type_list = behavior_type.split(',')
@@ -251,15 +258,26 @@ class LeadsPersistence:
             .outerjoin(FiveXFiveUsersPhones, FiveXFiveUsersPhones.user_id == FiveXFiveUser.id)
             .outerjoin(FiveXFivePhones, FiveXFivePhones.id == FiveXFiveUsersPhones.phone_id)
             )
-
-            search_conditions = or_(
-                FirstNameAlias.name.ilike(f'{search_query}%'),
-                LastNameAlias.name.ilike(f'{search_query}%'),
+            
+            filters = [
                 FiveXFiveEmails.email.ilike(f'{search_query}%'),
                 FiveXFiveEmails.email_host.ilike(f'{search_query}%'),
-                FiveXFivePhones.number.ilike(f'{search_query}%'),
-            )
-            query = query.filter(search_conditions)
+                FiveXFivePhones.number.ilike(f'{search_query}%')
+            ]
+            search_query = search_query.split()
+            if len(search_query) == 1:
+                filters.extend([
+                    FirstNameAlias.name.ilike(f'{search_query[0].strip()}%'),
+                    LastNameAlias.name.ilike(f'{search_query[0].strip()}%')
+                ])
+            elif len(search_query) == 2:
+                name_filter = and_(
+                    FirstNameAlias.name.ilike(f'{search_query[0].strip()}%'),
+                    LastNameAlias.name.ilike(f'{search_query[1].strip()}%')
+                )
+                filters.append(name_filter)
+            
+            query = query.filter(or_(*filters))
 
         offset = (page - 1) * per_page
         leads = query.limit(per_page).offset(offset).all()
@@ -270,19 +288,30 @@ class LeadsPersistence:
     def get_lead_data(self, lead_id):
         lead = self.db.query(FiveXFiveUser).filter(FiveXFiveUser.id == lead_id).first()
 
-    def get_ids_user_leads_ids(self, user_id, leads_ids):
-        lead_users = self.db.query(LeadUser).filter(LeadUser.user_id == user_id,
+    def get_ids_user_leads_ids(self, domain_id, leads_ids):
+        lead_users = self.db.query(LeadUser).filter(LeadUser.domain_id == domain_id,
                                                     LeadUser.lead_id.in_(leads_ids)).all()
         lead_ids_set = {lead_user.lead_id for lead_user in lead_users}
         return lead_ids_set
 
-    def get_full_user_leads_by_ids(self, user_id, leads_ids):
+    def get_full_user_leads_by_ids(self, dommain_id, leads_ids):
         lead_users = (
             self.db.query(FiveXFiveUser)
             .join(LeadUser, LeadUser.five_x_five_user_id == FiveXFiveUser.id)
             .filter(
-                LeadUser.user_id == user_id,
+                LeadUser.domain_id == dommain_id,
                 FiveXFiveUser.id.in_(leads_ids)
+            )
+            .all()
+        )
+        return lead_users
+    
+    def get_full_user_leads(self, domain_id):
+        lead_users = (
+            self.db.query(FiveXFiveUser)
+            .join(LeadUser, LeadUser.five_x_five_user_id == FiveXFiveUser.id)
+            .filter(
+                LeadUser.domain_id == domain_id
             )
             .all()
         )
@@ -336,7 +365,7 @@ class LeadsPersistence:
                 Lead.age_min,
                 Lead.age_max,
                 Lead.job_title,
-                FiveXFiveLocations.state,
+                FiveXFiveLocations.state_id,
                 FiveXFiveLocations.city,
             )
             .join(FiveXFiveUsersLocations, FiveXFiveUsersLocations.five_x_five_user_id == Lead.id)
@@ -385,11 +414,82 @@ class LeadsPersistence:
         return leads_data, count, max_page
     
     def get_leads_users_by_lead_id(self, lead_id: int, user_id: int) -> LeadUser:
-        return self.db.query(LeadUser).filter(LeadUser.five_x_five_user_id == lead_id, LeadUser.user_id == user_id).first()
+        return self.db.query(LeadUser).filter(LeadUser.five_x_five_user_id == lead_id, LeadUser.domain_id == user_id).first()
     
     def get_leads_user_filter_by_email(self, user_id: int, email: str):
-        return self.db.query(LeadUser).join(FiveXFiveUser, FiveXFiveUser.id == LeadUser.five_x_five_user_id).filter(LeadUser.user_id == user_id, 
+        return self.db.query(LeadUser).join(FiveXFiveUser, FiveXFiveUser.id == LeadUser.five_x_five_user_id).filter(LeadUser.domain_id == user_id, 
                                                                                          FiveXFiveUser.business_email == email).all()
 
-    def get_leads_user(self, user_id: int, **filter_by):
-        return self.db.query(LeadUser).filter_by(**filter_by)
+    def get_leads_user(self, domain_id: int, **filter_by):
+        return self.db.query(LeadUser).filter_by(domain_id=domain_id**filter_by)
+    
+    
+    def search_contact(self, start_letter, domain_id):
+        letters = start_letter.split()
+        FirstNameAlias = aliased(FiveXFiveNames)
+        LastNameAlias = aliased(FiveXFiveNames)
+
+        query = (
+            self.db.query(
+                FiveXFiveUser.first_name,
+                FiveXFiveUser.last_name,
+                FiveXFiveEmails.email,
+                FiveXFivePhones.number
+            )
+            .join(LeadUser, LeadUser.five_x_five_user_id == FiveXFiveUser.id)
+            .join(FirstNameAlias, FirstNameAlias.id == FiveXFiveUser.first_name_id)
+            .join(LastNameAlias, LastNameAlias.id == FiveXFiveUser.last_name_id)
+            .outerjoin(FiveXFiveUsersEmails, FiveXFiveUsersEmails.user_id == FiveXFiveUser.id)
+            .outerjoin(FiveXFiveEmails, FiveXFiveEmails.id == FiveXFiveUsersEmails.email_id)
+            .outerjoin(FiveXFiveUsersPhones, FiveXFiveUsersPhones.user_id == FiveXFiveUser.id)
+            .outerjoin(FiveXFivePhones, FiveXFivePhones.id == FiveXFiveUsersPhones.phone_id)
+            .filter(
+                LeadUser.domain_id == domain_id,
+            ).group_by(FiveXFiveUser.first_name, FiveXFiveUser.last_name, FiveXFiveEmails.email, FiveXFivePhones.number, LeadUser.five_x_five_user_id)
+        )
+        email_host = start_letter.split('@')
+        if len(email_host) == 2:
+            email_host = email_host[1]
+        filters = [
+            FiveXFiveEmails.email.ilike(f'{start_letter}%'),
+            FiveXFiveEmails.email_host.ilike(f'{email_host}%'),
+            FiveXFivePhones.number.ilike(f'{start_letter}%')
+        ]
+        if len(letters) == 1:
+            filters.extend([
+                FirstNameAlias.name.ilike(f'{letters[0].strip()}%'),
+                LastNameAlias.name.ilike(f'{letters[0].strip()}%')
+            ])
+        elif len(letters) == 2:
+            name_filter = and_(
+                FirstNameAlias.name.ilike(f'{letters[0].strip()}%'),
+                LastNameAlias.name.ilike(f'{letters[1].strip()}%')
+            )
+            filters.append(name_filter)
+        query = query.filter(or_(*filters))
+        leads = query.all()
+        return leads
+
+
+        
+    def search_location(self, start_letter, dommain_id):
+        query = (
+            self.db.query(
+                FiveXFiveLocations.city,
+                States.state_name
+            )
+            .join(FiveXFiveUsersLocations, FiveXFiveUsersLocations.location_id == FiveXFiveLocations.id)
+            .join(LeadUser, LeadUser.five_x_five_user_id == FiveXFiveUsersLocations.five_x_five_user_id)
+            .outerjoin(States, States.id == FiveXFiveLocations.state_id)
+            .filter(
+                LeadUser.domain_id == dommain_id,
+                or_(
+                    FiveXFiveLocations.city.ilike(f'{start_letter}%'),
+                    States.state_name.ilike(f'{start_letter}%')
+                )
+            )
+            .group_by(FiveXFiveLocations.id, States.state_name)
+            .limit(10)
+        )
+        locations = query.all()
+        return locations
