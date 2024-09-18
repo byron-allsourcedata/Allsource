@@ -80,7 +80,9 @@ class UserPersistence:
                 'role': user.role,
                 'calendly_uuid': user.calendly_uuid,
                 'calendly_invitee_uuid': user.calendly_invitee_uuid,
-                'activate_steps_percent': user.activate_steps_percent
+                'activate_steps_percent': user.activate_steps_percent,
+                'leads_credits': user.leads_credits,
+                'prospect_credits': user.prospect_credits
             }
         self.db.rollback()
         return result_user

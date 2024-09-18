@@ -3,8 +3,7 @@ import logging
 import os
 import sys
 
-from sqlalchemy import create_engine
-
+from sqlalchemy import create_engine,and_,func
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
@@ -65,19 +64,33 @@ def save_city_and_state_to_user(session, personal_city, personal_state, five_x_f
     session.flush()
 
 
-async def process_users(session, batch_size=1000):
-    offset = 0
+async def process_users(session):
     states = session.query(States).all()
     states_dict = {state.state_code: state.id for state in states}
-    while True:
-        five_x_five_users = session.query(FiveXFiveUser).offset(offset).limit(batch_size).all()
-        if not five_x_five_users:
-            break
+    min_id = session.query(func.min(FiveXFiveUser.id)).scalar()
+    max_id = session.query(func.max(FiveXFiveUser.id)).scalar()   
+    current_id = min_id - 1
+    
+    while current_id < max_id:
+        five_x_five_users = session.query(FiveXFiveUser).filter(
+            and_(
+                FiveXFiveUser.id > current_id,
+                FiveXFiveUser.id <= current_id + 1000
+            )
+        ).all()        
         for five_x_five_user in five_x_five_users:
             if five_x_five_user.personal_city and five_x_five_user.personal_state:
-                save_city_and_state_to_user(session=session, personal_city=five_x_five_user.personal_city, personal_state=five_x_five_user.personal_state, five_x_five_user_id=five_x_five_user.id, states_dict=states_dict)
+                save_city_and_state_to_user(
+                    session=session,
+                    personal_city=five_x_five_user.personal_city,
+                    personal_state=five_x_five_user.personal_state,
+                    five_x_five_user_id=five_x_five_user.id,
+                    states_dict=states_dict
+                )
                 session.commit()
-        offset += batch_size
+        
+        current_id += 1000
+
 
 
 async def main():
