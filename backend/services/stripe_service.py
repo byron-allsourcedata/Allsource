@@ -33,6 +33,7 @@ def get_card_details_by_customer_id(customer_id):
     card_details = []
     for pm in payment_methods.auto_paging_iter():
         card_info = {
+            'id': pm.id,
             'last4': pm.card.last4,
             'brand': pm.card.brand,
             'exp_month': pm.card.exp_month,
@@ -49,12 +50,43 @@ def add_card_to_customer(customer_id, payment_method_id):
         )
         
         return {
-            'status': 'success',
+            'status': 'SUCCESS',
             'message': 'Card successfully added'
         }
     except stripe.error.StripeError as e:
         return {
-            'status': 'error',
+            'status': 'ERROR',
+            'message': e.user_message
+        }
+        
+def detach_card_from_customer(payment_method_id):
+    try:
+        stripe.PaymentMethod.detach(payment_method_id)
+        return {
+            'status': 'SUCCESS',
+            'message': 'Card successfully removed'
+        }
+    except stripe.error.StripeError as e:
+        return {
+            'status': 'ERROR',
+            'message': e.user_message
+        }
+        
+def set_default_card_for_customer(customer_id, payment_method_id):
+    try:
+        stripe.Customer.modify(
+            customer_id,
+            invoice_settings={
+                'default_payment_method': payment_method_id
+            }
+        )
+        return {
+            'status': 'SUCCESS',
+            'message': 'Default card successfully set'
+        }
+    except stripe.error.StripeError as e:
+        return {
+            'status': 'ERROR',
             'message': e.user_message
         }
         

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Request as fastRequest, Query
 from models.users import User
 from services.settings import SettingsService
-from schemas.settings import AccountDetailsRequest, TeamsDetailsRequest, ResetEmailForm
+from schemas.settings import AccountDetailsRequest, TeamsDetailsRequest, ResetEmailForm, PaymentCard, ApiKeysRequest
 from dependencies import get_settings_service, check_user_authorization_without_pixel
 router = APIRouter()
 
@@ -38,9 +38,17 @@ def get_billing_history(
     settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authorization_without_pixel)):
     return settings_service.get_billing_history(page=page, per_page=per_page, user=user)
 
-@router.put("/billing")
-def change_billing(settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authorization_without_pixel)):
-    return settings_service.change_billing_details(user=user)
+@router.post("/billing/add-card")
+def add_card(payment_card: PaymentCard, settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authorization_without_pixel)):
+    return settings_service.add_card(user=user, payment_method_id=payment_card.payment_method_id)
+
+@router.delete("/billing/delete-card")
+def delete_card(payment_card: PaymentCard, settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authorization_without_pixel)):
+    return settings_service.delete_card(payment_method_id=payment_card.payment_method_id)
+
+@router.put("/billing/default-card")
+def default_card(payment_card: PaymentCard, settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authorization_without_pixel)):
+    return settings_service.default_card(user=user, payment_method_id=payment_card.payment_method_id)
 
 @router.get("/subscription")
 def get_subscription_plan(settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authorization_without_pixel)):
@@ -51,5 +59,17 @@ def get_api_details(settings_service: SettingsService = Depends(get_settings_ser
     return settings_service.get_api_details(user=user)
 
 @router.put("/api-details")
-def change_api_details(settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authorization_without_pixel)):
-    return settings_service.change_api_details(user=user)
+def change_api_details(api_keys_request: ApiKeysRequest, settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authorization_without_pixel)):
+    return settings_service.change_api_details(user=user, api_keys_request=api_keys_request)
+
+@router.put("/api-details/usage")
+def change_api_details(api_keys_request: ApiKeysRequest, settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authorization_without_pixel)):
+    return settings_service.change_api_details(user=user, api_keys_request=api_keys_request)
+
+@router.post("/api-details")
+def change_api_details(api_keys_request: ApiKeysRequest, settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authorization_without_pixel)):
+    return settings_service.insert_api_details(user=user, api_keys_request=api_keys_request)
+
+@router.delete("/api-details")
+def change_api_details(api_keys_request: ApiKeysRequest, settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authorization_without_pixel)):
+    return settings_service.delete_api_details(user=user, api_keys_request=api_keys_request)

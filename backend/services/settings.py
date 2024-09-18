@@ -126,17 +126,94 @@ class SettingsService:
     
     def extract_billing_history(self, customer_id, page, per_page):
         result = []
-        billing_history = get_billing_history_by_userid(customer_id=customer_id, page=page, per_page=per_page)
+        billing_history, count, max_page = get_billing_history_by_userid(customer_id=customer_id, page=page, per_page=per_page)
         for billing_data in billing_history:
             billing_hash = {}
-            billing_hash['date'] = ''
-            billing_hash['invoice_id'] = ''
-            billing_hash['pricing_plan'] = ''
-            billing_hash['total'] = ''
-            billing_hash['status'] = ''
+            line_item = billing_data['lines']
+            billing_hash['date'] = self.timestamp_to_date(line_item['data'][0]['plan']['created'])
+            billing_hash['invoice_id'] = line_item['data'][0]['invoice']
+            billing_hash['pricing_plan'] = determine_plan_name_from_product_id(line_item['data'][0]['plan']['product'])
+            billing_hash['total'] = billing_data['subtotal'] / 100
+            billing_hash['status'] = billing_data['status']
+            
+            status = billing_data['status']
+            if status == "paid":
+                billing_hash['status'] = "Successful"
+            elif status == "uncollectible":
+                billing_hash['status'] = "Decline"
+            else:
+                billing_hash['status'] = "Failed"
+            
+            result.append(billing_hash)
+        return result, count, max_page
            
     
     def get_billing_history(self, user: dict, page, per_page):
         result = {}
-        result['billing_history'] = self.extract_billing_history(user.get('customer_id'), page, per_page)
+        result['billing_history'], result['count'], result['max_page'] = self.extract_billing_history(user.get('customer_id'), page, per_page)
         return result
+    
+    def add_card(self, user: dict, payment_method_id):
+        return add_card_to_customer(user.get('customer_id'), payment_method_id)
+    
+    def delete_card(self, payment_method_id):
+        return detach_card_from_customer(payment_method_id)
+    
+    def default_card(self, user: dict, payment_method_id):
+        return set_default_card_for_customer(user.get('customer_id'), payment_method_id)
+    
+    def get_subscription_plan(self, user: dict):
+        result = {}
+        current_plan = self.plan_persistence.get_current_plan(user_id=user.get('id'))
+        current_plan = {
+            'current_plan_id': current_plan.id,
+            'current_plan_name': current_plan.title
+        }
+        result['current_plan'] = current_plan
+        return result
+        
+        
+    def get_api_details(self, user):
+        get_api_details = self.settings_persistence.get_api_details(user.get('id'))
+        return [
+            {
+                "api_key": result[0],
+                "description": result[1],
+                "created_date": result[2],
+                "name": result[3],
+                "id": result[4],
+                "api_id": result[5],
+                "last_used_at": result[6]
+            }
+            for result in get_api_details
+        ]
+    
+    def delete_api_details(self, user, api_keys_request):
+        self.settings_persistence.delete_data_api_details(user_id=user.get('id'), api_keys_id=api_keys_request.id)
+        return SettingStatus.SUCCESS
+    
+    def insert_api_details(self, user, api_keys_request):
+        self.settings_persistence.insert_data_api_details(user_id=user.get('id'), api_keys_request=api_keys_request)
+        return SettingStatus.SUCCESS
+    
+    
+    def change_api_details(self, user, api_keys_request):
+        changes = {}
+
+        if api_keys_request.api_key:
+            changes['api_key'] = api_keys_request.api_key
+            
+        if api_keys_request.api_id:
+            changes['api_id'] = api_keys_request.api_id
+        
+        if api_keys_request.name:
+            changes['name'] = api_keys_request.name
+        if api_keys_request.description:
+            changes['description'] = api_keys_request.description
+
+        if changes:
+            self.settings_persistence.change_columns_data_api_details(changes=changes, user_id=user.get('id'), api_keys_id=api_keys_request.id)
+        else:
+            changes['last_used_at'] = datetime.now()
+            self.settings_persistence.change_columns_data_api_details(changes=changes, user_id=user.get('id'), api_keys_id=api_keys_request.id)
+        return SettingStatus.SUCCESS
