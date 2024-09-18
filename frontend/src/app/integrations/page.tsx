@@ -6,7 +6,6 @@ import axiosInstance from '../../axios/axiosInterceptorInstance';
 import { Box, Button, Grid, Typography, TextField, Backdrop, Drawer, IconButton, Modal } from "@mui/material";
 import Image from "next/image";
 import PersonIcon from '@mui/icons-material/Person';
-import AccountButton from "@/components/AccountButton";
 import dynamic from "next/dynamic";
 import { useSlider, SliderProvider } from '../../context/SliderContext';
 import CloseIcon from '@mui/icons-material/Close';
