@@ -23,12 +23,16 @@ import ManualPopup from "@/components/ManualPopup";
 
 
 const VerifyPixelIntegration: React.FC = () => {
-  const { website } = useUser();
-  const [inputValue, setInputValue] = useState<string>(website || "");
+
+  const [inputValue, setInputValue] = useState<string>("");
 
   useEffect(() => {
-    setInputValue(website || "");
-  }, [website]);
+    const storedValue = sessionStorage.getItem('current_domain');
+    if (storedValue !== null) {
+      setInputValue(storedValue);
+    }
+  }, []);
+
 
   const handleButtonClick = () => {
     let url = inputValue.trim();
