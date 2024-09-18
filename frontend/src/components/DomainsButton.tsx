@@ -1,7 +1,7 @@
 import { Box, Typography, Button, Menu, MenuItem, TextField, IconButton } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import React, { useEffect, useState } from 'react';
-import axiosInterceptorInstance from '@/axios/axiosInterceptorInstance';
+import axiosInstance from '@/axios/axiosInterceptorInstance';
 import CloseIcon from '@mui/icons-material/Close';
 import { showErrorToast, showToast } from './ToastNotification';
 import { UpgradePlanPopup } from './UpgradePlanPopup';
@@ -39,7 +39,7 @@ const AddDomainPopup = ({ open, handleClose, handleSave }: AddDomainProps) => {
     if (newErrors.domain) return;
   
     try {
-      const response = await axiosInterceptorInstance.post("/domains/", { domain });
+      const response = await axiosInstance.post("domains/", { domain });
       if (response.status === 201) {
         handleClose();
         handleSave(domain);
@@ -115,7 +115,7 @@ const DomainButton: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axiosInterceptorInstance.get('/domains/');
+        const response = await axiosInstance.get('domains/');
         if (response.status === 200) {
           const domainData = response.data.map((domain: Domain) =>
             domain.domain.replace('https://', '')
