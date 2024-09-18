@@ -148,9 +148,13 @@ return (
           width: '100%'
         }} textAlign={'justify'} mt={4} fontSize={'1.1rem'}>Maximiz provides cutting-edge tools and features tailored to elevate your business performance, delivering superior results and unlocking your full potential.</Typography>
       </Box>
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', width: '100%', marginTop: '4rem' }}>
+        <span style={{ border: '1px solid #CDCDCD', marginBottom: '1rem', width: '100%'}}></span>
+      </Box>
       <Box sx={{ display: 'flex', justifyContent: 'flex-end', width: '100%', marginTop: '1rem' }}>
+      
         <Button sx={{
-          margin: '4em 2em 0 4em',
+          margin: '0em 2em 0 4em',
           border: '1px #5052B2 solid',
           color: '#5052B2',
           padding: '0 4rem',
@@ -159,7 +163,7 @@ return (
         }
         }} variant='outlined' onClick={() => handleClose()}>Cancel</Button>
         <Button sx={{
-          margin: '4em 2em 0 4em',
+          margin: '0em 2em 0 4em',
           background: '#5052B2',
           padding: '1em 4rem',
           '&:hover': {
