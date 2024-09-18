@@ -224,8 +224,8 @@ def get_user_domain_persistence(db: Session = Depends(get_db)) -> UserDomainsPer
 
 def check_domain(user = Depends(check_user_authentication), domain: str = Depends(get_cookie_domain),
                  domain_persistence: UserDomainsPersistence = Depends(get_user_domain_persistence)) -> UserDomains:
-    current_domain = domain_persistence.get_domain_by_user(user.get('id'), domain=domain)
-    if not current_domain[0]:
+    current_domain = domain_persistence.get_domain_by_user(user.get('id'), domain_substr=domain)
+    if not current_domain and len(current_domain) < 1:
         raise HTTPException(status_code=404, detail='domain not found')
     return current_domain[0]
 
@@ -268,7 +268,7 @@ def get_users_service(user=Depends(check_user_authentication),
 def get_leads_service(user = Depends(check_user_authorization),
                       domain: UserDomains = Depends(check_pixel_install_domain),
                       leads_persistence_service: LeadsPersistence = Depends(get_leads_persistence)):
-    return LeadsService(domain=user, domain=domain, leads_persistence_service=leads_persistence_service)
+    return LeadsService(domain=domain, leads_persistence_service=leads_persistence_service)
 
 
 def get_audience_service(user: User = Depends(check_user_authorization),

@@ -126,7 +126,7 @@ class LeadsPersistence:
             .group_by(
                 FiveXFiveUser.id,
                 LeadUser.behavior_type,
-                FiveXFiveLocations.state,
+                FiveXFiveLocations.state_id,
                 FiveXFiveLocations.city,
                 LeadsVisits.start_date,
                 LeadsVisits.start_time,
@@ -140,7 +140,7 @@ class LeadsPersistence:
             'mobile_phone': FiveXFiveUser.mobile_phone,
             'gender': FiveXFiveUser.gender,
             'first_visited_date': LeadsVisits.start_date,
-            'state': FiveXFiveLocations.state,
+            'state': FiveXFiveLocations.state_id,
             'city': FiveXFiveLocations.city,
             'age': FiveXFiveUser.age_min,
             'time_spent': LeadsVisits.full_time_sec,

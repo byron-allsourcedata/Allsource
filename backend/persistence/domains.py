@@ -7,8 +7,13 @@ class UserDomainsPersistence:
     def __init__(self, db: Session):
         self.db = db
 
-    def get_domain_by_user(self, user_id: int, **filter_by):
-        return self.db.query(UserDomains).filter_by(user_id=user_id, **filter_by).all()
+
+    def get_domain_by_user(self, user_id: int, domain_substr: str = None):
+        query = self.db.query(UserDomains).filter_by(user_id=user_id)
+        if domain_substr:
+            query = query.filter(UserDomains.domain.like(f"%{domain_substr}%"))
+        return query.all()
+
 
     def create_domain(self, user_id: int, data: dict):
         domain = UserDomains(user_id=user_id, **data)
