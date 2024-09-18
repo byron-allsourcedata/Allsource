@@ -147,7 +147,7 @@ class LeadsPersistence:
             'city': FiveXFiveLocations.city,
             'age': FiveXFiveUser.age_min,
             'time_spent': LeadsVisits.full_time_sec,
-            'behavior_type': LeadUser.behavior_type
+            'status': LeadUser.is_returning_visitor
         }
         if sort_by:
             sort_column = sort_options[sort_by]

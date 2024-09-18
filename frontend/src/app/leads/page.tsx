@@ -380,7 +380,8 @@ const Leads: React.FC = () => {
             if (selectedFilters.some(filter => filter.label === 'Visitor Type')) {
                 const status = selectedFilters.find(filter => filter.label === 'Visitor Type')?.value.split(', ') || [];
                 if (status.length > 0) {
-                    url += `&behavior_type=${encodeURIComponent(status.join(','))}`;
+                    const formattedStatus = status.map(status => status.toLowerCase().replace(/\s+/g, '_'));
+                    url += `&behavior_type=${encodeURIComponent(formattedStatus.join(','))}`;
                 }
             }
 
@@ -1074,7 +1075,7 @@ const Leads: React.FC = () => {
                                                         { key: 'business_email', label: 'Email' },
                                                         { key: 'mobile_phone', label: 'Phone number' },
                                                         { key: 'first_visited_date', label: 'Visited date', sortable: true },
-                                                        { key: 'behavior_type', label: 'Visitor Type' },
+                                                        { key: 'status', label: 'Visitor Type' },
                                                         { key: 'time_spent', label: 'Time on site' },
                                                     ].map(({ key, label, sortable = true }) => (
                                                         <TableCell
