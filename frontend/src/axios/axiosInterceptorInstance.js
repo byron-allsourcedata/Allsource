@@ -16,7 +16,7 @@ axiosInterceptorInstance.interceptors.request.use(
       config.headers.Authorization = `Bearer ${accessToken}`;
       if (!currentDomain) {
         try {
-          const response = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/domains/`, {
+          const response = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}domains/`, {
             headers: { Authorization: `Bearer ${accessToken}` }
           });
 

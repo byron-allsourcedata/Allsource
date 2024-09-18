@@ -2,7 +2,9 @@ import axiosInterceptorInstance from '../axios/axiosInterceptorInstance';
 
 export const fetchUserData = async () => {
   try {
-    const response = await axiosInterceptorInstance.get('/me');
+    const accessToken = localStorage.getItem("token");
+    if (accessToken) {
+      const response = await axiosInterceptorInstance.get('/me');
     const responseData = response.data;
 
 
@@ -29,6 +31,7 @@ export const fetchUserData = async () => {
       };
     } else {
       return null;
+    }
     }
   } catch (error) {
     console.error('Error fetching data:', error);
