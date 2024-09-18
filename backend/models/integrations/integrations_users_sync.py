@@ -6,7 +6,7 @@ class IntegrationUserSync(Base):
 
     __tablename__ = 'integrations_users_sync'
     id = Column(Integer, primary_key=True, autoincrement=True)
-    user_id = Column(Integer)
+    domain_id = Column(Integer)
     integration_id = Column(Integer)
     sync_type = Column(VARCHAR(32))
     supression = Column(Boolean)

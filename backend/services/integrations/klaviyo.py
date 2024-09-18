@@ -146,7 +146,7 @@ class KlaviyoIntegrationsService:
         credential = self.__get_credentials(user_id)
         syncs = self.integrations_user_sync_persistence.get_filter_by(user_id=user_id)
         for sync in syncs:
-            leads_list = self.leads_persistence.get_leads_user(user_id=sync.user_id, status=sync.filter_by_contact_type)
+            leads_list = self.leads_persistence.get_leads_user(user_id=sync.domain_id, status=sync.filter_by_contact_type)
             for lead in leads_list:
                 customer = self.leads_persistence.get_leads_users_by_lead_id(lead.id, user_id=user_id)
                 if customer.klaviyo_user_id:

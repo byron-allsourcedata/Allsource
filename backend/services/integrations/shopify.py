@@ -344,13 +344,13 @@ let viewedProductHandler;
                 })
 
 
-    def create_sync(self, user_id: int, 
+    def create_sync(self, domain_id: int, 
                     integration_id: int, 
                     sync_type: str,  
                     supression: bool, 
                     filter_by_contact_type: str):
         data = {
-            'user_id': user_id,
+            'domain_id': domain_id,
             'integration_id': integration_id,
             'sync_type': sync_type,
             'supression': supression,
@@ -361,11 +361,11 @@ let viewedProductHandler;
         return {'status': 'Successfuly', 'detail': sync}
     
 
-    def __export_sync(self, user_id: int):
-        credential = self.get_credentials(user_id)
-        syncs = self.integrations_user_sync_persistence.get_filter_by(user_id=user_id)
+    def __export_sync(self, domain_id: int):
+        credential = self.get_credentials(domain_id)
+        syncs = self.integrations_user_sync_persistence.get_filter_by(domain_id=domain_id)
         for sync in syncs:
-            leads_list = self.lead_persistence.get_leads_user(user_id=sync.user_id, status=sync.filter_by_contact_type)
+            leads_list = self.lead_persistence.get_leads_user(domain_id=sync.domain_id, status=sync.filter_by_contact_type)
             for lead in leads_list:
                 self.__create_or_update_shopify_customer(self.lead_persistence.get_lead_data(lead.five_x_five_user_id), 
                                                          credential.shop_domain, credential.access_token)
@@ -384,10 +384,10 @@ let viewedProductHandler;
         self.__save_customer(customers, user_id)
 
 
-    def sync(self, user_id):
-        self.__import_sync(user_id)
-        self.__order_sync(user_id)
-        self.__export_sync(user_id)
+    def sync(self, domain_id):
+        self.__import_sync(domain_id)
+        self.__order_sync(domain_id)
+        self.__export_sync(domain_id)
 
 # -------------------------------MAPPED-SHOPIFY-DATA------------------------------------ #
 

@@ -268,7 +268,7 @@ def get_users_service(user=Depends(check_user_authentication),
 def get_leads_service(user = Depends(check_user_authorization),
                       domain: UserDomains = Depends(check_pixel_install_domain),
                       leads_persistence_service: LeadsPersistence = Depends(get_leads_persistence)):
-    return LeadsService(user=user, domain=domain, leads_persistence_service=leads_persistence_service)
+    return LeadsService(domain=user, domain=domain, leads_persistence_service=leads_persistence_service)
 
 
 def get_audience_service(user: User = Depends(check_user_authorization),

@@ -35,8 +35,8 @@ class IntegrationService:
     def delete_integration(self, serivce_name: str, user):
         self.integration_persistence.delete_integration(user['id'], serivce_name)
 
-    def get_sync_user(self, user_id: int):
-        return self.integrations_user_sync_persistence.get_filter_by(user_id=user_id)
+    def get_sync_user(self, domain_id: int):
+        return self.integrations_user_sync_persistence.get_filter_by(domain_id=domain_id)
 
     def get_sync_users(self):
         return self.integrations_user_sync_persistence.get_filter_by()

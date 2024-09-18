@@ -85,8 +85,8 @@ class SendlaneIntegration:
         })
 
     
-    def export_sync(self, user, list_name: str = None, list_id: int = None, customers_ids: List[int] = None, filter_id: int = None):
-        credentials = self.__get_credentials(user['id'])
+    def export_sync(self, domain, list_name: str = None, list_id: int = None, customers_ids: List[int] = None, filter_id: int = None):
+        credentials = self.__get_credentials(domain.id)
         if not credentials:
             raise HTTPException(status_code=400, detail={'status': 'error', 'detail': {
                 'message': 'Sendlane credentials invalid'
@@ -97,7 +97,7 @@ class SendlaneIntegration:
         if not customers_ids:
             if not filter_id:
                 raise HTTPException(status_code=400, detail={'status': 'error', 'detail': {'message': 'Filter is empty' } } )
-            customers_ids = self.leads_persistence.get_customer_by_filter_id(user['id'], filter_id) 
+            customers_ids = self.leads_persistence.get_customer_by_filter_id(domain.id, filter_id) 
         self.__add_customer_to_list(list_id, customers_ids)
         return {'status': 'Success'}
     
