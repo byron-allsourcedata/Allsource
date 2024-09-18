@@ -20,6 +20,7 @@ class SubscriptionStatus(Enum):
     UNKNOWN = "UNKNOWN"
     
 class SettingStatus(Enum):
+    INCORRECT_MAIL = 'INCORRECT_MAIL'
     SUCCESS = "SUCCESS"
     INCORRECT_PASSWORD = "INCORRECT_PASSWORD"
     RESEND_TOO_SOON = "RESEND_TOO_SOON"

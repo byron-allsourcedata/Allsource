@@ -3,6 +3,7 @@ from models.users import User
 from services.settings import SettingsService
 from schemas.settings import AccountDetailsRequest, TeamsDetailsRequest, ResetEmailForm, PaymentCard, ApiKeysRequest
 from dependencies import get_settings_service, check_user_authorization_without_pixel
+from schemas.users import VerifyTokenResponse
 router = APIRouter()
 
 
@@ -14,9 +15,10 @@ def get_account_details(settings_service: SettingsService = Depends(get_settings
 def change_account_details(account_details: AccountDetailsRequest, settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authorization_without_pixel)):
     return settings_service.change_account_details(user=user, account_details=account_details)
 
-@router.post("/account-details/change-email")
-def change_email_account_details(email_form: ResetEmailForm, settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authorization_without_pixel)):
-    return settings_service.change_email_account_details(user=user, email=email_form.email)
+@router.get("/account-details/change-email")
+def change_email_account_details(settings_service: SettingsService = Depends(get_settings_service), token: str = Query(...), mail: str = Query(...)):
+    result = settings_service.change_email_account_details(token=token, email=mail)
+    return VerifyTokenResponse(status=result.get('status'), token=result.get('user_token', None))
 
 @router.get("/teams")
 def get_teams(settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authorization_without_pixel)):

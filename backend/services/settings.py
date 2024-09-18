@@ -3,9 +3,12 @@ import os
 
 from persistence.settings_persistence import SettingsPersistence
 from models.users import User
+from persistence.user_persistence import UserPersistence
 from persistence.plans_persistence import PlansPersistence
 from sqlalchemy.orm import Session
+from .jwt_service import get_password_hash, create_access_token, decode_jwt_data
 from schemas.settings import AccountDetailsRequest
+from enums import VerifyToken
 logger = logging.getLogger(__name__)
 from datetime import datetime, timedelta
 from services.jwt_service import get_password_hash,create_access_token
@@ -17,9 +20,10 @@ OVERAGE_CONTACT = 1
 
 class SettingsService:
 
-    def __init__(self, db: Session, settings_persistence: SettingsPersistence, plan_persistence: PlansPersistence):
+    def __init__(self, db: Session, settings_persistence: SettingsPersistence, plan_persistence: PlansPersistence, user_persistence: UserPersistence):
         self.settings_persistence = settings_persistence
         self.plan_persistence = plan_persistence
+        self.user_persistence = user_persistence
 
 
     def get_account_details(self, user):
@@ -58,7 +62,7 @@ class SettingsService:
                     "id": user.get('id'),
                 }
                 token = create_access_token(token_info)           
-                confirm_email_url = f"{os.getenv('SITE_HOST_URL')}/change-email?token={token}&mail={account_details.account.email_address}"
+                confirm_email_url = f"{os.getenv('SITE_HOST_URL')}/authentication/verify-token?token={token}&mail={account_details.account.email_address}"
                 mail_object = SendgridHandler()
                 mail_object.send_sign_up_mail(
                     to_emails=account_details.account.email_address,
@@ -89,12 +93,29 @@ class SettingsService:
 
         return SettingStatus.SUCCESS
     
-    def change_email_account_details(self, user: User, email: str):
-        changes = {}
-        changes['email'] = email
-
-        if changes:
-            self.settings_persistence.change_columns_data_by_userid(changes, user.get('id'))
+    def change_email_account_details(self, token: User, email: str):
+        if email is None:
+            SettingStatus.INCORRECT_MAIL
+        try:
+            data = decode_jwt_data(token)
+        except:
+            return {'status': VerifyToken.INCORRECT_TOKEN}
+        
+        check_user_object = self.user_persistence.get_user_by_id(data.get('id'))
+        if check_user_object:
+            changes = {}
+            changes['email'] = email
+            self.settings_persistence.change_columns_data_by_userid(changes, data.get('id'))
+            token_info = {
+                "id": check_user_object.get('id'),
+            }
+            user_token = create_access_token(token_info)
+            return {
+                'status': VerifyToken.SUCCESS,
+                'user_token': user_token
+            }
+        return {'status': VerifyToken.INCORRECT_TOKEN}
+        
     
     def timestamp_to_date(self, timestamp):
         return datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d')
