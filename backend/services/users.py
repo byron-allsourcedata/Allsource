@@ -14,9 +14,8 @@ load_dotenv()
 
 
 class UsersService:
-    def __init__(self, user, domain, user_persistence_service: UserPersistence):
+    def __init__(self, user, user_persistence_service: UserPersistence):
         self.user = user
-        self.domain = domain
         self.user_persistence_service = user_persistence_service
 
     def update_password(self, update_data: UpdatePassword):
@@ -33,7 +32,6 @@ class UsersService:
     def get_my_info(self):
         return {"email": self.user.get('email'),
                 "full_name": self.user.get('full_name'),
-                "company_website": self.domain.domain,
                 "activate_percent": self.user.get('activate_steps_percent'),
                 }
 
