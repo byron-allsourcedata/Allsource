@@ -1,13 +1,13 @@
-"use client";
 import { Box, Typography, Button, Menu, MenuItem, TextField, IconButton } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import React, { useEffect, useState } from 'react';
 import axiosInterceptorInstance from '@/axios/axiosInterceptorInstance';
 import CloseIcon from '@mui/icons-material/Close';
 import { showErrorToast, showToast } from './ToastNotification';
-import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { UpgradePlanPopup } from './UpgradePlanPopup';
 import { AxiosError } from 'axios';
+import { SliderProvider } from '@/context/SliderContext';
+import Slider from '../components/Slider';
 
 interface Domain {
     id: number;
@@ -29,32 +29,38 @@ const AddDomainPopup = ({ open, handleClose, handleSave }: AddDomainProps) => {
   const [isFocused, setIsFocused] = useState(false);
   const [errors, setErrors] = useState({ domain: '' });
   const [upgradePlanPopup, setUpgradePlanPopup] = useState(false);
-
+  const [showSlider, setShowSlider] = useState(false)
   const handleFocus = () => setIsFocused(true);
   const handleBlur = () => setIsFocused(false);
-
   const validateField = (value: string): string => value.trim() ? "" : "Domain is required";
-
-  const isFormValid = () => !validateField(domain);
-
   const handleSubmit = async () => {
     const newErrors = { domain: validateField(domain) };
     setErrors(newErrors);
     if (newErrors.domain) return;
-
+  
     try {
-      const response = await axiosInstance.post("/domains/", { domain });
+      const response = await axiosInterceptorInstance.post("/domains/", { domain });
       if (response.status === 201) {
         handleClose();
         handleSave(domain);
       }
     } catch (error) {
-      if (error instanceof AxiosError && error.response?.status === 403) {
-        if (error.response.data.status === 'NEED_UPGRADE_PLAN') {
-          setUpgradePlanPopup(true); 
+      if (error instanceof AxiosError) {
+        if (error.response?.status === 403) {
+          if (error.response.data.status === 'NEED_UPGRADE_PLAN') {
+            setUpgradePlanPopup(true);
+          } else if (error.response.data.status === 'NEED_BOOK_CALL') {
+            sessionStorage.setItem('is_slider_opened', 'true');
+            setShowSlider(true);
+          } else {
+            sessionStorage.setItem('is_slider_opened', 'false');
+            setShowSlider(false); 
+          }
         } else {
           showErrorToast('An error occurred while adding the domain');
         }
+      } else {
+        console.error("Error fetching data:", error);
       }
     }
   };
@@ -76,8 +82,8 @@ const AddDomainPopup = ({ open, handleClose, handleSave }: AddDomainProps) => {
         helperText={errors.domain}
         InputProps={{
           endAdornment: (
-            <IconButton aria-label="close" edge="end" sx={{ color: 'text.secondary' }}>
-              <CloseIcon onClick={handleClose} />
+            <IconButton aria-label="close" edge="end" sx={{ color: 'text.secondary' }} onClick={handleClose}>
+              <CloseIcon />
             </IconButton>
           ),
         }}
@@ -86,6 +92,7 @@ const AddDomainPopup = ({ open, handleClose, handleSave }: AddDomainProps) => {
         <Button color='primary' variant='outlined' onClick={handleSubmit}>Save</Button>
       </Box>
       <UpgradePlanPopup open={upgradePlanPopup} handleClose={() => setUpgradePlanPopup(false)} />
+      {showSlider && <Slider />}
     </Box>
   );
 };
@@ -133,7 +140,7 @@ const DomainButton: React.FC = () => {
   const handleSetDomain = (domain: string) => {
     sessionStorage.setItem('current_domain', domain);
     setCurrentDomain(domain.replace('https://', ''));
-    window.location.reload()
+    window.location.reload();
   };
 
   const handleSave = (domain: string) => {
@@ -195,6 +202,11 @@ const DomainButton: React.FC = () => {
       </Menu>
     </>
   );
-};
+}
+const DomainSelect = () => {
+  return (
+    <SliderProvider><DomainButton /></SliderProvider>
+  )
+}
 
-export default DomainButton;
+export default DomainSelect

@@ -2,7 +2,7 @@ from persistence.domains import UserDomainsPersistence, UserDomains
 from schemas.domains import DomainResponse
 from services.users import UsersService
 from persistence.plans_persistence import PlansPersistence
-from enums import  SubscriptionStatus
+from enums import  SubscriptionStatus, UserAuthorizationStatus
 from fastapi import HTTPException
 class UserDomainsService:
 
@@ -12,7 +12,13 @@ class UserDomainsService:
         self.user_service = UsersService
 
     def create(self, user, domain: str):
+        if not user.get('is_book_call_passed'):
+            raise HTTPException(status_code=403, detail={'status': UserAuthorizationStatus.NEED_BOOK_CALL.value})
+        if user.get('payment_status') == 'PENDING':
+            raise HTTPException(status_code=403, detail={'status': UserAuthorizationStatus.PAYMENT_NEEDED.value})
         plan_info = self.plan_persistence.get_plan_info(user.get('id'))
+        if not plan_info:
+            raise HTTPException(status_code=403, detail={'status': UserAuthorizationStatus.NEED_CHOOSE_PLAN.value})
         if self.domain_persistence.count_domain(user.get('id')) >= plan_info.domains_limit:
             raise HTTPException(status_code=403, detail={'status': SubscriptionStatus.NEED_UPGRADE_PLAN.value})
         if 'https://' not in domain or 'http://' not in domain:

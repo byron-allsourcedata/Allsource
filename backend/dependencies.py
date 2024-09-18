@@ -224,8 +224,7 @@ def check_domain(
     domain_persistence: UserDomainsPersistence = Depends(get_user_domain_persistence)
 ) -> UserDomains:
     current_domain = domain_persistence.get_domain_by_user(user.get('id'), domain_substr=CurrentDomain)
-
-    if not current_domain or len(current_domain) == 0:
+    if not current_domain or len(current_domain) == 0 :
         raise HTTPException(status_code=404, detail={'status': "DOMAIN NOT FOUND"})
     return current_domain[0]
 
@@ -260,9 +259,8 @@ def get_users_auth_service(db: Session = Depends(get_db),
 
 
 def get_users_service(user=Depends(check_user_authentication),
-                      domain=Depends(check_domain),
                       user_persistence_service: UserPersistence = Depends(get_user_persistence_service)):
-    return UsersService(user=user, domain=domain, user_persistence_service=user_persistence_service)
+    return UsersService(user=user, user_persistence_service=user_persistence_service)
 
 
 def get_leads_service(user = Depends(check_user_authorization),
