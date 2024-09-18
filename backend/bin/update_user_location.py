@@ -77,11 +77,7 @@ async def process_users(session):
                 FiveXFiveUser.id > current_id,
                 FiveXFiveUser.id <= current_id + 1000
             )
-        ).all()
-        
-        if not five_x_five_users:
-            break
-            
+        ).all()        
         for five_x_five_user in five_x_five_users:
             if five_x_five_user.personal_city and five_x_five_user.personal_state:
                 save_city_and_state_to_user(
