@@ -5,7 +5,8 @@ from models.users import User
 from schemas.pixel_installation import PixelInstallationRequest, EmailFormRequest, ManualFormResponse
 from schemas.users import PixelFormResponse
 from services.pixel_installation import PixelInstallationService
-from dependencies import get_pixel_installation_service, check_user_authorization_without_pixel, check_user_authentication
+from dependencies import get_pixel_installation_service, check_user_authorization_without_pixel, \
+    check_user_authentication, check_domain
 from config.rmq_connection import publish_rabbitmq_message, RabbitMQConnection
 import logging
 
@@ -15,8 +16,8 @@ router = APIRouter()
 
 @router.get("/manually", response_model=ManualFormResponse)
 async def manual(pixel_installation_service: PixelInstallationService = Depends(get_pixel_installation_service),
-                 user: User = Depends(check_user_authorization_without_pixel)):
-    manual_result, pixel_client_id = pixel_installation_service.get_manual(user)
+                 user: User = Depends(check_user_authorization_without_pixel), domain = Depends(check_domain)):
+    manual_result, pixel_client_id = pixel_installation_service.get_manual(user, domain)
     return ManualFormResponse(manual=manual_result, pixel_client_id=pixel_client_id)
 
 
@@ -26,6 +27,7 @@ async def send_pixel_code_in_email(email_form: EmailFormRequest,
                                        get_pixel_installation_service),
                                    user: User = Depends(check_user_authorization_without_pixel)):
     return pixel_installation_service.send_pixel_code_in_email(email_form.email, user)
+
 
 @router.post("/check-pixel-installed-parse", response_model=PixelFormResponse)
 async def manual(pixel_installation_request: PixelInstallationRequest,
@@ -70,6 +72,6 @@ async def google_tag(user: User = Depends(check_user_authorization_without_pixel
 
 @router.get("/cms", response_model=ManualFormResponse)
 async def cms(pixel_installation_service: PixelInstallationService = Depends(get_pixel_installation_service),
-              user: User = Depends(check_user_authorization_without_pixel)):
-    manual_result, pixel_client_id = pixel_installation_service.get_manual(user)
+              user: User = Depends(check_user_authorization_without_pixel), domain = Depends(check_domain)):
+    manual_result, pixel_client_id = pixel_installation_service.get_manual(user, domain)
     return ManualFormResponse(manual=manual_result, pixel_client_id=pixel_client_id)

@@ -73,7 +73,7 @@ class AudiencePersistence:
     def create_user_audience(self, user_id, leads_ids, audience_name):
         lead_users = (
             self.db.query(LeadUser)
-            .filter(LeadUser.user_id == user_id, LeadUser.five_x_five_user_id.in_(leads_ids))
+            .filter(LeadUser.domain_id == user_id, LeadUser.five_x_five_user_id.in_(leads_ids))
             .all()
         )
         if not audience_name or not audience_name.strip():
@@ -98,7 +98,7 @@ class AudiencePersistence:
             audience = self.db.query(Audience).filter(Audience.user_id == user_id, Audience.id == audience_id).first()
             if audience:
                 if leads_ids:
-                    lead_users = self.db.query(LeadUser).filter(LeadUser.user_id == user_id,
+                    lead_users = self.db.query(LeadUser).filter(LeadUser.domain_id == user_id,
                                                                 LeadUser.lead_id.in_(leads_ids)).all()
                     lead_ids_set = {lead_user.lead_id for lead_user in lead_users}
 
@@ -110,7 +110,7 @@ class AudiencePersistence:
                         self.db.add(audience_lead)
 
                 if remove_ids:
-                    leads_to_remove = self.db.query(LeadUser).filter(LeadUser.user_id == user_id,
+                    leads_to_remove = self.db.query(LeadUser).filter(LeadUser.domain_id == user_id,
                                                                      LeadUser.lead_id.in_(remove_ids)).all()
                     leads_to_remove_ids = {lead_user.lead_id for lead_user in leads_to_remove}
 

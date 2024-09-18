@@ -12,7 +12,7 @@ import Slider from '../../components/Slider';
 import {SliderProvider} from '../../context/SliderContext';
 import PersonIcon from '@mui/icons-material/Person';
 import TrialStatus from '@/components/TrialLabel';
-import AccountButton from '@/components/AccountButton';
+import DomainButton from '@/components/DomainsButton';
 import {ChevronLeft, ChevronRight} from '@mui/icons-material';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import FilterPopup from '@/components/FiltersSlider';

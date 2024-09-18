@@ -46,11 +46,11 @@ class SendlaneIntegration:
             service.sendlane.save_customer(customer)
 
 
-    def add_integration(self, user, credentials: IntegrationCredentials):
+    def add_integration(self, user, domain, credentials: IntegrationCredentials):
         customers = [self.__mapped_customer(customer) for customer in self.__get_customers(credentials.sendlane.access_token)]
-        integrataion = self.__save_integration(credentials.sendlane.access_token, user['id'])
-        for customer in customers:
-            self.__save_customer(customer, user['id'])
+        integrataion = self.__save_integration(credentials.sendlane.access_token, domain.id)
+        # for customer in customers:
+        #     self.__save_customer(customer, user['id'])
         return {
             'status': 'Successfuly',
             'detail': {
@@ -85,8 +85,8 @@ class SendlaneIntegration:
         })
 
     
-    def export_sync(self, user, list_name: str = None, list_id: int = None, customers_ids: List[int] = None, filter_id: int = None):
-        credentials = self.__get_credentials(user['id'])
+    def export_sync(self, domain, list_name: str = None, list_id: int = None, customers_ids: List[int] = None, filter_id: int = None):
+        credentials = self.__get_credentials(domain.id)
         if not credentials:
             raise HTTPException(status_code=400, detail={'status': 'error', 'detail': {
                 'message': 'Sendlane credentials invalid'
@@ -97,7 +97,7 @@ class SendlaneIntegration:
         if not customers_ids:
             if not filter_id:
                 raise HTTPException(status_code=400, detail={'status': 'error', 'detail': {'message': 'Filter is empty' } } )
-            customers_ids = self.leads_persistence.get_customer_by_filter_id(user['id'], filter_id) 
+            customers_ids = self.leads_persistence.get_customer_by_filter_id(domain.id, filter_id) 
         self.__add_customer_to_list(list_id, customers_ids)
         return {'status': 'Success'}
     

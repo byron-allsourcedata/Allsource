@@ -1,6 +1,6 @@
 import hashlib
 import os
-from models.users import Users
+from models.users_domains import UserDomains
 from schemas.integrations.shopify import ShopifyCustomer, ShopifyOrderAPI
 from schemas.integrations.integrations import IntegrationCredentials
 from persistence.leads_persistence import LeadsPersistence
@@ -11,18 +11,22 @@ from httpx import Client
 from fastapi import HTTPException
 from datetime import datetime
 from services.aws import AWSService
+from sqlalchemy.orm import Session
+
+
 class ShopifyIntegrationService:
 
     def __init__(self, integration_persistence: IntegrationsPresistence, 
                  lead_persistence: LeadsPersistence, lead_orders_persistence: LeadOrdersPersistence,
                  integrations_user_sync_persistence: IntegrationsUserSyncPersistence,
-                 client: Client, aws_service: AWSService):
+                 client: Client, aws_service: AWSService, db: Session):
         self.integration_persistence = integration_persistence
         self.lead_persistence = lead_persistence
         self.lead_orders_persistence = lead_orders_persistence
         self.integrations_user_sync_persistence = integrations_user_sync_persistence
         self.client = client
         self.AWS = aws_service
+        self.db = db
 
 
     def __handle_request(self, method: str, url: str, headers: dict = None, json: dict = None, data: dict = None, params: dict = None):
@@ -56,19 +60,19 @@ class ShopifyIntegrationService:
         return response.json().get('orders')
 
 
-    def get_credentials(self, user_id: int):
-        return self.integration_persistence.get_credentials_for_service(user_id, 'Shopify')
+    def get_credentials(self, domain_id: int):
+        return self.integration_persistence.get_credentials_for_service(domain_id, 'Shopify')
 
 
-    def __set_pixel(self, user, shop_domain: str, access_token: str):
-        client_id = user.get('data_provider_id')
+    def __set_pixel(self, user, domain, shop_domain: str, access_token: str):
+        client_id = domain.data_provider_id
         if client_id is None:
-            client_id = hashlib.sha256((str(user.get('id')) + os.getenv('SECRET_SALT')).encode()).hexdigest()
-            self.db.query(Users).filter(Users.id == user.get('id')).update(
-                {Users.data_provider_id: client_id},
+            client_id = hashlib.sha256((str(domain.id) + os.getenv('SECRET_SALT')).encode()).hexdigest()
+            self.db.query(UserDomains).filter(UserDomains.user_id == user.get('id'), UserDomains.domain == domain.domain).update(
+                {UserDomains.data_provider_id: client_id},
                 synchronize_session=False
             )
-            self.db.commit()
+            self.db.commit() 
         script_shopify = f"""
 window.pixelClientId = '{client_id}';
 
@@ -274,12 +278,9 @@ let viewedProductHandler;
         return response.json().get('customers')
 
 
-    def __save_integration(self, shop_domain: str, access_token: str, user_id: int):
-        if self.integration_persistence.get_credentials_for_service(user_id, 'Shopify'):
-            return
-        
+    def __save_integration(self, shop_domain: str, access_token: str, domain_id: int):
         credentials = {
-            'user_id': user_id, 
+            'domain_id': domain_id, 
             'shop_domain': shop_domain,
             'access_token': access_token, 
             'service_name': 'Shopify'
@@ -310,16 +311,16 @@ let viewedProductHandler;
         return response.json().get('customers')
 
 
-    def add_integration(self, user, credentials: IntegrationCredentials):
+    def add_integration(self, user, domain, credentials: IntegrationCredentials):
         if not credentials.shopify.shop_domain.startswith('https://'):
             credentials.shopify.shop_domain = f'https://{credentials.shopify.shop_domain}'
         shop_domain = credentials.shopify.shop_domain.lower().lstrip('http://').lstrip('https://')
-        user_website = user['company_website'].lower().lstrip('http://').lstrip('https://')
+        user_website = domain.domain.lower().lstrip('http://').lstrip('https://')
         if user_website != shop_domain:
             raise HTTPException(status_code=400, detail={'status': 'error', 'detail': {'message': 'Store Domain does not match the one you specified earlier'}})
-        self.__save_integration(credentials.shopify.shop_domain, credentials.shopify.access_token, user['id'])
-        if not user['is_pixel_installed']:
-            self.__set_pixel(user, credentials.shopify.shop_domain, credentials.shopify.access_token)
+        self.__save_integration(credentials.shopify.shop_domain, credentials.shopify.access_token, domain.id)
+        if not domain.is_pixel_installed:
+            self.__set_pixel(user, domain, credentials.shopify.shop_domain, credentials.shopify.access_token)
         return {
             'status': 'Successfully',
             'detail': {
@@ -343,13 +344,13 @@ let viewedProductHandler;
                 })
 
 
-    def create_sync(self, user_id: int, 
+    def create_sync(self, domain_id: int, 
                     integration_id: int, 
                     sync_type: str,  
                     supression: bool, 
                     filter_by_contact_type: str):
         data = {
-            'user_id': user_id,
+            'domain_id': domain_id,
             'integration_id': integration_id,
             'sync_type': sync_type,
             'supression': supression,
@@ -360,11 +361,11 @@ let viewedProductHandler;
         return {'status': 'Successfuly', 'detail': sync}
     
 
-    def __export_sync(self, user_id: int):
-        credential = self.get_credentials(user_id)
-        syncs = self.integrations_user_sync_persistence.get_filter_by(user_id=user_id)
+    def __export_sync(self, domain_id: int):
+        credential = self.get_credentials(domain_id)
+        syncs = self.integrations_user_sync_persistence.get_filter_by(domain_id=domain_id)
         for sync in syncs:
-            leads_list = self.lead_persistence.get_leads_user(user_id=sync.user_id, status=sync.filter_by_contact_type)
+            leads_list = self.lead_persistence.get_leads_user(domain_id=sync.domain_id, status=sync.filter_by_contact_type)
             for lead in leads_list:
                 self.__create_or_update_shopify_customer(self.lead_persistence.get_lead_data(lead.five_x_five_user_id), 
                                                          credential.shop_domain, credential.access_token)
@@ -383,10 +384,10 @@ let viewedProductHandler;
         self.__save_customer(customers, user_id)
 
 
-    def sync(self, user_id):
-        self.__import_sync(user_id)
-        self.__order_sync(user_id)
-        self.__export_sync(user_id)
+    def sync(self, domain_id):
+        self.__import_sync(domain_id)
+        self.__order_sync(domain_id)
+        self.__export_sync(domain_id)
 
 # -------------------------------MAPPED-SHOPIFY-DATA------------------------------------ #
 

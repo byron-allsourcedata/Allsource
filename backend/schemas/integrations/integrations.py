@@ -36,6 +36,7 @@ class IntegrationCredentials(BaseModel):
     mailchimp: Optional[MailchimpCredentials] = None
     facebook: Optional[FacebookCredentials] = None
     sendlane: Optional[KlaviyoOrSandlaneCredentials] = None
+    pixel_install: bool = False
 
 
 class Lead(BaseModel):
