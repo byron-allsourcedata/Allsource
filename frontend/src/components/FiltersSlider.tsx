@@ -431,7 +431,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
     fromTime: dayjs.Dayjs | null;
     toTime: dayjs.Dayjs | null;
   };
-  
+
   // Инициализация состояния
   const [timeRange, setTimeRange] = useState<TimeRange>({
     fromTime: null,
@@ -455,10 +455,10 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
       setCheckedFiltersTime((prevFiltersTime) => {
         // Explicitly type `prevFilters` for better TypeScript support
         const prevFiltersTimeTyped = prevFiltersTime as Record<string, boolean>;
-  
+
         // Find the previously selected radio button
         const previouslySelectedTime = Object.keys(prevFiltersTimeTyped).find((key) => prevFiltersTimeTyped[key]);
-  
+
         // Reset all filters and select the new one
         const newFiltersTime = {
           morning: false,
@@ -467,14 +467,14 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
           all_day: false,
           [name]: true,
         };
-  
+
         const tagMapTime: { [key: string]: string } = {
           morning: "Morning 12AM - 11AM",
           afternoon: "Afternoon 11AM - 5PM",
           evening: "Evening 5PM - 9PM",
           all_day: "All day",
         };
-  
+
         // Remove the tag for the previously selected radio button, if any
         if (previouslySelectedTime && previouslySelectedTime !== name) {
           removeTag("visitedTime", tagMapTime[previouslySelectedTime]);
@@ -486,7 +486,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
           afternoon: false,
           all_day: false,
         });
-  
+
         return newFiltersTime;
       });
 
@@ -505,7 +505,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
   };
 
   const deleteTagTime = () => {
-    setSelectedTimeRange(null)     
+    setSelectedTimeRange(null)
     setTimeRange({
       fromTime: null,
       toTime: null,
@@ -763,20 +763,20 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
       });
 
       const isTimeSpentFilterActive = Object.values(savedFilters.checkedFiltersTimeSpent || {}).some(value => value === true);
-    if (isTimeSpentFilterActive) {
-      const timeSpentTagMap: { [key: string]: string } = {
-        under_10: "under 10 secs",
-        over_10: "10-30 secs",
-        over_30: "30-60 secs",
-        over_60: "Over 60 secs",
-      };
+      if (isTimeSpentFilterActive) {
+        const timeSpentTagMap: { [key: string]: string } = {
+          under_10: "under 10 secs",
+          over_10: "10-30 secs",
+          over_30: "30-60 secs",
+          over_60: "Over 60 secs",
+        };
 
-      Object.keys(savedFilters.checkedFiltersTimeSpent).forEach((key) => {
-        if (savedFilters.checkedFiltersTimeSpent[key]) {
-          addTag("timeSpents", timeSpentTagMap[key]);
-        }
-      });
-    }
+        Object.keys(savedFilters.checkedFiltersTimeSpent).forEach((key) => {
+          if (savedFilters.checkedFiltersTimeSpent[key]) {
+            addTag("timeSpents", timeSpentTagMap[key]);
+          }
+        });
+      }
 
 
       setSelectedFunnels(savedFilters.selectedFunnels || []);
@@ -793,34 +793,34 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
           evening: "Evening 5PM - 9PM",
           all_day: "All day",
         };
-  
+
         // Обработка активных фильтров
         Object.keys(savedFilters.checkedFiltersTime).forEach((key) => {
           if (savedFilters.checkedFiltersTime[key]) {
             addTag("visitedTime", timeTagMap[key]);
           }
         });
-          
-      }  else {
-      // Преобразование времени из строкового формата в Dayjs
-      const fromTime = savedFilters.from_time ? dayjs(savedFilters.from_time, 'HH:mm') : null;
-      const toTime = savedFilters.to_time ? dayjs(savedFilters.to_time, 'HH:mm') : null;
 
-      // Форматирование времени для тега
-      const formattedFromTime = fromTime ? fromTime.format('h:mm A') : '';
-      const formattedToTime = toTime ? toTime.format('h:mm A') : '';
-      if (fromTime && toTime) {
-        setSelectedTimeRange(`${formattedFromTime} to ${formattedToTime}`);
       } else {
-        setSelectedTimeRange(null);
-      }
+        // Преобразование времени из строкового формата в Dayjs
+        const fromTime = savedFilters.from_time ? dayjs(savedFilters.from_time, 'HH:mm') : null;
+        const toTime = savedFilters.to_time ? dayjs(savedFilters.to_time, 'HH:mm') : null;
 
-      // Обновление состояния
-      setTimeRange({
-        fromTime: fromTime && fromTime.isValid() ? fromTime : null,
-        toTime: toTime && toTime.isValid() ? toTime : null,
-      });
-    }
+        // Форматирование времени для тега
+        const formattedFromTime = fromTime ? fromTime.format('h:mm A') : '';
+        const formattedToTime = toTime ? toTime.format('h:mm A') : '';
+        if (fromTime && toTime) {
+          setSelectedTimeRange(`${formattedFromTime} to ${formattedToTime}`);
+        } else {
+          setSelectedTimeRange(null);
+        }
+
+        // Обновление состояния
+        setTimeRange({
+          fromTime: fromTime && fromTime.isValid() ? fromTime : null,
+          toTime: toTime && toTime.isValid() ? toTime : null,
+        });
+      }
 
 
       const isAnyFilterActive = Object.values(savedFilters.checkedFilters || {}).some(value => value === true);
@@ -1236,8 +1236,8 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
             borderBottom: "1px solid #e4e4e4",
             position: "sticky",
             top: 0,
-            zIndex: 1400, // Чтобы элемент был выше других
-            backgroundColor: "#fff", // Фон для предотвращения прозрачности
+            zIndex: 1400,
+            backgroundColor: "#fff",
           }}
         >
           <Typography
@@ -1889,13 +1889,13 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                   <DatePicker
                     label="From date"
                     value={dateRange.fromDate}
-                    onChange={(newValue) =>
-                      handleDateChange("fromDate")(newValue)
-                    }
-                    sx={{ width: "100%" }}
-                    slots={{
-                      textField: (props) => (
-                        <TextField {...props} variant="outlined" fullWidth sx={{
+                    onChange={(newValue) => handleDateChange("fromDate")(newValue)}
+                    sx={{ width: '100%' }}
+                    slotProps={{
+                      textField: {
+                        variant: "outlined",
+                        fullWidth: true,
+                        sx: {
                           '& .MuiInputBase-input': {
                             fontFamily: 'Nunito',
                             fontSize: '14px',
@@ -1910,8 +1910,8 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                             lineHeight: '19.6px',
                             textAlign: 'left',
                           }
-                        }} />
-                      ),
+                        }
+                      }
                     }}
                   />
                   <DatePicker
@@ -1921,26 +1921,27 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                       handleDateChange("toDate")(newValue)
                     }
                     sx={{ width: "100%" }}
-                    slots={{
-                      textField: (props) => (
-                        <TextField {...props} variant="outlined" fullWidth
-                          sx={{
-                            '& .MuiInputBase-input': {
-                              fontFamily: 'Nunito',
-                              fontSize: '14px',
-                              fontWeight: 400,
-                              lineHeight: '19.6px',
-                              textAlign: 'left',
-                            },
-                            '& .MuiInputLabel-root': {
-                              fontFamily: 'Nunito',
-                              fontSize: '14px',
-                              fontWeight: 400,
-                              lineHeight: '19.6px',
-                              textAlign: 'left',
-                            }
-                          }} />
-                      ),
+                    slotProps={{
+                      textField: {
+                        variant: "outlined",
+                        fullWidth: true,
+                        sx: {
+                          '& .MuiInputBase-input': {
+                            fontFamily: 'Nunito',
+                            fontSize: '14px',
+                            fontWeight: 400,
+                            lineHeight: '19.6px',
+                            textAlign: 'left',
+                          },
+                          '& .MuiInputLabel-root': {
+                            fontFamily: 'Nunito',
+                            fontSize: '14px',
+                            fontWeight: 400,
+                            lineHeight: '19.6px',
+                            textAlign: 'left',
+                          }
+                        }
+                      }
                     }}
                   />
                 </LocalizationProvider>
@@ -1979,7 +1980,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
               {selectedTimeRange && (
                 <CustomChip
                   label={selectedTimeRange}
-                  onDelete={() => deleteTagTime() }
+                  onDelete={() => deleteTagTime()}
                 />
               )}
               <IconButton
@@ -2081,9 +2082,11 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                     label="From time"
                     value={timeRange.fromTime}
                     onChange={handleTimeChange("fromTime")}
-                    slots={{
-                      textField: (props) => (
-                        <TextField {...props} variant="outlined" fullWidth sx={{
+                    slotProps={{
+                      textField: {
+                        variant: "outlined",
+                        fullWidth: true,
+                        sx: {
                           '& .MuiInputBase-input': {
                             fontFamily: 'Nunito',
                             fontSize: '14px',
@@ -2098,17 +2101,19 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                             lineHeight: '19.6px',
                             textAlign: 'left',
                           }
-                        }} />
-                      ),
+                        }
+                      }
                     }}
                   />
                   <TimePicker
                     label="To time"
                     value={timeRange.toTime}
                     onChange={handleTimeChange("toTime")}
-                    slots={{
-                      textField: (props) => (
-                        <TextField {...props} variant="outlined" fullWidth sx={{
+                    slotProps={{
+                      textField: {
+                        variant: "outlined",
+                        fullWidth: true,
+                        sx: {
                           '& .MuiInputBase-input': {
                             fontFamily: 'Nunito',
                             fontSize: '14px',
@@ -2123,8 +2128,8 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                             lineHeight: '19.6px',
                             textAlign: 'left',
                           }
-                        }} />
-                      ),
+                        }
+                      }
                     }}
                   />
                 </LocalizationProvider>
@@ -2562,8 +2567,8 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
               padding: '1em', // Отступы
               gap: 3,
               borderTop: '1px solid rgba(228, 228, 228, 1)',
-              "@media (max-width: 600px)": 
-              { width: '100%'}
+              "@media (max-width: 600px)":
+                { width: '100%' }
             }}
           >
             <Button
