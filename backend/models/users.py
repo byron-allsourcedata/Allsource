@@ -39,6 +39,7 @@ class Users(Base):
     activate_steps_percent = Column(INTEGER, nullable=True)
     leads_credits = Column(INTEGER, nullable=True)
     prospect_credits = Column(INTEGER, nullable=True)
+    is_leads_auto_charging = Column(BOOLEAN, default=True, nullable=False)
 
 
 User = Users

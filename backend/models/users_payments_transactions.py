@@ -10,11 +10,11 @@ class UsersPaymentsTransactions(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     created_at = Column(TIMESTAMP(precision=6))
-    transaction_id = Column(VARCHAR, nullable=True)
+    transaction_id = Column(VARCHAR, nullable=True, unique=True)
     status = Column(VARCHAR, nullable=True)
     amount_credits = Column(Integer, nullable=True)
     type = Column(VARCHAR, nullable=False)
-    lead_id = Column(Integer, ForeignKey("leads_users.id"), nullable=True)
+    domain_id = Column(Integer, ForeignKey("users_domains.id"), nullable=True)
     five_x_five_up_id = Column(VARCHAR, nullable=False)
 
 event.listen(UsersPaymentsTransactions, "before_insert", create_timestamps)

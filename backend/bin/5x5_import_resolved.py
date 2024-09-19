@@ -102,6 +102,10 @@ def process_user_data(table, index, five_x_five_user: FiveXFiveUser, session: Se
     if not user:
         logging.info(f"User not found with client_id {partner_uid_client_id}")
         return
+    
+    if user.is_leads_auto_charging is False:
+        logging.info(f"User not found with client_id {partner_uid_client_id}")
+        return
     page = partner_uid_dict.get('current_page')
     if page is None:
         json_headers = json.loads(str(table['JSON_HEADERS'][index]).lower())
@@ -115,8 +119,14 @@ def process_user_data(table, index, five_x_five_user: FiveXFiveUser, session: Se
         lead_user = LeadUser(five_x_five_user_id=five_x_five_user.id, user_id=user.id, behavior_type=behavior_type, domain_id=user_domain_id)
         session.add(lead_user)
         session.flush()
-        user_payment_transactions = UsersPaymentsTransactions(user_id=user.id, status='success', amount_credits=AMOUNT_CREDITS, type='lead', lead_id=lead_user.id, five_x_five_up_id=five_x_five_user.up_id)
+        
+        users_payments_transactions = session.query(UsersPaymentsTransactions).filter_by(five_x_five_user_id=five_x_five_user.id, domain_id=user_domain_id).first()
+        if users_payments_transactions:
+            logging.info(f"users_payments_transactions is already exists with id = {users_payments_transactions.id}")
+            return
+        user_payment_transactions = UsersPaymentsTransactions(user_id=user.id, status='success', amount_credits=AMOUNT_CREDITS, type='buy_lead', domain_id=user_domain_id, five_x_five_up_id=five_x_five_user.up_id)
         session.add(user_payment_transactions)
+        user.leads_credits -= AMOUNT_CREDITS
         session.flush()
     else:
         first_visit_id = lead_user.first_visit_id
