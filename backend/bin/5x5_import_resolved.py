@@ -124,30 +124,31 @@ async def process_user_data(table, index, five_x_five_user: FiveXFiveUser, sessi
     lead_user = session.query(LeadUser).filter_by(five_x_five_user_id=five_x_five_user.id, user_id=user.id).first()
     is_first_request = False
     if not lead_user:
-        users_payments_transactions = session.query(UsersPaymentsTransactions).filter(
-            UsersPaymentsTransactions.five_x_five_up_id == str(five_x_five_user.up_id),
-            UsersPaymentsTransactions.domain_id == user_domain_id
-        ).first()
-        if users_payments_transactions:
-            logging.info(f"users_payments_transactions is already exists with id = {users_payments_transactions.id}")
-            return
-        user_payment_transactions = UsersPaymentsTransactions(user_id=user.id, status='success', amount_credits=AMOUNT_CREDITS, type='buy_lead', domain_id=user_domain_id, five_x_five_up_id=five_x_five_user.up_id)
-        session.add(user_payment_transactions)
-        if (user.leads_credits - AMOUNT_CREDITS) < 0:
-            if user.is_leads_auto_charging is False:
-                logging.info(f"User eads_auto_charging is False")
+        if root_user is None:
+            users_payments_transactions = session.query(UsersPaymentsTransactions).filter(
+                UsersPaymentsTransactions.five_x_five_up_id == str(five_x_five_user.up_id),
+                UsersPaymentsTransactions.domain_id == user_domain_id
+            ).first()
+            if users_payments_transactions:
+                logging.info(f"users_payments_transactions is already exists with id = {users_payments_transactions.id}")
                 return
-            user.leads_credits -= AMOUNT_CREDITS
-            if user.leads_credits % 100 == 0 and root_user is None:
-                await publish_rabbitmq_message(
-                    connection=rmq_connection,
-                    queue_name=QUEUE_CREDITS_CHARGING,
-                    message_body={'customer_id': user.customer_id, 'credits': user.leads_credits}
-                )
-                logging.info({'customer_id': user.customer_id, 'credits': user.leads_credits})
-        else:
-            user.leads_credits -= AMOUNT_CREDITS
-        session.flush()
+            user_payment_transactions = UsersPaymentsTransactions(user_id=user.id, status='success', amount_credits=AMOUNT_CREDITS, type='buy_lead', domain_id=user_domain_id, five_x_five_up_id=five_x_five_user.up_id)
+            session.add(user_payment_transactions)
+            if (user.leads_credits - AMOUNT_CREDITS) < 0:
+                if user.is_leads_auto_charging is False:
+                    logging.info(f"User eads_auto_charging is False")
+                    return
+                user.leads_credits -= AMOUNT_CREDITS
+                if user.leads_credits % 100 == 0:
+                    await publish_rabbitmq_message(
+                        connection=rmq_connection,
+                        queue_name=QUEUE_CREDITS_CHARGING,
+                        message_body={'customer_id': user.customer_id, 'credits': user.leads_credits}
+                    )
+                    logging.info({'customer_id': user.customer_id, 'credits': user.leads_credits})
+            else:
+                user.leads_credits -= AMOUNT_CREDITS
+            session.flush()
         
         is_first_request = True
         lead_user = LeadUser(five_x_five_user_id=five_x_five_user.id, user_id=user.id, behavior_type=behavior_type, domain_id=user_domain_id)
