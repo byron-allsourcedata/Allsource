@@ -113,7 +113,10 @@ def process_user_data(table, index, five_x_five_user: FiveXFiveUser, session: Se
     lead_user = session.query(LeadUser).filter_by(five_x_five_user_id=five_x_five_user.id, user_id=user.id).first()
     is_first_request = False
     if not lead_user:
-        users_payments_transactions = session.query(UsersPaymentsTransactions).filter_by(five_x_five_user_id=five_x_five_user.id, domain_id=user_domain_id).first()
+        users_payments_transactions = session.query(UsersPaymentsTransactions).filter(
+            UsersPaymentsTransactions.five_x_five_up_id == str(five_x_five_user.up_id),
+            UsersPaymentsTransactions.domain_id == user_domain_id
+        ).first()
         if users_payments_transactions:
             logging.info(f"users_payments_transactions is already exists with id = {users_payments_transactions.id}")
             return
