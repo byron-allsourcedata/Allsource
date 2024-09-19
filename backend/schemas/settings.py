@@ -26,3 +26,13 @@ class TeamsDetailsRequest(BaseModel):
     pending_invitation_revoke: str = Field(...)
     invite_user: str = Field(...)
     remove_user: str = Field(...)
+    
+class PaymentCard(BaseModel):
+    payment_method_id: str = Field(...)
+    
+class ApiKeysRequest(BaseModel):
+    id: Optional[str] = None
+    api_key: Optional[str] = None
+    api_id: Optional[str] = None
+    name: Optional[str] = None
+    description: Optional[str] = None

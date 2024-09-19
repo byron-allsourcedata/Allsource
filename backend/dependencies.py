@@ -81,7 +81,7 @@ def get_leads_persistence(db: Session = Depends(get_db)):
 def get_send_grid_persistence_service(db: Session = Depends(get_db)):
     return SendgridPersistence(db=db)
 
-def get_settings_persistence_service(db: Session = Depends(get_db)):
+def get_settings_persistence(db: Session = Depends(get_db)):
     return SettingsPersistence(db=db)
 
 
@@ -214,19 +214,18 @@ def check_user_authentication(Authorization: Annotated[str, Header()],
     return user
 
 
-def get_cookie_domain(request: Request):
-    return request.cookies.get('current_domain')
-
-
 def get_user_domain_persistence(db: Session = Depends(get_db)) -> UserDomainsPersistence:
     return UserDomainsPersistence(db)
 
 
-def check_domain(user = Depends(check_user_authentication), domain: str = Depends(get_cookie_domain),
-                 domain_persistence: UserDomainsPersistence = Depends(get_user_domain_persistence)) -> UserDomains:
-    current_domain = domain_persistence.get_domain_by_user(user.get('id'), domain_substr=domain)
-    if not current_domain and len(current_domain) < 1:
-        raise HTTPException(status_code=404, detail='domain not found')
+def check_domain(
+    CurrentDomain: Annotated[str, Header()],
+    user=Depends(check_user_authentication), 
+    domain_persistence: UserDomainsPersistence = Depends(get_user_domain_persistence)
+) -> UserDomains:
+    current_domain = domain_persistence.get_domain_by_user(user.get('id'), domain_substr=CurrentDomain)
+    if not current_domain or len(current_domain) == 0 :
+        raise HTTPException(status_code=404, detail={'status': "DOMAIN NOT FOUND"})
     return current_domain[0]
 
 
@@ -260,9 +259,8 @@ def get_users_auth_service(db: Session = Depends(get_db),
 
 
 def get_users_service(user=Depends(check_user_authentication),
-                      domain=Depends(check_domain),
                       user_persistence_service: UserPersistence = Depends(get_user_persistence_service)):
-    return UsersService(user=user, domain=domain, user_persistence_service=user_persistence_service)
+    return UsersService(user=user, user_persistence_service=user_persistence_service)
 
 
 def get_leads_service(user = Depends(check_user_authorization),
@@ -293,10 +291,16 @@ def get_pixel_installation_service(db: Session = Depends(get_db),
 
 
 def get_settings_service(db: Session = Depends(get_db),
-                                   settings_persistence_service: SettingsPersistence = Depends(
-                                       get_settings_persistence_service),
+                                   settings_persistence: SettingsPersistence = Depends(
+                                       get_settings_persistence),
+                                    plan_persistence: PlansPersistence = Depends(
+                                       get_plans_persistence
+                                       ),
+                                    user_persistence: UserPersistence = Depends(
+                                       get_user_persistence_service
+                                       )
                                    ):
-    return SettingsService(db=db, settings_persistence_service=settings_persistence_service)
+    return SettingsService(db=db, settings_persistence=settings_persistence, plan_persistence=plan_persistence, user_persistence=user_persistence)
 
 
 def get_plans_service(user=Depends(check_user_authentication),

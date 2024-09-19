@@ -380,14 +380,14 @@ const Leads: React.FC = () => {
             if (selectedFilters.some(filter => filter.label === 'Visitor Type')) {
                 const status = selectedFilters.find(filter => filter.label === 'Visitor Type')?.value.split(', ') || [];
                 if (status.length > 0) {
-                    url += `&behavior_type=${encodeURIComponent(status.join(','))}`;
+                    const formattedStatus = status.map(status => status.toLowerCase().replace(/\s+/g, '_'));
+                    url += `&behavior_type=${encodeURIComponent(formattedStatus.join(','))}`;
                 }
             }
 
 
             // Processing "Regions"
             if (selectedFilters.some(filter => filter.label === 'Regions')) {
-                console.log(selectedFilters.find(filter => filter.label === 'Regions'))
                 const regions = selectedFilters.find(filter => filter.label === 'Regions')?.value.split(', ') || [];
 
                 const regionsFilter = selectedFilters.find(filter => filter.label === 'Regions');
@@ -494,7 +494,6 @@ const Leads: React.FC = () => {
                     setShowSlider(true);
                 } else if (error.response.data.status === 'PIXEL_INSTALLATION_NEEDED') {
                     setStatus(error.response.data.status || null);
-                    console.log(status)
                 } else {
                     setShowSlider(false);
                 }
@@ -688,55 +687,15 @@ const Leads: React.FC = () => {
 
     const getStatusStyle = (behavior_type: any) => {
         switch (behavior_type) {
-            case 'visitor':
+            case false:
                 return {
                     background: 'rgba(235, 243, 254, 1)',
                     color: 'rgba(20, 110, 246, 1)',
                 };
-            case 'Visitor':
-                return {
-                    background: 'rgba(235, 243, 254, 1)',
-                    color: 'rgba(20, 110, 246, 1)',
-                };
-            case 'product_added_to_cart':
-                return {
-                    background: 'rgba(241, 241, 249, 1)',
-                    color: 'rgba(80, 82, 178, 1)',
-                };
-            case 'Add_to_cart':
-                return {
-                    background: 'rgba(241, 241, 249, 1)',
-                    color: 'rgba(80, 82, 178, 1)',
-                };
-            case 'Add to cart':
-                return {
-                    background: 'rgba(241, 241, 249, 1)',
-                    color: 'rgba(80, 82, 178, 1)',
-                };
-            case 'Viewed Product':
+            case true:
                 return {
                     background: 'rgba(244, 252, 238, 1)',
                     color: 'rgba(43, 91, 0, 1)',
-                };
-            case 'Viewed_product':
-                return {
-                    background: 'rgba(244, 252, 238, 1)',
-                    color: 'rgba(43, 91, 0, 1)',
-                };
-            case 'viewed_product':
-                return {
-                    background: 'rgba(244, 252, 238, 1)',
-                    color: 'rgba(43, 91, 0, 1)',
-                };
-            case 'Existing':
-                return {
-                    background: 'rgba(244, 252, 238, 1)',
-                    color: 'rgba(43, 91, 0, 1)',
-                };
-            case 'New':
-                return {
-                    background: 'rgba(254, 243, 205, 1)',
-                    color: 'rgba(101, 79, 0, 1))',
                 };
             default:
                 return {
@@ -746,16 +705,13 @@ const Leads: React.FC = () => {
         }
     };
 
-    const formatFunnelText = (text: string) => {
-        if (text === 'product_added_to_cart') {
-            return 'Add to cart';
-        }        
-        // Заменяем символ подчеркивания пробелом и делаем первую букву каждого слова заглавной
-        return text
-            .replace(/_/g, ' ') // Заменяем подчеркивания пробелами
-            .split(' ')         // Разделяем строку по пробелам
-            .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()) // Каждое слово с заглавной буквы
-            .join(' ');
+    const formatFunnelText = (text: boolean) => {
+        if (text === false) {
+            return 'New';
+        }
+        if (text === true) {
+            return 'Returning';
+        }
     };
 
     const handleDownload = async () => {
@@ -858,76 +814,6 @@ const Leads: React.FC = () => {
                             <Typography variant="h4" component="h1" sx={leadsStyles.title}>
                                 Resolved Contacts ({count_leads ? count_leads : 0})
                             </Typography>
-                            {/* {status != 'PIXEL_INSTALLATION_NEEDED' && (
-                                    <Button
-                                        disabled={status === 'PIXEL_INSTALLATION_NEEDED'}
-                                        onClick={() => handleFilterChange('all')}
-                                        sx={{
-                                            color: activeFilter === 'all' ? 'rgba(80, 82, 178, 1)' : 'rgba(89, 89, 89, 1)',
-                                            borderBottom: activeFilter === 'all' && status !== 'PIXEL_INSTALLATION_NEEDED' ? '2px solid rgba(80, 82, 178, 1)' : '0px solid transparent',
-                                            textTransform: 'none',
-                                            mr: '1em',
-                                            borderRadius: '0px',
-                                            minWidth: 'auto',
-                                            padding: '0.25em 1em 0.25em 1em',
-                                            '@media (max-width: 1199px)': {
-                                                display: 'none'
-                                            }
-                                        }}
-                                    >
-                                        <Typography variant="body2" sx={{...leadsStyles.subtitle,
-                                            color: activeFilter === 'all' ? 'rgba(80, 82, 178, 1)' : 'rgba(89, 89, 89, 1)',
-                                        }}
-                                        
-                                        >All</Typography>
-                                    </Button>
-
-                                    )} */}
-                            {/* {status != 'PIXEL_INSTALLATION_NEEDED' && (
-                                    <Button
-                                        disabled={status === 'PIXEL_INSTALLATION_NEEDED'}
-                                        onClick={() => handleFilterChange('new_customers')}
-                                        sx={{
-                                            color: activeFilter === 'new_customers' ? 'rgba(80, 82, 178, 1)' : 'rgba(89, 89, 89, 1)',
-                                            borderBottom: activeFilter === 'new_customers' ? '2px solid rgba(80, 82, 178, 1)' : '0px solid transparent',
-                                            textTransform: 'none',
-                                            mr: '1em',
-                                            borderRadius: '0px',
-                                            minWidth: 'auto',
-                                            padding: '0.25em 1em 0.25em 1em',
-                                            '@media (max-width: 1199px)': {
-                                                display: 'none'
-                                            }
-                                        }}
-                                    >
-                                        <Typography variant="body2" sx={{...leadsStyles.subtitle,
-                                            color: activeFilter === 'new_customers' ? 'rgba(80, 82, 178, 1)' : 'rgba(89, 89, 89, 1)',
-                                        }}>New Customers</Typography>
-                                    </Button>
-                                    )} */}
-                            {/* {status != 'PIXEL_INSTALLATION_NEEDED' && (
-                                    <Button
-                                        disabled={status === 'PIXEL_INSTALLATION_NEEDED'}
-                                        onClick={() => handleFilterChange('existing_customers')}
-                                        sx={{
-                                            color: activeFilter === 'existing_customers' ? 'rgba(80, 82, 178, 1)' : 'rgba(89, 89, 89, 1)',
-                                            borderBottom: activeFilter === 'existing_customers' ? '2px solid rgba(80, 82, 178, 1)' : '0px solid transparent',
-                                            textTransform: 'none',
-                                            mr: '1em',
-                                            borderRadius: '0px',
-                                            minWidth: 'auto',
-                                            padding: '0.25em 1em 0.25em 1em',
-                                            '@media (max-width: 1199px)': {
-                                                display: 'none'
-                                            }
-                                        }}
-                                    >
-                                        <Typography variant="body2" sx={{...leadsStyles.subtitle,
-                                            color: activeFilter === 'existing_customers' ? 'rgba(80, 82, 178, 1)' : 'rgba(89, 89, 89, 1)',
-                                        }}>Existing
-                                            Customers</Typography>
-                                    </Button>
-                                    )} */}
                         </Box>
                         <Box sx={{
                             display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '15px',
@@ -1014,6 +900,10 @@ const Leads: React.FC = () => {
                                             height: '10px',
                                             backgroundColor: 'red',
                                             borderRadius: '50%',
+                                            '@media (max-width: 900px)': {
+                                                top:-1,
+                                                right:1
+                                            }
                                         }}
                                     />
                                 )}
@@ -1068,77 +958,6 @@ const Leads: React.FC = () => {
                             </Button>
                         </Box>
                     </Box>
-                    <Box sx={{
-                        display: 'flex', flexDirection: 'row', alignItems: 'center',
-                        flexWrap: 'wrap',
-                        marginTop: '1.125rem',
-                        marginBottom: '0.25rem',
-                        '@media (min-width: 1200px)': {
-                            display: 'none'
-                        }
-                    }}>
-
-                        {status != 'PIXEL_INSTALLATION_NEEDED' && data.length != 0 && (
-                            <Button
-                                disabled={status === 'PIXEL_INSTALLATION_NEEDED'}
-                                onClick={() => handleFilterChange('all')}
-                                sx={{
-                                    color: activeFilter === 'all' ? 'rgba(80, 82, 178, 1)' : 'rgba(89, 89, 89, 1)',
-                                    borderBottom: activeFilter === 'all' && status !== 'PIXEL_INSTALLATION_NEEDED' ? '2px solid rgba(80, 82, 178, 1)' : '0px solid transparent',
-                                    textTransform: 'none',
-                                    borderRadius: '0px',
-                                    minWidth: 'auto',
-                                    padding: '0.25em 1em 0.25em 1em'
-                                }}
-                            >
-                                <Typography variant="body2" sx={{
-                                    ...leadsStyles.subtitle,
-                                    color: activeFilter === 'all' ? 'rgba(80, 82, 178, 1)' : 'rgba(89, 89, 89, 1)',
-                                }}
-                                >All</Typography>
-                            </Button>
-
-                        )}
-                        {status != 'PIXEL_INSTALLATION_NEEDED' && data.length != 0 && (
-                            <Button
-                                disabled={status === 'PIXEL_INSTALLATION_NEEDED'}
-                                onClick={() => handleFilterChange('new_customers')}
-                                sx={{
-                                    color: activeFilter === 'new_customers' ? 'rgba(80, 82, 178, 1)' : 'rgba(89, 89, 89, 1)',
-                                    borderBottom: activeFilter === 'new_customers' ? '2px solid rgba(80, 82, 178, 1)' : '0px solid transparent',
-                                    textTransform: 'none',
-                                    borderRadius: '0px',
-                                    minWidth: 'auto',
-                                    padding: '0.25em 1em 0.25em 1em'
-                                }}
-                            >
-                                <Typography variant="body2" sx={{
-                                    ...leadsStyles.subtitle,
-                                    color: activeFilter === 'new_customers' ? 'rgba(80, 82, 178, 1)' : 'rgba(89, 89, 89, 1)',
-                                }}>New Customers</Typography>
-                            </Button>
-                        )}
-                        {status != 'PIXEL_INSTALLATION_NEEDED' && data.length != 0 && (
-                            <Button
-                                disabled={status === 'PIXEL_INSTALLATION_NEEDED'}
-                                onClick={() => handleFilterChange('existing_customers')}
-                                sx={{
-                                    color: activeFilter === 'existing_customers' ? 'rgba(80, 82, 178, 1)' : 'rgba(89, 89, 89, 1)',
-                                    borderBottom: activeFilter === 'existing_customers' ? '2px solid rgba(80, 82, 178, 1)' : '0px solid transparent',
-                                    textTransform: 'none',
-                                    borderRadius: '0px',
-                                    minWidth: 'auto',
-                                    padding: '0.25em 1em 0.25em 1em'
-                                }}
-                            >
-                                <Typography variant="body2" sx={{
-                                    ...leadsStyles.subtitle,
-                                    color: activeFilter === 'existing_customers' ? 'rgba(80, 82, 178, 1)' : 'rgba(89, 89, 89, 1)',
-                                }}>Existing
-                                    Customers</Typography>
-                            </Button>
-                        )}
-                    </Box>
                     <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, mt: 2 }}>
                         {selectedFilters.length > 0 && (
                             <Chip
@@ -1150,7 +969,7 @@ const Leads: React.FC = () => {
                         {selectedFilters.map(filter => (
                             <Chip
                                 key={filter.label}
-                                label={`${filter.label}: ${filter.value}`}
+                                label={`${filter.label}: ${filter.value.charAt(0).toUpperCase() + filter.value.slice(1)}`}
                                 onDelete={() => handleDeleteFilter(filter)}
                                 deleteIcon={
                                     <CloseIcon
@@ -1256,7 +1075,7 @@ const Leads: React.FC = () => {
                                                         { key: 'business_email', label: 'Email' },
                                                         { key: 'mobile_phone', label: 'Phone number' },
                                                         { key: 'first_visited_date', label: 'Visited date', sortable: true },
-                                                        { key: 'behavior_type', label: 'Visitor Type' },
+                                                        { key: 'status', label: 'Visitor Type' },
                                                         { key: 'time_spent', label: 'Time on site' },
                                                     ].map(({ key, label, sortable = true }) => (
                                                         <TableCell
@@ -1337,14 +1156,14 @@ const Leads: React.FC = () => {
                                                                     fontSize: '12px',
                                                                     fontWeight: '700',
                                                                     lineHeight: 'normal',
-                                                                    backgroundColor: getStatusStyle(row.behavior_type).background,
-                                                                    color: getStatusStyle(row.behavior_type).color,
+                                                                    backgroundColor: getStatusStyle(row.visitor_type).background,
+                                                                    color: getStatusStyle(row.visitor_type).color,
                                                                     justifyContent: 'center',
                                                                     minWidth: '130px',
                                                                     textTransform: 'capitalize'
                                                                 }}
                                                             >
-                                                                {formatFunnelText(row.behavior_type) || 'N/A'}
+                                                                {formatFunnelText(row.visitor_type) || 'N/A'}
                                                             </Box>
                                                         </TableCell>
 

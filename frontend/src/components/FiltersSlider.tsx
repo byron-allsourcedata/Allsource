@@ -6,7 +6,7 @@ import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider, DatePicker, TimePicker } from '@mui/x-date-pickers';
-import dayjs from 'dayjs';
+import dayjs, { Dayjs } from 'dayjs';
 import Image from 'next/image';
 import { filterStyles } from '../css/filterSlider';
 import debounce from 'lodash/debounce';
@@ -71,22 +71,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
   // const handleOpen = () => setOpen(true);
   // const handleClose = () => setOpen(false);
 
-  const style = {
-    position: "absolute" as "absolute",
-    top: "17vh",
-    left: '85%',
-    transform: "translate(-50%, -50%)",
-    width: 300,
-    bgcolor: "background.paper",
-    boxShadow: 24,
-    p: 2,
-    borderRadius: "10px",
-    '@media (max-width:600px)': {
-      top: "7%",
-      left: '50%',
-      width: '100%',
-    }
-  };
 
   type ButtonFilters = {
     button: string;
@@ -147,9 +131,8 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
   };
 
   const statusMapping: Record<string, string> = {
-    Visitor: "visitor",
-    "View Product": "viewed_product",
-    "Add to cart": "product_added_to_cart",
+    New: "New",
+    "Returning": "Returning"
   };
 
   const addTag = (category: string, tag: string) => {
@@ -364,42 +347,14 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
   );
 
 
-  const handleButtonClick = (label: string) => {
-    let funnel = "";
-    switch (label) {
-      case "Abandoned cart":
-        funnel = "Abandoned cart";
-        break;
-      case "Converters sales":
-        funnel = "Converted sales";
-        break;
-      case "Returning visitors":
-        funnel = "Returning visitors";
-        break;
-      case "Landed to cart":
-        funnel = "Added to cart";
-        break;
-    }
-
-    const now = dayjs();
-    const fromDate = now.subtract(30, "days").startOf("day").unix();
-    const toDate = now.endOf("day").unix();
-
-    const newFilters = {
-      button: label,
-      dateRange: {
-        fromDate,
-        toDate,
-      },
-      selectedFunnels: [funnel],
-    };
-
-    setButtonFilters(newFilters); // Сохраняем фильтры в состоянии
-    setSelectedButton(label);
-  };
 
   ///// Date
-  const [dateRange, setDateRange] = useState({
+
+  interface DateRange {
+    fromDate: Dayjs | null;
+    toDate: Dayjs | null;
+  }
+  const [dateRange, setDateRange] = useState<DateRange>({
     fromDate: null,
     toDate: null,
   });
@@ -472,7 +427,13 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
   };
 
   /////// Time
-  const [timeRange, setTimeRange] = useState({
+  type TimeRange = {
+    fromTime: dayjs.Dayjs | null;
+    toTime: dayjs.Dayjs | null;
+  };
+  
+  // Инициализация состояния
+  const [timeRange, setTimeRange] = useState<TimeRange>({
     fromTime: null,
     toTime: null,
   });
@@ -664,6 +625,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
       button: buttonFilters ? buttonFilters.button : selectedButton,
       checkedFiltersTime,      // Фильтры по времени (утро, день, вечер и т.д.)
       checkedFiltersPageVisits,
+      checkedFilters,
       regions,
       checkedFiltersTimeSpent,
       selectedStatus,
@@ -679,18 +641,18 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
 
 
   const saveFiltersToSessionStorage = (filters: {
-      from_date: number | null;
-      to_date: number | null;
-      from_time: string | null;
-      to_time: string | null;
-      selectedFunnels: string[]; button: string | null; 
-      checkedFiltersTime: { morning: boolean; evening: boolean; afternoon: boolean; all_day: boolean; };
-      checkedFiltersPageVisits: { page: boolean; two_page: boolean; three_page: boolean; more_three: boolean; }; 
-      regions: string[]; 
-      checkedFiltersTimeSpent: { under_10: boolean; over_10: boolean; over_30: boolean; over_60: boolean; }; 
-      selectedStatus: string[]; recurringVisits: string[];
-      searchQuery: string; dateRange?: { fromDate: number; toDate: number; } | undefined;
-    }) => {
+    from_date: number | null;
+    to_date: number | null;
+    from_time: string | null;
+    to_time: string | null;
+    selectedFunnels: string[]; button: string | null;
+    checkedFiltersTime: { morning: boolean; evening: boolean; afternoon: boolean; all_day: boolean; };
+    checkedFiltersPageVisits: { page: boolean; two_page: boolean; three_page: boolean; more_three: boolean; };
+    regions: string[];
+    checkedFiltersTimeSpent: { under_10: boolean; over_10: boolean; over_30: boolean; over_60: boolean; };
+    selectedStatus: string[]; recurringVisits: string[];
+    searchQuery: string; dateRange?: { fromDate: number; toDate: number; } | undefined;
+  }) => {
     sessionStorage.setItem('filters', JSON.stringify(filters));
   };
 
@@ -705,12 +667,34 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
   const initializeFilters = () => {
     const savedFilters = loadFiltersFromSessionStorage();
     if (savedFilters) {
+
+      // Page visits
       setCheckedFiltersPageVisits(savedFilters.checkedFiltersPageVisits || {
         page: false,
         two_page: false,
         three_page: false,
         more_three: false,
       });
+
+      // Проверка активных фильтров посещений страниц
+      const isPageVisitsFilterActive = Object.values(savedFilters.checkedFiltersPageVisits || {}).some(value => value === true);
+
+      if (isPageVisitsFilterActive) {
+        const pageVisitsTagMap: { [key: string]: string } = {
+          page: "1 page",
+          two_page: "2 pages",
+          three_page: "3 pages",
+          more_three: "More than 3 pages",
+        };
+
+        // Проходим по всем фильтрам и добавляем тег для каждого активного
+        Object.keys(savedFilters.checkedFiltersPageVisits).forEach((key) => {
+          if (savedFilters.checkedFiltersPageVisits[key]) {
+            addTag("pageVisits", pageVisitsTagMap[key]);
+          }
+        });
+      }
+
       setCheckedFiltersTime(savedFilters.checkedFiltersTime || {
         morning: false,
         afternoon: false,
@@ -723,30 +707,123 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
         last6Months: false,
         allTime: false,
       });
+
+      // Time spent
       setCheckedFiltersTimeSpent(savedFilters.checkedFiltersTimeSpent || {
         under_10: false,
         over_10: false,
         over_30: false,
         over_60: false,
       });
-      setRegions(savedFilters.regions || []);
+
+      const isTimeSpentFilterActive = Object.values(savedFilters.checkedFiltersTimeSpent || {}).some(value => value === true);
+    if (isTimeSpentFilterActive) {
+      const timeSpentTagMap: { [key: string]: string } = {
+        under_10: "under 10 secs",
+        over_10: "10-30 secs",
+        over_30: "30-60 secs",
+        over_60: "Over 60 secs",
+      };
+
+      Object.keys(savedFilters.checkedFiltersTimeSpent).forEach((key) => {
+        if (savedFilters.checkedFiltersTimeSpent[key]) {
+          addTag("timeSpents", timeSpentTagMap[key]);
+        }
+      });
+    }
+
+
       setSelectedFunnels(savedFilters.selectedFunnels || []);
       setSelectedStatus(savedFilters.selectedStatus || []);
       setSelectedValues(savedFilters.recurringVisits || []);
       setSearchQuery(savedFilters.searchQuery || '');
-      setButtonFilters(savedFilters.button)
-  };
-}
+
+
+      const isTimeFilterActive = Object.values(savedFilters.checkedFiltersTime || {}).some(value => value === true);
+      if (isTimeFilterActive) {
+        const timeTagMap: { [key: string]: string } = {
+          morning: "Morning 12AM - 11AM",
+          afternoon: "Afternoon 11AM - 5PM",
+          evening: "Evening 5PM - 9PM",
+          all_day: "All day",
+        };
   
+        // Обработка активных фильтров
+        Object.keys(savedFilters.checkedFiltersTime).forEach((key) => {
+          if (savedFilters.checkedFiltersTime[key]) {
+            addTag("visitedTime", timeTagMap[key]);
+          }
+        });
+          
+      }  else {
+      // Преобразование времени из строкового формата в Dayjs
+      const fromTime = savedFilters.from_time ? dayjs(savedFilters.from_time, 'HH:mm') : null;
+      const toTime = savedFilters.to_time ? dayjs(savedFilters.to_time, 'HH:mm') : null;
+
+      // Форматирование времени для тега
+      const formattedFromTime = fromTime ? fromTime.format('h:mm A') : '';
+      const formattedToTime = toTime ? toTime.format('h:mm A') : '';
+      if (fromTime && toTime) {
+        setSelectedTimeRange(`${formattedFromTime} to ${formattedToTime}`);
+      } else {
+        setSelectedTimeRange(null);
+      }
+
+      // Обновление состояния
+      setTimeRange({
+        fromTime: fromTime && fromTime.isValid() ? fromTime : null,
+        toTime: toTime && toTime.isValid() ? toTime : null,
+      });
+    }
+
+
+      const isAnyFilterActive = Object.values(savedFilters.checkedFilters || {}).some(value => value === true);
+      if (isAnyFilterActive) {
+        setButtonFilters(savedFilters.button);
+        const tagMap: { [key: string]: string } = {
+          lastWeek: "Last week",
+          last30Days: "Last 30 days",
+          last6Months: "Last 6 months",
+          allTime: "All time",
+        };
+        const activeFilter = Object.keys(savedFilters.checkedFilters).find(key => savedFilters.checkedFilters[key]);
+
+        if (activeFilter) {
+          addTag("visitedDate", tagMap[activeFilter]);
+        }
+      } else {
+        const fromDate = savedFilters.from_date ? dayjs.unix(savedFilters.from_date).format('MMM DD, YYYY') : null;
+        const toDate = savedFilters.to_date ? dayjs.unix(savedFilters.to_date).format('MMM DD, YYYY') : null;
+        const newTag = fromDate && toDate ? `From ${fromDate} to ${toDate}` : null;
+        if (newTag) {
+          addTag("visitedDate", newTag);
+        }
+        setDateRange({
+          fromDate: savedFilters.from_date ? dayjs.unix(savedFilters.from_date) : null,
+          toDate: savedFilters.to_date ? dayjs.unix(savedFilters.to_date) : null,
+        });
+      }
+      setButtonFilters(savedFilters.button)
+      if (savedFilters.regions) {
+        setTags((prevTags) => {
+          const uniqueTags = new Set(prevTags);
+          savedFilters.regions.forEach((cityTag: string) => {
+            uniqueTags.add(cityTag);
+          });
+          return Array.from(uniqueTags);
+        });
+      }
+    };
+  }
+
   useEffect(() => {
     initializeFilters();
   }, [open]);
-  
+
 
 
   const handleApply = () => {
     const filters = handleFilters();
-    console.log(filters)
     onApply(filters);
     onClose();
   };
@@ -1052,7 +1129,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
     setTags((prevTags) => [...prevTags, `${city.city}-${city.state}`]);
     setRegions('');
     setCities([]);
-    setIsRegionOpen(false);
   };
 
 
@@ -1378,10 +1454,13 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
-            pb: 2
+            pb: 2,
+            position: "relative",
+            height: '100%',
+            width: '100%'
           }}
         >
-          <Box sx={{ display: 'flex', width: '100%', flexDirection: 'column' }}>
+          <Box sx={{ display: 'flex', width: '100%', flexDirection: 'column', pb: 2 }}>
             <TextField
               placeholder="Search by name, emails, phone"
               variant="outlined"
@@ -1446,54 +1525,177 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
               )}
             </Box>
           </Box>
+          {/* Status */}
           <Box
-            sx={{ display: "flex", flexWrap: "wrap", gap: "10px", p: "1em" }}
+            sx={filterStyles.main_filter_form}
           >
-            {[
-              "Abandoned cart",
-              "Converters sales",
-              "Returning visitors",
-              "Landed to cart",
-            ].map((label) => (
-              <Button
-                key={label}
-                onClick={() => handleButtonClick(label)}
+            <Box
+              sx={filterStyles.filter_form}
+              onClick={() => setIsStatus(!isStatus)}
+            >
+              <Box
                 sx={{
-                  width: "calc(50% - 5px)",
-                  height: "33px",
-                  textTransform: "none",
-                  padding: "1.25em",
-                  gap: "10px",
-                  textAlign: "center",
-                  borderRadius: "4px",
-                  border:
-                    selectedButton === label
-                      ? "1px solid rgba(80, 82, 178, 1)"
-                      : "1px solid rgba(220, 220, 239, 1)",
-                  backgroundColor:
-                    selectedButton === label
-                      ? "rgba(219, 219, 240, 1)"
-                      : "#fff",
-                  color:
-                    selectedButton === label
-                      ? "rgba(80, 82, 178, 1)"
-                      : "rgba(74, 74, 74, 1)",
-                  fontFamily: "Nunito",
-                  opacity: 1,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
+                  ...filterStyles.active_filter_dote,
+                  visibility: isStatusFilterActive() ? "visible" : "hidden"
+                }}
+              />
+              <Image src="/status.svg" alt="calendar" width={18} height={18} />
+              <Typography
+                sx={{
+                  ...filterStyles.filter_name
                 }}
               >
-                {label}
-              </Button>
-            ))}
+                Visitor type
+              </Typography>
+              {selectedStatus.map((mappedLabel) => {
+                const originalLabel = Object.keys(statusMapping).find(
+                  (key) => statusMapping[key] === mappedLabel
+                ) as keyof typeof statusMapping;
+                return (
+                  <CustomChip
+                    key={mappedLabel}
+                    label={originalLabel}
+                    onDelete={() => handleButtonStatusClick(originalLabel)}
+                  />
+                );
+              })}
+              <IconButton
+                onClick={() => setIsStatus(!isStatus)}
+                aria-label="toggle-content"
+              >
+                {isStatus ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+              </IconButton>
+            </Box>
+            <Collapse in={isStatus}>
+              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, pt: 2, pl: 2 }}>
+                {["New", "Returning"].map((label) => {
+                  const mappedStatus = statusMapping[label];
+                  const isSelected = selectedStatus.includes(mappedStatus);
+
+                  return (
+                    <Button
+                      key={label}
+                      onClick={() => handleButtonStatusClick(label)}
+                      sx={{
+                        width: "calc(25% - 5px)",
+                        height: "2em",
+                        textTransform: "none",
+                        textWrap: 'nowrap',
+                        padding: "5px 0px",
+                        gap: "10px",
+                        textAlign: "center",
+                        borderRadius: "4px",
+                        fontFamily: "Nunito",
+                        opacity: 1,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        border: isSelected
+                          ? "1px solid rgba(80, 82, 178, 1)"
+                          : "1px solid rgba(220, 220, 239, 1)",
+                        color: isSelected
+                          ? "rgba(80, 82, 178, 1)"
+                          : "rgba(74, 74, 74, 1)",
+                        backgroundColor: isSelected
+                          ? "rgba(237, 237, 247, 1)"
+                          : "rgba(255, 255, 255, 1)",
+                      }}
+                    >
+                      {label}
+                    </Button>
+                  );
+                })}
+              </Box>
+            </Collapse>
+
+          </Box>
+          {/* Lead status */}
+          <Box
+            sx={filterStyles.main_filter_form}
+          >
+            <Box
+              sx={filterStyles.filter_form}
+              onClick={() => setIsLeadFunnel(!isLeadFunnel)}
+            >
+              <Box
+                sx={{
+                  ...filterStyles.active_filter_dote,
+                  visibility: isLeadFunnelActive() ? "visible" : "hidden"
+                }}
+              />
+              <Image src="/Leads.svg" alt="calendar" width={18} height={18} />
+              <Typography
+                sx={{
+                  ...filterStyles.filter_name
+                }}
+              >
+                Lead Status
+              </Typography>
+              {selectedFunnels.map((label) => (
+                <CustomChip
+                  key={label}
+                  label={label}
+                  onDelete={() => handleButtonLeadFunnelClick(label)}
+                />
+              ))}
+              <IconButton
+                onClick={() => setIsLeadFunnel(!isLeadFunnel)}
+                aria-label="toggle-content"
+              >
+                {isLeadFunnel ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+              </IconButton>
+            </Box>
+            <Collapse in={isLeadFunnel}>
+              <Box sx={{ display: "flex", width: '100%', flexWrap: 'wrap', gap: 1, pt: 2, pl: 2 }}>
+                {[
+                  "Abandoned cart",
+                  "View Product",
+                  "Converted sales",
+                ].map((label) => {
+                  const isSelected = selectedFunnels.includes(label);
+                  return (
+                    <Button
+                      key={label}
+                      onClick={() => handleButtonLeadFunnelClick(label)}
+                      sx={{
+                        width: "calc(25%)",
+                        height: "2em",
+                        textTransform: "none",
+                        gap: "0px",
+                        padding: '1em 2em',
+                        textWrap: "nowrap",
+                        textAlign: "center",
+                        borderRadius: "4px",
+                        fontFamily: "Nunito",
+                        opacity: 1,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        border: isSelected
+                          ? "1px solid rgba(80, 82, 178, 1)"
+                          : "1px solid rgba(220, 220, 239, 1)",
+                        color: isSelected
+                          ? "rgba(80, 82, 178, 1)"
+                          : "rgba(74, 74, 74, 1)",
+                        background: isSelected
+                          ? "rgba(237, 237, 247, 1)"
+                          : "transparent",
+                        '@media (max-width:600px)': {
+                          width: '48%'
+                        }
+                      }}
+                    >
+                      {label}
+                    </Button>
+                  );
+                })}
+              </Box>
+            </Collapse>
           </Box>
           {/* Visited date */}
           <Box
             sx={{
               width: "100%",
-              mt: 0.5,
               padding: "0.5em",
               border: "1px solid rgba(228, 228, 228, 1)",
             }}
@@ -2202,179 +2404,11 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
               </Box>
             </Collapse>
           </Box>
-          {/* Lead Funnel */}
-          <Box
-            sx={filterStyles.main_filter_form}
-          >
-            <Box
-              sx={filterStyles.filter_form}
-              onClick={() => setIsLeadFunnel(!isLeadFunnel)}
-            >
-              <Box
-                sx={{
-                  ...filterStyles.active_filter_dote,
-                  visibility: isLeadFunnelActive() ? "visible" : "hidden"
-                }}
-              />
-              <Image src="/Leads.svg" alt="calendar" width={18} height={18} />
-              <Typography
-                sx={{
-                  ...filterStyles.filter_name
-                }}
-              >
-                Lead Status
-              </Typography>
-              {selectedFunnels.map((label) => (
-                <CustomChip
-                  key={label}
-                  label={label}
-                  onDelete={() => handleButtonLeadFunnelClick(label)}
-                />
-              ))}
-              <IconButton
-                onClick={() => setIsLeadFunnel(!isLeadFunnel)}
-                aria-label="toggle-content"
-              >
-                {isLeadFunnel ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-              </IconButton>
-            </Box>
-            <Collapse in={isLeadFunnel}>
-              <Box sx={{ display: "flex", width: '100%', flexWrap: 'wrap', gap: 1, pt: 2, pl: 2 }}>
-                {[
-                  "Converted sales",
-                  "Returning visitors",
-                  "Abandoned cart",
-                  "Landed to cart",
-                ].map((label) => {
-                  const isSelected = selectedFunnels.includes(label);
-                  return (
-                    <Button
-                      key={label}
-                      onClick={() => handleButtonLeadFunnelClick(label)}
-                      sx={{
-                        width: "calc(33% - 8px)",
-                        height: "2em",
-                        textTransform: "none",
-                        gap: "0px",
-                        padding: '1em 2em',
-                        textWrap: "nowrap",
-                        textAlign: "center",
-                        borderRadius: "4px",
-                        fontFamily: "Nunito",
-                        opacity: 1,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        border: isSelected
-                          ? "1px solid rgba(80, 82, 178, 1)"
-                          : "1px solid rgba(220, 220, 239, 1)",
-                        color: isSelected
-                          ? "rgba(80, 82, 178, 1)"
-                          : "rgba(74, 74, 74, 1)",
-                        background: isSelected
-                          ? "rgba(237, 237, 247, 1)"
-                          : "transparent",
-                        '@media (max-width:600px)': {
-                          width: '48%'
-                        }
-                      }}
-                    >
-                      {label}
-                    </Button>
-                  );
-                })}
-              </Box>
-            </Collapse>
-          </Box>
-          {/* Status */}
-          <Box
-            sx={filterStyles.main_filter_form}
-          >
-            <Box
-              sx={filterStyles.filter_form}
-              onClick={() => setIsStatus(!isStatus)}
-            >
-              <Box
-                sx={{
-                  ...filterStyles.active_filter_dote,
-                  visibility: isStatusFilterActive() ? "visible" : "hidden"
-                }}
-              />
-              <Image src="/status.svg" alt="calendar" width={18} height={18} />
-              <Typography
-                sx={{
-                  ...filterStyles.filter_name
-                }}
-              >
-                Visitor type
-              </Typography>
-              {selectedStatus.map((mappedLabel) => {
-                const originalLabel = Object.keys(statusMapping).find(
-                  (key) => statusMapping[key] === mappedLabel
-                ) as keyof typeof statusMapping;
-                return (
-                  <CustomChip
-                    key={mappedLabel}
-                    label={originalLabel}
-                    onDelete={() => handleButtonStatusClick(originalLabel)}
-                  />
-                );
-              })}
-              <IconButton
-                onClick={() => setIsStatus(!isStatus)}
-                aria-label="toggle-content"
-              >
-                {isStatus ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-              </IconButton>
-            </Box>
-            <Collapse in={isStatus}>
-              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, pt: 2, pl: 2 }}>
-                {["Visitor", "View Product", "Add to cart"].map((label) => {
-                  const mappedStatus = statusMapping[label];
-                  const isSelected = selectedStatus.includes(mappedStatus);
-
-                  return (
-                    <Button
-                      key={label}
-                      onClick={() => handleButtonStatusClick(label)}
-                      sx={{
-                        width: "calc(25% - 5px)",
-                        height: "2em",
-                        textTransform: "none",
-                        textWrap: 'nowrap',
-                        padding: "5px 0px",
-                        gap: "10px",
-                        textAlign: "center",
-                        borderRadius: "4px",
-                        fontFamily: "Nunito",
-                        opacity: 1,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        border: isSelected
-                          ? "1px solid rgba(80, 82, 178, 1)"
-                          : "1px solid rgba(220, 220, 239, 1)",
-                        color: isSelected
-                          ? "rgba(80, 82, 178, 1)"
-                          : "rgba(74, 74, 74, 1)",
-                        backgroundColor: isSelected
-                          ? "rgba(237, 237, 247, 1)"
-                          : "rgba(255, 255, 255, 1)",
-                      }}
-                    >
-                      {label}
-                    </Button>
-                  );
-                })}
-              </Box>
-            </Collapse>
-
-          </Box>
           {/* Recurring Visits */}
           <Box
             sx={{
               width: "100%",
-              mb: 2,
+              mb: 15,
               border: "1px solid rgba(228, 228, 228, 1)",
               padding: "0.5em",
             }}
@@ -2452,50 +2486,66 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
               </Box>
             </Collapse>
           </Box>
-        </Box>
-        <Box
-          sx={{
-            marginRight: "2em",
-            display: "flex",
-            justifyContent: "end",
-            pb: 2,
-            gap: 3
-          }}
-        >
-          <Button
-            variant="contained"
-            onClick={handleClearFilters}
+          <Box
             sx={{
-              color: "rgba(80, 82, 178, 1)",
-              backgroundColor: '#fff',
-              border: 'rgba(80, 82, 178, 1)',
-              fontFamily: "Nunito",
-              fontSize: "16px",
-              textTransform: "none",
-              padding: "0.75em 2.5em",
-              '&:hover': {
-                backgroundColor: 'transparent'
-              }
+              mb: 0,
+              padding: "0.15em",
+              visibility: 'hidden'
             }}
           >
-            Clear all
-          </Button>
-          <Button
-            variant="contained"
-            onClick={handleApply}
+          </Box>
+          {/* Buttons */}
+          <Box
             sx={{
-              backgroundColor: "rgba(80, 82, 178, 1)",
-              fontFamily: "Nunito",
-              fontSize: "16px",
-              textTransform: "none",
-              padding: "0.75em 2.5em",
-              '&:hover': {
-                backgroundColor: 'rgba(80, 82, 178, 1)'
-              }
+              position: 'fixed ', // "липкое" положение
+              width: '40%',
+              bottom: 0, // Прилипает к низу
+              right: 0,
+              zIndex: 1302, // Поверх других элементов
+              backgroundColor: 'rgba(255, 255, 255, 1)', // Фон кнопок
+              display: 'flex',
+              justifyContent: 'flex-end', // Выравнивание по правому краю
+              marginTop: '1em',
+              padding: '1em', // Отступы
+              gap: 3,
+              borderTop: '1px solid rgba(228, 228, 228, 1)'
             }}
           >
-            Apply
-          </Button>
+            <Button
+              variant="contained"
+              onClick={handleClearFilters}
+              sx={{
+                color: "rgba(80, 82, 178, 1)",
+                backgroundColor: '#fff',
+                fontFamily: "Nunito",
+                border: ' 1px solid rgba(80, 82, 178, 1)',
+                fontSize: "16px",
+                textTransform: "none",
+                padding: "0.75em 2.5em",
+                '&:hover': {
+                  backgroundColor: 'transparent'
+                }
+              }}
+            >
+              Clear all
+            </Button>
+            <Button
+              variant="contained"
+              onClick={handleApply}
+              sx={{
+                backgroundColor: "rgba(80, 82, 178, 1)",
+                fontFamily: "Nunito",
+                fontSize: "16px",
+                textTransform: "none",
+                padding: "0.75em 2.5em",
+                '&:hover': {
+                  backgroundColor: 'rgba(80, 82, 178, 1)'
+                }
+              }}
+            >
+              Apply
+            </Button>
+          </Box>
         </Box>
       </Drawer>
     </>

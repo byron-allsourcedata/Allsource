@@ -2,7 +2,7 @@ import logging
 from datetime import datetime
 
 from services.subscriptions import SubscriptionService
-
+from .stripe_service import save_payment_details_in_stripe
 logger = logging.getLogger(__name__)
 
 
@@ -30,7 +30,7 @@ class WebhookService:
         Saving the details of payment mode
         """
 
-        saved_details_of_payment = self.subscription_service.save_payment_details_in_stripe(customer_id=customer_id)
+        saved_details_of_payment = save_payment_details_in_stripe(customer_id=customer_id)
         if saved_details_of_payment:
             logger.info("saved details of payment for success")
 
@@ -71,7 +71,7 @@ class WebhookService:
         Saving the details of payment mode
         """
 
-        saved_details_of_payment = self.subscription_service.save_payment_details_in_stripe(customer_id=customer_id)
+        saved_details_of_payment = save_payment_details_in_stripe(customer_id=customer_id)
         if saved_details_of_payment:
             logger.info("saved details of payment for success")
 
@@ -108,7 +108,7 @@ class WebhookService:
         Saving the details of payment mode
         """
 
-        saved_details_of_payment = self.subscription_service.save_payment_details_in_stripe(customer_id=customer_id)
+        saved_details_of_payment = save_payment_details_in_stripe(customer_id=customer_id)
         if saved_details_of_payment:
             logger.info("saved details of payment for success")
 

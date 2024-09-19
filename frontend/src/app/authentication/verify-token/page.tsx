@@ -10,7 +10,7 @@ const VerifyToken = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
-
+  const mail = searchParams.get('mail');
   useEffect(() => {
     document.body.style.overflow = 'hidden';
     return () => {
@@ -22,33 +22,53 @@ const VerifyToken = () => {
     const verifyToken = async () => {
       if (token) {
         try {
-          const response = await axiosInstance.get(`/authentication/verify-token?token=${token}`);
-
-          if (response.data.status === 'SUCCESS' || response.data.status === 'EMAIL_ALREADY_VERIFIED') {
+          if (mail) {
+            const response = await axiosInstance.get(`/account-details/change-email?token=${token}&mail=${mail}`);
             if (typeof window !== 'undefined') {
-              if (response.data.status === 'EMAIL_ALREADY_VERIFIED') {
-                showInfoToast('Email has already been verified')
-              }
-              else if (response.data.status === 'SUCCESS') {
+              if (response.data.status === 'SUCCESS') {
                 showToast('You have successfully verified your email')
+                const newToken = response.data.token;
+                localStorage.removeItem('token');
+                localStorage.setItem('token', newToken);
               }
-              const newToken = response.data.token;
-              localStorage.removeItem('token');
-              localStorage.setItem('token', newToken);
-
+              else if (response.data.status === 'INCORRECT_TOKEN') {
+                showErrorToast('The link is incorrect or outdated')
+              }
+              else if (response.data.status === 'INCORRECT_MAIL') {
+                showErrorToast('The link is incorrect mail')
+              }
               setTimeout(() => {
-                router.push('/dashboard');
-              }, 2500); 
+                router.push('/settings');
+              }, 2500);
             }
-          }
-          else if (response.data.status === 'INCORRECT_TOKEN') {
-            showErrorToast('The link is incorrect or outdated')
-            const localtoken = localStorage.getItem('token')
-            if (localtoken) {
-              router.push('/dashboard')
+          } else {
+            const response = await axiosInstance.get(`/authentication/verify-token?token=${token}`);
+            if (response.data.status === 'SUCCESS' || response.data.status === 'EMAIL_ALREADY_VERIFIED') {
+              if (typeof window !== 'undefined') {
+                if (response.data.status === 'EMAIL_ALREADY_VERIFIED') {
+                  showInfoToast('Email has already been verified')
+                }
+                else if (response.data.status === 'SUCCESS') {
+                  showToast('You have successfully verified your email')
+                }
+                const newToken = response.data.token;
+                localStorage.removeItem('token');
+                localStorage.setItem('token', newToken);
+
+                setTimeout(() => {
+                  router.push('/dashboard');
+                }, 2500);
+              }
             }
-            else {
-              router.push('/signin')
+            else if (response.data.status === 'INCORRECT_TOKEN') {
+              showErrorToast('The link is incorrect or outdated')
+              const localtoken = localStorage.getItem('token')
+              if (localtoken) {
+                router.push('/dashboard')
+              }
+              else {
+                router.push('/signin')
+              }
             }
           }
         } catch (error) {

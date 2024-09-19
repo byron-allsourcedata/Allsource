@@ -85,12 +85,12 @@ class PixelInstallationService:
                     return True
         return False
 
-    def check_pixel_installed_via_parse(self, url, pixelClientId):
+    def check_pixel_installed_via_parse(self, url, user, domain):
         result = {'success': False}
-        result_parser = self.parse_website(url, user)
+        result_parser = self.parse_website(url, domain)
         if result_parser:
-            self.db.query(Users).filter(Users.id == user.get('id')).update(
-                {Users.company_website: url},
+            self.db.query(UserDomains).filter(UserDomains.id == UserDomains.id).update(
+                {UserDomains.domain: url, UserDomains.is_pixel_installed: True},
                 synchronize_session=False)
             self.db.commit()
             result['success'] = True

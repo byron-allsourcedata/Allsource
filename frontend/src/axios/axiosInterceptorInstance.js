@@ -3,20 +3,36 @@ import axios from "axios";
 import { showErrorToast } from "@/components/ToastNotification";
 
 const axiosInterceptorInstance = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL, // BASE URL API
+  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
 });
 
 
-// Request interceptor
 axiosInterceptorInstance.interceptors.request.use(
-  (config) => {
-    config.withCredentials = true
+  async (config) => { 
     const accessToken = localStorage.getItem("token");
+    let currentDomain = sessionStorage.getItem('current_domain');
 
-    if (accessToken) {
-      if (config.headers)
-        config.headers.Authorization = `Bearer ${accessToken}`;
-    } 
+    if (accessToken && config.headers) {
+      config.headers.Authorization = `Bearer ${accessToken}`;
+      if (!currentDomain) {
+        try {
+          const response = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}domains/`, {
+            headers: { Authorization: `Bearer ${accessToken}` }
+          });
+
+          if (response.status === 200 && response.data.length > 0) {
+            currentDomain = response.data[0].domain;
+            sessionStorage.setItem('current_domain', currentDomain);
+          }
+        } catch (error) {
+          console.error('Error fetching domain:', error);
+        }
+      }
+      if (currentDomain) {
+        config.headers.CurrentDomain = currentDomain;
+      }
+    }
+
     return config;
   },
   (error) => {
@@ -24,11 +40,11 @@ axiosInterceptorInstance.interceptors.request.use(
   }
 );
 
+
+
 const navigateTo = (path) => {
   window.location.href = path;
 };
-
-// Response interceptor
 axiosInterceptorInstance.interceptors.response.use(
   (response) => {
     return response;
