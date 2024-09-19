@@ -21,8 +21,6 @@ class UserDomainsService:
             raise HTTPException(status_code=403, detail={'status': UserAuthorizationStatus.NEED_CHOOSE_PLAN.value})
         if self.domain_persistence.count_domain(user.get('id')) >= plan_info.domains_limit:
             raise HTTPException(status_code=403, detail={'status': SubscriptionStatus.NEED_UPGRADE_PLAN.value})
-        if 'https://' not in domain or 'http://' not in domain:
-            domain = f'https://{domain}'
         new_domain = self.domain_persistence.create_domain(user.get('id'), {'domain': domain})
         return self.domain_mapped(new_domain)
 
@@ -38,3 +36,6 @@ class UserDomainsService:
             is_pixel_installed=domain.is_pixel_installed,
             enable=domain.enable
         ).model_dump()
+    
+    def delete_domain(self,user_id: int, domain_id: str):
+        return self.domain_persistence.delete_domain(user_id, domain_id)

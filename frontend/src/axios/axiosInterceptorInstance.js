@@ -84,7 +84,7 @@ axiosInterceptorInstance.interceptors.response.use(
         default:
           showErrorToast(
             `An error occurred: ${
-              error.response.data.message || "Unknown error"
+              error.response.data.status || "Unknown error"
             }`
           );
       }

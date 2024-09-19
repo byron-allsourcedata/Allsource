@@ -45,20 +45,7 @@ async def process_users(session, batch_size=100):
                 .all()
             )
             leads_credits = 0
-            buy_credits = 0
-            for user_payments_transaction in user_payments_transactions:
-                if user_payments_transaction.type == 'lead':
-                    leads_credits += 1
-                if user_payments_transaction.type == 'buy_credits':
-                    buy_credits += 1
-                    
-            if leads_credits > user.leads_credits:
-                remaining_leads = leads_credits - user.leads_credits
-                user.leads_credits = 0
-                buy_credits -= remaining_leads
-                user.prospect_credits = buy_credits
-            else:
-                user.leads_credits -= leads_credits
+                
         session.commit()
         offset += batch_size
         
