@@ -4,6 +4,7 @@ import { Box, Typography, Button, TextField, Dialog, DialogActions, Tooltip, Sli
 import CloseIcon from '@mui/icons-material/Close';
 import axiosInterceptorInstance from '@/axios/axiosInterceptorInstance';
 import Image from 'next/image';
+import CustomizedProgressBar from './CustomizedProgressBar';
 
 const accontDetailsStyles = {
     formField: {
@@ -128,6 +129,7 @@ export const SettingsAccountDetails: React.FC = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [errors, setErrors] = useState<{ [key: string]: string }>({});
+    const [isLoading, setIsLoading] = useState(false)
 
 
     
@@ -146,6 +148,7 @@ export const SettingsAccountDetails: React.FC = () => {
     useEffect(() => {
         const fetchAccountDetails = async () => {
             try {
+                setIsLoading(true)
                 const response = await axiosInterceptorInstance.get('/settings/account-details');
                 const data = response.data;
                 setResetPasswordDate(data.reset_password_sent_at);
@@ -162,13 +165,18 @@ export const SettingsAccountDetails: React.FC = () => {
             } catch (error) {
                 console.error('Error fetching account details:', error);
             }
+            finally{
+                setIsLoading(false)
+            }
         };
 
         fetchAccountDetails();
     }, []);
 
 
-    
+    if (isLoading) {
+        return <CustomizedProgressBar />;
+    }
 
     const handleSaveAccountDetails = (field: 'full_name' | 'email_address') => {
         const accountData = {
