@@ -1,4 +1,4 @@
-import { Box, Typography, Button, Menu, MenuItem, TextField, IconButton } from '@mui/material';
+import { Box, Typography, Button, Menu, MenuItem, TextField, IconButton, InputAdornment, colors } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import React, { useEffect, useState } from 'react';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
@@ -8,6 +8,8 @@ import { UpgradePlanPopup } from './UpgradePlanPopup';
 import { AxiosError } from 'axios';
 import { SliderProvider } from '@/context/SliderContext';
 import Slider from '../components/Slider';
+import { DeleteDomainPopup } from './DeleteDomain';
+import Image from 'next/image';
 
 interface Domain {
     id: number;
@@ -21,8 +23,35 @@ interface Domain {
 interface AddDomainProps {
   open: boolean;
   handleClose: () => void;
-  handleSave: (domain: string) => void; 
+  handleSave: (domain: Domain) => void; 
 }
+
+interface HoverImageProps {
+  srcDefault: string
+  srcHover: string
+  alt: string
+  onClick: () => void
+}
+
+const HoverableImage = ({ srcDefault, srcHover, alt, onClick }: HoverImageProps) => {
+  const [isHovered, setIsHovered] = useState(false);
+
+  return (
+    <Image
+      height={20}
+      width={20}
+      alt={alt}
+      src={isHovered ? srcHover : srcDefault}
+      style={{
+        transition: 'opacity 0.3s ease',
+        cursor: 'pointer',
+      }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onClick={onClick}
+    />
+  );
+};
 
 const AddDomainPopup = ({ open, handleClose, handleSave }: AddDomainProps) => {
   const [domain, setDomain] = useState('');
@@ -32,9 +61,16 @@ const AddDomainPopup = ({ open, handleClose, handleSave }: AddDomainProps) => {
   const [showSlider, setShowSlider] = useState(false)
   const handleFocus = () => setIsFocused(true);
   const handleBlur = () => setIsFocused(false);
-  const validateField = (value: string): string => value.trim() ? "" : "Domain is required";
+  const validateField = (
+    value: string,
+    type: "domain"
+  ): string => {
+        const sanitizedValue = value.replace(/^www\./, '');
+        const websiteRe = /^(https?:\/\/)?([\da-z.-]+)\.([a-z]{2,20})([/\w .-]*)*\/?$/i;
+        return websiteRe.test(sanitizedValue) ? "" : "Invalid website URL";
+    }
   const handleSubmit = async () => {
-    const newErrors = { domain: validateField(domain) };
+    const newErrors = { domain: validateField(domain, 'domain') };
     setErrors(newErrors);
     if (newErrors.domain) return;
   
@@ -42,7 +78,7 @@ const AddDomainPopup = ({ open, handleClose, handleSave }: AddDomainProps) => {
       const response = await axiosInstance.post("domains/", { domain });
       if (response.status === 201) {
         handleClose();
-        handleSave(domain);
+        handleSave(response.data);
       }
     } catch (error) {
       if (error instanceof AxiosError) {
@@ -56,8 +92,6 @@ const AddDomainPopup = ({ open, handleClose, handleSave }: AddDomainProps) => {
             sessionStorage.setItem('is_slider_opened', 'false');
             setShowSlider(false); 
           }
-        } else {
-          showErrorToast('An error occurred while adding the domain');
         }
       } else {
         console.error("Error fetching data:", error);
@@ -65,30 +99,78 @@ const AddDomainPopup = ({ open, handleClose, handleSave }: AddDomainProps) => {
     }
   };
 
+  const handleWebsiteLink = (event: { target: { value: string } }) => {
+    let input = event.target.value.trim();
+
+    const hasWWW = input.startsWith("www.");
+
+    const sanitizedInput = hasWWW ? input.replace(/^www\./, '') : input;
+
+    const domainPattern = /^[\w-]+\.[a-z]{2,}$/i;
+    const isValidDomain = domainPattern.test(sanitizedInput);
+
+    let finalInput = input;
+
+    if (isValidDomain) {
+      finalInput = hasWWW ? `https://www.${sanitizedInput}` : `https://${sanitizedInput}`;
+    }
+
+    setDomain(finalInput);
+
+    const websiteError = validateField(input, "domain");
+    setErrors((prevErrors) => ({
+      domain: websiteError,
+    }));
+  };
+
   if (!open) return null;
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', padding: '1rem' }}>
-      <TextField
-        label="Shop Domain"
-        variant="outlined"
-        placeholder="Enter your Shop Domain"
-        margin="normal"
-        value={isFocused ? domain.replace(/^https?:\/\//, "") : `https://${domain.replace(/^https?:\/\//, "")}`}
-        onFocus={handleFocus}
-        onBlur={handleBlur}
-        onChange={(e) => setDomain(e.target.value)}
-        error={!!errors.domain}
-        helperText={errors.domain}
-        InputProps={{
-          endAdornment: (
-            <IconButton aria-label="close" edge="end" sx={{ color: 'text.secondary' }} onClick={handleClose}>
-              <CloseIcon />
-            </IconButton>
-          ),
-        }}
-      />
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', width: '100%', marginTop: '1rem' }}>
+    
+    <Box sx={{ display: 'flex', flexDirection: 'column', padding: '1rem', width: '100%' }}>
+    <TextField
+    onKeyDown={(e) => e.stopPropagation()}
+      fullWidth
+      label="Enter domain link"
+      variant="outlined"
+      sx={{
+        marginBottom: '1.5em',
+        maxHeight: '56px',
+        '& .MuiInputBase-root': {
+          maxHeight: '48px',
+        },
+        '&.Mui-focused': {
+          color: '#0000FF',
+        },
+        '& .MuiOutlinedInput-root': {
+          paddingTop: '13px',
+          paddingBottom: '13px',
+        },
+        '& .MuiInputLabel-root': {
+          top: '-5px',
+        },
+        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+          borderColor: '#0000FF',
+        },
+      }}
+      placeholder={isFocused ? "example.com" : ""}
+      value={isFocused ? domain.replace(/^https?:\/\//, "") : `https://${domain.replace(/^https?:\/\//, "")}`}
+      onChange={handleWebsiteLink}
+      onFocus={handleFocus}
+      onBlur={handleBlur}
+      error={!!errors.domain}
+      helperText={errors.domain}
+      InputProps={{
+        startAdornment: isFocused && (
+          <InputAdornment position="start">https://</InputAdornment>
+        ),
+        endAdornment: (
+          <IconButton aria-label="close" edge="end" sx={{ color: 'text.secondary' }} onClick={handleClose}>
+            <CloseIcon />
+          </IconButton>
+        ),
+      }} />
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }}>
         <Button color='primary' variant='outlined' onClick={handleSubmit}>Save</Button>
       </Box>
       <UpgradePlanPopup open={upgradePlanPopup} handleClose={() => setUpgradePlanPopup(false)} />
@@ -98,12 +180,13 @@ const AddDomainPopup = ({ open, handleClose, handleSave }: AddDomainProps) => {
 };
 
 const DomainButton: React.FC = () => {
-  const [domains, setDomains] = useState<string[]>([]);
+  const [domains, setDomains] = useState<Domain[]>([]);
   const [currentDomain, setCurrentDomain] = useState('');
   const [showDomainPopup, setDomainPopup] = useState(false);
   const [dropdownEl, setDropdownEl] = useState<null | HTMLElement>(null);
   const dropdownOpen = Boolean(dropdownEl);
-
+  const [deleteDomainPopup, setDeleteDomainPopup] = useState(false)
+  const [deleteDomain, setDeleteDomain] = useState<Domain | null>(null)
   const handleDropdownClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     setDropdownEl(event.currentTarget);
   };
@@ -117,16 +200,13 @@ const DomainButton: React.FC = () => {
       try {
         const response = await axiosInstance.get('domains/');
         if (response.status === 200) {
-          const domainData = response.data.map((domain: Domain) =>
-            domain.domain.replace('https://', '')
-          );
-          setDomains(domainData);
+          setDomains(response.data);
           const savedDomain = sessionStorage.getItem('current_domain');
           if (savedDomain) {
             setCurrentDomain(savedDomain.replace('https://', ''));
-          } else if (domainData.length > 0) {
-            setCurrentDomain(domainData[0]);
-            sessionStorage.setItem('current_domain', domainData[0]);
+          } else if (response.data.length > 0) {
+            setCurrentDomain(response.data[0].domain.replace('https://', ''));
+            sessionStorage.setItem('current_domain', response.data[0].domain);
           }
         }
       } catch (error) {
@@ -143,12 +223,28 @@ const DomainButton: React.FC = () => {
     window.location.reload();
   };
 
-  const handleSave = (domain: string) => {
-    setDomains((prevDomains) => [...prevDomains, domain]);
+  const handleSave = (domain: Domain) => {
+    setDomains((prevDomains) => [...prevDomains, domain]); 
     setDomainPopup(false);
-    handleSetDomain(domain);
+    handleSetDomain(domain.domain);
     showToast('Successfully added domain');
   };
+
+  const handleShowDelete = (domain: Domain) => {
+      setDeleteDomain(domain)
+      setDeleteDomainPopup(true)
+  }
+
+  const handleDeleteDomain = (domain: Domain) => {
+    if(sessionStorage.getItem('current_domain') == domain.domain){
+      sessionStorage.removeItem('current_domain')
+      window.location.reload()
+    }
+    else{
+      setDomains(prevDomains => prevDomains.filter(d => d.id !== domain.id));
+    }
+    setDeleteDomainPopup(false)
+  }
 
   return (
     <>
@@ -179,6 +275,8 @@ const DomainButton: React.FC = () => {
       </Button>
       <Menu
         id="account-dropdown"
+        variant='menu'
+        
         anchorEl={dropdownEl}
         open={dropdownOpen}
         onClose={handleDropdownClose}
@@ -195,12 +293,28 @@ const DomainButton: React.FC = () => {
           <span style={{ border: '1px solid #CDCDCD', marginBottom: '1rem', width: '100%' }}></span>
         </Box>
         {domains.map((domain) => (
-          <MenuItem key={domain} onClick={() => handleSetDomain(domain)}>
-            {domain}
+            <>
+            <DeleteDomainPopup open={deleteDomainPopup} domain={domain} handleClose={() => setDeleteDomainPopup(false)} handleDelete={handleDeleteDomain}/>
+            <MenuItem key={domain.id}>
+            <Box sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              width: '20rem'
+            }}>
+            <Typography onClick={() => handleSetDomain(domain.domain)}>
+            {domain.domain.replace('https://', '')}
+            </Typography>
+            
+            <HoverableImage srcDefault='/trash-03.svg' srcHover='/trash-03-active.svg' alt='Remove' onClick={() => handleShowDelete(domain)} />
+            
+            </Box>
           </MenuItem>
+        </>          
+            
         ))}
       </Menu>
-    </>
+          </>
   );
 }
 const DomainSelect = () => {
