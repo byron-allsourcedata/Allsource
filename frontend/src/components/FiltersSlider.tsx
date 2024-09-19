@@ -427,7 +427,13 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
   };
 
   /////// Time
-  const [timeRange, setTimeRange] = useState({
+  type TimeRange = {
+    fromTime: dayjs.Dayjs | null;
+    toTime: dayjs.Dayjs | null;
+  };
+  
+  // Инициализация состояния
+  const [timeRange, setTimeRange] = useState<TimeRange>({
     fromTime: null,
     toTime: null,
   });
@@ -661,12 +667,34 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
   const initializeFilters = () => {
     const savedFilters = loadFiltersFromSessionStorage();
     if (savedFilters) {
+
+      // Page visits
       setCheckedFiltersPageVisits(savedFilters.checkedFiltersPageVisits || {
         page: false,
         two_page: false,
         three_page: false,
         more_three: false,
       });
+
+      // Проверка активных фильтров посещений страниц
+      const isPageVisitsFilterActive = Object.values(savedFilters.checkedFiltersPageVisits || {}).some(value => value === true);
+
+      if (isPageVisitsFilterActive) {
+        const pageVisitsTagMap: { [key: string]: string } = {
+          page: "1 page",
+          two_page: "2 pages",
+          three_page: "3 pages",
+          more_three: "More than 3 pages",
+        };
+
+        // Проходим по всем фильтрам и добавляем тег для каждого активного
+        Object.keys(savedFilters.checkedFiltersPageVisits).forEach((key) => {
+          if (savedFilters.checkedFiltersPageVisits[key]) {
+            addTag("pageVisits", pageVisitsTagMap[key]);
+          }
+        });
+      }
+
       setCheckedFiltersTime(savedFilters.checkedFiltersTime || {
         morning: false,
         afternoon: false,
@@ -679,20 +707,102 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
         last6Months: false,
         allTime: false,
       });
+
+      // Time spent
       setCheckedFiltersTimeSpent(savedFilters.checkedFiltersTimeSpent || {
         under_10: false,
         over_10: false,
         over_30: false,
         over_60: false,
       });
+
+      const isTimeSpentFilterActive = Object.values(savedFilters.checkedFiltersTimeSpent || {}).some(value => value === true);
+    if (isTimeSpentFilterActive) {
+      const timeSpentTagMap: { [key: string]: string } = {
+        under_10: "under 10 secs",
+        over_10: "10-30 secs",
+        over_30: "30-60 secs",
+        over_60: "Over 60 secs",
+      };
+
+      Object.keys(savedFilters.checkedFiltersTimeSpent).forEach((key) => {
+        if (savedFilters.checkedFiltersTimeSpent[key]) {
+          addTag("timeSpents", timeSpentTagMap[key]);
+        }
+      });
+    }
+
+
       setSelectedFunnels(savedFilters.selectedFunnels || []);
       setSelectedStatus(savedFilters.selectedStatus || []);
       setSelectedValues(savedFilters.recurringVisits || []);
       setSearchQuery(savedFilters.searchQuery || '');
-      setDateRange({
-        fromDate: savedFilters.from_date ? dayjs.unix(savedFilters.from_date) : null,
-        toDate: savedFilters.to_date ? dayjs.unix(savedFilters.to_date) : null,
-      });      
+
+
+      const isTimeFilterActive = Object.values(savedFilters.checkedFiltersTime || {}).some(value => value === true);
+      if (isTimeFilterActive) {
+        const timeTagMap: { [key: string]: string } = {
+          morning: "Morning 12AM - 11AM",
+          afternoon: "Afternoon 11AM - 5PM",
+          evening: "Evening 5PM - 9PM",
+          all_day: "All day",
+        };
+  
+        // Обработка активных фильтров
+        Object.keys(savedFilters.checkedFiltersTime).forEach((key) => {
+          if (savedFilters.checkedFiltersTime[key]) {
+            addTag("visitedTime", timeTagMap[key]);
+          }
+        });
+          
+      }  else {
+      // Преобразование времени из строкового формата в Dayjs
+      const fromTime = savedFilters.from_time ? dayjs(savedFilters.from_time, 'HH:mm') : null;
+      const toTime = savedFilters.to_time ? dayjs(savedFilters.to_time, 'HH:mm') : null;
+
+      // Форматирование времени для тега
+      const formattedFromTime = fromTime ? fromTime.format('h:mm A') : '';
+      const formattedToTime = toTime ? toTime.format('h:mm A') : '';
+      if (fromTime && toTime) {
+        setSelectedTimeRange(`${formattedFromTime} to ${formattedToTime}`);
+      } else {
+        setSelectedTimeRange(null);
+      }
+
+      // Обновление состояния
+      setTimeRange({
+        fromTime: fromTime && fromTime.isValid() ? fromTime : null,
+        toTime: toTime && toTime.isValid() ? toTime : null,
+      });
+    }
+
+
+      const isAnyFilterActive = Object.values(savedFilters.checkedFilters || {}).some(value => value === true);
+      if (isAnyFilterActive) {
+        setButtonFilters(savedFilters.button);
+        const tagMap: { [key: string]: string } = {
+          lastWeek: "Last week",
+          last30Days: "Last 30 days",
+          last6Months: "Last 6 months",
+          allTime: "All time",
+        };
+        const activeFilter = Object.keys(savedFilters.checkedFilters).find(key => savedFilters.checkedFilters[key]);
+
+        if (activeFilter) {
+          addTag("visitedDate", tagMap[activeFilter]);
+        }
+      } else {
+        const fromDate = savedFilters.from_date ? dayjs.unix(savedFilters.from_date).format('MMM DD, YYYY') : null;
+        const toDate = savedFilters.to_date ? dayjs.unix(savedFilters.to_date).format('MMM DD, YYYY') : null;
+        const newTag = fromDate && toDate ? `From ${fromDate} to ${toDate}` : null;
+        if (newTag) {
+          addTag("visitedDate", newTag);
+        }
+        setDateRange({
+          fromDate: savedFilters.from_date ? dayjs.unix(savedFilters.from_date) : null,
+          toDate: savedFilters.to_date ? dayjs.unix(savedFilters.to_date) : null,
+        });
+      }
       setButtonFilters(savedFilters.button)
       if (savedFilters.regions) {
         setTags((prevTags) => {
@@ -1458,7 +1568,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
             </Box>
             <Collapse in={isStatus}>
               <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, pt: 2, pl: 2 }}>
-                {["New", "Returning" ].map((label) => {
+                {["New", "Returning"].map((label) => {
                   const mappedStatus = statusMapping[label];
                   const isSelected = selectedStatus.includes(mappedStatus);
 
@@ -2408,7 +2518,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                 color: "rgba(80, 82, 178, 1)",
                 backgroundColor: '#fff',
                 fontFamily: "Nunito",
-                border:' 1px solid rgba(80, 82, 178, 1)',
+                border: ' 1px solid rgba(80, 82, 178, 1)',
                 fontSize: "16px",
                 textTransform: "none",
                 padding: "0.75em 2.5em",
