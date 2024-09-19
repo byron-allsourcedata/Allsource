@@ -2217,7 +2217,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                 <ListItem button key={index} onClick={() => handleSelectCity(city)}>
                   <ListItemText
                     primary={
-                      <span style={{ fontFamily: 'Nunito', fontSize: '12px', fontWeight: 600, lineHeight: '16.8px', textAlign: 'left', color: 'rgba(74, 74, 74, 1)' }}>
+                      <span style={{ fontFamily: 'Nunito', fontSize: '13px', fontWeight: 600, lineHeight: '16.8px', textAlign: 'left', color: 'rgba(74, 74, 74, 1)' }}>
                         {city.city},{' '}
                         <span style={{ color: 'rgba(200, 202, 203, 1)' }}>
                           {city.state}
@@ -2555,16 +2555,16 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
           {/* Buttons */}
           <Box
             sx={{
-              position: 'fixed ', // "липкое" положение
+              position: 'fixed ',
               width: '40%',
-              bottom: 0, // Прилипает к низу
+              bottom: 0,
               right: 0,
-              zIndex: 1302, // Поверх других элементов
-              backgroundColor: 'rgba(255, 255, 255, 1)', // Фон кнопок
+              zIndex: 1302,
+              backgroundColor: 'rgba(255, 255, 255, 1)',
               display: 'flex',
-              justifyContent: 'flex-end', // Выравнивание по правому краю
+              justifyContent: 'flex-end',
               marginTop: '1em',
-              padding: '1em', // Отступы
+              padding: '1em',
               gap: 3,
               borderTop: '1px solid rgba(228, 228, 228, 1)',
               "@media (max-width: 600px)":
