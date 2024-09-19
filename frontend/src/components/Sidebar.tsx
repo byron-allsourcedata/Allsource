@@ -29,7 +29,7 @@ const sidebarStyles = {
         fontWeight: '500',
         backgroundColor: 'rgba(255, 255, 255, 1)',
         borderRight: '1px solid rgba(228, 228, 228, 1)',
-        height: '90.99vh',
+        height: '92vh',
         display: 'flex',
         overflow: 'hidden',
         flexDirection: 'column',

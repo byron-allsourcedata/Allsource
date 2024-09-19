@@ -9,6 +9,13 @@ import CustomizedProgressBar from './CustomizedProgressBar';
 const accontDetailsStyles = {
     formField: {
         margin: '0',
+        maxWidth: '55%',
+        "@media (max-width: 440px)": {
+            maxWidth:'75%'
+        }
+    },
+    formFieldPassword: {
+        margin: '0',
     },
     inputLabel: {
         fontFamily: 'Nunito Sans',
@@ -49,7 +56,12 @@ const accontDetailsStyles = {
       orDivider: {
         display: 'flex',
         alignItems: 'center',
-        margin: '0 -40px'
+        margin: '0 -1.5em',
+        maxWidth: '71%',
+        '@media (max-width: 440px)': {
+            maxWidth: '115%',
+            margin: '0 -1em',
+                        }
       },
       passwordValidationText: {
         '& .MuiTypography-root' : {
@@ -144,6 +156,19 @@ export const SettingsAccountDetails: React.FC = () => {
 
         return `${differenceInDays} days ago`;
     };
+
+    useEffect(() => {
+        // Проверка на мобильное устройство по ширине экрана
+        if (window.innerWidth >= 768) {
+          document.body.style.overflow = 'hidden';
+        }
+    
+        return () => {
+          // Сброс overflow на 'auto' при размонтировании компонента
+          document.body.style.overflow = 'auto';
+        };
+      }, []);
+
 
     useEffect(() => {
         const fetchAccountDetails = async () => {
@@ -342,7 +367,7 @@ const handleChangePasswordPopupClose = () => {
 
 
     return (
-                <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' , mb: 8 }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'start', alignItems: 'start',  }}>
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: '24px',
                     '@media (max-width: 899px)': {
                             minWidth: '100%'
@@ -355,7 +380,7 @@ const handleChangePasswordPopupClose = () => {
                      }
                      
                     }}>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
                     <Typography variant="h6" sx={{
                         fontFamily: 'Nunito Sans',
                         fontSize: '16px',
@@ -365,7 +390,7 @@ const handleChangePasswordPopupClose = () => {
                     }}>Name</Typography>
                     <Box sx={{ display: 'flex', gap: 2,
                         '@media (max-width: 600px)': {
-                            flexDirection: 'column',
+                            flexDirection: 'row',
                             alignItems: 'flex-start'
                         },
                     }}>
@@ -440,7 +465,10 @@ const handleChangePasswordPopupClose = () => {
                         margin: '0 -40px',
                         '@media (min-width: 601px)': {
                             display: 'none'
-                        },}}>
+                        },
+                        '@media (max-width: 440px)': {
+                            margin: '0 -1em',
+                        }}}>
                         <Box sx={{ borderBottom: '1px solid #e4e4e4', flexGrow: 1 }} />
                     </Box>
 
@@ -454,8 +482,8 @@ const handleChangePasswordPopupClose = () => {
 
                     <Box sx={{ display: 'flex', gap: 2,
                         '@media (max-width: 600px)': {
-                            flexDirection: 'column',
-                            alignItems: 'flex-start'
+                            flexDirection: 'row',
+                            alignItems: 'space-between'
                         }
                     }}>
                         <TextField sx={accontDetailsStyles.formField}
@@ -528,7 +556,10 @@ const handleChangePasswordPopupClose = () => {
                         margin: '0 -40px',
                         '@media (min-width: 601px)': {
                             display: 'none'
-                        },}}>
+                        },
+                        '@media (max-width: 440px)': {
+                            margin: '0 -1em',
+                        }}}>
                         <Box sx={{ borderBottom: '1px solid #e4e4e4', flexGrow: 1 }} />
                     </Box>
 
@@ -563,7 +594,7 @@ const handleChangePasswordPopupClose = () => {
                             display: 'none'
                         }
                     }}>Password</Typography>
-                    <Box sx={{ display: 'flex', gap: 2, justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Box sx={{ display: 'flex', gap: 2, justifyContent: 'space-between', alignItems: 'center', maxWidth: '68%' }}>
                         <Button variant="contained" color="secondary" onClick={handleChangePasswordPopupOpen}
                         sx={{
                             borderRadius: '4px',
@@ -640,7 +671,7 @@ const handleChangePasswordPopupClose = () => {
                                     Update your password to enhance account security and maintain access control.
                                 </Typography>
 
-                                <TextField sx={accontDetailsStyles.formField}
+                                <TextField sx={accontDetailsStyles.formFieldPassword}
                                     InputLabelProps={{ sx: accontDetailsStyles.inputLabel }}
                                     label="Current Password"
                                     type={showCurrentPassword ? 'text' : 'password'}
@@ -664,7 +695,7 @@ const handleChangePasswordPopupClose = () => {
                                         ),
                                       }}
                                 />
-                                <TextField sx={accontDetailsStyles.formField}
+                                <TextField sx={accontDetailsStyles.formFieldPassword}
                                     InputLabelProps={{ sx: accontDetailsStyles.inputLabel }}
                                     label="New Password"
                                     type={showPassword ? 'text' : 'password'}
@@ -711,7 +742,7 @@ const handleChangePasswordPopupClose = () => {
                                     </ListItem>
                                 </List>
                                 <TextField 
-                                    sx={accontDetailsStyles.formField}
+                                    sx={accontDetailsStyles.formFieldPassword}
                                     InputLabelProps={{ sx: accontDetailsStyles.inputLabel }}
                                     label="Confirm New Password"
                                     type={showConfirmPassword ? 'text' : 'password'}
@@ -814,9 +845,9 @@ const handleChangePasswordPopupClose = () => {
                             }}>
                             Business Info
                         </Typography>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, marginBottom: 2,
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2,
                             '@media (max-width: 600px)': {
-                                flexDirection: 'column',
+                                flexDirection: 'row',
                                 alignItems: 'flex-start'
                             },
                          }}>
@@ -883,9 +914,9 @@ const handleChangePasswordPopupClose = () => {
                                 Save
                             </Button>
                         </Box>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, marginBottom: 2,
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2,
                             '@media (max-width: 600px)': {
-                                flexDirection: 'column',
+                                flexDirection: 'row',
                                 alignItems: 'flex-start'
                             }
                         }}>
@@ -954,7 +985,7 @@ const handleChangePasswordPopupClose = () => {
                         </Box>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, marginBottom: 2,
                             '@media (max-width: 600px)': {
-                                flexDirection: 'column',
+                                flexDirection: 'row',
                                 alignItems: 'flex-start'
                             }
                         }}>
