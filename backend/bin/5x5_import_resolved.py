@@ -45,6 +45,7 @@ BUCKET_NAME = 'trovo-coop-shakespeare'
 FILES_PATH = 'outgoing/cookie_sync/resolved'
 LAST_PROCESSED_FILE_PATH = 'tmp/last_processed_file_resolved.txt'
 AMOUNT_CREDITS = 1
+OVERAGE_CREDITS = 0.49
 
 def create_sts_client(key_id, key_secret):
     return boto3.client('sts', aws_access_key_id=key_id, aws_secret_access_key=key_secret, region_name='us-west-2')
@@ -103,9 +104,6 @@ def process_user_data(table, index, five_x_five_user: FiveXFiveUser, session: Se
         logging.info(f"User not found with client_id {partner_uid_client_id}")
         return
     
-    if user.is_leads_auto_charging is False:
-        logging.info(f"User not found with client_id {partner_uid_client_id}")
-        return
     page = partner_uid_dict.get('current_page')
     if page is None:
         json_headers = json.loads(str(table['JSON_HEADERS'][index]).lower())
@@ -115,18 +113,24 @@ def process_user_data(table, index, five_x_five_user: FiveXFiveUser, session: Se
     lead_user = session.query(LeadUser).filter_by(five_x_five_user_id=five_x_five_user.id, user_id=user.id).first()
     is_first_request = False
     if not lead_user:
-        is_first_request = True
-        lead_user = LeadUser(five_x_five_user_id=five_x_five_user.id, user_id=user.id, behavior_type=behavior_type, domain_id=user_domain_id)
-        session.add(lead_user)
-        session.flush()
-        
         users_payments_transactions = session.query(UsersPaymentsTransactions).filter_by(five_x_five_user_id=five_x_five_user.id, domain_id=user_domain_id).first()
         if users_payments_transactions:
             logging.info(f"users_payments_transactions is already exists with id = {users_payments_transactions.id}")
             return
         user_payment_transactions = UsersPaymentsTransactions(user_id=user.id, status='success', amount_credits=AMOUNT_CREDITS, type='buy_lead', domain_id=user_domain_id, five_x_five_up_id=five_x_five_user.up_id)
         session.add(user_payment_transactions)
-        user.leads_credits -= AMOUNT_CREDITS
+        if (user.leads_credits - AMOUNT_CREDITS) < 0:
+            if user.is_leads_auto_charging is False:
+                logging.info(f"User not found with client_id {partner_uid_client_id}")
+                return
+            user.leads_credits -= OVERAGE_CREDITS
+        else:
+            user.leads_credits -= AMOUNT_CREDITS
+        session.flush()
+        
+        is_first_request = True
+        lead_user = LeadUser(five_x_five_user_id=five_x_five_user.id, user_id=user.id, behavior_type=behavior_type, domain_id=user_domain_id)
+        session.add(lead_user)
         session.flush()
     else:
         first_visit_id = lead_user.first_visit_id
