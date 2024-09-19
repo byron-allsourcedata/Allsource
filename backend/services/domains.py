@@ -21,7 +21,7 @@ class UserDomainsService:
             raise HTTPException(status_code=403, detail={'status': UserAuthorizationStatus.NEED_CHOOSE_PLAN.value})
         if self.domain_persistence.count_domain(user.get('id')) >= plan_info.domains_limit:
             raise HTTPException(status_code=403, detail={'status': SubscriptionStatus.NEED_UPGRADE_PLAN.value})
-        new_domain = self.domain_persistence.create_domain(user.get('id'), {'domain': domain})
+        new_domain = self.domain_persistence.create_domain(user.get('id'), {'domain': domain.replace('https://', '').replace('http://', '')})
         return self.domain_mapped(new_domain)
 
     def get_domains(self, user_id: int, **filter_by):

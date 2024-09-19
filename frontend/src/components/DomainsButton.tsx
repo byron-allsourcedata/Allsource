@@ -3,13 +3,13 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import React, { useEffect, useState } from 'react';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 import CloseIcon from '@mui/icons-material/Close';
-import { showErrorToast, showToast } from './ToastNotification';
+import { showToast } from './ToastNotification';
 import { UpgradePlanPopup } from './UpgradePlanPopup';
 import { AxiosError } from 'axios';
 import { SliderProvider } from '@/context/SliderContext';
 import Slider from '../components/Slider';
-import { DeleteDomainPopup } from './DeleteDomain';
 import Image from 'next/image';
+import ConfirmDeleteDomain from './DeleteDomain';
 
 interface Domain {
     id: number;
@@ -185,8 +185,9 @@ const DomainButton: React.FC = () => {
   const [showDomainPopup, setDomainPopup] = useState(false);
   const [dropdownEl, setDropdownEl] = useState<null | HTMLElement>(null);
   const dropdownOpen = Boolean(dropdownEl);
-  const [deleteDomainPopup, setDeleteDomainPopup] = useState(false)
-  const [deleteDomain, setDeleteDomain] = useState<Domain | null>(null)
+  const [deleteDomainPopup, setDeleteDomainPopup] = useState(false);
+  const [deleteDomain, setDeleteDomain] = useState<Domain | null>(null);
+
   const handleDropdownClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     setDropdownEl(event.currentTarget);
   };
@@ -215,7 +216,6 @@ const DomainButton: React.FC = () => {
     };
     fetchData();
   }, []);
-  
 
   const handleSetDomain = (domain: string) => {
     sessionStorage.setItem('current_domain', domain);
@@ -224,27 +224,26 @@ const DomainButton: React.FC = () => {
   };
 
   const handleSave = (domain: Domain) => {
-    setDomains((prevDomains) => [...prevDomains, domain]); 
+    setDomains((prevDomains) => [...prevDomains, domain]);
     setDomainPopup(false);
     handleSetDomain(domain.domain);
     showToast('Successfully added domain');
   };
 
   const handleShowDelete = (domain: Domain) => {
-      setDeleteDomain(domain)
-      setDeleteDomainPopup(true)
-  }
+    setDeleteDomain(domain);
+    setDeleteDomainPopup(true);
+  };
 
   const handleDeleteDomain = (domain: Domain) => {
-    if(sessionStorage.getItem('current_domain') == domain.domain){
-      sessionStorage.removeItem('current_domain')
-      window.location.reload()
-    }
-    else{
+    if (sessionStorage.getItem('current_domain') === domain.domain) {
+      sessionStorage.removeItem('current_domain');
+      window.location.reload();
+    } else {
       setDomains(prevDomains => prevDomains.filter(d => d.id !== domain.id));
     }
-    setDeleteDomainPopup(false)
-  }
+    setDeleteDomainPopup(false);
+  };
 
   return (
     <>
@@ -276,7 +275,6 @@ const DomainButton: React.FC = () => {
       <Menu
         id="account-dropdown"
         variant='menu'
-        
         anchorEl={dropdownEl}
         open={dropdownOpen}
         onClose={handleDropdownClose}
@@ -293,30 +291,38 @@ const DomainButton: React.FC = () => {
           <span style={{ border: '1px solid #CDCDCD', marginBottom: '1rem', width: '100%' }}></span>
         </Box>
         {domains.map((domain) => (
-            <>
-            <DeleteDomainPopup open={deleteDomainPopup} domain={domain} handleClose={() => setDeleteDomainPopup(false)} handleDelete={handleDeleteDomain}/>
-            <MenuItem key={domain.id}>
+          <MenuItem key={domain.id}>
             <Box sx={{
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
               width: '20rem'
             }}>
-            <Typography onClick={() => handleSetDomain(domain.domain)}>
-            {domain.domain.replace('https://', '')}
-            </Typography>
-            
-            <HoverableImage srcDefault='/trash-03.svg' srcHover='/trash-03-active.svg' alt='Remove' onClick={() => handleShowDelete(domain)} />
-            
+              <Typography onClick={() => handleSetDomain(domain.domain)}>
+                {domain.domain.replace('https://', '')}
+              </Typography>
+              {deleteDomainPopup && deleteDomain && (
+                <ConfirmDeleteDomain
+                  open={deleteDomainPopup}
+                  domain={deleteDomain}
+                  handleClose={() => setDeleteDomainPopup(false)}
+                  handleDelete={handleDeleteDomain}
+                />
+              )}
+              <HoverableImage
+                srcDefault='/trash-03.svg'
+                srcHover='/trash-03-active.svg'
+                alt='Remove'
+                onClick={() => handleShowDelete(domain)}
+              />
             </Box>
           </MenuItem>
-        </>          
-            
         ))}
       </Menu>
-          </>
+    </>
   );
-}
+};
+
 const DomainSelect = () => {
   return (
     <SliderProvider><DomainButton /></SliderProvider>
