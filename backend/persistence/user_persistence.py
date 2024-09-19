@@ -82,7 +82,8 @@ class UserPersistence:
                 'calendly_invitee_uuid': user.calendly_invitee_uuid,
                 'activate_steps_percent': user.activate_steps_percent,
                 'leads_credits': user.leads_credits,
-                'prospect_credits': user.prospect_credits
+                'prospect_credits': user.prospect_credits,
+                'is_leads_auto_charging': user.is_leads_auto_charging
             }
         self.db.rollback()
         return result_user
