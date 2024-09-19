@@ -3,6 +3,7 @@ import os
 
 from persistence.settings_persistence import SettingsPersistence
 from models.users import User
+from persistence.sendgrid_persistence import SendgridPersistence
 from persistence.user_persistence import UserPersistence
 from persistence.plans_persistence import PlansPersistence
 from sqlalchemy.orm import Session
@@ -20,10 +21,11 @@ OVERAGE_CONTACT = 1
 
 class SettingsService:
 
-    def __init__(self, db: Session, settings_persistence: SettingsPersistence, plan_persistence: PlansPersistence, user_persistence: UserPersistence):
+    def __init__(self, db: Session, settings_persistence: SettingsPersistence, plan_persistence: PlansPersistence, user_persistence: UserPersistence, send_grid_persistence: SendgridPersistence):
         self.settings_persistence = settings_persistence
         self.plan_persistence = plan_persistence
         self.user_persistence = user_persistence
+        self.send_grid_persistence = send_grid_persistence
 
 
     def get_account_details(self, user):
@@ -46,14 +48,14 @@ class SettingsService:
             if account_details.account.full_name:
                 changes['full_name'] = account_details.account.full_name
             if account_details.account.email_address:
-                if user.is_email_confirmed == False:
+                if user.get('is_email_confirmed') == False:
                     return SettingStatus.EMAIL_NOT_CONFIRMED
-                template_id = self.send_grid_persistence_service.get_template_by_alias(
+                template_id = self.send_grid_persistence.get_template_by_alias(
                 SendgridTemplate.CHANGE_EMAIL_TEMPLATE.value)
                 if not template_id:
                     logger.info("template_id is None")
                     return SettingStatus.FAILED
-                message_expiration_time = self.user.get('change_email_sent_at')
+                message_expiration_time = user.get('change_email_sent_at')
                 time_now = datetime.now()
                 if message_expiration_time is not None:
                     if (message_expiration_time + timedelta(minutes=1)) > time_now:

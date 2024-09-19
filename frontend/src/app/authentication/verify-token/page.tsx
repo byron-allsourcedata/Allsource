@@ -23,7 +23,7 @@ const VerifyToken = () => {
       if (token) {
         try {
           if (mail) {
-            const response = await axiosInstance.get(`/account-details/change-email?token=${token}&mail=${mail}`);
+            const response = await axiosInstance.get(`settings/account-details/change-email?token=${token}&mail=${mail}`);
             if (typeof window !== 'undefined') {
               if (response.data.status === 'SUCCESS') {
                 showToast('You have successfully verified your email')

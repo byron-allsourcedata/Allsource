@@ -78,8 +78,8 @@ class LeadsService:
         'professional_zip': lead[54],
         'company_zip': lead[55],
         'behavior_type': lead[56],
-        'state': lead[57],
-        'city': lead[58],
+        'state': lead[57].title() if lead[57] else None,
+        'city': lead[58].title() if lead[58] else None,
         'first_visited_date': lead[59].strftime('%d.%m.%Y'),
         'first_visited_time': lead[60].strftime('%H:%M'),
         'time_spent': lead[61],
@@ -178,7 +178,7 @@ class LeadsService:
 
         for location in location_data:
             results_hash = {
-                'city': location[0],
+                'city': location[0].title(),
                 'state': location[1]
             }
             

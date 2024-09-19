@@ -298,9 +298,12 @@ def get_settings_service(db: Session = Depends(get_db),
                                        ),
                                     user_persistence: UserPersistence = Depends(
                                        get_user_persistence_service
+                                       ),
+                                    send_grid_persistence: SendgridPersistence = Depends(
+                                       get_send_grid_persistence_service
                                        )
                                    ):
-    return SettingsService(db=db, settings_persistence=settings_persistence, plan_persistence=plan_persistence, user_persistence=user_persistence)
+    return SettingsService(db=db, settings_persistence=settings_persistence, plan_persistence=plan_persistence, user_persistence=user_persistence, send_grid_persistence=send_grid_persistence)
 
 
 def get_plans_service(user=Depends(check_user_authentication),
