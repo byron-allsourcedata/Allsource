@@ -452,6 +452,44 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
         [name]: newValue,
       };
 
+      setCheckedFiltersTime((prevFiltersTime) => {
+        // Explicitly type `prevFilters` for better TypeScript support
+        const prevFiltersTimeTyped = prevFiltersTime as Record<string, boolean>;
+  
+        // Find the previously selected radio button
+        const previouslySelectedTime = Object.keys(prevFiltersTimeTyped).find((key) => prevFiltersTimeTyped[key]);
+  
+        // Reset all filters and select the new one
+        const newFiltersTime = {
+          morning: false,
+          afternoon: false,
+          evening: false,
+          all_day: false,
+          [name]: true,
+        };
+  
+        const tagMapTime: { [key: string]: string } = {
+          morning: "Morning 12AM - 11AM",
+          afternoon: "Afternoon 11AM - 5PM",
+          evening: "Evening 5PM - 9PM",
+          all_day: "All day",
+        };
+  
+        // Remove the tag for the previously selected radio button, if any
+        if (previouslySelectedTime && previouslySelectedTime !== name) {
+          removeTag("visitedTime", tagMapTime[previouslySelectedTime]);
+        }
+
+        setCheckedFiltersTime({
+          morning: false,
+          evening: false,
+          afternoon: false,
+          all_day: false,
+        });
+  
+        return newFiltersTime;
+      });
+
       const fromTime = updatedRange.fromTime ? dayjs(updatedRange.fromTime).format('h:mm A') : '';
       const toTime = updatedRange.toTime ? dayjs(updatedRange.toTime).format('h:mm A') : '';
 
@@ -465,6 +503,14 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
       return updatedRange;
     });
   };
+
+  const deleteTagTime = () => {
+    setSelectedTimeRange(null)     
+    setTimeRange({
+      fromTime: null,
+      toTime: null,
+    });
+  }
 
   ////Page
   const [checkedFiltersPageVisits, setCheckedFiltersPageVisits] = useState({
@@ -651,7 +697,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
     regions: string[];
     checkedFiltersTimeSpent: { under_10: boolean; over_10: boolean; over_30: boolean; over_60: boolean; };
     selectedStatus: string[]; recurringVisits: string[];
-    searchQuery: string; dateRange?: { fromDate: number; toDate: number; } | undefined;
+    searchQuery: string; dateRange?: { fromDate: number | null; toDate: number | null; } | undefined;
   }) => {
     sessionStorage.setItem('filters', JSON.stringify(filters));
   };
@@ -911,6 +957,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
   const handleRadioChangeTime = (event: { target: { name: string } }) => {
 
     const { name } = event.target;
+    deleteTagTime()
 
     setCheckedFiltersTime((prevFiltersTime) => {
       // Explicitly type `prevFilters` for better TypeScript support
@@ -1102,6 +1149,8 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
     setSelectedStatus([]);
     setButtonFilters(null);
     setSearchQuery("");
+
+    sessionStorage.removeItem('filters')
   };
 
   const fetchCities = debounce(async (searchValue: string) => {
@@ -1185,6 +1234,10 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
             alignItems: "center",
             padding: "0.75em 1em 0.25em 1em",
             borderBottom: "1px solid #e4e4e4",
+            position: "sticky",
+            top: 0,
+            zIndex: 1400, // Чтобы элемент был выше других
+            backgroundColor: "#fff", // Фон для предотвращения прозрачности
           }}
         >
           <Typography
@@ -1926,7 +1979,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
               {selectedTimeRange && (
                 <CustomChip
                   label={selectedTimeRange}
-                  onDelete={() => setSelectedTimeRange(null)}
+                  onDelete={() => deleteTagTime() }
                 />
               )}
               <IconButton
@@ -2508,7 +2561,9 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
               marginTop: '1em',
               padding: '1em', // Отступы
               gap: 3,
-              borderTop: '1px solid rgba(228, 228, 228, 1)'
+              borderTop: '1px solid rgba(228, 228, 228, 1)',
+              "@media (max-width: 600px)": 
+              { width: '100%'}
             }}
           >
             <Button

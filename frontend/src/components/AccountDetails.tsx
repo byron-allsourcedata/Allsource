@@ -34,16 +34,16 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
 
     const genderText = (gender: string) => {
         switch (gender) {
-          case 'M':
-            return 'Male';
-          case 'F':
-            return 'Female';
-          case 'U':
-            return 'Unknown';
-          default:
-            return 'N/A';
+            case 'M':
+                return 'Male';
+            case 'F':
+                return 'Female';
+            case 'U':
+                return 'Unknown';
+            default:
+                return '--';
         }
-      };
+    };
 
     const handleDownload = async () => {
         const requestBody = {
@@ -172,7 +172,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                             <Box sx={{ display: 'flex', flexDirection: 'row', gap: 5, '@media (max-width: 600px)': { flexDirection: 'column', gap: 1 }, }}>
                                 <Typography variant="body1" gutterBottom sx={{ ...accountStyles.header_text, display: 'flex', flexDirection: 'row', gap: 1 }}>
                                     <Image src={'/sms.svg'} width={18} height={18} alt='mail icon' />
-                                    {lead.personal_emails?.split(',')[0] || 'N/A'}
+                                    {lead.personal_emails?.split(',')[0] || '--'}
                                 </Typography>
                                 <Typography
                                     variant="body1"
@@ -197,12 +197,12 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                             }}
                                         >
                                             <Image src={'/iphone-02.svg'} width={18} height={18} alt='iphone icon' />
-                                            {lead.mobile_phone ? lead.mobile_phone.split(',')[0] : 'N/A'}
+                                            {lead.mobile_phone ? lead.mobile_phone.split(',')[0] : '--'}
                                         </Link>
                                     ) : (
                                         <>
                                             <Image src={'/iphone-02.svg'} width={18} height={18} alt='iphone icon' />
-                                            <Typography sx={accountStyles.text}> N/A</Typography>
+                                            <Typography sx={accountStyles.text}> --</Typography>
                                         </>
                                     )}
                                 </Typography>
@@ -221,7 +221,16 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                 Cell number:
                             </Typography>
                             <Typography sx={{ ...accountStyles.text, width: '50%' }}>
-                                {lead.cell_number || 'N/A'}
+                                {lead.mobile_phone || '--'}
+                            </Typography>
+                        </Box>
+
+                        <Box sx={accountStyles.rows_pam}>
+                            <Typography sx={accountStyles.title_text}>
+                                Personal number:
+                            </Typography>
+                            <Typography sx={{ ...accountStyles.text, width: '50%' }}>
+                                {lead.personal_phone || '--'}
                             </Typography>
                         </Box>
 
@@ -230,7 +239,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                 Direct number:
                             </Typography>
                             <Typography sx={{ ...accountStyles.text, width: '50%' }}>
-                                {lead.mobile_phone || 'N/A'}
+                                {lead.direct_number || '--'}
                             </Typography>
                         </Box>
 
@@ -239,7 +248,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                 Address:
                             </Typography>
                             <Typography sx={{ ...accountStyles.text }}>
-                                {lead.address || 'N/A'}
+                                {lead.address || '--'}
                             </Typography>
                         </Box>
 
@@ -248,7 +257,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                 City:
                             </Typography>
                             <Typography sx={{ ...accountStyles.text }}>
-                                {rowData?.city || 'N/A'}
+                                {rowData?.city || '--'}
                             </Typography>
                         </Box>
 
@@ -257,7 +266,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                 State:
                             </Typography>
                             <Typography sx={{ ...accountStyles.text }}>
-                                {rowData?.state || 'N/A'}
+                                {rowData?.state || '--'}
                             </Typography>
                         </Box>
 
@@ -266,20 +275,18 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                 Zip:
                             </Typography>
                             <Typography sx={{ ...accountStyles.text }}>
-                                {lead.personal_zip || lead.professional_zip || lead.company_zip
-                                    ? `${lead.personal_zip || ''} ${lead.professional_zip || ''} ${lead.company_zip || ''}`.trim()
-                                    : 'N/A'}
+                                {lead.personal_zip
+                                    ? `${lead.personal_zip || ''}`.trim()
+                                    : '--'}
                             </Typography>
                         </Box>
 
                         <Box sx={accountStyles.rows_pam}>
                             <Typography sx={{ ...accountStyles.title_text }}>
-                                Other emails:
+                                Personal Email:
                             </Typography>
                             <Typography sx={{ ...accountStyles.text }}>
-                                {lead.business_email || lead.personal_emails || lead.additional_personal_emails
-                                    ? `${lead.business_email || ''} ${lead.personal_emails || ''} ${lead.additional_personal_emails || ''}`.trim()
-                                    : 'N/A'}
+                                {lead.personal_emails || '--'}
                             </Typography>
                         </Box>
 
@@ -288,9 +295,59 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                 Personal email last seen:
                             </Typography>
                             <Typography sx={{ ...accountStyles.text }}>
-                                {lead.email || 'N/A'}
+                                {lead.personal_emails_last_seen || '--'}
                             </Typography>
                         </Box>
+
+                        <Box sx={accountStyles.rows_pam}>
+                            <Typography sx={{ ...accountStyles.title_text }}>
+                                Other personal emails:
+                            </Typography>
+                            <Typography sx={{ ...accountStyles.text }}>
+                                {lead.personal_emails || lead.additional_personal_emails
+                                    ? `${lead.personal_emails || ''} ${lead.additional_personal_emails || ''}`.trim()
+                                    : '--'}
+                            </Typography>
+                        </Box>
+
+                        <Box sx={accountStyles.rows_pam}>
+                            <Typography sx={{ ...accountStyles.title_text }}>
+                                Business email:
+                            </Typography>
+                            <Typography sx={{ ...accountStyles.text }}>
+                                {lead.business_email || '--'}
+                            </Typography>
+                        </Box>
+
+                        <Box sx={accountStyles.rows_pam}>
+                            <Typography sx={{ ...accountStyles.title_text }}>
+                                Business email last seen:
+                            </Typography>
+                            <Typography sx={{ ...accountStyles.text }}>
+                                {lead.business_email_last_seen || '--'}
+                            </Typography>
+                        </Box>
+
+                        <Box sx={accountStyles.rows_pam}>
+                            <Typography sx={{ ...accountStyles.title_text }}>
+                                Personal LinkedIn url:
+                            </Typography>
+                            {lead.linkedin_url ? (
+                                <Link
+                                    href={lead.linkedin_url.startsWith('http') ? lead.linkedin_url : `https://${lead.linkedin_url}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    sx={{ ...accountStyles.text, textDecoration: 'none', color: 'rgba(80, 82, 178, 1)', }}
+                                >
+                                    {lead.linkedin_url}
+                                </Link>
+                            ) : (
+                                <Typography sx={{ ...accountStyles.text }}>
+                                    --
+                                </Typography>
+                            )}
+                        </Box>
+
                     </Box>
                     {/* Demographics */}
                     <Box sx={accountStyles.box_param}>
@@ -313,7 +370,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                 Age Range:
                             </Typography>
                             <Typography sx={{ ...accountStyles.text }}>
-                                {lead.age_min && lead.age_max ? `${lead.age_min} - ${lead.age_max}` : 'N/A'}
+                                {lead.age_min && lead.age_max ? `${lead.age_min} - ${lead.age_max}` : '--'} yrs
                             </Typography>
                         </Box>
 
@@ -322,7 +379,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                 Marital status:
                             </Typography>
                             <Typography sx={{ ...accountStyles.text }}>
-                                {lead.marital_status || 'N/A'}
+                                {lead.marital_status || '--'}
                             </Typography>
                         </Box>
 
@@ -331,7 +388,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                 Children:
                             </Typography>
                             <Typography sx={{ ...accountStyles.text }}>
-                                {lead.children || 'N/A'}
+                                {lead.children || '--'}
                             </Typography>
                         </Box>
                     </Box>
@@ -349,7 +406,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                 Job title:
                             </Typography>
                             <Typography sx={{ ...accountStyles.text }}>
-                                {lead.job_title || 'N/A'}
+                                {lead.job_title || '--'}
                             </Typography>
                         </Box>
 
@@ -358,7 +415,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                 Seniority level:
                             </Typography>
                             <Typography sx={{ ...accountStyles.text }}>
-                                {lead.seniority || 'N/A'}
+                                {lead.seniority_level || '--'}
                             </Typography>
                         </Box>
 
@@ -367,7 +424,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                 Department:
                             </Typography>
                             <Typography sx={{ ...accountStyles.text }}>
-                                {lead.department || 'N/A'}
+                                {lead.department || '--'}
                             </Typography>
                         </Box>
 
@@ -376,7 +433,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                 Company name:
                             </Typography>
                             <Typography sx={{ ...accountStyles.text }}>
-                                {lead.company_name || 'N/A'}
+                                {lead.company_name || '--'}
                             </Typography>
                         </Box>
 
@@ -384,9 +441,20 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                             <Typography sx={{ ...accountStyles.title_text }}>
                                 Company domain:
                             </Typography>
-                            <Typography sx={{ ...accountStyles.text }}>
-                                {lead.company_domain || 'N/A'}
-                            </Typography>
+                            {lead.company_domain ? (
+                                <Link
+                                    href={`https://${lead.company_domain}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    sx={{ ...accountStyles.text, textDecoration: 'none', color: 'rgba(80, 82, 178, 1)', }}
+                                >
+                                    {lead.company_domain}
+                                </Link>
+                            ) : (
+                                <Typography sx={{ ...accountStyles.text }}>
+                                    --
+                                </Typography>
+                            )}
                         </Box>
 
                         <Box sx={accountStyles.rows_pam}>
@@ -394,7 +462,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                 Company phone:
                             </Typography>
                             <Typography sx={{ ...accountStyles.text }}>
-                                {lead.company_phone || 'N/A'}
+                                {lead.company_phone || '--'}
                             </Typography>
                         </Box>
 
@@ -403,7 +471,16 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                 Company description:
                             </Typography>
                             <Typography sx={{ ...accountStyles.text }}>
-                                <TruncatedText text={lead.company_description || 'N/A'} limit={100} />
+                                <TruncatedText text={lead.company_description || '--'} limit={100} />
+                            </Typography>
+                        </Box>
+
+                        <Box sx={accountStyles.rows_pam}>
+                            <Typography sx={{ ...accountStyles.title_text }}>
+                                Business email:
+                            </Typography>
+                            <Typography sx={{ ...accountStyles.text }}>
+                                {lead.business_email || '--'}
                             </Typography>
                         </Box>
 
@@ -412,7 +489,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                 Business email last seen:
                             </Typography>
                             <Typography sx={{ ...accountStyles.text }}>
-                                {lead.business_email || 'N/A'}
+                                {lead.business_email_last_seen || '--'}
                             </Typography>
                         </Box>
 
@@ -421,16 +498,16 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                 Company last updated:
                             </Typography>
                             <Typography sx={{ ...accountStyles.text }}>
-                                {lead.company_last_update || 'N/A'}
+                                {lead.company_last_updated || '--'}
                             </Typography>
                         </Box>
 
                         <Box sx={accountStyles.rows_pam}>
                             <Typography sx={{ ...accountStyles.title_text }}>
-                                Address
+                                Address:
                             </Typography>
                             <Typography sx={{ ...accountStyles.text }}>
-                                {lead.company_address || 'N/A'}
+                                {lead.company_address || '--'}
                             </Typography>
                         </Box>
 
@@ -439,7 +516,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                 Company City:
                             </Typography>
                             <Typography sx={{ ...accountStyles.text }}>
-                                {lead.company_city || 'N/A'}
+                                {lead.company_city || '--'}
                             </Typography>
                         </Box>
 
@@ -448,7 +525,16 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                 Company State:
                             </Typography>
                             <Typography sx={{ ...accountStyles.text }}>
-                                {lead.company_state || 'N/A'}
+                                {lead.company_state || '--'}
+                            </Typography>
+                        </Box>
+
+                        <Box sx={accountStyles.rows_pam}>
+                            <Typography sx={{ ...accountStyles.title_text }}>
+                                Company Zipcode:
+                            </Typography>
+                            <Typography sx={{ ...accountStyles.text }}>
+                                {lead.company_zip || '--'}
                             </Typography>
                         </Box>
 
@@ -462,71 +548,49 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
 
                         <Box sx={accountStyles.rows_pam}>
                             <Typography sx={{ ...accountStyles.title_text }}>
-                                Income range:
+                                Income range
                             </Typography>
                             <Typography sx={{ ...accountStyles.text }}>
-                                {lead.income_range || 'N/A'}
+                                {lead.income_range || '--'}
                             </Typography>
                         </Box>
 
                         <Box sx={accountStyles.rows_pam}>
                             <Typography sx={{ ...accountStyles.title_text }}>
-                                Net worth:
+                                Net worth
                             </Typography>
                             <Typography sx={{ ...accountStyles.text }}>
-                                {lead.net_worth || 'N/A'}
+                                {lead.net_worth || '--'}
                             </Typography>
                         </Box>
 
                         <Box sx={accountStyles.rows_pam}>
                             <Typography sx={{ ...accountStyles.title_text }}>
-                                Company Revenue:
+                                Company Revenue
                             </Typography>
                             <Typography sx={{ ...accountStyles.text }}>
-                                {lead.company_revenue || 'N/A'}
+                                {lead.company_revenue || '--'}
                             </Typography>
                         </Box>
 
                         <Box sx={accountStyles.rows_pam}>
                             <Typography sx={{ ...accountStyles.title_text }}>
-                                Company employee count:
+                                Company employee count
                             </Typography>
                             <Typography sx={{ ...accountStyles.text }}>
-                                {lead.company_employee_count || 'N/A'}
+                                {lead.company_employee_count || '--'}
                             </Typography>
                         </Box>
 
                         <Box sx={accountStyles.rows_pam}>
                             <Typography sx={{ ...accountStyles.title_text }}>
-                                Primary industry:
+                                Primary industry
                             </Typography>
                             <Typography sx={{ ...accountStyles.text }}>
-                                {lead.state || 'N/A'}
+                                {lead.state || '--'}
                             </Typography>
                         </Box>
 
-                        <Box sx={accountStyles.rows_pam}>
-                            <Typography sx={{ ...accountStyles.title_text }}>
-                                Institution url:
-                            </Typography>
-                            <Typography sx={{ ...accountStyles.text, color: 'rgba(80, 82, 178, 1)' }}>
-                                {lead.institution_url ? (
-                                    <Link
-                                        href={`${lead.institution_url}`}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        underline="none"
-                                        sx={{
-                                            color: 'rgba(80, 82, 178, 1)',
-                                        }}
-                                    >
-                                        {lead.institution_url}
-                                    </Link>
-                                ) : (
-                                    <Typography sx={accountStyles.text}> N/A</Typography>
-                                )}
-                            </Typography>
-                        </Box>
                     </Box>
                     {/* Social Connections */}
                     <Box sx={accountStyles.box_param}>
@@ -537,32 +601,30 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
 
                         <Box sx={accountStyles.rows_pam}>
                             <Typography sx={{ ...accountStyles.title_text }}>
-                                Followers:
+                                Followers
                             </Typography>
                             <Typography sx={{ ...accountStyles.text }}>
-                                {lead.followers || 'N/A'}
+                                {lead.followers || '--'}
                             </Typography>
                         </Box>
 
                         <Box sx={accountStyles.rows_pam}>
                             <Typography sx={{ ...accountStyles.title_text }}>
-                                Company url:
+                                Company LinkedIn url
                             </Typography>
                             <Typography sx={{ ...accountStyles.text, color: 'rgba(80, 82, 178, 1)' }}>
                                 {lead.company_linkedin_url ? (
                                     <Link
-                                        href={`${lead.company_linkedin_url}`}
+                                        href={`https://${lead.company_linkedin_url}`}
                                         underline="none"
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        sx={{
-                                            color: 'rgba(80, 82, 178, 1)',
-                                        }}
+                                        sx={{ ...accountStyles.text, textDecoration: 'none', color: 'rgba(80, 82, 178, 1)', }}
                                     >
                                         {lead.company_linkedin_url}
                                     </Link>
                                 ) : (
-                                    <Typography sx={accountStyles.text}> N/A</Typography>
+                                    <Typography sx={accountStyles.text}> --</Typography>
                                 )}
                             </Typography>
                         </Box>
