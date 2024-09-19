@@ -172,7 +172,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                             <Box sx={{ display: 'flex', flexDirection: 'row', gap: 5, '@media (max-width: 600px)': { flexDirection: 'column', gap: 1 }, }}>
                                 <Typography variant="body1" gutterBottom sx={{ ...accountStyles.header_text, display: 'flex', flexDirection: 'row', gap: 1 }}>
                                     <Image src={'/sms.svg'} width={18} height={18} alt='mail icon' />
-                                    {lead.business_email || 'N/A'}
+                                    {lead.personal_emails?.split(',')[0] || 'N/A'}
                                 </Typography>
                                 <Typography
                                     variant="body1"

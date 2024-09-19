@@ -1072,7 +1072,8 @@ const Leads: React.FC = () => {
                                                 <TableRow>
                                                     {[
                                                         { key: 'name', label: 'Name' },
-                                                        { key: 'business_email', label: 'Email' },
+                                                        { key: 'personal_email', label: 'Personal Email' },
+                                                        { key: 'business_email', label: 'Business Email' },
                                                         { key: 'mobile_phone', label: 'Phone number' },
                                                         { key: 'first_visited_date', label: 'Visited date', sortable: true },
                                                         { key: 'status', label: 'Visitor Type' },
@@ -1138,8 +1139,10 @@ const Leads: React.FC = () => {
                                                                 handleOpenPopup(row);
 
                                                             }}>{row.first_name} {row.last_name}</TableCell>
+                                                            <TableCell
+                                                            sx={{ ...leadsStyles.table_array, position: 'relative' }}>{row.personal_emails?.split(',')[0] || 'N/A'}</TableCell>
                                                         <TableCell
-                                                            sx={{ ...leadsStyles.table_array, position: 'relative' }}>{row.business_email || 'N/A'}</TableCell>
+                                                            sx={{ ...leadsStyles.table_array, position: 'relative' }}>{row.business_email?.split(',')[0] || 'N/A'}</TableCell>
                                                         <TableCell
                                                             sx={leadsStyles.table_array_phone}>{row.mobile_phone?.split(',')[0] || 'N/A'}</TableCell>
                                                         <TableCell
@@ -1159,7 +1162,7 @@ const Leads: React.FC = () => {
                                                                     backgroundColor: getStatusStyle(row.visitor_type).background,
                                                                     color: getStatusStyle(row.visitor_type).color,
                                                                     justifyContent: 'center',
-                                                                    minWidth: '130px',
+                                                                    minWidth: '110px',
                                                                     textTransform: 'capitalize'
                                                                 }}
                                                             >

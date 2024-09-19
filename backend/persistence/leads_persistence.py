@@ -140,6 +140,7 @@ class LeadsPersistence:
         sort_options = {
             'name': FiveXFiveUser.first_name,
             'business_email': FiveXFiveUser.business_email,
+            'personal_email': FiveXFiveUser.personal_emails,
             'mobile_phone': FiveXFiveUser.mobile_phone,
             'gender': FiveXFiveUser.gender,
             'first_visited_date': LeadsVisits.start_date,
