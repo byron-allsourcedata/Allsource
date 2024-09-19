@@ -9,13 +9,7 @@ import CustomizedProgressBar from './CustomizedProgressBar';
 const accontDetailsStyles = {
     formField: {
         margin: '0',
-        maxWidth: '55%',
-        "@media (max-width: 440px)": {
-            maxWidth:'75%'
-        }
-    },
-    formFieldPassword: {
-        margin: '0',
+        maxWidth: '65%'
     },
     inputLabel: {
         fontFamily: 'Nunito Sans',
@@ -56,12 +50,13 @@ const accontDetailsStyles = {
       orDivider: {
         display: 'flex',
         alignItems: 'center',
-        margin: '0 -1.5em',
-        maxWidth: '71%',
+        maxWidth: '80%',
+        margin: '0',
         '@media (max-width: 440px)': {
             maxWidth: '115%',
             margin: '0 -1em',
                         }
+
       },
       passwordValidationText: {
         '& .MuiTypography-root' : {
@@ -100,16 +95,27 @@ const accontDetailsStyles = {
       },
 }
 
-export const SettingsAccountDetails: React.FC = () => {
+interface SettingsAccountDetailsProps {
+    accountDetails: {
+      full_name: string;
+      email_address: string;
+      company_name: string;
+      company_website: string;
+      company_website_visits: string;
+      reset_password_sent_at: string;
+    };
+  }
+
+export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ accountDetails }) => {
     const [currentPassword, setCurrentPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmNewPassword, setConfirmNewPassword] = useState('');
-    const [fullName, setFullName] = useState('');
-    const [emailAddress, setEmailAddress] = useState('');
-    const [organizationName, setOrganizationName] = useState('');
-    const [companyWebsite, setCompanyWebsite] = useState('');
-    const [monthlyVisits, setMonthlyVisits] = useState('');
-    const [resetPasswordDate, setResetPasswordDate] = useState('');
+    const [fullName, setFullName] = useState(accountDetails.full_name);
+    const [emailAddress, setEmailAddress] = useState(accountDetails.email_address);
+    const [organizationName, setOrganizationName] = useState(accountDetails.company_name);
+    const [companyWebsite, setCompanyWebsite] = useState(accountDetails.company_website);
+    const [monthlyVisits, setMonthlyVisits] = useState(accountDetails.company_website_visits);
+    const [resetPasswordDate, setResetPasswordDate] = useState(accountDetails.reset_password_sent_at);
     const [isFocused, setIsFocused] = useState(false);
     const [isTyping, setIsTyping] = useState(false);
     const [isModified, setIsModified] = useState(false); 
@@ -119,12 +125,12 @@ export const SettingsAccountDetails: React.FC = () => {
     const [isEmailFocused, setIsEmailFocused] = useState(false);
     const [isEmailTyping, setIsEmailTyping] = useState(false);
     const [isEmailModified, setIsEmailModified] = useState(false); 
-    
+
     const [initialOrganizationName, setInitialOrganizationName] = useState('');
     const [isOrganizationNameFocused, setIsOrganizationNameFocused] = useState(false);
     const [isOrganizationNameTyping, setIsOrganizationNameTyping] = useState(false);
     const [isOrganizationNameModified, setIsOrganizationNameModified] = useState(false);
-    
+
     const [initialCompanyWebsite, setInitialCompanyWebsite] = useState('');
     const [isCompanyWebsiteFocused, setIsCompanyWebsiteFocused] = useState(false);
     const [isCompanyWebsiteTyping, setIsCompanyWebsiteTyping] = useState(false);
@@ -141,10 +147,6 @@ export const SettingsAccountDetails: React.FC = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [errors, setErrors] = useState<{ [key: string]: string }>({});
-    const [isLoading, setIsLoading] = useState(false)
-
-
-    
 
     const calculateDaysAgo = (dateString: string) => {
         if (!dateString) return 'Never';
@@ -169,40 +171,6 @@ export const SettingsAccountDetails: React.FC = () => {
         };
       }, []);
 
-
-    useEffect(() => {
-        const fetchAccountDetails = async () => {
-            try {
-                setIsLoading(true)
-                const response = await axiosInterceptorInstance.get('/settings/account-details');
-                const data = response.data;
-                setResetPasswordDate(data.reset_password_sent_at);
-                setFullName(data.full_name);
-                setInitialValue(data.full_name);
-                setEmailAddress(data.email_address);
-                setInitialEmail(data.email_address);
-                setOrganizationName(data.company_name);
-                setInitialOrganizationName(data.company_name);
-                setCompanyWebsite(data.company_website);
-                setInitialCompanyWebsite(data.company_website);
-                setMonthlyVisits(data.company_website_visits);
-                setInitialMonthlyVisits(data.company_website_visits);
-            } catch (error) {
-                console.error('Error fetching account details:', error);
-            }
-            finally{
-                setIsLoading(false)
-            }
-        };
-
-        fetchAccountDetails();
-    }, []);
-
-
-    if (isLoading) {
-        return <CustomizedProgressBar />;
-    }
-
     const handleSaveAccountDetails = (field: 'full_name' | 'email_address') => {
         const accountData = {
             account: {
@@ -218,6 +186,9 @@ export const SettingsAccountDetails: React.FC = () => {
             });
     };
     
+    
+
+
 
     const handleChangePassword = () => {
         const newErrors: { [key: string]: string } = {};
@@ -226,15 +197,12 @@ export const SettingsAccountDetails: React.FC = () => {
           } else if (!passwordValidation.length || !passwordValidation.upperCase || !passwordValidation.lowerCase) {
             newErrors.newPassword = 'Please enter a stronger password';
           }
-      
           if (!confirmNewPassword) {
             newErrors.confirmNewPassword = 'Confirm password is required';
           } else if (confirmNewPassword !== newPassword) {
             newErrors.confirmNewPassword = 'Invalid password combination.';
           }
-      
           setErrors(newErrors);
-      
           if (Object.keys(newErrors).length > 0) {
             return;
           }
@@ -287,7 +255,7 @@ export const SettingsAccountDetails: React.FC = () => {
         setIsTyping(true);
         setIsModified(true);
         };
-  
+
   // Generic function to handle input reset
   const handleReset = (
     setValue: React.Dispatch<React.SetStateAction<string>>,
@@ -297,7 +265,7 @@ export const SettingsAccountDetails: React.FC = () => {
       setIsTyping(false);
       setIsModified(false);
   };
-  
+
   // Generic function to handle focus
   const handleFocus = (value: string, setIsFocused: React.Dispatch<React.SetStateAction<boolean>>, setIsTyping: React.Dispatch<React.SetStateAction<boolean>>) => () => {
       setIsFocused(true);
@@ -305,7 +273,7 @@ export const SettingsAccountDetails: React.FC = () => {
           setIsTyping(false);
       }
   };
-  
+
   // Generic function to handle blur
   const handleBlur = (value: string, setIsFocused: React.Dispatch<React.SetStateAction<boolean>>, setIsTyping: React.Dispatch<React.SetStateAction<boolean>>) => () => {
       setIsFocused(false);
@@ -313,11 +281,11 @@ export const SettingsAccountDetails: React.FC = () => {
           setIsTyping(false);
       }
   };
-  
+
   // Check if the save button should be enabled
   const isSaveEnabled = (value: string, initialValue: string, isModified: boolean) => 
     value.trim() !== '' && value !== initialValue && isModified;
-  
+
   // Show close icon conditionally
   const showCloseIcon = (isTyping: boolean, value: string, initialValue: string) => 
     isTyping && value.trim() !== '' && value !== initialValue;
@@ -367,8 +335,8 @@ const handleChangePasswordPopupClose = () => {
 
 
     return (
-                <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'start', alignItems: 'start',  }}>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: '24px',
+                <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center'}}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: '24px', 
                     '@media (max-width: 899px)': {
                             minWidth: '100%'
                      },
@@ -376,9 +344,10 @@ const handleChangePasswordPopupClose = () => {
                             minWidth: '700px'
                      },
                      '@media (min-width: 1200px)': {
-                            minWidth: '780px'
+                            minWidth: '780px',
+                            pl: 12
                      }
-                     
+
                     }}>
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
                     <Typography variant="h6" sx={{
@@ -390,7 +359,7 @@ const handleChangePasswordPopupClose = () => {
                     }}>Name</Typography>
                     <Box sx={{ display: 'flex', gap: 2,
                         '@media (max-width: 600px)': {
-                            flexDirection: 'row',
+                            flexDirection: 'column',
                             alignItems: 'flex-start'
                         },
                     }}>
@@ -462,13 +431,10 @@ const handleChangePasswordPopupClose = () => {
                     <Box sx={{
                         display: 'flex',
                         alignItems: 'center',
-                        margin: '0 -40px',
+                        margin: '0 -15px',
                         '@media (min-width: 601px)': {
                             display: 'none'
-                        },
-                        '@media (max-width: 440px)': {
-                            margin: '0 -1em',
-                        }}}>
+                        },}}>
                         <Box sx={{ borderBottom: '1px solid #e4e4e4', flexGrow: 1 }} />
                     </Box>
 
@@ -482,8 +448,8 @@ const handleChangePasswordPopupClose = () => {
 
                     <Box sx={{ display: 'flex', gap: 2,
                         '@media (max-width: 600px)': {
-                            flexDirection: 'row',
-                            alignItems: 'space-between'
+                            flexDirection: 'column',
+                            alignItems: 'flex-start'
                         }
                     }}>
                         <TextField sx={accontDetailsStyles.formField}
@@ -553,13 +519,10 @@ const handleChangePasswordPopupClose = () => {
                     <Box sx={{
                         display: 'flex',
                         alignItems: 'center',
-                        margin: '0 -40px',
+                        margin: '0 -15px',
                         '@media (min-width: 601px)': {
                             display: 'none'
-                        },
-                        '@media (max-width: 440px)': {
-                            margin: '0 -1em',
-                        }}}>
+                        },}}>
                         <Box sx={{ borderBottom: '1px solid #e4e4e4', flexGrow: 1 }} />
                     </Box>
 
@@ -594,7 +557,7 @@ const handleChangePasswordPopupClose = () => {
                             display: 'none'
                         }
                     }}>Password</Typography>
-                    <Box sx={{ display: 'flex', gap: 2, justifyContent: 'space-between', alignItems: 'center', maxWidth: '68%' }}>
+                    <Box sx={{ display: 'flex', gap: 2, justifyContent: 'space-between', alignItems: 'center', maxWidth: '78%' }}>
                         <Button variant="contained" color="secondary" onClick={handleChangePasswordPopupOpen}
                         sx={{
                             borderRadius: '4px',
@@ -671,7 +634,7 @@ const handleChangePasswordPopupClose = () => {
                                     Update your password to enhance account security and maintain access control.
                                 </Typography>
 
-                                <TextField sx={accontDetailsStyles.formFieldPassword}
+                                <TextField sx={accontDetailsStyles.formField}
                                     InputLabelProps={{ sx: accontDetailsStyles.inputLabel }}
                                     label="Current Password"
                                     type={showCurrentPassword ? 'text' : 'password'}
@@ -695,7 +658,7 @@ const handleChangePasswordPopupClose = () => {
                                         ),
                                       }}
                                 />
-                                <TextField sx={accontDetailsStyles.formFieldPassword}
+                                <TextField sx={accontDetailsStyles.formField}
                                     InputLabelProps={{ sx: accontDetailsStyles.inputLabel }}
                                     label="New Password"
                                     type={showPassword ? 'text' : 'password'}
@@ -742,7 +705,7 @@ const handleChangePasswordPopupClose = () => {
                                     </ListItem>
                                 </List>
                                 <TextField 
-                                    sx={accontDetailsStyles.formFieldPassword}
+                                    sx={accontDetailsStyles.formField}
                                     InputLabelProps={{ sx: accontDetailsStyles.inputLabel }}
                                     label="Confirm New Password"
                                     type={showConfirmPassword ? 'text' : 'password'}
@@ -847,7 +810,7 @@ const handleChangePasswordPopupClose = () => {
                         </Typography>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2,
                             '@media (max-width: 600px)': {
-                                flexDirection: 'row',
+                                flexDirection: 'column',
                                 alignItems: 'flex-start'
                             },
                          }}>
@@ -916,7 +879,7 @@ const handleChangePasswordPopupClose = () => {
                         </Box>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2,
                             '@media (max-width: 600px)': {
-                                flexDirection: 'row',
+                                flexDirection: 'column',
                                 alignItems: 'flex-start'
                             }
                         }}>
@@ -983,9 +946,9 @@ const handleChangePasswordPopupClose = () => {
                                 Save
                             </Button>
                         </Box>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, marginBottom: 2,
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2,
                             '@media (max-width: 600px)': {
-                                flexDirection: 'row',
+                                flexDirection: 'column',
                                 alignItems: 'flex-start'
                             }
                         }}>
@@ -1057,6 +1020,6 @@ const handleChangePasswordPopupClose = () => {
                     </Box>
                 </Box>
 
-            
+
     );
 };

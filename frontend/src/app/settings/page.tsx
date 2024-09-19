@@ -7,10 +7,37 @@ import { SettingsTeams } from '@/components/SettingsTeams';
 import { SettingsBilling } from '@/components/SettingsBilling';
 import { SettingsSubscription } from '@/components/SettingsSubscription';
 import { SettingsApiDetails } from '@/components/SettingsApiDetails';
+import axiosInterceptorInstance from '@/axios/axiosInterceptorInstance';
+import CustomizedProgressBar from '@/components/CustomizedProgressBar';
 
 const Settings: React.FC = () => {
     const [activeSection, setActiveSection] = useState<string>('accountDetails');
+    const [accountDetails, setAccountDetails] = useState<any>(null); // Для хранения данных аккаунта
+    const [isLoading, setIsLoading] = useState<boolean>(true);
 
+    // Функция для получения данных аккаунта
+    const fetchAccountDetails = async () => {
+        try {
+            setIsLoading(true);
+            const response = await axiosInterceptorInstance.get('/settings/account-details');
+            const data = response.data;
+            setAccountDetails(data);
+        } catch (error) {
+            console.error('Error fetching account details:', error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    // useEffect для загрузки данных один раз при монтировании
+    useEffect(() => {
+        fetchAccountDetails();
+    }, []);
+    
+    if (isLoading) {
+        return <CustomizedProgressBar />;
+    }
+    
     return (
         <Box>
             <Typography variant="h4" gutterBottom sx={planStyles.title}>
@@ -55,7 +82,7 @@ const Settings: React.FC = () => {
             </Box>
 
             {activeSection === 'accountDetails' && (
-                <SettingsAccountDetails />
+                <SettingsAccountDetails accountDetails={accountDetails} />
             )}
 
             {activeSection === 'teams' && (

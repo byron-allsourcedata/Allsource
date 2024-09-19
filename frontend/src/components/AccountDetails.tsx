@@ -214,8 +214,17 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                     <Box sx={accountStyles.box_param}>
                         <Typography sx={{ ...accountStyles.title }}>
                             <Image src={'/user-square.svg'} width={18} height={18} alt='iphone icon' />
-                            Basic Details
+                            Person Details
                         </Typography>
+                        <Box sx={accountStyles.rows_pam}>
+                            <Typography sx={accountStyles.title_text}>
+                                Cell number:
+                            </Typography>
+                            <Typography sx={{ ...accountStyles.text, width: '50%' }}>
+                                {lead.cell_number || 'N/A'}
+                            </Typography>
+                        </Box>
+
                         <Box sx={accountStyles.rows_pam}>
                             <Typography sx={accountStyles.title_text}>
                                 Direct number:

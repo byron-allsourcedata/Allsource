@@ -22,21 +22,21 @@ const TrialStatus: React.FC = () => {
   useEffect(() => {
     if (trial) {
       if (daysDifference === null || daysDifference === undefined || isNaN(daysDifference)) {
-        setStatusText('Trial Pending');
-        setBackgroundColor('rgba(238, 238, 238, 1)');
-        setTextColor('rgba(0, 0, 0, 1)');
-        setIconColor('rgba(0, 0, 0, 1)');
+        setStatusText('Trial Active');
+        setBackgroundColor('#EAF8DD');
+        setTextColor('#6EC125');
+        setIconColor('#6EC125');
       } else {
-        if (daysDifference > 1) {
+        if (daysDifference > 5) {
+          setStatusText(`${daysDifference} days Free Trial Left.`);
+          setBackgroundColor('#EAF8DD');
+          setTextColor('#6EC125');
+          setIconColor('#6EC125');
+        } else if (daysDifference <= 5) {
           setStatusText(`${daysDifference} days Free Trial Left.`);
           setBackgroundColor('rgba(255, 233, 131, 1)');
           setTextColor('rgba(0, 0, 0, 1)');
           setIconColor('rgba(0, 0, 0, 1)');
-        } else if (daysDifference === 1) {
-          setStatusText(`${daysDifference} days Free Trial Left.`);
-          setBackgroundColor('rgba(248, 211, 211, 1)');
-          setTextColor('rgba(224, 49, 48, 1)');
-          setIconColor('rgba(224, 49, 48, 1)');
         } else {
           setStatusText('Free Trial Expired');
           setBackgroundColor('rgba(246, 202, 204, 1)');
@@ -99,7 +99,7 @@ const TrialStatus: React.FC = () => {
         }}>
           {statusText}
         </Typography>
-        {(statusText.includes('Trial Pending')) && (
+        {(statusText.includes('Trial Active')) && (
           <AccessTimeIcon sx={{ color: iconColor }} />
         )}
         {(statusText.includes('Free Trial Expired') || statusText.includes('Free Trial Left')) && (
