@@ -107,7 +107,7 @@ class LeadsPersistence:
                 FiveXFiveUser.professional_zip,
                 FiveXFiveUser.company_zip,
                 LeadUser.behavior_type,
-                FiveXFiveLocations.state_id,
+                States.state_name,
                 FiveXFiveLocations.city,
                 LeadsVisits.start_date.label('start_date'),
                 LeadsVisits.start_time.label('start_time'),
@@ -128,7 +128,7 @@ class LeadsPersistence:
                 FiveXFiveUser.id,
                 LeadUser.behavior_type,
                 LeadUser.is_returning_visitor,
-                FiveXFiveLocations.state_id,
+                States.state_name,
                 FiveXFiveLocations.city,
                 LeadsVisits.start_date,
                 LeadsVisits.start_time,
@@ -217,9 +217,11 @@ class LeadsPersistence:
             for region_data in region_list:
                 region_data = region_data.split('-')
                 filters.append(FiveXFiveLocations.city.ilike(f'{region_data[0]}%'))
-                if region_data[1]:
+                
+                if len(region_data) > 1 and region_data[1]:
                     filters.append(States.state_name.ilike(f'{region_data[1]}%'))
-                query = query.filter(or_(*filters))
+            
+            query = query.filter(or_(*filters))
 
         if behavior_type:
             behavior_type_list = behavior_type.split(',')
