@@ -36,3 +36,6 @@ class UserDomainsService:
             is_pixel_installed=domain.is_pixel_installed,
             enable=domain.enable
         ).model_dump()
+    
+    def delete_domain(self,user_id: int, domain_id: str):
+        return self.domain_persistence.delete_domain(user_id, domain_id)

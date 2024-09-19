@@ -23,3 +23,9 @@ def list_domain(request: Request = None,
     filter_by = dict(request.query_params)
     domains = domain_service.get_domains(user.get('id'), **filter_by)
     return domains
+
+@router.delete('/{domain_id}')
+def delete_domain(domain_id: int, domain_service: UserDomainsService = Depends(get_domain_service),
+                  user = Depends(check_user_authentication)):
+    domain_service.delete_domain(user.get('id'), domain_id)
+    return {'status': "SUCCESS"}

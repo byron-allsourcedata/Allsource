@@ -1,104 +1,9 @@
 "use client";
-import React, { useState } from 'react';
-import { Box, Button, Typography, Modal, IconButton, TextField, Drawer, Backdrop } from '@mui/material';
+import React from 'react';
+import { Box, Button, Typography, Drawer, Backdrop } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import Image from 'next/image';
-import { styles } from '../css/cmsStyles';
-import axios from 'axios'; 
-import { showErrorToast, showToast } from './ToastNotification'
-import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { useRouter } from 'next/navigation';
-
-const style = {
-  position: 'fixed' as 'fixed',
-  top: 0,
-  right: 0,
-  width: '45%',
-  height: '100%',
-  bgcolor: 'background.paper',
-  boxShadow: 24,
-  p: 4,
-  display: 'flex',
-  flexDirection: 'column',
-  transition: 'transform 0.3s ease-in-out',
-  transform: 'translateX(100%)',
-  '@media (max-width: 600px)': {
-    width: '100%',
-    height: '100%',
-    p: 2
-  },
-};
-
-const openStyle = {
-  transform: 'translateX(0%)',
-  right: 0,
-};
-
-const typographyStyles = {
-  textTransform: 'none',
-  fontFamily: 'Nunito',
-  fontSize: '14px',
-  fontWeight: '500',
-  lineHeight: '19.6px',
-  color: 'rgba(74, 74, 74, 1)',
-  textWrap: 'nowrap',
-  paddingTop: '1em',
-  paddingBottom: '0.75em',
-};
-
-const buttonStyles = {
-  backgroundColor: '#fff',
-  display: "flex",
-  flexDirection: 'column',
-  padding: '1em',
-  borderColor: 'rgba(228, 228, 228, 1)',
-  border: '1px solid rgba(228, 228, 228, 1)',
-  width: '100%',
-};
-
-const buttonGoogle = {
-  backgroundColor: '#fff',
-  display: "flex",
-  flexDirection: 'column',
-  padding: '1em 2em 1.5em 1em',
-  borderColor: 'rgba(228, 228, 228, 1)',
-  border: '1px solid rgba(228, 228, 228, 1)',
-  width: '100%',
-};
-
-const typographyGoogle = {
-  textTransform: 'none',
-  fontFamily: 'Nunito',
-  fontSize: '18px',
-  fontWeight: '450',
-  lineHeight: '19.6px',
-  color: 'rgba(74, 74, 74, 1)',
-  textWrap: 'wrap',
-  paddingTop: '1em',
-  paddingBottom: '0.25em',
-};
-
-const maintext = {
-  fontFamily: 'Nunito',
-  fontSize: '14px',
-  fontWeight: '600',
-  lineHeight: '19.6px',
-  color: 'rgba(0, 0, 0, 1)',
-  paddingTop: '1em',
-  paddingBottom: '0.75em',
-};
-
-const subtext = {
-  fontFamily: 'Nunito',
-  fontSize: '15px',
-  fontWeight: '600',
-  lineHeight: '19.6px',
-  textAlign: 'center',
-  color: 'rgba(74, 74, 74, 1)',
-  paddingTop: '0.25em',
-  '@media (max-width: 600px)': { textAlign: 'left', fontSize: '14px' }
-};
-
 
 type Props = {
   open: boolean;
@@ -134,7 +39,7 @@ return (
           'justifyContent': 'space-between',
         }}>
         <Typography variant='h3' fontSize={'1rem'}>Upgrade plan</Typography>
-        <CloseIcon onClick={() => handleClose()} />
+        <CloseIcon sx={{cursor: 'pointer'}} onClick={() => handleClose()} />
         
         </Box>
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', width: '100%', marginTop: '1rem' }}>
