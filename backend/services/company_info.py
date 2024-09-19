@@ -33,7 +33,7 @@ class CompanyInfoService:
                 synchronize_session=False)
             self.db.commit()
             if not self.db.query(UserDomains).filter(UserDomains.id == self.user.get('id')).all():
-                self.db.add(UserDomains(user_id=self.user.get('id'), domain=company_info.company_website))
+                self.db.add(UserDomains(user_id=self.user.get('id'), domain=company_info.company_website.replace('https://', '').replace('http://', '')))
                 self.db.commit()
             return CompanyInfoEnum.SUCCESS
         else:
