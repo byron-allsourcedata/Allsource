@@ -3,6 +3,7 @@ import logging
 import os
 import sys
 import tempfile
+import asyncio
 import traceback
 import pytz
 import urllib.parse
@@ -37,6 +38,8 @@ from dotenv import load_dotenv
 from sqlalchemy.dialects.postgresql import insert
 from collections import defaultdict
 from datetime import datetime, timedelta
+from config.rmq_connection import publish_rabbitmq_message, RabbitMQConnection
+
 
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
@@ -45,7 +48,10 @@ BUCKET_NAME = 'trovo-coop-shakespeare'
 FILES_PATH = 'outgoing/cookie_sync/resolved'
 LAST_PROCESSED_FILE_PATH = 'tmp/last_processed_file_resolved.txt'
 AMOUNT_CREDITS = 1
-OVERAGE_CREDITS = 0.49
+QUEUE_CREDITS_CHARGING = 'credits_charging'
+
+ROOT_BOT_CLIENT_EMAIL = 'onlineinet.ru@gmail.com'
+ROOT_BOT_CLIENT_DOMAIN = 'https://app.maximiz.ai'
 
 def create_sts_client(key_id, key_secret):
     return boto3.client('sts', aws_access_key_id=key_id, aws_secret_access_key=key_secret, region_name='us-west-2')
@@ -58,7 +64,7 @@ def assume_role(role_arn, sts_client):
     return credentials
 
 
-def process_file(bucket, file_key, session):
+async def process_file(bucket, file_key, session, channel, root_user):
     obj = bucket.Object(file_key)
     file_data = obj.get()['Body'].read()
     if file_key.endswith('.snappy.parquet'):
@@ -66,10 +72,10 @@ def process_file(bucket, file_key, session):
             temp_file.write(file_data)
             temp_file.seek(0)
             table = pq.read_table(temp_file.name)
-            process_table(table, session, file_key)
+            await process_table(table, session, file_key, channel, root_user)
 
 
-def process_table(table, session, file_key):
+async def process_table(table, session, file_key, channel, root_user):
     for i in reversed(range(len(table))):
         up_id = table['UP_ID'][i]
         five_x_five_user = 1
@@ -82,20 +88,25 @@ def process_table(table, session, file_key):
         five_x_five_user = session.query(FiveXFiveUser).filter(FiveXFiveUser.up_id == str(up_id).lower()).first()
         if five_x_five_user:
             logging.info(f"UP_ID {up_id} found in table")
-            process_user_data(table, i, five_x_five_user, session)
+            await process_user_data(table, i, five_x_five_user, session, channel, None)
+            if root_user:
+                await process_user_data(table, i, five_x_five_user, session, channel, root_user)
             break
     update_last_processed_file(file_key)
 
 
-def process_user_data(table, index, five_x_five_user: FiveXFiveUser, session: Session):
+async def process_user_data(table, index, five_x_five_user: FiveXFiveUser, session: Session, rmq_connection, root_user=None):
     partner_uid_decoded = urllib.parse.unquote(str(table['PARTNER_UID'][index]).lower())
     partner_uid_dict = json.loads(partner_uid_decoded)
     partner_uid_client_id = partner_uid_dict.get('client_id')
     page = partner_uid_dict.get('current_page')
-    result = session.query(Users, UserDomains.id) \
-                .join(UserDomains, UserDomains.user_id == Users.id) \
-                .filter(UserDomains.data_provider_id == str(partner_uid_client_id)) \
-                .first()
+    if root_user:
+        result = root_user
+    else:
+        result = session.query(Users, UserDomains.id) \
+                    .join(UserDomains, UserDomains.user_id == Users.id) \
+                    .filter(UserDomains.data_provider_id == str(partner_uid_client_id)) \
+                    .first()
     if not result:
         logging.info(f"result not found with client_id {partner_uid_client_id}")
         return
@@ -124,9 +135,16 @@ def process_user_data(table, index, five_x_five_user: FiveXFiveUser, session: Se
         session.add(user_payment_transactions)
         if (user.leads_credits - AMOUNT_CREDITS) < 0:
             if user.is_leads_auto_charging is False:
-                logging.info(f"User not found with client_id {partner_uid_client_id}")
+                logging.info(f"User eads_auto_charging is False")
                 return
-            user.leads_credits -= OVERAGE_CREDITS
+            user.leads_credits -= AMOUNT_CREDITS
+            if user.leads_credits % 100 == 0 and root_user is None:
+                await publish_rabbitmq_message(
+                    connection=rmq_connection,
+                    queue_name=QUEUE_CREDITS_CHARGING,
+                    message_body={'customer_id': user.customer_id, 'credits': user.leads_credits}
+                )
+                logging.info({'customer_id': user.customer_id, 'credits': user.leads_credits})
         else:
             user.leads_credits -= AMOUNT_CREDITS
         session.flush()
@@ -325,7 +343,7 @@ def check_visitors(bucket, files):
             f"Date: {date}, Number of unique visitors: {num_visitors}, Number of views: {num_views}, Number of null UIDs: {num_null_uids}")
 
 
-def process_files(sts_client, session):
+async def process_files(sts_client, session, channel, root_user):
     try:
         with open(LAST_PROCESSED_FILE_PATH, "r") as file:
             last_processed_file = file.read().strip()
@@ -342,19 +360,36 @@ def process_files(sts_client, session):
     else:
         files = bucket.objects.filter(Prefix=FILES_PATH)
     for file in files:
-        process_file(bucket, file.key, session)
+        await process_file(bucket, file.key, session, channel, root_user)
 
 
-def main():
+async def main():
     sts_client = create_sts_client(os.getenv('S3_KEY_ID'), os.getenv('S3_KEY_SECRET'))
     engine = create_engine(
         f"postgresql://{os.getenv('DB_USERNAME')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}")
     Session = sessionmaker(bind=engine)
     session = Session()
+    
+    rabbitmq_connection = RabbitMQConnection()
+    connection = await rabbitmq_connection.connect()
+    channel = await connection.channel()
+    await channel.declare_queue(
+        name=QUEUE_CREDITS_CHARGING,
+        durable=True,
+        arguments={
+            'x-consumer-timeout': 3600000,
+        }
+    )
+    
     logging.info("Started")
     try:
+        result = session.query(Users, UserDomains.id) \
+            .join(UserDomains, UserDomains.user_id == Users.id) \
+            .filter((UserDomains.domain == ROOT_BOT_CLIENT_DOMAIN) & (Users.email == ROOT_BOT_CLIENT_EMAIL)) \
+            .first()
+
         while True:
-            process_files(sts_client, session)
+            await process_files(sts_client=sts_client, session=session, channel=connection, root_user=result)
             logging.info('Sleeping for 10 minutes...')
             time.sleep(60 * 10)
     except Exception as e:
@@ -366,4 +401,4 @@ def main():
         logging.info("Connection to the database closed")
 
 
-main()
+asyncio.run(main())
