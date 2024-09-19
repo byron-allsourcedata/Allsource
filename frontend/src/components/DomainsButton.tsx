@@ -1,4 +1,4 @@
-import { Box, Typography, Button, Menu, MenuItem, TextField, IconButton } from '@mui/material';
+import { Box, Typography, Button, Menu, MenuItem, TextField, IconButton, InputAdornment } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import React, { useEffect, useState } from 'react';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
@@ -32,9 +32,16 @@ const AddDomainPopup = ({ open, handleClose, handleSave }: AddDomainProps) => {
   const [showSlider, setShowSlider] = useState(false)
   const handleFocus = () => setIsFocused(true);
   const handleBlur = () => setIsFocused(false);
-  const validateField = (value: string): string => value.trim() ? "" : "Domain is required";
+  const validateField = (
+    value: string,
+    type: "domain"
+  ): string => {
+        const sanitizedValue = value.replace(/^www\./, '');
+        const websiteRe = /^(https?:\/\/)?([\da-z.-]+)\.([a-z]{2,20})([/\w .-]*)*\/?$/i;
+        return websiteRe.test(sanitizedValue) ? "" : "Invalid website URL";
+    }
   const handleSubmit = async () => {
-    const newErrors = { domain: validateField(domain) };
+    const newErrors = { domain: validateField(domain, 'domain') };
     setErrors(newErrors);
     if (newErrors.domain) return;
   
@@ -56,8 +63,6 @@ const AddDomainPopup = ({ open, handleClose, handleSave }: AddDomainProps) => {
             sessionStorage.setItem('is_slider_opened', 'false');
             setShowSlider(false); 
           }
-        } else {
-          showErrorToast('An error occurred while adding the domain');
         }
       } else {
         console.error("Error fetching data:", error);
@@ -65,29 +70,76 @@ const AddDomainPopup = ({ open, handleClose, handleSave }: AddDomainProps) => {
     }
   };
 
+  const handleWebsiteLink = (event: { target: { value: string } }) => {
+    let input = event.target.value.trim();
+
+    const hasWWW = input.startsWith("www.");
+
+    const sanitizedInput = hasWWW ? input.replace(/^www\./, '') : input;
+
+    const domainPattern = /^[\w-]+\.[a-z]{2,}$/i;
+    const isValidDomain = domainPattern.test(sanitizedInput);
+
+    let finalInput = input;
+
+    if (isValidDomain) {
+      finalInput = hasWWW ? `https://www.${sanitizedInput}` : `https://${sanitizedInput}`;
+    }
+
+    setDomain(finalInput);
+
+    const websiteError = validateField(input, "domain");
+    setErrors((prevErrors) => ({
+      domain: websiteError,
+    }));
+  };
+
   if (!open) return null;
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', padding: '1rem' }}>
-      <TextField
-        label="Shop Domain"
-        variant="outlined"
-        placeholder="Enter your Shop Domain"
-        margin="normal"
-        value={isFocused ? domain.replace(/^https?:\/\//, "") : `https://${domain.replace(/^https?:\/\//, "")}`}
-        onFocus={handleFocus}
-        onBlur={handleBlur}
-        onChange={(e) => setDomain(e.target.value)}
-        error={!!errors.domain}
-        helperText={errors.domain}
-        InputProps={{
-          endAdornment: (
-            <IconButton aria-label="close" edge="end" sx={{ color: 'text.secondary' }} onClick={handleClose}>
-              <CloseIcon />
-            </IconButton>
-          ),
-        }}
-      />
+    
+    <Box sx={{ display: 'flex', flexDirection: 'column', padding: '1rem', width: '20rem' }}>
+    <TextField
+      fullWidth
+      label="Enter domain link"
+      variant="outlined"
+      sx={{
+        marginBottom: '1.5em',
+        maxHeight: '56px',
+        '& .MuiInputBase-root': {
+          maxHeight: '48px',
+        },
+        '&.Mui-focused': {
+          color: '#0000FF',
+        },
+        '& .MuiOutlinedInput-root': {
+          paddingTop: '13px',
+          paddingBottom: '13px',
+        },
+        '& .MuiInputLabel-root': {
+          top: '-5px',
+        },
+        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+          borderColor: '#0000FF',
+        },
+      }}
+      placeholder={isFocused ? "example.com" : ""}
+      value={isFocused ? domain.replace(/^https?:\/\//, "") : `https://${domain.replace(/^https?:\/\//, "")}`}
+      onChange={handleWebsiteLink}
+      onFocus={handleFocus}
+      onBlur={handleBlur}
+      error={!!errors.domain}
+      helperText={errors.domain}
+      InputProps={{
+        startAdornment: isFocused && (
+          <InputAdornment position="start">https://</InputAdornment>
+        ),
+        endAdornment: (
+          <IconButton aria-label="close" edge="end" sx={{ color: 'text.secondary' }} onClick={handleClose}>
+            <CloseIcon />
+          </IconButton>
+        ),
+      }} />
       <Box sx={{ display: 'flex', justifyContent: 'flex-end', width: '100%', marginTop: '1rem' }}>
         <Button color='primary' variant='outlined' onClick={handleSubmit}>Save</Button>
       </Box>

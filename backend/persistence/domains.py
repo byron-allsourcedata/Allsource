@@ -1,7 +1,7 @@
 from models.users_domains import UserDomains
 from sqlalchemy.orm import Session
 from sqlalchemy import func
-
+from fastapi import HTTPException
 class UserDomainsPersistence:
 
     def __init__(self, db: Session):
@@ -14,9 +14,12 @@ class UserDomainsPersistence:
             query = query.filter(UserDomains.domain.like(f"%{domain_substr}%"))
         return query.all()
 
-
-    def create_domain(self, user_id: int, data: dict):
+    def create_domain(self, user_id, data: dict):
         domain = UserDomains(user_id=user_id, **data)
+        if data['domain']:
+            domain_search = self.db.query(UserDomains).filter(UserDomains.domain.like(f'%{data["domain"]}%')).all()
+            if domain_search:
+                raise HTTPException(status_code=409, detail={'status': 'Domain already exists'})
         self.db.add(domain)
         self.db.commit()
         return domain
