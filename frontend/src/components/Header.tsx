@@ -15,7 +15,7 @@ const headerStyles = {
     padding: '1.125rem 1.5rem',
     justifyContent: 'space-between',
     alignItems: 'center',
-    minHeight: '9vh',
+    minHeight: '8vh',
     color: 'rgba(244, 87, 69, 1)',
     borderBottom: `1px solid rgba(228, 228, 228, 1)`,
   },
