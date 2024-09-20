@@ -301,7 +301,7 @@ const DomainButton: React.FC = () => {
               <Typography onClick={() => handleSetDomain(domain.domain)}>
                 {domain.domain.replace('https://', '')}
               </Typography>
-              {deleteDomainPopup && deleteDomain && (
+              {deleteDomainPopup && deleteDomain  && (
                 <ConfirmDeleteDomain
                   open={deleteDomainPopup}
                   domain={deleteDomain}
@@ -309,12 +309,16 @@ const DomainButton: React.FC = () => {
                   handleDelete={handleDeleteDomain}
                 />
               )}
-              <HoverableImage
+              {
+                domains.length > 1 && (
+                  <HoverableImage
                 srcDefault='/trash-03.svg'
                 srcHover='/trash-03-active.svg'
                 alt='Remove'
                 onClick={() => handleShowDelete(domain)}
               />
+                ) 
+              }
             </Box>
           </MenuItem>
         ))}
