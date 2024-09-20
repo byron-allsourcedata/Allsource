@@ -334,7 +334,7 @@ class LeadsPersistence:
         )
         query = (
             self.db.query(
-                FiveXFiveUser.id,
+                FiveXFiveUser,
                 recurring_visits_subquery.c.recurring_visits,
             )
                 .join(LeadUser, LeadUser.five_x_five_user_id == FiveXFiveUser.id)
@@ -348,6 +348,7 @@ class LeadsPersistence:
                 .filter(LeadUser.domain_id == domain_id)
                 .group_by(
                 FiveXFiveUser.id,
+                LeadsVisits.start_date,
                 recurring_visits_subquery.c.recurring_visits
             )
         )
