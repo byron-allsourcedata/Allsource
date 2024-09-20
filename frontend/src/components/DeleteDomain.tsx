@@ -127,6 +127,7 @@ const ConfirmDeleteDomain = ({ open, handleClose, domain, handleDelete }: Props)
                 width: '100%', 
                 textAlign: 'center',
                 whiteSpace: 'pre-line',
+                userSelect: 'text'
             }}
             >
             Are you sure you want to remove this domain? If you do, all data associated with it will be permanently erased.
@@ -141,6 +142,7 @@ const ConfirmDeleteDomain = ({ open, handleClose, domain, handleDelete }: Props)
                 width: '100%', 
                 textAlign: 'center',
                 whiteSpace: 'pre-line',
+                userSelect: 'text'
             }}
             >
             To delete the domain, you need to enter <strong>{domain.domain.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')}</strong> in the field below and press the &apos;Remove&apos; button. 
