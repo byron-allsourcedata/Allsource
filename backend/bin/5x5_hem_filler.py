@@ -16,8 +16,7 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO)
 
 BUCKET_NAME = 'trovo-coop-shakespeare'
-FILES_PATH = 'outgoing/upid_hem_1_6_0'
-LAST_PROCESSED_FILE_PATH = 'tmp/last_processed_file_hems.txt'
+FILES_PATH = 'outgoing/upid_hem_1_8_0'
 QUEUE_HEMS_FILES = '5x5_hems_files'
 
 def create_sts_client(key_id, key_secret):
