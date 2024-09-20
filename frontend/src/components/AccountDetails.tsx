@@ -185,9 +185,9 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                         color: 'rgba(80, 82, 178, 1)',
                                     }}
                                 >
-                                    {lead.mobile_phone ? (
+                                    {lead.mobile_phone || lead.personal_phone ? (
                                         <Link
-                                            href={`tel:${lead.mobile_phone.split(',')[0]}`}
+                                            href={`tel:${lead.mobile_phone ? lead.mobile_phone.split(',')[0] : lead.personal_phone.split(',')[0]}`}
                                             underline="none"
                                             sx={{
                                                 color: 'rgba(80, 82, 178, 1)',
@@ -197,7 +197,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                             }}
                                         >
                                             <Image src={'/iphone-02.svg'} width={18} height={18} alt='iphone icon' />
-                                            {lead.mobile_phone ? lead.mobile_phone.split(',')[0] : '--'}
+                                            {lead.mobile_phone ? lead.mobile_phone.split(',')[0] : lead.personal_phone ? lead.personal_phone.split(',')[0] : '--'}
                                         </Link>
                                     ) : (
                                         <>
@@ -214,7 +214,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                     <Box sx={accountStyles.box_param}>
                         <Typography sx={{ ...accountStyles.title }}>
                             <Image src={'/user-square.svg'} width={18} height={18} alt='iphone icon' />
-                            Person Details
+                            Personal Details
                         </Typography>
                         <Box sx={accountStyles.rows_pam}>
                             <Typography sx={accountStyles.title_text}>
