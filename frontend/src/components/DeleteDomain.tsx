@@ -131,6 +131,20 @@ const ConfirmDeleteDomain = ({ open, handleClose, domain, handleDelete }: Props)
             >
             Are you sure you want to remove this domain? If you do, all data associated with it will be permanently erased.
             </Typography>
+            <Typography
+            variant='h6'
+            textAlign='left'
+            fontFamily='Nunito Sans'
+            fontWeight={500}
+            fontSize='1rem'
+            sx={{
+                width: '100%', 
+                textAlign: 'center',
+                whiteSpace: 'pre-line',
+            }}
+            >
+            To delete the domain, you need to enter <strong>{domain.domain.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')}</strong> in the field below and press the 'Remove' button.
+            </Typography>
         </Box>
           <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center'}}>
             <TextField
@@ -157,7 +171,7 @@ const ConfirmDeleteDomain = ({ open, handleClose, domain, handleDelete }: Props)
               helperText={errors.domain}
               InputProps={{
                 startAdornment: isFocused && (
-                  <InputAdornment position="start">https://</InputAdornment>
+                  <InputAdornment position="start" disablePointerEvents sx={{ marginRight: 0 }}>https://</InputAdornment>
                 ),
               }}
             />

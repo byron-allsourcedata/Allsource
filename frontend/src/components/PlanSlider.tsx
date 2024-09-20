@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Box, Button, Typography, Modal, IconButton, Divider, Input } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
@@ -71,6 +71,14 @@ interface PopupProps {
 }
 
 const PlanSlider: React.FC<PopupProps> = ({ open, handleClose, handleChoosePlan }) => {
+    const calendlyPopupRef = useRef<HTMLDivElement | null>(null);
+    const [rootElement, setRootElement] = useState<HTMLElement | null>(null);
+    useEffect(() => {
+        if (calendlyPopupRef.current) {
+          setRootElement(calendlyPopupRef.current);
+        }
+      }, []);
+
     return (
         <Modal
             open={open}
@@ -95,7 +103,7 @@ const PlanSlider: React.FC<PopupProps> = ({ open, handleClose, handleChoosePlan 
                     '@media (max-width: 600px)': { pl: 2, pr: 2 }
                 }}>
                     <img src="/slider-bookcall.png" alt="Setup" style={{ width: '40%', marginBottom: '0.5em', marginTop: '0.5em', }} />
-                    <div id='calendly-popup-wrapper' className="book-call-button__wrapper"> </div>
+                    <div id="calendly-popup-wrapper" ref={calendlyPopupRef} />
                     <Typography variant="body1" gutterBottom sx={{
                         color: '#4A4A4A', textAlign: 'left', fontFamily: 'Nunito', fontWeight: '500', fontSize: '18px', lineHeight: '23.2px', marginBottom: '1em',
                         '@media (max-width: 600px)': { fontSize: '18px', lineHeight: '22px', marginBottom: '2em', mt:2 },
@@ -164,7 +172,7 @@ const PlanSlider: React.FC<PopupProps> = ({ open, handleClose, handleChoosePlan 
                         </Box>
                     </Box>
                     <Box sx={{ width: '100%', display: 'flex', justifyContent: 'space-around', paddingTop: '1em', maxHeight: '20em', gap: 2, '@media (max-width: 600px)': { justifyContent: 'center', pb: 3, width: '60%', } }}>
-                        <PopupButton
+                    {rootElement && (<PopupButton
                             className="book-call-button"
                             styles={{
                                 textWrap: 'nowrap',
@@ -183,9 +191,9 @@ const PlanSlider: React.FC<PopupProps> = ({ open, handleClose, handleChoosePlan 
 
                             }}
                             url="https://calendly.com/maximiz-support/30min"
-                            rootElement={document.getElementById("calendly-popup-wrapper")!}
+                            rootElement={rootElement} 
                             text="Book a call"
-                        />
+                        />)}
                         <Button variant="contained" onClick={handleChoosePlan} sx={{
                             backgroundColor: 'rgba(80, 82, 178, 1)', fontFamily: "Nunito", textTransform: 'none', lineHeight: '22.4px',
                             fontWeight: '700', padding: '1em 5em', textWrap: 'nowrap'
