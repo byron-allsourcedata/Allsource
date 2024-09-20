@@ -583,24 +583,107 @@ const Leads: React.FC = () => {
         } catch (error) {
             console.error('Error fetching leads:', error);
         }
-        finally{
+        finally {
             setIsLoading(false)
         }
     };
 
     const handleDeleteFilter = (filterToDelete: { label: string; value: string }) => {
-        // Обновляем выбранные фильтры, удаляя только тот, который нужно удалить
         const updatedFilters = selectedFilters.filter(filter => filter.label !== filterToDelete.label);
-    
-        // Обновляем состояние выбранных фильтров
+
         setSelectedFilters(updatedFilters);
-    
-        // Если фильтр даты удален, сбрасываем состояние даты
+
+        const filters = JSON.parse(sessionStorage.getItem('filters') || '{}');
+        console.log(filters)
+
+        // Удаляем фильтр в зависимости от его label
+        switch (filterToDelete.label) {
+            case 'From Date':
+                filters.from_date = null;
+                break;
+            case 'To Date':
+                filters.to_date = null;
+                break;
+            case 'From Time':
+                filters.from_time = null;
+                break;
+            case 'To Time':
+                filters.to_time = null;
+                filters.checkedFiltersTime = {
+                    ...filters.checkedFiltersTime,
+                    [filterToDelete.value]: false
+                };
+                break;
+            case 'Lead Status':
+                filters.selectedFunnels = []
+                break;
+            case 'Regions':
+                filters.regions = '';
+                break;
+            case 'Visitor Type':
+                filters.selectedStatus = filters.selectedStatus.filter((status: string) => status !== filterToDelete.value);
+                break;
+            case 'Search':
+                filters.searchQuery = '';
+                break;
+            case 'Time of Day':
+                filters.checkedFiltersTime = {
+                    ...filters.checkedFiltersTime,
+                    [filterToDelete.value]: false
+                };
+                break;
+            case 'Page Visits':
+                filters.checkedFiltersPageVisits = {
+                    page: false,
+                    two_page: false,
+                    three_page: false,
+                    more_three: false,
+                };
+                break;
+            case 'Time Spent':
+                filters.checkedFiltersTimeSpent = {
+                    under_10: false,
+                    over_10: false,
+                    over_30: false,
+                    over_60: false,
+                };
+                break;
+            case 'Recurring Visits':
+                filters.recurringVisits = []
+                break;
+            default:
+                break;
+        }
+
+        if (!filters.from_time) {
+            if (!filters.to_time) {
+                filters.checkedFiltersTime = {
+                    morning: false,
+                    evening: false,
+                    afternoon: false,
+                    all_day: false,
+                };
+            }
+        }
+        if (!filters.from_date) {
+            if (!filters.to_date) {
+                filters.checkedFilters = {
+                    lastWeek: false,
+                    last30Days: false,
+                    last6Months: false,
+                    allTime: false,
+                };
+            }
+        }
+
+        // Сохраняем обновленные фильтры в sessionStorage
+        sessionStorage.setItem('filters', JSON.stringify(filters));
+
         if (filterToDelete.label === 'Dates') {
             setAppliedDates({ start: null, end: null });
             setFormattedDates('');
         }
-    
+
         // Обновляем фильтры для применения
         const newFilters: FilterParams = {
             from_date: updatedFilters.find(f => f.label === 'From Date') ? Number(updatedFilters.find(f => f.label === 'From Date')!.value) : null,
@@ -610,7 +693,7 @@ const Leads: React.FC = () => {
             emails: updatedFilters.find(f => f.label === 'Emails') ? updatedFilters.find(f => f.label === 'Emails')!.value.split(', ') : [],
             selectedFunnels: updatedFilters.find(f => f.label === 'Lead Status') ? updatedFilters.find(f => f.label === 'Lead Status')!.value.split(', ') : [],
             searchQuery: updatedFilters.find(f => f.label === 'Search') ? updatedFilters.find(f => f.label === 'Search')!.value : '',
-            
+
             // Сбрасываем флаги фильтров, если они удалены
             checkedFilters: {
                 lastWeek: updatedFilters.some(f => f.label === 'Date Range' && f.value === 'lastWeek'),
@@ -640,11 +723,11 @@ const Leads: React.FC = () => {
             from_time: updatedFilters.find(f => f.label === 'From Time') ? updatedFilters.find(f => f.label === 'From Time')!.value : null,
             to_time: updatedFilters.find(f => f.label === 'To Time') ? updatedFilters.find(f => f.label === 'To Time')!.value : null
         };
-    
+
         // Применяем обновленные фильтры
         handleApplyFilters(newFilters);
     };
-    
+
 
 
     useEffect(() => {
@@ -901,8 +984,8 @@ const Leads: React.FC = () => {
                                             backgroundColor: 'red',
                                             borderRadius: '50%',
                                             '@media (max-width: 900px)': {
-                                                top:-1,
-                                                right:1
+                                                top: -1,
+                                                right: 1
                                             }
                                         }}
                                     />
@@ -1139,7 +1222,7 @@ const Leads: React.FC = () => {
                                                                 handleOpenPopup(row);
 
                                                             }}>{row.first_name} {row.last_name}</TableCell>
-                                                            <TableCell
+                                                        <TableCell
                                                             sx={{ ...leadsStyles.table_array, position: 'relative' }}>{row.personal_emails?.split(',')[0] || 'N/A'}</TableCell>
                                                         <TableCell
                                                             sx={{ ...leadsStyles.table_array, position: 'relative' }}>{row.business_email?.split(',')[0] || 'N/A'}</TableCell>

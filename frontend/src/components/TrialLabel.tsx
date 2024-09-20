@@ -22,10 +22,10 @@ const TrialStatus: React.FC = () => {
   useEffect(() => {
     if (trial) {
       if (daysDifference === null || daysDifference === undefined || isNaN(daysDifference)) {
-        setStatusText('Trial Active');
-        setBackgroundColor('#EAF8DD');
-        setTextColor('#6EC125');
-        setIconColor('#6EC125');
+        setStatusText('Trial Pending');
+        setBackgroundColor('rgba(231, 231, 231, 1)');
+        setTextColor('rgba(95, 99, 104, 1)');
+        setIconColor('rgba(95, 99, 104, 1)');
       } else {
         if (daysDifference > 5) {
           setStatusText(`${daysDifference} days Free Trial Left.`);
