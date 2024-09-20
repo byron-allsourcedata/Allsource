@@ -162,7 +162,7 @@ const AddDomainPopup = ({ open, handleClose, handleSave }: AddDomainProps) => {
       helperText={errors.domain}
       InputProps={{
         startAdornment: isFocused && (
-          <InputAdornment position="start">https://</InputAdornment>
+          <InputAdornment position="start" disablePointerEvents sx={{ marginRight: 0 }}>https://</InputAdornment>
         ),
         endAdornment: (
           <IconButton aria-label="close" edge="end" sx={{ color: 'text.secondary' }} onClick={handleClose}>

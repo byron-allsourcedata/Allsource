@@ -780,6 +780,11 @@ const Leads: React.FC = () => {
                     background: 'rgba(244, 252, 238, 1)',
                     color: 'rgba(43, 91, 0, 1)',
                 };
+            case "viewed_product":
+                return {
+                    background: 'rgba(244, 252, 238, 1)',
+                    color: 'rgba(43, 91, 0, 1)',
+                };
             default:
                 return {
                     background: 'transparent',
@@ -794,6 +799,12 @@ const Leads: React.FC = () => {
         }
         if (text === true) {
             return 'Returning';
+        }
+        if (text === 'visitor'){
+            return "Visitor"
+        }
+        if (text === 'viewed_product') {
+            return "View Product"
         }
     };
 
@@ -1159,6 +1170,7 @@ const Leads: React.FC = () => {
                                                         { key: 'business_email', label: 'Business Email' },
                                                         { key: 'mobile_phone', label: 'Phone number' },
                                                         { key: 'first_visited_date', label: 'Visited date', sortable: true },
+                                                        { key: 'funnel', label: 'Lead Status' },
                                                         { key: 'status', label: 'Visitor Type' },
                                                         { key: 'time_spent', label: 'Time on site' },
                                                     ].map(({ key, label, sortable = true }) => (
@@ -1223,13 +1235,35 @@ const Leads: React.FC = () => {
 
                                                             }}>{row.first_name} {row.last_name}</TableCell>
                                                         <TableCell
-                                                            sx={{ ...leadsStyles.table_array, position: 'relative' }}>{row.personal_emails?.split(',')[0] || 'N/A'}</TableCell>
+                                                            sx={{ ...leadsStyles.table_array, position: 'relative' }}>{row.personal_emails?.split(',')[0] || '--'}</TableCell>
                                                         <TableCell
-                                                            sx={{ ...leadsStyles.table_array, position: 'relative' }}>{row.business_email?.split(',')[0] || 'N/A'}</TableCell>
+                                                            sx={{ ...leadsStyles.table_array, position: 'relative' }}>{row.business_email?.split(',')[0] || '--'}</TableCell>
                                                         <TableCell
-                                                            sx={leadsStyles.table_array_phone}>{row.mobile_phone?.split(',')[0] || 'N/A'}</TableCell>
+                                                            sx={leadsStyles.table_array_phone}>{row.mobile_phone?.split(',')[0] || '--'}</TableCell>
                                                         <TableCell
-                                                            sx={{ ...leadsStyles.table_array, position: 'relative' }}>{row.first_visited_date || 'N/A'}</TableCell>
+                                                            sx={{ ...leadsStyles.table_array, position: 'relative' }}>{row.first_visited_date || '--'}</TableCell>
+                                                        <TableCell
+                                                            sx={{ ...leadsStyles.table_column, position: 'relative' }}
+                                                        >
+                                                            <Box
+                                                                sx={{
+                                                                    display: 'flex',
+                                                                    padding: '2px 8px',
+                                                                    borderRadius: '2px',
+                                                                    fontFamily: 'Nunito',
+                                                                    fontSize: '12px',
+                                                                    fontWeight: '700',
+                                                                    lineHeight: 'normal',
+                                                                    backgroundColor: getStatusStyle(row.behavior_type).background,
+                                                                    color: getStatusStyle(row.behavior_type).color,
+                                                                    justifyContent: 'center',
+                                                                    minWidth: '110px',
+                                                                    textTransform: 'capitalize'
+                                                                }}
+                                                            >
+                                                                {formatFunnelText(row.behavior_type) || '--'}
+                                                            </Box>
+                                                        </TableCell>
                                                         <TableCell
                                                             sx={{ ...leadsStyles.table_column, position: 'relative' }}
                                                         >
@@ -1249,12 +1283,12 @@ const Leads: React.FC = () => {
                                                                     textTransform: 'capitalize'
                                                                 }}
                                                             >
-                                                                {formatFunnelText(row.visitor_type) || 'N/A'}
+                                                                {formatFunnelText(row.visitor_type) || '--'}
                                                             </Box>
                                                         </TableCell>
 
                                                         <TableCell
-                                                            sx={leadsStyles.table_array}>{`${row.time_spent} sec` || 'N/A'}</TableCell>
+                                                            sx={leadsStyles.table_array}>{`${row.time_spent} sec` || '--'}</TableCell>
                                                     </TableRow>
                                                 ))}
                                             </TableBody>
