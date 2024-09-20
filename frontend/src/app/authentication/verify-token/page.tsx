@@ -56,7 +56,7 @@ const VerifyToken = () => {
                 localStorage.setItem('token', newToken);
 
                 setTimeout(() => {
-                  router.push('/dashboard');
+                  router.push('/account-setup');
                 }, 2500);
               }
             }

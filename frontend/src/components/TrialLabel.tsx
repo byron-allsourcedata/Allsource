@@ -19,13 +19,15 @@ const TrialStatus: React.FC = () => {
   const [isSliderOpen, setIsSliderOpen] = useState(false);
   const router = useRouter();
 
+  console.log(trial)
+
   useEffect(() => {
     if (trial) {
       if (daysDifference === null || daysDifference === undefined || isNaN(daysDifference)) {
-        setStatusText('Trial Pending');
-        setBackgroundColor('rgba(231, 231, 231, 1)');
-        setTextColor('rgba(95, 99, 104, 1)');
-        setIconColor('rgba(95, 99, 104, 1)');
+        setStatusText('Trial Active');
+        setBackgroundColor('#EAF8DD');
+        setTextColor('#6EC125');
+        setIconColor('#6EC125');
       } else {
         if (daysDifference > 5) {
           setStatusText(`${daysDifference} days Free Trial Left.`);
@@ -45,9 +47,14 @@ const TrialStatus: React.FC = () => {
         }
       }
     }
+    if (trial === false) {
+      setStatusText('Trial Pending');
+      setBackgroundColor('rgba(231, 231, 231, 1)');
+      setTextColor('rgba(95, 99, 104, 1)');
+      setIconColor('rgba(95, 99, 104, 1)');
+    }
   }, [trial, daysDifference]);
 
-  if (!trial) return null;
 
   const handleOpenSlider = () => {
     setIsSliderOpen(true);
@@ -99,7 +106,7 @@ const TrialStatus: React.FC = () => {
         }}>
           {statusText}
         </Typography>
-        {(statusText.includes('Trial Active')) && (
+        {(statusText.includes('Trial Pending')) || statusText.includes('Trial Active') && (
           <AccessTimeIcon sx={{ color: iconColor }} />
         )}
         {(statusText.includes('Free Trial Expired') || statusText.includes('Free Trial Left')) && (
