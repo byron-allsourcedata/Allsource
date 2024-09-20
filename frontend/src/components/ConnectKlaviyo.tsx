@@ -34,6 +34,21 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
     const [isDropdownValid, setIsDropdownValid] = useState(false);
     const [listNameError, setListNameError] = useState(false);
     const [tagNameError, setTagNameError] = useState(false);
+    const [deleteAnchorEl, setDeleteAnchorEl] = useState<null | HTMLElement>(null)
+    const [selectedRowId, setSelectedRowId] = useState<number | null>(null);
+    const [newMapListName, setNewMapListName] = useState<string>('');
+    const [showCreateMapForm, setShowCreateMapForm] = useState<boolean>(false);
+    const [maplistNameError, setMapListNameError] = useState(false);
+    const [mapListOptions, setMapListOptions] = useState<string[]>([
+        'Email',
+        'Phone number',
+        'First name',
+        'Second name',
+        'Gender',
+        'Age',
+        'Job Title',
+        'Location',
+    ]);
 
       // Handle click outside to unshrink the label if input is empty
   useEffect(() => {
@@ -85,6 +100,11 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
         setTagName(''); // Clear new list name when closing
     };
 
+    const handleMapClose = () => {
+        setShowCreateMapForm(false);
+        setNewMapListName(''); // Clear new list name when closing
+    };
+
     // Handle option selection
     const handleSelectOption = (value: string) => {
         if (value === 'createNew') {
@@ -101,6 +121,21 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
             handleClose();
         }
         setIsDropdownValid(value !== '');
+    };
+
+    const handleSelectMapOption = (value: string, event: React.MouseEvent<HTMLElement>, id: number) => {
+        event.stopPropagation(); // Prevent click event from closing the dropdown
+
+        if (value === 'createNewField') {
+            setShowCreateMapForm(prev => !prev); // Toggle form visibility
+
+            // Ensure dropdown remains open if it was already open or if form is being opened
+            if (openDropdown !== id) {
+                setOpenDropdown(id); // Open dropdown if it’s not already open
+            }
+        } else {
+            handleDropdownClose(); // Close dropdown for other selections
+        }
     };
 
     // Handle Save action for the create new list form
@@ -129,6 +164,38 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
             handleClose();
         }
     };
+
+    const handleMapSave = (id: number) => {
+        let valid = true;
+    
+        // Validate List Name
+        if (newMapListName.trim() === '') {
+            setMapListNameError(true);
+            valid = false;
+        } else {
+            setMapListNameError(false);
+        }
+    
+       
+    
+        // If valid, save and close
+        if (valid) {
+            if (newMapListName.trim() === '') return; // Prevent saving empty values
+
+            // Update the value in the rows state
+            handleMapListChange(id, 'selectValue', newMapListName);
+
+            setMapListOptions(prevOptions => [...prevOptions, newMapListName]);
+
+            // Optionally, reset the new value state if needed
+            setNewMapListName('');
+
+            
+            setShowCreateMapForm(false); // Close the form
+            setOpenDropdown(null); // Close the dropdown if needed
+            handleMapClose();
+        }
+    };
     
 
 
@@ -146,11 +213,11 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
 
     const klaviyoStyles = {
         tabHeading: {
-            fontFamily: 'Nunito',
-            fontSize: '16px',
-            color: '#7b7b7b',
-            fontWeight: '400',
-            lineHeight: 'normal',
+            fontFamily: 'Nunito Sans',
+            fontSize: '14px',
+            color: '#707071',
+            fontWeight: '500',
+            lineHeight: '20px',
             textTransform: 'none',
             padding: 0,
             minWidth: 'auto',
@@ -166,11 +233,10 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
             }
         },
         inputLabel: {
-            fontFamily: 'Nunito',
-            fontSize: '16px',
-            lineHeight: 'normal',
+            fontFamily: 'Nunito Sans',
+            fontSize: '12px',
+            lineHeight: '16px',
             color: 'rgba(17, 17, 19, 0.60)',
-            top: '-3px',
             '&.Mui-focused': {
                 color: '#0000FF',
               },
@@ -180,7 +246,11 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
               height: '48px',
               '& .MuiOutlinedInput-input': {
                 padding: '12px 16px 13px 16px',
-                fontFamily: 'Nunito',
+                fontFamily: 'Roboto',
+                color: '#202124',
+                fontSize: '14px',
+                lineHeight: '20px',
+                fontWeight: '400'
               },
               '& .MuiOutlinedInput-notchedOutline': {
                 borderColor: '#A3B0C2',
@@ -250,18 +320,18 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
 
     // Define the keywords and their styles
     const highlightConfig: HighlightConfig = {
-        'Klaviyo': { color: '#5052B2', fontWeight: '700' }, // Blue and bold
-        'Settings': { fontWeight: '700' }, // Bold only
-        'Create Private API Key': { fontWeight: '700' }, // Blue and bold
-        'Lists': { fontWeight: '700' }, // Bold only
-        'Profiles': { fontWeight: '700' }, // Bold only
-        'Metrics': { fontWeight: '700' }, // Blue and bold
-        'Events': { fontWeight: '700' }, // Blue and bold
-        'Templates': { fontWeight: '700' }, // Blue and bold
-        'Create': { fontWeight: '700' }, // Blue and bold
-        'API Key': { fontWeight: '700' }, // Blue and bold
-        'Connect': { fontWeight: '700' }, // Bold only
-        'Export': { fontWeight: '700' } // Blue and bold
+        'Klaviyo': { color: '#5052B2', fontWeight: '500' }, // Blue and bold
+        'Settings': { color: '#707071', fontWeight: '500' }, // Bold only
+        'Create Private API Key': { color: '#707071', fontWeight: '500' }, // Blue and bold
+        'Lists': { color: '#707071', fontWeight: '500' }, // Bold only
+        'Profiles': { color: '#707071', fontWeight: '500' }, // Bold only
+        'Metrics': { color: '#707071', fontWeight: '500' }, // Blue and bold
+        'Events': { color: '#707071', fontWeight: '500' }, // Blue and bold
+        'Templates': { color: '#707071', fontWeight: '500' }, // Blue and bold
+        'Create': { color: '#707071', fontWeight: '500' }, // Blue and bold
+        'API Key': { color: '#707071', fontWeight: '500' }, // Blue and bold
+        'Connect': { color: '#707071', fontWeight: '500' }, // Bold only
+        'Export': { color: '#707071', fontWeight: '500' } // Blue and bold
     };
 
     // Define buttons for each tab
@@ -275,14 +345,15 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                         onClick={handleNextTab}
                         sx={{
                             backgroundColor: '#5052B2',
-                            fontFamily: "Nunito",
-                            fontSize: '16px',
+                            fontFamily: "Nunito Sans",
+                            fontSize: '14px',
                             fontWeight: '600',
-                            lineHeight: '22px',
+                            lineHeight: '20px',
                             letterSpacing: 'normal',
                             color: "#fff",
                             textTransform: 'none',
                             padding: '10px 24px',
+                            boxShadow:'0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
                             '&:hover': {
                                 backgroundColor: '#5052B2'
                             },
@@ -300,14 +371,15 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                         disabled={!selectedRadioValue}
                         sx={{
                             backgroundColor: '#5052B2',
-                            fontFamily: "Nunito",
-                            fontSize: '16px',
+                            fontFamily: "Nunito Sans",
+                            fontSize: '14px',
                             fontWeight: '600',
-                            lineHeight: '22px',
+                            lineHeight: '20px',
                             letterSpacing: 'normal',
                             color: "#fff",
                             textTransform: 'none',
                             padding: '10px 24px',
+                            boxShadow:'0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
                             '&:hover': {
                                 backgroundColor: '#5052B2'
                             },
@@ -325,14 +397,15 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                         onClick={handleNextTab}
                         sx={{
                             backgroundColor: '#5052B2',
-                            fontFamily: "Nunito",
-                            fontSize: '16px',
+                            fontFamily: "Nunito Sans",
+                            fontSize: '14px',
                             fontWeight: '600',
-                            lineHeight: '22px',
+                            lineHeight: '20px',
                             letterSpacing: 'normal',
                             color: "#fff",
                             textTransform: 'none',
                             padding: '10px 24px',
+                            boxShadow:'0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
                             '&:hover': {
                                 backgroundColor: '#5052B2'
                             },
@@ -348,14 +421,15 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                         variant="contained"
                         sx={{
                             backgroundColor: '#5052B2',
-                            fontFamily: "Nunito",
-                            fontSize: '16px',
+                            fontFamily: "Nunito Sans",
+                            fontSize: '14px',
                             fontWeight: '600',
-                            lineHeight: '22px',
+                            lineHeight: '20px',
                             letterSpacing: 'normal',
                             color: "#fff",
                             textTransform: 'none',
                             padding: '10px 24px',
+                            boxShadow:'0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
                             '&:hover': {
                                 backgroundColor: '#5052B2'
                             },
@@ -399,8 +473,21 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
       };
 
     // Delete function with typed parameter
-    const handleDelete = (id: number) => {
-        setRows(rows.filter(row => row.id !== id));
+    const handleClickOpen = (event: React.MouseEvent<HTMLElement>, id: number) => {
+        setDeleteAnchorEl(event.currentTarget);  // Set the current target as the anchor
+        setSelectedRowId(id);  // Set the ID of the row to delete
+    };
+
+    const handleDeleteClose = () => {
+        setDeleteAnchorEl(null);
+        setSelectedRowId(null);
+    };
+
+    const handleDelete = () => {
+        if (selectedRowId !== null) {
+            setRows(rows.filter(row => row.id !== selectedRowId));
+            handleDeleteClose();
+        }
     };
 
     // Add row function
@@ -468,6 +555,9 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
         }
       };
 
+      const deleteOpen = Boolean(deleteAnchorEl);
+    const deleteId = deleteOpen ? 'delete-popover' : undefined;
+
     return (
         <Drawer
             anchor="right"
@@ -480,6 +570,11 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                     zIndex: 1301,
                     top: 0,
                     bottom: 0,
+                    msOverflowStyle: 'none',
+                    scrollbarWidth: 'none',
+                    '&::-webkit-scrollbar': {
+                        display: 'none',
+                    },
                     '@media (max-width: 600px)': {
                         width: '100%',
                     }
@@ -487,15 +582,15 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
             }}
         >
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 3.5, px: 2, borderBottom: '1px solid #e4e4e4' }}>
-                <Typography variant="h6" sx={{ textAlign: 'center', color: '#1c1c1c', fontFamily: 'Nunito', fontWeight: '700', fontSize: '16px', lineHeight: 'normal' }}>
+                <Typography variant="h6" sx={{ textAlign: 'center', color: '#202124', fontFamily: 'Nunito Sans', fontWeight: '600', fontSize: '16px', lineHeight: 'normal' }}>
                     Connect to Klaviyo
                 </Typography>
                 <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
                     <Link href="#" sx={{
-                        fontFamily: 'Nunito',
-                        fontSize: '16px',
+                        fontFamily: 'Nunito Sans',
+                        fontSize: '14px',
                         fontWeight: '600',
-                        lineHeight: '22px',
+                        lineHeight: '20px',
                         color: '#5052b2',
                         textDecorationColor: '#5052b2'
                     }}>Tutorial</Link>
@@ -534,10 +629,10 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                     <Image src='/klaviyo.svg' alt='klaviyo' height={26} width={32} />
                                     <Typography variant="h6" sx={{
-                                        fontFamily: 'Nunito',
-                                        fontSize: '14px',
-                                        fontWeight: '700',
-                                        color: '#4a4a4a'
+                                        fontFamily: 'Nunito Sans',
+                                        fontSize: '16px',
+                                        fontWeight: '600',
+                                        color: '#202124'
                                     }}>API Key</Typography>
                                     <Tooltip title="Enter the API key provided by Klaviyo" placement="right">
                                         <Image src='/baseline-info-icon.svg' alt='baseline-info-icon' height={16} width={16} />
@@ -560,11 +655,11 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', mb: 2 }}>
                                     <Image src='/info-circle.svg' alt='info-circle' height={20} width={20} />
                                     <Typography variant="subtitle1" sx={{
-                                        fontFamily: 'Nunito',
-                                        fontSize: '12px',
-                                        fontWeight: '700',
-                                        color: '#4a4a4a',
-                                        lineHeight: '16px'
+                                        fontFamily: 'Nunito Sans',
+                                        fontSize: '16px',
+                                        fontWeight: '600',
+                                        color: '#202124',
+                                        lineHeight: 'normal'
                                     }}>How to integrate Klaviyo</Typography>
                                 </Box>
                                 <List dense sx={{ p: 0 }}>
@@ -575,11 +670,11 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                                                 sx={{
                                                     display: 'inline-block',
                                                     marginRight: '4px',
-                                                    fontFamily: 'Nunito',
+                                                    fontFamily: 'Roboto',
                                                     fontSize: '12px',
                                                     fontWeight: '400',
-                                                    color: '#4a4a4a',
-                                                    lineHeight: '22px'
+                                                    color: '#808080',
+                                                    lineHeight: '24px'
                                                 }}
                                             >
                                                 {instructions.indexOf(instruction) + 1}.
@@ -588,11 +683,11 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                                                 variant="body1"
                                                 sx={{
                                                     display: 'inline',
-                                                    fontFamily: 'Nunito',
+                                                    fontFamily: 'Roboto',
                                                     fontSize: '12px',
                                                     fontWeight: '400',
-                                                    color: '#4a4a4a',
-                                                    lineHeight: '22px'
+                                                    color: '#808080',
+                                                    lineHeight: '24px'
                                                 }}
                                             >
                                                 {highlightText(instruction.text, highlightConfig)}
@@ -609,30 +704,32 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                     <Image src='/klaviyo.svg' alt='klaviyo' height={26} width={32} />
                                     <Typography variant="h6" sx={{
-                                        fontFamily: 'Nunito',
-                                        fontSize: '14px',
-                                        fontWeight: '700',
-                                        color: '#4a4a4a',
+                                        fontFamily: 'Nunito Sans',
+                                        fontSize: '16px',
+                                        fontWeight: '600',
+                                        color: '#202124',
                                         lineHeight: 'normal'
                                     }}>Eliminate Redundancy: Stop Paying for Contacts You Already Own</Typography>
                                 </Box>
                                 <Typography variant="subtitle1" sx={{
-                                        fontFamily: 'Nunito',
-                                        fontSize: '14px',
+                                        fontFamily: 'Roboto',
+                                        fontSize: '12px',
                                         fontWeight: '400',
-                                        color: '#7b7b7b',
-                                        lineHeight: '20px'
+                                        color: '#808080',
+                                        lineHeight: '20px',
+                                        letterSpacing: '0.06px'
                                     }}>Sync your current list to avoid collecting contacts you already possess.
                                     Newly added contacts in Klaviyo will be automatically suppressed each day.</Typography>
                                 
 
                                         <Box sx={{ display: 'flex', gap: '32px', alignItems: 'center' }}>
                                             <Typography variant="subtitle1" sx={{
-                                                fontFamily: 'Nunito',
-                                                fontSize: '14px',
+                                                fontFamily: 'Roboto',
+                                                fontSize: '12px',
                                                 fontWeight: '400',
-                                                color: '#7b7b7b',
-                                                lineHeight: '20px'
+                                                color: '#808080',
+                                                lineHeight: 'normal',
+                                                letterSpacing: '0.06px'
                                             }}>
                                                 Enable Automatic Contact Suppression
                                             </Typography>
@@ -692,11 +789,12 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                                                         <Typography
                                                             variant="caption"
                                                             sx={{
-                                                                fontFamily: 'Nunito',
+                                                                fontFamily: 'Roboto',
                                                                 fontSize: '12px',
                                                                 color: '#fff',
-                                                                fontWeight: 'bold',
+                                                                fontWeight: '400',
                                                                 marginRight: '8px',
+                                                                lineHeight: 'normal',
                                                                 width: '100%',
                                                                 textAlign: 'right',
                                                             }}
@@ -709,11 +807,12 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                                                         <Typography
                                                             variant="caption"
                                                             sx={{
-                                                                fontFamily: 'Nunito',
+                                                                fontFamily: 'Roboto',
                                                                 fontSize: '12px',
                                                                 color: '#fff',
-                                                                fontWeight: 'bold',
+                                                                fontWeight: '400',
                                                                 marginLeft: '6px',
+                                                                lineHeight: 'normal'
                                                             }}
                                                         >
                                                             Yes
@@ -731,36 +830,38 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                     <Image src='/info-circle.svg' alt='info-circle' height={20} width={20} />
                                     <Typography variant="subtitle1" sx={{
-                                        fontFamily: 'Nunito',
+                                        fontFamily: 'Roboto',
                                         fontSize: '12px',
                                         fontWeight: '400',
-                                        color: '#4a4a4a',
-                                        lineHeight: '16px'
+                                        color: '#808080',
+                                        lineHeight: '20px',
+                                        letterSpacing: '0.06px'
                                     }}>By performing this action, all your Klaviyo contacts will be added to your Grow suppression list, and new contacts will be imported daily around 6pm EST.</Typography>
                                 </Box>
                             </Box>
                             <Box sx={{p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)', display: 'flex', flexDirection:'column', gap: '16px'}}>
                                 <Typography variant="h6" sx={{
-                                        fontFamily: 'Nunito',
-                                        fontSize: '14px',
-                                        fontWeight: '700',
-                                        color: '#4a4a4a',
+                                        fontFamily: 'Nunito Sans',
+                                        fontSize: '16px',
+                                        fontWeight: '600',
+                                        color: '#202124',
                                         lineHeight: 'normal'
                                     }}>Sync Type</Typography>
                                     <Typography variant="subtitle1" sx={{
-                                        fontFamily: 'Nunito',
-                                        fontSize: '14px',
+                                        fontFamily: 'Roboto',
+                                        fontSize: '12px',
                                         fontWeight: '400',
-                                        color: '#7b7b7b',
-                                        lineHeight: '20px'
+                                        color: '#808080',
+                                        lineHeight: 'normal',
+                                        letterSpacing: '0.06px'
                                     }}>Synchronise data gathered from this moment onward in real-time.</Typography>
                                     
                                     <FormControl sx={{gap: '16px'}} error={tab2Error}>
                                         <FormLabel id="contact-type-radio-buttons-group-label" sx={{
-                                            fontFamily: 'Nunito',
-                                            fontSize: '14px',
-                                            fontWeight: '500',
-                                            color: '#000',
+                                            fontFamily: 'Nunito Sans',
+                                            fontSize: '16px',
+                                            fontWeight: '600',
+                                            color: '#202124',
                                             lineHeight: 'normal',
                                             '&.Mui-focused': {
                                                 color: '#000',
@@ -783,7 +884,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                                             componentsProps={{
                                                 typography: {
                                                   sx: {
-                                                    fontFamily: 'Nunito',
+                                                    fontFamily: 'Nunito Sans',
                                                     fontSize: '14px',
                                                     fontWeight: '500',
                                                     color: '#000',
@@ -809,7 +910,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                                             componentsProps={{
                                                 typography: {
                                                   sx: {
-                                                    fontFamily: 'Nunito',
+                                                    fontFamily: 'Nunito Sans',
                                                     fontSize: '14px',
                                                     fontWeight: '500',
                                                     color: '#000',
@@ -835,7 +936,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                                             componentsProps={{
                                                 typography: {
                                                   sx: {
-                                                    fontFamily: 'Nunito',
+                                                    fontFamily: 'Nunito Sans',
                                                     fontSize: '14px',
                                                     fontWeight: '500',
                                                     color: '#000',
@@ -861,7 +962,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                                             componentsProps={{
                                                 typography: {
                                                   sx: {
-                                                    fontFamily: 'Nunito',
+                                                    fontFamily: 'Nunito Sans',
                                                     fontSize: '14px',
                                                     fontWeight: '500',
                                                     color: '#000',
@@ -890,10 +991,10 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', mb: 3 }}>
                                     <Image src='/klaviyo.svg' alt='klaviyo' height={26} width={32} />
                                     <Typography variant="h6" sx={{
-                                        fontFamily: 'Nunito',
-                                        fontSize: '14px',
-                                        fontWeight: '700',
-                                        color: '#4a4a4a'
+                                        fontFamily: 'Nunito Sans',
+                                        fontSize: '16px',
+                                        fontWeight: '600',
+                                        color: '#202124'
                                     }}>Contact sync</Typography>
                                     <Tooltip title="Sync data with list" placement="right">
                                         <Image src='/baseline-info-icon.svg' alt='baseline-info-icon' height={16} width={16} />
@@ -914,10 +1015,11 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                                         InputLabelProps={{
                                             shrink: isShrunk || selectedOption !== "", // Shrinks label if clicked or if value is not empty
                                             sx: {
-                                                fontFamily: 'Nunito',
-                                            fontSize: '16px',
-                                            lineHeight: 'normal',
+                                                fontFamily: 'Nunito Sans',
+                                            fontSize: '12px',
+                                            lineHeight: '16px',
                                             color: 'rgba(17, 17, 19, 0.60)',
+                                            letterSpacing: '0.06px',
                                             top: '5px',
                                             '&.Mui-focused': {
                                                 color: '#0000FF',
@@ -973,11 +1075,11 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                                             }}>
                                                 <ListItemText primary={`+ Create new list`} primaryTypographyProps={{
                                                         sx: {
-                                                            fontFamily: "Nunito",
+                                                            fontFamily: "Nunito Sans",
                                                             fontSize: "14px",
-                                                            color: showCreateForm ?  "#5052B2" : "rgba(0, 0, 0, 0.89)",
-                                                            fontWeight: "600",
-                                                            lineHeight: "normal",
+                                                            color: showCreateForm ?  "#5052B2" : "#202124",
+                                                            fontWeight: "500",
+                                                            lineHeight: "20px",
                                                             
                                                         }
                                                     }}/>
@@ -1019,11 +1121,11 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                                                             helperText={listNameError ? 'List Name is required' : ''}
                                                             InputLabelProps={{
                                                                 sx: {
-                                                                fontFamily: 'Nunito',
-                                                                fontSize: '16px',
-                                                                lineHeight: 'normal',
+                                                                fontFamily: 'Nunito Sans',
+                                                                fontSize: '12px',
+                                                                lineHeight: '16px',
+                                                                fontWeight: '400',
                                                                 color: 'rgba(17, 17, 19, 0.60)',
-                                                                top: '-3px',
                                                                 '&.Mui-focused': {
                                                                     color: '#0000FF',
                                                                 },
@@ -1053,7 +1155,11 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                                                                         height: '32px',
                                                                         '& .MuiOutlinedInput-input': {
                                                                             padding: '5px 16px 4px 16px',
-                                                                            fontFamily: 'Nunito',
+                                                                            fontFamily: 'Roboto',
+                                                                            color: '#202124',
+                                                                            fontSize: '14px',
+                                                                            fontWeight: '400',
+                                                                            lineHeight: '20px'
                                                                         },
                                                                         '& .MuiOutlinedInput-notchedOutline': {
                                                                             borderColor: '#A3B0C2',
@@ -1083,11 +1189,11 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                                                             helperText={tagNameError ? 'Tag Name is required' : ''}
                                                             InputLabelProps={{
                                                                 sx: {
-                                                                fontFamily: 'Nunito',
-                                                                fontSize: '16px',
-                                                                lineHeight: 'normal',
+                                                                fontFamily: 'Nunito Sans',
+                                                                fontSize: '12px',
+                                                                lineHeight: '16px',
+                                                                fontWeight: '400',
                                                                 color: 'rgba(17, 17, 19, 0.60)',
-                                                                top: '-3px',
                                                                 '&.Mui-focused': {
                                                                     color: '#0000FF',
                                                                 },
@@ -1113,7 +1219,11 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                                                                         height: '32px',
                                                                         '& .MuiOutlinedInput-input': {
                                                                             padding: '5px 16px 4px 16px',
-                                                                            fontFamily: 'Nunito',
+                                                                            fontFamily: 'Roboto',
+                                                                            color: '#202124',
+                                                                            fontSize: '14px',
+                                                                            fontWeight: '400',
+                                                                            lineHeight: '20px'
                                                                         },
                                                                         '& .MuiOutlinedInput-notchedOutline': {
                                                                             borderColor: '#A3B0C2',
@@ -1140,15 +1250,19 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                                                             border: '1px solid #5052B2',
                                                             background: '#fff',
                                                             boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                                                            fontFamily: 'Nunito',
-                                                            fontSize: '16px',
+                                                            fontFamily: 'Nunito Sans',
+                                                            fontSize: '14px',
                                                             fontWeight: '600',
-                                                            lineHeight: '22px',
+                                                            lineHeight: '20px',
                                                             color: '#5052b2',
                                                             textTransform: 'none',
                                                             padding: '4px 22px',
                                                             '&:hover' : {
                                                                 background: 'transparent'
+                                                            },
+                                                            '&.Mui-disabled' : {
+                                                                background: 'transparent',
+                                                                color: '#5052b2'
                                                             }
                                                         }}>
                                                                 Save
@@ -1171,11 +1285,11 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                                                     } }}>
                                                     <ListItemText primary={option}  primaryTypographyProps={{
                                                         sx: {
-                                                            fontFamily: "Nunito",
+                                                            fontFamily: "Nunito Sans",
                                                             fontSize: "14px",
-                                                            color: "rgba(0, 0, 0, 0.89)",
-                                                            fontWeight: "600",
-                                                            lineHeight: "normal"
+                                                            color: "#202124",
+                                                            fontWeight: "500",
+                                                            lineHeight: "20px"
                                                         }
                                                     }} />
                                                 </MenuItem>
@@ -1197,19 +1311,21 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                         }}>
                             <Box sx={{display: 'flex', gap: '8px', marginBottom: '20px'}}>
                             <Typography variant="h6" sx={{
-                                            fontFamily: 'Nunito',
-                                            fontSize: '14px',
-                                            fontWeight: '700',
-                                            color: '#4a4a4a'
+                                            fontFamily: 'Nunito Sans',
+                                            fontSize: '16px',
+                                            fontWeight: '600',
+                                            color: '#202124',
+                                            lineHeight: 'normal'
                                         }}>Map list</Typography>
                                         <Typography variant='h6' sx={{
-                                            background: 'rgba(80, 82, 178, 0.10)',
+                                            background: '#EDEDF7',
                                             borderRadius: '3px',
-                                            fontFamily: 'Nunito',
+                                            fontFamily: 'Roboto',
                                             fontSize: '12px',
-                                            fontWeight: '700',
-                                            color: '#4a4a4a',
-                                            padding: '2px 4px'
+                                            fontWeight: '400',
+                                            color: '#5f6368',
+                                            padding: '2px 4px',
+                                            lineHeight: '16px'
                                         }}>
                                             Test list 2
                                         </Typography>
@@ -1252,11 +1368,11 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                                         onChange={(e) => handleMapListChange(row.id, 'value', e.target.value)}
                                         InputLabelProps={{
                                             sx: {
-                                            fontFamily: 'Nunito',
-                                            fontSize: '14px',
-                                            lineHeight: 'normal',
-                                            color: '#7b7b7b',
-                                            top: '-8px',
+                                            fontFamily: 'Nunito Sans',
+                                            fontSize: '12px',
+                                            lineHeight: '16px',
+                                            color: 'rgba(17, 17, 19, 0.60)',
+                                            top: '-5px',
                                             '&.Mui-focused': {
                                                 color: '#0000FF',
                                                 top: 0
@@ -1273,7 +1389,11 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                                                     height: '36px',
                                                     '& .MuiOutlinedInput-input': {
                                                         padding: '6.5px 8px',
-                                                        fontFamily: 'Nunito',
+                                                        fontFamily: 'Roboto',
+                                                        color: '#202124',
+                                                        fontSize: '14px',
+                                                        fontWeight: '400',
+                                                        lineHeight: '20px'
                                                     },
                                                     '& .MuiOutlinedInput-notchedOutline': {
                                                         borderColor: '#A3B0C2',
@@ -1333,11 +1453,11 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                                         onChange={(e) => handleMapListChange(row.id, 'value', e.target.value)}
                                         InputLabelProps={{
                                             sx: {
-                                            fontFamily: 'Nunito',
-                                            fontSize: '14px',
-                                            lineHeight: 'normal',
-                                            color: '#7B7B7B',
-                                            top: '-8px',
+                                            fontFamily: 'Nunito Sans',
+                                            fontSize: '12px',
+                                            lineHeight: '16px',
+                                            color: 'rgba(17, 17, 19, 0.60)',
+                                            top: '-5px',
                                             '&.Mui-focused': {
                                                 color: '#0000FF',
                                                 top: 0
@@ -1354,7 +1474,11 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                                                     height: '36px',
                                                     '& .MuiOutlinedInput-input': {
                                                         padding: '6.5px 8px',
-                                                        fontFamily: 'Nunito',
+                                                        fontFamily: 'Roboto',
+                                                        color: '#202124',
+                                                        fontSize: '14px',
+                                                        fontWeight: '400',
+                                                        lineHeight: '20px'
                                                     },
                                                     '& .MuiOutlinedInput-notchedOutline': {
                                                         borderColor: '#A3B0C2',
@@ -1373,6 +1497,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                                           }}
                                         />
                                     ) : (
+                                        
                                         <TextField
                                             fullWidth
                                             variant="outlined"
@@ -1386,10 +1511,10 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                                             
                                             InputLabelProps={{
                                                 sx: {
-                                                fontFamily: 'Nunito',
-                                                fontSize: '14px',
-                                                lineHeight: '20px',
-                                                color: '#7B7B7B',
+                                                fontFamily: 'Nunito Sans',
+                                                fontSize: '12px',
+                                                lineHeight: '16px',
+                                                color: 'rgba(17, 17, 19, 0.60)',
                                                 top: '-8px',
                                                 '&.Mui-focused': {
                                                     color: '#0000FF',
@@ -1403,7 +1528,12 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                                             SelectProps={{
                                                 open: openDropdown === row.id,
                                                 onOpen: () => handleDropdownOpen(row.id),
-                                                onClose: handleDropdownClose,
+                                                // onClose: handleDropdownClose,
+                                                onClose: () => {
+                                                if (!showCreateMapForm) {
+                                                    handleDropdownClose();
+                                                  }
+                                                },
                                                 IconComponent: () => (
                                                 openDropdown === row.id ? (
                                                     <Image src='/chevron-drop-up.svg' alt='chevron-drop-up' height={24} width={24} />
@@ -1416,13 +1546,13 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                                                         padding: '6.5px 8px',
                                                     },
                                                 paddingRight: '16px', // Adds space for the custom icon
-                                                fontFamily: 'Nunito',
+                                                fontFamily: 'Roboto',
                                                 fontSize: '14px',
                                                 lineHeight: '20px',
-                                                color: '#7B7B7B',
+                                                color: '#707071',
                                                 },
                                             }}
-                                            onClick={() => {
+                                            onClick={(e) => {
                                                 if (openDropdown === row.id) {
                                                   handleDropdownClose();
                                                 } else {
@@ -1430,60 +1560,182 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                                                 }
                                               }}
                                             >
-                                            <MenuItem value="" sx= {{
-                                                            fontFamily: "Nunito",
+                                            {/* <MenuItem value="" sx= {{
+                                                            fontFamily: "Nunito Sans",
                                                             fontSize: "14px",
-                                                            color: "#7b7b7b",
-                                                            lineHeight: "20px"
-                                                        }}>Select</MenuItem>
-                                            <MenuItem value="Email" sx= {{
-                                                            fontFamily: "Nunito",
+                                                            color: "#202124",
+                                                            lineHeight: "20px",
+                                                            fontWeight: '500'
+                                                        }}>Select</MenuItem> */}
+
+                                            <MenuItem 
+                                            
+                                            onClick={(e) => {
+                                                e.stopPropagation(); // Prevent click event from closing the dropdown
+                                                handleSelectMapOption('createNewField',e, row.id);
+                                              }} sx={{
+                                                borderBottom: showCreateMapForm ?  "none" : "1px solid #cdcdcd",
+                                                '&:hover': {
+                                                    background: 'rgba(80, 82, 178, 0.10)'
+                                                }
+                                            }}>
+                                                <ListItemText onClick={(e) => {
+                                                e.stopPropagation(); // Prevent click event from closing the dropdown
+                                                handleSelectMapOption('createNewField',e, row.id);
+                                              }} primary={`+ Add new field`} primaryTypographyProps={{
+                                                        sx: {
+                                                            fontFamily: "Nunito Sans",
                                                             fontSize: "14px",
-                                                            color: "#7b7b7b",
-                                                            lineHeight: "20px"
-                                                        }}>Email</MenuItem>
-                                            <MenuItem value="Phone number" sx= {{
-                                                            fontFamily: "Nunito",
-                                                            fontSize: "14px",
-                                                            color: "#7b7b7b",
-                                                            lineHeight: "20px"
-                                                        }}>Phone number</MenuItem>
-                                            <MenuItem value="First name" sx= {{
-                                                            fontFamily: "Nunito",
-                                                            fontSize: "14px",
-                                                            color: "#7b7b7b",
-                                                            lineHeight: "20px"
-                                                        }}>First name</MenuItem>
-                                            <MenuItem value="Second name" sx= {{
-                                                            fontFamily: "Nunito",
-                                                            fontSize: "14px",
-                                                            color: "#7b7b7b",
-                                                            lineHeight: "20px"
-                                                        }}>Second name</MenuItem>
-                                            <MenuItem value="Gender" sx= {{
-                                                            fontFamily: "Nunito",
-                                                            fontSize: "14px",
-                                                            color: "#7b7b7b",
-                                                            lineHeight: "20px"
-                                                        }}>Gender</MenuItem>
-                                            <MenuItem value="Age" sx= {{
-                                                            fontFamily: "Nunito",
-                                                            fontSize: "14px",
-                                                            color: "#7b7b7b",
-                                                            lineHeight: "20px"
-                                                        }}>Age</MenuItem>
-                                            <MenuItem value="Job Title" sx= {{
-                                                            fontFamily: "Nunito",
-                                                            fontSize: "14px",
-                                                            color: "#7b7b7b",
-                                                            lineHeight: "20px"
-                                                        }}>Job Title</MenuItem>
-                                            <MenuItem value="Location" sx= {{
-                                                            fontFamily: "Nunito",
-                                                            fontSize: "14px",
-                                                            color: "#7b7b7b",
-                                                            lineHeight: "20px"
-                                                        }}>Location</MenuItem>
+                                                            color: showCreateMapForm ?  "#5052B2" : "#202124",
+                                                            fontWeight: "500",
+                                                            lineHeight: "20px",
+                                                            
+                                                        }
+                                                    }}/>
+                                            </MenuItem>
+
+                                            {/* Show Create New List form if 'showCreateForm' is true */}
+                                            {showCreateMapForm && (
+                                                <Box>
+                                                    <Box onClick={(e) => e.stopPropagation()}  sx={{
+                                                        display: 'flex',
+                                                        flexDirection: 'column',
+                                                        gap: '24px',
+                                                        p: 2,
+                                                        width: '208px',
+                                                        pt: 0
+                                                    }}>
+                                                    <Box
+                                                        sx={{
+                                                            
+                                                            
+                                                            mt: 1, // Margin-top to separate form from menu item
+                                                            display: 'flex',
+                                                            justifyContent: 'space-between',
+                                                            gap: '16px',
+                                                            '@media (max-width: 600px)': {
+                                                                flexDirection: 'column'
+                                                            },
+                                                        }}
+                                                    >
+                                                        <TextField
+                                                            label="List Name"
+                                                            variant="outlined"
+                                                            value={newMapListName}
+                                                            onChange={(e) => setNewMapListName(e.target.value)}
+                                                            size="small"
+                                                            fullWidth
+                                                            onKeyDown={(e) => e.stopPropagation()}
+                                                            error={listNameError}
+                                                            helperText={listNameError ? 'List Name is required' : ''}
+                                                            InputLabelProps={{
+                                                                sx: {
+                                                                fontFamily: 'Nunito Sans',
+                                                                fontSize: '12px',
+                                                                lineHeight: '16px',
+                                                                fontWeight: '400',
+                                                                color: 'rgba(17, 17, 19, 0.60)',
+                                                                '&.Mui-focused': {
+                                                                    color: '#0000FF',
+                                                                },
+                                                                }
+                                                            }}
+                                                            InputProps={{
+                                                                
+                                                                endAdornment: (
+                                                                    newListName && ( // Conditionally render close icon if input is not empty
+                                                                        <InputAdornment position="end">
+                                                                          <IconButton 
+                                                                            edge="end"
+                                                                            onClick={() => setNewMapListName('')} // Clear the text field when clicked
+                                                                          >
+                                                                            <Image 
+                                                                              src='/close-circle.svg' 
+                                                                              alt='close-circle' 
+                                                                              height={18} 
+                                                                              width={18} // Adjust the size as needed
+                                                                            />
+                                                                          </IconButton>
+                                                                        </InputAdornment>
+                                                                      )
+                                                                ),
+                                                                sx: {
+                                                                    '&.MuiOutlinedInput-root': {
+                                                                        height: '32px',
+                                                                        '& .MuiOutlinedInput-input': {
+                                                                            padding: '5px 16px 4px 16px',
+                                                                            fontFamily: 'Roboto',
+                                                                            color: '#202124',
+                                                                            fontSize: '14px',
+                                                                            fontWeight: '400',
+                                                                            lineHeight: '20px'
+                                                                        },
+                                                                        '& .MuiOutlinedInput-notchedOutline': {
+                                                                            borderColor: '#A3B0C2',
+                                                                        },
+                                                                        '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                                            borderColor: '#A3B0C2',
+                                                                        },
+                                                                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                                                            borderColor: '#0000FF',
+                                                                        },
+                                                                        },
+                                                                        '&+.MuiFormHelperText-root': {
+                                                                            marginLeft: '0',
+                                                                        },
+                                                                }
+                                                              }}
+                                                        />
+                                                        
+                                                    </Box>
+                                                        <Box sx={{textAlign: 'right'}}>
+                                                        <Button variant="contained" onClick={() => handleMapSave(row.id)}
+                                                        disabled={maplistNameError || !newMapListName}
+                                                        sx={{
+                                                            borderRadius: '4px',
+                                                            border: '1px solid #5052B2',
+                                                            background: '#fff',
+                                                            boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
+                                                            fontFamily: 'Nunito Sans',
+                                                            fontSize: '14px',
+                                                            fontWeight: '600',
+                                                            lineHeight: '20px',
+                                                            color: '#5052b2',
+                                                            textTransform: 'none',
+                                                            padding: '4px 22px',
+                                                            '&:hover' : {
+                                                                background: 'transparent'
+                                                            },
+                                                            '&.Mui-disabled' : {
+                                                                background: 'transparent',
+                                                                color: '#5052b2'
+                                                            }
+                                                        }}>
+                                                                Save
+                                                            </Button>
+                                                        </Box>
+
+                                                        </Box>
+                                                    
+
+                                                    {/* Add a Divider to separate form from options */}
+                                                    <Divider sx={{ borderColor: '#cdcdcd' }} />
+                                                </Box>
+                                            )}
+
+                                            {mapListOptions.map(option => (
+                                                    <MenuItem key={option} value={option} sx= {{
+                                                        fontFamily: "Nunito Sans",
+                                                        fontSize: "14px",
+                                                        color: "#202124",
+                                                        lineHeight: "20px",
+                                                        fontWeight: '500'
+                                                    }}>
+                                                        {option}
+                                                    </MenuItem>
+                                                ))}
+
+                                            
                                         </TextField>
 
                                     )}
@@ -1492,23 +1744,101 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                                     {/* Delete Icon */}
                                     <Grid item xs="auto" sm={1} container justifyContent="center">
                                     {row.canDelete && (
-                                        <IconButton onClick={() => handleDelete(row.id)}>
+                                        <>
+                                        <IconButton onClick={(event) => handleClickOpen(event, row.id)}>
                                             <Image 
-                                                src='/trash-icon.svg' 
-                                                alt='trash-icon' 
+                                                src='/trash-icon-filled.svg' 
+                                                alt='trash-icon-filled' 
                                                 height={18} 
                                                 width={18} // Adjust the size as needed
                                             />
                                         </IconButton>
+                                        <Popover
+                                        id={deleteId}
+                                        open={deleteOpen}
+                                        anchorEl={deleteAnchorEl}
+                                        onClose={handleDeleteClose}
+                                        anchorOrigin={{
+                                            vertical: 'bottom',
+                                            horizontal: 'center',
+                                        }}
+                                        transformOrigin={{
+                                            vertical: 'top',
+                                            horizontal: 'right',
+                                        }}
+                                    >
+                                        <Box sx={{
+                                            minWidth: '254px',
+                                            borderRadius: '4px',
+                                            border: '0.2px solid #afafaf',
+                                            background: '#fff',
+                                            boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.12)',
+                                            padding: '16px 21px 16px 16px'
+                                        }}>
+                                            <Typography variant="body1" sx={{
+                                                color: '#202124',
+                                                fontFamily: 'Nunito Sans',
+                                                fontSize: '16px',
+                                                fontWeight: '600',
+                                                lineHeight: 'normal',
+                                                paddingBottom: '12px'
+                                            }}>Confirm Deletion</Typography>
+                                            <Typography variant="body2" sx={{
+                                                color: '#5f6368',
+                                                fontFamily: 'Roboto',
+                                                fontSize: '12px',
+                                                fontWeight: '400',
+                                                lineHeight: '16px',
+                                                paddingBottom: '26px'
+                                            }}>
+                                                Are you sure you want to delete this <br /> map data?
+                                            </Typography>
+                                            <Box display="flex" justifyContent="flex-end" mt={2}>
+                                                <Button onClick={handleDeleteClose}  sx={{
+                                                    borderRadius: '4px',
+                                                    border: '1px solid #5052b2',
+                                                    boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
+                                                    color: '#5052b2',
+                                                    fontFamily: 'Nunito Sans',
+                                                    fontSize: '14px',
+                                                    fontWeight: '600',
+                                                    lineHeight: '20px',
+                                                    marginRight: '16px',
+                                                    textTransform: 'none'
+                                                }}>
+                                                    Clear
+                                                </Button>
+                                                <Button onClick={handleDelete} sx={{
+                                                    background: '#5052B2',
+                                                    borderRadius: '4px',
+                                                    border: '1px solid #5052b2',
+                                                    boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
+                                                    color: '#fff',
+                                                    fontFamily: 'Nunito Sans',
+                                                    fontSize: '14px',
+                                                    fontWeight: '600',
+                                                    lineHeight: '20px',
+                                                    textTransform: 'none',
+                                                    '&:hover': {
+                                                        color: '#5052B2'
+                                                    }
+                                                }}>
+                                                    Delete
+                                                </Button>
+                                            </Box>
+                                        </Box>
+                                    </Popover>
+                                    </>
                                     )}
+                                     
                                     </Grid>
                                 </Grid>
                                 </Box>
                             ))}
                                 
                                 <Button color="primary" onClick={handleAddRow} sx={{
-                                    fontFamily: 'Nunito',
-                                    fontSize: '16px',
+                                    fontFamily: 'Nunito Sans',
+                                    fontSize: '14px',
                                     fontWeight: '600',
                                     color: '#5052B2',
                                     lineHeight: '22px',
