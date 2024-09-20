@@ -174,13 +174,12 @@ async def process_user_data(table, index, five_x_five_user: FiveXFiveUser, sessi
         leads_requests = [leads_request for leads_request, _, _ in leads_result]
         lead_visit_id = leads_result[0][1]
         lead_behavior_type = leads_result[0][2]
-        if first_visit_id == lead_visit_id:
-            if lead_user.behavior_type in ('visitor', 'viewed_product') and behavior_type in (
-            'viewed_product', 'product_added_to_cart') and lead_user.behavior_type != behavior_type:
-                session.query(LeadUser).filter(LeadUser.id == lead_user.id).update({
-                    LeadUser.behavior_type: behavior_type
-                })
-                session.flush()
+        if lead_user.behavior_type in ('visitor', 'viewed_product') and behavior_type in (
+        'viewed_product', 'product_added_to_cart') and lead_user.behavior_type != behavior_type:
+            session.query(LeadUser).filter(LeadUser.id == lead_user.id).update({
+                LeadUser.behavior_type: behavior_type
+            })
+            session.flush()
         if lead_behavior_type == 'visitor':
             if behavior_type == 'viewed_product':
                 lead_behavior_type = behavior_type
