@@ -389,16 +389,6 @@ const Leads: React.FC = () => {
             // Processing "Regions"
             if (selectedFilters.some(filter => filter.label === 'Regions')) {
                 const regions = selectedFilters.find(filter => filter.label === 'Regions')?.value.split(', ') || [];
-
-                const regionsFilter = selectedFilters.find(filter => filter.label === 'Regions');
-                const region = regionsFilter?.value.split(', ') || [];
-                const formattedRegions = region.map(region => {
-                    const [name] = region.split('-');
-                    return name;
-                });
-                if (regionsFilter) {
-                    regionsFilter.value = formattedRegions.join(', ');
-                }
                 if (regions.length > 0) {
                     url += `&regions=${encodeURIComponent(regions.join(','))}`;
                 }
@@ -594,7 +584,6 @@ const Leads: React.FC = () => {
         setSelectedFilters(updatedFilters);
 
         const filters = JSON.parse(sessionStorage.getItem('filters') || '{}');
-        console.log(filters)
 
         // Удаляем фильтр в зависимости от его label
         switch (filterToDelete.label) {
@@ -800,7 +789,7 @@ const Leads: React.FC = () => {
         if (text === true) {
             return 'Returning';
         }
-        if (text === 'visitor'){
+        if (text === 'visitor') {
             return "Visitor"
         }
         if (text === 'viewed_product') {
@@ -811,7 +800,107 @@ const Leads: React.FC = () => {
     const handleDownload = async () => {
         setLoading(true);
         try {
-            const response = await axiosInstance.get('/leads/download_leads');
+            // Processing "Date Calendly"
+            const startEpoch = appliedDates.start ? Math.floor(appliedDates.start.getTime() / 1000) : null;
+            const endEpoch = appliedDates.end ? Math.floor(appliedDates.end.getTime() / 1000) : null;
+
+            let url = '/leads/download_leads';
+            let params = [];
+
+            if (startEpoch !== null && endEpoch !== null) {
+                params.push(`from_date=${startEpoch}&to_date=${endEpoch}`);
+            }
+
+            if (selectedFilters.some(filter => filter.label === 'Visitor Type')) {
+                const status = selectedFilters.find(filter => filter.label === 'Visitor Type')?.value.split(', ') || [];
+                if (status.length > 0) {
+                    const formattedStatus = status.map(status => status.toLowerCase().replace(/\s+/g, '_'));
+                    params.push(`behavior_type=${encodeURIComponent(formattedStatus.join(','))}`);
+                }
+            }
+
+            if (selectedFilters.some(filter => filter.label === 'Regions')) {
+                const regions = selectedFilters.find(filter => filter.label === 'Regions')?.value.split(', ') || [];
+                if (regions.length > 0) {
+                    params.push(`regions=${encodeURIComponent(regions.join(','))}`);
+                }
+            }
+
+            if (selectedFilters.some(filter => filter.label === 'From Date')) {
+                const fromDate = selectedFilters.find(filter => filter.label === 'From Date')?.value || '';
+                if (fromDate) {
+                    const fromDateEpoch = Math.floor(new Date(fromDate).getTime() / 1000);
+                    params.push(`from_date=${fromDateEpoch}`);
+                }
+            }
+
+            if (selectedFilters.some(filter => filter.label === 'To Date')) {
+                const toDate = selectedFilters.find(filter => filter.label === 'To Date')?.value || '';
+                if (toDate) {
+                    const toDateEpoch = Math.floor(new Date(toDate).getTime() / 1000);
+                    params.push(`to_date=${toDateEpoch}`);
+                }
+            }
+
+            if (selectedFilters.some(filter => filter.label === 'Lead Status')) {
+                const funnels = selectedFilters.find(filter => filter.label === 'Lead Status')?.value.split(', ') || [];
+                if (funnels.length > 0) {
+                    const formattedFunnels = funnels.map(funnel => funnel.toLowerCase().replace(/\s+/g, '_'));
+                    params.push(`status=${encodeURIComponent(formattedFunnels.join(','))}`);
+                }
+            }
+
+            if (selectedFilters.some(filter => filter.label === 'Search')) {
+                const searchQuery = selectedFilters.find(filter => filter.label === 'Search')?.value || '';
+                if (searchQuery) {
+                    params.push(`search_query=${encodeURIComponent(searchQuery)}`);
+                }
+            }
+
+            if (selectedFilters.some(filter => filter.label === 'From Time')) {
+                const fromTime = selectedFilters.find(filter => filter.label === 'From Time')?.value || '';
+                if (fromTime) {
+                    params.push(`from_time=${encodeURIComponent(fromTime)}`);
+                }
+            }
+
+            if (selectedFilters.some(filter => filter.label === 'To Time')) {
+                const toTime = selectedFilters.find(filter => filter.label === 'To Time')?.value || '';
+                if (toTime) {
+                    params.push(`to_time=${encodeURIComponent(toTime)}`);
+                }
+            }
+
+            if (selectedFilters.some(filter => filter.label === 'Time Spent')) {
+                const timeSpent = selectedFilters.find(filter => filter.label === 'Time Spent')?.value.split(', ') || [];
+                if (timeSpent.length > 0) {
+                    const formattedTimeSpent = timeSpent.map(value => value.replace(/\s+/g, '_'));
+                    params.push(`time_spent=${encodeURIComponent(formattedTimeSpent.join(','))}`);
+                }
+            }
+
+            if (selectedFilters.some(filter => filter.label === 'Recurring Visits')) {
+                const recurringVisits = selectedFilters.find(filter => filter.label === 'Recurring Visits')?.value.split(', ') || [];
+                if (recurringVisits.length > 0) {
+                    const formattedRecurringVisits = recurringVisits.map(value => value.replace(/\s+/g, '_'));
+                    params.push(`recurring_visits=${encodeURIComponent(formattedRecurringVisits.join(','))}`);
+                }
+            }
+
+            if (selectedFilters.some(filter => filter.label === 'Page Visits')) {
+                const pageVisits = selectedFilters.find(filter => filter.label === 'Page Visits')?.value.split(', ') || [];
+                if (pageVisits.length > 0) {
+                    const formattedPageVisits = pageVisits.map(value => value.replace(/\s+/g, '_'));
+                    params.push(`page_visits=${encodeURIComponent(formattedPageVisits.join(','))}`);
+                }
+            }
+
+            // Join all parameters into a single query string
+            if (params.length > 0) {
+                url += `?${params.join('&')}`;
+            }
+
+            const response = await axiosInstance.get(url, { responseType: 'blob' });
 
             if (response.status === 200) {
                 const url = window.URL.createObjectURL(new Blob([response.data]));
@@ -831,6 +920,7 @@ const Leads: React.FC = () => {
             setLoading(false);
         }
     };
+
 
     const handleChangePage = (event: unknown, newPage: number) => {
         setPage(newPage);
@@ -1060,23 +1150,42 @@ const Leads: React.FC = () => {
                                 sx={{ backgroundColor: 'rgba(255, 255, 255, 1)', color: 'rgba(80, 82, 178, 1)', borderRadius: '3px', fontFamily: 'Nunito', fontWeight: '600', fontSize: '12px' }}
                             />
                         )}
-                        {selectedFilters.map(filter => (
-                            <Chip
-                                key={filter.label}
-                                label={`${filter.label}: ${filter.value.charAt(0).toUpperCase() + filter.value.slice(1)}`}
-                                onDelete={() => handleDeleteFilter(filter)}
-                                deleteIcon={
-                                    <CloseIcon
-                                        sx={{
-                                            backgroundColor: 'transparent',
-                                            color: 'rgba(74, 74, 74, 1)',
-                                            fontSize: '14px'
-                                        }}
-                                    />
-                                }
-                                sx={{ borderRadius: '4.5px', backgroundColor: 'rgba(237, 237, 247, 1)', color: 'rgba(74, 74, 74, 1)', fontFamily: 'Nunito', fontWeight: '600', fontSize: '12px' }}
-                            />
-                        ))}
+                        {selectedFilters.map(filter => {
+                            let displayValue = filter.value;
+                            // Если фильтр Regions, применяем форматирование
+                            if (filter.label === 'Regions') {
+                                const regions = filter.value.split(', ') || [];
+                                const formattedRegions = regions.map(region => {
+                                    const [name] = region.split('-');
+                                    return name;
+                                });
+                                displayValue = formattedRegions.join(', ');
+                            }
+                            return (
+                                <Chip
+                                    key={filter.label}
+                                    label={`${filter.label}: ${displayValue.charAt(0).toUpperCase() + displayValue.slice(1)}`}
+                                    onDelete={() => handleDeleteFilter(filter)}
+                                    deleteIcon={
+                                        <CloseIcon
+                                            sx={{
+                                                backgroundColor: 'transparent',
+                                                color: 'rgba(74, 74, 74, 1)',
+                                                fontSize: '14px'
+                                            }}
+                                        />
+                                    }
+                                    sx={{
+                                        borderRadius: '4.5px',
+                                        backgroundColor: 'rgba(237, 237, 247, 1)',
+                                        color: 'rgba(74, 74, 74, 1)',
+                                        fontFamily: 'Nunito',
+                                        fontWeight: '600',
+                                        fontSize: '12px'
+                                    }}
+                                />
+                            );
+                        })}
                     </Box>
                     <Box sx={{
                         flex: 1, display: 'flex', flexDirection: 'column', maxWidth: '100%', pl: 0, pr: 0, pt: '14px', pb: '20px',

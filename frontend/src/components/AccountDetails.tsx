@@ -218,7 +218,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                         </Typography>
                         <Box sx={accountStyles.rows_pam}>
                             <Typography sx={accountStyles.title_text}>
-                                Cell number:
+                                Phone number:
                             </Typography>
                             <Typography sx={{ ...accountStyles.text, width: '50%' }}>
                                 {lead.mobile_phone || '--'}

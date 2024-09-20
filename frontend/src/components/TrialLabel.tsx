@@ -19,8 +19,6 @@ const TrialStatus: React.FC = () => {
   const [isSliderOpen, setIsSliderOpen] = useState(false);
   const router = useRouter();
 
-  console.log(trial)
-
   useEffect(() => {
     if (trial) {
       if (daysDifference === null || daysDifference === undefined || isNaN(daysDifference)) {
