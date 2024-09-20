@@ -177,7 +177,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                 }}
             >
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 3.5, px: 2, borderBottom: '1px solid #e4e4e4' }}>
-                    <Typography variant="h6" sx={{ textAlign: 'center', color: '#1c1c1c', fontFamily: 'Nunito', fontWeight: '700', fontSize: '16px', lineHeight: 'normal' }}>
+                    <Typography variant="h6" sx={{ textAlign: 'center', color: '#202124', fontFamily: 'Nunito Sans', fontWeight: '600', fontSize: '16px', lineHeight: '22px' }}>
                         Create contact sync
                     </Typography>
                     <IconButton onClick={onClose} sx={{p: 0}}>
@@ -188,7 +188,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                 <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', gap: 5, height: '100%' }}>
                     <Box sx={{px: 3, py: 2,  width: '100%'}}>
                         <Box sx={{px: 2, py: 3, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)'}}>
-                            <Typography variant="h6" sx={{ color: '#4a4a4a', fontFamily: 'Nunito', fontWeight: '700', fontSize: '14px', lineHeight: 'normal' }}>
+                            <Typography variant="h6" sx={{ color: '#202124', fontFamily: 'Nunito Sans', fontWeight: '600', fontSize: '16px', lineHeight: '22px' }}>
                                 Choose from integrated platform
                             </Typography>
                             <List sx={{ display: 'flex', gap: '16px', py: 2, flexWrap: 'wrap' }}>
@@ -206,10 +206,10 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                     </ListItemIcon>
                                     <ListItemText primary="HubSpot" primaryTypographyProps={{
                                             sx: {
-                                                fontFamily: "Nunito",
+                                                fontFamily: "Nunito Sans",
                                                 fontSize: "14px",
-                                                color: "#000",
-                                                fontWeight: "400",
+                                                color: "#4a4a4a",
+                                                fontWeight: "500",
                                                 lineHeight: "20px"
                                             }
                                         }}/>
@@ -230,10 +230,10 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                     </ListItemIcon>
                                     <ListItemText primary="WordPress" primaryTypographyProps={{
                                             sx: {
-                                                fontFamily: "Nunito",
+                                                fontFamily: "Nunito Sans",
                                                 fontSize: "14px",
-                                                color: "#000",
-                                                fontWeight: "400",
+                                                color: "#4a4a4a",
+                                                fontWeight: "500",
                                                 lineHeight: "20px"
                                             }
                                         }} />
@@ -254,10 +254,10 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                         </ListItemIcon>
                                         <ListItemText primary="Klaviyo" primaryTypographyProps={{
                                             sx: {
-                                                fontFamily: "Nunito",
+                                                fontFamily: "Nunito Sans",
                                                 fontSize: "14px",
-                                                color: "#000",
-                                                fontWeight: "400",
+                                                color: "#4a4a4a",
+                                                fontWeight: "500",
                                                 lineHeight: "20px"
                                             }
                                         }}  />
@@ -288,14 +288,15 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                 // onClick={handleSave}
                                 sx={{
                                     backgroundColor: '#5052B2',
-                                    fontFamily: "Nunito",
-                                    fontSize: '16px',
+                                    fontFamily: "Nunito Sans",
+                                    fontSize: '14px',
                                     fontWeight: '600',
-                                    lineHeight: '22px',
+                                    lineHeight: '20px',
                                     letterSpacing: 'normal',
                                     color: "#fff",
                                     textTransform: 'none',
                                     padding: '10px 24px',
+                                    boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
                                     '&:hover': {
                                         backgroundColor: '#5052B2'
                                     },
@@ -329,7 +330,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                 
                 
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 3.5, px: 2, borderBottom: '1px solid #e4e4e4' }}>
-                    <Typography variant="h6" sx={{ textAlign: 'center', color: '#1c1c1c', fontFamily: 'Nunito', fontWeight: '700', fontSize: '16px', lineHeight: 'normal' }}>
+                    <Typography variant="h6" sx={{ textAlign: 'center', color: '#202124', fontFamily: 'Nunito Sans', fontWeight: '600', fontSize: '16px', lineHeight: 'normal' }}>
                         Add an Integration
                     </Typography>
                     <IconButton onClick={handlePlusIconPopupClose} sx={{p: 0}}>
@@ -360,24 +361,32 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                     sx: {
                         paddingLeft: "12px",
                         paddingRight: "12px",
-                        color: "#4a4a4a",
-                        fontFamily: "Nunito",
+                        color: "#707071",
+                        fontFamily: "Roboto",
                         fontSize: "14px",
                         fontWeight: "400",
-                        lineHeight: "16px",
+                        lineHeight: "20px",
                         "& .MuiOutlinedInput-notchedOutline": {
                             borderColor: "#e4e4e4",
                         },
                         '& .MuiOutlinedInput-input': {
                             padding: '16px 0',
-                            fontFamily: 'Nunito',
+                            fontFamily: 'Roboto',
                             height: 'auto',
                             '@media (max-width:600px)': {
                                 padding: '13px 0',
                             }
+                        },
+                        '&::placeholder': {
+                            color: "#707071",
+                            fontFamily: "Roboto",
+                            fontSize: "14px",
+                            fontWeight: "400",
+                            lineHeight: "20px",
                         }
 
                     }
+
                     }}
                     sx={{ px: 3, py: 2, paddingBottom: '0' }}
                 />
@@ -385,7 +394,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                 <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', gap: 5, height: '100%' }}>
                     <Box sx={{px: 3, py: 2,  width: '100%'}}>
                         <Box sx={{px: 2, py: 3, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)'}}>
-                            <Typography variant="h6" sx={{ color: '#4a4a4a', fontFamily: 'Nunito', fontWeight: '700', fontSize: '14px', lineHeight: 'normal' }}>
+                            <Typography variant="h6" sx={{ color: '#202124', fontFamily: 'Nunito Sans', fontWeight: '600', fontSize: '16px', lineHeight: 'normal' }}>
                                 Available integrations platform
                             </Typography>
                             <List sx={{ display: 'flex', gap: '16px', py: 2, flexWrap: 'wrap' }}>
@@ -401,10 +410,10 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                     </ListItemIcon>
                                     <ListItemText primary="WordPress" primaryTypographyProps={{
                                             sx: {
-                                                fontFamily: "Nunito",
+                                                fontFamily: "Nunito Sans",
                                                 fontSize: "14px",
-                                                color: "#000",
-                                                fontWeight: "400",
+                                                color: "#4a4a4a",
+                                                fontWeight: "500",
                                                 lineHeight: "20px"
                                             }
                                         }} />
@@ -423,10 +432,10 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                         </ListItemIcon>
                                         <ListItemText primary="Klaviyo" primaryTypographyProps={{
                                             sx: {
-                                                fontFamily: "Nunito",
+                                                fontFamily: "Nunito Sans",
                                                 fontSize: "14px",
-                                                color: "#000",
-                                                fontWeight: "400",
+                                                color: "#4a4a4a",
+                                                fontWeight: "500",
                                                 lineHeight: "20px"
                                             }
                                         }}  />
@@ -444,10 +453,10 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                         </ListItemIcon>
                                         <ListItemText primary="Zapier" primaryTypographyProps={{
                                             sx: {
-                                                fontFamily: "Nunito",
+                                                fontFamily: "Nunito Sans",
                                                 fontSize: "14px",
-                                                color: "#000",
-                                                fontWeight: "400",
+                                                color: "#4a4a4a",
+                                                fontWeight: "500",
                                                 lineHeight: "20px"
                                             }
                                         }}  />
@@ -465,10 +474,10 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                         </ListItemIcon>
                                         <ListItemText primary="Shopify" primaryTypographyProps={{
                                             sx: {
-                                                fontFamily: "Nunito",
+                                                fontFamily: "Nunito Sans",
                                                 fontSize: "14px",
-                                                color: "#000",
-                                                fontWeight: "400",
+                                                color: "#4a4a4a",
+                                                fontWeight: "500",
                                                 lineHeight: "20px"
                                             }
                                         }}  />
@@ -486,10 +495,10 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                         </ListItemIcon>
                                         <ListItemText primary="Elastic" primaryTypographyProps={{
                                             sx: {
-                                                fontFamily: "Nunito",
+                                                fontFamily: "Nunito Sans",
                                                 fontSize: "14px",
-                                                color: "#000",
-                                                fontWeight: "400",
+                                                color: "#4a4a4a",
+                                                fontWeight: "500",
                                                 lineHeight: "20px"
                                             }
                                         }}  />
@@ -507,10 +516,10 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                         </ListItemIcon>
                                         <ListItemText primary="Meta" primaryTypographyProps={{
                                             sx: {
-                                                fontFamily: "Nunito",
+                                                fontFamily: "Nunito Sans",
                                                 fontSize: "14px",
-                                                color: "#000",
-                                                fontWeight: "400",
+                                                color: "#4a4a4a",
+                                                fontWeight: "500",
                                                 lineHeight: "20px"
                                             }
                                         }}  />
