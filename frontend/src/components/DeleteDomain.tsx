@@ -143,7 +143,7 @@ const ConfirmDeleteDomain = ({ open, handleClose, domain, handleDelete }: Props)
                 whiteSpace: 'pre-line',
             }}
             >
-            To delete the domain, you need to enter <strong>{domain.domain.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')}</strong> in the field below and press the 'Remove' button.
+            To delete the domain, you need to enter <strong>{domain.domain.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')}</strong> in the field below and press the &apos;Remove&apos; button. 
             </Typography>
         </Box>
           <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center'}}>
