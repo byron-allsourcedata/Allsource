@@ -4,6 +4,7 @@ import { Box, Typography, Button, TextField, Dialog, DialogActions, Tooltip, Sli
 import CloseIcon from '@mui/icons-material/Close';
 import axiosInterceptorInstance from '@/axios/axiosInterceptorInstance';
 import Image from 'next/image';
+import { showErrorToast, showToast } from './ToastNotification';
 import CustomizedProgressBar from './CustomizedProgressBar';
 
 const accontDetailsStyles = {
@@ -179,10 +180,10 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
         };
         axiosInterceptorInstance.put('/settings/account-details', accountData)
             .then(() => {
-                alert('Account details updated successfully');
+                showToast('Account details updated successfully');
             })
             .catch(error => {
-                console.error('Error updating account details:', error);
+                showErrorToast('Error updating account details:', error);
             });
     };
     
@@ -214,15 +215,19 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
                     new_password: newPassword
                 }
             };
-            axiosInterceptorInstance.put('/api/changePassword', changePasswordData)
-                .then(() => {
-                    alert('Password changed successfully');
+            axiosInterceptorInstance.put('/settings/account-details', changePasswordData)
+                .then(response => {
+                    if (response.data === 'SUCCESS') {
+                        showToast('Password changed successfully');
+                    } else if (response.data === 'INCORRECT_PASSWORD') {
+                        showErrorToast('Incorrect password. Please try again.');
+                    }
                 })
                 .catch(error => {
-                    console.error('Error changing password:', error);
+                    showErrorToast('Error changing password:', error);
                 });
         } else {
-            console.error('New passwords do not match');
+            showErrorToast('New passwords do not match');
         }
     };
     
@@ -237,10 +242,10 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
         };
         axiosInterceptorInstance.put('/settings/account-details', businessInfoData)
             .then(() => {
-                alert('Business info updated successfully');
+                showToast('Business info updated successfully');
             })
             .catch(error => {
-                console.error('Error updating business info:', error);
+                showErrorToast('Error updating business info:', error);
             });
     };
 

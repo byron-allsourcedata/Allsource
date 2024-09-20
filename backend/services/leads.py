@@ -167,7 +167,7 @@ class LeadsService:
             else:
                 if start_letter in (f"{lead.first_name} {lead.last_name}").lower():
                     results.add(f"{lead.first_name} {lead.last_name}")
-                if lead.mail and start_letter in (lead.email).lower():
+                if lead.email and start_letter in (lead.email).lower():
                     results.add(lead.email)
         limited_results = list(results)[:10]
         return limited_results

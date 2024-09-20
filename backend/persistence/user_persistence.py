@@ -58,6 +58,7 @@ class UserPersistence:
             result_user = {
                 "id": user.id,
                 "email": user.email,
+                "password": user.password,
                 "is_email_confirmed": user.is_email_confirmed,
                 "is_with_card": user.is_with_card,
                 "is_company_details_filled": user.is_company_details_filled,

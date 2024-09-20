@@ -7,7 +7,7 @@ from persistence.sendgrid_persistence import SendgridPersistence
 from persistence.user_persistence import UserPersistence
 from persistence.plans_persistence import PlansPersistence
 from sqlalchemy.orm import Session
-from .jwt_service import get_password_hash, create_access_token, decode_jwt_data
+from .jwt_service import get_password_hash, create_access_token, decode_jwt_data, verify_password
 from schemas.settings import AccountDetailsRequest
 from enums import VerifyToken
 logger = logging.getLogger(__name__)
@@ -77,10 +77,10 @@ class SettingsService:
             
         if account_details.change_password:
             if account_details.change_password.current_password and account_details.change_password.new_password:
-                current_hash_password = get_password_hash(account_details.change_password.current_password)
-                if user.password != current_hash_password:
+                if not verify_password(account_details.change_password.current_password, user.get('password')):
                     return SettingStatus.INCORRECT_PASSWORD
                 changes['password'] = get_password_hash(account_details.change_password.new_password)
+                self.settings_persistence.set_reset_password_sent_now(user.get('id'))
         
         if account_details.business_info:
             if account_details.business_info.organization_name:

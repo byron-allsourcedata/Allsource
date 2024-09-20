@@ -23,6 +23,13 @@ class SettingsPersistence:
             {Users.change_email_sent_at: send_message_expiration_time},
             synchronize_session=False)
         self.db.commit()
+    
+    def set_reset_password_sent_now(self, user_id):
+        send_message_expiration_time = datetime.now()
+        self.db.query(Users).filter(Users.id == user_id).update(
+            {Users.reset_password_sent_at: send_message_expiration_time},
+            synchronize_session=False)
+        self.db.commit()
         
     def get_api_details(self, user_id):
         return self.db.query(
