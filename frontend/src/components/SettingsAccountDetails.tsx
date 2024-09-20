@@ -102,6 +102,7 @@ interface SettingsAccountDetailsProps {
       company_name: string;
       company_website: string;
       company_website_visits: string;
+      is_email_confirmed: string;
       reset_password_sent_at: string;
     };
   }
@@ -462,6 +463,30 @@ const handleChangePasswordPopupClose = () => {
                             InputProps={{ sx: accontDetailsStyles.formInput,
                                 endAdornment: (
                                     <InputAdornment position="end">
+                                        {accountDetails.is_email_confirmed ? (
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                <Image src="/green-tick-circle.svg" alt='green-tick-circle' height={16} width={16} />
+                                                <Typography variant="caption" sx={{
+                                                    fontFamily: 'Roboto',
+                                                    fontSize: '12px',
+                                                    fontWeight: '400',
+                                                    lineHeight: '16px',
+                                                    color: '#2b5b00'
+                                                }}>
+                                                        Verified
+                                                </Typography>
+                                            </Box>
+                                            ) : (
+                                            <Typography variant="caption" sx={{
+                                                fontFamily: 'Roboto',
+                                                fontSize: '12px',
+                                                fontWeight: '400',
+                                                lineHeight: '16px',
+                                                color: '#f8464b'
+                                            }}>
+                                                Not Verified
+                                            </Typography>
+                                            )}
                                         {/* Write Icon */}
                                         <IconButton
                                             sx={{ 
