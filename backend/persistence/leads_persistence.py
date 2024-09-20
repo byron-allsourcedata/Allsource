@@ -318,16 +318,175 @@ class LeadsPersistence:
         )
         return lead_users
 
-    def get_full_user_leads(self, domain_id):
-        lead_users = (
-            self.db.query(FiveXFiveUser)
-                .join(LeadUser, LeadUser.five_x_five_user_id == FiveXFiveUser.id)
-                .filter(
-                LeadUser.domain_id == domain_id
+    def get_full_user_leads_by_filters(self, domain_id, from_date, to_date, regions,page_visits,
+                                                                                       average_time_spent, behavior_type, status, recurring_visits, sort_by, sort_order, 
+                                                                                       search_query, from_time, to_time):
+        FirstNameAlias = aliased(FiveXFiveNames)
+        LastNameAlias = aliased(FiveXFiveNames)
+
+        recurring_visits_subquery = (
+            self.db.query(
+                LeadsVisits.lead_id,
+                func.count().label('recurring_visits')
             )
-                .all()
+                .group_by(LeadsVisits.lead_id)
+                .subquery()
         )
-        return lead_users
+        query = (
+            self.db.query(
+                FiveXFiveUser.id,
+                recurring_visits_subquery.c.recurring_visits,
+            )
+                .join(LeadUser, LeadUser.five_x_five_user_id == FiveXFiveUser.id)
+                .join(FirstNameAlias, FirstNameAlias.id == FiveXFiveUser.first_name_id)
+                .join(LastNameAlias, LastNameAlias.id == FiveXFiveUser.last_name_id)
+                .join(LeadsVisits, LeadsVisits.id == LeadUser.first_visit_id)
+                .outerjoin(FiveXFiveUsersLocations, FiveXFiveUsersLocations.five_x_five_user_id == FiveXFiveUser.id)
+                .outerjoin(FiveXFiveLocations, FiveXFiveLocations.id == FiveXFiveUsersLocations.location_id)
+                .outerjoin(States, States.id == FiveXFiveLocations.state_id)
+                .outerjoin(recurring_visits_subquery, recurring_visits_subquery.c.lead_id == LeadUser.id)
+                .filter(LeadUser.domain_id == domain_id)
+                .group_by(
+                FiveXFiveUser.id,
+                recurring_visits_subquery.c.recurring_visits
+            )
+        )
+        query = query.order_by(desc(LeadsVisits.start_date))
+
+        if from_date and to_date:
+            start_date = datetime.fromtimestamp(from_date, tz=pytz.UTC)
+            end_date = datetime.fromtimestamp(to_date, tz=pytz.UTC)
+            query = query.filter(
+                and_(
+                    LeadsVisits.start_date >= start_date,
+                    LeadsVisits.start_date <= end_date
+                )
+            )
+        if status:
+            status_list = status.split(',')
+            filters = []
+            for status_data in status_list:
+                if status_data == 'converted_sales':
+                    filters.append(LeadUser.is_converted_sales == True)
+                elif status_data == 'view_product':
+                    filters.append(LeadUser.behavior_type == "viewed_product")
+                elif status_data == 'abandoned_cart':
+                    query = (
+                        query
+                            .join(LeadsUsersAddedToCart, LeadsUsersAddedToCart.lead_user_id == LeadUser.id)
+                            .outerjoin(LeadsUsersOrdered, LeadsUsersOrdered.lead_user_id == LeadUser.id)
+                            .where(
+                            LeadsUsersAddedToCart.added_at.isnot(None),
+                            or_(
+                                LeadsUsersAddedToCart.added_at > LeadsUsersOrdered.ordered_at,
+                                and_(
+                                    LeadsUsersOrdered.ordered_at.is_(None),
+                                    LeadsUsersAddedToCart.added_at.isnot(None)
+                                )
+                            )
+                        )
+                    )
+            query = query.filter(or_(*filters))
+        if from_time and to_time:
+            from_time = datetime.strptime(from_time, '%H:%M').time()
+            to_time = datetime.strptime(to_time, '%H:%M').time()
+            query = query.filter(
+                and_(
+                    LeadsVisits.start_time >= from_time,
+                    LeadsVisits.start_time <= to_time
+                )
+            )
+
+        if recurring_visits:
+            recurring_visits_list = recurring_visits.split(',')
+            filters = []
+            for recurring_visit in recurring_visits_list:
+                if recurring_visit == '4+':
+                    filters.append(recurring_visits_subquery.c.recurring_visits > 4)
+                else:
+                    filters.append(recurring_visits_subquery.c.recurring_visits == recurring_visit)
+            query = query.filter(or_(*filters))
+        if regions:
+            filters = []
+            region_list = regions.split(',')
+            for region_data in region_list:
+                region_data = region_data.split('-')
+                filters.append(FiveXFiveLocations.city.ilike(f'{region_data[0]}%'))
+                
+                if len(region_data) > 1 and region_data[1]:
+                    filters.append(States.state_name.ilike(f'{region_data[1]}%'))
+            
+            query = query.filter(or_(*filters))
+
+        if behavior_type:
+            behavior_type_list = behavior_type.split(',')
+            filters = []
+            for behavior in behavior_type_list:
+                if behavior == 'returning':
+                    filters.append(LeadUser.is_returning_visitor == True)
+                elif behavior == 'new':
+                    filters.append(LeadUser.is_returning_visitor == False)
+            query = query.filter(or_(*filters))
+
+        if page_visits:
+            page_visits_list = page_visits.split(',')
+            filters = []
+            for visit in page_visits_list:
+                if visit == 'more_than_3_pages':
+                    filters.append(LeadsVisits.pages_count > 3)
+                elif visit == '2_pages':
+                    filters.append(LeadsVisits.pages_count == 2)
+                elif visit == '3_pages':
+                    filters.append(LeadsVisits.pages_count == 3)
+                elif visit == '1_pages':
+                    filters.append(LeadsVisits.pages_count == 1)
+            query = query.filter(or_(*filters))
+
+        if average_time_spent:
+            page_visits_list = average_time_spent.split(',')
+            filters = []
+            for visit in page_visits_list:
+                if visit == 'under_10_secs':
+                    filters.append(LeadsVisits.average_time_sec < 10)
+                elif visit == '10-30_secs':
+                    filters.append(LeadsVisits.average_time_sec >= 10 and LeadsVisits.average_time_sec <= 30)
+                elif visit == '30-60_secs':
+                    filters.append(LeadsVisits.average_time_sec >= 30 and LeadsVisits.average_time_sec <= 60)
+                else:
+                    filters.append(LeadsVisits.average_time_sec > 60)
+            query = query.filter(or_(*filters))
+
+        if search_query:
+            query = (
+                query
+                    .outerjoin(FiveXFiveUsersEmails, FiveXFiveUsersEmails.user_id == FiveXFiveUser.id)
+                    .outerjoin(FiveXFiveEmails, FiveXFiveEmails.id == FiveXFiveUsersEmails.email_id)
+                    .outerjoin(FiveXFiveUsersPhones, FiveXFiveUsersPhones.user_id == FiveXFiveUser.id)
+                    .outerjoin(FiveXFivePhones, FiveXFivePhones.id == FiveXFiveUsersPhones.phone_id)
+            )
+
+            filters = [
+                FiveXFiveEmails.email.ilike(f'{search_query}%'),
+                FiveXFiveEmails.email_host.ilike(f'{search_query}%'),
+                FiveXFivePhones.number.ilike(f'{search_query}%')
+            ]
+            search_query = search_query.split()
+            if len(search_query) == 1:
+                filters.extend([
+                    FirstNameAlias.name.ilike(f'{search_query[0].strip()}%'),
+                    LastNameAlias.name.ilike(f'{search_query[0].strip()}%')
+                ])
+            elif len(search_query) == 2:
+                name_filter = and_(
+                    FirstNameAlias.name.ilike(f'{search_query[0].strip()}%'),
+                    LastNameAlias.name.ilike(f'{search_query[1].strip()}%')
+                )
+                filters.append(name_filter)
+
+            query = query.filter(or_(*filters))
+            
+        leads = query.limit(1000).all()
+        return leads
 
     def create_age_conditions(self, age_str: str):
         filters = []

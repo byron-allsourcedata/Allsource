@@ -90,9 +90,14 @@ class LeadsService:
     ]   
         return leads_list, count, max_page
 
-    def download_leads(self, leads_ids=0):
+    def download_leads(self, from_date=None, to_date=None, regions=None, page_visits=None, average_time_spent=None,
+                                          behavior_type=None, status=None, recurring_visits=None,sort_by=None,
+                                          sort_order=None, search_query=None, from_time=None, to_time=None, leads_ids=0):
         if leads_ids == 0:
-            leads_data = self.leads_persistence_service.get_full_user_leads(self.domain.id)
+            leads_data = self.leads_persistence_service.get_full_user_leads_by_filters(domain_id=self.domain.id, from_date=from_date, to_date=to_date, regions=regions,page_visits=page_visits,
+                                                                                       average_time_spent=average_time_spent, behavior_type=behavior_type, status=status, recurring_visits=recurring_visits, sort_by=sort_by, sort_order=sort_order, 
+                                                                                       search_query=search_query, from_time=from_time, to_time=to_time
+                                                                                       )
         else:
             leads_data = self.leads_persistence_service.get_full_user_leads_by_ids(self.domain.id, leads_ids)
         if len(leads_data) == 0:
