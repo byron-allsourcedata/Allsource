@@ -180,7 +180,7 @@ class SettingsService:
         mail_object.send_sign_up_mail(
             to_emails=invite_user,
             template_id=template_id,
-            template_placeholder={"full_name": invite_user, "link": confirm_email_url}
+            template_placeholder={"full_name": invite_user, "link": confirm_email_url, "company_name": user.get('company_name')}
         )
         
         self.settings_persistence.save_pending_invations_by_userid(user_id=user.get('id'), user_mail=invite_user, access_level=access_level, token=token)
