@@ -36,6 +36,11 @@ def change_teams(teams_details: TeamsDetailsRequest, settings_service: SettingsS
 def invite_user(teams_details: TeamsDetailsRequest, settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authorization_without_pixel)):
     return settings_service.invite_user(user=user, invite_user=teams_details.invite_user, access_level=teams_details.access_level)
 
+@router.get("/teams/sign-up")
+def sign_up_in_teams(settings_service: SettingsService = Depends(get_settings_service), token: str = Query(...)):
+    result = settings_service.sign_up_in_teams(token=token)
+    return VerifyTokenResponse(status=result.get('status'))
+
 @router.get("/billing")
 def get_billing(
     settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authorization_without_pixel)):

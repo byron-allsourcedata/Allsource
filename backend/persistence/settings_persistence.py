@@ -18,6 +18,10 @@ class SettingsPersistence:
         self.db.execute(stmt)
         self.db.commit()
         
+    def check_status_invitations(self, teams_owner_id, mail):
+        teams_invitation = self.db.query(TeamsInvitations).filter(TeamsInvitations.teams_owner_id == teams_owner_id, TeamsInvitations.mail==mail).first()
+        
+        
     def set_reset_email_sent_now(self, user_id):
         send_message_expiration_time = datetime.now()
         self.db.query(Users).filter(Users.id == user_id).update(
@@ -71,7 +75,7 @@ class SettingsPersistence:
         self.db.commit()
         
     def get_teams_by_userid(self, user_id):
-        return self.db.query(User).filter(User.teams_owner_id == user_id).all()
+        return self.db.query(User).filter(User.team_owner_id == user_id).all()
     
     def get_pending_invations_by_userid(self, user_id):
         return self.db.query(TeamsInvitations).filter(TeamsInvitations.teams_owner_id == user_id).all()
@@ -92,16 +96,16 @@ class SettingsPersistence:
         user_id = self.db.query(User.id).filter(User.email == user_mail).scalar()
         
         if user_id:
-            user_team_member = self.db.query(User).filter(User.teams_owner_id == user_id).first()
+            user_team_member = self.db.query(User).filter(User.team_owner_id == user_id).first()
             if user_team_member:
                 return True
             
         return False
 
     
-    def save_pending_invations_by_userid(self, user_id, user_mail, access_level):
+    def save_pending_invations_by_userid(self, user_id, user_mail, access_level, token):
         user_email = self.db.query(User.email).filter(User.id == user_id).scalar()
-        teams_invitation = TeamsInvitations(mail=user_mail, access_level=access_level, status='pending', invited_by=user_email, date_invited = datetime.now(), teams_owner_id = user_id)
+        teams_invitation = TeamsInvitations(mail=user_mail, access_level=access_level, status='pending', invited_by=user_email, date_invited = datetime.now(), teams_owner_id = user_id, token_invitation=token)
         self.db.add(teams_invitation)
         self.db.commit()
         
@@ -113,7 +117,7 @@ class SettingsPersistence:
         self.db.commit()
         
     def team_members_remove(self, user_id, mail):
-        self.db.query(Users).filter(Users.email == mail, Users.teams_owner_id == user_id).update(
-            {Users.teams_owner_id: None},
+        self.db.query(Users).filter(Users.email == mail, Users.team_owner_id == user_id).update(
+            {Users.team_owner_id: None},
             synchronize_session=False)
         self.db.commit()

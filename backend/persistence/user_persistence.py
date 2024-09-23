@@ -62,7 +62,7 @@ class UserPersistence:
                 "is_with_card": user.is_with_card,
                 "is_company_details_filled": user.is_company_details_filled,
                 "full_name": user.full_name,
-                "teams_owner_id": user.teams_owner_id,
+                "teams_owner_id": user.team_owner_id,
                 "image": user.image,
                 "company_name": user.company_name,
                 "company_website": user.company_website,
@@ -90,7 +90,7 @@ class UserPersistence:
 
     def update_teams_owner_id(self, user_id, teams_owner_mail):
         teams_owner_id = self.db.query(Users.id).where(Users.email == teams_owner_mail).scalar()
-        self.db.query(Users).filter(Users.id == user_id).update({Users.teams_owner_id: teams_owner_id},
+        self.db.query(Users).filter(Users.id == user_id).update({Users.team_owner_id: teams_owner_id},
                                                                   synchronize_session=False)
         self.db.commit()
 

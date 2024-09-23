@@ -13,7 +13,6 @@ from schemas.settings import AccountDetailsRequest
 from enums import VerifyToken
 logger = logging.getLogger(__name__)
 from datetime import datetime, timedelta
-from services.jwt_service import get_password_hash,create_access_token
 from .sendgrid import SendgridHandler
 from enums import SettingStatus, SendgridTemplate
 from services.stripe_service import *
@@ -98,7 +97,7 @@ class SettingsService:
 
         return SettingStatus.SUCCESS
     
-    def change_email_account_details(self, token: User, email: str):
+    def change_email_account_details(self, token, email: str):
         if email is None:
             SettingStatus.INCORRECT_MAIL
         try:
@@ -119,6 +118,20 @@ class SettingsService:
                 'status': VerifyToken.SUCCESS,
                 'user_token': user_token
             }
+        return {'status': VerifyToken.INCORRECT_TOKEN}
+    
+    def sign_up_in_teams(self, token):
+        try:
+            data = decode_jwt_data(token)
+        except:
+            return {'status': VerifyToken.INCORRECT_TOKEN}
+        
+        check_user_object = self.user_persistence.get_user_by_id(data.get('id'))
+        if check_user_object:
+            if self.settings_persistence.check_status_invitations(teams_owner_id=data.get('id'), mail=data.get('user_teams_mail')):
+                return {
+                    'status': VerifyToken.SUCCESS
+                }
         return {'status': VerifyToken.INCORRECT_TOKEN}
     
     def get_teams(self, user: dict):
@@ -156,16 +169,21 @@ class SettingsService:
             logger.info("template_id is None")
             return SettingStatus.FAILED
         
-        confirm_email_url = f"{os.getenv('SITE_HOST_URL')}/send-sign-up-invitation/?teams_owner_mail={user.get('email')}&user_mail={invite_user}&access_level{access_level}"
+        token_info = {
+                    'id': user.get('id'),
+                    'user_teams_mail': invite_user
+                    
+                }
+        token = create_access_token(token_info)           
+        confirm_email_url = f"{os.getenv('SITE_HOST_URL')}/authentication/verify-token?token={token}&user_teams_mail={invite_user}"
         mail_object = SendgridHandler()
         mail_object.send_sign_up_mail(
             to_emails=invite_user,
             template_id=template_id,
-            template_placeholder={"full_name": invite_user, "link": confirm_email_url,
-                                    },
+            template_placeholder={"full_name": invite_user, "link": confirm_email_url}
         )
         
-        self.settings_persistence.save_pending_invations_by_userid(user_id=user.get('id'), user_mail=invite_user, access_level=access_level)
+        self.settings_persistence.save_pending_invations_by_userid(user_id=user.get('id'), user_mail=invite_user, access_level=access_level, token=token)
         invitation_limit = -1
         self.subscription_service.update_invitation_limit(user_id=user.get('id'), invitation_limit=invitation_limit)
         return SettingStatus.SUCCESS 

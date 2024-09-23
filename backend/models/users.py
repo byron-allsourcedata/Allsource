@@ -13,7 +13,7 @@ class Users(Base):
     is_company_details_filled = Column(BOOLEAN, default=False, nullable=True)
     password = Column(VARCHAR, nullable=True)
     full_name = Column(VARCHAR, nullable=True)
-    teams_owner_id = Column(BIGINT, nullable=True)
+    team_owner_id = Column(BIGINT, nullable=True)
     image = Column(VARCHAR, nullable=True)
     company_name = Column(VARCHAR, nullable=True)
     company_website = Column(VARCHAR, nullable=True)

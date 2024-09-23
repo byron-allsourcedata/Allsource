@@ -302,7 +302,7 @@ class SubscriptionService:
         return user_subscription
     
     def check_invitation_limit(self, user_id):
-        member_limit =self.db.query(UserSubscriptions.member_limit).filter(
+        member_limit =self.db.query(UserSubscriptions.members_limit).filter(
             UserSubscriptions.user_id == user_id
         ).order_by(UserSubscriptions.id.desc()).limit(1).scalar()
         if member_limit == 0:
@@ -313,5 +313,5 @@ class SubscriptionService:
         member_limit = self.db.query(UserSubscriptions).filter(
             UserSubscriptions.user_id == user_id
         ).order_by(UserSubscriptions.id.desc()).limit(1).first()
-        member_limit.member_limit = member_limit.member_limit + invitation_limit
+        member_limit.members_limit = member_limit.members_limit + invitation_limit
         self.db.commit()
