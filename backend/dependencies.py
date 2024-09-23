@@ -163,10 +163,7 @@ def check_user_authorization(Authorization: Annotated[str, Header()],
                                  get_user_persistence_service), subscription_service: SubscriptionService = Depends(
             get_subscription_service)) -> Token:
     user = check_user_authentication(Authorization, user_persistence_service)
-    if user.get('team_owner_id'):
-        auth_status = get_user_authorization_status(user.get('team_owner_id'), subscription_service)
-    else:
-        auth_status = get_user_authorization_status(user, subscription_service)
+    auth_status = get_user_authorization_status(user, subscription_service)
     if auth_status == UserAuthorizationStatus.PAYMENT_NEEDED:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -187,10 +184,7 @@ def check_user_authorization_without_pixel(Authorization: Annotated[str, Header(
                                            subscription_service: SubscriptionService = Depends(
                                                get_subscription_service)) -> Token:
     user = check_user_authentication(Authorization, user_persistence_service)
-    if user.get('team_owner_id'):
-        auth_status = get_user_authorization_status(user.get('team_owner_id'), subscription_service)
-    else:
-        auth_status = get_user_authorization_status(user, subscription_service)
+    auth_status = get_user_authorization_status(user, subscription_service)
     if auth_status == UserAuthorizationStatus.PAYMENT_NEEDED:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -217,6 +211,8 @@ def check_user_authentication(Authorization: Annotated[str, Header()],
                 'NOT_FOUND'
             }
         )
+    if user_data.team_member_id:
+        user['team_member'] = user_persistence_service.get_user_team_member_by_id(user_data.team_member_id)
     return user
 
 

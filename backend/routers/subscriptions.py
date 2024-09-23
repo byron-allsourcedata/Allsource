@@ -41,28 +41,34 @@ async def update_payment_confirmation(request: fastRequest, webhook_service: Web
 
 @router.post("/cancel-plan")
 def cancel_user_subscripion(payments_service: PaymentsService = Depends(get_payments_service), users: Users = Depends(check_user_authorization_without_pixel)):
-    if users.team_owner_id is not None and users.access_level != 'admin':
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Access denied. Admins only."
-        )
+    if users.get('team_member'):
+        team_member = users.get('team_member')
+        if team_member.team_access_level != 'admin':
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied. Admins and standard only."
+            )
     return payments_service.cancel_user_subscripion(users=users)
 
 @router.get("/upgrade-and-downgrade-user-subscription")
 def upgrade_and_downgrade_user_subscription(price_id: str, payments_service: PaymentsService = Depends(get_payments_service), users: Users = Depends(check_user_authorization_without_pixel)):
-    if users.team_owner_id is not None and users.access_level != 'admin':
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Access denied. Admins only."
-        )
+    if users.get('team_member'):
+        team_member = users.get('team_member')
+        if team_member.team_access_level != 'admin':
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied. Admins and standard only."
+            )
     return payments_service.upgrade_and_downgrade_user_subscription(price_id=price_id, users=users)
 
 @router.get("/buy-credits")
 def buy_credits(credits_used: int, payments_service: PaymentsService = Depends(get_payments_service), users: Users = Depends(check_user_authorization_without_pixel)):
-    if users.team_owner_id is not None and users.access_level != 'admin':
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Access denied. Admins only."
-        )
+    if users.get('team_member'):
+        team_member = users.get('team_member')
+        if team_member.team_access_level != 'admin':
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied. Admins and standard only."
+            )
     return payments_service.charge_user_for_extra_credits(credits_used=credits_used, users=users)
     

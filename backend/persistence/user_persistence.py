@@ -88,6 +88,19 @@ class UserPersistence:
             }
         self.db.rollback()
         return result_user
+    
+    def get_user_team_member_by_id(self, user_id):
+        user = self.db.query(Users).filter(Users.id == user_id).first()
+        result_user = None
+        if user:
+            result_user = {
+                "id": user.id,
+                "email": user.email,
+                "full_name": user.full_name,
+               'team_access_level': user.team_access_level
+            }
+        self.db.rollback()
+        return result_user
 
     def update_teams_owner_id(self, user_id, mail, teams_owner_mail):
         teams_owner_id = self.db.query(Users.id).where(Users.email == teams_owner_mail).scalar()
@@ -99,6 +112,7 @@ class UserPersistence:
             TeamsInvitations.teams_owner_id == teams_owner_id
         ).delete()
         self.db.commit()
+        return teams_owner_id
 
     def email_confirmed(self, user_id: int):
         query = self.db.query(Users).filter(Users.id == user_id)

@@ -11,11 +11,13 @@ def create_domain(domain_data: DomainScheme,
                   domain_service: UserDomainsService = Depends(get_domain_service),
                   user = Depends(check_user_authentication)):
     
-    if user.team_owner_id is not None and (user.access_level != 'admin' or user.access_level != 'standard'):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Access denied. Admins and standard only."
-        )
+    if user.get('team_member'):
+        team_member = user.get('team_member')
+        if team_member.team_access_level != 'admin' or team_member.team_access_level != 'standard':
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied. Admins and standard only."
+            )
         
     domain = domain_service.create(user, domain_data.domain)
     if not domain:
@@ -34,10 +36,12 @@ def list_domain(request: Request = None,
 @router.delete('/{domain_id}')
 def delete_domain(domain_id: int, domain_service: UserDomainsService = Depends(get_domain_service),
                   user = Depends(check_user_authentication)):
-    if user.team_owner_id is not None and (user.access_level != 'admin' or user.access_level != 'standard'):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Access denied. Admins and standard only."
-        )
+    if user.get('team_member'):
+        team_member = user.get('team_member')
+        if team_member.team_access_level != 'admin' or team_member.team_access_level != 'standard':
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied. Admins and standard only."
+            )
     domain_service.delete_domain(user.get('id'), domain_id)
     return {'status': "SUCCESS"}
