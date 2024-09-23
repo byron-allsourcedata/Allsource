@@ -18,9 +18,12 @@ class SettingsPersistence:
         self.db.execute(stmt)
         self.db.commit()
         
-    def check_status_invitations(self, teams_owner_id, mail):
-        teams_invitation = self.db.query(TeamsInvitations).filter(TeamsInvitations.teams_owner_id == teams_owner_id, TeamsInvitations.mail==mail).first()
-        
+    def check_status_invitations(self, team_owner_id, mail):
+        teams_invitation = self.db.query(TeamsInvitations).filter(TeamsInvitations.team_owner_id == team_owner_id, TeamsInvitations.mail==mail).first()
+        if teams_invitation:
+            if teams_invitation.status == 'pending':
+                return True
+        return False
         
     def set_reset_email_sent_now(self, user_id):
         send_message_expiration_time = datetime.now()

@@ -190,7 +190,7 @@ class UsersAuth:
             }
 
     def create_account(self, user_form: UserSignUpForm):
-        teams_owner_mail = user_form.teams_owner_mail
+        team_owner_mail = user_form.team_owner_mail
         if not user_form.password:
             logger.debug("The password must not be empty.")
             return {
@@ -219,8 +219,8 @@ class UsersAuth:
             "password": user_form.password,
         }
         user_object = self.add_user(is_without_card, customer_id, user_form=user_data)
-        if teams_owner_mail:
-            self.user_persistence_service.update_teams_owner_id(user_object.id, teams_owner_mail)
+        if team_owner_mail:
+            self.user_persistence_service.update_teams_owner_id(user_object.id, team_owner_mail)
         token_info = {
             "id": user_object.id,
         }

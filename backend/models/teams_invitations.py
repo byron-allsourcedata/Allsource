@@ -15,7 +15,6 @@ class TeamsInvitations(Base):
     status = Column(VARCHAR, nullable=False)
     invited_by = Column(VARCHAR, nullable=False)
     date_invited = Column(TIMESTAMP(precision=7), nullable=True)
-    teams_owner_id = Column(BIGINT, nullable=True)
-    token_invitation = Column(VARCHAR, nullable=False)
+    team_owner_id = Column(BIGINT, nullable=True)
 
 event.listen(TeamsInvitations, "before_insert", create_timestamps)

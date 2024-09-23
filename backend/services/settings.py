@@ -128,11 +128,12 @@ class SettingsService:
         
         check_user_object = self.user_persistence.get_user_by_id(data.get('id'))
         if check_user_object:
-            if self.settings_persistence.check_status_invitations(teams_owner_id=data.get('id'), mail=data.get('user_teams_mail')):
+            if self.settings_persistence.check_status_invitations(team_owner_id=data.get('id'), mail=data.get('user_teams_mail')):
                 return {
+                    'team_owner_mail': check_user_object.get('email'),
                     'status': VerifyToken.SUCCESS
                 }
-        return {'status': VerifyToken.INCORRECT_TOKEN}
+        return {'status': VerifyToken.UNSUCCES}
     
     def get_teams(self, user: dict):
         result = {}
