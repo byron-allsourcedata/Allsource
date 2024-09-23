@@ -6,16 +6,15 @@ from .base import Base, create_timestamps, update_timestamps
 from .plans import SubscriptionPlan
 
 
-class TeamMembers(Base):
-    __tablename__ = "team_members"
+class TeamsInvitations(Base):
+    __tablename__ = "teams_invitations"
 
     id = Column(Integer, primary_key=True, nullable=False)
-    user_name = Column(VARCHAR, nullable=True)
-    last_signed_in = Column(TIMESTAMP, nullable=True)
+    mail = Column(VARCHAR, nullable=True)
     access_level = Column(VARCHAR, nullable=True)
-    invited_by = Column(VARCHAR, nullable=True)
-    added_on = Column(TIMESTAMP, nullable=True)
     status = Column(VARCHAR, nullable=False)
+    invited_by = Column(VARCHAR, nullable=False)
     date_invited = Column(TIMESTAMP(precision=7), nullable=True)
+    teams_owner_id = Column(BIGINT, nullable=True)
 
-event.listen(TeamMembers, "before_insert", create_timestamps)
+event.listen(TeamsInvitations, "before_insert", create_timestamps)

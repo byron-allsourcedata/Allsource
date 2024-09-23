@@ -293,9 +293,25 @@ class SubscriptionService:
         user_subscription.stripe_request_created_at = stripe_request_created_at
         self.db.flush()
 
-        user = self.db.query(User).filter(User.id == user_subscription.user_id).first()
-        user.leads_credits = leads_credits
-        user.prospect_credits = prospect_credits
-        self.db.commit()
+        if status != "active":
+            user = self.db.query(User).filter(User.id == user_subscription.user_id).first()
+            user.leads_credits = leads_credits
+            user.prospect_credits = prospect_credits
+            self.db.commit()
 
         return user_subscription
+    
+    def check_invitation_limit(self, user_id):
+        member_limit =self.db.query(UserSubscriptions.member_limit).filter(
+            UserSubscriptions.user_id == user_id
+        ).order_by(UserSubscriptions.id.desc()).limit(1).scalar()
+        if member_limit == 0:
+            return False
+        return True
+    
+    def update_invitation_limit(self, user_id, invitation_limit):
+        member_limit = self.db.query(UserSubscriptions).filter(
+            UserSubscriptions.user_id == user_id
+        ).order_by(UserSubscriptions.id.desc()).limit(1).first()
+        member_limit.member_limit = member_limit.member_limit + invitation_limit
+        self.db.commit()

@@ -290,8 +290,7 @@ def get_pixel_installation_service(db: Session = Depends(get_db),
 
 
 
-def get_settings_service(db: Session = Depends(get_db),
-                                   settings_persistence: SettingsPersistence = Depends(
+def get_settings_service(settings_persistence: SettingsPersistence = Depends(
                                        get_settings_persistence),
                                     plan_persistence: PlansPersistence = Depends(
                                        get_plans_persistence
@@ -302,8 +301,12 @@ def get_settings_service(db: Session = Depends(get_db),
                                     send_grid_persistence: SendgridPersistence = Depends(
                                        get_send_grid_persistence_service
                                        )
+                                    ,
+                                    subscription_service: SubscriptionService = Depends(
+                                       get_subscription_service
+                                       )
                                    ):
-    return SettingsService(db=db, settings_persistence=settings_persistence, plan_persistence=plan_persistence, user_persistence=user_persistence, send_grid_persistence=send_grid_persistence)
+    return SettingsService(settings_persistence=settings_persistence, plan_persistence=plan_persistence, user_persistence=user_persistence, send_grid_persistence=send_grid_persistence, subscription_service=subscription_service)
 
 
 def get_plans_service(user=Depends(check_user_authentication),

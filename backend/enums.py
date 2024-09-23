@@ -27,6 +27,8 @@ class SettingStatus(Enum):
     RESEND_TOO_SOON = "RESEND_TOO_SOON"
     EMAIL_NOT_CONFIRMED = "EMAIL_NOT_CONFIRMED"
     FAILED = 'FAILED'
+    ALREADY_INVITED = 'ALREADY_INVITED'
+    INVITATION_LIMIT_REACHED = 'INVITATION_LIMIT_REACHED'
 
 
 class VerificationEmail(Enum):
@@ -87,6 +89,7 @@ class SendgridTemplate(Enum):
     FORGOT_PASSWORD_TEMPLATE = 'forgot_password_template'
     SEND_PIXEL_CODE_TEMPLATE = 'send_pixel_code_template'
     CHANGE_EMAIL_TEMPLATE = 'change_email_template'
+    TEAM_MEMBERS_TEMPLATE = 'team_members_template'
 
 
 class ResetPasswordEnum(Enum):

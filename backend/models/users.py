@@ -13,7 +13,7 @@ class Users(Base):
     is_company_details_filled = Column(BOOLEAN, default=False, nullable=True)
     password = Column(VARCHAR, nullable=True)
     full_name = Column(VARCHAR, nullable=True)
-    parent_id = Column(BIGINT, nullable=True)
+    teams_owner_id = Column(BIGINT, nullable=True)
     image = Column(VARCHAR, nullable=True)
     company_name = Column(VARCHAR, nullable=True)
     company_website = Column(VARCHAR, nullable=True)
@@ -40,6 +40,11 @@ class Users(Base):
     leads_credits = Column(INTEGER, nullable=True, default=0)
     prospect_credits = Column(INTEGER, nullable=True, default=0)
     is_leads_auto_charging = Column(BOOLEAN, default=True, nullable=False)
+    last_signed_in = Column(TIMESTAMP(precision=7), nullable=True)
+    access_level = Column(VARCHAR(32), nullable=True)
+    invited_by = Column(VARCHAR(32), nullable=True)
+    added_on = Column(TIMESTAMP(precision=7), nullable=True)
+    access_level = Column(VARCHAR(32), nullable=True)
 
 
 User = Users

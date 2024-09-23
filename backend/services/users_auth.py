@@ -52,7 +52,6 @@ class UsersAuth:
             created_at=self.get_utc_aware_date_for_mssql(),
             last_login=self.get_utc_aware_date_for_mssql(),
             payment_status=StripePaymentStatusEnum.PENDING.name,
-            parent_id=0,
             customer_id=customer_id,
         )
         if not is_without_card:
@@ -62,6 +61,7 @@ class UsersAuth:
         return user_object
 
     def create_account_google(self, auth_google_data: AuthGoogleData):
+        teams_owner_mail = AuthGoogleData.teams_owner_mail
         client_id = os.getenv("CLIENT_GOOGLE_ID")
         google_request = google_requests.Request()
         is_without_card = auth_google_data.is_without_card
@@ -92,7 +92,8 @@ class UsersAuth:
 
         customer_id = stripe_service.create_customer_google(google_payload)
         user_object = self.add_user(is_without_card=is_without_card, customer_id=customer_id, user_form=google_payload)
-        self.user_persistence_service.update_user_parent_v2(user_object.id)
+        if teams_owner_mail:
+            self.user_persistence_service.update_teams_owner_id(user_object.id, teams_owner_mail)
         token_info = {
             "id": user_object.id,
         }
@@ -189,6 +190,7 @@ class UsersAuth:
             }
 
     def create_account(self, user_form: UserSignUpForm):
+        teams_owner_mail = user_form.teams_owner_mail
         if not user_form.password:
             logger.debug("The password must not be empty.")
             return {
@@ -217,7 +219,8 @@ class UsersAuth:
             "password": user_form.password,
         }
         user_object = self.add_user(is_without_card, customer_id, user_form=user_data)
-        self.user_persistence_service.update_user_parent_v2(user_object.id)
+        if teams_owner_mail:
+            self.user_persistence_service.update_teams_owner_id(user_object.id, teams_owner_mail)
         token_info = {
             "id": user_object.id,
         }

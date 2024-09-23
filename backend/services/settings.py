@@ -6,6 +6,7 @@ from models.users import User
 from persistence.sendgrid_persistence import SendgridPersistence
 from persistence.user_persistence import UserPersistence
 from persistence.plans_persistence import PlansPersistence
+from services.subscriptions import SubscriptionService
 from sqlalchemy.orm import Session
 from .jwt_service import get_password_hash, create_access_token, decode_jwt_data, verify_password
 from schemas.settings import AccountDetailsRequest
@@ -21,9 +22,11 @@ OVERAGE_CONTACT = 1
 
 class SettingsService:
 
-    def __init__(self, db: Session, settings_persistence: SettingsPersistence, plan_persistence: PlansPersistence, user_persistence: UserPersistence, send_grid_persistence: SendgridPersistence):
+    def __init__(self, settings_persistence: SettingsPersistence, plan_persistence: PlansPersistence, user_persistence: UserPersistence, send_grid_persistence: SendgridPersistence,
+                 subscription_service: SubscriptionService):
         self.settings_persistence = settings_persistence
         self.plan_persistence = plan_persistence
+        self.subscription_service = subscription_service
         self.user_persistence = user_persistence
         self.send_grid_persistence = send_grid_persistence
 
@@ -117,8 +120,65 @@ class SettingsService:
                 'user_token': user_token
             }
         return {'status': VerifyToken.INCORRECT_TOKEN}
-        
     
+    def get_teams(self, user: dict):
+        result = {}
+        teams_data = self.settings_persistence.get_teams_by_userid(user_id=user.get('id'))
+        for team_data in teams_data:
+            result['mail'] = team_data.email
+            result['last_sign_in'] = team_data.last_signed_in
+            result['access_level'] = team_data.access_level
+            result['invited_by'] = team_data.invited_by
+            result['added_on'] = team_data.added_on
+        return result
+            
+        
+    def get_pending_invations(self, user: dict):
+        result = {}
+        invations_data = self.settings_persistence.get_pending_invations_by_userid(user_id=user.get('id'))
+        for invation_data in invations_data:
+            result['mail'] = invation_data.email
+            result['access_level'] = invation_data.access_level
+            result['invited_by'] = invation_data.invited_by
+            result['status'] = invation_data.invited_by
+        return result
+    
+    def invite_user(self, user: dict, invite_user, access_level='read_only'):
+        user_limit = self.subscription_service.check_invitation_limit(user_id=user.get('id'))
+        if user_limit is False:
+            return SettingStatus.INVITATION_LIMIT_REACHED
+        exists_team_member = self.settings_persistence.exists_team_member(user_id=user.get('id'), user_mail=invite_user)
+        if exists_team_member:
+            return SettingStatus.ALREADY_INVITED
+        template_id = self.send_grid_persistence.get_template_by_alias(
+                SendgridTemplate.TEAM_MEMBERS_TEMPLATE.value)
+        if not template_id:
+            logger.info("template_id is None")
+            return SettingStatus.FAILED
+        
+        confirm_email_url = f"{os.getenv('SITE_HOST_URL')}/send-sign-up-invitation/?teams_owner_mail={user.get('email')}&user_mail={invite_user}&access_level{access_level}"
+        mail_object = SendgridHandler()
+        mail_object.send_sign_up_mail(
+            to_emails=invite_user,
+            template_id=template_id,
+            template_placeholder={"full_name": invite_user, "link": confirm_email_url,
+                                    },
+        )
+        
+        self.settings_persistence.save_pending_invations_by_userid(user_id=user.get('id'), user_mail=invite_user, access_level=access_level)
+        invitation_limit = -1
+        self.subscription_service.update_invitation_limit(user_id=user.get('id'), invitation_limit=invitation_limit)
+        return SettingStatus.SUCCESS 
+    
+    def change_teams(self, user: dict, teams_details):
+        pending_invitation_revoke = teams_details.pending_invitation_revoke
+        remove_user = teams_details.remove_user
+        if pending_invitation_revoke:
+            self.settings_persistence.pending_invitation_revoke(user_id=user.get('id'), mail=pending_invitation_revoke)
+        if remove_user:
+            self.settings_persistence.team_members_remove(user_id=user.get('id'), mail=remove_user)
+        
+        
     def timestamp_to_date(self, timestamp):
         return datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d')
             

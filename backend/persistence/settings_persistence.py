@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import update
 from datetime import datetime
 from models.users import Users
+from models.teams_invitations import TeamsInvitations
 
 class SettingsPersistence:
     def __init__(self, db: Session):
@@ -69,3 +70,50 @@ class SettingsPersistence:
         self.db.add(new_api_key)
         self.db.commit()
         
+    def get_teams_by_userid(self, user_id):
+        return self.db.query(User).filter(User.teams_owner_id == user_id).all()
+    
+    def get_pending_invations_by_userid(self, user_id):
+        return self.db.query(TeamsInvitations).filter(TeamsInvitations.teams_owner_id == user_id).all()
+    
+    def exists_team_member(self, user_id, user_mail):
+        pending_invitations = (
+            self.db.query(TeamsInvitations)
+            .filter(
+                TeamsInvitations.mail == user_mail,
+                TeamsInvitations.teams_owner_id == user_id
+            )
+            .first()
+        )
+        
+        if pending_invitations:
+            return True
+
+        user_id = self.db.query(User.id).filter(User.email == user_mail).scalar()
+        
+        if user_id:
+            user_team_member = self.db.query(User).filter(User.teams_owner_id == user_id).first()
+            if user_team_member:
+                return True
+            
+        return False
+
+    
+    def save_pending_invations_by_userid(self, user_id, user_mail, access_level):
+        user_email = self.db.query(User.email).filter(User.id == user_id).scalar()
+        teams_invitation = TeamsInvitations(mail=user_mail, access_level=access_level, status='pending', invited_by=user_email, date_invited = datetime.now(), teams_owner_id = user_id)
+        self.db.add(teams_invitation)
+        self.db.commit()
+        
+    def pending_invitation_revoke(self, user_id, mail):
+        self.db.query(TeamsInvitations).filter(
+            TeamsInvitations.mail == mail,
+            TeamsInvitations.teams_owner_id == user_id
+        ).delete()
+        self.db.commit()
+        
+    def team_members_remove(self, user_id, mail):
+        self.db.query(Users).filter(Users.email == mail, Users.teams_owner_id == user_id).update(
+            {Users.teams_owner_id: None},
+            synchronize_session=False)
+        self.db.commit()

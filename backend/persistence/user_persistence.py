@@ -63,7 +63,7 @@ class UserPersistence:
                 "is_with_card": user.is_with_card,
                 "is_company_details_filled": user.is_company_details_filled,
                 "full_name": user.full_name,
-                "parent_id": user.parent_id,
+                "teams_owner_id": user.teams_owner_id,
                 "image": user.image,
                 "company_name": user.company_name,
                 "company_website": user.company_website,
@@ -89,8 +89,9 @@ class UserPersistence:
         self.db.rollback()
         return result_user
 
-    def update_user_parent_v2(self, parent_id: int):
-        self.db.query(Users).filter(Users.id == parent_id).update({Users.parent_id: parent_id},
+    def update_teams_owner_id(self, user_id, teams_owner_mail):
+        teams_owner_id = self.db.query(Users.id).where(Users.email == teams_owner_mail).scalar()
+        self.db.query(Users).filter(Users.id == user_id).update({Users.teams_owner_id: teams_owner_id},
                                                                   synchronize_session=False)
         self.db.commit()
 

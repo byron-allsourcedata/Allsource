@@ -24,9 +24,17 @@ def change_email_account_details(settings_service: SettingsService = Depends(get
 def get_teams(settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authorization_without_pixel)):
     return settings_service.get_teams(user=user)
 
+@router.get("/teams/pending-invations")
+def get_pending_invations(settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authorization_without_pixel)):
+    return settings_service.get_pending_invations(user=user)
+
 @router.put("/teams")
 def change_teams(teams_details: TeamsDetailsRequest, settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authorization_without_pixel)):
-    return settings_service.change_teams_details(user=user, teams_details=teams_details)
+    return settings_service.change_teams(user=user, teams_details=teams_details)
+
+@router.post("/teams")
+def invite_user(teams_details: TeamsDetailsRequest, settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authorization_without_pixel)):
+    return settings_service.invite_user(user=user, invite_user=teams_details.invite_user, access_level=teams_details.access_level)
 
 @router.get("/billing")
 def get_billing(
