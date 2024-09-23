@@ -2,17 +2,17 @@ from fastapi import APIRouter, Depends, Request as fastRequest, Query
 from models.users import User
 from services.settings import SettingsService
 from schemas.settings import AccountDetailsRequest, TeamsDetailsRequest, ResetEmailForm, PaymentCard, ApiKeysRequest
-from dependencies import get_settings_service, check_user_authorization_without_pixel
+from dependencies import get_settings_service, check_user_authorization_without_pixel, check_user_authentication
 from schemas.users import VerifyTokenResponse
 router = APIRouter()
 
 
 @router.get("/account-details")
-def get_account_details(settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authorization_without_pixel)):
+def get_account_details(settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authentication)):
     return settings_service.get_account_details(user=user)
 
 @router.put("/account-details")
-def change_account_details(account_details: AccountDetailsRequest, settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authorization_without_pixel)):
+def change_account_details(account_details: AccountDetailsRequest, settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authentication)):
     return settings_service.change_account_details(user=user, account_details=account_details)
 
 @router.get("/account-details/change-email")

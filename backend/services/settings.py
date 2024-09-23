@@ -173,7 +173,6 @@ class SettingsService:
         token_info = {
                     'id': user.get('id'),
                     'user_teams_mail': invite_user
-                    
                 }
         token = create_access_token(token_info)           
         confirm_email_url = f"{os.getenv('SITE_HOST_URL')}/authentication/verify-token?token={token}&user_teams_mail={invite_user}"
