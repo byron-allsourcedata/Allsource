@@ -38,8 +38,7 @@ def invite_user(teams_details: TeamsDetailsRequest, settings_service: SettingsSe
 
 @router.get("/teams/sign-up")
 def sign_up_in_teams(settings_service: SettingsService = Depends(get_settings_service), token: str = Query(...)):
-    result = settings_service.sign_up_in_teams(token=token)
-    return result
+    return settings_service.sign_up_in_teams(token=token)
 
 @router.get("/billing")
 def get_billing(
