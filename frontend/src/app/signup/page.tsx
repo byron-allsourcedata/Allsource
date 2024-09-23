@@ -20,9 +20,9 @@ const Signup: React.FC = () => {
 
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
-  const team_owner_mail = searchParams.get('team_owner_mail');
   const user_teams_mail = searchParams.get('user_teams_mail');
-  const [formValues, setFormValues] = useState({ full_name: '', email: user_teams_mail, password: '', is_without_card: isWithoutCard ? 'true' : 'false', termsAccepted: false, team_owner_mail: team_owner_mail });
+  const token = searchParams.get('token');
+  const [formValues, setFormValues] = useState({ full_name: '', email: user_teams_mail, password: '', is_without_card: isWithoutCard ? 'true' : 'false', termsAccepted: false, token: token });
   const [formSubmitted, setFormSubmitted] = useState(false);
 
 
@@ -245,7 +245,7 @@ const Signup: React.FC = () => {
               try {
                 const response = await axiosInstance.post('/sign-up-google', {
                   token: credentialResponse.credential,
-                  ...(team_owner_mail && { team_owner_mail })
+                  ...(token && { token })
                 });
 
                 const responseData = response.data;

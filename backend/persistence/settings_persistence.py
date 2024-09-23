@@ -2,6 +2,7 @@ from models.users import User
 from models.api_keys import ApiKeys
 from sqlalchemy.orm import Session
 from sqlalchemy import update
+from sqlalchemy.orm import aliased
 from datetime import datetime
 from models.users import Users
 from models.teams_invitations import TeamsInvitations
@@ -78,7 +79,12 @@ class SettingsPersistence:
         self.db.commit()
         
     def get_teams_by_userid(self, user_id):
-        return self.db.query(User).filter(User.team_owner_id == user_id).all()
+        inviter = aliased(User)
+        invited = aliased(User)
+        return self.db.query(invited, inviter.mail).join(inviter, invited.invited_by_user_id == inviter.id) \
+            .filter(invited.team_owner_id == user_id) \
+            .order_by(inviter.mail).all()
+
     
     def get_pending_invations_by_userid(self, user_id):
         return self.db.query(TeamsInvitations).filter(TeamsInvitations.teams_owner_id == user_id).all()
@@ -107,8 +113,7 @@ class SettingsPersistence:
 
     
     def save_pending_invations_by_userid(self, user_id, user_mail, access_level, token):
-        user_email = self.db.query(User.email).filter(User.id == user_id).scalar()
-        teams_invitation = TeamsInvitations(mail=user_mail, access_level=access_level, status='pending', invited_by=user_email, date_invited = datetime.now(), teams_owner_id = user_id, token_invitation=token)
+        teams_invitation = TeamsInvitations(mail=user_mail, access_level=access_level, status='pending', date_invited = datetime.now(), teams_owner_id = user_id)
         self.db.add(teams_invitation)
         self.db.commit()
         

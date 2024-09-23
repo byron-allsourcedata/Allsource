@@ -61,7 +61,7 @@ class UsersAuth:
         return user_object
 
     def create_account_google(self, auth_google_data: AuthGoogleData):
-        teams_owner_mail = AuthGoogleData.teams_owner_mail
+        token = AuthGoogleData.token
         client_id = os.getenv("CLIENT_GOOGLE_ID")
         google_request = google_requests.Request()
         is_without_card = auth_google_data.is_without_card
@@ -92,12 +92,22 @@ class UsersAuth:
 
         customer_id = stripe_service.create_customer_google(google_payload)
         user_object = self.add_user(is_without_card=is_without_card, customer_id=customer_id, user_form=google_payload)
-        if teams_owner_mail:
-            teams_owner_id =self.user_persistence_service.update_teams_owner_id(user_object.id, user_object.email,teams_owner_mail)
-            token_info = {
-                "id": teams_owner_id,
-                "team_member_id": user_object.id
-            }
+        if token:
+            try:
+                data = decode_jwt_data(token)
+            except:
+                raise ValueError(VerifyToken.INCORRECT_TOKEN)
+
+            check_user_object = self.user_persistence.get_user_by_id(data.get('id'))
+            
+            if check_user_object:
+                if self.user_persistence.check_status_invitations(team_owner_id=data.get('id'), mail=data.get('user_teams_mail')):
+                    owner_id = data.get('id')
+                    teams_owner_id = self.user_persistence_service.update_teams_owner_id(user_object.id, user_object.email, owner_id)
+                    token_info = {
+                        "id": teams_owner_id,
+                        "team_member_id": user_object.id
+                    }
         else:
             token_info = {
                 "id": user_object.id,
@@ -201,7 +211,7 @@ class UsersAuth:
             }
 
     def create_account(self, user_form: UserSignUpForm):
-        team_owner_mail = user_form.team_owner_mail
+        token = user_form.token
         if not user_form.password:
             logger.debug("The password must not be empty.")
             return {
@@ -230,12 +240,21 @@ class UsersAuth:
             "password": user_form.password,
         }
         user_object = self.add_user(is_without_card, customer_id, user_form=user_data)
-        if team_owner_mail:
-            teams_owner_id =self.user_persistence_service.update_teams_owner_id(user_object.id, user_object.email, team_owner_mail)
-            token_info = {
-                "id": teams_owner_id,
-                "team_member_id": user_object.id
-            }
+        if token:
+            try:
+                data = decode_jwt_data(token)
+            except:
+                raise ValueError(VerifyToken.INCORRECT_TOKEN)
+
+            check_user_object = self.user_persistence.get_user_by_id(data.get('id'))
+            if check_user_object:
+                if self.user_persistence.check_status_invitations(team_owner_id=data.get('id'), mail=data.get('user_teams_mail')):
+                    owner_id = data.get('id')
+                    self.user_persistence_service.update_teams_owner_id(user_object.id, user_object.email, owner_id)
+                    token_info = {
+                        "id": owner_id,
+                        "team_member_id": user_object.id
+                    }
         else:
             token_info = {
                 "id": user_object.id,

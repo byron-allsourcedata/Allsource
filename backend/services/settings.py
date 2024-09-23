@@ -120,41 +120,33 @@ class SettingsService:
             }
         return {'status': VerifyToken.INCORRECT_TOKEN}
     
-    def sign_up_in_teams(self, token):
-        try:
-            data = decode_jwt_data(token)
-        except:
-            return {'status': VerifyToken.INCORRECT_TOKEN}
-        
-        check_user_object = self.user_persistence.get_user_by_id(data.get('id'))
-        if check_user_object:
-            if self.settings_persistence.check_status_invitations(team_owner_id=data.get('id'), mail=data.get('user_teams_mail')):
-                return {
-                    'team_owner_mail': check_user_object.get('email'),
-                    'status': VerifyToken.SUCCESS
-                }
-        return {'status': VerifyToken.UNSUCCES}
-    
     def get_teams(self, user: dict):
-        result = {}
+        result = []
         teams_data = self.settings_persistence.get_teams_by_userid(user_id=user.get('id'))
         for team_data in teams_data:
-            result['mail'] = team_data.email
-            result['last_sign_in'] = team_data.last_signed_in
-            result['access_level'] = team_data.access_level
-            result['invited_by'] = team_data.invited_by
-            result['added_on'] = team_data.added_on
+            invited, inviter_mail = team_data
+            team_info = {
+                'mail': invited.email,
+                'last_sign_in': invited.last_signed_in,
+                'access_level': invited.access_level,
+                'invited_by': inviter_mail,
+                'added_on': invited.added_on
+            }
+            result.append(team_info)
         return result
             
         
     def get_pending_invations(self, user: dict):
-        result = {}
+        result = []
         invations_data = self.settings_persistence.get_pending_invations_by_userid(user_id=user.get('id'))
         for invation_data in invations_data:
-            result['mail'] = invation_data.email
-            result['access_level'] = invation_data.access_level
-            result['invited_by'] = invation_data.invited_by
-            result['status'] = invation_data.invited_by
+            team_info = {
+                'mail': invation_data.email,
+                'access_level': invation_data.access_level,
+                'data_invited': invation_data.date_invited,
+                'status': invation_data.status
+            }
+            result.append(team_info)
         return result
     
     def invite_user(self, user: dict, invite_user, access_level='read_only'):
@@ -175,7 +167,7 @@ class SettingsService:
                     'user_teams_mail': invite_user
                 }
         token = create_access_token(token_info)           
-        confirm_email_url = f"{os.getenv('SITE_HOST_URL')}/authentication/verify-token?token={token}&user_teams_mail={invite_user}"
+        confirm_email_url = f"{os.getenv('SITE_HOST_URL')}/sign_up?token={token}&user_teams_mail={invite_user}"
         mail_object = SendgridHandler()
         mail_object.send_sign_up_mail(
             to_emails=invite_user,

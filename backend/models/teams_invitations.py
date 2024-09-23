@@ -13,8 +13,8 @@ class TeamsInvitations(Base):
     mail = Column(VARCHAR, nullable=True)
     access_level = Column(VARCHAR, nullable=True)
     status = Column(VARCHAR, nullable=False)
-    invited_by = Column(VARCHAR, nullable=False)
     date_invited = Column(TIMESTAMP(precision=7), nullable=True)
+    invited_by_id = Column(BIGINT, nullable=True)
     team_owner_id = Column(BIGINT, nullable=True)
 
 event.listen(TeamsInvitations, "before_insert", create_timestamps)

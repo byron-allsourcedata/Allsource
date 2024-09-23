@@ -11,7 +11,6 @@ const VerifyToken = () => {
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
   const mail = searchParams.get('mail');
-  const user_teams_mail = searchParams.get('user_teams_mail');
 
   useEffect(() => {
     document.body.style.overflow = 'hidden';
@@ -42,29 +41,6 @@ const VerifyToken = () => {
               setTimeout(() => {
                 router.push('/settings');
               }, 2500);
-            }
-          } 
-          else if (user_teams_mail) {
-            const response = await axiosInstance.get(`settings/teams/sign-up?token=${token}`);
-            if (typeof window !== 'undefined') {
-              if (response.data.status === 'SUCCESS') {
-                showToast('You have successfully verified your token')
-                const team_owner_mail = response.data.team_owner_mail;
-                setTimeout(() => {
-                  router.push(`/signup?team_owner_mail=${team_owner_mail}&user_teams_mail=${user_teams_mail}`);
-                }, 2500);
-              }
-              else if (response.data.status === 'INCORRECT_TOKEN') {
-                showErrorToast('The link is incorrect or outdated')
-              }
-              else if (response.data.status === 'UNSUCCES') {
-                showErrorToast('Unsuccessful operation')
-              }
-              else{
-                setTimeout(() => {
-                  router.push('/signup');
-                }, 2500);
-              }
             }
           }
           else {

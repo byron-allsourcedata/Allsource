@@ -42,7 +42,7 @@ class Users(Base):
     is_leads_auto_charging = Column(BOOLEAN, default=True, nullable=False)
     last_signed_in = Column(TIMESTAMP(precision=7), nullable=True)
     team_access_level = Column(VARCHAR(32), nullable=True)
-    invited_by = Column(VARCHAR(32), nullable=True)
+    invited_by_id = Column(VARCHAR(32), nullable=True)
     added_on = Column(TIMESTAMP(precision=7), nullable=True)
 
 

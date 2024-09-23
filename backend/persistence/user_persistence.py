@@ -102,17 +102,23 @@ class UserPersistence:
         self.db.rollback()
         return result_user
 
-    def update_teams_owner_id(self, user_id, mail, teams_owner_mail):
-        teams_owner_id = self.db.query(Users.id).where(Users.email == teams_owner_mail).scalar()
-        self.db.query(Users).filter(Users.id == user_id).update({Users.team_owner_id: teams_owner_id},
-                                                                  synchronize_session=False)
-        
-        self.db.query(TeamsInvitations).filter(
+    def update_teams_owner_id(self, user_id, mail, owner_id):
+        teams_invitation = self.db.query(TeamsInvitations).filter(
             TeamsInvitations.mail == mail,
-            TeamsInvitations.teams_owner_id == teams_owner_id
-        ).delete()
+            TeamsInvitations.teams_owner_id == owner_id
+        ).first()
+        
+        self.db.query(Users).filter(Users.id == user_id).update({
+            Users.team_owner_id: owner_id,
+            Users.team_access_level: teams_invitation.team_owner_id,
+            Users.invited_by_id: teams_invitation.invited_by_id,
+            Users.added_on: datetime.now()
+        }, synchronize_session=False)
+
+        self.db.delete(teams_invitation)
+        
         self.db.commit()
-        return teams_owner_id
+
 
     def email_confirmed(self, user_id: int):
         query = self.db.query(Users).filter(Users.id == user_id)
