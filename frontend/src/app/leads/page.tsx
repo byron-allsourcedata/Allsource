@@ -542,7 +542,6 @@ const Leads: React.FC = () => {
 
 
         setSelectedFilters(newSelectedFilters);
-        console.log(newSelectedFilters)
         setActiveFilter(filters.selectedStatus?.[0] || '');
         setFilterParams(filters);
     };
@@ -571,12 +570,10 @@ const Leads: React.FC = () => {
         const updatedFilters = selectedFilters.filter(filter => filter.label !== filterToDelete.label);
 
         setSelectedFilters(updatedFilters);
-        console.log(updatedFilters)
 
         const filters = JSON.parse(sessionStorage.getItem('filters') || '{}');
-        console.log(filters)
 
-        // Удаляем фильтр в зависимости от его label
+
         switch (filterToDelete.label) {
             case 'From Date':
                 filters.from_date = null;
@@ -656,7 +653,7 @@ const Leads: React.FC = () => {
             }
         }
 
-        // Сохраняем обновленные фильтры в sessionStorage
+
         sessionStorage.setItem('filters', JSON.stringify(filters));
 
         if (filterToDelete.label === 'Dates') {
@@ -704,9 +701,6 @@ const Leads: React.FC = () => {
             to_time: updatedFilters.find(f => f.label === 'To Time') ? updatedFilters.find(f => f.label === 'To Time')!.value : null
         };
 
-        console.log(updatedFilters)
-        console.log(newFilters.from_date)
-        console.log(newFilters.to_date)
 
         // Применяем обновленные фильтры
         handleApplyFilters(newFilters);
