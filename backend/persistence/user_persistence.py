@@ -52,7 +52,6 @@ class UserPersistence:
 
     def get_user_by_id(self, user_id):
         user = self.db.query(Users).filter(Users.id == user_id).first()
-        users_domain = self.db.query(UserDomains).filter(UserDomains.user_id == user.id, UserDomains.is_pixel_installed == True).first()
         result_user = None
         if user:
             result_user = {
