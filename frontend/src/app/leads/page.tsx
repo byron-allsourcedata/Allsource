@@ -21,6 +21,7 @@ import dayjs from 'dayjs';
 import PopupDetails from '@/components/AccountDetails';
 import CloseIcon from '@mui/icons-material/Close';
 import CustomizedProgressBar from '@/components/CustomizedProgressBar';
+import Tooltip from '@mui/material/Tooltip';
 
 
 
@@ -314,27 +315,11 @@ const Leads: React.FC = () => {
         }
     };
 
-    const handleFilterChange = (filter: string) => {
-        setActiveFilter(filter);
-        setSelectedFilters([]);
-        setPage(0);
-    };
 
     const installPixel = () => {
         router.push('/dashboard');
     };
 
-    const handleSelectRow = (id: number) => {
-        setSelectedRows((prevSelectedRows) => {
-            const newSelectedRows = new Set(prevSelectedRows);
-            if (newSelectedRows.has(id)) {
-                newSelectedRows.delete(id);
-            } else {
-                newSelectedRows.add(id);
-            }
-            return newSelectedRows;
-        });
-    };
 
     const handleChangeRowsPerPage = (event: React.ChangeEvent<{ value: unknown }>) => {
         setRowsPerPage(parseInt(event.target.value as string, 10));
@@ -545,6 +530,9 @@ const Leads: React.FC = () => {
             });
         }
 
+
+
+
         // Iterate over the mappings to populate newSelectedFilters
         filterMappings.forEach(({ condition, label, value }) => {
             if (condition) {
@@ -554,6 +542,7 @@ const Leads: React.FC = () => {
 
 
         setSelectedFilters(newSelectedFilters);
+        console.log(newSelectedFilters)
         setActiveFilter(filters.selectedStatus?.[0] || '');
         setFilterParams(filters);
     };
@@ -582,8 +571,10 @@ const Leads: React.FC = () => {
         const updatedFilters = selectedFilters.filter(filter => filter.label !== filterToDelete.label);
 
         setSelectedFilters(updatedFilters);
+        console.log(updatedFilters)
 
         const filters = JSON.parse(sessionStorage.getItem('filters') || '{}');
+        console.log(filters)
 
         // Удаляем фильтр в зависимости от его label
         switch (filterToDelete.label) {
@@ -675,8 +666,8 @@ const Leads: React.FC = () => {
 
         // Обновляем фильтры для применения
         const newFilters: FilterParams = {
-            from_date: updatedFilters.find(f => f.label === 'From Date') ? Number(updatedFilters.find(f => f.label === 'From Date')!.value) : null,
-            to_date: updatedFilters.find(f => f.label === 'To Date') ? Number(updatedFilters.find(f => f.label === 'To Date')!.value) : null,
+            from_date: updatedFilters.find(f => f.label === 'From Date') ? dayjs(updatedFilters.find(f => f.label === 'From Date')!.value).unix() : null,
+            to_date: updatedFilters.find(f => f.label === 'To Date') ? dayjs(updatedFilters.find(f => f.label === 'To Date')!.value).unix() : null,
             selectedStatus: updatedFilters.find(f => f.label === 'Visitor Type') ? updatedFilters.find(f => f.label === 'Visitor Type')!.value.split(', ') : [],
             regions: updatedFilters.find(f => f.label === 'Regions') ? updatedFilters.find(f => f.label === 'Regions')!.value.split(', ') : [],
             emails: updatedFilters.find(f => f.label === 'Emails') ? updatedFilters.find(f => f.label === 'Emails')!.value.split(', ') : [],
@@ -691,10 +682,10 @@ const Leads: React.FC = () => {
                 allTime: updatedFilters.some(f => f.label === 'Date Range' && f.value === 'allTime')
             },
             checkedFiltersPageVisits: {
-                page: updatedFilters.some(f => f.label === 'Page Visits' && f.value === '1 page'),
-                two_page: updatedFilters.some(f => f.label === 'Page Visits' && f.value === '2 pages'),
-                three_page: updatedFilters.some(f => f.label === 'Page Visits' && f.value === '3 pages'),
-                more_three: updatedFilters.some(f => f.label === 'Page Visits' && f.value === 'more than 3 pages')
+                page: updatedFilters.some(f => f.label === 'Page Visits' && f.value.split(', ').includes('1 page')),
+                two_page: updatedFilters.some(f => f.label === 'Page Visits' && f.value.split(', ').includes('2 pages')),
+                three_page: updatedFilters.some(f => f.label === 'Page Visits' && f.value.split(', ').includes('3 pages')),
+                more_three: updatedFilters.some(f => f.label === 'Page Visits' && f.value.split(', ').includes('more than 3 pages')),
             },
             checkedFiltersTime: {
                 morning: updatedFilters.some(f => f.label === 'Time of Day' && f.value === 'morning'),
@@ -703,15 +694,19 @@ const Leads: React.FC = () => {
                 all_day: updatedFilters.some(f => f.label === 'Time of Day' && f.value === 'all_day')
             },
             checkedFiltersTimeSpent: {
-                under_10: updatedFilters.some(f => f.label === 'Time Spent' && f.value === 'under 10'),
-                over_10: updatedFilters.some(f => f.label === 'Time Spent' && f.value === '10-30 secs'),
-                over_30: updatedFilters.some(f => f.label === 'Time Spent' && f.value === '30-60 secs'),
-                over_60: updatedFilters.some(f => f.label === 'Time Spent' && f.value === 'over 60 secs')
+                under_10: updatedFilters.some(f => f.label === 'Time Spent' && f.value.split(', ').includes('under 10')),
+                over_10: updatedFilters.some(f => f.label === 'Time Spent' && f.value.split(', ').includes('10-30 secs')),
+                over_30: updatedFilters.some(f => f.label === 'Time Spent' && f.value.split(', ').includes('30-60 secs')),
+                over_60: updatedFilters.some(f => f.label === 'Time Spent' && f.value.split(', ').includes('over 60 secs')),
             },
             recurringVisits: updatedFilters.find(f => f.label === 'Recurring Visits') ? updatedFilters.find(f => f.label === 'Recurring Visits')!.value.split(', ') : [],
             from_time: updatedFilters.find(f => f.label === 'From Time') ? updatedFilters.find(f => f.label === 'From Time')!.value : null,
             to_time: updatedFilters.find(f => f.label === 'To Time') ? updatedFilters.find(f => f.label === 'To Time')!.value : null
         };
+
+        console.log(updatedFilters)
+        console.log(newFilters.from_date)
+        console.log(newFilters.to_date)
 
         // Применяем обновленные фильтры
         handleApplyFilters(newFilters);
@@ -773,6 +768,21 @@ const Leads: React.FC = () => {
                 return {
                     background: 'rgba(244, 252, 238, 1)',
                     color: 'rgba(43, 91, 0, 1)',
+                };
+            case 'visitor':
+                return {
+                    background: 'rgba(235, 243, 254, 1)',
+                    color: 'rgba(20, 110, 246, 1)',
+                };
+            case 'Converted':
+                return {
+                    background: 'rgba(244, 252, 238, 1)',
+                    color: 'rgba(110, 193, 37, 1)',
+                };
+            case 'cart_abandoned':
+                return {
+                    background: 'rgba(254, 238, 236, 1)',
+                    color: 'rgba(244, 87, 69, 1)',
                 };
             default:
                 return {
@@ -937,6 +947,30 @@ const Leads: React.FC = () => {
         });
     };
 
+    const formatTimeSpent = (seconds: number): string => {
+        if (!seconds) return '--';
+
+        const hours = Math.floor(seconds / 3600); // Получаем часы
+        const minutes = Math.floor((seconds % 3600) / 60); // Получаем оставшиеся минуты
+        const remainingSeconds = seconds % 60; // Получаем оставшиеся секунды
+
+        let result = '';
+        if (hours > 0) {
+            result += `${hours} hr `;
+        }
+        if (minutes > 0) {
+            result += `${minutes} min `;
+        }
+        if (remainingSeconds > 0) {
+            result += `${remainingSeconds} sec`;
+        }
+
+        return result.trim();
+    };
+
+    const truncateText = (text: string, maxLength: number) => {
+        return text.length > maxLength ? `${text.slice(0, maxLength)}...` : text;
+    };
 
     return (
         <>
@@ -1142,7 +1176,7 @@ const Leads: React.FC = () => {
                             </Button>
                         </Box>
                     </Box>
-                    <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, mt: 2 }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, mt: 2, overflowX: 'scroll' }}>
                         {selectedFilters.length > 0 && (
                             <Chip
                                 label="Clear all"
@@ -1344,9 +1378,30 @@ const Leads: React.FC = () => {
 
                                                             }}>{row.first_name} {row.last_name}</TableCell>
                                                         <TableCell
-                                                            sx={{ ...leadsStyles.table_array, position: 'relative' }}>{row.personal_emails?.split(',')[0] || '--'}</TableCell>
+                                                            sx={{ ...leadsStyles.table_array, position: 'relative' }}>
+                                                            {row.personal_emails ? (
+                                                                <Tooltip title={row.personal_emails.split(',')[0]}>
+                                                                    <span className="truncate-email">
+                                                                        {truncateText(row.personal_emails.split(',')[0], 24)}
+                                                                    </span>
+                                                                </Tooltip>
+                                                            ) : (
+                                                                <span className="truncate-email">--</span>
+                                                            )}
+                                                        </TableCell>
+
                                                         <TableCell
-                                                            sx={{ ...leadsStyles.table_array, position: 'relative' }}>{row.business_email?.split(',')[0] || '--'}</TableCell>
+                                                            sx={{ ...leadsStyles.table_array, position: 'relative' }}>
+                                                            {row.business_email ? (
+                                                                <Tooltip title={row.business_email.split(',')[0]}>
+                                                                    <span className="truncate-email">
+                                                                        {truncateText(row.business_email.split(',')[0], 24)}
+                                                                    </span>
+                                                                </Tooltip>
+                                                            ) : (
+                                                                <span className="truncate-email">--</span>
+                                                            )}
+                                                        </TableCell>
                                                         <TableCell
                                                             sx={leadsStyles.table_array_phone}>{row.mobile_phone?.split(',')[0] || '--'}</TableCell>
                                                         <TableCell
@@ -1396,8 +1451,10 @@ const Leads: React.FC = () => {
                                                             </Box>
                                                         </TableCell>
 
-                                                        <TableCell
-                                                            sx={leadsStyles.table_array}>{`${row.time_spent} sec` || '--'}</TableCell>
+                                                        <TableCell sx={leadsStyles.table_array}>
+                                                            {row.time_spent ? formatTimeSpent(row.time_spent) : '--'}
+                                                        </TableCell>
+
                                                     </TableRow>
                                                 ))}
                                             </TableBody>
