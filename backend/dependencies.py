@@ -163,7 +163,10 @@ def check_user_authorization(Authorization: Annotated[str, Header()],
                                  get_user_persistence_service), subscription_service: SubscriptionService = Depends(
             get_subscription_service)) -> Token:
     user = check_user_authentication(Authorization, user_persistence_service)
-    auth_status = get_user_authorization_status(user, subscription_service)
+    if user.get('team_owner_id'):
+        auth_status = get_user_authorization_status(user.get('team_owner_id'), subscription_service)
+    else:
+        auth_status = get_user_authorization_status(user, subscription_service)
     if auth_status == UserAuthorizationStatus.PAYMENT_NEEDED:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -184,7 +187,10 @@ def check_user_authorization_without_pixel(Authorization: Annotated[str, Header(
                                            subscription_service: SubscriptionService = Depends(
                                                get_subscription_service)) -> Token:
     user = check_user_authentication(Authorization, user_persistence_service)
-    auth_status = get_user_authorization_status(user, subscription_service)
+    if user.get('team_owner_id'):
+        auth_status = get_user_authorization_status(user.get('team_owner_id'), subscription_service)
+    else:
+        auth_status = get_user_authorization_status(user, subscription_service)
     if auth_status == UserAuthorizationStatus.PAYMENT_NEEDED:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -309,10 +315,9 @@ def get_settings_service(settings_persistence: SettingsPersistence = Depends(
     return SettingsService(settings_persistence=settings_persistence, plan_persistence=plan_persistence, user_persistence=user_persistence, send_grid_persistence=send_grid_persistence, subscription_service=subscription_service)
 
 
-def get_plans_service(user=Depends(check_user_authentication),
-                      plans_persistence: PlansPersistence = Depends(get_plans_persistence),
+def get_plans_service(plans_persistence: PlansPersistence = Depends(get_plans_persistence),
                       subscription_service: SubscriptionService = Depends(get_subscription_service)):
-    return PlansService(plans_persistence=plans_persistence, user=user, subscription_service=subscription_service)
+    return PlansService(plans_persistence=plans_persistence, subscription_service=subscription_service)
 
 
 def get_webhook(subscription_service: SubscriptionService = Depends(get_subscription_service)):

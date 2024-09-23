@@ -5,6 +5,7 @@ from models.users_domains import UserDomains
 from models.plans import SubscriptionPlan
 from models.users import Users
 from models.subscriptions import UserSubscriptions
+from models.teams_invitations import TeamsInvitations
 import logging
 
 logger = logging.getLogger(__name__)
@@ -62,7 +63,7 @@ class UserPersistence:
                 "is_with_card": user.is_with_card,
                 "is_company_details_filled": user.is_company_details_filled,
                 "full_name": user.full_name,
-                "teams_owner_id": user.team_owner_id,
+                "team_owner_id": user.team_owner_id,
                 "image": user.image,
                 "company_name": user.company_name,
                 "company_website": user.company_website,
@@ -88,10 +89,15 @@ class UserPersistence:
         self.db.rollback()
         return result_user
 
-    def update_teams_owner_id(self, user_id, teams_owner_mail):
+    def update_teams_owner_id(self, user_id, mail, teams_owner_mail):
         teams_owner_id = self.db.query(Users.id).where(Users.email == teams_owner_mail).scalar()
         self.db.query(Users).filter(Users.id == user_id).update({Users.team_owner_id: teams_owner_id},
                                                                   synchronize_session=False)
+        
+        self.db.query(TeamsInvitations).filter(
+            TeamsInvitations.mail == mail,
+            TeamsInvitations.teams_owner_id == teams_owner_id
+        ).delete()
         self.db.commit()
 
     def email_confirmed(self, user_id: int):

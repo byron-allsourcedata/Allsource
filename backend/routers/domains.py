@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends, Response, Request
+from fastapi import APIRouter, HTTPException, Depends, Response, Request, status
 from fastapi.responses import JSONResponse
 from dependencies import get_domain_service, check_user_authentication, UserDomainsService
 from schemas.domains import DomainScheme
@@ -10,6 +10,13 @@ router = APIRouter(prefix='/domains', tags=['Domains'])
 def create_domain(domain_data: DomainScheme,
                   domain_service: UserDomainsService = Depends(get_domain_service),
                   user = Depends(check_user_authentication)):
+    
+    if user.team_owner_id is not None and (user.access_level != 'admin' or user.access_level != 'standard'):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied. Admins and standard only."
+        )
+        
     domain = domain_service.create(user, domain_data.domain)
     if not domain:
         raise HTTPException(status_code=400, detail={'status': 'Domain creation failed'})
@@ -27,5 +34,10 @@ def list_domain(request: Request = None,
 @router.delete('/{domain_id}')
 def delete_domain(domain_id: int, domain_service: UserDomainsService = Depends(get_domain_service),
                   user = Depends(check_user_authentication)):
+    if user.team_owner_id is not None and (user.access_level != 'admin' or user.access_level != 'standard'):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied. Admins and standard only."
+        )
     domain_service.delete_domain(user.get('id'), domain_id)
     return {'status': "SUCCESS"}
