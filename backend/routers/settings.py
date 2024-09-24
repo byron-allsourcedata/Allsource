@@ -23,7 +23,7 @@ def change_email_account_details(settings_service: SettingsService = Depends(get
 
 @router.get("/teams")
 def get_teams(settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authorization_without_pixel)):
-    return settings_service.get_teams(user=user)
+    return settings_service.get_team_members(user=user)
 
 @router.get("/teams/pending-invations")
 def get_pending_invations(settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authorization_without_pixel)):

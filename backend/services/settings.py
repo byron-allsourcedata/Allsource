@@ -122,9 +122,9 @@ class SettingsService:
             }
         return {'status': VerifyToken.INCORRECT_TOKEN}
     
-    def get_teams(self, user: dict):
+    def get_team_members(self, user: dict):
         result = []
-        teams_data = self.settings_persistence.get_teams_by_userid(user_id=user.get('id'))
+        teams_data = self.settings_persistence.get_team_members_by_userid(user_id=user.get('id'))
         for team_data in teams_data:
             invited, inviter_mail = team_data
             team_info = {

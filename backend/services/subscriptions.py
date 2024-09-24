@@ -322,7 +322,7 @@ class SubscriptionService:
         plan_type = determine_plan_name_from_product_id(
             stripe_payload.get("data").get("object").get("plan").get("product"))
         plan_id = self.plans_persistence.get_plan_by_title(plan_type)
-        domains_limit, users_limit, integrations_limit, leads_credits, prospect_credits = self.plans_persistence.get_plan_limit_by_id(
+        domains_limit, users_limit, integrations_limit, leads_credits, prospect_credits, members_limit = self.plans_persistence.get_plan_limit_by_id(
             plan_id=plan_id)
         if status != "canceled":
             user_subscription.plan_start = start_date
@@ -331,6 +331,7 @@ class SubscriptionService:
             user_subscription.users_limit = users_limit
             user_subscription.integrations_limit = integrations_limit
             user_subscription.plan_id=plan_id,
+            user_subscription.members_limit=(members_limit - 1)
         user_subscription.status = status
         user_subscription.stripe_request_created_at = stripe_request_created_at
         self.db.flush()
@@ -347,7 +348,7 @@ class SubscriptionService:
         member_limit =self.db.query(UserSubscriptions.members_limit).filter(
             UserSubscriptions.user_id == user_id
         ).order_by(UserSubscriptions.id.desc()).limit(1).scalar()
-        if member_limit == 0:
+        if member_limit <= 0:
             return False
         return True
     

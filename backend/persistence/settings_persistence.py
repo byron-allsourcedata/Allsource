@@ -72,13 +72,15 @@ class SettingsPersistence:
         self.db.add(new_api_key)
         self.db.commit()
         
-    def get_teams_by_userid(self, user_id):
+    def get_team_members_by_userid(self, user_id):
         inviter = aliased(User)
         invited = aliased(User)
-        return self.db.query(invited, inviter.mail).join(inviter, invited.invited_by_user_id == inviter.id) \
+        return self.db.query(invited, inviter.mail) \
+            .join(inviter, invited.invited_by_user_id == inviter.id) \
             .filter(invited.team_owner_id == user_id) \
-            .order_by(inviter.mail).all()
-
+            .filter(User.id == user_id) \
+            .order_by(inviter.mail) \
+            .all()
     
     def get_pending_invations_by_userid(self, user_id):
         return self.db.query(TeamInvitation).filter(TeamInvitation.teams_owner_id == user_id).all()
