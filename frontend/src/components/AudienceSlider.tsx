@@ -176,7 +176,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                     },
                 }}
             >
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 3.5, px: 2, borderBottom: '1px solid #e4e4e4' }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 3.5, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
                     <Typography variant="h6" sx={{ textAlign: 'center', color: '#202124', fontFamily: 'Nunito Sans', fontWeight: '600', fontSize: '16px', lineHeight: '22px' }}>
                         Create contact sync
                     </Typography>
@@ -184,7 +184,6 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                         <CloseIcon sx={{width: '20px', height: '20px'}} />
                     </IconButton>
                 </Box>
-                <Divider />
                 <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', gap: 5, height: '100%' }}>
                     <Box sx={{px: 3, py: 2,  width: '100%'}}>
                         <Box sx={{px: 2, py: 3, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)'}}>
@@ -198,7 +197,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                         flexBasis: 'calc(50% - 8px)'
                                     }
                                 }}>
-                                    <ListItemButton onClick={() => handleIntegrationSelect('HubSpot')} sx={{p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center',
+                                    <ListItemButton sx={{p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center',
                                         backgroundColor: selectedIntegration === 'HubSpot' ? 'rgba(80, 82, 178, 0.10)' : 'transparent'
                                     }}>
                                     <ListItemIcon sx={{minWidth: 'auto'}}>
@@ -222,7 +221,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                         flexBasis: 'calc(50% - 8px)'
                                     }
                                 }}>
-                                    <ListItemButton onClick={() => handleIntegrationSelect('WordPress')} sx={{p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center',
+                                    <ListItemButton sx={{p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center',
                                         backgroundColor: selectedIntegration === 'WordPress' ? 'rgba(80, 82, 178, 0.10)' : 'transparent'
                                     }}>
                                     <ListItemIcon sx={{minWidth: 'auto'}}>    
@@ -246,7 +245,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                         flexBasis: 'calc(50% - 8px)'
                                     }
                                 }}>
-                                    <ListItemButton onClick={() => handleIntegrationSelect('Klaviyo')}  sx={{p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center',
+                                    <ListItemButton onClick={handleKlaviyoIconPopupOpen}  sx={{p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center',
                                         backgroundColor: selectedIntegration === 'Klaviyo' ? 'rgba(80, 82, 178, 0.10)' : 'transparent'
                                     }}>
                                         <ListItemIcon sx={{minWidth: 'auto'}}>
@@ -280,33 +279,35 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
 
                         </Box>
                     </Box>
-                    <Box sx={{ px: 2, py: 3.5, width: '100%', border: '1px solid #e4e4e4' }}>
-                        <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
-                            <Button
-                                variant="contained"
-                                disabled={isExportDisabled} 
-                                // onClick={handleSave}
-                                sx={{
-                                    backgroundColor: '#5052B2',
-                                    fontFamily: "Nunito Sans",
-                                    fontSize: '14px',
-                                    fontWeight: '600',
-                                    lineHeight: '20px',
-                                    letterSpacing: 'normal',
-                                    color: "#fff",
-                                    textTransform: 'none',
-                                    padding: '10px 24px',
-                                    boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                                    '&:hover': {
-                                        backgroundColor: '#5052B2'
-                                    },
-                                    borderRadius: '4px',
-                                }}
-                            >
-                                Export
-                            </Button>
+                    {/* <Box sx={{position: 'relative'}}>
+                        <Box sx={{ px: 2, py: 3.5, width: '100%', border: '1px solid #e4e4e4', position: 'fixed', bottom: 0, right: 0 }}>
+                            <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
+                                <Button
+                                    variant="contained"
+                                    disabled={isExportDisabled} 
+                                    // onClick={handleSave}
+                                    sx={{
+                                        backgroundColor: '#5052B2',
+                                        fontFamily: "Nunito Sans",
+                                        fontSize: '14px',
+                                        fontWeight: '600',
+                                        lineHeight: '20px',
+                                        letterSpacing: 'normal',
+                                        color: "#fff",
+                                        textTransform: 'none',
+                                        padding: '10px 24px',
+                                        boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
+                                        '&:hover': {
+                                            backgroundColor: '#5052B2'
+                                        },
+                                        borderRadius: '4px',
+                                    }}
+                                >
+                                    Export
+                                </Button>
+                            </Box>
                         </Box>
-                    </Box>
+                    </Box> */}
                 </Box>
             </Drawer>
 
@@ -329,7 +330,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
             >
                 
                 
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 3.5, px: 2, borderBottom: '1px solid #e4e4e4' }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 3.5, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
                     <Typography variant="h6" sx={{ textAlign: 'center', color: '#202124', fontFamily: 'Nunito Sans', fontWeight: '600', fontSize: '16px', lineHeight: 'normal' }}>
                         Add an Integration
                     </Typography>
@@ -337,7 +338,6 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                         <CloseIcon sx={{width: '20px', height: '20px'}} />
                     </IconButton>
                 </Box>
-                <Divider />
                 <Box>
                 <TextField
                     placeholder="Search integrations"

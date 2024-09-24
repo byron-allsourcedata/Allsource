@@ -1,9 +1,12 @@
 from models.users import User
 from models.api_keys import ApiKeys
 from sqlalchemy.orm import Session
-from sqlalchemy import update
+from sqlalchemy import update, or_
+from sqlalchemy.orm import aliased
 from datetime import datetime
 from models.users import Users
+from models.teams_invitations import TeamInvitation
+from enums import TeamsInvitationStatus
 
 class SettingsPersistence:
     def __init__(self, db: Session):
@@ -69,3 +72,69 @@ class SettingsPersistence:
         self.db.add(new_api_key)
         self.db.commit()
         
+    def get_team_members_by_userid(self, user_id):
+        inviter = aliased(User)
+        invited = aliased(User)
+        return self.db.query(invited, inviter.mail) \
+            .join(inviter, invited.invited_by_user_id == inviter.id) \
+            .filter(or_(invited.team_owner_id == user_id, User.id == user_id)) \
+            .order_by(inviter.mail) \
+            .all()
+    
+    def get_pending_invations_by_userid(self, user_id):
+        return self.db.query(TeamInvitation).filter(TeamInvitation.teams_owner_id == user_id).all()
+    
+    def exists_team_member(self, user_id, user_mail):
+        pending_invitations = (
+            self.db.query(TeamInvitation)
+            .filter(
+                TeamInvitation.mail == user_mail,
+                TeamInvitation.teams_owner_id == user_id
+            )
+            .first()
+        )
+        
+        if pending_invitations:
+            return True
+
+        user_id = self.db.query(User.id).filter(User.email == user_mail).scalar()
+        
+        if user_id:
+            user_team_member = self.db.query(User).filter(User.team_owner_id == user_id).first()
+            if user_team_member:
+                return True
+            
+        return False
+
+    
+    def save_pending_invations_by_userid(self, user_id, user_mail, access_level, md5_hash):
+        teams_invitation = TeamInvitation(mail=user_mail, access_level=access_level, status=TeamsInvitationStatus.PENDING, date_invited_by = datetime.now(), teams_owner_id = user_id,
+                                          md5_hash=md5_hash)
+        self.db.add(teams_invitation)
+        self.db.commit()
+        
+    def pending_invitation_revoke(self, user_id, mail):
+        self.db.query(TeamInvitation).filter(
+            TeamInvitation.mail == mail,
+            TeamInvitation.teams_owner_id == user_id
+        ).delete()
+        self.db.commit()
+        
+    def team_members_remove(self, user_id, mail):
+        result = {
+            'success': False
+        }
+        user_to_update = self.db.query(Users).filter(Users.email == mail).first()
+        
+        if user_to_update and user_to_update.id == user_id:
+            result['error'] = True
+            result['status'] = "Cannot remove team owner!"
+        
+        self.db.query(Users).filter(Users.email == mail, Users.team_owner_id == user_id).update(
+            {Users.team_owner_id: None},
+            synchronize_session=False
+        )
+        self.db.commit()
+        result['success'] = True
+        
+        return result

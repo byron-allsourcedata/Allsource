@@ -29,16 +29,16 @@ class PaymentsService:
     def get_user_subscription_authorization_status(self):
         return self.plans_service.get_user_subscription_authorization_status()
     
-    def cancel_user_subscripion(self):
-        subscription_id = self.plans_service.get_subscription_id()
+    def cancel_user_subscripion(self, user):
+        subscription_id = self.plans_service.get_subscription_id(user)
         subscription_data = stripe.Subscription.cancel(subscription_id)
         if subscription_data['status'] == 'canceled':
             return SubscriptionStatus.SUCCESS
         else:
             return SubscriptionStatus.UNKNOWN
     
-    def upgrade_and_downgrade_user_subscription(self, price_id: str) -> str:
-        subscription_id = self.plans_service.get_subscription_id()
+    def upgrade_and_downgrade_user_subscription(self, price_id: str, users) -> str:
+        subscription_id = self.plans_service.get_subscription_id(users)
         subscription = stripe.Subscription.retrieve(subscription_id)
         subscription_item_id = subscription['items']['data'][0]['id']
         is_downgrade = self.is_downgrade(price_id)
@@ -91,11 +91,11 @@ class PaymentsService:
 
 
         
-    def charge_user_for_extra_credits(self, quantity: int):
+    def charge_user_for_extra_credits(self, quantity: int, users):
         return self.create_stripe_checkout_session(
         success_url=StripeConfig.success_url,
         cancel_url=StripeConfig.cancel_url,
-        customer_id=self.plans_service.get_customer_id(),
+        customer_id=self.plans_service.get_customer_id(users),
         line_items=[{"price": self.get_additional_credits_price_id(), "quantity": quantity}],
         mode="payment"
     )

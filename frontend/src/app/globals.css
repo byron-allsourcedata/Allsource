@@ -61,6 +61,27 @@ body::-webkit-scrollbar {
   opacity: 1;
 }
 
+.truncate-email {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: 'Nunito'; 
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 19.6px;
+}
+
+.main-text {
+  font-family: 'Nunito Sans';
+}
+
+.second-text {
+  font-family: 'Roboto';
+}
+
+
+
+
 @media (max-width: 600px) {
   #urlInput {
     width: 100% !important;

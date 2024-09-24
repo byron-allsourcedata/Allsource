@@ -1,9 +1,9 @@
-from fastapi import APIRouter, Depends, Query, HTTPException
+from fastapi import APIRouter, Depends, Query, HTTPException, status
 from enums import UserAuthorizationStatus
 from dependencies import get_integration_service, IntegrationService, IntegrationsPresistence, get_user_integrations_presistence, \
     check_user_authorization, check_domain, check_pixel_install_domain, check_user_authentication
 from schemas.integrations.integrations import *
-
+from enums import TeamAccessLevel
 
 router = APIRouter(prefix='/integrations', tags=['Integrations'])
 
@@ -31,6 +31,13 @@ async def get_credential_service(platform: str,
 async def export(export_query: ExportLeads, service_name: str = Query(...),
                  integrations_service: IntegrationService = Depends(get_integration_service),
                  user = Depends(check_user_authorization), domain = Depends(check_pixel_install_domain)):
+    if user.get('team_member'):
+        team_member = user.get('team_member')
+        if team_member.team_access_level != TeamAccessLevel.ADMIN or team_member.team_access_level != TeamAccessLevel.STANDARD:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied. Admins and standard only."
+            )
     with integrations_service as service: 
         service = getattr(service, service_name)
         service.export_leads(export_query.list_name, user['id'])
@@ -41,6 +48,13 @@ async def export(export_query: ExportLeads, service_name: str = Query(...),
 async def create_integration(creditional: IntegrationCredentials, service_name: str = Query(...), 
                              integration_service: IntegrationService = Depends(get_integration_service),
                              user = Depends(check_user_authentication), domain = Depends(check_domain)):
+    if user.get('team_member'):
+        team_member = user.get('team_member')
+        if team_member.team_access_level != TeamAccessLevel.ADMIN or team_member.team_access_level != TeamAccessLevel.STANDARD:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied. Admins and standard only."
+            )
     if not creditional.pixel_install and not domain.is_pixel_installed:
         raise HTTPException(status_code=403, detail={'status': UserAuthorizationStatus.PIXEL_INSTALLATION_NEEDED.value})
     with integration_service as service:
@@ -55,6 +69,13 @@ async def create_integration(creditional: IntegrationCredentials, service_name: 
 async def delete_integration(service_name: str = Query(...),
                              user = Depends(check_user_authorization),
                              integration_service: IntegrationService = Depends(get_integration_service), domain = Depends(check_pixel_install_domain)):
+    if user.get('team_member'):
+        team_member = user.get('team_member')
+        if team_member.team_access_level != TeamAccessLevel.ADMIN or team_member.team_access_level != TeamAccessLevel.STANDARD:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied. Admins and standard only."
+            )
     try:
         integration_service.delete_integration(service_name, user)
         return {'message': 'Successfuly'}
@@ -107,6 +128,13 @@ async def create_tag(tag_data: CreateListOrTags,
 async def create_sync(data: SyncCreate, service_name: str = Query(...),
                       integration_service: IntegrationService = Depends(get_integration_service),
                       user = Depends(check_user_authorization), domain = Depends(check_pixel_install_domain)):
+    if user.get('team_member'):
+        team_member = user.get('team_member')
+        if team_member.team_access_level != TeamAccessLevel.ADMIN or team_member.team_access_level != TeamAccessLevel.STANDARD:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied. Admins and standard only."
+            )
     with integration_service as service:
         service = getattr(service, service_name.lower())
         service.create_sync(user['id'], **data.model_dump())
