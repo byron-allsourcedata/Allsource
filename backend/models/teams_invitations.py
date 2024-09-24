@@ -6,7 +6,7 @@ from .base import Base, create_timestamps, update_timestamps
 from .plans import SubscriptionPlan
 
 
-class TeamsInvitations(Base):
+class TeamInvitation(Base):
     __tablename__ = "teams_invitations"
 
     id = Column(Integer, primary_key=True, nullable=False)
@@ -16,5 +16,6 @@ class TeamsInvitations(Base):
     date_invited = Column(TIMESTAMP(precision=7), nullable=True)
     invited_by_id = Column(BIGINT, nullable=True)
     team_owner_id = Column(BIGINT, nullable=True)
+    md5_hash = Column(VARCHAR, nullable=False)
 
-event.listen(TeamsInvitations, "before_insert", create_timestamps)
+event.listen(TeamInvitation, "before_insert", create_timestamps)

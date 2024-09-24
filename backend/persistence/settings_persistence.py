@@ -5,7 +5,8 @@ from sqlalchemy import update
 from sqlalchemy.orm import aliased
 from datetime import datetime
 from models.users import Users
-from models.teams_invitations import TeamsInvitations
+from models.teams_invitations import TeamInvitation
+from enums import TeamsInvitationStatus
 
 class SettingsPersistence:
     def __init__(self, db: Session):
@@ -18,13 +19,6 @@ class SettingsPersistence:
         stmt = update(User).where(User.id == user_id).values(changes)
         self.db.execute(stmt)
         self.db.commit()
-        
-    def check_status_invitations(self, team_owner_id, mail):
-        teams_invitation = self.db.query(TeamsInvitations).filter(TeamsInvitations.team_owner_id == team_owner_id, TeamsInvitations.mail==mail).first()
-        if teams_invitation:
-            if teams_invitation.status == 'pending':
-                return True
-        return False
         
     def set_reset_email_sent_now(self, user_id):
         send_message_expiration_time = datetime.now()
@@ -87,14 +81,14 @@ class SettingsPersistence:
 
     
     def get_pending_invations_by_userid(self, user_id):
-        return self.db.query(TeamsInvitations).filter(TeamsInvitations.teams_owner_id == user_id).all()
+        return self.db.query(TeamInvitation).filter(TeamInvitation.teams_owner_id == user_id).all()
     
     def exists_team_member(self, user_id, user_mail):
         pending_invitations = (
-            self.db.query(TeamsInvitations)
+            self.db.query(TeamInvitation)
             .filter(
-                TeamsInvitations.mail == user_mail,
-                TeamsInvitations.teams_owner_id == user_id
+                TeamInvitation.mail == user_mail,
+                TeamInvitation.teams_owner_id == user_id
             )
             .first()
         )
@@ -112,15 +106,16 @@ class SettingsPersistence:
         return False
 
     
-    def save_pending_invations_by_userid(self, user_id, user_mail, access_level, token):
-        teams_invitation = TeamsInvitations(mail=user_mail, access_level=access_level, status='pending', date_invited = datetime.now(), teams_owner_id = user_id)
+    def save_pending_invations_by_userid(self, user_id, user_mail, access_level, md5_hash):
+        teams_invitation = TeamInvitation(mail=user_mail, access_level=access_level, status=TeamsInvitationStatus.PENDING, date_invited = datetime.now(), teams_owner_id = user_id,
+                                          md5_hash=md5_hash)
         self.db.add(teams_invitation)
         self.db.commit()
         
     def pending_invitation_revoke(self, user_id, mail):
-        self.db.query(TeamsInvitations).filter(
-            TeamsInvitations.mail == mail,
-            TeamsInvitations.teams_owner_id == user_id
+        self.db.query(TeamInvitation).filter(
+            TeamInvitation.mail == mail,
+            TeamInvitation.teams_owner_id == user_id
         ).delete()
         self.db.commit()
         

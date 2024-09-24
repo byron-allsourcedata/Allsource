@@ -12,7 +12,7 @@ class UserSignUpForm(BaseModel):
     email: str = Field(...)
     password: str = Field(...)
     is_without_card: bool = Field(...)
-    token: Optional[str] = None
+    teams_token: Optional[str] = None
 
 
 class UserSignUpFormResponse(BaseModel):

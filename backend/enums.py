@@ -60,7 +60,14 @@ class SignUpStatus(Enum):
     PASSWORD_NOT_VALID = 'PASSWORD_NOT_VALID'
     NEED_CONFIRM_EMAIL = 'NEED_CONFIRM_EMAIL'
     FILL_COMPANY_DETAILS = 'FILL_COMPANY_DETAILS'
-
+    TEAM_INVITATION_INVALID = 'TEAM_INVITATION_INVALID'
+    
+class TeamsInvitationStatus(Enum):
+    PENDING = 'pending'
+    
+class TeamAccessLevel(Enum):
+    ADMIN = 'admin'
+    STANDARD = 'standard'
 
 class LoginStatus(Enum):
     INCORRECT_PASSWORD_OR_EMAIL = 'INCORRECT_PASSWORD_OR_EMAIL'
@@ -115,4 +122,3 @@ class VerifyToken(Enum):
     SUCCESS = 'SUCCESS'
     EMAIL_ALREADY_VERIFIED = 'EMAIL_ALREADY_VERIFIED'
     INCORRECT_TOKEN = 'INCORRECT_TOKEN'
-    UNSUCCES = 'UNSUCCES'

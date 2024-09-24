@@ -3,6 +3,7 @@ from fastapi.responses import JSONResponse
 from dependencies import get_domain_service, check_user_authentication, UserDomainsService
 from schemas.domains import DomainScheme
 from urllib.parse import unquote
+from enums import TeamAccessLevel
 router = APIRouter(prefix='/domains', tags=['Domains'])
 
 
@@ -13,7 +14,7 @@ def create_domain(domain_data: DomainScheme,
     
     if user.get('team_member'):
         team_member = user.get('team_member')
-        if team_member.team_access_level != 'admin' or team_member.team_access_level != 'standard':
+        if team_member.team_access_level != TeamAccessLevel.ADMIN or team_member.team_access_level != TeamAccessLevel.STANDARD:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Access denied. Admins and standard only."
@@ -38,7 +39,7 @@ def delete_domain(domain_id: int, domain_service: UserDomainsService = Depends(g
                   user = Depends(check_user_authentication)):
     if user.get('team_member'):
         team_member = user.get('team_member')
-        if team_member.team_access_level != 'admin' or team_member.team_access_level != 'standard':
+        if team_member.team_access_level != TeamAccessLevel.ADMIN or team_member.team_access_level != TeamAccessLevel.STANDARD:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Access denied. Admins and standard only."

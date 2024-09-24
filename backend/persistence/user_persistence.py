@@ -5,7 +5,8 @@ from models.users_domains import UserDomains
 from models.plans import SubscriptionPlan
 from models.users import Users
 from models.subscriptions import UserSubscriptions
-from models.teams_invitations import TeamsInvitations
+from models.teams_invitations import TeamInvitation
+from enums import TeamsInvitationStatus, SignUpStatus
 import logging
 
 logger = logging.getLogger(__name__)
@@ -50,6 +51,23 @@ class UserPersistence:
     def get_user_by_email(self, email):
         user_object = self.db.query(Users).filter(func.lower(Users.email) == func.lower(email)).first()
         return user_object
+    
+    def check_status_invitations(self, teams_token, user_mail):
+        result = {
+            'succes': False
+        }
+        teams_invitation = self.db.query(TeamInvitation).filter(TeamInvitation.md5_hash == teams_token).first()
+        if teams_invitation:
+            if teams_invitation.mail != user_mail:
+                result['error'] = SignUpStatus.NOT_VALID_EMAIL
+            if teams_invitation.status == TeamsInvitationStatus.PENDING:
+                result['succes'] = True
+                result['team_owner_id'] = TeamInvitation.team_owner_id
+        else:
+            result['error'] = SignUpStatus.TEAM_INVITATION_INVALID
+        return result
+        
+            
 
     def get_user_by_id(self, user_id):
         user = self.db.query(Users).filter(Users.id == user_id).first()
@@ -102,21 +120,17 @@ class UserPersistence:
         self.db.rollback()
         return result_user
 
-    def update_teams_owner_id(self, user_id, mail, owner_id):
-        teams_invitation = self.db.query(TeamsInvitations).filter(
-            TeamsInvitations.mail == mail,
-            TeamsInvitations.teams_owner_id == owner_id
+    def update_teams_owner_id(self, user_id, teams_token, owner_id):
+        teams_invitation = self.db.query(TeamInvitation).filter(
+            TeamInvitation.md5_hash == teams_token
         ).first()
-        
-        self.db.query(Users).filter(Users.id == user_id).update({
-            Users.team_owner_id: owner_id,
-            Users.team_access_level: teams_invitation.team_owner_id,
-            Users.invited_by_id: teams_invitation.invited_by_id,
-            Users.added_on: datetime.now()
-        }, synchronize_session=False)
-
+        user_data = self.db.query(Users).filter(Users.id == user_id).first()
+        user_data.team_owner_id = owner_id
+        user_data.team_access_level = teams_invitation.team_owner_id
+        user_data.invited_by_id = teams_invitation.invited_by_id
+        user_data.added_on = datetime.now()
+        self.db.flush()
         self.db.delete(teams_invitation)
-        
         self.db.commit()
 
 

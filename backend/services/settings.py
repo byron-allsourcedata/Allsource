@@ -15,6 +15,8 @@ logger = logging.getLogger(__name__)
 from datetime import datetime, timedelta
 from .sendgrid import SendgridHandler
 from enums import SettingStatus, SendgridTemplate
+import hashlib
+import json
 from services.stripe_service import *
 
 OVERAGE_CONTACT = 1
@@ -162,12 +164,14 @@ class SettingsService:
             logger.info("template_id is None")
             return SettingStatus.FAILED
         
-        token_info = {
+        md5_token_info = {
                     'id': user.get('id'),
-                    'user_teams_mail': invite_user
+                    'user_teams_mail': invite_user,
+                    'salt': os.getenv('SECRET_SALT')
                 }
-        token = create_access_token(token_info)           
-        confirm_email_url = f"{os.getenv('SITE_HOST_URL')}/sign_up?token={token}&user_teams_mail={invite_user}"
+        json_string = json.dumps(md5_token_info, sort_keys=True)
+        md5_hash = hashlib.md5(json_string.encode()).hexdigest()
+        confirm_email_url = f"{os.getenv('SITE_HOST_URL')}/sign_up?token={md5_hash}&user_teams_mail={invite_user}"
         mail_object = SendgridHandler()
         mail_object.send_sign_up_mail(
             to_emails=invite_user,
@@ -175,7 +179,7 @@ class SettingsService:
             template_placeholder={"full_name": invite_user, "link": confirm_email_url, "company_name": user.get('company_name')}
         )
         
-        self.settings_persistence.save_pending_invations_by_userid(user_id=user.get('id'), user_mail=invite_user, access_level=access_level, token=token)
+        self.settings_persistence.save_pending_invations_by_userid(user_id=user.get('id'), user_mail=invite_user, access_level=access_level, md5_hash=md5_hash)
         invitation_limit = -1
         self.subscription_service.update_invitation_limit(user_id=user.get('id'), invitation_limit=invitation_limit)
         return SettingStatus.SUCCESS 
@@ -187,6 +191,8 @@ class SettingsService:
             self.settings_persistence.pending_invitation_revoke(user_id=user.get('id'), mail=pending_invitation_revoke)
         if remove_user:
             self.settings_persistence.team_members_remove(user_id=user.get('id'), mail=remove_user)
+        invitation_limit = 1
+        self.subscription_service.update_invitation_limit(user_id=user.get('id'), invitation_limit=invitation_limit)
         
         
     def timestamp_to_date(self, timestamp):

@@ -61,12 +61,21 @@ class UsersAuth:
         return user_object
 
     def create_account_google(self, auth_google_data: AuthGoogleData):
-        token = AuthGoogleData.token
+        teams_token = auth_google_data.teams_token
+        owner_id = None
         client_id = os.getenv("CLIENT_GOOGLE_ID")
         google_request = google_requests.Request()
         is_without_card = auth_google_data.is_without_card
         idinfo = id_token.verify_oauth2_token(str(auth_google_data.token), google_request, client_id)
         if idinfo:
+            if teams_token:
+                status_result = self.user_persistence_service.check_status_invitations(teams_token=teams_token, user_mail=idinfo.get("email"))
+                if status_result['success'] is False:
+                    return {
+                        'is_success': True,
+                        'status': status_result['error']
+                    }
+                owner_id = status_result['team_owner_id']
             full_name = idinfo.get('given_name')
             family_name = idinfo.get('family_name')
             if family_name and family_name != 'None':
@@ -92,22 +101,12 @@ class UsersAuth:
 
         customer_id = stripe_service.create_customer_google(google_payload)
         user_object = self.add_user(is_without_card=is_without_card, customer_id=customer_id, user_form=google_payload)
-        if token:
-            try:
-                data = decode_jwt_data(token)
-            except:
-                raise ValueError(VerifyToken.INCORRECT_TOKEN)
-
-            check_user_object = self.user_persistence.get_user_by_id(data.get('id'))
-            
-            if check_user_object:
-                if self.user_persistence.check_status_invitations(team_owner_id=data.get('id'), mail=data.get('user_teams_mail')):
-                    owner_id = data.get('id')
-                    teams_owner_id = self.user_persistence_service.update_teams_owner_id(user_object.id, user_object.email, owner_id)
-                    token_info = {
-                        "id": teams_owner_id,
-                        "team_member_id": user_object.id
-                    }
+        if teams_token:
+            self.user_persistence_service.update_teams_owner_id(user_id=user_object.id,teams_token=teams_token, owner_id=owner_id)
+            token_info = {
+                "id": owner_id,
+                "team_member_id": user_object.id
+            }
         else:
             token_info = {
                 "id": user_object.id,
@@ -211,7 +210,16 @@ class UsersAuth:
             }
 
     def create_account(self, user_form: UserSignUpForm):
-        token = user_form.token
+        teams_token = user_form.teams_token
+        owner_id = None
+        if teams_token:
+            status_result = self.user_persistence_service.check_status_invitations(teams_token=teams_token, user_mail=user_form.email)
+            if status_result['success'] is False:
+                return {
+                    'is_success': True,
+                    'status': status_result['error']
+                }
+            owner_id = status_result['team_owner_id']
         if not user_form.password:
             logger.debug("The password must not be empty.")
             return {
@@ -224,7 +232,7 @@ class UsersAuth:
                 'is_success': True,
                 'status': SignUpStatus.PASSWORD_NOT_VALID
             }
-        user_form.password = get_password_hash(user_form.password)
+        user_form.password = get_password_hash(user_form.password.strip())
         check_user_object = self.user_persistence_service.get_user_by_email(user_form.email)
         is_without_card = user_form.is_without_card
         if check_user_object is not None:
@@ -240,21 +248,12 @@ class UsersAuth:
             "password": user_form.password,
         }
         user_object = self.add_user(is_without_card, customer_id, user_form=user_data)
-        if token:
-            try:
-                data = decode_jwt_data(token)
-            except:
-                raise ValueError(VerifyToken.INCORRECT_TOKEN)
-
-            check_user_object = self.user_persistence.get_user_by_id(data.get('id'))
-            if check_user_object:
-                if self.user_persistence.check_status_invitations(team_owner_id=data.get('id'), mail=data.get('user_teams_mail')):
-                    owner_id = data.get('id')
-                    self.user_persistence_service.update_teams_owner_id(user_object.id, user_object.email, owner_id)
-                    token_info = {
-                        "id": owner_id,
-                        "team_member_id": user_object.id
-                    }
+        if teams_token:
+            self.user_persistence_service.update_teams_owner_id(user_id=user_object.id, user_mail=user_object.email,teams_token=teams_token, owner_id=owner_id)
+            token_info = {
+                "id": owner_id,
+                "team_member_id": user_object.id
+            }
         else:
             token_info = {
                 "id": user_object.id,
@@ -262,7 +261,7 @@ class UsersAuth:
         
         token = create_access_token(token_info)
         logger.info("Token created")
-        if is_without_card:
+        if is_without_card and teams_token is None:
             template_id = self.send_grid_persistence_service.get_template_by_alias(
                 SendgridTemplate.EMAIL_VERIFICATION_TEMPLATE.value)
             if not template_id:
