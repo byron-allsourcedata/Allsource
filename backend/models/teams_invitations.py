@@ -13,7 +13,7 @@ class TeamInvitation(Base):
     mail = Column(VARCHAR, nullable=False)
     access_level = Column(VARCHAR, nullable=False)
     status = Column(VARCHAR, nullable=False)
-    date_invited = Column(TIMESTAMP(precision=7), nullable=False)
+    date_invited_at = Column(TIMESTAMP(precision=7), nullable=False)
     invited_by_id = Column(BIGINT, nullable=False)
     team_owner_id = Column(BIGINT, nullable=False)
     token = Column(VARCHAR, nullable=False)

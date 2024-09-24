@@ -107,7 +107,7 @@ class SettingsPersistence:
 
     
     def save_pending_invations_by_userid(self, user_id, user_mail, access_level, md5_hash):
-        teams_invitation = TeamInvitation(mail=user_mail, access_level=access_level, status=TeamsInvitationStatus.PENDING, date_invited = datetime.now(), teams_owner_id = user_id,
+        teams_invitation = TeamInvitation(mail=user_mail, access_level=access_level, status=TeamsInvitationStatus.PENDING, date_invited_by = datetime.now(), teams_owner_id = user_id,
                                           md5_hash=md5_hash)
         self.db.add(teams_invitation)
         self.db.commit()

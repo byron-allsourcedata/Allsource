@@ -145,7 +145,7 @@ class SettingsService:
             team_info = {
                 'mail': invation_data.email,
                 'access_level': invation_data.access_level,
-                'data_invited': invation_data.date_invited,
+                'data_invited': invation_data.date_invited_at,
                 'status': invation_data.status
             }
             result.append(team_info)
