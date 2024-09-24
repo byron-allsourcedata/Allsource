@@ -19,7 +19,7 @@ class IntegrationService:
                  lead_persistence: LeadsPersistence, audience_persistence: AudiencePersistence, 
                  lead_orders_persistence: LeadOrdersPersistence, 
                  integrations_user_sync_persistence: IntegrationsUserSyncPersistence,
-                 aws_service: AWSService):
+                 aws_service: AWSService, domain_persistence):
         self.db = db
         self.client = httpx.Client()
         self.integration_persistence = integration_persistence
@@ -28,6 +28,7 @@ class IntegrationService:
         self.lead_orders_persistence = lead_orders_persistence
         self.integrations_user_sync_persistence = integrations_user_sync_persistence
         self.aws_service = aws_service
+        self.domain_persistence = domain_persistence
 
     def get_user_service_credentials(self, domain_id):
         return self.integration_persistence.get_integration_by_user(domain_id)
@@ -50,11 +51,10 @@ class IntegrationService:
         self.bigcommerce = BigcommerceIntegrationsService(self.integration_persistence, 
                                                           self.lead_persistence, 
                                                           self.client)
-        self.klaviyo = KlaviyoIntegrationsService(self.integration_persistence, 
-                                           self.client, 
-                                           self.audience_persistence,
-                                           self.integrations_user_sync_persistence,
-                                           self.lead_persistence)
+        self.klaviyo = KlaviyoIntegrationsService(self.domain_persistence, 
+                                                self.integration_persistence,  
+                                                self.lead_persistence,
+                                                self.integrations_user_sync_persistence,)
         self.mailchimp = MailchimpIntegrationsService(self.integration_persistence)
         return self
 

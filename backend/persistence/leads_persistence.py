@@ -594,7 +594,7 @@ class LeadsPersistence:
             LeadUser.domain_id == user_id,
             FiveXFiveUser.business_email == email).all()
 
-    def get_leads_user(self, domain_id: int, **filter_by):
+    def get_leads_domain(self, domain_id: int, **filter_by):
         return self.db.query(LeadUser).filter_by(domain_id=domain_id ** filter_by)
 
     def search_contact(self, start_letter, domain_id):

@@ -66,3 +66,7 @@ class SyncCreate(BaseModel):
     supression: bool
     filter_by_contact_type: str
     list_id: Optional[int] = None
+
+class CreateListOrTags(BaseModel):
+    name: str
+

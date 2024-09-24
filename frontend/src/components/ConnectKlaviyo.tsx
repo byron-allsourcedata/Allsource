@@ -5,22 +5,30 @@ import TabList from '@mui/lab/TabList';
 import TabPanel from '@mui/lab/TabPanel';
 import Image from 'next/image';
 import CloseIcon from '@mui/icons-material/Close';
+import axiosInstance from '@/axios/axiosInterceptorInstance';
 
 interface ConnectKlaviyoPopupProps {
     open: boolean;
     onClose: () => void;
 }
 
+type KlaviyoList = {
+    id: string
+    list_name: string
+}
+
+type KlaviyoTags = {
+    id: string
+    tags_name: string
+}
+
 const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) => {
 
     const [value, setValue] = React.useState('1');
-
     const [checked, setChecked] = useState(false);
-
     const [selectedRadioValue, setSelectedRadioValue] = useState('');
-
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-    const [selectedOption, setSelectedOption] = useState<string>(''); // Track selected option
+    const [selectedOption, setSelectedOption] = useState<string>('');
     const [showCreateForm, setShowCreateForm] = useState<boolean>(false);
     const [newListName, setNewListName] = useState<string>('');
     const [tagName, setTagName] = useState<string>('');
@@ -39,6 +47,8 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
     const [newMapListName, setNewMapListName] = useState<string>('');
     const [showCreateMapForm, setShowCreateMapForm] = useState<boolean>(false);
     const [maplistNameError, setMapListNameError] = useState(false);
+    const [klaviyoList, setKlaviyoList] = useState<KlaviyoList[]>([])
+    const [klaviyoTags, setKlaviyoTags] = useState<KlaviyoTags[]>([])
     const [mapListOptions, setMapListOptions] = useState<string[]>([
         'Email',
         'Phone number',
@@ -49,7 +59,15 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
         'Job Title',
         'Location',
     ]);
-
+    useEffect(() => {
+        const fetchData = async() => {
+            const response = await axiosInstance.get('/integrations/credentials/klaviyo')
+            if(response.status == 200) {
+                setApiKey(response.data.access_token)
+            }
+        }
+        fetchData()
+    }, [])
       // Handle click outside to unshrink the label if input is empty
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -64,6 +82,8 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
       }
     };
 
+    
+
     // Attach event listener for detecting click outside
     document.addEventListener('mousedown', handleClickOutside);
     
@@ -74,6 +94,31 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
   }, [selectedOption]);
 
     // Static options
+    
+    const getKlaviyoTags = async() => {
+        const response = await axiosInstance.get('/integrations/sync/tags/', {
+            params: {
+                service_name: 'Klaviyo'
+            }
+        })
+        setKlaviyoTags(response.data)
+    }
+
+    const getKlaviyoList = async() => {
+        const response = await axiosInstance.get('/integrations/sync/list/', {
+            params: {
+                service_name: 'Klaviyo'
+            }
+        })
+        setKlaviyoList(response.data)
+    }
+
+    const handleSaveSync = () => {
+        console.log(mapListOptions)
+        console.log(tagName)
+        console.log()
+    }
+
     const staticOptions = ['Email List', 'Phone List', 'SMS List', 'Maximiz Contacts', 'Preview List', 'Maximiz'];
 
     // Handle menu open
@@ -106,22 +151,22 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
     };
 
     // Handle option selection
-    const handleSelectOption = (value: string) => {
+    const handleSelectOption = (value: KlaviyoList | string) => {
         if (value === 'createNew') {
-            // If the form is already open, close it
             if (showCreateForm) {
                 setShowCreateForm(false);
             } else {
-                // If the form is not open, open it and keep the dropdown open
+
                 setShowCreateForm(true);
-                setAnchorEl(textFieldRef.current); // Keep the menu open
+                setAnchorEl(textFieldRef.current); 
             }
-        } else {
-            setSelectedOption(value);
+        } else if (typeof value !== 'string') {
+            setSelectedOption(value.list_name); 
             handleClose();
         }
-        setIsDropdownValid(value !== '');
+        setIsDropdownValid(typeof value !== 'string' && value.list_name !== '');
     };
+    
 
     const handleSelectMapOption = (value: string, event: React.MouseEvent<HTMLElement>, id: number) => {
         event.stopPropagation(); // Prevent click event from closing the dropdown
@@ -139,7 +184,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
     };
 
     // Handle Save action for the create new list form
-    const handleSave = () => {
+    const handleSave = async() => {
         let valid = true;
     
         // Validate List Name
@@ -184,9 +229,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
 
             // Update the value in the rows state
             handleMapListChange(id, 'selectValue', newMapListName);
-
             setMapListOptions(prevOptions => [...prevOptions, newMapListName]);
-
             // Optionally, reset the new value state if needed
             setNewMapListName('');
 
@@ -196,8 +239,6 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
             handleMapClose();
         }
     };
-    
-
 
 
     const handleSwitchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -419,6 +460,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                 return (
                     <Button
                         variant="contained"
+                        onClick={handleSaveSync}
                         sx={{
                             backgroundColor: '#5052B2',
                             fontFamily: "Nunito Sans",
@@ -470,6 +512,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
         setRows(rows.map(row =>
           row.id === id ? { ...row, [field]: value } : row
         ));
+        console.log(rows)
       };
 
     // Delete function with typed parameter
@@ -514,6 +557,24 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
         setApiKeyError(event.target.value === ''); // Set error if API Key is empty
     };
     
+    const handleSubmitApiKey = async() => {
+        const response = await axiosInstance.post('/integrations/', 
+            {
+                klaviyo: {
+                    api_key: apiKey
+                }
+            },
+            {
+                params: { 
+                    service_name: 'Klaviyo' 
+                }
+            });
+    }
+
+    const handleCreateList = async() => {
+        const response = await axiosInstance.post('/integrations')
+    }
+
     const validateApiKey = () => {
         // Your logic to validate the API key
         if (apiKey.trim() === '') {
@@ -535,9 +596,13 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
 
 
 
-    const handleNextTab = () => {
+    const handleNextTab = async() => {
         if (validateApiKey()) {
-          // Increment tab value
+          if(value === '1') {
+            await handleSubmitApiKey()
+            await getKlaviyoList()
+            await getKlaviyoTags()
+          }
           setValue((prevValue) => {
             const nextValue = String(Number(prevValue) + 1);
             return nextValue;
@@ -547,7 +612,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
               setValue((prevValue) => String(Number(prevValue) + 1));
             }
           } else if (value === '3') {
-            // Validate Tab 3
+            
             if (isDropdownValid) {
                 // Proceed to next tab
                 setValue((prevValue) => String(Number(prevValue) + 1));
@@ -1278,12 +1343,12 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                                             )}
 
                                             {/* Show static options */}
-                                            {staticOptions.map((option, index) => (
-                                                <MenuItem key={index} onClick={() => handleSelectOption(option)} sx={{
+                                            {klaviyoList.map((klaviyo, option) => (
+                                                <MenuItem key={klaviyo.id} onClick={() => handleSelectOption(klaviyo)} sx={{
                                                     '&:hover': {
                                                         background: 'rgba(80, 82, 178, 0.10)'
                                                     } }}>
-                                                    <ListItemText primary={option}  primaryTypographyProps={{
+                                                    <ListItemText primary={klaviyo.list_name}  primaryTypographyProps={{
                                                         sx: {
                                                             fontFamily: "Nunito Sans",
                                                             fontSize: "14px",
@@ -1360,57 +1425,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                                 <Grid container spacing={2} alignItems="center" sx={{flexWrap: { xs: 'nowrap', sm: 'wrap' }}}>
                                     {/* Left Input Field */}
                                     <Grid item xs="auto" sm={5}>
-                                    <TextField
-                                        fullWidth
-                                        variant="outlined"
-                                        label={row.type}
-                                        value={row.value}
-                                        onChange={(e) => handleMapListChange(row.id, 'value', e.target.value)}
-                                        InputLabelProps={{
-                                            sx: {
-                                            fontFamily: 'Nunito Sans',
-                                            fontSize: '12px',
-                                            lineHeight: '16px',
-                                            color: 'rgba(17, 17, 19, 0.60)',
-                                            top: '-5px',
-                                            '&.Mui-focused': {
-                                                color: '#0000FF',
-                                                top: 0
-                                            },
-                                            '&.MuiInputLabel-shrink': {
-                                                top: 0
-                                            }
-                                            }
-                                        }}
-                                        InputProps={{
-                                            
-                                            sx: {
-                                                '&.MuiOutlinedInput-root': {
-                                                    height: '36px',
-                                                    '& .MuiOutlinedInput-input': {
-                                                        padding: '6.5px 8px',
-                                                        fontFamily: 'Roboto',
-                                                        color: '#202124',
-                                                        fontSize: '14px',
-                                                        fontWeight: '400',
-                                                        lineHeight: '20px'
-                                                    },
-                                                    '& .MuiOutlinedInput-notchedOutline': {
-                                                        borderColor: '#A3B0C2',
-                                                    },
-                                                    '&:hover .MuiOutlinedInput-notchedOutline': {
-                                                        borderColor: '#A3B0C2',
-                                                    },
-                                                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                                        borderColor: '#0000FF',
-                                                    },
-                                                    },
-                                                    '&+.MuiFormHelperText-root': {
-                                                        marginLeft: '0',
-                                                    },
-                                            }
-                                          }}
-                                    />
+                                    
                                     </Grid>
                                     
                                     {/* Middle Icon Toggle (Right Arrow or Close Icon) */}
@@ -1689,7 +1704,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                                                         
                                                     </Box>
                                                         <Box sx={{textAlign: 'right'}}>
-                                                        <Button variant="contained" onClick={() => handleMapSave(row.id)}
+                                                        <Button variant="contained" onClick={() =>  handleMapSave(row.id)}
                                                         disabled={maplistNameError || !newMapListName}
                                                         sx={{
                                                             borderRadius: '4px',

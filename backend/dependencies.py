@@ -225,7 +225,7 @@ def check_domain(
 ) -> UserDomains:
     current_domain = domain_persistence.get_domain_by_user(user.get('id'), domain_substr=CurrentDomain)
     if not current_domain or len(current_domain) == 0 :
-        raise HTTPException(status_code=404, detail={'status': "DOMAIN NOT FOUND"})
+        raise HTTPException(status_code=404, detail={'status': "DOMAIN_NOT_FOUND"})
     return current_domain[0]
 
 
@@ -298,12 +298,9 @@ def get_settings_service(db: Session = Depends(get_db),
                                        ),
                                     user_persistence: UserPersistence = Depends(
                                        get_user_persistence_service
-                                       ),
-                                    send_grid_persistence: SendgridPersistence = Depends(
-                                       get_send_grid_persistence_service
                                        )
                                    ):
-    return SettingsService(db=db, settings_persistence=settings_persistence, plan_persistence=plan_persistence, user_persistence=user_persistence, send_grid_persistence=send_grid_persistence)
+    return SettingsService(db=db, settings_persistence=settings_persistence, plan_persistence=plan_persistence, user_persistence=user_persistence)
 
 
 def get_plans_service(user=Depends(check_user_authentication),
@@ -380,14 +377,15 @@ def get_integration_service(db: Session = Depends(get_db),
                             lead_presistence: LeadsPersistence = Depends(get_leads_persistence),
                             lead_orders_persistence: LeadOrdersPersistence = Depends(get_lead_orders_persistence),
                             integrations_user_sync_persistence: IntegrationsUserSyncPersistence = Depends(get_integrations_user_sync_persistence),
-                            aws_service: AWSService = Depends(get_aws_service)
+                            aws_service: AWSService = Depends(get_aws_service), domain_persistence = Depends(get_user_domain_persistence)
                             ):
-    return IntegrationService(db, 
+    return IntegrationService(db,    
                               integration_presistence, 
                               lead_presistence, 
                               audience_persistence, 
                               lead_orders_persistence,
                               integrations_user_sync_persistence,
-                              aws_service)
+                              aws_service,
+                              domain_persistence)
 
 
