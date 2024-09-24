@@ -289,9 +289,9 @@ const Signup: React.FC = () => {
                   case 'NOT_VALID_EMAIL':
                     showErrorToast("The email is either invalid or does not match the invited user.");
                     break;
-                    case 'TEAM_INVITATION_INVALID':
-                      showErrorToast("The email provided is not valid for team invitation.");
-                      break;
+                  case 'TEAM_INVITATION_INVALID':
+                    showErrorToast("The email provided is not valid for team invitation.");
+                    break;
                   case "PIXEL_INSTALLATION_NEEDED":
                     get_me()
                     router.push('/dashboard');
@@ -348,6 +348,7 @@ const Signup: React.FC = () => {
               error={Boolean(errors.email)}
               helperText={errors.email}
               InputProps={{ sx: signupStyles.formInput }}
+              disabled={user_teams_mail !== null}
             />
             <TextField sx={signupStyles.formField}
               InputLabelProps={{ sx: signupStyles.inputLabel }}
