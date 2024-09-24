@@ -71,6 +71,16 @@ body::-webkit-scrollbar {
   line-height: 19.6px;
 }
 
+.main-text {
+  font-family: 'Nunito Sans';
+}
+
+.second-text {
+  font-family: 'Roboto';
+}
+
+
+
 
 @media (max-width: 600px) {
   #urlInput {
