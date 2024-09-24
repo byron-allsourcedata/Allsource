@@ -72,15 +72,30 @@ interface Invitation {
 
 export const SettingsTeams: React.FC = () => {
     const [pendingInvitations, setPendingInvitations] = useState<Invitation[]>([]);
-    // const [teamMembers, setTeamMembers] = useState<any[]>([]);
+    const [teamMembers, setTeamMembers] = useState<any[]>([]);
     const [inviteUsersPopupOpen, setInviteUsersPopupOpen] = useState(false);
     const [idCounter, setIdCounter] = useState<number>(0);
     const [selectedRowId, setSelectedRowId] = useState<number | null>(null);
-    const [teamMembers, setTeamMembers] = useState([
-        { id: 1, email: 'kalley22@gmail.com', date: 'Aug 18, 2024', role: 'Admin', invite: 'kalley22@gmail.com', addedon: 'Aug 30, 2024' },
-        { id: 2, email: 'metro23@gmail.com', date: 'Aug 30, 2024', role: 'Member', invite: 'metro23@gmail.com', addedon: 'Aug 30, 2024' },
-    ]);
     const [teamSelectOpen, setTeamSelectOpen] = useState<number | null>(null);
+    const [isLoading, setIsLoading] = useState<boolean>(true);
+
+
+     const fetchTeamsData = async () => {
+        try {
+            setIsLoading(true);
+            const response = await axiosInterceptorInstance.get('/settings/teams');
+            const data = response.data;
+            setTeamMembers(data)
+        } catch (error) {
+            console.error('Error fetching account details:', error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchTeamsData();
+    }, []);
 
     const handleInviteUsersPopupOpen = () => {
         setInviteUsersPopupOpen(true);

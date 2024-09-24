@@ -131,7 +131,7 @@ class SettingsService:
             team_info = {
                 'mail': invited.email,
                 'last_sign_in': invited.last_signed_in,
-                'access_level': invited.access_level,
+                'access_level': invited.team_access_level,
                 'invited_by': inviter_mail,
                 'added_on': invited.added_on
             }

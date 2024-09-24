@@ -211,7 +211,7 @@ def check_user_authentication(Authorization: Annotated[str, Header()],
                 'NOT_FOUND'
             }
         )
-    if user_data.team_member_id:
+    if hasattr(user_data, 'team_member_id') and user_data.team_member_id:
         user['team_member'] = user_persistence_service.get_user_team_member_by_id(user_data.team_member_id)
     return user
 

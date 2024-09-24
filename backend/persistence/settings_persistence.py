@@ -75,10 +75,10 @@ class SettingsPersistence:
     def get_team_members_by_userid(self, user_id):
         inviter = aliased(User)
         invited = aliased(User)
-        return self.db.query(invited, inviter.mail) \
-            .join(inviter, invited.invited_by_user_id == inviter.id) \
-            .filter(or_(invited.team_owner_id == user_id, User.id == user_id)) \
-            .order_by(inviter.mail) \
+        return self.db.query(invited, inviter.email) \
+            .outerjoin(inviter, invited.invited_by_id == inviter.id) \
+            .filter(or_(invited.team_owner_id == user_id, invited.id == user_id)) \
+            .order_by(inviter.email) \
             .all()
     
     def get_pending_invations_by_userid(self, user_id):
