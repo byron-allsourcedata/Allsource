@@ -370,7 +370,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                 Age Range:
                             </Typography>
                             <Typography sx={{ ...accountStyles.text }}>
-                                {lead.age_min && lead.age_max ? `${lead.age_min} - ${lead.age_max}` yrs : '--'}
+                                {lead.age_min && lead.age_max ? `${lead.age_min} - ${lead.age_max} yrs ` : '--'}
                             </Typography>
                         </Box>
 
