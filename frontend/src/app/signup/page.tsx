@@ -171,6 +171,12 @@ const Signup: React.FC = () => {
               get_me()
               router.push(`${response.data.stripe_payment_url}`)
               break;
+            case 'NOT_VALID_EMAIL':
+              showErrorToast("The email is either invalid or does not match the invited user.");
+              break;
+            case 'TEAM_INVITATION_INVALID':
+              showErrorToast("The email provided is not valid for team invitation.");
+              break;
             case "FILL_COMPANY_DETAILS":
               get_me()
               router.push("/account-setup")
@@ -277,9 +283,15 @@ const Signup: React.FC = () => {
                     get_me()
                     router.push(`${response.data.stripe_payment_url}`);
                     break;
-                  case 'INCORRECT_PASSWORD_OR_EMAIL':
-                    showErrorToast("User with this email does not exist");
+                    case 'INCORRECT_PASSWORD_OR_EMAIL':
+                      showErrorToast("User with this email does not exist");
+                      break;
+                  case 'NOT_VALID_EMAIL':
+                    showErrorToast("The email is either invalid or does not match the invited user.");
                     break;
+                    case 'TEAM_INVITATION_INVALID':
+                      showErrorToast("The email provided is not valid for team invitation.");
+                      break;
                   case "PIXEL_INSTALLATION_NEEDED":
                     get_me()
                     router.push('/dashboard');
