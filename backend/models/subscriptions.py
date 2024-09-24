@@ -22,6 +22,7 @@ class UserSubscriptions(Base):
     is_trial = Column(BOOLEAN, nullable=True, default=False)
     domains_limit = Column(Integer, nullable=True)
     users_limit = Column(Integer, nullable=True)
+    members_limit = Column(Integer, nullable=True)
     integrations_limit = Column(Integer, nullable=True)
 
 

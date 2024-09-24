@@ -211,6 +211,8 @@ def check_user_authentication(Authorization: Annotated[str, Header()],
                 'NOT_FOUND'
             }
         )
+    if user_data.team_member_id:
+        user['team_member'] = user_persistence_service.get_user_team_member_by_id(user_data.team_member_id)
     return user
 
 
@@ -290,8 +292,7 @@ def get_pixel_installation_service(db: Session = Depends(get_db),
 
 
 
-def get_settings_service(db: Session = Depends(get_db),
-                                   settings_persistence: SettingsPersistence = Depends(
+def get_settings_service(settings_persistence: SettingsPersistence = Depends(
                                        get_settings_persistence),
                                     plan_persistence: PlansPersistence = Depends(
                                        get_plans_persistence
@@ -302,14 +303,17 @@ def get_settings_service(db: Session = Depends(get_db),
                                     send_grid_persistence: SendgridPersistence = Depends(
                                        get_send_grid_persistence_service
                                        )
+                                    ,
+                                    subscription_service: SubscriptionService = Depends(
+                                       get_subscription_service
+                                       )
                                    ):
-    return SettingsService(db=db, settings_persistence=settings_persistence, plan_persistence=plan_persistence, user_persistence=user_persistence, send_grid_persistence=send_grid_persistence)
+    return SettingsService(settings_persistence=settings_persistence, plan_persistence=plan_persistence, user_persistence=user_persistence, send_grid_persistence=send_grid_persistence, subscription_service=subscription_service)
 
 
-def get_plans_service(user=Depends(check_user_authentication),
-                      plans_persistence: PlansPersistence = Depends(get_plans_persistence),
+def get_plans_service(plans_persistence: PlansPersistence = Depends(get_plans_persistence),
                       subscription_service: SubscriptionService = Depends(get_subscription_service)):
-    return PlansService(plans_persistence=plans_persistence, user=user, subscription_service=subscription_service)
+    return PlansService(plans_persistence=plans_persistence, subscription_service=subscription_service)
 
 
 def get_webhook(subscription_service: SubscriptionService = Depends(get_subscription_service)):

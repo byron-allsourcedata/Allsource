@@ -32,7 +32,8 @@ class PlansPersistence:
         integrations_limit = plan.integrations_limit
         leads_credits = plan.leads_credits
         prospect_credits = plan.prospect_credits
-        return domains_limit, users_limit, integrations_limit, leads_credits, prospect_credits
+        members_limit = plan.members_limit
+        return domains_limit, users_limit, integrations_limit, leads_credits, prospect_credits, members_limit
 
     def get_free_trail_plan(self):
         return self.db.query(SubscriptionPlan).filter(SubscriptionPlan.is_free_trial == True).first()

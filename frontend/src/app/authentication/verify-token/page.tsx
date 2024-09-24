@@ -11,6 +11,7 @@ const VerifyToken = () => {
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
   const mail = searchParams.get('mail');
+
   useEffect(() => {
     document.body.style.overflow = 'hidden';
     return () => {
@@ -41,7 +42,8 @@ const VerifyToken = () => {
                 router.push('/settings');
               }, 2500);
             }
-          } else {
+          }
+          else {
             const response = await axiosInstance.get(`/authentication/verify-token?token=${token}`);
             if (response.data.status === 'SUCCESS' || response.data.status === 'EMAIL_ALREADY_VERIFIED') {
               if (typeof window !== 'undefined') {

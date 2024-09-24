@@ -23,9 +23,10 @@ class ResetEmailForm(BaseModel):
     email: str = Field(...)
     
 class TeamsDetailsRequest(BaseModel):
-    pending_invitation_revoke: str = Field(...)
-    invite_user: str = Field(...)
-    remove_user: str = Field(...)
+    pending_invitation_revoke: Optional[str] = None
+    invite_user: Optional[str] = None
+    remove_user: Optional[str] = None
+    access_level: Optional[str] = None
     
 class PaymentCard(BaseModel):
     payment_method_id: str = Field(...)

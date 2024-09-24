@@ -1,18 +1,19 @@
-from fastapi import APIRouter, Depends, Request as fastRequest, Query
+from fastapi import APIRouter, Depends, Request as fastRequest, Query, HTTPException, status
 from models.users import User
 from services.settings import SettingsService
 from schemas.settings import AccountDetailsRequest, TeamsDetailsRequest, ResetEmailForm, PaymentCard, ApiKeysRequest
-from dependencies import get_settings_service, check_user_authorization_without_pixel
+from dependencies import get_settings_service, check_user_authorization_without_pixel, check_user_authentication
 from schemas.users import VerifyTokenResponse
+from enums import TeamAccessLevel
 router = APIRouter()
 
 
 @router.get("/account-details")
-def get_account_details(settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authorization_without_pixel)):
+def get_account_details(settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authentication)):
     return settings_service.get_account_details(user=user)
 
 @router.put("/account-details")
-def change_account_details(account_details: AccountDetailsRequest, settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authorization_without_pixel)):
+def change_account_details(account_details: AccountDetailsRequest, settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authentication)):
     return settings_service.change_account_details(user=user, account_details=account_details)
 
 @router.get("/account-details/change-email")
@@ -22,11 +23,44 @@ def change_email_account_details(settings_service: SettingsService = Depends(get
 
 @router.get("/teams")
 def get_teams(settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authorization_without_pixel)):
-    return settings_service.get_teams(user=user)
+    return settings_service.get_team_members(user=user)
+
+@router.get("/teams/pending-invations")
+def get_pending_invations(settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authorization_without_pixel)):
+    return settings_service.get_pending_invations(user=user)
 
 @router.put("/teams")
 def change_teams(teams_details: TeamsDetailsRequest, settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authorization_without_pixel)):
-    return settings_service.change_teams_details(user=user, teams_details=teams_details)
+    if user.get('team_member'):
+        team_member = user.get('team_member')
+        if team_member.team_access_level != TeamAccessLevel.ADMIN:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied. Admins and standard only."
+            )
+    return settings_service.change_teams(user=user, teams_details=teams_details)
+
+@router.post("/teams")
+def invite_user(teams_details: TeamsDetailsRequest, settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authorization_without_pixel)):
+    if user.get('team_member'):
+        team_member = user.get('team_member')
+        if team_member.team_access_level != TeamAccessLevel.ADMIN:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied. Admins and standard only."
+            )
+    return settings_service.invite_user(user=user, invite_user=teams_details.invite_user, access_level=teams_details.access_level)
+
+@router.post("/teams/check-team-invitations-limit")
+def check_team_invitations_limit(settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authorization_without_pixel)):
+    if user.get('team_member'):
+        team_member = user.get('team_member')
+        if team_member.team_access_level != TeamAccessLevel.ADMIN:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied. Admins and standard only."
+            )
+    return settings_service.check_team_invitations_limit(user=user)
 
 @router.get("/billing")
 def get_billing(
@@ -42,14 +76,35 @@ def get_billing_history(
 
 @router.post("/billing/add-card")
 def add_card(payment_card: PaymentCard, settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authorization_without_pixel)):
+    if user.get('team_member'):
+        team_member = user.get('team_member')
+        if team_member.team_access_level != TeamAccessLevel.ADMIN:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied. Admins and standard only."
+            )
     return settings_service.add_card(user=user, payment_method_id=payment_card.payment_method_id)
 
 @router.delete("/billing/delete-card")
 def delete_card(payment_card: PaymentCard, settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authorization_without_pixel)):
+    if user.get('team_member'):
+        team_member = user.get('team_member')
+        if team_member.team_access_level != TeamAccessLevel.ADMIN:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied. Admins and standard only."
+            )
     return settings_service.delete_card(payment_method_id=payment_card.payment_method_id)
 
 @router.put("/billing/default-card")
 def default_card(payment_card: PaymentCard, settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authorization_without_pixel)):
+    if user.get('team_member'):
+        team_member = user.get('team_member')
+        if team_member.team_access_level != TeamAccessLevel.ADMIN:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied. Admins and standard only."
+            )
     return settings_service.default_card(user=user, payment_method_id=payment_card.payment_method_id)
 
 @router.get("/subscription")

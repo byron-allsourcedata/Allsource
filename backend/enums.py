@@ -27,6 +27,10 @@ class SettingStatus(Enum):
     RESEND_TOO_SOON = "RESEND_TOO_SOON"
     EMAIL_NOT_CONFIRMED = "EMAIL_NOT_CONFIRMED"
     FAILED = 'FAILED'
+    ALREADY_INVITED = 'ALREADY_INVITED'
+    INVITATION_LIMIT_REACHED = 'INVITATION_LIMIT_REACHED'
+    INVITATION_LIMIT_NOT_REACHED = 'INVITATION_LIMIT_NOT_REACHED'
+    INVALID_ACCESS_LEVEL = 'INVALID_ACCESS_LEVEL'
 
 
 class VerificationEmail(Enum):
@@ -58,7 +62,15 @@ class SignUpStatus(Enum):
     PASSWORD_NOT_VALID = 'PASSWORD_NOT_VALID'
     NEED_CONFIRM_EMAIL = 'NEED_CONFIRM_EMAIL'
     FILL_COMPANY_DETAILS = 'FILL_COMPANY_DETAILS'
-
+    TEAM_INVITATION_INVALID = 'TEAM_INVITATION_INVALID'
+    
+class TeamsInvitationStatus(Enum):
+    PENDING = 'pending'
+    
+class TeamAccessLevel(Enum):
+    ADMIN = 'admin'
+    STANDARD = 'standard'
+    READ_ONLY = 'read_only'
 
 class LoginStatus(Enum):
     INCORRECT_PASSWORD_OR_EMAIL = 'INCORRECT_PASSWORD_OR_EMAIL'
@@ -87,6 +99,7 @@ class SendgridTemplate(Enum):
     FORGOT_PASSWORD_TEMPLATE = 'forgot_password_template'
     SEND_PIXEL_CODE_TEMPLATE = 'send_pixel_code_template'
     CHANGE_EMAIL_TEMPLATE = 'change_email_template'
+    TEAM_MEMBERS_TEMPLATE = 'team_members_template'
 
 
 class ResetPasswordEnum(Enum):
