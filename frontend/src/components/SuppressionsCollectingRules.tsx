@@ -13,12 +13,10 @@ const CollectionRules: React.FC = () => {
             "@media (max-width: 600px)": {padding: '0px'} 
         }}>
             <Box sx={{ width: '100%', padding: '20px', "@media (max-width: 600px)": {padding: '16px'} }}>
-                {/* Заголовок */}
                 <Typography className="main-text" sx={{ fontWeight: '600', lineHeight: '21.82px', marginBottom: '16px', fontSize: '1rem', color: 'rgba(32, 33, 36, 1)' }}>
                     Collection Rules
                 </Typography>
 
-                {/* Описание */}
                 <Typography className="second-text" sx={{ marginBottom: '24px', fontWeight: 400, fontSize: '0.75rem', color: 'rgba(128, 128, 128, 1)' }}>
                     Create rules to automatically start a collection event.
                 </Typography>
