@@ -80,6 +80,9 @@ class SettingsPersistence:
             .filter(or_(invited.team_owner_id == user_id, User.id == user_id)) \
             .order_by(inviter.mail) \
             .all()
+            
+    def get_invitation_limit(self, user_id):
+        
     
     def get_pending_invations_by_userid(self, user_id):
         return self.db.query(TeamInvitation).filter(TeamInvitation.teams_owner_id == user_id).all()

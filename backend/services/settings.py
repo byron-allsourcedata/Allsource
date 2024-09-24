@@ -123,7 +123,8 @@ class SettingsService:
         return {'status': VerifyToken.INCORRECT_TOKEN}
     
     def get_team_members(self, user: dict):
-        result = []
+        result = {}
+        team_arr = []
         teams_data = self.settings_persistence.get_team_members_by_userid(user_id=user.get('id'))
         for team_data in teams_data:
             invited, inviter_mail = team_data
@@ -134,8 +135,11 @@ class SettingsService:
                 'invited_by': inviter_mail,
                 'added_on': invited.added_on
             }
-            result.append(team_info)
-        return result
+            team_arr.append(team_info)
+        result['teams'] = team_arr
+        result['member_limit'] = self.plan_persistence.get_current_plan(user_id=user.get('id')).members_limit
+        result['member_count'] = len(team_arr)
+        return team_arr
             
         
     def get_pending_invations(self, user: dict):
