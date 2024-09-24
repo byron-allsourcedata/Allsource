@@ -56,7 +56,7 @@ class UserPersistence:
         result = {
             'succes': False
         }
-        teams_invitation = self.db.query(TeamInvitation).filter(TeamInvitation.md5_hash == teams_token).first()
+        teams_invitation = self.db.query(TeamInvitation).filter(TeamInvitation.token == teams_token).first()
         if teams_invitation:
             if teams_invitation.mail != user_mail:
                 result['error'] = SignUpStatus.NOT_VALID_EMAIL
@@ -122,7 +122,7 @@ class UserPersistence:
 
     def update_teams_owner_id(self, user_id, teams_token, owner_id):
         teams_invitation = self.db.query(TeamInvitation).filter(
-            TeamInvitation.md5_hash == teams_token
+            TeamInvitation.token == teams_token
         ).first()
         user_data = self.db.query(Users).filter(Users.id == user_id).first()
         user_data.team_owner_id = owner_id

@@ -16,6 +16,6 @@ class TeamInvitation(Base):
     date_invited = Column(TIMESTAMP(precision=7), nullable=True)
     invited_by_id = Column(BIGINT, nullable=True)
     team_owner_id = Column(BIGINT, nullable=True)
-    md5_hash = Column(VARCHAR, nullable=False)
+    token = Column(VARCHAR, nullable=False)
 
 event.listen(TeamInvitation, "before_insert", create_timestamps)
