@@ -14,7 +14,7 @@ from enums import VerifyToken
 logger = logging.getLogger(__name__)
 from datetime import datetime, timedelta
 from .sendgrid import SendgridHandler
-from enums import SettingStatus, SendgridTemplate
+from enums import SettingStatus, SendgridTemplate, TeamAccessLevel
 import hashlib
 import json
 from services.stripe_service import *
@@ -157,10 +157,12 @@ class SettingsService:
             return SettingStatus.INVITATION_LIMIT_REACHED
         return SettingStatus.INVITATION_LIMIT_NOT_REACHED
     
-    def invite_user(self, user: dict, invite_user, access_level='read_only'):
+    def invite_user(self, user: dict, invite_user, access_level=TeamAccessLevel.READ_ONLY):
         user_limit = self.subscription_service.check_invitation_limit(user_id=user.get('id'))
         if user_limit is False:
             return SettingStatus.INVITATION_LIMIT_REACHED
+        if access_level not in TeamAccessLevel:
+            return SettingStatus.INVALID_ACCESS_LEVEL 
         exists_team_member = self.settings_persistence.exists_team_member(user_id=user.get('id'), user_mail=invite_user)
         if exists_team_member:
             return SettingStatus.ALREADY_INVITED

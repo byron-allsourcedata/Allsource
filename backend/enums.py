@@ -30,6 +30,7 @@ class SettingStatus(Enum):
     ALREADY_INVITED = 'ALREADY_INVITED'
     INVITATION_LIMIT_REACHED = 'INVITATION_LIMIT_REACHED'
     INVITATION_LIMIT_NOT_REACHED = 'INVITATION_LIMIT_NOT_REACHED'
+    INVALID_ACCESS_LEVEL = 'INVALID_ACCESS_LEVEL'
 
 
 class VerificationEmail(Enum):
@@ -69,6 +70,7 @@ class TeamsInvitationStatus(Enum):
 class TeamAccessLevel(Enum):
     ADMIN = 'admin'
     STANDARD = 'standard'
+    READ_ONLY = 'read_only'
 
 class LoginStatus(Enum):
     INCORRECT_PASSWORD_OR_EMAIL = 'INCORRECT_PASSWORD_OR_EMAIL'
