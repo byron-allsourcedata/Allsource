@@ -51,6 +51,17 @@ def invite_user(teams_details: TeamsDetailsRequest, settings_service: SettingsSe
             )
     return settings_service.invite_user(user=user, invite_user=teams_details.invite_user, access_level=teams_details.access_level)
 
+@router.post("/teams/check-team-invitations-limit")
+def check_team_invitations_limit(settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authorization_without_pixel)):
+    if user.get('team_member'):
+        team_member = user.get('team_member')
+        if team_member.team_access_level != TeamAccessLevel.ADMIN:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied. Admins and standard only."
+            )
+    return settings_service.check_team_invitations_limit(user=user)
+
 @router.get("/billing")
 def get_billing(
     settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authorization_without_pixel)):

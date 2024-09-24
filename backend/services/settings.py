@@ -151,6 +151,12 @@ class SettingsService:
             result.append(team_info)
         return result
     
+    def check_team_invitations_limit(self, user):
+        user_limit = self.subscription_service.check_invitation_limit(user_id=user.get('id'))
+        if user_limit is False:
+            return SettingStatus.INVITATION_LIMIT_REACHED
+        return SettingStatus.INVITATION_LIMIT_NOT_REACHED
+    
     def invite_user(self, user: dict, invite_user, access_level='read_only'):
         user_limit = self.subscription_service.check_invitation_limit(user_id=user.get('id'))
         if user_limit is False:
