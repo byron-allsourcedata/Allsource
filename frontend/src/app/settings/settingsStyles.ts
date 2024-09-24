@@ -132,7 +132,7 @@ export const planStyles: { [key: string]: SxProps<Theme> } = {
         color: '#4a4a4a',
         fontWeight: '600',
         textTransform: 'none',
-        padding: '0 10px 10px',
+        padding: '0 0 10px 0',
         minWidth: 'auto',
         boxShadow: 'none',
         borderRadius: 0,
