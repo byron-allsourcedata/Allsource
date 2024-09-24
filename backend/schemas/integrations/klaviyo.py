@@ -25,11 +25,6 @@ class KlaviyoTags(BaseModel):
     id: str
     tag_name: str
 
-class KlaviyoSync(BaseModel):
-    list_id: int
-    supression: bool
-    filter_contact_type: tp.List[str]
-    map_data: tp.Dict[str, str]
 
 class KlaviyoLocation(BaseModel):
     address1: tp.Optional[str] = None

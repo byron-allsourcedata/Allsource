@@ -6,11 +6,14 @@ import TabPanel from '@mui/lab/TabPanel';
 import Image from 'next/image';
 import CloseIcon from '@mui/icons-material/Close';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
+import { showToast } from './ToastNotification';
+
 
 interface ConnectKlaviyoPopupProps {
     open: boolean;
     onClose: () => void;
 }
+
 
 type KlaviyoList = {
     id: string
@@ -36,6 +39,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
     const textFieldRef = useRef<HTMLDivElement>(null);
     const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
     const [openDropdown, setOpenDropdown] = useState<number | null>(null);
+    const [openDropdownMaximiz, setOpenDropdownMaximiz] = useState<number | null>(null)
     const [apiKey, setApiKey] = useState('');
     const [apiKeyError, setApiKeyError] = useState(false);
     const [tab2Error, setTab2Error] = useState(false);
@@ -49,7 +53,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
     const [maplistNameError, setMapListNameError] = useState(false);
     const [klaviyoList, setKlaviyoList] = useState<KlaviyoList[]>([])
     const [klaviyoTags, setKlaviyoTags] = useState<KlaviyoTags[]>([])
-    const [mapListOptions, setMapListOptions] = useState<string[]>([
+    const [mapKlaviyoListOptions, setKlaviyoMapListOptions] = useState<string[]>([
         'Email',
         'Phone number',
         'First name',
@@ -59,6 +63,14 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
         'Job Title',
         'Location',
     ]);
+    const [mapMaximizListOptions, setMaximizMapListOptions] = useState<string[]>([
+        'First name',
+        'Second name',
+        'Gender',
+        'Age',
+        'Job Title',
+        'Location',
+    ])
     useEffect(() => {
         const fetchData = async() => {
             const response = await axiosInstance.get('/integrations/credentials/klaviyo')
@@ -113,11 +125,49 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
         setKlaviyoList(response.data)
     }
 
-    const handleSaveSync = () => {
-        console.log(mapListOptions)
-        console.log(tagName)
-        console.log()
+    const createNewList = async() => {
+        const newListResponse = await axiosInstance.post('/integrations/sync/list/', {
+            list_name: newListName
+        }, {
+            params: {
+                service_name: 'klaviyo'
+            }
+        })
+        if(newListResponse.status !== 201) {
+            throw new Error('Failed to create a new list')
+        }
+        return newListResponse.data
     }
+
+    const createTag = async() => {
+        const newTagsResponse = await axiosInstance.post('/integrations/sync/list/', {
+            tag_name: tagName
+        }, {
+            params: {
+                service_name: 'klaviyo'
+            }
+        })
+        if (newTagsResponse.status !== 201 && newTagsResponse.status !== 200) {
+            throw new Error('Failed to create a new tags')
+        }
+        return newTagsResponse.data
+    }
+
+    const handleSaveSync = async() => {
+        const list: KlaviyoList = await createNewList()
+        const tag: KlaviyoTags = await createTag()
+        const response = await axiosInstance.post('/integrations/sync/', {
+            list_id: list.id,
+            tags_id: tag.id,
+            leads_type: selectedRadioValue,
+            data_map: rows
+        })
+        if(response.status === 201) {
+            onClose()
+            showToast('Create data sync successfuly')
+        }
+    }
+
 
     const staticOptions = ['Email List', 'Phone List', 'SMS List', 'Maximiz Contacts', 'Preview List', 'Maximiz'];
 
@@ -167,6 +217,20 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
         setIsDropdownValid(typeof value !== 'string' && value.list_name !== '');
     };
     
+    const handleSelectMapOptionMaximiz = (value: string, event: React.MouseEvent<HTMLElement>, id: number) => {
+        event.stopPropagation();
+
+        if (value === 'createNewField') {
+            setShowCreateMapForm(prev => !prev); // Toggle form visibility
+
+            // Ensure dropdown remains open if it was already open or if form is being opened
+            if (openDropdown !== id) {
+                setOpenDropdownMaximiz(id); // Open dropdown if it’s not already open
+            }
+        } else {
+            handleDropdownMaximizClose(); // Close dropdown for other selections
+        }
+    };
 
     const handleSelectMapOption = (value: string, event: React.MouseEvent<HTMLElement>, id: number) => {
         event.stopPropagation(); // Prevent click event from closing the dropdown
@@ -228,8 +292,8 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
             if (newMapListName.trim() === '') return; // Prevent saving empty values
 
             // Update the value in the rows state
-            handleMapListChange(id, 'selectValue', newMapListName);
-            setMapListOptions(prevOptions => [...prevOptions, newMapListName]);
+            handleMapListChange(id, 'type', newMapListName);
+            setKlaviyoMapListOptions(prevOptions => [...prevOptions, newMapListName]);
             // Optionally, reset the new value state if needed
             setNewMapListName('');
 
@@ -502,17 +566,16 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
     }
 
     const defaultRows: Row[] = [
-        { id: 1, type: 'Email', value: '' },
-        { id: 2, type: 'Phone number', value: '' },
+        { id: 1, type: 'Email', value: 'Email' },
+        { id: 2, type: 'Phone number', value: 'Email' },
       ];
       const [rows, setRows] = useState<Row[]>(defaultRows);
 
       // Update function with typed parameters
-      const handleMapListChange = (id: number, field: 'value' | 'selectValue', value: string) => {
+      const handleMapListChange = (id: number, field: 'value' | 'type', value: string) => {
         setRows(rows.map(row =>
           row.id === id ? { ...row, [field]: value } : row
         ));
-        console.log(rows)
       };
 
     // Delete function with typed parameter
@@ -537,9 +600,8 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
     const handleAddRow = () => {
         const newRow: Row = {
           id: Date.now(), // Unique ID for each new row
-          type: 'Enter new data',
+          type: '',
           value: '',
-          selectValue: '', // Ensure selectValue is present for new rows
           canDelete: true, // This new row can be deleted
         };
         setRows([...rows, newRow]);
@@ -548,9 +610,17 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
         setOpenDropdown(id); // Set the open state for the current dropdown
     };
 
+    const handleDropdownMaximizOpen = (id: number) => {
+        setOpenDropdownMaximiz(id)
+    }
+
     const handleDropdownClose = () => {
         setOpenDropdown(null); // Reset when dropdown closes
     };
+
+    const handleDropdownMaximizClose = () => {
+        setOpenDropdownMaximiz(null)
+    }
 
     const handleApiKeyChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setApiKey(event.target.value);
@@ -646,7 +716,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                 },
             }}
         >
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 3.5, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 3.5, px: 2, borderBottom: '1px solid #e4e4e4' }}>
                 <Typography variant="h6" sx={{ textAlign: 'center', color: '#202124', fontFamily: 'Nunito Sans', fontWeight: '600', fontSize: '16px', lineHeight: 'normal' }}>
                     Connect to Klaviyo
                 </Typography>
@@ -664,16 +734,9 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                     </IconButton>
                 </Box>
             </Box>
-            <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', height: '100%',
-                '@media (max-width: 480px)': {
-                        height: 'auto'
-                    }
-             }}>
-                <Box sx={{ width: '100%', padding: '16px 24px 24px 24px', position: 'relative', height: '100%', marginBottom: '100px',
-                    '@media (max-width: 480px)': {
-                        height: 'auto'
-                    }
-                 }}>
+            <Divider />
+            <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', height: '100%' }}>
+                <Box sx={{ width: '100%', padding: '16px 24px 24px 24px', position: 'relative' }}>
                 <TabContext value={value}>
                     <Box sx={{pb: 4}}>
                         <TabList centered aria-label="Connect to Klaviyo Tabs"
@@ -1432,9 +1495,136 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                                 <Grid container spacing={2} alignItems="center" sx={{flexWrap: { xs: 'nowrap', sm: 'wrap' }}}>
                                     {/* Left Input Field */}
                                     <Grid item xs="auto" sm={5}>
-                                    
+                                    {index < 2 ? ( // For the first two rows, show input fields
+                                        <TextField
+                                        fullWidth
+                                        variant="outlined"
+                                        disabled={true}
+                                        label={row.type}
+                                        value={row.value}
+                                        onChange={(e) => handleMapListChange(row.id, 'value', e.target.value)}
+                                        InputLabelProps={{
+                                            sx: {
+                                            fontFamily: 'Nunito Sans',
+                                            fontSize: '12px',
+                                            lineHeight: '16px',
+                                            color: 'rgba(17, 17, 19, 0.60)',
+                                            top: '-5px',
+                                            '&.Mui-focused': {
+                                                color: '#0000FF',
+                                                top: 0
+                                            },
+                                            '&.MuiInputLabel-shrink': {
+                                                top: 0
+                                            }
+                                            }
+                                        }}
+                                        InputProps={{
+                                            
+                                            sx: {
+                                                '&.MuiOutlinedInput-root': {
+                                                    height: '36px',
+                                                    '& .MuiOutlinedInput-input': {
+                                                        padding: '6.5px 8px',
+                                                        fontFamily: 'Roboto',
+                                                        color: '#202124',
+                                                        fontSize: '14px',
+                                                        fontWeight: '400',
+                                                        lineHeight: '20px'
+                                                    },
+                                                    '& .MuiOutlinedInput-notchedOutline': {
+                                                        borderColor: '#A3B0C2',
+                                                    },
+                                                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                        borderColor: '#A3B0C2',
+                                                    },
+                                                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                                        borderColor: '#0000FF',
+                                                    },
+                                                    },
+                                                    '&+.MuiFormHelperText-root': {
+                                                        marginLeft: '0',
+                                                    },
+                                            }
+                                          }}
+                                        />
+                                    ) : (
+                                        <TextField
+                                            fullWidth
+                                            variant="outlined"
+                                            label="Select"
+                                            select
+                                            sx={{minWidth: '194px'}}
+                                            value={row.value || ""}
+                                            onChange={(e: React.ChangeEvent<{ value: unknown }>) =>
+                                                handleMapListChange(row.id, 'value', e.target.value as string)
+                                            }
+                                            InputLabelProps={{
+                                                sx: {
+                                                fontFamily: 'Nunito Sans',
+                                                fontSize: '12px',
+                                                lineHeight: '16px',
+                                                color: 'rgba(17, 17, 19, 0.60)',
+                                                top: '-8px',
+                                                '&.Mui-focused': {
+                                                    color: '#0000FF',
+                                                    top: '0'
+                                                },
+                                                '&.MuiInputLabel-shrink': {
+                                                    top: 0
+                                                }
+                                                }
+                                            }}
+                                            SelectProps={{
+                                                open: openDropdownMaximiz === row.id,
+                                                onOpen: () => handleDropdownMaximizOpen(row.id),
+
+                                                onClose: () => {
+                                                handleDropdownMaximizClose()
+                                                },
+                                                IconComponent: () => (
+                                                openDropdownMaximiz === row.id ? (
+                                                    <Image src='/chevron-drop-up.svg' alt='chevron-drop-up' height={24} width={24} />
+                                                ) : (
+                                                    <Image src='/chevron-drop-down.svg' alt='chevron-drop-down' height={24} width={24} />
+                                                )
+                                                ),
+                                                sx: {
+                                                    '& .MuiOutlinedInput-input': {
+                                                        padding: '6.5px 8px',
+                                                    },
+                                                paddingRight: '16px', // Adds space for the custom icon
+                                                fontFamily: 'Roboto',
+                                                fontSize: '14px',
+                                                lineHeight: '20px',
+                                                color: '#707071',
+                                                },
+                                            }}
+                                            onClick={(e) => {
+                                                if (openDropdownMaximiz === row.id) {
+                                                  handleDropdownMaximizClose();
+                                                } else {
+                                                  handleDropdownMaximizOpen(row.id);
+                                                }
+                                              }}
+                                            >
+                                            {mapMaximizListOptions.map(option => (
+                                                    <MenuItem key={option} value={option} sx= {{
+                                                        fontFamily: "Nunito Sans",
+                                                        fontSize: "14px",
+                                                        color: "#202124",
+                                                        lineHeight: "20px",
+                                                        fontWeight: '500'
+                                                    }}>
+                                                        {option}
+                                                    </MenuItem>
+                                                ))}
+
+                                            
+                                        </TextField>
+
+                                    )}
                                     </Grid>
-                                    
                                     {/* Middle Icon Toggle (Right Arrow or Close Icon) */}
                                     <Grid item xs="auto" sm={1} container justifyContent="center">
                                     {row.selectValue !== undefined ? (
@@ -1470,9 +1660,10 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                                         <TextField
                                         fullWidth
                                         variant="outlined"
+                                        disabled={true}
                                         label={row.type}
-                                        value={row.value}
-                                        onChange={(e) => handleMapListChange(row.id, 'value', e.target.value)}
+                                        value={row.type}
+                                        onChange={(e) => handleMapListChange(row.id, 'type', e.target.value)}
                                         InputLabelProps={{
                                             sx: {
                                             fontFamily: 'Nunito Sans',
@@ -1526,9 +1717,9 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                                             label="Select"
                                             select
                                             sx={{minWidth: '194px'}}
-                                            value={row.selectValue || ""}
+                                            value={row.type || ""}
                                             onChange={(e: React.ChangeEvent<{ value: unknown }>) =>
-                                                handleMapListChange(row.id, 'selectValue', e.target.value as string)
+                                                handleMapListChange(row.id, 'type', e.target.value as string)
                                             }
                                             
                                             InputLabelProps={{
@@ -1745,7 +1936,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                                                 </Box>
                                             )}
 
-                                            {mapListOptions.map(option => (
+                                            {mapKlaviyoListOptions.map(option => (
                                                     <MenuItem key={option} value={option} sx= {{
                                                         fontFamily: "Nunito Sans",
                                                         fontSize: "14px",
@@ -1878,12 +2069,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                 {/* Button based on selected tab */}
                     
             </Box>
-            <Box sx={{ px: 2, py: 3.5, border: '1px solid #e4e4e4', position: 'fixed', bottom: 0, right: 0, background: '#fff',
-                width: '620px',
-                '@media (max-width: 600px)': {
-                        width: '100%',
-                }
-             }}>
+            <Box sx={{ px: 2, py: 3.5, width: '100%', border: '1px solid #e4e4e4' }}>
                         <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
                             
                                 {getButton(value)}

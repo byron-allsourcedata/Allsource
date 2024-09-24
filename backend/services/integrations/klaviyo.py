@@ -84,11 +84,12 @@ class KlaviyoIntegrationsService:
         credentials = self.get_credentials(domain_id)
         return self.__get_tags(credentials.access_token)
 
+
     def create_tags(self, tag_name: str, domain_id: int):
         credentail = self.get_credentials(domain_id)
         response = self.__handle_request(method='POST', url='https://a.klaviyo.com/api/tags/', api_key=credentail.access_token, json=json.dump(self.__mapped_tags_json_to_klaviyo(tag_name)))
         if response.status_code == 201:
-            return {'status': IntegrationsStatus.SUCCESS}
+            return self.__mapped_tags(response.json().get('data'))
         else: raise HTTPException(status_code=400, detail={'status': IntegrationsStatus.CREATE_IS_FAILED.value})
 
 
@@ -115,14 +116,13 @@ class KlaviyoIntegrationsService:
             'status': IntegrationsStatus.SUCCESS.value
         }
     
-    def create_sync(self, supperssion: bool, leads_type: List[str], data_map: Dict[str, str], domain_id: int):
+    def create_sync(self, leads_type: str, data_map: List[DataMap], domain_id: int):
         credentials = self.get_credentials(domain_id)
         self.sync_persistence.create_sync({
             'integration_id': credentials.id,
             'domain_id': domain_id,
-            'supperssion': supperssion,
             'leads_type': leads_type,
-            'data_map': data_map
+            'data_map': [data.model_dump_json() for data in data_map]
         })
     
     def data_sync(self):
