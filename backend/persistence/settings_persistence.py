@@ -1,7 +1,7 @@
 from models.users import User
 from models.api_keys import ApiKeys
 from sqlalchemy.orm import Session
-from sqlalchemy import update
+from sqlalchemy import update, or_
 from sqlalchemy.orm import aliased
 from datetime import datetime
 from models.users import Users
@@ -77,8 +77,7 @@ class SettingsPersistence:
         invited = aliased(User)
         return self.db.query(invited, inviter.mail) \
             .join(inviter, invited.invited_by_user_id == inviter.id) \
-            .filter(invited.team_owner_id == user_id) \
-            .filter(User.id == user_id) \
+            .filter(or_(invited.team_owner_id == user_id, User.id == user_id)) \
             .order_by(inviter.mail) \
             .all()
     
@@ -122,7 +121,20 @@ class SettingsPersistence:
         self.db.commit()
         
     def team_members_remove(self, user_id, mail):
+        result = {
+            'success': False
+        }
+        user_to_update = self.db.query(Users).filter(Users.email == mail).first()
+        
+        if user_to_update and user_to_update.id == user_id:
+            result['error'] = True
+            result['status'] = "Cannot remove team owner!"
+        
         self.db.query(Users).filter(Users.email == mail, Users.team_owner_id == user_id).update(
             {Users.team_owner_id: None},
-            synchronize_session=False)
+            synchronize_session=False
+        )
         self.db.commit()
+        result['success'] = True
+        
+        return result

@@ -196,7 +196,9 @@ class SettingsService:
         if pending_invitation_revoke:
             self.settings_persistence.pending_invitation_revoke(user_id=user.get('id'), mail=pending_invitation_revoke)
         if remove_user:
-            self.settings_persistence.team_members_remove(user_id=user.get('id'), mail=remove_user)
+            result = self.settings_persistence.team_members_remove(user_id=user.get('id'), mail=remove_user)
+            if result['success'] == False:
+                return result['error']
         invitation_limit = 1
         self.subscription_service.update_invitation_limit(user_id=user.get('id'), invitation_limit=invitation_limit)
         
