@@ -63,12 +63,14 @@ class UsersAuth:
     def create_account_google(self, auth_google_data: AuthGoogleData):
         teams_token = auth_google_data.teams_token
         owner_id = None
+        status = SignUpStatus.NEED_CHOOSE_PLAN
         client_id = os.getenv("CLIENT_GOOGLE_ID")
         google_request = google_requests.Request()
         is_without_card = auth_google_data.is_without_card
         idinfo = id_token.verify_oauth2_token(str(auth_google_data.token), google_request, client_id)
         if idinfo:
             if teams_token:
+                status = SignUpStatus.SUCCESS
                 status_result = self.user_persistence_service.check_status_invitations(teams_token=teams_token, user_mail=idinfo.get("email"))
                 if status_result['success'] is False:
                     return {
@@ -102,7 +104,7 @@ class UsersAuth:
         customer_id = stripe_service.create_customer_google(google_payload)
         user_object = self.add_user(is_without_card=is_without_card, customer_id=customer_id, user_form=google_payload)
         if teams_token:
-            self.user_persistence_service.update_teams_owner_id(user_id=user_object.id,teams_token=teams_token, owner_id=owner_id)
+            self.user_persistence_service.update_teams_owner_id(user_id=user_object.id, teams_token=teams_token, owner_id=owner_id)
             token_info = {
                 "id": owner_id,
                 "team_member_id": user_object.id
@@ -121,11 +123,11 @@ class UsersAuth:
             }
         logger.info("Token created")
         return {
-            'status': SignUpStatus.NEED_CHOOSE_PLAN,
+            'status': status,
             'token': token,
         }
 
-    def get_user_authorization_information(self, user: User, subscription_service: SubscriptionService):
+    def get_user_authorization_information(self, user: Users, subscription_service: SubscriptionService):
         if user.is_with_card:
             if user.company_name:
                 subscription_plan_is_active = subscription_service.is_user_has_active_subscription(user.id)
@@ -177,11 +179,12 @@ class UsersAuth:
         if not user_object.is_email_confirmed:
             self.user_persistence_service.email_confirmed(user_object.id)
         if user_object:
-            if user_object.team_owner_id:  
+            if user_object.team_owner_id:
                 token_info = {
                     "id": user_object.team_owner_id,
                     "team_member_id": user_object.id
                 }
+                user_object = self.user_persistence_service.get_user_by_id(user_object.team_owner_id, True)
             else:
                 token_info = {
                     "id": user_object.id,
@@ -212,7 +215,9 @@ class UsersAuth:
     def create_account(self, user_form: UserSignUpForm):
         teams_token = user_form.teams_token
         owner_id = None
+        status = SignUpStatus.NEED_CHOOSE_PLAN
         if teams_token:
+            status = SignUpStatus.SUCCESS
             status_result = self.user_persistence_service.check_status_invitations(teams_token=teams_token, user_mail=user_form.email)
             if status_result['success'] is False:
                 return {
@@ -249,7 +254,7 @@ class UsersAuth:
         }
         user_object = self.add_user(is_without_card, customer_id, user_form=user_data)
         if teams_token:
-            self.user_persistence_service.update_teams_owner_id(user_id=user_object.id, user_mail=user_object.email,teams_token=teams_token, owner_id=owner_id)
+            self.user_persistence_service.update_teams_owner_id(user_id=user_object.id, teams_token=teams_token, owner_id=owner_id)
             token_info = {
                 "id": owner_id,
                 "team_member_id": user_object.id
@@ -258,7 +263,6 @@ class UsersAuth:
             token_info = {
                 "id": user_object.id,
             }
-        
         token = create_access_token(token_info)
         logger.info("Token created")
         if is_without_card and teams_token is None:
@@ -281,13 +285,14 @@ class UsersAuth:
             return {
                 'is_success': True,
                 'status': SignUpStatus.NEED_CONFIRM_EMAIL,
-                'token': token,
-            }
+                'token': token
+            }   
+        
         logger.info("Token created")
         return {
             'is_success': True,
-            'status': SignUpStatus.NEED_CHOOSE_PLAN,
-            'token': token,
+            'status': status,
+            'token': token
         }
 
     def login_account(self, login_form: UserLoginForm):
@@ -302,9 +307,10 @@ class UsersAuth:
                 logger.info("Password verification passed")
                 if user_object.team_owner_id:
                     token_info = {
-                    "id": user_object.team_owner_id,
-                    "team_member_id": user_object.id
+                        "id": user_object.team_owner_id,
+                        "team_member_id": user_object.id
                     }
+                    user_object = self.user_persistence_service.get_user_by_id(user_object.team_owner_id, True)
                 else:
                     token_info = {
                         "id": user_object.id,
