@@ -104,7 +104,8 @@ class UserPersistence:
                 'activate_steps_percent': user.activate_steps_percent,
                 'leads_credits': user.leads_credits,
                 'prospect_credits': user.prospect_credits,
-                'is_leads_auto_charging': user.is_leads_auto_charging
+                'is_leads_auto_charging': user.is_leads_auto_charging,
+                'team_access_level':user.team_access_level
             }
         self.db.rollback()
         if result_as_object:

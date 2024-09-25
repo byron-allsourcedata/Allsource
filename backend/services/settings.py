@@ -180,6 +180,12 @@ class SettingsService:
         user_limit = self.subscription_service.get_invitation_limit(user_id=user.get('id'))
         return user_limit
     
+    def change_user_role(self, user: dict, email, access_level=TeamAccessLevel.READ_ONLY):
+        self.settings_persistence.change_user_role(email, access_level)
+        return {
+                'status': SettingStatus.SUCCESS,
+            }
+    
     def invite_user(self, user: dict, invite_user, access_level=TeamAccessLevel.READ_ONLY):
         user_limit = self.subscription_service.check_invitation_limit(user_id=user.get('id'))
         if user_limit is False:
@@ -218,8 +224,8 @@ class SettingsService:
             template_id=template_id,
             template_placeholder={"full_name": invite_user, "link": confirm_email_url, "company_name": user.get('company_name')}
         )
-        team_owner_id = user.get('team_owner_id') if user.get('team_owner_id') else user.get('id')
-        self.settings_persistence.save_pending_invations_by_userid(team_owner_id=team_owner_id, user_mail=invite_user, invited_by_id=user.get('id'), access_level=access_level, md5_hash=md5_hash)
+        invited_by_id = user.get('team_member').get('id') if user.get('team_member') else user.get('id')
+        self.settings_persistence.save_pending_invations_by_userid(team_owner_id=user.get('id'), user_mail=invite_user, invited_by_id=invited_by_id, access_level=access_level, md5_hash=md5_hash)
         invitation_limit = -1
         self.subscription_service.update_invitation_limit(user_id=user.get('id'), invitation_limit=invitation_limit)
         return {

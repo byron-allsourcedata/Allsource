@@ -71,6 +71,12 @@ interface Invitation {
     status: string;
 }
 
+const roleOptions = [
+    { key: "admin", value: "Admin" },
+    { key: "standard", value: "Standard" },
+    { key: "read-only", value: "Read Only" },
+];
+
 export const SettingsTeams: React.FC = () => {
     const [pendingInvitations, setPendingInvitations] = useState<any[]>([]);
     const [teamMembers, setTeamMembers] = useState<any[]>([]);
@@ -97,6 +103,31 @@ export const SettingsTeams: React.FC = () => {
         } finally {
             setIsLoading(false);
         }
+    };
+
+    const handleChangeUserRole = async (email: string, role: string): Promise<boolean> => {
+        try {
+            const response = await axiosInterceptorInstance.post('/settings/teams/change-user-role', { invite_user: email, access_level: role });
+            if (response.status === 200) {
+                switch (response.data.status) {
+                    case 'SUCCESS':
+                        showToast('Change user role successfully');
+                        return true;
+                    default:
+                        showErrorToast('Unknown response received.');
+                        return false;
+                }
+            }
+        } catch (error) {
+            if (axios.isAxiosError(error)) {
+                if (error.response && error.response.status === 403) {
+                    showErrorToast('Access denied: You do not have permission to remove this member.');
+                } else {
+                    console.error('Error removing team member:', error);
+                }
+            }
+        }
+        return false;
     };
 
     const fetchPendingInvitationData = async () => {
@@ -182,7 +213,7 @@ export const SettingsTeams: React.FC = () => {
 
     const handleSendInvitation = async (emails: string[], role: string) => {
         const results = [];
-        
+
         for (const email of emails) {
             try {
                 const response = await axiosInterceptorInstance.post('/settings/teams', { invite_user: email, access_level: role.toLowerCase() });
@@ -227,10 +258,10 @@ export const SettingsTeams: React.FC = () => {
                 results.push(false);
             }
         }
-    
+
         return results;
     };
-    
+
 
     const handleRevokeInvitation = async (email: string) => {
         try {
@@ -251,7 +282,7 @@ export const SettingsTeams: React.FC = () => {
         } catch (error) {
             if (axios.isAxiosError(error)) {
                 if (error.response && error.response.status === 403) {
-                    showErrorToast('Access denied: You do not have permission to send this invitation.');
+                    showErrorToast('Access denied: You do not have permission to revoke this invitation.');
                 } else {
                     console.error('Error revoking invitation:', error);
                 }
@@ -288,7 +319,7 @@ export const SettingsTeams: React.FC = () => {
                     showErrorToast('Access denied: You do not have permission to remove this member.');
                 } else {
                     console.error('Error removing team member:', error);
-                }   
+                }
             }
         }
         return false; // Return false if the request fails or if no cases match
@@ -496,24 +527,6 @@ export const SettingsTeams: React.FC = () => {
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            {/* {teamMembers.map((member) => (
-                                        <TableRow key={member.id}>
-                                            <TableCell>{member.user}</TableCell>
-                                            <TableCell>{member.lastSignedIn}</TableCell>
-                                            <TableCell>{member.accessLevel}</TableCell>
-                                            <TableCell>{member.invitedBy}</TableCell>
-                                            <TableCell>{member.addedOn}</TableCell>
-                                            <TableCell>
-                                                <Button
-                                                    variant="outlined"
-                                                    color="error"
-                                                    onClick={() => handleRemoveTeamMember(member.userId)}
-                                                >
-                                                    Remove
-                                                </Button>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))} */}
                             {teamMembers.length === 0 ? (
                                 <TableRow sx={teamsStyles.tableBodyRow}>
                                     <TableCell colSpan={5} sx={{
@@ -615,32 +628,50 @@ export const SettingsTeams: React.FC = () => {
                                                         },
                                                     }}
                                                 >
-                                                    <MenuItem key="admin" value="Admin">Admin</MenuItem>
-                                                    <MenuItem key="member" value="Member">Member</MenuItem>
-                                                    <MenuItem key="read-only" value="Read Only">Read Only</MenuItem>
+                                                    <Select
+                                                        onChange={(event) => {
+                                                            const selectedValue = event.target.value;
+                                                            const selectedOption = roleOptions.find(option => option.value === selectedValue);
+                                                            const selectedKey = selectedOption ? selectedOption.key : '';
+
+                                                            handleChangeUserRole(member.email, selectedKey).then(result => {
+                                                                if (result === true) {
+                                                                    member.access_level = selectedKey;
+                                                                }
+                                                            });
+                                                        }}>
+                                                        {roleOptions.map(option => (
+                                                            <MenuItem key={option.key} value={option.value}>{option.value}</MenuItem>
+                                                        ))}
+                                                    </Select>
+
                                                 </Select>
                                             </FormControl>
                                         </TableCell>
                                         <TableCell sx={teamsStyles.tableBodyColumn}>{member.invited_by}</TableCell>
                                         <TableCell sx={teamsStyles.tableBodyColumn}>{member.added_on}</TableCell>
                                         <TableCell sx={teamsStyles.tableBodyColumn}>
-                                            <Button onClick={() => handleRemoveMember(member.email)}
-                                                sx={{
-                                                    fontFamily: 'Roboto',
-                                                    fontSize: '12px',
-                                                    fontWeight: '400',
-                                                    lineHeight: '16px',
-                                                    color: '#5f6368',
-                                                    position: 'relative',
-                                                    textAlign: 'center',
-                                                    textTransform: 'none',
-                                                    '&:hover': {
-                                                        background: 'transparent'
-                                                    }
-                                                }}
-                                            >
-                                                Remove
-                                            </Button>
+                                            {member.access_level !== 'owner' && (
+                                                <Button
+                                                    onClick={() => handleRemoveMember(member.email)}
+                                                    sx={{
+                                                        fontFamily: 'Roboto',
+                                                        fontSize: '12px',
+                                                        fontWeight: '400',
+                                                        lineHeight: '16px',
+                                                        color: '#5f6368',
+                                                        position: 'relative',
+                                                        textAlign: 'center',
+                                                        textTransform: 'none',
+                                                        '&:hover': {
+                                                            background: 'transparent'
+                                                        }
+                                                    }}
+                                                >
+                                                    Remove
+                                                </Button>
+                                            )}
+
                                         </TableCell>
                                     </TableRow>
                                 )))}

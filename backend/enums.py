@@ -73,6 +73,7 @@ class TeamAccessLevel(Enum):
     ADMIN = 'admin'
     STANDARD = 'standard'
     READ_ONLY = 'read_only'
+    OWNER = 'owner'
 
 class LoginStatus(Enum):
     INCORRECT_PASSWORD_OR_EMAIL = 'INCORRECT_PASSWORD_OR_EMAIL'
