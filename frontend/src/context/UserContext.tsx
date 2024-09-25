@@ -8,6 +8,7 @@ interface UserContextType {
   website: string | null;
   daysDifference: number | null;
   percent_steps: number | 0;
+  resetUserData: () => void;
 }
 
 interface UserProviderProps {
@@ -23,6 +24,15 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   const [hasFetched, setHasFetched] = useState<boolean>(false);
   const [daysDifference, setDaysDifference] = useState<number | null>(null);
   const [percent_steps, setPercent] = useState<number | 0>(0);
+
+    const resetUserData = () => {
+      setEmail(null);
+      setFullName(null);
+      setWebsite(null);
+      setDaysDifference(null);
+      setPercent(0);
+      setHasFetched(false);
+    };
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -76,7 +86,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   }, [hasFetched]);
 
   return (
-    <UserContext.Provider value={{ email, full_name, website, daysDifference, percent_steps }}>
+    <UserContext.Provider value={{ email, full_name, website, daysDifference, percent_steps, resetUserData }}>
       {children}
     </UserContext.Provider>
   );

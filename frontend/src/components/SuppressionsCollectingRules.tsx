@@ -9,7 +9,8 @@ const CollectionRules: React.FC = () => {
             padding: 0,
             margin: '0 auto',
             color: 'rgba(32, 33, 36, 1)',
-            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
+            border: '1px solid rgba(240, 240, 240, 1)',
+            boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.2)',
             "@media (max-width: 600px)": {padding: '0px'} 
         }}>
             <Box sx={{ width: '100%', padding: '20px', "@media (max-width: 600px)": {padding: '16px'} }}>
@@ -33,7 +34,7 @@ const CollectionRules: React.FC = () => {
                                         content: '"•"',
                                         marginRight: '0.5rem',
                                         color: 'rgba(32, 33, 36, 1)',
-                                        fontSize: '1.25rem'
+                                        fontSize: '1rem'
                                     }
                                 }}
                             >
@@ -80,7 +81,7 @@ const CollectionRules: React.FC = () => {
                                         content: '"•"',
                                         marginRight: '0.5rem',
                                         color: 'rgba(32, 33, 36, 1)',
-                                        fontSize: '1.25rem'
+                                        fontSize: '1rem'
                                     }
                                 }}
                             >
