@@ -226,7 +226,7 @@ class SubscriptionService:
             stripe_request_created_at=stripe_request_created_at,
             domains_limit=domains_limit,
             integrations_limit=integrations_limit,
-            members_limit=members_limit
+            members_limit=members_limit-1
         )
         self.db.add(subscription_obj)
         user = self.db.query(User).filter(User.id == user_id).first()
@@ -269,7 +269,7 @@ class SubscriptionService:
             users_limit=users_limit,
             updated_at=created_at.isoformat() + "Z",
             created_at=created_at.isoformat() + "Z",
-            members_limit=members_limit,
+            members_limit=members_limit - 1,
             status=status,
             plan_id=plan.id,
             is_trial=True
@@ -339,7 +339,7 @@ class SubscriptionService:
             user_subscription.users_limit = users_limit
             user_subscription.integrations_limit = integrations_limit
             user_subscription.plan_id=plan_id,
-            user_subscription.members_limit=members_limit
+            user_subscription.members_limit=members_limit - 1
         user_subscription.status = status
         user_subscription.stripe_request_created_at = stripe_request_created_at
         self.db.flush()

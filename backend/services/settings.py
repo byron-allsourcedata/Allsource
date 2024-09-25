@@ -153,7 +153,7 @@ class SettingsService:
         current_plan = self.plan_persistence.get_current_plan(user_id=user.get('id'))
         current_subscription = self.subscription_service.get_subscription_by_user_id(user_id=user.get('id'))
         result['member_limit'] = current_plan.members_limit if current_plan else 0
-        result['member_count'] = current_subscription.members_limit if current_subscription else 0
+        result['member_count'] = current_plan.members_limit - current_subscription.members_limit if current_subscription else 0
         return result
             
         
@@ -228,9 +228,10 @@ class SettingsService:
         self.settings_persistence.save_pending_invations_by_userid(team_owner_id=user.get('id'), user_mail=invite_user, invited_by_id=invited_by_id, access_level=access_level, md5_hash=md5_hash)
         invitation_limit = -1
         self.subscription_service.update_invitation_limit(user_id=user.get('id'), invitation_limit=invitation_limit)
+        current_plan = self.plan_persistence.get_current_plan(user_id=user.get('id')).members_limit
         return {
                     'status': SettingStatus.SUCCESS,
-                    'invitation_count': self.get_team_invitations_count(user)
+                    'invitation_count': current_plan - self.get_team_invitations_count(user)
                 }
     
     def change_teams(self, user: dict, teams_details):
@@ -246,9 +247,10 @@ class SettingsService:
                 
         invitation_limit = 1
         self.subscription_service.update_invitation_limit(user_id=user.get('id'), invitation_limit=invitation_limit)
+        current_plan = self.plan_persistence.get_current_plan(user_id=user.get('id')).members_limit
         return {
                     'status': SettingStatus.SUCCESS,
-                    'invitation_count': self.get_team_invitations_count(user)
+                    'invitation_count': current_plan - self.get_team_invitations_count(user)
                 }
         
         
