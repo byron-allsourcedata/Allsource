@@ -129,7 +129,7 @@ class SettingsService:
         for team_data in teams_data:
             invited, inviter_mail = team_data
             team_info = {
-                'mail': invited.email,
+                'email': invited.email,
                 'last_sign_in': invited.last_signed_in,
                 'access_level': invited.team_access_level,
                 'invited_by': inviter_mail,
@@ -137,9 +137,11 @@ class SettingsService:
             }
             team_arr.append(team_info)
         result['teams'] = team_arr
-        result['member_limit'] = self.plan_persistence.get_current_plan(user_id=user.get('id')).members_limit
-        result['member_count'] = len(team_arr)
-        return team_arr
+        current_plan = self.plan_persistence.get_current_plan(user_id=user.get('id'))
+        current_subscription = self.subscription_service.get_subscription_by_user_id(user_id=user.get('id'))
+        result['member_limit'] = current_plan.members_limit if current_plan else 0
+        result['member_count'] = current_subscription.members_limit if current_subscription else 0
+        return result
             
         
     def get_pending_invations(self, user: dict):
@@ -147,9 +149,9 @@ class SettingsService:
         invations_data = self.settings_persistence.get_pending_invations_by_userid(user_id=user.get('id'))
         for invation_data in invations_data:
             team_info = {
-                'mail': invation_data.email,
-                'access_level': invation_data.access_level,
-                'data_invited': invation_data.date_invited_at,
+                'email': invation_data.mail,
+                'role': invation_data.access_level,
+                'date': invation_data.date_invited_at,
                 'status': invation_data.status
             }
             result.append(team_info)
@@ -166,7 +168,7 @@ class SettingsService:
         if user_limit is False:
             return SettingStatus.INVITATION_LIMIT_REACHED
         if access_level not in TeamAccessLevel:
-            return SettingStatus.INVALID_ACCESS_LEVEL 
+            access_level = TeamAccessLevel.READ_ONLY.value
         exists_team_member = self.settings_persistence.exists_team_member(user_id=user.get('id'), user_mail=invite_user)
         if exists_team_member:
             return SettingStatus.ALREADY_INVITED
@@ -183,15 +185,15 @@ class SettingsService:
                 }
         json_string = json.dumps(md5_token_info, sort_keys=True)
         md5_hash = hashlib.md5(json_string.encode()).hexdigest()
-        confirm_email_url = f"{os.getenv('SITE_HOST_URL')}/sign_up?token={md5_hash}&user_teams_mail={invite_user}"
+        confirm_email_url = f"{os.getenv('SITE_HOST_URL')}/signup?token={md5_hash}&user_teams_mail={invite_user}"
         mail_object = SendgridHandler()
         mail_object.send_sign_up_mail(
             to_emails=invite_user,
             template_id=template_id,
             template_placeholder={"full_name": invite_user, "link": confirm_email_url, "company_name": user.get('company_name')}
         )
-        
-        self.settings_persistence.save_pending_invations_by_userid(user_id=user.get('id'), user_mail=invite_user, access_level=access_level, md5_hash=md5_hash)
+        team_owner_id = user.get('team_owner_id') if user.get('team_owner_id') else user.get('id')
+        self.settings_persistence.save_pending_invations_by_userid(team_owner_id=team_owner_id, user_mail=invite_user, invited_by_id=user.get('id'), access_level=access_level, md5_hash=md5_hash)
         invitation_limit = -1
         self.subscription_service.update_invitation_limit(user_id=user.get('id'), invitation_limit=invitation_limit)
         return SettingStatus.SUCCESS 
@@ -202,11 +204,13 @@ class SettingsService:
         if pending_invitation_revoke:
             self.settings_persistence.pending_invitation_revoke(user_id=user.get('id'), mail=pending_invitation_revoke)
         if remove_user:
-            result = self.settings_persistence.team_members_remove(user_id=user.get('id'), mail=remove_user)
+            mail = user.get('team_member').get('email') if user.get('team_member') else user.get('email')
+            result = self.settings_persistence.team_members_remove(user_id=user.get('id'), mail_remove_user=remove_user, mail = mail)
             if result['success'] == False:
                 return result['error']
         invitation_limit = 1
         self.subscription_service.update_invitation_limit(user_id=user.get('id'), invitation_limit=invitation_limit)
+        return SettingStatus.SUCCESS
         
         
     def timestamp_to_date(self, timestamp):
@@ -231,10 +235,11 @@ class SettingsService:
         result = {}
         result['card_details'] = get_card_details_by_customer_id(user.get('customer_id'))
         result['billing_details'] = self.extract_subscription_details(user.get('customer_id'))
-        result['usages_credits'] = {'leads_credits': user.get('leads_credits'),
-                          'plan_leads_credits': self.plan_persistence.get_current_plan(user_id=user.get('id')).leads_credits,
-                          'prospect_credits': user.get('prospect_credits')
-                          }
+        result['usages_credits'] = {
+                        'leads_credits': user.get('leads_credits'),
+                        'plan_leads_credits': self.plan_persistence.get_current_plan(user_id=user.get('id')).leads_credits,
+                        'prospect_credits': user.get('prospect_credits')
+                        }
         return result
     
     def extract_billing_history(self, customer_id, page, per_page):

@@ -33,7 +33,7 @@ def get_pending_invations(settings_service: SettingsService = Depends(get_settin
 def change_teams(teams_details: TeamsDetailsRequest, settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authorization_without_pixel)):
     if user.get('team_member'):
         team_member = user.get('team_member')
-        if team_member.team_access_level != TeamAccessLevel.ADMIN:
+        if team_member.get('team_access_level') != TeamAccessLevel.ADMIN.value:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Access denied. Admins and standard only."
@@ -44,18 +44,18 @@ def change_teams(teams_details: TeamsDetailsRequest, settings_service: SettingsS
 def invite_user(teams_details: TeamsDetailsRequest, settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authorization_without_pixel)):
     if user.get('team_member'):
         team_member = user.get('team_member')
-        if team_member.team_access_level != TeamAccessLevel.ADMIN:
+        if team_member.get('team_access_level') != TeamAccessLevel.ADMIN.value:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Access denied. Admins and standard only."
+                detail="ACCESS_DENIED"
             )
     return settings_service.invite_user(user=user, invite_user=teams_details.invite_user, access_level=teams_details.access_level)
 
-@router.post("/teams/check-team-invitations-limit")
+@router.get("/teams/check-team-invitations-limit")
 def check_team_invitations_limit(settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authorization_without_pixel)):
     if user.get('team_member'):
         team_member = user.get('team_member')
-        if team_member.team_access_level != TeamAccessLevel.ADMIN:
+        if team_member.get('team_access_level') != TeamAccessLevel.ADMIN.value:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Access denied. Admins and standard only."
@@ -78,7 +78,7 @@ def get_billing_history(
 def add_card(payment_card: PaymentCard, settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authorization_without_pixel)):
     if user.get('team_member'):
         team_member = user.get('team_member')
-        if team_member.team_access_level != TeamAccessLevel.ADMIN:
+        if team_member.get('team_access_level') != TeamAccessLevel.ADMIN.value:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Access denied. Admins and standard only."
@@ -89,7 +89,7 @@ def add_card(payment_card: PaymentCard, settings_service: SettingsService = Depe
 def delete_card(payment_card: PaymentCard, settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authorization_without_pixel)):
     if user.get('team_member'):
         team_member = user.get('team_member')
-        if team_member.team_access_level != TeamAccessLevel.ADMIN:
+        if team_member.get('team_access_level') != TeamAccessLevel.ADMIN.value:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Access denied. Admins and standard only."
@@ -100,7 +100,7 @@ def delete_card(payment_card: PaymentCard, settings_service: SettingsService = D
 def default_card(payment_card: PaymentCard, settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authorization_without_pixel)):
     if user.get('team_member'):
         team_member = user.get('team_member')
-        if team_member.team_access_level != TeamAccessLevel.ADMIN:
+        if team_member.get('team_access_level') != TeamAccessLevel.ADMIN.value:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Access denied. Admins and standard only."

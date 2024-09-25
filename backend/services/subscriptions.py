@@ -59,6 +59,12 @@ class SubscriptionService:
 
     def is_user_have_subscription(self, user_id):
         return self.db.query(SubscriptionPlan).filter(SubscriptionPlan.user_id == user_id).limit(1).scalar()
+    
+    def get_subscription_by_user_id(self, user_id):
+        user_subscription = self.db.query(UserSubscriptions).filter(
+                UserSubscriptions.user_id == user_id
+            ).order_by(UserSubscriptions.id.desc()).limit(1).first()
+        return user_subscription
 
     def update_user_payment_status(self, user_id, status):
         if status in ["active", "succeeded"]:

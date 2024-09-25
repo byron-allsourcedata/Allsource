@@ -17,11 +17,11 @@ class PaymentsService:
     def get_additional_credits_price_id(self):
         return self.plans_service.get_additional_credits_price_id()
 
-    def create_customer_session(self, price_id: str):
+    def create_customer_session(self, price_id: str, users):
         return self.create_stripe_checkout_session(
             success_url=StripeConfig.success_url,
             cancel_url=StripeConfig.cancel_url,
-            customer_id=self.plans_service.get_customer_id(),
+            customer_id=self.plans_service.get_customer_id(users),
             line_items=[{"price": price_id, "quantity": 1}],
             mode="subscription"
         )
