@@ -33,7 +33,8 @@ class SettingsService:
 
 
     def get_account_details(self, user):
-        user_info = self.settings_persistence.get_account_details(user.get('id'))
+        user_id = user.get('team_member').get('id') if user.get('team_member') else user.get('id')
+        user_info = self.settings_persistence.get_account_details(user_id)
         if user_info:
             return {
                 'full_name': user_info.full_name,

@@ -187,7 +187,7 @@ const Signup: React.FC = () => {
               break;
             default:
               get_me()
-              router.push('/dahboard')
+              router.push('/dashboard')
               break;
           }
         }
