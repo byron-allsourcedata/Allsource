@@ -20,6 +20,7 @@ class KlaviyoIntegrationsService:
         self.integrations_persisntece = integrations_persistence
         self.leads_persistence = leads_persistence
         self.sync_persistence = sync_persistence
+        self.QUEUE_DATA_SYNC = 'data_sync_leads'
         self.client = httpx.Client()
 
     def __handle_request(self, method: str, url: str, headers: dict = None, json: dict = None, data: dict = None, params: dict = None, api_key: str = None):
@@ -142,9 +143,14 @@ class KlaviyoIntegrationsService:
         }
         rabbitmq_connection = RabbitMQConnection()
         connection = await rabbitmq_connection.connect()
+        channel = await rabbitmq_connection.channel()
+        await channel.declare_queue(
+            name=self.QUEUE_DATA_SYNC,
+            durable=True
+        )
         await publish_rabbitmq_message(
             connection=connection,
-            queue_name='data_sync_leads', 
+            queue_name=self.QUEUE_DATA_SYNC, 
             message_body=message)
     
 
