@@ -8,9 +8,11 @@ import { useRouter } from 'next/navigation';
 type Props = {
   open: boolean;
   handleClose: () => void;
+  limitName: string;
 };
 
-export const UpgradePlanPopup = ({ open, handleClose }: Props) => {
+
+export const UpgradePlanPopup: React.FC<Props> = ({ open, handleClose, limitName }) => {
   const router = useRouter()
   if (!open) return null;
   return (
@@ -73,7 +75,9 @@ export const UpgradePlanPopup = ({ open, handleClose }: Props) => {
                 fontSize: '16px',
                 color: 'rgba(32, 33, 36, 1)',
                 mb: 2
-              }} variant='h6'>You have reached the maximum domain limit for your current plan. To add more domains, please consider upgrading your plan.</Typography>
+              }} variant='h6'>
+                You have reached the maximum {limitName} limit for your current plan. To add more {limitName}, please consider upgrading your plan.
+                </Typography>
               <Typography sx={{
                 width: '100%',
                 fontFamily: 'Roboto',

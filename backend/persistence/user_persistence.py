@@ -111,6 +111,11 @@ class UserPersistence:
             return user
         return result_user
     
+    def set_last_signed_in(self, user_id):
+        user = self.db.query(Users).filter(Users.id == user_id).first()
+        user.last_signed_in = datetime.now()
+        self.db.commit()
+    
     def get_user_team_member_by_id(self, user_id):
         user = self.db.query(Users).filter(Users.id == user_id).first()
         result_user = None
@@ -119,7 +124,10 @@ class UserPersistence:
                 "id": user.id,
                 "email": user.email,
                 "full_name": user.full_name,
-               'team_access_level': user.team_access_level
+               'team_access_level': user.team_access_level,
+               'is_email_confirmed': user.is_email_confirmed,
+               'change_email_sent_at': user.change_email_sent_at,
+               'password': user.password
             }
         self.db.rollback()
         return result_user

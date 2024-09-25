@@ -119,79 +119,15 @@ export const SettingsTeams: React.FC = () => {
 
     const handleInviteUsersPopupOpen = () => {
         axiosInterceptorInstance.get('/settings/teams/check-team-invitations-limit')
-        .then(response => {
-            if (response.status === 200) {
-                switch (response.data) {
-                    case 'INVITATION_LIMIT_NOT_REACHED':
-                        setInviteUsersPopupOpen(true);
-                        break;
-                    case 'INVITATION_LIMIT_REACHED':
-                        setUpgradePlanPopup(true);
-                        showErrorToast('Invitation limit reached.');
-                        break;
-                    default:
-                        showErrorToast('Unknown response received.');
-                }
-            }
-        })
-        .catch(error => {
-            if (error.response && error.response.status === 403) {
-                showErrorToast('Access denied: You do not have permission to send this invitation.');
-            } else {
-                console.error('Error revoking invitation:', error);
-            }
-        });
-    };
-
-    const handleInviteUsersPopupClose = () => {
-        setInviteUsersPopupOpen(false);
-    };
-
-    const handleRevoke = (email: string) => {
-        setPendingInvitations(prevInvitations =>
-            prevInvitations.filter(invitation => invitation.email !== email)
-        );
-        handleRevokeInvitation (email)
-    };
-
-    const handleSend = (emails: string[], role: string) => {
-        const newInvitations = emails.map(email => ({
-            id: `invitation-${idCounter}`, // Unique ID
-            email,
-            role,
-            date: new Date().toLocaleDateString('en-US', {
-                month: 'short',
-                day: '2-digit',
-                year: 'numeric'
-            }),
-            status: 'Pending',
-        }));
-
-        setPendingInvitations(prevInvitations => [
-            ...prevInvitations,
-            ...newInvitations,
-        ]);
-        setIdCounter(prevCounter => prevCounter + emails.length);
-        handleSendInvitation(emails, role)
-    };
-
-    const handleSendInvitation = (emails: string[], role: string) => {
-        emails.forEach((email) => {
-            axiosInterceptorInstance.post('/settings/teams', { invite_user: email, access_level: role.toLowerCase() })
             .then(response => {
                 if (response.status === 200) {
                     switch (response.data) {
-                        case 'SUCCESS':
-                            showToast('Invitation sent successfully');
+                        case 'INVITATION_LIMIT_NOT_REACHED':
+                            setInviteUsersPopupOpen(true);
                             break;
                         case 'INVITATION_LIMIT_REACHED':
+                            setUpgradePlanPopup(true);
                             showErrorToast('Invitation limit reached.');
-                            break;
-                        case 'ALREADY_INVITED':
-                            showErrorToast('User has already been invited.');
-                            break;
-                        case 'FAILED':
-                            showErrorToast('Failed to send invitation.');
                             break;
                         default:
                             showErrorToast('Unknown response received.');
@@ -205,62 +141,164 @@ export const SettingsTeams: React.FC = () => {
                     console.error('Error revoking invitation:', error);
                 }
             });
-        });
     };
 
-    const handleRevokeInvitation = (email: string) => {
-        axiosInterceptorInstance.put('/settings/teams', { pending_invitation_revoke: email })
-        .then(response => {
+    const handleInviteUsersPopupClose = () => {
+        setInviteUsersPopupOpen(false);
+    };
+
+    const handleRevoke = async (email: string) => {
+        const result_revoke = await handleRevokeInvitation(email);
+        if (result_revoke === true) {
+            setPendingInvitations(prevInvitations =>
+                prevInvitations.filter(invitation => invitation.email !== email)
+            );
+        }
+    };
+
+    const handleSend = async (emails: string[], role: string) => {
+        const newInvitations = emails.map(email => ({
+            id: `invitation-${idCounter}`, // Unique ID
+            email,
+            role,
+            date: new Date().toLocaleDateString('en-US', {
+                month: 'short',
+                day: '2-digit',
+                year: 'numeric'
+            }),
+            status: 'Pending',
+        }));
+
+        const results = await handleSendInvitation(emails, role);
+
+        if (results.every(result => result)) {
+            setPendingInvitations(prevInvitations => [
+                ...prevInvitations,
+                ...newInvitations,
+            ]);
+            setIdCounter(prevCounter => prevCounter + emails.length);
+        }
+    };
+
+    const handleSendInvitation = async (emails: string[], role: string) => {
+        const results = [];
+        
+        for (const email of emails) {
+            try {
+                const response = await axiosInterceptorInstance.post('/settings/teams', { invite_user: email, access_level: role.toLowerCase() });
+                if (response.status === 200) {
+                    switch (response.data.status) {
+                        case 'SUCCESS':
+                            showToast('Invitation sent successfully');
+                            setMemberCount(response.data.invitation_count);
+                            results.push(true);
+                            break;
+                        case 'INVITATION_LIMIT_REACHED':
+                            showErrorToast('Invitation limit reached.');
+                            setMemberCount(response.data.invitation_count);
+                            results.push(false);
+                            break;
+                        case 'ALREADY_INVITED':
+                            showErrorToast('User has already been invited.');
+                            setMemberCount(response.data.invitation_count);
+                            results.push(false);
+                            break;
+                        case 'FAILED':
+                            showErrorToast('Failed to send invitation.');
+                            setMemberCount(response.data.invitation_count);
+                            results.push(false);
+                            break;
+                        default:
+                            showErrorToast('Unknown response received.');
+                            results.push(false);
+                            break;
+                    }
+                }
+            } catch (err) {
+                if (axios.isAxiosError(err)) {
+                    if (err.response && err.response.status === 403) {
+                        showErrorToast('Access denied: You do not have permission to send this invitation.');
+                    } else {
+                        console.error('Error sending invitation:', err.message);
+                    }
+                } else {
+                    console.error('Unexpected error:', err);
+                }
+                results.push(false);
+            }
+        }
+    
+        return results;
+    };
+    
+
+    const handleRevokeInvitation = async (email: string) => {
+        try {
+            const response = await axiosInterceptorInstance.put('/settings/teams', { pending_invitation_revoke: email });
+
             if (response.status === 200) {
-                switch (response.data) {
+                switch (response.data.status) {
                     case 'SUCCESS':
-                        showToast('Invitation remove successfully');
-                        break;
+                        showToast('Invitation removed successfully');
+                        setMemberCount(response.data.invitation_count)
+                        return true;
                     default:
                         showErrorToast('Unknown response received.');
+                        setMemberCount(response.data.invitation_count)
+                        return false;
                 }
             }
-        })
-        .catch(error => {
-            if (error.response && error.response.status === 403) {
-                showErrorToast('Access denied: You do not have permission to send this invitation.');
-            } else {
-                console.error('Error revoking invitation:', error);
+        } catch (error) {
+            if (axios.isAxiosError(error)) {
+                if (error.response && error.response.status === 403) {
+                    showErrorToast('Access denied: You do not have permission to send this invitation.');
+                } else {
+                    console.error('Error revoking invitation:', error);
+                }
             }
-        });
+        }
+        return false; // Return false if the request fails
     };
 
-    const handleRemoveTeamMember = (email: string) => {
-        axiosInterceptorInstance.put('/settings/teams', { remove_user: email })
-        .then(response => {
+
+    const handleRemoveTeamMember = async (email: string) => {
+        try {
+            const response = await axiosInterceptorInstance.put('/settings/teams', { remove_user: email });
+
             if (response.status === 200) {
-                switch (response.data) {
+                switch (response.data.status) {
                     case 'SUCCESS':
-                        showToast('Member remove successfully');
-                        break;
+                        showToast('Member removed successfully');
+                        setMemberCount(response.data.invitation_count)
+                        return true;
                     case 'CANNOT_REMOVE_TEAM_OWNER':
                         showErrorToast('Cannot remove team owner!');
-                        break;
+                        return false;
                     case 'CANNOT_REMOVE_YOURSELF_FROM_TEAM':
                         showErrorToast('Cannot remove yourself from team!');
-                        break;
+                        return false;
                     default:
                         showErrorToast('Unknown response received.');
+                        return false;
                 }
             }
-        })
-        .catch(error => {
-            if (error.response && error.response.status === 403) {
-                showErrorToast('Access denied: You do not have permission to send this invitation.');
-            } else {
-                console.error('Error revoking invitation:', error);
+        } catch (error) {
+            if (axios.isAxiosError(error)) {
+                if (error.response && error.response.status === 403) {
+                    showErrorToast('Access denied: You do not have permission to remove this member.');
+                } else {
+                    console.error('Error removing team member:', error);
+                }   
             }
-        });
+        }
+        return false; // Return false if the request fails or if no cases match
     };
 
-    const handleRemoveMember = (email: string) => {
-        setTeamMembers(prevMembers => prevMembers.filter(member => member.email !== email));
-        handleRemoveTeamMember(email)
+
+    const handleRemoveMember = async (email: string) => {
+        if (await handleRemoveTeamMember(email) === true) {
+            setTeamMembers(prevMembers => prevMembers.filter(member => member.email !== email));
+        }
     };
 
     const handleSelectionChange = (e: SelectChangeEvent<string>, memberMail: string) => {
@@ -431,7 +469,7 @@ export const SettingsTeams: React.FC = () => {
                     </Box>
                     <Box sx={{ border: '1px dashed #5052B2', borderRadius: '4px' }}>
                         <Button onClick={handleInviteUsersPopupOpen}><Image src="/add-square.svg" alt="add-square" height={24} width={24} /></Button>
-                        <UpgradePlanPopup open={upgradePlanPopup} handleClose={() => setUpgradePlanPopup(false)} />
+                        <UpgradePlanPopup open={upgradePlanPopup} limitName={'team members'} handleClose={() => setUpgradePlanPopup(false)} />
                     </Box>
                     <InviteUsersPopup open={inviteUsersPopupOpen} onClose={handleInviteUsersPopupClose} onSend={handleSend} />
                 </Box>

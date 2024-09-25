@@ -174,7 +174,7 @@ const AddDomainPopup = ({ open, handleClose, handleSave }: AddDomainProps) => {
       <Box sx={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }}>
         <Button color='primary' variant='outlined' onClick={handleSubmit}>Save</Button>
       </Box>
-      <UpgradePlanPopup open={upgradePlanPopup} handleClose={() => setUpgradePlanPopup(false)} />
+      <UpgradePlanPopup open={upgradePlanPopup} limitName={'domain'} handleClose={() => setUpgradePlanPopup(false)} />
       {showSlider && <Slider />}
     </Box>
   );

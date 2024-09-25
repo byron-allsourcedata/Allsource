@@ -8,6 +8,7 @@ from persistence.user_persistence import UserPersistence
 from persistence.plans_persistence import PlansPersistence
 from services.subscriptions import SubscriptionService
 from sqlalchemy.orm import Session
+from fastapi import HTTPException, status
 from .jwt_service import get_password_hash, create_access_token, decode_jwt_data, verify_password
 from schemas.settings import AccountDetailsRequest
 from enums import VerifyToken
@@ -33,8 +34,10 @@ class SettingsService:
 
 
     def get_account_details(self, user):
-        user_id = user.get('team_member').get('id') if user.get('team_member') else user.get('id')
-        user_info = self.settings_persistence.get_account_details(user_id)
+        member_id = None
+        if user.get('team_member'):
+            member_id = user.get('team_member').get('id')
+        user_info = self.settings_persistence.get_account_details(owner_id=user.get('id'), member_id=member_id)
         if user_info:
             return {
                 'full_name': user_info.full_name,
@@ -46,10 +49,27 @@ class SettingsService:
                 'is_email_confirmed': user_info.is_email_confirmed
             }
             
-    def change_account_details(self, user: User, account_details: AccountDetailsRequest):
+    def change_account_details(self, user: dict, account_details: AccountDetailsRequest):
         changes = {}
-
+        
+        if account_details.business_info:
+            if user.get('team_member'):
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Access denied. Owner only."
+                )
+            if account_details.business_info.organization_name:
+                changes['company_name'] = account_details.business_info.organization_name
+            if account_details.business_info.company_website:
+                changes['company_website'] = account_details.business_info.company_website
+            if account_details.business_info.visits_to_website:
+                changes['company_website_visits'] = account_details.business_info.visits_to_website
+        
         if account_details.account:
+            if user.get('team_member'):
+                user_id = user.get('team_member').get('id')
+                user = self.user_persistence.get_user_by_id(user_id)
+            
             if account_details.account.full_name:
                 changes['full_name'] = account_details.account.full_name
             if account_details.account.email_address:
@@ -86,14 +106,6 @@ class SettingsService:
                     return SettingStatus.INCORRECT_PASSWORD
                 changes['password'] = get_password_hash(account_details.change_password.new_password)
                 self.settings_persistence.set_reset_password_sent_now(user.get('id'))
-        
-        if account_details.business_info:
-            if account_details.business_info.organization_name:
-                changes['company_name'] = account_details.business_info.organization_name
-            if account_details.business_info.company_website:
-                changes['company_website'] = account_details.business_info.company_website
-            if account_details.business_info.visits_to_website:
-                changes['company_website_visits'] = account_details.business_info.visits_to_website
 
         if changes:
             self.settings_persistence.change_columns_data_by_userid(changes, user.get('id'))
@@ -131,10 +143,10 @@ class SettingsService:
             invited, inviter_mail = team_data
             team_info = {
                 'email': invited.email,
-                'last_sign_in': invited.last_signed_in,
+                'last_sign_in': invited.last_signed_in.strftime('%d.%m.%Y %H:%M') if invited.last_signed_in else None,
                 'access_level': invited.team_access_level,
                 'invited_by': inviter_mail,
-                'added_on': invited.added_on
+                'added_on': invited.added_on.strftime('%d.%m.%Y %H:%M') if invited.added_on else None
             }
             team_arr.append(team_info)
         result['teams'] = team_arr
@@ -152,7 +164,7 @@ class SettingsService:
             team_info = {
                 'email': invation_data.mail,
                 'role': invation_data.access_level,
-                'date': invation_data.date_invited_at,
+                'date': invation_data.date_invited_at.strftime('%d.%m.%Y %H:%M') if invation_data.date_invited_at else None,
                 'status': invation_data.status
             }
             result.append(team_info)
@@ -164,20 +176,33 @@ class SettingsService:
             return SettingStatus.INVITATION_LIMIT_REACHED
         return SettingStatus.INVITATION_LIMIT_NOT_REACHED
     
+    def get_team_invitations_count(self, user):
+        user_limit = self.subscription_service.get_invitation_limit(user_id=user.get('id'))
+        return user_limit
+    
     def invite_user(self, user: dict, invite_user, access_level=TeamAccessLevel.READ_ONLY):
         user_limit = self.subscription_service.check_invitation_limit(user_id=user.get('id'))
         if user_limit is False:
-            return SettingStatus.INVITATION_LIMIT_REACHED
+            return {
+                'status': SettingStatus.INVITATION_LIMIT_REACHED,
+                'invitation_count': self.get_team_invitations_count(user)
+            }
         if access_level not in TeamAccessLevel:
             access_level = TeamAccessLevel.READ_ONLY.value
         exists_team_member = self.settings_persistence.exists_team_member(user_id=user.get('id'), user_mail=invite_user)
         if exists_team_member:
-            return SettingStatus.ALREADY_INVITED
+            return {
+                    'status': SettingStatus.ALREADY_INVITED,
+                    'invitation_count': self.get_team_invitations_count(user)
+                }
         template_id = self.send_grid_persistence.get_template_by_alias(
                 SendgridTemplate.TEAM_MEMBERS_TEMPLATE.value)
         if not template_id:
             logger.info("template_id is None")
-            return SettingStatus.FAILED
+            return {
+                    'status': SettingStatus.FAILED,
+                    'invitation_count': self.get_team_invitations_count(user)
+                }
         
         md5_token_info = {
                     'id': user.get('id'),
@@ -197,7 +222,10 @@ class SettingsService:
         self.settings_persistence.save_pending_invations_by_userid(team_owner_id=team_owner_id, user_mail=invite_user, invited_by_id=user.get('id'), access_level=access_level, md5_hash=md5_hash)
         invitation_limit = -1
         self.subscription_service.update_invitation_limit(user_id=user.get('id'), invitation_limit=invitation_limit)
-        return SettingStatus.SUCCESS 
+        return {
+                    'status': SettingStatus.SUCCESS,
+                    'invitation_count': self.get_team_invitations_count(user)
+                }
     
     def change_teams(self, user: dict, teams_details):
         pending_invitation_revoke = teams_details.pending_invitation_revoke
@@ -208,10 +236,14 @@ class SettingsService:
             mail = user.get('team_member').get('email') if user.get('team_member') else user.get('email')
             result = self.settings_persistence.team_members_remove(user_id=user.get('id'), mail_remove_user=remove_user, mail = mail)
             if result['success'] == False:
-                return result['error']
+                return {'status': result['error']}
+                
         invitation_limit = 1
         self.subscription_service.update_invitation_limit(user_id=user.get('id'), invitation_limit=invitation_limit)
-        return SettingStatus.SUCCESS
+        return {
+                    'status': SettingStatus.SUCCESS,
+                    'invitation_count': self.get_team_invitations_count(user)
+                }
         
         
     def timestamp_to_date(self, timestamp):

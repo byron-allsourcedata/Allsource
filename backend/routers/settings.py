@@ -9,11 +9,11 @@ router = APIRouter()
 
 
 @router.get("/account-details")
-def get_account_details(settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authentication)):
+def get_account_details(settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authorization_without_pixel)):
     return settings_service.get_account_details(user=user)
 
 @router.put("/account-details")
-def change_account_details(account_details: AccountDetailsRequest, settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authentication)):
+def change_account_details(account_details: AccountDetailsRequest, settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authorization_without_pixel)):
     return settings_service.change_account_details(user=user, account_details=account_details)
 
 @router.get("/account-details/change-email")

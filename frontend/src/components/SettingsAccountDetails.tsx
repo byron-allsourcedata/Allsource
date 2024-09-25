@@ -19,36 +19,36 @@ const accontDetailsStyles = {
         color: 'rgba(17, 17, 19, 0.60)',
         '&.Mui-focused': {
             color: '#0000FF',
-          },
+        },
     },
     formInput: {
         '&.MuiFormControl-root': {
             margin: 0,
         },
         '&.MuiOutlinedInput-root': {
-          height: '48px',
-          '& .MuiOutlinedInput-input': {
-            padding: '12px 16px 13px 16px',
-            fontFamily: 'Roboto',
-            color: '#202124',
-            fontSize: '14px',
-            lineHeight: '20px'
-          },
-          '& .MuiOutlinedInput-notchedOutline': {
-            borderColor: '#A3B0C2',
-          },
-          '&:hover .MuiOutlinedInput-notchedOutline': {
-            borderColor: '#A3B0C2',
-          },
-          '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-            borderColor: '#0000FF',
-          },
+            height: '48px',
+            '& .MuiOutlinedInput-input': {
+                padding: '12px 16px 13px 16px',
+                fontFamily: 'Roboto',
+                color: '#202124',
+                fontSize: '14px',
+                lineHeight: '20px'
+            },
+            '& .MuiOutlinedInput-notchedOutline': {
+                borderColor: '#A3B0C2',
+            },
+            '&:hover .MuiOutlinedInput-notchedOutline': {
+                borderColor: '#A3B0C2',
+            },
+            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                borderColor: '#0000FF',
+            },
         },
         '&+.MuiFormHelperText-root': {
             marginLeft: '0',
         },
-      },
-      orDivider: {
+    },
+    orDivider: {
         display: 'flex',
         alignItems: 'center',
         maxWidth: '80%',
@@ -56,57 +56,57 @@ const accontDetailsStyles = {
         '@media (max-width: 440px)': {
             maxWidth: '115%',
             margin: '0 -1em',
-                        }
+        }
 
-      },
-      passwordValidationText: {
-        '& .MuiTypography-root' : {
-          fontFamily: 'Nunito',
-          fontSize: '12px',
-          fontWeight: '400',
-          color: 'rgba(17, 17, 19, 0.60)',
+    },
+    passwordValidationText: {
+        '& .MuiTypography-root': {
+            fontFamily: 'Nunito',
+            fontSize: '12px',
+            fontWeight: '400',
+            color: 'rgba(17, 17, 19, 0.60)',
         }
-      },
-      passwordValidationTextSuccess: {
-        '& .MuiTypography-root' : {
-          fontFamily: 'Nunito',
-          fontSize: '12px',
-          fontWeight: '400',
-          color: '#111113',
+    },
+    passwordValidationTextSuccess: {
+        '& .MuiTypography-root': {
+            fontFamily: 'Nunito',
+            fontSize: '12px',
+            fontWeight: '400',
+            color: '#111113',
         }
-      },
-      passwordContentList: {
+    },
+    passwordContentList: {
         display: 'flex',
         padding: '0',
         margin: '-24px 0 0'
-      },
-      passwordContentListItem: {
+    },
+    passwordContentListItem: {
         width: 'auto',
         padding: '0 16px 0 0',
         '@media (max-width: 440px)': {
-          padding: '0 8px 0 0',
+            padding: '0 8px 0 0',
         },
-        '&:last-child' : {
-          padding: 0
+        '&:last-child': {
+            padding: 0
         }
-      },
-      passwordContentListItemIcon: {
+    },
+    passwordContentListItemIcon: {
         minWidth: '0',
         marginRight: '4px'
-      },
+    },
 }
 
 interface SettingsAccountDetailsProps {
     accountDetails: {
-      full_name: string;
-      email_address: string;
-      company_name: string;
-      company_website: string;
-      company_website_visits: string;
-      is_email_confirmed: string;
-      reset_password_sent_at: string;
+        full_name: string;
+        email_address: string;
+        company_name: string;
+        company_website: string;
+        company_website_visits: string;
+        is_email_confirmed: string;
+        reset_password_sent_at: string;
     };
-  }
+}
 
 export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ accountDetails }) => {
     const [currentPassword, setCurrentPassword] = useState('');
@@ -120,13 +120,13 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
     const [resetPasswordDate, setResetPasswordDate] = useState(accountDetails.reset_password_sent_at);
     const [isFocused, setIsFocused] = useState(false);
     const [isTyping, setIsTyping] = useState(false);
-    const [isModified, setIsModified] = useState(false); 
+    const [isModified, setIsModified] = useState(false);
     const [initialValue, setInitialValue] = useState('');
 
     const [initialEmail, setInitialEmail] = useState('');
     const [isEmailFocused, setIsEmailFocused] = useState(false);
     const [isEmailTyping, setIsEmailTyping] = useState(false);
-    const [isEmailModified, setIsEmailModified] = useState(false); 
+    const [isEmailModified, setIsEmailModified] = useState(false);
 
     const [initialOrganizationName, setInitialOrganizationName] = useState('');
     const [isOrganizationNameFocused, setIsOrganizationNameFocused] = useState(false);
@@ -164,14 +164,14 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
     useEffect(() => {
         // Проверка на мобильное устройство по ширине экрана
         if (window.innerWidth >= 768) {
-          document.body.style.overflow = 'hidden';
+            document.body.style.overflow = 'hidden';
         }
-    
+
         return () => {
-          // Сброс overflow на 'auto' при размонтировании компонента
-          document.body.style.overflow = 'auto';
+            // Сброс overflow на 'auto' при размонтировании компонента
+            document.body.style.overflow = 'auto';
         };
-      }, []);
+    }, []);
 
     const handleSaveAccountDetails = (field: 'full_name' | 'email_address') => {
         const accountData = {
@@ -184,11 +184,16 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
                 showToast('Account details updated successfully');
             })
             .catch(error => {
-                showErrorToast('Error updating account details:', error);
-            });
+                if (error.response && error.response.status === 403) {
+                    showErrorToast('Access denied: You do not have permission.');
+                } else {
+                    console.error('Error revoking invitation:', error);
+                }
+            }
+            );
     };
-    
-    
+
+
 
 
 
@@ -196,18 +201,18 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
         const newErrors: { [key: string]: string } = {};
         if (!newPassword) {
             newErrors.newPassword = 'Password is required';
-          } else if (!passwordValidation.length || !passwordValidation.upperCase || !passwordValidation.lowerCase) {
+        } else if (!passwordValidation.length || !passwordValidation.upperCase || !passwordValidation.lowerCase) {
             newErrors.newPassword = 'Please enter a stronger password';
-          }
-          if (!confirmNewPassword) {
+        }
+        if (!confirmNewPassword) {
             newErrors.confirmNewPassword = 'Confirm password is required';
-          } else if (confirmNewPassword !== newPassword) {
+        } else if (confirmNewPassword !== newPassword) {
             newErrors.confirmNewPassword = 'Invalid password combination.';
-          }
-          setErrors(newErrors);
-          if (Object.keys(newErrors).length > 0) {
+        }
+        setErrors(newErrors);
+        if (Object.keys(newErrors).length > 0) {
             return;
-          }
+        }
 
         if (newPassword === confirmNewPassword) {
             const changePasswordData = {
@@ -231,7 +236,7 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
             showErrorToast('New passwords do not match');
         }
     };
-    
+
 
     const handleSaveBusinessInfo = (field: 'organizationName' | 'companyWebsite' | 'monthlyVisits') => {
         const businessInfoData = {
@@ -246,7 +251,11 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
                 showToast('Business info updated successfully');
             })
             .catch(error => {
-                showErrorToast('Error updating business info:', error);
+                if (error.response && error.response.status === 403) {
+                    showErrorToast('Access denied: You do not have permission.');
+                } else {
+                    console.error('Error revoking invitation:', error);
+                }
             });
     };
 
@@ -255,107 +264,108 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
     const handleChange = (
         setValue: React.Dispatch<React.SetStateAction<string>>,
         setIsTyping: React.Dispatch<React.SetStateAction<boolean>>,
-        setIsModified: React.Dispatch<React.SetStateAction<boolean>>) => 
+        setIsModified: React.Dispatch<React.SetStateAction<boolean>>) =>
         (e: React.ChangeEvent<HTMLInputElement>) => {
-        setValue(e.target.value);
-        setIsTyping(true);
-        setIsModified(true);
+            setValue(e.target.value);
+            setIsTyping(true);
+            setIsModified(true);
         };
 
-  // Generic function to handle input reset
-  const handleReset = (
-    setValue: React.Dispatch<React.SetStateAction<string>>,
-    setIsTyping: React.Dispatch<React.SetStateAction<boolean>>,
-    setIsModified: React.Dispatch<React.SetStateAction<boolean>>) => () => {
-      setValue('');
-      setIsTyping(false);
-      setIsModified(false);
-  };
+    // Generic function to handle input reset
+    const handleReset = (
+        setValue: React.Dispatch<React.SetStateAction<string>>,
+        setIsTyping: React.Dispatch<React.SetStateAction<boolean>>,
+        setIsModified: React.Dispatch<React.SetStateAction<boolean>>) => () => {
+            setValue('');
+            setIsTyping(false);
+            setIsModified(false);
+        };
 
-  // Generic function to handle focus
-  const handleFocus = (value: string, setIsFocused: React.Dispatch<React.SetStateAction<boolean>>, setIsTyping: React.Dispatch<React.SetStateAction<boolean>>) => () => {
-      setIsFocused(true);
-      if (value.trim() === '') {
-          setIsTyping(false);
-      }
-  };
-
-  // Generic function to handle blur
-  const handleBlur = (value: string, setIsFocused: React.Dispatch<React.SetStateAction<boolean>>, setIsTyping: React.Dispatch<React.SetStateAction<boolean>>) => () => {
-      setIsFocused(false);
-      if (value === '') {
-          setIsTyping(false);
-      }
-  };
-
-  // Check if the save button should be enabled
-  const isSaveEnabled = (value: string, initialValue: string, isModified: boolean) => 
-    value.trim() !== '' && value !== initialValue && isModified;
-
-  // Show close icon conditionally
-  const showCloseIcon = (isTyping: boolean, value: string, initialValue: string) => 
-    isTyping && value.trim() !== '' && value !== initialValue;
-
-  const handleChangePasswordPopupOpen = () => {
-    setChangePasswordPopupOpen(true);
-
-};
-
-const handleChangePasswordPopupClose = () => {
-    setChangePasswordPopupOpen(false);
-};
-
-
-
-  const isPasswordValid = (password: string) => {
-    return {
-      length: password.length >= 8,
-      upperCase: /[A-Z]/.test(password),
-      lowerCase: /[a-z]/.test(password),
+    // Generic function to handle focus
+    const handleFocus = (value: string, setIsFocused: React.Dispatch<React.SetStateAction<boolean>>, setIsTyping: React.Dispatch<React.SetStateAction<boolean>>) => () => {
+        setIsFocused(true);
+        if (value.trim() === '') {
+            setIsTyping(false);
+        }
     };
-  };
 
-  const passwordValidation = isPasswordValid(newPassword);
+    // Generic function to handle blur
+    const handleBlur = (value: string, setIsFocused: React.Dispatch<React.SetStateAction<boolean>>, setIsTyping: React.Dispatch<React.SetStateAction<boolean>>) => () => {
+        setIsFocused(false);
+        if (value === '') {
+            setIsTyping(false);
+        }
+    };
 
-  const toggleCurrentPasswordVisibility = () => {
-    setShowCurrentPassword(!showCurrentPassword);
-  };
-  
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
-  };
+    // Check if the save button should be enabled
+    const isSaveEnabled = (value: string, initialValue: string, isModified: boolean) =>
+        value?.trim() !== '' && value !== initialValue && isModified;
 
-  const toggleConfirmPasswordVisibility = () => {
-    setShowConfirmPassword(!showConfirmPassword);
-  };
+    // Show close icon conditionally
+    const showCloseIcon = (isTyping: boolean, value: string, initialValue: string) =>
+        isTyping && value.trim() !== '' && value !== initialValue;
 
-  const CustomCheckCircleIcon = ({ isSuccess }: { isSuccess: boolean }) => (
-    <Image 
-        src={isSuccess ? "/tick-circle-green.svg" : "/tick-circle.svg"} 
-        alt={isSuccess ? "Success Check Circle" : "Disabled Check Circle"} 
-        height={16} width={16}
-    />
-  );
-  
+    const handleChangePasswordPopupOpen = () => {
+        setChangePasswordPopupOpen(true);
+
+    };
+
+    const handleChangePasswordPopupClose = () => {
+        setChangePasswordPopupOpen(false);
+    };
+
+
+
+    const isPasswordValid = (password: string) => {
+        return {
+            length: password.length >= 8,
+            upperCase: /[A-Z]/.test(password),
+            lowerCase: /[a-z]/.test(password),
+        };
+    };
+
+    const passwordValidation = isPasswordValid(newPassword);
+
+    const toggleCurrentPasswordVisibility = () => {
+        setShowCurrentPassword(!showCurrentPassword);
+    };
+
+    const togglePasswordVisibility = () => {
+        setShowPassword(!showPassword);
+    };
+
+    const toggleConfirmPasswordVisibility = () => {
+        setShowConfirmPassword(!showConfirmPassword);
+    };
+
+    const CustomCheckCircleIcon = ({ isSuccess }: { isSuccess: boolean }) => (
+        <Image
+            src={isSuccess ? "/tick-circle-green.svg" : "/tick-circle.svg"}
+            alt={isSuccess ? "Success Check Circle" : "Disabled Check Circle"}
+            height={16} width={16}
+        />
+    );
+
 
 
 
     return (
-                <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center'}}>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: '24px', 
-                    '@media (max-width: 899px)': {
-                            minWidth: '100%'
-                     },
-                     '@media (min-width: 900px)': {
-                            minWidth: '700px'
-                     },
-                     '@media (min-width: 1200px)': {
-                            minWidth: '780px',
-                            pl: 12
-                     }
+        <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+            <Box sx={{
+                display: 'flex', flexDirection: 'column', gap: '24px',
+                '@media (max-width: 899px)': {
+                    minWidth: '100%'
+                },
+                '@media (min-width: 900px)': {
+                    minWidth: '700px'
+                },
+                '@media (min-width: 1200px)': {
+                    minWidth: '780px',
+                    pl: 12
+                }
 
-                    }}>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+            }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
                     <Typography variant="h6" sx={{
                         fontFamily: 'Nunito Sans',
                         fontSize: '16px',
@@ -363,7 +373,8 @@ const handleChangePasswordPopupClose = () => {
                         color: '#4a4a4a',
                         lineHeight: '22px'
                     }}>Name</Typography>
-                    <Box sx={{ display: 'flex', gap: 2,
+                    <Box sx={{
+                        display: 'flex', gap: 2,
                         '@media (max-width: 600px)': {
                             flexDirection: 'column',
                             alignItems: 'flex-start'
@@ -372,7 +383,7 @@ const handleChangePasswordPopupClose = () => {
                         <TextField sx={accontDetailsStyles.formField}
                             label="Full Name"
                             value={fullName}
-                            onChange={handleChange(setFullName, setIsTyping, setIsModified)} 
+                            onChange={handleChange(setFullName, setIsTyping, setIsModified)}
                             fullWidth
                             margin="normal"
                             InputLabelProps={{ sx: accontDetailsStyles.inputLabel }}
@@ -382,7 +393,7 @@ const handleChangePasswordPopupClose = () => {
                                     <InputAdornment position="end">
                                         {/* Write Icon */}
                                         <IconButton
-                                            sx={{ 
+                                            sx={{
                                                 display: (isFocused && !isTyping) ? 'flex' : 'none',
                                                 visibility: (isFocused && !isTyping) ? 'visible' : 'hidden',
                                             }}
@@ -392,7 +403,7 @@ const handleChangePasswordPopupClose = () => {
                                         {/* Close Icon */}
                                         <IconButton
                                             onClick={handleReset(setFullName, setIsTyping, setIsModified)}
-                                            sx={{ 
+                                            sx={{
                                                 display: showCloseIcon(isTyping, fullName, initialValue) ? 'flex' : 'none',
                                                 visibility: showCloseIcon(isTyping, fullName, initialValue) ? 'visible' : 'hidden',
                                             }}
@@ -420,7 +431,7 @@ const handleChangePasswordPopupClose = () => {
                                 textTransform: 'none',
                                 padding: '10px 24px',
                                 height: '40px',
-                                '&:hover' : {
+                                '&:hover': {
                                     background: 'transparent'
                                 },
                                 '&.Mui-disabled': {
@@ -429,7 +440,7 @@ const handleChangePasswordPopupClose = () => {
                                 }
                             }}
                             disabled={!isSaveEnabled(fullName, initialValue, isModified)}
-                            >
+                        >
                             Save
                         </Button>
                     </Box>
@@ -440,7 +451,8 @@ const handleChangePasswordPopupClose = () => {
                         margin: '0 -15px',
                         '@media (min-width: 601px)': {
                             display: 'none'
-                        },}}>
+                        },
+                    }}>
                         <Box sx={{ borderBottom: '1px solid #e4e4e4', flexGrow: 1 }} />
                     </Box>
 
@@ -452,7 +464,8 @@ const handleChangePasswordPopupClose = () => {
                         lineHeight: '22px'
                     }}>Email address</Typography>
 
-                    <Box sx={{ display: 'flex', gap: 2,
+                    <Box sx={{
+                        display: 'flex', gap: 2,
                         '@media (max-width: 600px)': {
                             flexDirection: 'column',
                             alignItems: 'flex-start'
@@ -465,7 +478,8 @@ const handleChangePasswordPopupClose = () => {
                             fullWidth
                             margin="normal"
                             InputLabelProps={{ sx: accontDetailsStyles.inputLabel }}
-                            InputProps={{ sx: accontDetailsStyles.formInput,
+                            InputProps={{
+                                sx: accontDetailsStyles.formInput,
                                 endAdornment: (
                                     <InputAdornment position="end">
                                         {accountDetails.is_email_confirmed ? (
@@ -478,10 +492,10 @@ const handleChangePasswordPopupClose = () => {
                                                     lineHeight: '16px',
                                                     color: '#2b5b00'
                                                 }}>
-                                                        Verified
+                                                    Verified
                                                 </Typography>
                                             </Box>
-                                            ) : (
+                                        ) : (
                                             <Typography variant="caption" sx={{
                                                 fontFamily: 'Roboto',
                                                 fontSize: '12px',
@@ -491,10 +505,10 @@ const handleChangePasswordPopupClose = () => {
                                             }}>
                                                 Not Verified
                                             </Typography>
-                                            )}
+                                        )}
                                         {/* Write Icon */}
                                         <IconButton
-                                            sx={{ 
+                                            sx={{
                                                 display: (isEmailFocused && !isEmailTyping) ? 'flex' : 'none',
                                                 visibility: (isEmailFocused && !isEmailTyping) ? 'visible' : 'hidden',
                                             }}
@@ -504,7 +518,7 @@ const handleChangePasswordPopupClose = () => {
                                         {/* Close Icon */}
                                         <IconButton
                                             onClick={handleReset(setEmailAddress, setIsEmailTyping, setIsEmailModified)}
-                                            sx={{ 
+                                            sx={{
                                                 display: showCloseIcon(isEmailTyping, emailAddress, initialEmail) ? 'flex' : 'none',
                                                 visibility: showCloseIcon(isEmailTyping, emailAddress, initialEmail) ? 'visible' : 'hidden',
                                             }}
@@ -532,7 +546,7 @@ const handleChangePasswordPopupClose = () => {
                                 textTransform: 'none',
                                 padding: '10px 24px',
                                 height: '40px',
-                                '&:hover' : {
+                                '&:hover': {
                                     background: 'transparent'
                                 },
                                 '&.Mui-disabled': {
@@ -541,7 +555,7 @@ const handleChangePasswordPopupClose = () => {
                                 }
                             }}
                             disabled={!isSaveEnabled(emailAddress, initialEmail, isEmailModified)}
-                            >
+                        >
                             Save
                         </Button>
                     </Box>
@@ -552,15 +566,17 @@ const handleChangePasswordPopupClose = () => {
                         margin: '0 -15px',
                         '@media (min-width: 601px)': {
                             display: 'none'
-                        },}}>
+                        },
+                    }}>
                         <Box sx={{ borderBottom: '1px solid #e4e4e4', flexGrow: 1 }} />
                     </Box>
 
-                    <Box sx={{ display: 'flex', gap: 2, justifyContent: 'space-between', alignItems: 'center',
+                    <Box sx={{
+                        display: 'flex', gap: 2, justifyContent: 'space-between', alignItems: 'center',
                         '@media (min-width: 601px)': {
                             display: 'none'
                         }
-                     }}>
+                    }}>
                         <Typography variant="h6" sx={{
                             fontFamily: 'Nunito Sans',
                             fontSize: '16px',
@@ -568,12 +584,12 @@ const handleChangePasswordPopupClose = () => {
                             color: '#4a4a4a',
                             lineHeight: '22px'
                         }}>Password</Typography>
-                          <Typography variant="body2" sx={{ 
+                        <Typography variant="body2" sx={{
                             fontFamily: 'Nunito Sans',
                             fontSize: '12px',
                             lineHeight: '16px',
                             color: 'rgba(17, 17, 19, 0.60)'
-                         }}>
+                        }}>
                             Last changed: <strong>{calculateDaysAgo(resetPasswordDate)}</strong>
                         </Typography>
                     </Box>
@@ -589,27 +605,27 @@ const handleChangePasswordPopupClose = () => {
                     }}>Password</Typography>
                     <Box sx={{ display: 'flex', gap: 2, justifyContent: 'space-between', alignItems: 'center', maxWidth: '78%' }}>
                         <Button variant="contained" color="secondary" onClick={handleChangePasswordPopupOpen}
-                        sx={{
-                            borderRadius: '4px',
-                            border: '1px solid #5052B2',
-                            background: '#fff',
-                            boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                            fontFamily: 'Nunito Sans',
-                            fontSize: '14px',
-                            fontWeight: '600',
-                            lineHeight: '20px',
-                            color: '#5052b2',
-                            textTransform: 'none',
-                            padding: '10px 24px',
-                            height: '40px',
-                            '&:hover' : {
-                                background: 'transparent'
-                            }
-                        }}
+                            sx={{
+                                borderRadius: '4px',
+                                border: '1px solid #5052B2',
+                                background: '#fff',
+                                boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
+                                fontFamily: 'Nunito Sans',
+                                fontSize: '14px',
+                                fontWeight: '600',
+                                lineHeight: '20px',
+                                color: '#5052b2',
+                                textTransform: 'none',
+                                padding: '10px 24px',
+                                height: '40px',
+                                '&:hover': {
+                                    background: 'transparent'
+                                }
+                            }}
                         >
                             Change password
                         </Button>
-                        <Typography variant="body2" sx={{ 
+                        <Typography variant="body2" sx={{
                             fontFamily: 'Nunito Sans',
                             fontSize: '12px',
                             lineHeight: '16px',
@@ -617,27 +633,27 @@ const handleChangePasswordPopupClose = () => {
                             '@media (max-width: 600px)': {
                                 display: 'none'
                             }
-                         }}>
+                        }}>
                             Last changed: <strong>{calculateDaysAgo(resetPasswordDate)}</strong>
                         </Typography>
                     </Box>
                     <Drawer
-                            anchor="right"
-                            open={changePasswordPopupOpen}
-                            onClose={handleChangePasswordPopupClose}
-                            PaperProps={{
-                                sx: {
-                                    width: '620px',
-                                    position: 'fixed',
-                                    zIndex: 1301,
-                                    top: 0,
-                                    bottom: 0,
-                                    '@media (max-width: 600px)': {
-                                        width: '100%',
-                                    }
-                                },
-                            }}
-                        >
+                        anchor="right"
+                        open={changePasswordPopupOpen}
+                        onClose={handleChangePasswordPopupClose}
+                        PaperProps={{
+                            sx: {
+                                width: '620px',
+                                position: 'fixed',
+                                zIndex: 1301,
+                                top: 0,
+                                bottom: 0,
+                                '@media (max-width: 600px)': {
+                                    width: '100%',
+                                }
+                            },
+                        }}
+                    >
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '24px 32px 24px', borderBottom: '1px solid #e4e4e4' }}>
                             <Typography variant="h6" sx={{
                                 textAlign: 'center',
@@ -645,22 +661,24 @@ const handleChangePasswordPopupClose = () => {
                                 fontFamily: 'Nunito Sans',
                                 fontWeight: '600',
                                 fontSize: '16px',
-                                lineHeight: 'normal' }}>
+                                lineHeight: 'normal'
+                            }}>
                                 Change password
                             </Typography>
-                            <IconButton onClick={handleChangePasswordPopupClose} sx={{p: 0}}>
-                                <CloseIcon sx={{width: '20px', height: '20px'}} />
+                            <IconButton onClick={handleChangePasswordPopupClose} sx={{ p: 0 }}>
+                                <CloseIcon sx={{ width: '20px', height: '20px' }} />
                             </IconButton>
                         </Box>
                         <Divider />
                         <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', height: '100%' }}>
-                            <Box sx={{px: 4, py: 3,  width: '100%', display: 'flex', flexDirection: 'column', gap: 4}}>
+                            <Box sx={{ px: 4, py: 3, width: '100%', display: 'flex', flexDirection: 'column', gap: 4 }}>
                                 <Typography variant="h6" sx={{
                                     color: '#202124',
                                     fontFamily: 'Nunito Sans',
                                     fontWeight: '600',
                                     fontSize: '16px',
-                                    lineHeight: 'normal' }}>
+                                    lineHeight: 'normal'
+                                }}>
                                     Update your password to enhance account security and maintain access control.
                                 </Typography>
 
@@ -675,18 +693,18 @@ const handleChangePasswordPopupClose = () => {
                                     InputProps={{
                                         sx: accontDetailsStyles.formInput,
                                         endAdornment: (
-                                          <InputAdornment position="end">
-                                            <IconButton onClick={toggleCurrentPasswordVisibility} edge="end">
-                                              <Image 
-                                                src={showCurrentPassword ? "/custom-visibility-icon-off.svg" : "/custom-visibility-icon.svg"} 
-                                                alt={showCurrentPassword ? "Show password" : "Hide password"} 
-                                                height={18} width={18}
-                                                title={showCurrentPassword ? "Hide password" : "Show password"}
-                                              />
-                                            </IconButton>
-                                          </InputAdornment>
+                                            <InputAdornment position="end">
+                                                <IconButton onClick={toggleCurrentPasswordVisibility} edge="end">
+                                                    <Image
+                                                        src={showCurrentPassword ? "/custom-visibility-icon-off.svg" : "/custom-visibility-icon.svg"}
+                                                        alt={showCurrentPassword ? "Show password" : "Hide password"}
+                                                        height={18} width={18}
+                                                        title={showCurrentPassword ? "Hide password" : "Show password"}
+                                                    />
+                                                </IconButton>
+                                            </InputAdornment>
                                         ),
-                                      }}
+                                    }}
                                 />
                                 <TextField sx={accontDetailsStyles.formField}
                                     InputLabelProps={{ sx: accontDetailsStyles.inputLabel }}
@@ -701,40 +719,40 @@ const handleChangePasswordPopupClose = () => {
                                     InputProps={{
                                         sx: accontDetailsStyles.formInput,
                                         endAdornment: (
-                                          <InputAdornment position="end">
-                                            <IconButton onClick={togglePasswordVisibility} edge="end">
-                                              <Image 
-                                                src={showPassword ? "/custom-visibility-icon-off.svg" : "/custom-visibility-icon.svg"} 
-                                                alt={showPassword ? "Show password" : "Hide password"} 
-                                                height={18} width={18}
-                                                title={showPassword ? "Hide password" : "Show password"}
-                                              />
-                                            </IconButton>
-                                          </InputAdornment>
+                                            <InputAdornment position="end">
+                                                <IconButton onClick={togglePasswordVisibility} edge="end">
+                                                    <Image
+                                                        src={showPassword ? "/custom-visibility-icon-off.svg" : "/custom-visibility-icon.svg"}
+                                                        alt={showPassword ? "Show password" : "Hide password"}
+                                                        height={18} width={18}
+                                                        title={showPassword ? "Hide password" : "Show password"}
+                                                    />
+                                                </IconButton>
+                                            </InputAdornment>
                                         ),
-                                      }}
+                                    }}
                                 />
                                 <List sx={accontDetailsStyles.passwordContentList}>
                                     <ListItem sx={accontDetailsStyles.passwordContentListItem}>
                                         <ListItemIcon sx={accontDetailsStyles.passwordContentListItemIcon}>
-                                        <CustomCheckCircleIcon isSuccess={passwordValidation.length} />
+                                            <CustomCheckCircleIcon isSuccess={passwordValidation.length} />
                                         </ListItemIcon>
                                         <ListItemText sx={passwordValidation.length ? accontDetailsStyles.passwordValidationTextSuccess : accontDetailsStyles.passwordValidationText} primary="8 characters min." />
                                     </ListItem>
                                     <ListItem sx={accontDetailsStyles.passwordContentListItem}>
                                         <ListItemIcon sx={accontDetailsStyles.passwordContentListItemIcon}>
-                                        <CustomCheckCircleIcon isSuccess={passwordValidation.upperCase} />
+                                            <CustomCheckCircleIcon isSuccess={passwordValidation.upperCase} />
                                         </ListItemIcon>
-                                        <ListItemText sx={passwordValidation.upperCase ? accontDetailsStyles.passwordValidationTextSuccess : accontDetailsStyles.passwordValidationText}  primary="1 uppercase" />
+                                        <ListItemText sx={passwordValidation.upperCase ? accontDetailsStyles.passwordValidationTextSuccess : accontDetailsStyles.passwordValidationText} primary="1 uppercase" />
                                     </ListItem>
                                     <ListItem sx={accontDetailsStyles.passwordContentListItem}>
                                         <ListItemIcon sx={accontDetailsStyles.passwordContentListItemIcon}>
-                                        <CustomCheckCircleIcon isSuccess={passwordValidation.lowerCase} />
+                                            <CustomCheckCircleIcon isSuccess={passwordValidation.lowerCase} />
                                         </ListItemIcon>
                                         <ListItemText sx={passwordValidation.lowerCase ? accontDetailsStyles.passwordValidationTextSuccess : accontDetailsStyles.passwordValidationText} primary="1 lowercase" />
                                     </ListItem>
                                 </List>
-                                <TextField 
+                                <TextField
                                     sx={accontDetailsStyles.formField}
                                     InputLabelProps={{ sx: accontDetailsStyles.inputLabel }}
                                     label="Confirm New Password"
@@ -748,29 +766,29 @@ const handleChangePasswordPopupClose = () => {
                                     InputProps={{
                                         sx: accontDetailsStyles.formInput,
                                         endAdornment: (
-                                          <InputAdornment position="end">
-                                            {Boolean(errors.confirmNewPassword) && (
-                                              <IconButton edge="end">
-                                                {/* Add your danger icon here */}
-                                                <Image 
-                                                  src="/danger-icon.svg" 
-                                                  alt="Danger icon"
-                                                  height={20} width={20} 
-                                                  title="Invalid password"
-                                                />
-                                              </IconButton>
-                                            )}
-                                            <IconButton onClick={toggleConfirmPasswordVisibility} edge="end">
-                                              <Image 
-                                                src={showConfirmPassword ? "/custom-visibility-icon-off.svg" : "/custom-visibility-icon.svg"} 
-                                                alt={showConfirmPassword ? "Show password" : "Hide password"} 
-                                                height={18} width={18}
-                                                title={showConfirmPassword ? "Hide password" : "Show password"}
-                                              />
-                                            </IconButton>
-                                          </InputAdornment>
+                                            <InputAdornment position="end">
+                                                {Boolean(errors.confirmNewPassword) && (
+                                                    <IconButton edge="end">
+                                                        {/* Add your danger icon here */}
+                                                        <Image
+                                                            src="/danger-icon.svg"
+                                                            alt="Danger icon"
+                                                            height={20} width={20}
+                                                            title="Invalid password"
+                                                        />
+                                                    </IconButton>
+                                                )}
+                                                <IconButton onClick={toggleConfirmPasswordVisibility} edge="end">
+                                                    <Image
+                                                        src={showConfirmPassword ? "/custom-visibility-icon-off.svg" : "/custom-visibility-icon.svg"}
+                                                        alt={showConfirmPassword ? "Show password" : "Hide password"}
+                                                        height={18} width={18}
+                                                        title={showConfirmPassword ? "Hide password" : "Show password"}
+                                                    />
+                                                </IconButton>
+                                            </InputAdornment>
                                         ),
-                                      }}
+                                    }}
                                 />
                             </Box>
                         </Box>
@@ -795,8 +813,8 @@ const handleChangePasswordPopupClose = () => {
                                         },
                                         borderRadius: '4px',
                                     }}
-                                    >
-                                        Cancel
+                                >
+                                    Cancel
                                 </Button>
                                 <Button
                                     onClick={handleChangePassword}
@@ -830,20 +848,21 @@ const handleChangePasswordPopupClose = () => {
                     {/* Business Info Section */}
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
                         <Typography variant="h6" sx={{
-                                fontFamily: 'Nunito Sans',
-                                fontSize: '16px',
-                                fontWeight: '600',
-                                color: '#4a4a4a',
-                                lineHeight: '22px'
-                            }}>
+                            fontFamily: 'Nunito Sans',
+                            fontSize: '16px',
+                            fontWeight: '600',
+                            color: '#4a4a4a',
+                            lineHeight: '22px'
+                        }}>
                             Business Info
                         </Typography>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2,
+                        <Box sx={{
+                            display: 'flex', alignItems: 'center', gap: 2,
                             '@media (max-width: 600px)': {
                                 flexDirection: 'column',
                                 alignItems: 'flex-start'
                             },
-                         }}>
+                        }}>
                             <TextField sx={accontDetailsStyles.formField}
                                 label="Organization Name"
                                 value={organizationName}
@@ -851,12 +870,13 @@ const handleChangePasswordPopupClose = () => {
                                 fullWidth
                                 margin="normal"
                                 InputLabelProps={{ sx: accontDetailsStyles.inputLabel }}
-                                InputProps={{ sx: accontDetailsStyles.formInput,
+                                InputProps={{
+                                    sx: accontDetailsStyles.formInput,
                                     endAdornment: (
                                         <InputAdornment position="end">
                                             {/* Write Icon */}
                                             <IconButton
-                                                sx={{ 
+                                                sx={{
                                                     display: (isOrganizationNameFocused && !isOrganizationNameTyping) ? 'flex' : 'none',
                                                     visibility: (isOrganizationNameFocused && !isOrganizationNameTyping) ? 'visible' : 'hidden',
                                                 }}
@@ -866,7 +886,7 @@ const handleChangePasswordPopupClose = () => {
                                             {/* Close Icon */}
                                             <IconButton
                                                 onClick={handleReset(setOrganizationName, setIsOrganizationNameTyping, setIsOrganizationNameModified)}
-                                                sx={{ 
+                                                sx={{
                                                     display: showCloseIcon(isOrganizationNameTyping, organizationName, initialOrganizationName) ? 'flex' : 'none',
                                                     visibility: showCloseIcon(isOrganizationNameTyping, organizationName, initialOrganizationName) ? 'visible' : 'hidden',
                                                 }}
@@ -894,7 +914,7 @@ const handleChangePasswordPopupClose = () => {
                                     textTransform: 'none',
                                     padding: '10px 24px',
                                     height: '40px',
-                                    '&:hover' : {
+                                    '&:hover': {
                                         background: 'transparent'
                                     },
                                     '&.Mui-disabled': {
@@ -903,11 +923,12 @@ const handleChangePasswordPopupClose = () => {
                                     }
                                 }}
                                 disabled={!isSaveEnabled(organizationName, initialOrganizationName, isOrganizationNameModified)}
-                                >
+                            >
                                 Save
                             </Button>
                         </Box>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2,
+                        <Box sx={{
+                            display: 'flex', alignItems: 'center', gap: 2,
                             '@media (max-width: 600px)': {
                                 flexDirection: 'column',
                                 alignItems: 'flex-start'
@@ -920,12 +941,13 @@ const handleChangePasswordPopupClose = () => {
                                 fullWidth
                                 margin="normal"
                                 InputLabelProps={{ sx: accontDetailsStyles.inputLabel }}
-                                InputProps={{ sx: accontDetailsStyles.formInput,
+                                InputProps={{
+                                    sx: accontDetailsStyles.formInput,
                                     endAdornment: (
                                         <InputAdornment position="end">
                                             {/* Write Icon */}
                                             <IconButton
-                                                sx={{ 
+                                                sx={{
                                                     display: (isCompanyWebsiteFocused && !isCompanyWebsiteTyping) ? 'flex' : 'none',
                                                     visibility: (isCompanyWebsiteFocused && !isCompanyWebsiteTyping) ? 'visible' : 'hidden',
                                                 }}
@@ -935,7 +957,7 @@ const handleChangePasswordPopupClose = () => {
                                             {/* Close Icon */}
                                             <IconButton
                                                 onClick={handleReset(setCompanyWebsite, setIsCompanyWebsiteTyping, setIsCompanyWebsiteModified)}
-                                                sx={{ 
+                                                sx={{
                                                     display: showCloseIcon(isCompanyWebsiteTyping, companyWebsite, initialCompanyWebsite) ? 'flex' : 'none',
                                                     visibility: showCloseIcon(isCompanyWebsiteTyping, companyWebsite, initialCompanyWebsite) ? 'visible' : 'hidden',
                                                 }}
@@ -963,7 +985,7 @@ const handleChangePasswordPopupClose = () => {
                                     textTransform: 'none',
                                     padding: '10px 24px',
                                     height: '40px',
-                                    '&:hover' : {
+                                    '&:hover': {
                                         background: 'transparent'
                                     },
                                     '&.Mui-disabled': {
@@ -972,11 +994,12 @@ const handleChangePasswordPopupClose = () => {
                                     }
                                 }}
                                 disabled={!isSaveEnabled(companyWebsite, initialCompanyWebsite, isCompanyWebsiteModified)}
-                                >
+                            >
                                 Save
                             </Button>
                         </Box>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2,
+                        <Box sx={{
+                            display: 'flex', alignItems: 'center', gap: 2,
                             '@media (max-width: 600px)': {
                                 flexDirection: 'column',
                                 alignItems: 'flex-start'
@@ -989,12 +1012,13 @@ const handleChangePasswordPopupClose = () => {
                                 fullWidth
                                 margin="normal"
                                 InputLabelProps={{ sx: accontDetailsStyles.inputLabel }}
-                                InputProps={{ sx: accontDetailsStyles.formInput,
+                                InputProps={{
+                                    sx: accontDetailsStyles.formInput,
                                     endAdornment: (
                                         <InputAdornment position="end">
                                             {/* Write Icon */}
                                             <IconButton
-                                                sx={{ 
+                                                sx={{
                                                     display: (isMonthlyVisitsFocused && !isMonthlyVisitsTyping) ? 'flex' : 'none',
                                                     visibility: (isMonthlyVisitsFocused && !isMonthlyVisitsTyping) ? 'visible' : 'hidden',
                                                 }}
@@ -1004,7 +1028,7 @@ const handleChangePasswordPopupClose = () => {
                                             {/* Close Icon */}
                                             <IconButton
                                                 onClick={handleReset(setMonthlyVisits, setIsMonthlyVisitsTyping, setIsMonthlyVisitsModified)}
-                                                sx={{ 
+                                                sx={{
                                                     display: showCloseIcon(isMonthlyVisitsTyping, monthlyVisits, initialMonthlyVisits) ? 'flex' : 'none',
                                                     visibility: showCloseIcon(isMonthlyVisitsTyping, monthlyVisits, initialMonthlyVisits) ? 'visible' : 'hidden',
                                                 }}
@@ -1032,7 +1056,7 @@ const handleChangePasswordPopupClose = () => {
                                     textTransform: 'none',
                                     padding: '10px 24px',
                                     height: '40px',
-                                    '&:hover' : {
+                                    '&:hover': {
                                         background: 'transparent'
                                     },
                                     '&.Mui-disabled': {
@@ -1041,14 +1065,14 @@ const handleChangePasswordPopupClose = () => {
                                     }
                                 }}
                                 disabled={!isSaveEnabled(monthlyVisits, initialMonthlyVisits, isMonthlyVisitsModified)}
-                                >
+                            >
                                 Save
                             </Button>
                         </Box>
-                        </Box>
-                    </Box>
                     </Box>
                 </Box>
+            </Box>
+        </Box>
 
 
     );

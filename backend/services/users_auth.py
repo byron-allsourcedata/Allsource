@@ -53,6 +53,8 @@ class UsersAuth:
             last_login=self.get_utc_aware_date_for_mssql(),
             payment_status=StripePaymentStatusEnum.PENDING.name,
             customer_id=customer_id,
+            last_signed_in = datetime.now(),
+            added_on = datetime.now()
         )
         if not is_without_card:
             user_object.is_with_card = True
@@ -179,6 +181,7 @@ class UsersAuth:
         if not user_object.is_email_confirmed:
             self.user_persistence_service.email_confirmed(user_object.id)
         if user_object:
+            self.user_persistence_service.set_last_signed_in(user_id=user_object.id)
             if user_object.team_owner_id:
                 token_info = {
                     "id": user_object.team_owner_id,
@@ -305,6 +308,7 @@ class UsersAuth:
             check_password = verify_password(password, user_object.password)
             if check_password:
                 logger.info("Password verification passed")
+                self.user_persistence_service.set_last_signed_in(user_id=user_object.id)
                 if user_object.team_owner_id:
                     token_info = {
                         "id": user_object.team_owner_id,

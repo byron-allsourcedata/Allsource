@@ -12,8 +12,26 @@ class SettingsPersistence:
     def __init__(self, db: Session):
         self.db = db
 
-    def get_account_details(self, user_id):
-        return self.db.query(User).filter(User.id == user_id).first()
+    def get_account_details(self, owner_id, member_id):
+        if member_id:
+            OwnerAlias = aliased(User)
+            MemberAlias = aliased(User)
+            return (
+                self.db.query(
+                    MemberAlias.full_name, 
+                    MemberAlias.email, 
+                    MemberAlias.reset_password_sent_at, 
+                    MemberAlias.is_email_confirmed,
+                    OwnerAlias.company_name,
+                    OwnerAlias.company_website,
+                    OwnerAlias.company_website_visits
+                )
+                .join(MemberAlias, MemberAlias.team_owner_id == OwnerAlias.id)
+                .filter(MemberAlias.id == member_id)
+                .first()
+            )
+        return self.db.query(User.full_name, User.email, User.reset_password_sent_at, User.company_name, User.company_website,
+                             User.company_website_visits, User.is_email_confirmed).filter(User.id == owner_id).first()
     
     def change_columns_data_by_userid(self, changes: dict, user_id: int):
         stmt = update(User).where(User.id == user_id).values(changes)
