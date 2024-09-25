@@ -18,11 +18,12 @@ class WebhookService:
         if not user_data:
             return payload
         
+        if self.subscription_service.check_duplicate_send(stripe_request_created_at, user_data.id):
+            return payload
+        
         self.subscription_service.create_subscription_transaction(user_id=user_data.id,
                                                                     stripe_payload=payload)
         
-        if self.subscription_service.check_duplicate_send(stripe_request_created_at, user_data.id):
-            return payload
 
         status = payload.get("data").get("object").get("status")
 
@@ -59,11 +60,12 @@ class WebhookService:
         if not user_data:
             return payload
         
+        if self.subscription_service.check_duplicate_send(stripe_request_created_at, user_data.id):
+            return payload
+        
         self.subscription_service.create_subscription_transaction(user_id=user_data.id,
                                                                     stripe_payload=payload)
         
-        if self.subscription_service.check_duplicate_send(stripe_request_created_at, user_data.id):
-            return payload
 
         status = payload.get("data").get("object").get("status")
 
@@ -96,14 +98,10 @@ class WebhookService:
         if not user_data:
             return payload
         
-        self.subscription_service.create_payments_transaction(user_id=user_data.id,
-                                                                    stripe_payload=payload)
-        
-        if self.subscription_service.check_duplicate_send(stripe_request_created_at, user_data.id):
+        if self.subscription_service.check_duplicate_payments_send(stripe_request_created_at, user_data.id):
             return payload
-
-        status = payload.get("data").get("object").get("status")
-
+        
+        
         """
         Saving the details of payment mode
         """
@@ -115,9 +113,17 @@ class WebhookService:
         """
         Logic for existing or new subscription, credits and credit usage
         """
-        self.subscription_service.update_user_payment_status(user_id=user_data.id, status=status)
-        logger.info(f"updated the payment status of user to completed {user_data.email}")
-        user_subscription = self.subscription_service.create_payment_from_webhook(user_id=user_data.id, stripe_payload=payload)
-        if user_subscription:
+        transaction_id = payload.get('data').get('object').get('id')
+        
+        user_payment_transaction_exist = self.subscription_service.get_user_payment_by_transaction_id(transaction_id)
+        if user_payment_transaction_exist:
+            self.subscription_service.update_payments_transaction(user_id=user_data.id,
+                                                                    stripe_payload=payload, user_payment_transaction_id=user_payment_transaction_exist.id)
+        else:
+            self.subscription_service.create_payments_transaction(user_id=user_data.id,
+                                                                    stripe_payload=payload)
+        user_payment = self.subscription_service.create_payment_from_webhook(user_id=user_data.id, stripe_payload=payload)
+        if user_payment:
             logger.info("New payment created")
-            return user_subscription
+            return user_payment
+            

@@ -6,24 +6,28 @@ from models.users import User
 from persistence.sendgrid_persistence import SendgridPersistence
 from persistence.user_persistence import UserPersistence
 from persistence.plans_persistence import PlansPersistence
+from services.subscriptions import SubscriptionService
 from sqlalchemy.orm import Session
 from .jwt_service import get_password_hash, create_access_token, decode_jwt_data, verify_password
 from schemas.settings import AccountDetailsRequest
 from enums import VerifyToken
 logger = logging.getLogger(__name__)
 from datetime import datetime, timedelta
-from services.jwt_service import get_password_hash,create_access_token
 from .sendgrid import SendgridHandler
-from enums import SettingStatus, SendgridTemplate
+from enums import SettingStatus, SendgridTemplate, TeamAccessLevel
+import hashlib
+import json
 from services.stripe_service import *
 
 OVERAGE_CONTACT = 1
 
 class SettingsService:
 
-    def __init__(self, db: Session, settings_persistence: SettingsPersistence, plan_persistence: PlansPersistence, user_persistence: UserPersistence, send_grid_persistence: SendgridPersistence):
+    def __init__(self, settings_persistence: SettingsPersistence, plan_persistence: PlansPersistence, user_persistence: UserPersistence, send_grid_persistence: SendgridPersistence,
+                 subscription_service: SubscriptionService):
         self.settings_persistence = settings_persistence
         self.plan_persistence = plan_persistence
+        self.subscription_service = subscription_service
         self.user_persistence = user_persistence
         self.send_grid_persistence = send_grid_persistence
 
@@ -95,7 +99,7 @@ class SettingsService:
 
         return SettingStatus.SUCCESS
     
-    def change_email_account_details(self, token: User, email: str):
+    def change_email_account_details(self, token, email: str):
         if email is None:
             SettingStatus.INCORRECT_MAIL
         try:
@@ -117,8 +121,94 @@ class SettingsService:
                 'user_token': user_token
             }
         return {'status': VerifyToken.INCORRECT_TOKEN}
-        
     
+    def get_team_members(self, user: dict):
+        result = {}
+        team_arr = []
+        teams_data = self.settings_persistence.get_team_members_by_userid(user_id=user.get('id'))
+        for team_data in teams_data:
+            invited, inviter_mail = team_data
+            team_info = {
+                'mail': invited.email,
+                'last_sign_in': invited.last_signed_in,
+                'access_level': invited.team_access_level,
+                'invited_by': inviter_mail,
+                'added_on': invited.added_on
+            }
+            team_arr.append(team_info)
+        result['teams'] = team_arr
+        result['member_limit'] = self.plan_persistence.get_current_plan(user_id=user.get('id')).members_limit
+        result['member_count'] = len(team_arr)
+        return team_arr
+            
+        
+    def get_pending_invations(self, user: dict):
+        result = []
+        invations_data = self.settings_persistence.get_pending_invations_by_userid(user_id=user.get('id'))
+        for invation_data in invations_data:
+            team_info = {
+                'mail': invation_data.email,
+                'access_level': invation_data.access_level,
+                'data_invited': invation_data.date_invited_at,
+                'status': invation_data.status
+            }
+            result.append(team_info)
+        return result
+    
+    def check_team_invitations_limit(self, user):
+        user_limit = self.subscription_service.check_invitation_limit(user_id=user.get('id'))
+        if user_limit is False:
+            return SettingStatus.INVITATION_LIMIT_REACHED
+        return SettingStatus.INVITATION_LIMIT_NOT_REACHED
+    
+    def invite_user(self, user: dict, invite_user, access_level=TeamAccessLevel.READ_ONLY):
+        user_limit = self.subscription_service.check_invitation_limit(user_id=user.get('id'))
+        if user_limit is False:
+            return SettingStatus.INVITATION_LIMIT_REACHED
+        if access_level not in TeamAccessLevel:
+            return SettingStatus.INVALID_ACCESS_LEVEL 
+        exists_team_member = self.settings_persistence.exists_team_member(user_id=user.get('id'), user_mail=invite_user)
+        if exists_team_member:
+            return SettingStatus.ALREADY_INVITED
+        template_id = self.send_grid_persistence.get_template_by_alias(
+                SendgridTemplate.TEAM_MEMBERS_TEMPLATE.value)
+        if not template_id:
+            logger.info("template_id is None")
+            return SettingStatus.FAILED
+        
+        md5_token_info = {
+                    'id': user.get('id'),
+                    'user_teams_mail': invite_user,
+                    'salt': os.getenv('SECRET_SALT')
+                }
+        json_string = json.dumps(md5_token_info, sort_keys=True)
+        md5_hash = hashlib.md5(json_string.encode()).hexdigest()
+        confirm_email_url = f"{os.getenv('SITE_HOST_URL')}/sign_up?token={md5_hash}&user_teams_mail={invite_user}"
+        mail_object = SendgridHandler()
+        mail_object.send_sign_up_mail(
+            to_emails=invite_user,
+            template_id=template_id,
+            template_placeholder={"full_name": invite_user, "link": confirm_email_url, "company_name": user.get('company_name')}
+        )
+        
+        self.settings_persistence.save_pending_invations_by_userid(user_id=user.get('id'), user_mail=invite_user, access_level=access_level, md5_hash=md5_hash)
+        invitation_limit = -1
+        self.subscription_service.update_invitation_limit(user_id=user.get('id'), invitation_limit=invitation_limit)
+        return SettingStatus.SUCCESS 
+    
+    def change_teams(self, user: dict, teams_details):
+        pending_invitation_revoke = teams_details.pending_invitation_revoke
+        remove_user = teams_details.remove_user
+        if pending_invitation_revoke:
+            self.settings_persistence.pending_invitation_revoke(user_id=user.get('id'), mail=pending_invitation_revoke)
+        if remove_user:
+            result = self.settings_persistence.team_members_remove(user_id=user.get('id'), mail=remove_user)
+            if result['success'] == False:
+                return result['error']
+        invitation_limit = 1
+        self.subscription_service.update_invitation_limit(user_id=user.get('id'), invitation_limit=invitation_limit)
+        
+        
     def timestamp_to_date(self, timestamp):
         return datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d')
             

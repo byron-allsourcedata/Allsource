@@ -12,7 +12,7 @@ import CustomizedProgressBar from '@/components/CustomizedProgressBar';
 
 const Settings: React.FC = () => {
     const [activeSection, setActiveSection] = useState<string>('accountDetails');
-    const [accountDetails, setAccountDetails] = useState<any>(null); // Для хранения данных аккаунта
+    const [accountDetails, setAccountDetails] = useState<any>(null); 
     const [isLoading, setIsLoading] = useState<boolean>(true);
 
     // Функция для получения данных аккаунта

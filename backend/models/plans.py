@@ -24,6 +24,7 @@ class SubscriptionPlan(Base):
     leads_credits = Column(INTEGER, nullable=True)
     prospect_credits = Column(INTEGER, nullable=True)
     users_limit = Column(Integer, nullable=True)
+    members_limit = Column(Integer, nullable=True)
 
 
 event.listen(SubscriptionPlan, "before_insert", create_timestamps)

@@ -20,8 +20,11 @@ const Signup: React.FC = () => {
 
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
-  const [formValues, setFormValues] = useState({ full_name: '', email: '', password: '', is_without_card: isWithoutCard ? 'true' : 'false', termsAccepted: false });
+  const user_teams_mail = searchParams.get('user_teams_mail');
+  const teams_token = searchParams.get('registration_token');
+  const [formValues, setFormValues] = useState({ full_name: '', email: user_teams_mail, password: '', is_without_card: isWithoutCard ? 'true' : 'false', termsAccepted: false, teams_token: teams_token });
   const [formSubmitted, setFormSubmitted] = useState(false);
+
 
   useEffect(() => {
     document.body.style.overflow = 'hidden';
@@ -168,6 +171,12 @@ const Signup: React.FC = () => {
               get_me()
               router.push(`${response.data.stripe_payment_url}`)
               break;
+            case 'NOT_VALID_EMAIL':
+              showErrorToast("The email is either invalid or does not match the invited user.");
+              break;
+            case 'TEAM_INVITATION_INVALID':
+              showErrorToast("The email provided is not valid for team invitation.");
+              break;
             case "FILL_COMPANY_DETAILS":
               get_me()
               router.push("/account-setup")
@@ -242,6 +251,7 @@ const Signup: React.FC = () => {
               try {
                 const response = await axiosInstance.post('/sign-up-google', {
                   token: credentialResponse.credential,
+                  ...(teams_token && { teams_token })
                 });
 
                 const responseData = response.data;
@@ -273,8 +283,14 @@ const Signup: React.FC = () => {
                     get_me()
                     router.push(`${response.data.stripe_payment_url}`);
                     break;
-                  case 'INCORRECT_PASSWORD_OR_EMAIL':
-                    showErrorToast("User with this email does not exist");
+                    case 'INCORRECT_PASSWORD_OR_EMAIL':
+                      showErrorToast("User with this email does not exist");
+                      break;
+                  case 'NOT_VALID_EMAIL':
+                    showErrorToast("The email is either invalid or does not match the invited user.");
+                    break;
+                  case 'TEAM_INVITATION_INVALID':
+                    showErrorToast("The email provided is not valid for team invitation.");
                     break;
                   case "PIXEL_INSTALLATION_NEEDED":
                     get_me()
@@ -332,6 +348,7 @@ const Signup: React.FC = () => {
               error={Boolean(errors.email)}
               helperText={errors.email}
               InputProps={{ sx: signupStyles.formInput }}
+              disabled={user_teams_mail !== null}
             />
             <TextField sx={signupStyles.formField}
               InputLabelProps={{ sx: signupStyles.inputLabel }}

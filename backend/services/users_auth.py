@@ -52,7 +52,6 @@ class UsersAuth:
             created_at=self.get_utc_aware_date_for_mssql(),
             last_login=self.get_utc_aware_date_for_mssql(),
             payment_status=StripePaymentStatusEnum.PENDING.name,
-            parent_id=0,
             customer_id=customer_id,
         )
         if not is_without_card:
@@ -62,11 +61,21 @@ class UsersAuth:
         return user_object
 
     def create_account_google(self, auth_google_data: AuthGoogleData):
+        teams_token = auth_google_data.teams_token
+        owner_id = None
         client_id = os.getenv("CLIENT_GOOGLE_ID")
         google_request = google_requests.Request()
         is_without_card = auth_google_data.is_without_card
         idinfo = id_token.verify_oauth2_token(str(auth_google_data.token), google_request, client_id)
         if idinfo:
+            if teams_token:
+                status_result = self.user_persistence_service.check_status_invitations(teams_token=teams_token, user_mail=idinfo.get("email"))
+                if status_result['success'] is False:
+                    return {
+                        'is_success': True,
+                        'status': status_result['error']
+                    }
+                owner_id = status_result['team_owner_id']
             full_name = idinfo.get('given_name')
             family_name = idinfo.get('family_name')
             if family_name and family_name != 'None':
@@ -92,10 +101,16 @@ class UsersAuth:
 
         customer_id = stripe_service.create_customer_google(google_payload)
         user_object = self.add_user(is_without_card=is_without_card, customer_id=customer_id, user_form=google_payload)
-        self.user_persistence_service.update_user_parent_v2(user_object.id)
-        token_info = {
-            "id": user_object.id,
-        }
+        if teams_token:
+            self.user_persistence_service.update_teams_owner_id(user_id=user_object.id,teams_token=teams_token, owner_id=owner_id)
+            token_info = {
+                "id": owner_id,
+                "team_member_id": user_object.id
+            }
+        else:
+            token_info = {
+                "id": user_object.id,
+            }
         token = create_access_token(token_info)
         logger.info("Token created")
         self.user_persistence_service.email_confirmed(user_object.id)
@@ -162,9 +177,15 @@ class UsersAuth:
         if not user_object.is_email_confirmed:
             self.user_persistence_service.email_confirmed(user_object.id)
         if user_object:
-            token_info = {
-                "id": user_object.id,
-            }
+            if user_object.team_owner_id:  
+                token_info = {
+                    "id": user_object.team_owner_id,
+                    "team_member_id": user_object.id
+                }
+            else:
+                token_info = {
+                    "id": user_object.id,
+                }
             token = create_access_token(token_info)
             authorization_data = self.get_user_authorization_information(user_object, self.subscription_service)
             if authorization_data['status'] == LoginStatus.PAYMENT_NEEDED:
@@ -189,6 +210,16 @@ class UsersAuth:
             }
 
     def create_account(self, user_form: UserSignUpForm):
+        teams_token = user_form.teams_token
+        owner_id = None
+        if teams_token:
+            status_result = self.user_persistence_service.check_status_invitations(teams_token=teams_token, user_mail=user_form.email)
+            if status_result['success'] is False:
+                return {
+                    'is_success': True,
+                    'status': status_result['error']
+                }
+            owner_id = status_result['team_owner_id']
         if not user_form.password:
             logger.debug("The password must not be empty.")
             return {
@@ -201,7 +232,7 @@ class UsersAuth:
                 'is_success': True,
                 'status': SignUpStatus.PASSWORD_NOT_VALID
             }
-        user_form.password = get_password_hash(user_form.password)
+        user_form.password = get_password_hash(user_form.password.strip())
         check_user_object = self.user_persistence_service.get_user_by_email(user_form.email)
         is_without_card = user_form.is_without_card
         if check_user_object is not None:
@@ -217,13 +248,20 @@ class UsersAuth:
             "password": user_form.password,
         }
         user_object = self.add_user(is_without_card, customer_id, user_form=user_data)
-        self.user_persistence_service.update_user_parent_v2(user_object.id)
-        token_info = {
-            "id": user_object.id,
-        }
+        if teams_token:
+            self.user_persistence_service.update_teams_owner_id(user_id=user_object.id, user_mail=user_object.email,teams_token=teams_token, owner_id=owner_id)
+            token_info = {
+                "id": owner_id,
+                "team_member_id": user_object.id
+            }
+        else:
+            token_info = {
+                "id": user_object.id,
+            }
+        
         token = create_access_token(token_info)
         logger.info("Token created")
-        if is_without_card:
+        if is_without_card and teams_token is None:
             template_id = self.send_grid_persistence_service.get_template_by_alias(
                 SendgridTemplate.EMAIL_VERIFICATION_TEMPLATE.value)
             if not template_id:
@@ -262,9 +300,15 @@ class UsersAuth:
             check_password = verify_password(password, user_object.password)
             if check_password:
                 logger.info("Password verification passed")
-                token_info = {
-                    "id": user_object.id,
-                }
+                if user_object.team_owner_id:
+                    token_info = {
+                    "id": user_object.team_owner_id,
+                    "team_member_id": user_object.id
+                    }
+                else:
+                    token_info = {
+                        "id": user_object.id,
+                    }
                 token = create_access_token(token_info)
                 authorization_data = self.get_user_authorization_information(user_object, self.subscription_service)
                 if authorization_data['status'] == LoginStatus.PAYMENT_NEEDED:
@@ -296,18 +340,30 @@ class UsersAuth:
         check_user_object = self.user_persistence_service.get_user_by_id(data.get('id'))
         if check_user_object:
             if check_user_object.get('is_email_confirmed'):
-                token_info = {
-                    "id": check_user_object.get('id'),
-                }
+                if check_user_object.team_owner_id:
+                    token_info = {
+                    "id": check_user_object.team_owner_id,
+                    "team_member_id": check_user_object.id
+                    }
+                else:
+                    token_info = {
+                        "id": check_user_object.id,
+                    }
                 user_token = create_access_token(token_info)
                 return {
                     'status': VerifyToken.EMAIL_ALREADY_VERIFIED,
                     'user_token': user_token
                 }
             self.user_persistence_service.email_confirmed(check_user_object.get('id'))
-            token_info = {
-                "id": check_user_object.get('id'),
-            }
+            if check_user_object.team_owner_id:
+                    token_info = {
+                    "id": check_user_object.team_owner_id,
+                    "team_member_id": check_user_object.id
+                    }
+            else:
+                token_info = {
+                    "id": check_user_object.id,
+                }
             user_token = create_access_token(token_info)
             return {
                 'status': VerifyToken.SUCCESS,
@@ -325,9 +381,16 @@ class UsersAuth:
             if message_expiration_time is not None:
                 if (message_expiration_time + timedelta(minutes=1)) > time_now:
                     return ResetPasswordEnum.RESEND_TOO_SOON
-            token_info = {
-                "id": db_user.id,
-            }
+            if db_user.team_owner_id:
+                    token_info = {
+                    "id": db_user.team_owner_id,
+                    "team_member_id": db_user.id
+                    }
+            else:
+                token_info = {
+                    "id": db_user.id,
+                }
+            
             token = create_access_token(token_info)
             template_id = self.send_grid_persistence_service.get_template_by_alias(
                 SendgridTemplate.FORGOT_PASSWORD_TEMPLATE.value)

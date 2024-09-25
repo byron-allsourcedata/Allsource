@@ -5,6 +5,8 @@ from models.users_domains import UserDomains
 from models.plans import SubscriptionPlan
 from models.users import Users
 from models.subscriptions import UserSubscriptions
+from models.teams_invitations import TeamInvitation
+from enums import TeamsInvitationStatus, SignUpStatus
 import logging
 
 logger = logging.getLogger(__name__)
@@ -49,10 +51,26 @@ class UserPersistence:
     def get_user_by_email(self, email):
         user_object = self.db.query(Users).filter(func.lower(Users.email) == func.lower(email)).first()
         return user_object
+    
+    def check_status_invitations(self, teams_token, user_mail):
+        result = {
+            'succes': False
+        }
+        teams_invitation = self.db.query(TeamInvitation).filter(TeamInvitation.token == teams_token).first()
+        if teams_invitation:
+            if teams_invitation.mail != user_mail:
+                result['error'] = SignUpStatus.NOT_VALID_EMAIL
+            if teams_invitation.status == TeamsInvitationStatus.PENDING:
+                result['succes'] = True
+                result['team_owner_id'] = TeamInvitation.team_owner_id
+        else:
+            result['error'] = SignUpStatus.TEAM_INVITATION_INVALID
+        return result
+        
+            
 
     def get_user_by_id(self, user_id):
         user = self.db.query(Users).filter(Users.id == user_id).first()
-        users_domain = self.db.query(UserDomains).filter(UserDomains.user_id == user.id, UserDomains.is_pixel_installed == True).first()
         result_user = None
         if user:
             result_user = {
@@ -63,7 +81,7 @@ class UserPersistence:
                 "is_with_card": user.is_with_card,
                 "is_company_details_filled": user.is_company_details_filled,
                 "full_name": user.full_name,
-                "parent_id": user.parent_id,
+                "team_owner_id": user.team_owner_id,
                 "image": user.image,
                 "company_name": user.company_name,
                 "company_website": user.company_website,
@@ -88,11 +106,33 @@ class UserPersistence:
             }
         self.db.rollback()
         return result_user
+    
+    def get_user_team_member_by_id(self, user_id):
+        user = self.db.query(Users).filter(Users.id == user_id).first()
+        result_user = None
+        if user:
+            result_user = {
+                "id": user.id,
+                "email": user.email,
+                "full_name": user.full_name,
+               'team_access_level': user.team_access_level
+            }
+        self.db.rollback()
+        return result_user
 
-    def update_user_parent_v2(self, parent_id: int):
-        self.db.query(Users).filter(Users.id == parent_id).update({Users.parent_id: parent_id},
-                                                                  synchronize_session=False)
+    def update_teams_owner_id(self, user_id, teams_token, owner_id):
+        teams_invitation = self.db.query(TeamInvitation).filter(
+            TeamInvitation.token == teams_token
+        ).first()
+        user_data = self.db.query(Users).filter(Users.id == user_id).first()
+        user_data.team_owner_id = owner_id
+        user_data.team_access_level = teams_invitation.team_owner_id
+        user_data.invited_by_id = teams_invitation.invited_by_id
+        user_data.added_on = datetime.now()
+        self.db.flush()
+        self.db.delete(teams_invitation)
         self.db.commit()
+
 
     def email_confirmed(self, user_id: int):
         query = self.db.query(Users).filter(Users.id == user_id)
