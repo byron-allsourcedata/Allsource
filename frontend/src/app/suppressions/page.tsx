@@ -3,6 +3,7 @@ import { Box, Typography, Tabs, Tab } from "@mui/material";
 import { useState } from "react";
 import { suppressionsStyle } from './suppressions';
 import CollectionRules from "@/components/SuppressionsCollectingRules";
+import SuppressionRules from "@/components/SuppressionsRules";
 
 interface TabPanelProps {
     children?: React.ReactNode;
@@ -21,15 +22,6 @@ const TabPanel: React.FC<TabPanelProps> = ({ children, value, index, ...other })
         >
             {value === index && <Box sx={{ pt: 3, margin: 0, }}>{children}</Box>}
         </div>
-    );
-};
-
-const SuppressionRules: React.FC = () => {
-    return (
-        <Box>
-            <Typography variant="h6">Suppression Rules</Typography>
-            <Typography>This section is for suppression rules management.</Typography>
-        </Box>
     );
 };
 
