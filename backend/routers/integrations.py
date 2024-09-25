@@ -96,7 +96,7 @@ async def get_list(service_name: str = Query(...),
         service = getattr(service, service_name.lower())
         return service.get_list(domain.id)
 
-@router.post('/sync/list/')
+@router.post('/sync/list/', status_code=201)
 async def create_list(list_data: CreateListOrTags,
                       service_name: str = Query(...),
                       integrations_service: IntegrationService = Depends(get_integration_service),
@@ -114,14 +114,14 @@ async def get_tags(service_name: str = Query(...),
         service = getattr(service, service_name.lower())
         return service.get_tags(domain.id)
 
-@router.post('/sync/tags')
+@router.post('/sync/tags/', status_code=201)
 async def create_tag(tag_data: CreateListOrTags,
                       service_name: str = Query(...),
                       integrations_service: IntegrationService = Depends(get_integration_service),
                       user = Depends(check_user_authorization), domain = Depends(check_pixel_install_domain)):
     with integrations_service as service:
         service = getattr(service, service_name)
-        return service.create_tag(tag_data.name, domain.id)
+        return service.create_tags(tag_data.name, domain.id)
 
 
 @router.post('/sync/', status_code=201)
@@ -137,5 +137,11 @@ async def create_sync(data: SyncCreate, service_name: str = Query(...),
             )
     with integration_service as service:
         service = getattr(service, service_name.lower())
-        service.create_sync(user['id'], **data.model_dump())
+        await service.create_sync(
+            leads_type=data.leads_type,
+            list_id=data.list_id,
+            tags_id=data.tags_id,
+            data_map=data.data_map,
+            domain_id=domain.id
+        )
 

@@ -61,14 +61,16 @@ class ExportLeads(BaseModel):
     list_name: str
 
 class DataMap(BaseModel):
+    id: int
     type: str
     value: str
 
 class SyncCreate(BaseModel):
     list_id: Optional[str] = None
     tags_id: Optional[str] = None
-    leads_type: Optional[str] = 'All'
+    leads_type: Optional[str] = 'All' 
     data_map: List[DataMap]
+
 
 class CreateListOrTags(BaseModel):
     name: str

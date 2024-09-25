@@ -39,11 +39,10 @@ class KlaviyoLocation(BaseModel):
     ip: tp.Optional[str] = None
 
 class KlaviyoProfile(BaseModel):
-    email: EmailStr
-    phone_number: str
+    email: tp.Optional[EmailStr] = None
+    phone_number: tp.Optional[str] = None
     first_name: tp.Optional[str] = None
     last_name: tp.Optional[str] = None
     organization: tp.Optional[str] = None
     title: tp.Optional[str] = None
     location: tp.Optional[KlaviyoLocation] = None
-    properties: tp.Optional[tp.Dict[str, tp.Any]]
