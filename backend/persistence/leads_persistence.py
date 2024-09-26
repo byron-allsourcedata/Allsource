@@ -176,6 +176,8 @@ class LeadsPersistence:
                     filters.append(LeadUser.is_converted_sales == True)
                 elif status_data == 'view_product':
                     filters.append(LeadUser.behavior_type == "viewed_product")
+                elif status_data == 'visitor':
+                    filters.append(LeadUser.behavior_type == "visitor")
                 elif status_data == 'abandoned_cart':
                     query = (
                         query
