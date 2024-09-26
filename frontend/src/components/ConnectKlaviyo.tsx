@@ -8,10 +8,19 @@ import CloseIcon from '@mui/icons-material/Close';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { showToast } from './ToastNotification';
 
+interface Integrations {
+    id: number
+    access_token: string
+    shop_domain: string
+    data_center: string
+    service_name: string
+    suppression: boolean
+}
 
 interface ConnectKlaviyoPopupProps {
     open: boolean;
     onClose: () => void;
+    onSaveSync: (newIntegration: Integrations) => void;
 }
 
 
@@ -25,7 +34,7 @@ type KlaviyoTags = {
     tags_name: string
 }
 
-const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) => {
+const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, onSaveSync }) => {
 
     const [value, setValue] = React.useState('1');
     const [checked, setChecked] = useState(false);
@@ -648,19 +657,34 @@ const handleSelectOption = (value: KlaviyoList | string) => {
         setApiKeyError(event.target.value === ''); // Set error if API Key is empty
     };
     
-    const handleSubmitApiKey = async() => {
-        const response = await axiosInstance.post('/integrations/', 
-            {
-                klaviyo: {
-                    api_key: apiKey
+    const handleSubmitApiKey = async () => {
+            const response = await axiosInstance.post('/integrations/', 
+                {
+                    klaviyo: {
+                        api_key: apiKey
+                    }
+                },
+                {
+                    params: { 
+                        service_name: 'Klaviyo' 
+                    }
                 }
-            },
-            {
-                params: { 
-                    service_name: 'Klaviyo' 
-                }
-            });
-    }
+            );
+    
+            // Проверяем, что статус ответа 200 или 201
+            if (response.status <= 201) {
+                onSaveSync({
+                    id: -1, 
+                    service_name: 'Klaviyo', 
+                    access_token: apiKey,
+                    shop_domain: '',
+                    data_center: '',
+                    suppression: false,
+                });
+            }
+    };
+    
+    
 
     const handleCreateList = async() => {
         const response = await axiosInstance.post('/integrations')
