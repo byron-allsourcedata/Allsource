@@ -35,8 +35,7 @@ class LeadsPersistence:
         self.db = db
 
     def filter_leads(self, domain_id, page, per_page, from_date, to_date, from_time, to_time, regions, page_visits,
-                     average_time_spent,
-                     behavior_type, recurring_visits, sort_by, sort_order, search_query, status):
+                     time_spent, behavior_type, recurring_visits, sort_by, sort_order, search_query, status):
         FirstNameAlias = aliased(FiveXFiveNames)
         LastNameAlias = aliased(FiveXFiveNames)
 
@@ -249,16 +248,16 @@ class LeadsPersistence:
                     filters.append(LeadsVisits.pages_count == 1)
             query = query.filter(or_(*filters))
 
-        if average_time_spent:
-            page_visits_list = average_time_spent.split(',')
+        if time_spent:
+            page_visits_list = time_spent.split(',')
             filters = []
             for visit in page_visits_list:
-                if visit == 'under_10_secs':
+                if visit == 'under_10':
                     filters.append(LeadsVisits.average_time_sec < 10)
                 elif visit == '10-30_secs':
-                    filters.append(LeadsVisits.average_time_sec >= 10 and LeadsVisits.average_time_sec <= 30)
+                    filters.append(and_(LeadsVisits.average_time_sec >= 10, LeadsVisits.average_time_sec <= 30))
                 elif visit == '30-60_secs':
-                    filters.append(LeadsVisits.average_time_sec >= 30 and LeadsVisits.average_time_sec <= 60)
+                    filters.append(and_(LeadsVisits.average_time_sec >= 30, LeadsVisits.average_time_sec <= 60))
                 else:
                     filters.append(LeadsVisits.average_time_sec > 60)
             query = query.filter(or_(*filters))

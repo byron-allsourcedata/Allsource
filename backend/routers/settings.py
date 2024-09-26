@@ -9,11 +9,11 @@ router = APIRouter()
 
 
 @router.get("/account-details")
-def get_account_details(settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authentication)):
+def get_account_details(settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authorization_without_pixel)):
     return settings_service.get_account_details(user=user)
 
 @router.put("/account-details")
-def change_account_details(account_details: AccountDetailsRequest, settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authentication)):
+def change_account_details(account_details: AccountDetailsRequest, settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authorization_without_pixel)):
     return settings_service.change_account_details(user=user, account_details=account_details)
 
 @router.get("/account-details/change-email")
@@ -33,32 +33,44 @@ def get_pending_invations(settings_service: SettingsService = Depends(get_settin
 def change_teams(teams_details: TeamsDetailsRequest, settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authorization_without_pixel)):
     if user.get('team_member'):
         team_member = user.get('team_member')
-        if team_member.team_access_level != TeamAccessLevel.ADMIN:
+        if team_member.get('team_access_level') not in {TeamAccessLevel.ADMIN.value, TeamAccessLevel.OWNER.value}:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Access denied. Admins and standard only."
+                detail="Access denied. Admins only."
             )
+
     return settings_service.change_teams(user=user, teams_details=teams_details)
 
 @router.post("/teams")
 def invite_user(teams_details: TeamsDetailsRequest, settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authorization_without_pixel)):
     if user.get('team_member'):
         team_member = user.get('team_member')
-        if team_member.team_access_level != TeamAccessLevel.ADMIN:
+        if team_member.get('team_access_level') not in {TeamAccessLevel.ADMIN.value, TeamAccessLevel.OWNER.value}:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Access denied. Admins and standard only."
+                detail="Access denied. Admins only."
             )
     return settings_service.invite_user(user=user, invite_user=teams_details.invite_user, access_level=teams_details.access_level)
 
-@router.post("/teams/check-team-invitations-limit")
+@router.post("/teams/change-user-role")
+def change_user_role(teams_details: TeamsDetailsRequest, settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authorization_without_pixel)):
+    if user.get('team_member'):
+        team_member = user.get('team_member')
+        if team_member.get('team_access_level') not in {TeamAccessLevel.OWNER.value}:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied. Admins only."
+            )
+    return settings_service.change_user_role(user=user, email=teams_details.invite_user, access_level=teams_details.access_level)
+
+@router.get("/teams/check-team-invitations-limit")
 def check_team_invitations_limit(settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authorization_without_pixel)):
     if user.get('team_member'):
         team_member = user.get('team_member')
-        if team_member.team_access_level != TeamAccessLevel.ADMIN:
+        if team_member.get('team_access_level') not in {TeamAccessLevel.ADMIN.value, TeamAccessLevel.OWNER.value}:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Access denied. Admins and standard only."
+                detail="Access denied. Admins only."
             )
     return settings_service.check_team_invitations_limit(user=user)
 
@@ -78,10 +90,10 @@ def get_billing_history(
 def add_card(payment_card: PaymentCard, settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authorization_without_pixel)):
     if user.get('team_member'):
         team_member = user.get('team_member')
-        if team_member.team_access_level != TeamAccessLevel.ADMIN:
+        if team_member.get('team_access_level') not in {TeamAccessLevel.ADMIN.value, TeamAccessLevel.OWNER.value}:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Access denied. Admins and standard only."
+                detail="Access denied. Admins only."
             )
     return settings_service.add_card(user=user, payment_method_id=payment_card.payment_method_id)
 
@@ -89,10 +101,10 @@ def add_card(payment_card: PaymentCard, settings_service: SettingsService = Depe
 def delete_card(payment_card: PaymentCard, settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authorization_without_pixel)):
     if user.get('team_member'):
         team_member = user.get('team_member')
-        if team_member.team_access_level != TeamAccessLevel.ADMIN:
+        if team_member.get('team_access_level') != TeamAccessLevel.ADMIN.value or team_member.get('team_access_level') != TeamAccessLevel.OWNER.value:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Access denied. Admins and standard only."
+                detail="Access denied. Admins only."
             )
     return settings_service.delete_card(payment_method_id=payment_card.payment_method_id)
 
@@ -100,10 +112,10 @@ def delete_card(payment_card: PaymentCard, settings_service: SettingsService = D
 def default_card(payment_card: PaymentCard, settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authorization_without_pixel)):
     if user.get('team_member'):
         team_member = user.get('team_member')
-        if team_member.team_access_level != TeamAccessLevel.ADMIN:
+        if team_member.get('team_access_level') != TeamAccessLevel.ADMIN.value or team_member.get('team_access_level') != TeamAccessLevel.OWNER.value:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Access denied. Admins and standard only."
+                detail="Access denied. Admins only."
             )
     return settings_service.default_card(user=user, payment_method_id=payment_card.payment_method_id)
 

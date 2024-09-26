@@ -10,6 +10,7 @@ import { SliderProvider } from '@/context/SliderContext';
 import Slider from '../components/Slider';
 import Image from 'next/image';
 import ConfirmDeleteDomain from './DeleteDomain';
+import CustomizedProgressBar from './CustomizedProgressBar';
 
 interface Domain {
     id: number;
@@ -173,7 +174,7 @@ const AddDomainPopup = ({ open, handleClose, handleSave }: AddDomainProps) => {
       <Box sx={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }}>
         <Button color='primary' variant='outlined' onClick={handleSubmit}>Save</Button>
       </Box>
-      <UpgradePlanPopup open={upgradePlanPopup} handleClose={() => setUpgradePlanPopup(false)} />
+      <UpgradePlanPopup open={upgradePlanPopup} limitName={'domain'} handleClose={() => setUpgradePlanPopup(false)} />
       {showSlider && <Slider />}
     </Box>
   );
@@ -187,6 +188,7 @@ const DomainButton: React.FC = () => {
   const dropdownOpen = Boolean(dropdownEl);
   const [deleteDomainPopup, setDeleteDomainPopup] = useState(false);
   const [deleteDomain, setDeleteDomain] = useState<Domain | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const handleDropdownClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     setDropdownEl(event.currentTarget);
@@ -199,6 +201,7 @@ const DomainButton: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setLoading(true)
         const response = await axiosInstance.get('domains/');
         if (response.status === 200) {
           setDomains(response.data);
@@ -212,6 +215,9 @@ const DomainButton: React.FC = () => {
         }
       } catch (error) {
         console.error('Error fetching domains:', error);
+      }
+      finally {
+        setLoading(false)
       }
     };
     fetchData();
@@ -244,6 +250,10 @@ const DomainButton: React.FC = () => {
     }
     setDeleteDomainPopup(false);
   };
+
+  if (loading) {
+      return <CustomizedProgressBar />;
+  }
 
   return (
     <>

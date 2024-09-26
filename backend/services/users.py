@@ -27,14 +27,10 @@ class UsersService:
         return UpdatePasswordStatus.PASSWORD_UPDATED_SUCCESSFULLY
 
     def get_info_plan(self):
-        if self.user.get('team_member'):
-            team_member = self.user.get('team_member')
-            return self.user_persistence_service.get_user_plan(team_member.get('id'))
-        else:
-            return self.user_persistence_service.get_user_plan(self.user.get('id'))
+        return self.user_persistence_service.get_user_plan(self.user.get('id'))
 
     def get_my_info(self):
-        if self.user.get('team_member_id'):
+        if self.user.get('team_member'):
             team_member = self.user.get('team_member')
             return {
                 "email": team_member.get('email'),

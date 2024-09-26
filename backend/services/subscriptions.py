@@ -59,6 +59,12 @@ class SubscriptionService:
 
     def is_user_have_subscription(self, user_id):
         return self.db.query(SubscriptionPlan).filter(SubscriptionPlan.user_id == user_id).limit(1).scalar()
+    
+    def get_subscription_by_user_id(self, user_id):
+        user_subscription = self.db.query(UserSubscriptions).filter(
+                UserSubscriptions.user_id == user_id
+            ).order_by(UserSubscriptions.id.desc()).limit(1).first()
+        return user_subscription
 
     def update_user_payment_status(self, user_id, status):
         if status in ["active", "succeeded"]:
@@ -207,7 +213,7 @@ class SubscriptionService:
             stripe_payload.get("data").get("object").get("plan").get("product"))
         payment_platform_subscription_id = stripe_payload.get("data").get("object").get("id")
         plan_id = self.plans_persistence.get_plan_by_title(plan_type)
-        domains_limit, users_limit, integrations_limit, leads_credits, prospect_credits = self.plans_persistence.get_plan_limit_by_id(
+        domains_limit, users_limit, integrations_limit, leads_credits, prospect_credits, members_limit = self.plans_persistence.get_plan_limit_by_id(
             plan_id=plan_id)
         subscription_obj = Subscription(
             user_id=user_id,
@@ -219,7 +225,8 @@ class SubscriptionService:
             plan_id=plan_id,
             stripe_request_created_at=stripe_request_created_at,
             domains_limit=domains_limit,
-            integrations_limit=integrations_limit
+            integrations_limit=integrations_limit,
+            members_limit=members_limit-1
         )
         self.db.add(subscription_obj)
         user = self.db.query(User).filter(User.id == user_id).first()
@@ -253,7 +260,7 @@ class SubscriptionService:
         plan = self.plans_persistence.get_free_trail_plan()
         status = 'active'
         created_at = datetime.strptime(get_utc_aware_date_for_postgres(), '%Y-%m-%dT%H:%M:%SZ')
-        domains_limit, users_limit, integrations_limit, leads_credits, prospect_credits = self.plans_persistence.get_plan_limit_by_id(
+        domains_limit, users_limit, integrations_limit, leads_credits, prospect_credits, members_limit = self.plans_persistence.get_plan_limit_by_id(
             plan_id=plan.id)
         add_subscription_obj = Subscription(
             domains_limit=domains_limit,
@@ -262,6 +269,7 @@ class SubscriptionService:
             users_limit=users_limit,
             updated_at=created_at.isoformat() + "Z",
             created_at=created_at.isoformat() + "Z",
+            members_limit=members_limit - 1,
             status=status,
             plan_id=plan.id,
             is_trial=True
@@ -331,7 +339,7 @@ class SubscriptionService:
             user_subscription.users_limit = users_limit
             user_subscription.integrations_limit = integrations_limit
             user_subscription.plan_id=plan_id,
-            user_subscription.members_limit=(members_limit - 1)
+            user_subscription.members_limit=members_limit - 1
         user_subscription.status = status
         user_subscription.stripe_request_created_at = stripe_request_created_at
         self.db.flush()
@@ -343,6 +351,13 @@ class SubscriptionService:
             self.db.commit()
 
         return user_subscription
+    
+    def get_invitation_limit(self, user_id):
+        member_limit =self.db.query(UserSubscriptions.members_limit).filter(
+            UserSubscriptions.user_id == user_id
+        ).order_by(UserSubscriptions.id.desc()).limit(1).scalar()
+        return member_limit
+    
     
     def check_invitation_limit(self, user_id):
         member_limit =self.db.query(UserSubscriptions.members_limit).filter(

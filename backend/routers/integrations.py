@@ -33,7 +33,7 @@ async def export(export_query: ExportLeads, service_name: str = Query(...),
                  user = Depends(check_user_authorization), domain = Depends(check_pixel_install_domain)):
     if user.get('team_member'):
         team_member = user.get('team_member')
-        if team_member.team_access_level != TeamAccessLevel.ADMIN or team_member.team_access_level != TeamAccessLevel.STANDARD:
+        if team_member.get('team_access_level') not in {TeamAccessLevel.ADMIN.value, TeamAccessLevel.OWNER.value, TeamAccessLevel.STANDARD.value}:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Access denied. Admins and standard only."
@@ -50,7 +50,7 @@ async def create_integration(creditional: IntegrationCredentials, service_name: 
                              user = Depends(check_user_authentication), domain = Depends(check_domain)):
     if user.get('team_member'):
         team_member = user.get('team_member')
-        if team_member.team_access_level != TeamAccessLevel.ADMIN or team_member.team_access_level != TeamAccessLevel.STANDARD:
+        if team_member.get('team_access_level') not in {TeamAccessLevel.ADMIN.value, TeamAccessLevel.OWNER.value, TeamAccessLevel.STANDARD.value}:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Access denied. Admins and standard only."
@@ -71,7 +71,7 @@ async def delete_integration(service_name: str = Query(...),
                              integration_service: IntegrationService = Depends(get_integration_service), domain = Depends(check_pixel_install_domain)):
     if user.get('team_member'):
         team_member = user.get('team_member')
-        if team_member.team_access_level != TeamAccessLevel.ADMIN or team_member.team_access_level != TeamAccessLevel.STANDARD:
+        if team_member.get('team_access_level') not in {TeamAccessLevel.ADMIN.value, TeamAccessLevel.OWNER.value, TeamAccessLevel.STANDARD.value}:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Access denied. Admins and standard only."
@@ -130,7 +130,7 @@ async def create_sync(data: SyncCreate, service_name: str = Query(...),
                       user = Depends(check_user_authorization), domain = Depends(check_pixel_install_domain)):
     if user.get('team_member'):
         team_member = user.get('team_member')
-        if team_member.team_access_level != TeamAccessLevel.ADMIN or team_member.team_access_level != TeamAccessLevel.STANDARD:
+        if team_member.get('team_access_level') not in {TeamAccessLevel.ADMIN.value, TeamAccessLevel.OWNER.value, TeamAccessLevel.STANDARD.value}:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Access denied. Admins and standard only."

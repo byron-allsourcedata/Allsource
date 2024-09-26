@@ -6,6 +6,7 @@ interface TrialContextType {
   daysDifference: number | null;
   setTrial: (trial: boolean) => void;
   setDaysLeft: (daysLeft: number | null) => void;
+  resetTrialData: () => void;
 }
 
 interface TrialProviderProps {
@@ -17,6 +18,11 @@ export const TrialContext = createContext<TrialContextType | undefined>(undefine
 export const TrialProvider: React.FC<TrialProviderProps> = ({ children }) => {
   const [trial, setTrial] = useState<boolean>(false);
   const [daysDifference, setDaysDifference] = useState<number | null>(null);
+
+  const resetTrialData = () => {
+    setTrial(false)
+    setDaysDifference(null)
+  };
   
 
   useEffect(() => {
@@ -48,7 +54,7 @@ export const TrialProvider: React.FC<TrialProviderProps> = ({ children }) => {
   
 
   return (
-    <TrialContext.Provider value={{ trial, daysDifference, setTrial, setDaysLeft: setDaysDifference }}>
+    <TrialContext.Provider value={{ trial, daysDifference, setTrial, setDaysLeft: setDaysDifference, resetTrialData }}>
       {children}
     </TrialContext.Provider>
   );

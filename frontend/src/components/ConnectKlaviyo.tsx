@@ -9,10 +9,19 @@ import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { showToast } from './ToastNotification';
 import CustomizedProgressBar from './CustomizedProgressBar';
 
+interface Integrations {
+    id: number
+    access_token: string
+    shop_domain: string
+    data_center: string
+    service_name: string
+    suppression: boolean
+}
 
 interface ConnectKlaviyoPopupProps {
     open: boolean;
     onClose: () => void;
+    onSaveSync: (newIntegration: Integrations) => void;
 }
 
 
@@ -27,7 +36,7 @@ type KlaviyoTags = {
 }
 
 const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) => {
-    const [loading, setLoading] = useState(false)
+    const [loading, setLoading] = useState(false
     const [value, setValue] = React.useState('1');
     const [checked, setChecked] = useState(false);
     const [selectedRadioValue, setSelectedRadioValue] = useState('');
@@ -535,7 +544,6 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
     const handleDropdownMaximizClose = () => {
         setOpenDropdownMaximiz(null)
     }
-
 
     const validateTab2 = () => {
         if (selectedRadioValue === null) {

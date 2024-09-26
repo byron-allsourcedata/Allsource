@@ -21,7 +21,7 @@ const Signup: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const user_teams_mail = searchParams.get('user_teams_mail');
-  const teams_token = searchParams.get('registration_token');
+  const teams_token = searchParams.get('token');
   const [formValues, setFormValues] = useState({ full_name: '', email: user_teams_mail, password: '', is_without_card: isWithoutCard ? 'true' : 'false', termsAccepted: false, teams_token: teams_token });
   const [formSubmitted, setFormSubmitted] = useState(false);
 
@@ -36,8 +36,8 @@ const Signup: React.FC = () => {
 
   const navigateTo = (path: string) => {
     window.location.href = path;
-  }; 
-  
+  };
+
   const get_me = async () => {
     const userData = await fetchUserData();
   };
@@ -96,7 +96,7 @@ const Signup: React.FC = () => {
       ...formValues,
       [name]: value,
     });
-      validateField(name, value);
+    validateField(name, value);
   };
 
   const isPasswordValid = (password: string) => {
@@ -112,7 +112,7 @@ const Signup: React.FC = () => {
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setFormSubmitted(true); // Mark the form as submitted
-    
+
     const newErrors: { [key: string]: string } = {};
 
     if (!formValues.full_name) {
@@ -187,7 +187,7 @@ const Signup: React.FC = () => {
               break;
             default:
               get_me()
-              router.push('/dahboard')
+              router.push('/dashboard')
               break;
           }
         }
@@ -214,22 +214,22 @@ const Signup: React.FC = () => {
     setFormValues({ ...formValues, termsAccepted: checked });
     if (formSubmitted) {
       setErrors((prevErrors) => {
-          const newErrors = { ...prevErrors };
-          if (checked) {
-              delete newErrors.termsAccepted; // Remove the error if checked
-          } else {
-              newErrors.termsAccepted = 'Please accept our Terms of Service'; // Add the error if unchecked
-          }
-          return newErrors;
+        const newErrors = { ...prevErrors };
+        if (checked) {
+          delete newErrors.termsAccepted; // Remove the error if checked
+        } else {
+          newErrors.termsAccepted = 'Please accept our Terms of Service'; // Add the error if unchecked
+        }
+        return newErrors;
       });
     }
-};
+  };
 
   const CustomCheckCircleIcon = ({ isSuccess }: { isSuccess: boolean }) => (
-    <Image 
-        src={isSuccess ? "/tick-circle-green.svg" : "/tick-circle.svg"} 
-        alt={isSuccess ? "Success Check Circle" : "Disabled Check Circle"} 
-        height={16} width={16}
+    <Image
+      src={isSuccess ? "/tick-circle-green.svg" : "/tick-circle.svg"}
+      alt={isSuccess ? "Success Check Circle" : "Disabled Check Circle"}
+      height={16} width={16}
     />
   );
 
@@ -283,9 +283,9 @@ const Signup: React.FC = () => {
                     get_me()
                     router.push(`${response.data.stripe_payment_url}`);
                     break;
-                    case 'INCORRECT_PASSWORD_OR_EMAIL':
-                      showErrorToast("User with this email does not exist");
-                      break;
+                  case 'INCORRECT_PASSWORD_OR_EMAIL':
+                    showErrorToast("User with this email does not exist");
+                    break;
                   case 'NOT_VALID_EMAIL':
                     showErrorToast("The email is either invalid or does not match the invited user.");
                     break;
@@ -368,9 +368,9 @@ const Signup: React.FC = () => {
                   <InputAdornment position="end">
                     <IconButton onClick={togglePasswordVisibility} edge="end">
                       {/* {showPassword ? <VisibilityIcon /> : <VisibilityOffIcon />} */}
-                      <Image 
-                        src={showPassword ? "/custom-visibility-icon-off.svg" : "/custom-visibility-icon.svg"} 
-                        alt={showPassword ? "Show password" : "Hide password"} 
+                      <Image
+                        src={showPassword ? "/custom-visibility-icon-off.svg" : "/custom-visibility-icon.svg"}
+                        alt={showPassword ? "Show password" : "Hide password"}
                         height={18} width={18}
                         title={showPassword ? "Hide password" : "Show password"}
                       />
@@ -390,7 +390,7 @@ const Signup: React.FC = () => {
                 <ListItemIcon sx={signupStyles.passwordContentListItemIcon}>
                   <CustomCheckCircleIcon isSuccess={passwordValidation.upperCase} />
                 </ListItemIcon>
-                <ListItemText sx={passwordValidation.upperCase ? signupStyles.passwordValidationTextSuccess : signupStyles.passwordValidationText}  primary="1 uppercase" />
+                <ListItemText sx={passwordValidation.upperCase ? signupStyles.passwordValidationTextSuccess : signupStyles.passwordValidationText} primary="1 uppercase" />
               </ListItem>
               <ListItem sx={signupStyles.passwordContentListItem}>
                 <ListItemIcon sx={signupStyles.passwordContentListItemIcon}>
@@ -398,38 +398,38 @@ const Signup: React.FC = () => {
                 </ListItemIcon>
                 <ListItemText sx={passwordValidation.lowerCase ? signupStyles.passwordValidationTextSuccess : signupStyles.passwordValidationText} primary="1 lowercase" />
               </ListItem>
-          </List>
-          <FormControlLabel
-                sx={signupStyles.checkboxContentField}
-                control={
-                  <Checkbox
-                    checked={formValues.termsAccepted}
-                    onChange={handleCheckboxChange}
-                    name="termsAccepted"
+            </List>
+            <FormControlLabel
+              sx={signupStyles.checkboxContentField}
+              control={
+                <Checkbox
+                  checked={formValues.termsAccepted}
+                  onChange={handleCheckboxChange}
+                  name="termsAccepted"
+                  color="primary"
+                  sx={{
+                    '&.MuiCheckbox-root:before': {
+                      border: errors.termsAccepted ? '1px solid #d32f2f' : '1px solid #e4e4e4', // Conditional border color
+                    },
+                  }}
+                />
+              }
+              label={
+                <span tabIndex={-1}>
+                  I accept the{' '}
+                  <Link
+                    sx={signupStyles.checkboxContentLink}
+                    href="https://www.maximiz.ai/terms-and-conditions/"
                     color="primary"
-                    sx={{
-                      '&.MuiCheckbox-root:before': {
-                        border: errors.termsAccepted ? '1px solid #d32f2f' : '1px solid #e4e4e4', // Conditional border color
-                      },
-                    }}
-                  />
-                }
-                label={
-                  <span tabIndex={-1}>
-                    I accept the{' '}
-                    <Link
-                      sx={signupStyles.checkboxContentLink}
-                      href="https://www.maximiz.ai/terms-and-conditions/"
-                      color="primary"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      Terms of Service {' '}
-                      <Image src='/terms-service-icon.svg' alt='logo' height={16} width={16} />
-                    </Link>
-                  </span>
-                }
-              />
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Terms of Service {' '}
+                    <Image src='/terms-service-icon.svg' alt='logo' height={16} width={16} />
+                  </Link>
+                </span>
+              }
+            />
             {errors.termsAccepted && (
               <FormHelperText error>{errors.termsAccepted}</FormHelperText>
             )}

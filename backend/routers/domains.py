@@ -14,7 +14,7 @@ def create_domain(domain_data: DomainScheme,
     
     if user.get('team_member'):
         team_member = user.get('team_member')
-        if team_member.team_access_level != TeamAccessLevel.ADMIN or team_member.team_access_level != TeamAccessLevel.STANDARD:
+        if team_member.get('team_access_level') not in {TeamAccessLevel.ADMIN.value, TeamAccessLevel.OWNER.value, TeamAccessLevel.STANDARD.value}:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Access denied. Admins and standard only."
@@ -39,7 +39,7 @@ def delete_domain(domain_id: int, domain_service: UserDomainsService = Depends(g
                   user = Depends(check_user_authentication)):
     if user.get('team_member'):
         team_member = user.get('team_member')
-        if team_member.team_access_level != TeamAccessLevel.ADMIN or team_member.team_access_level != TeamAccessLevel.STANDARD:
+        if team_member.get('team_access_level') not in {TeamAccessLevel.ADMIN.value, TeamAccessLevel.OWNER.value, TeamAccessLevel.STANDARD.value}:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Access denied. Admins and standard only."

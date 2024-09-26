@@ -54,22 +54,24 @@ class UserPersistence:
     
     def check_status_invitations(self, teams_token, user_mail):
         result = {
-            'succes': False
+            'success': False
         }
         teams_invitation = self.db.query(TeamInvitation).filter(TeamInvitation.token == teams_token).first()
         if teams_invitation:
             if teams_invitation.mail != user_mail:
                 result['error'] = SignUpStatus.NOT_VALID_EMAIL
-            if teams_invitation.status == TeamsInvitationStatus.PENDING:
-                result['succes'] = True
-                result['team_owner_id'] = TeamInvitation.team_owner_id
+            if teams_invitation.status == TeamsInvitationStatus.PENDING.value:
+                result['success'] = True
+                result['team_owner_id'] = teams_invitation.team_owner_id
+            else:
+                result['error'] = SignUpStatus.INCORRECT_STATUS
         else:
             result['error'] = SignUpStatus.TEAM_INVITATION_INVALID
         return result
         
             
 
-    def get_user_by_id(self, user_id):
+    def get_user_by_id(self, user_id, result_as_object = False):
         user = self.db.query(Users).filter(Users.id == user_id).first()
         result_user = None
         if user:
@@ -102,10 +104,18 @@ class UserPersistence:
                 'activate_steps_percent': user.activate_steps_percent,
                 'leads_credits': user.leads_credits,
                 'prospect_credits': user.prospect_credits,
-                'is_leads_auto_charging': user.is_leads_auto_charging
+                'is_leads_auto_charging': user.is_leads_auto_charging,
+                'team_access_level':user.team_access_level
             }
         self.db.rollback()
+        if result_as_object:
+            return user
         return result_user
+    
+    def set_last_signed_in(self, user_id):
+        user = self.db.query(Users).filter(Users.id == user_id).first()
+        user.last_signed_in = datetime.now()
+        self.db.commit()
     
     def get_user_team_member_by_id(self, user_id):
         user = self.db.query(Users).filter(Users.id == user_id).first()
@@ -115,7 +125,10 @@ class UserPersistence:
                 "id": user.id,
                 "email": user.email,
                 "full_name": user.full_name,
-               'team_access_level': user.team_access_level
+               'team_access_level': user.team_access_level,
+               'is_email_confirmed': user.is_email_confirmed,
+               'change_email_sent_at': user.change_email_sent_at,
+               'password': user.password
             }
         self.db.rollback()
         return result_user
@@ -126,7 +139,8 @@ class UserPersistence:
         ).first()
         user_data = self.db.query(Users).filter(Users.id == user_id).first()
         user_data.team_owner_id = owner_id
-        user_data.team_access_level = teams_invitation.team_owner_id
+        user_data.is_email_confirmed = True
+        user_data.team_access_level = teams_invitation.access_level
         user_data.invited_by_id = teams_invitation.invited_by_id
         user_data.added_on = datetime.now()
         self.db.flush()

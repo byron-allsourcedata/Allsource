@@ -4,9 +4,10 @@ import { Box, Typography, Button, TextField, Dialog, DialogActions, Tooltip, Sli
 import axios from 'axios';
 import axiosInterceptorInstance from '@/axios/axiosInterceptorInstance';
 import Image from 'next/image';
-import { BorderBottom, LineWeight } from '@mui/icons-material';
-import { Content } from 'next/font/google';
+import { UpgradePlanPopup } from './UpgradePlanPopup';
 import { InviteUsersPopup } from './InviteUsersPopup';
+import { showErrorToast, showToast } from './ToastNotification';
+import CustomizedProgressBar from '@/components/CustomizedProgressBar';
 
 const teamsStyles = {
     tableColumn: {
@@ -37,7 +38,7 @@ const teamsStyles = {
             borderBottom: 0
         }
     },
-    tableBodyColumn : {
+    tableBodyColumn: {
         fontFamily: 'Roboto',
         fontSize: '12px',
         fontWeight: '400',
@@ -70,22 +71,74 @@ interface Invitation {
     status: string;
 }
 
+const roleOptions = [
+    { key: "admin", value: "Admin" },
+    { key: "standard", value: "Standard" },
+    { key: "read-only", value: "Read Only" },
+];
+
 export const SettingsTeams: React.FC = () => {
-    const [pendingInvitations, setPendingInvitations] = useState<Invitation[]>([]);
+    const [pendingInvitations, setPendingInvitations] = useState<any[]>([]);
     const [teamMembers, setTeamMembers] = useState<any[]>([]);
     const [inviteUsersPopupOpen, setInviteUsersPopupOpen] = useState(false);
     const [idCounter, setIdCounter] = useState<number>(0);
-    const [selectedRowId, setSelectedRowId] = useState<number | null>(null);
-    const [teamSelectOpen, setTeamSelectOpen] = useState<number | null>(null);
+    const [memberLimit, setMemberLimit] = useState<number>(0);
+    const [memberCount, setMemberCount] = useState<number>(0);
+    const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
+    const [teamSelectOpen, setTeamSelectOpen] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [upgradePlanPopup, setUpgradePlanPopup] = useState(false);
 
 
-     const fetchTeamsData = async () => {
+    const fetchTeamsData = async () => {
         try {
             setIsLoading(true);
             const response = await axiosInterceptorInstance.get('/settings/teams');
             const data = response.data;
-            setTeamMembers(data)
+            setTeamMembers(data.teams)
+            setMemberLimit(data.member_limit)
+            setMemberCount(data.member_count)
+        } catch (error) {
+            console.error('Error fetching account details:', error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleChangeUserRole = async (email: string, role: string): Promise<boolean> => {
+        try {
+            setIsLoading(true);
+            const response = await axiosInterceptorInstance.post('/settings/teams/change-user-role', { invite_user: email, access_level: role });
+            if (response.status === 200) {
+                switch (response.data.status) {
+                    case 'SUCCESS':
+                        showToast('Change user role successfully');
+                        return true;
+                    default:
+                        showErrorToast('Unknown response received.');
+                        return false;
+                }
+            }
+        } catch (error) {
+            if (axios.isAxiosError(error)) {
+                if (error.response && error.response.status === 403) {
+                    showErrorToast('Access denied: You do not have permission to remove this member.');
+                } else {
+                    console.error('Error removing team member:', error);
+                }
+            }
+        } finally {
+            setIsLoading(false);
+        }
+        return false;
+    };
+
+    const fetchPendingInvitationData = async () => {
+        try {
+            setIsLoading(true);
+            const response = await axiosInterceptorInstance.get('/settings/teams/pending-invations');
+            const data = response.data;
+            setPendingInvitations(data)
         } catch (error) {
             console.error('Error fetching account details:', error);
         } finally {
@@ -95,23 +148,53 @@ export const SettingsTeams: React.FC = () => {
 
     useEffect(() => {
         fetchTeamsData();
+        fetchPendingInvitationData();
     }, []);
 
-    const handleInviteUsersPopupOpen = () => {
-        setInviteUsersPopupOpen(true);
+    const handleInviteUsersPopupOpen = async () => {
+        try {
+            setIsLoading(true);
+            const response = await axiosInterceptorInstance.get('/settings/teams/check-team-invitations-limit');
+            if (response.status === 200) {
+                switch (response.data) {
+                    case 'INVITATION_LIMIT_NOT_REACHED':
+                        setInviteUsersPopupOpen(true);
+                        break;
+                    case 'INVITATION_LIMIT_REACHED':
+                        setUpgradePlanPopup(true);
+                        showErrorToast('Invitation limit reached.');
+                        break;
+                    default:
+                        showErrorToast('Unknown response received.');
+                }
+            }
+        } catch (error) {
+            if (axios.isAxiosError(error)) {
+                if (error.response && error.response.status === 403) {
+                    showErrorToast('Access denied: You do not have permission to send this invitation.');
+                } else {
+                    console.error('Error revoking invitation:', error);
+                }
+            }
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const handleInviteUsersPopupClose = () => {
         setInviteUsersPopupOpen(false);
     };
 
-    const handleRevoke = (idToRevoke: string) => {
-        setPendingInvitations(prevInvitations => 
-            prevInvitations.filter(invitation => invitation.id !== idToRevoke)
-        );
+    const handleRevoke = async (email: string) => {
+        const result_revoke = await handleRevokeInvitation(email);
+        if (result_revoke === true) {
+            setPendingInvitations(prevInvitations =>
+                prevInvitations.filter(invitation => invitation.email !== email)
+            );
+        }
     };
 
-    const handleSend = (emails: string[], role: string) => {
+    const handleSend = async (emails: string[], role: string) => {
         const newInvitations = emails.map(email => ({
             id: `invitation-${idCounter}`, // Unique ID
             email,
@@ -124,166 +207,269 @@ export const SettingsTeams: React.FC = () => {
             status: 'Pending',
         }));
 
-        setPendingInvitations(prevInvitations => [
-            ...prevInvitations,
-            ...newInvitations,
-        ]);
-        setIdCounter(prevCounter => prevCounter + emails.length);
+        const results = await handleSendInvitation(emails, role);
+
+        if (results.every(result => result)) {
+            setPendingInvitations(prevInvitations => [
+                ...prevInvitations,
+                ...newInvitations,
+            ]);
+            setIdCounter(prevCounter => prevCounter + emails.length);
+        }
     };
 
-    
+    const handleSendInvitation = async (emails: string[], role: string) => {
+        const results = [];
 
-    
+        for (const email of emails) {
+            try {
+                setIsLoading(true);
+                const response = await axiosInterceptorInstance.post('/settings/teams', { invite_user: email, access_level: role.toLowerCase() });
+                if (response.status === 200) {
+                    switch (response.data.status) {
+                        case 'SUCCESS':
+                            showToast('Invitation sent successfully');
+                            setMemberCount(response.data.invitation_count);
+                            results.push(true);
+                            break;
+                        case 'INVITATION_LIMIT_REACHED':
+                            showErrorToast('Invitation limit reached.');
+                            setMemberCount(response.data.invitation_count);
+                            results.push(false);
+                            break;
+                        case 'ALREADY_INVITED':
+                            showErrorToast('User has already been invited.');
+                            setMemberCount(response.data.invitation_count);
+                            results.push(false);
+                            break;
+                        case 'FAILED':
+                            showErrorToast('Failed to send invitation.');
+                            setMemberCount(response.data.invitation_count);
+                            results.push(false);
+                            break;
+                        default:
+                            showErrorToast('Unknown response received.');
+                            results.push(false);
+                            break;
+                    }
+                }
+            } catch (err) {
+                if (axios.isAxiosError(err)) {
+                    if (err.response && err.response.status === 403) {
+                        showErrorToast('Access denied: You do not have permission to send this invitation.');
+                    } else {
+                        console.error('Error sending invitation:', err.message);
+                    }
+                } else {
+                    console.error('Unexpected error:', err);
+                }
+                results.push(false);
+            } finally {
+                setIsLoading(false);
+            }
+        }
 
-    const handleRevokeInvitation = (userId: number) => {
-        axiosInterceptorInstance.post('/api/revokeInvitation', { userId })
-            .then(() => {
-                alert('Invitation revoked');
-                // Refresh the data after revoking
-                axiosInterceptorInstance.get('/api/teamData')
-                    .then(response => {
-                        setPendingInvitations(response.data.pendingInvitations);
-                    })
-                    .catch(error => {
-                        console.error('Error refreshing pending invitations:', error);
-                    });
-            })
-            .catch(error => {
-                console.error('Error revoking invitation:', error);
-            });
+        return results;
     };
 
-    const handleRemoveTeamMember = (userId: number) => {
-        axiosInterceptorInstance.post('/api/removeTeamMember', { userId })
-            .then(() => {
-                alert('Team member removed');
-                axios.get('/api/teamData')
-                    .then(response => {
-                        setTeamMembers(response.data.teamMembers);
-                    })
-                    .catch(error => {
-                        console.error('Error refreshing team members:', error);
-                    });
-            })
-            .catch(error => {
-                console.error('Error removing team member:', error);
-            });
+
+    const handleRevokeInvitation = async (email: string) => {
+        try {
+            setIsLoading(true);
+            const response = await axiosInterceptorInstance.put('/settings/teams', { pending_invitation_revoke: email });
+
+            if (response.status === 200) {
+                switch (response.data.status) {
+                    case 'SUCCESS':
+                        showToast('Invitation removed successfully');
+                        setMemberCount(response.data.invitation_count)
+                        return true;
+                    default:
+                        showErrorToast('Unknown response received.');
+                        setMemberCount(response.data.invitation_count)
+                        return false;
+                }
+            }
+        } catch (error) {
+            if (axios.isAxiosError(error)) {
+                if (error.response && error.response.status === 403) {
+                    showErrorToast('Access denied: You do not have permission to revoke this invitation.');
+                } else {
+                    console.error('Error revoking invitation:', error);
+                }
+            }
+        } finally {
+            setIsLoading(false);
+        }
+        return false; // Return false if the request fails
     };
 
-    const handleRemoveMember = (id: number) => {
-        setTeamMembers(prevMembers => prevMembers.filter(member => member.id !== id));
+
+    const handleRemoveTeamMember = async (email: string) => {
+        try {
+            setIsLoading(true);
+            const response = await axiosInterceptorInstance.put('/settings/teams', { remove_user: email });
+
+            if (response.status === 200) {
+                switch (response.data.status) {
+                    case 'SUCCESS':
+                        showToast('Member removed successfully');
+                        setMemberCount(response.data.invitation_count)
+                        return true;
+                    case 'CANNOT_REMOVE_TEAM_OWNER':
+                        showErrorToast('Cannot remove team owner!');
+                        return false;
+                    case 'CANNOT_REMOVE_YOURSELF_FROM_TEAM':
+                        showErrorToast('Cannot remove yourself from team!');
+                        return false;
+                    default:
+                        showErrorToast('Unknown response received.');
+                        return false;
+                }
+            }
+        } catch (error) {
+            if (axios.isAxiosError(error)) {
+                if (error.response && error.response.status === 403) {
+                    showErrorToast('Access denied: You do not have permission to remove this member.');
+                } else {
+                    console.error('Error removing team member:', error);
+                }
+            }
+        } finally {
+            setIsLoading(false);
+        }
+        return false; // Return false if the request fails or if no cases match
     };
 
-    const handleSelectionChange = (e: SelectChangeEvent<string>, memberId: number) => {
+
+    const handleRemoveMember = async (email: string) => {
+        if (await handleRemoveTeamMember(email) === true) {
+            setTeamMembers(prevMembers => prevMembers.filter(member => member.email !== email));
+        }
+    };
+
+    const handleSelectionChange = (e: SelectChangeEvent<string>, memberMail: string) => {
         const newRole = e.target.value as string;
-        handleTeamRoleChange(memberId, newRole);
-        setTeamSelectOpen(memberId); // Keep the dropdown open after selection
+        handleTeamRoleChange(memberMail, newRole);
+        setTeamSelectOpen(memberMail); // Keep the dropdown open after selection
     };
 
-    const handleTeamRoleChange = (id: number, newRole: string) => {
-        setTeamMembers(prevMembers => 
-            prevMembers.map(member => 
-                member.id === id ? { ...member, role: newRole } : member
+    const handleTeamRoleChange = (email: string, newRole: string) => {
+        setTeamMembers(prevMembers =>
+            prevMembers.map(member =>
+                member.email === email ? { ...member, role: newRole } : member
             )
         );
     };
 
-    const handleRowClick = (id: number) => {
-        setSelectedRowId(id); // Update the selected row ID
+    const handleRowClick = (email: string) => {
+        setSelectedRowId(email); // Update the selected row ID
     };
 
-    const handleArrowClick = (e: React.MouseEvent, memberId: number) => {
+    const handleArrowClick = (e: React.MouseEvent, memberMail: string) => {
         e.stopPropagation(); // Prevent row click event
         // Toggle dropdown on arrow click
-        setTeamSelectOpen(prev => (prev === memberId ? null : memberId));
+        setTeamSelectOpen(prev => (prev === memberMail ? null : memberMail));
     };
 
-    const handleDropdownClick = (e: React.MouseEvent, memberId: number) => {
+    const handleDropdownClick = (e: React.MouseEvent, memberMail: string) => {
         e.stopPropagation(); // Prevent row click event
         // Toggle dropdown on column click
-        setTeamSelectOpen(prev => (prev === memberId ? null : memberId));
+        setTeamSelectOpen(prev => (prev === memberMail ? null : memberMail));
     };
+
+    if (isLoading) {
+        return <CustomizedProgressBar />;
+    }
 
     return (
 
-                <Box>
-                    <Box sx={{ marginBottom: 2 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', mb: 3 }}>
-                            <Typography variant="h6" sx={{
-                                fontFamily: 'Nunito Sans',
-                                fontSize: '16px',
-                                fontWeight: '600',
-                                color: '#202124',
-                                lineHeight: '22px'
-                            }}>Pending invitations</Typography>
-                            <Tooltip title="Team Info" placement="right">
-                                <Image src='/info-icon.svg' alt='info-icon' height={13} width={13} />
-                            </Tooltip>
-                        </Box>
-                        
-                        <TableContainer sx={{
-                            border: '1px solid #EBEBEB',
-                            borderRadius: '4px 4px 0px 0px'
-                        }}>
-                            <Table>
-                                <TableHead>
-                                    <TableRow>
-                                        <TableCell
-                                            sx={{...teamsStyles.tableColumn,
-                                                position: 'sticky', // Make the Name column sticky
-                                                left: 0, // Stick it to the left
-                                                zIndex: 9,
-                                                background: '#fff'
-                                            }}>Invited User</TableCell>
-                                        <TableCell sx={teamsStyles.tableColumn}>Access Level</TableCell>
-                                        <TableCell sx={teamsStyles.tableColumn}>Date Invited</TableCell>
-                                        <TableCell sx={teamsStyles.tableColumn}>Status</TableCell>
-                                        <TableCell sx={teamsStyles.tableColumn}>Actions</TableCell>
-                                    </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                {pendingInvitations.length === 0 ? (
-                                    <TableRow>
-                                        <TableCell colSpan={5} sx={{
-                                                    ...teamsStyles.tableBodyColumn,
-                                                    textAlign: 'center'
-                                                }}>
-                                                No pending invitations
-                                        </TableCell>
-                                    </TableRow>
-                                ) : (
-                                    pendingInvitations.map((invitation, index) => (
-                                        <TableRow key={index} sx={{
-                                            ...teamsStyles.tableBodyRow,
-                                            '&:hover': {
+        <Box>
+            <Box sx={{ marginBottom: 2 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', mb: 3 }}>
+                    <Typography variant="h6" sx={{
+                        fontFamily: 'Nunito Sans',
+                        fontSize: '16px',
+                        fontWeight: '600',
+                        color: '#202124',
+                        lineHeight: '22px'
+                    }}>Pending invitations</Typography>
+                    <Tooltip title="Team Info" placement="right">
+                        <Image src='/info-icon.svg' alt='info-icon' height={13} width={13} />
+                    </Tooltip>
+                </Box>
+
+                <TableContainer sx={{
+                    border: '1px solid #EBEBEB',
+                    borderRadius: '4px 4px 0px 0px'
+                }}>
+                    <Table>
+                        <TableHead>
+                            <TableRow>
+                                <TableCell
+                                    sx={{
+                                        ...teamsStyles.tableColumn,
+                                        position: 'sticky', // Make the Name column sticky
+                                        left: 0, // Stick it to the left
+                                        zIndex: 9,
+                                        background: '#fff'
+                                    }}>Invited User</TableCell>
+                                <TableCell sx={teamsStyles.tableColumn}>Access Level</TableCell>
+                                <TableCell sx={teamsStyles.tableColumn}>Date Invited</TableCell>
+                                <TableCell sx={teamsStyles.tableColumn}>Status</TableCell>
+                                <TableCell sx={teamsStyles.tableColumn}>Actions</TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {pendingInvitations.length === 0 ? (
+                                <TableRow>
+                                    <TableCell colSpan={5} sx={{
+                                        ...teamsStyles.tableBodyColumn,
+                                        textAlign: 'center'
+                                    }}>
+                                        No pending invitations
+                                    </TableCell>
+                                </TableRow>
+                            ) : (
+                                pendingInvitations.map((invitation, index) => (
+                                    <TableRow key={index} sx={{
+                                        ...teamsStyles.tableBodyRow,
+                                        '&:hover': {
+                                            backgroundColor: '#F7F7F7',
+                                            '& .sticky-cell': {
                                                 backgroundColor: '#F7F7F7',
-                                                '& .sticky-cell': {
-                                                    backgroundColor: '#F7F7F7',
-                                                }
-                                            },
-                                           
-                                        }}>
-                                        <TableCell className="sticky-cell" sx={{...teamsStyles.tableBodyColumn,
+                                            }
+                                        },
+
+                                    }}>
+                                        <TableCell className="sticky-cell" sx={{
+                                            ...teamsStyles.tableBodyColumn,
                                             cursor: 'pointer', position: 'sticky', left: '0', zIndex: 9, backgroundColor: '#fff'
                                         }}>{invitation.email}</TableCell>
                                         <TableCell sx={teamsStyles.tableBodyColumn}>{invitation.role}</TableCell>
                                         <TableCell sx={teamsStyles.tableBodyColumn}>{invitation.date}</TableCell>
                                         <TableCell sx={teamsStyles.tableBodyColumn}>
                                             <Typography component="span" sx={{
-                                            background: '#ececec',
-                                            padding: '6px 8px',
-                                            borderRadius: '2px',
-                                            fontFamily: 'Roboto',
-                                            fontSize: '12px',
-                                            fontWeight: '400',
-                                            lineHeight: '16px',
-                                            color: '#5f6368',
+                                                background: '#ececec',
+                                                padding: '6px 8px',
+                                                borderRadius: '2px',
+                                                fontFamily: 'Roboto',
+                                                fontSize: '12px',
+                                                fontWeight: '400',
+                                                lineHeight: '16px',
+                                                color: '#5f6368',
                                             }}>
-                                            {invitation.status}
+                                                {invitation.status}
                                             </Typography>
                                         </TableCell>
                                         <TableCell sx={teamsStyles.tableBodyColumn}>
-                                            <Button onClick={() => handleRevoke(invitation.id)} 
+                                            <Button
+                                                onClick={() => {
+                                                    const confirmed = window.confirm('Are you sure you want to revoke this invitation?');
+                                                    if (confirmed) {
+                                                        handleRevoke(invitation.email);
+                                                    }
+                                                }}
                                                 sx={{
                                                     fontFamily: 'Roboto',
                                                     fontSize: '12px',
@@ -297,100 +483,87 @@ export const SettingsTeams: React.FC = () => {
                                                         background: 'transparent'
                                                     }
                                                 }}
-                                                >Revoke</Button></TableCell>
-                                        </TableRow>
-                                    ))
-                                )}
-                                </TableBody>
-                            </Table>
-                        </TableContainer>
-                    </Box>
-
-                    <Divider sx={{borderColor: '#e4e4e4'}} />
-
-                    <Box>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', my: 3.75, alignItems: 'center' }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px'}}>
-                                <Typography variant="h6" sx={{
-                                    fontFamily: 'Nunito Sans',
-                                    fontSize: '16px',
-                                    fontWeight: '600',
-                                    color: '#202124',
-                                    lineHeight: '22px'
-                                }}>Team members</Typography>
-                                <Typography variant='h6' sx={{
-                                    background: '#EDEDF7',
-                                    borderRadius: '4px',
-                                    fontFamily: 'Roboto',
-                                    fontSize: '12px',
-                                    fontWeight: '400',
-                                    color: '#5f6368',
-                                    padding: '4px 6px',
-                                    lineHeight: '16px'
-                                }}>
-                                    3/3 Member limit
-                                </Typography>
-                                <Tooltip title="Team Info" placement="right">
-                                    <Image src='/info-icon.svg' alt='info-icon' height={13} width={13} />
-                                </Tooltip>
-                            </Box>
-                            <Box sx={{ border: '1px dashed #5052B2', borderRadius: '4px'}}>
-                                <Button onClick={handleInviteUsersPopupOpen}><Image src="/add-square.svg" alt="add-square" height={24} width={24} /></Button>
-                            </Box>
-                            <InviteUsersPopup open={inviteUsersPopupOpen} onClose={handleInviteUsersPopupClose} onSend={handleSend} />
-                        </Box>
-                        
-                        <TableContainer sx={{
-                            border: '1px solid #EBEBEB',
-                            borderRadius: '4px 4px 0px 0px'
-                        }}>
-                            <Table>
-                                <TableHead>
-                                    <TableRow>
-                                        <TableCell sx={{...teamsStyles.tableColumn,
-                                            position: 'sticky', // Make the Name column sticky
-                                            left: 0, // Stick it to the left
-                                            zIndex: 9,
-                                            background: '#fff'
-                                        }}>User</TableCell>
-                                        <TableCell sx={teamsStyles.tableColumn}>Last signed-in</TableCell>
-                                        <TableCell sx={teamsStyles.tableColumn}>Access level</TableCell>
-                                        <TableCell sx={teamsStyles.tableColumn}>Invited by</TableCell>
-                                        <TableCell sx={teamsStyles.tableColumn}>Added on</TableCell>
-                                        <TableCell sx={teamsStyles.tableColumn}>Actions</TableCell>
-                                    </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                    {/* {teamMembers.map((member) => (
-                                        <TableRow key={member.id}>
-                                            <TableCell>{member.user}</TableCell>
-                                            <TableCell>{member.lastSignedIn}</TableCell>
-                                            <TableCell>{member.accessLevel}</TableCell>
-                                            <TableCell>{member.invitedBy}</TableCell>
-                                            <TableCell>{member.addedOn}</TableCell>
-                                            <TableCell>
-                                                <Button
-                                                    variant="outlined"
-                                                    color="error"
-                                                    onClick={() => handleRemoveTeamMember(member.userId)}
-                                                >
-                                                    Remove
-                                                </Button>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))} */}
-                                    {teamMembers.length === 0 ? (
-                                    <TableRow sx={teamsStyles.tableBodyRow}>
-                                        <TableCell colSpan={5} sx={{
-                                                    ...teamsStyles.tableBodyColumn,
-                                                    textAlign: 'center'
-                                                }}>
-                                                No team members found
+                                            >
+                                                Revoke
+                                            </Button>
                                         </TableCell>
                                     </TableRow>
-                                ):(
-                                    teamMembers.map((member) => (
-                                        <TableRow key={member.id}
+                                ))
+                            )}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
+            </Box>
+
+            <Divider sx={{ borderColor: '#e4e4e4' }} />
+
+            <Box>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', my: 3.75, alignItems: 'center' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <Typography variant="h6" sx={{
+                            fontFamily: 'Nunito Sans',
+                            fontSize: '16px',
+                            fontWeight: '600',
+                            color: '#202124',
+                            lineHeight: '22px'
+                        }}>Team members</Typography>
+                        <Typography variant='h6' sx={{
+                            background: '#EDEDF7',
+                            borderRadius: '4px',
+                            fontFamily: 'Roboto',
+                            fontSize: '12px',
+                            fontWeight: '400',
+                            color: '#5f6368',
+                            padding: '4px 6px',
+                            lineHeight: '16px'
+                        }}>
+                            {memberCount}/{memberLimit} Member limit
+                        </Typography>
+                        <Tooltip title="Team Info" placement="right">
+                            <Image src='/info-icon.svg' alt='info-icon' height={13} width={13} />
+                        </Tooltip>
+                    </Box>
+                    <Box sx={{ border: '1px dashed #5052B2', borderRadius: '4px' }}>
+                        <Button onClick={handleInviteUsersPopupOpen}><Image src="/add-square.svg" alt="add-square" height={24} width={24} /></Button>
+                        <UpgradePlanPopup open={upgradePlanPopup} limitName={'team members'} handleClose={() => setUpgradePlanPopup(false)} />
+                    </Box>
+                    <InviteUsersPopup open={inviteUsersPopupOpen} onClose={handleInviteUsersPopupClose} onSend={handleSend} />
+                </Box>
+
+                <TableContainer sx={{
+                    border: '1px solid #EBEBEB',
+                    borderRadius: '4px 4px 0px 0px'
+                }}>
+                    <Table>
+                        <TableHead>
+                            <TableRow>
+                                <TableCell sx={{
+                                    ...teamsStyles.tableColumn,
+                                    position: 'sticky', // Make the Name column sticky
+                                    left: 0, // Stick it to the left
+                                    zIndex: 9,
+                                    background: '#fff'
+                                }}>User</TableCell>
+                                <TableCell sx={teamsStyles.tableColumn}>Last signed-in</TableCell>
+                                <TableCell sx={teamsStyles.tableColumn}>Access level</TableCell>
+                                <TableCell sx={teamsStyles.tableColumn}>Invited by</TableCell>
+                                <TableCell sx={teamsStyles.tableColumn}>Added on</TableCell>
+                                <TableCell sx={teamsStyles.tableColumn}>Actions</TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {teamMembers.length === 0 ? (
+                                <TableRow sx={teamsStyles.tableBodyRow}>
+                                    <TableCell colSpan={5} sx={{
+                                        ...teamsStyles.tableBodyColumn,
+                                        textAlign: 'center'
+                                    }}>
+                                        No team members found
+                                    </TableCell>
+                                </TableRow>
+                            ) : (
+                                teamMembers.map((member) => (
+                                    <TableRow key={member.email}
                                         sx={{
                                             ...teamsStyles.tableBodyRow,
                                             '&:hover': {
@@ -399,20 +572,22 @@ export const SettingsTeams: React.FC = () => {
                                                     backgroundColor: '#F7F7F7',
                                                 }
                                             },
-                                           
+
                                         }}
-                                        onClick={() => handleRowClick(member.id)} // Handle row click
-                                        >
-                                            <TableCell className="sticky-cell" sx={{...teamsStyles.tableBodyColumn,
-                                                cursor: 'pointer', position: 'sticky', left: '0', zIndex: 9, backgroundColor: '#fff'
-                                            }}>{member.email}</TableCell>
-                                            <TableCell sx={teamsStyles.tableBodyColumn}>{member.date}</TableCell>
-                                            <TableCell sx={teamsStyles.tableBodyColumn} onClick={(e) => handleDropdownClick(e, member.id)}>
+                                        onClick={() => handleRowClick(member.email)} // Handle row click
+                                    >
+                                        <TableCell className="sticky-cell" sx={{
+                                            ...teamsStyles.tableBodyColumn,
+                                            cursor: 'pointer', position: 'sticky', left: '0', zIndex: 9, backgroundColor: '#fff'
+                                        }}>{member.email}</TableCell>
+                                        <TableCell sx={teamsStyles.tableBodyColumn}>{member.last_sign_in}</TableCell>
+                                        <TableCell sx={teamsStyles.tableBodyColumn} onClick={(e) => handleDropdownClick(e, member.email)}>
                                             <FormControl variant="outlined" sx={{ width: '100%' }}>
+                                                {member.access_level}
                                                 <Select
-                                                    value={member.role}
-                                                    onChange={(e) => handleSelectionChange(e, member.id)}
-                                                    open={teamSelectOpen === member.id}
+                                                    value={member.access_level}
+                                                    onChange={(e) => handleSelectionChange(e, member.email)}
+                                                    open={teamSelectOpen === member.email}
                                                     sx={{
                                                         '& .MuiOutlinedInput-notchedOutline': {
                                                             border: 'none', // Remove the default border
@@ -447,11 +622,11 @@ export const SettingsTeams: React.FC = () => {
                                                     input={
                                                         <OutlinedInput
                                                             endAdornment={
-                                                                teamSelectOpen === member.id && ( // Show arrow only if the row is selected
-                                                                    <InputAdornment position="end" onClick={(e) => handleArrowClick(e, member.id)} sx={{ cursor: 'pointer' }}>
+                                                                teamSelectOpen === member.email && ( // Show arrow only if the row is selected
+                                                                    <InputAdornment position="end" onClick={(e) => handleArrowClick(e, member.email)} sx={{ cursor: 'pointer' }}>
                                                                         <Image
-                                                                            src={teamSelectOpen === member.id ? '/chevron-drop-up.svg' : '/chevron-drop-down.svg'}
-                                                                            alt={teamSelectOpen === member.id ? 'chevron-drop-up' : 'chevron-drop-down'}
+                                                                            src={teamSelectOpen === member.email ? '/chevron-drop-up.svg' : '/chevron-drop-down.svg'}
+                                                                            alt={teamSelectOpen === member.email ? 'chevron-drop-up' : 'chevron-drop-down'}
                                                                             height={24}
                                                                             width={24}
                                                                         />
@@ -460,7 +635,7 @@ export const SettingsTeams: React.FC = () => {
                                                             }
                                                         />
                                                     }
-                                                    
+
                                                     MenuProps={{
                                                         PaperProps: {
                                                             sx: {
@@ -478,16 +653,37 @@ export const SettingsTeams: React.FC = () => {
                                                         },
                                                     }}
                                                 >
-                                                    <MenuItem key="admin" value="Admin">Admin</MenuItem>
-                                                    <MenuItem key="member" value="Member">Member</MenuItem>
-                                                    <MenuItem key="read-only" value="Read Only">Read Only</MenuItem>
+                                                    <Select
+                                                        onChange={(event) => {
+                                                            const selectedValue = event.target.value;
+                                                            const selectedOption = roleOptions.find(option => option.value === selectedValue);
+                                                            const selectedKey = selectedOption ? selectedOption.key : '';
+
+                                                            handleChangeUserRole(member.email, selectedKey).then(result => {
+                                                                if (result === true) {
+                                                                    member.access_level = selectedKey;
+                                                                }
+                                                            });
+                                                        }}>
+                                                        {roleOptions.map(option => (
+                                                            <MenuItem key={option.key} value={option.value}>{option.value}</MenuItem>
+                                                        ))}
+                                                    </Select>
+
                                                 </Select>
                                             </FormControl>
-                                            </TableCell>
-                                            <TableCell sx={teamsStyles.tableBodyColumn}>{member.invite}</TableCell>
-                                            <TableCell sx={teamsStyles.tableBodyColumn}>{member.addedon}</TableCell>
-                                            <TableCell sx={teamsStyles.tableBodyColumn}>
-                                                <Button onClick={() => handleRemoveMember(member.id)} 
+                                        </TableCell>
+                                        <TableCell sx={teamsStyles.tableBodyColumn}>{member.invited_by}</TableCell>
+                                        <TableCell sx={teamsStyles.tableBodyColumn}>{member.added_on}</TableCell>
+                                        <TableCell sx={teamsStyles.tableBodyColumn}>
+                                            {member.access_level !== 'owner' && (
+                                                <Button
+                                                    onClick={() => {
+                                                        const confirmed = window.confirm('Are you sure you want to remove this member?');
+                                                        if (confirmed) {
+                                                            handleRemoveMember(member.email);
+                                                        }
+                                                    }}
                                                     sx={{
                                                         fontFamily: 'Roboto',
                                                         fontSize: '12px',
@@ -504,13 +700,14 @@ export const SettingsTeams: React.FC = () => {
                                                 >
                                                     Remove
                                                 </Button>
-                                            </TableCell>
-                                        </TableRow>
-                                    )))}
-                                </TableBody>
-                            </Table>
-                        </TableContainer>
-                    </Box>
-                </Box>
+                                            )}
+                                        </TableCell>
+                                    </TableRow>
+                                )))}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
+            </Box>
+        </Box>
     );
 };

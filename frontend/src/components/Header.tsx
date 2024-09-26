@@ -8,6 +8,7 @@ import TrialStatus from "./TrialLabel";
 import DomainButton from "@/components/DomainsButton";
 import NavigationMenu from "@/components/NavigationMenu";
 import { SliderProvider } from "../context/SliderContext";
+import { useTrial } from '../context/TrialProvider';
 
 const headerStyles = {
   headers: {
@@ -29,17 +30,20 @@ const headerStyles = {
 
 const Header = () => {
   const router = useRouter();
-  const { full_name: userFullName, email: userEmail } = useUser();
+  const { full_name: userFullName, email: userEmail, resetUserData, } = useUser();
   const meItem = typeof window !== "undefined" ? sessionStorage.getItem("me") : null;
   const meData = meItem ? JSON.parse(meItem) : { full_name: '', email: '' };
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
   const full_name = userFullName || meData.full_name;
   const email = userEmail || meData.email;
+  const { resetTrialData } = useTrial();
   const handleSignOut = () => {
     localStorage.clear();
     sessionStorage.clear();
-    router.push("/signin");
+    resetUserData();
+    resetTrialData();
+    window.location.href = "/signin";
   };
   const handleProfileMenuClick = (
     event: React.MouseEvent<HTMLButtonElement>
