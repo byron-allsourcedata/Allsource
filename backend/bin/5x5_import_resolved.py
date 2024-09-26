@@ -296,11 +296,6 @@ def process_leads_requests(requested_at, page, leads_requests, visit_id, session
         'behavior_type': behavior_type
     })
     session.flush()
-    lead_user = session.query(LeadUser).filter(LeadUser.id == lead_id).first()
-    lead_user.total_visit += 1
-    lead_user.total_visit_time += total_time_sec
-    lead_user.avarage_visit_time = lead_user.total_visit_time // len(leads_requests_sorted)
-    session.flush()
 
 
 def add_new_leads_visits(visited_datetime, lead_id, session, behavior_type):
@@ -316,11 +311,19 @@ def add_new_leads_visits(visited_datetime, lead_id, session, behavior_type):
     session.add(leads_visits)
     session.flush()
     
-    session.query(LeadUser).filter(LeadUser.id == lead_id).update({
-                LeadUser.total_visit: 1,
-                LeadUser.avarage_visit_time: int(end_time - start_time),
-                LeadUser.total_visit_time: int(end_time - start_time)
-            })
+    lead_user = session.query(LeadUser).filter(LeadUser.id == lead_id).first()
+    leads_count = session.query(LeadsRequests) \
+            .filter(LeadsRequests.lead_id == lead_id) \
+            .count()
+    if lead_user.total_visit:
+        lead_user.total_visit += 1
+        lead_user.total_visit_time += int(end_time - start_time)
+        lead_user.avarage_visit_time = lead_user.total_visit_time // (len(leads_count) + 1)
+    else:
+        lead_user.total_visit = 1
+        lead_user.total_visit_time += int(end_time - start_time)
+        lead_user.avarage_visit_time += int(end_time - start_time)
+        
     session.flush()
     return leads_visits
 
