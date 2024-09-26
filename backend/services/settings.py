@@ -258,13 +258,12 @@ class SettingsService:
         return datetime.fromtimestamp(timestamp).strftime('%B %d, %Y')
     
     def calculate_dates(self, plan):
-        start_date = datetime.now()  # Замените на фактическую начальную дату
+        start_date = datetime.now()
         interval = plan['interval']
         interval_count = plan['interval_count']
 
         if interval == 'month':
             end_date = start_date.replace(month=start_date.month + interval_count)
-        # Добавьте логику для других интервалов, если нужно
 
         return start_date, end_date
             
