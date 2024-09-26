@@ -99,7 +99,6 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
         return false;
     };
 
-
     const handleSave = async () => {
         try {
             if (selectedOption === 'create') {
@@ -534,7 +533,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                 </Box>
             </Drawer>
 
-            <ConnectKlaviyo open={klaviyoIconPopupOpen} onClose={handleKlaviyoIconPopupClose} />
+            <ConnectKlaviyo open={klaviyoIconPopupOpen} onClose={handleKlaviyoIconPopupClose}/>
             <ConnectMeta open={metaIconPopupOpen} onClose={handleMetaIconPopupClose} />
         </>
     );

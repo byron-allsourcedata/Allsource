@@ -7,6 +7,7 @@ import Image from 'next/image';
 import CloseIcon from '@mui/icons-material/Close';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { showToast } from './ToastNotification';
+import CustomizedProgressBar from './CustomizedProgressBar';
 
 
 interface ConnectKlaviyoPopupProps {
@@ -26,6 +27,7 @@ type KlaviyoTags = {
 }
 
 const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) => {
+    const [loading, setLoading] = useState(false)
 
     const [value, setValue] = React.useState('1');
     const [checked, setChecked] = useState(false);
@@ -40,7 +42,6 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
     const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
     const [openDropdown, setOpenDropdown] = useState<number | null>(null);
     const [openDropdownMaximiz, setOpenDropdownMaximiz] = useState<number | null>(null)
-    const [apiKey, setApiKey] = useState('');
     const [apiKeyError, setApiKeyError] = useState(false);
     const [tab2Error, setTab2Error] = useState(false);
     const [isDropdownValid, setIsDropdownValid] = useState(false);
@@ -52,35 +53,6 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
     const [showCreateMapForm, setShowCreateMapForm] = useState<boolean>(false);
     const [maplistNameError, setMapListNameError] = useState(false);
     const [klaviyoList, setKlaviyoList] = useState<KlaviyoList[]>([])
-    const [klaviyoTags, setKlaviyoTags] = useState<KlaviyoTags[]>([])
-    const [mapKlaviyoListOptions, setKlaviyoMapListOptions] = useState<string[]>([
-        'Email',
-        'Phone number',
-        'First name',
-        'Second name',
-        'Gender',
-        'Age',
-        'Job Title',
-        'Location',
-    ]);
-    const [mapMaximizListOptions, setMaximizMapListOptions] = useState<string[]>([
-        'First name',
-        'Second name',
-        'Gender',
-        'Age',
-        'Job Title',
-        'Location',
-    ])
-    useEffect(() => {
-        const fetchData = async() => {
-            const response = await axiosInstance.get('/integrations/credentials/klaviyo')
-            if(response.status == 200) {
-                setApiKey(response.data.access_token)
-            }
-        }
-        fetchData()
-    }, [])
-      // Handle click outside to unshrink the label if input is empty
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (textFieldRef.current && !textFieldRef.current.contains(event.target as Node)) {
@@ -106,25 +78,16 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
   }, [selectedOption]);
 
     // Static options
-    
-    const getKlaviyoTags = async() => {
-        const response = await axiosInstance.get('/integrations/sync/tags/', {
-            params: {
-                service_name: 'Klaviyo'
-            }
-        })
-        setKlaviyoTags(response.data)
-    }
-
     const getKlaviyoList = async() => {
+        setLoading(true)
         const response = await axiosInstance.get('/integrations/sync/list/', {
             params: {
                 service_name: 'Klaviyo'
             }
         })
         setKlaviyoList(response.data)
+        setLoading(false)
     }
-
     const createNewList = async () => {
         const newListResponse = await axiosInstance.post('/integrations/sync/list/', {
             name: selectedOption?.list_name
@@ -156,6 +119,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
     }
 
     const handleSaveSync = async () => {
+        setLoading(true)
         let list;
         let tag = null;
         if (selectedOption && selectedOption.id === '-1') {
@@ -176,16 +140,13 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                 service_name: 'klaviyo'
             }
         });
+        setLoading(false)
         if (response.status === 201) {
             onClose();
             
             showToast('Create data sync successfully');
         }
     };
-    
-
-
-    const staticOptions = ['Email List', 'Phone List', 'SMS List', 'Maximiz Contacts', 'Preview List', 'Maximiz'];
 
     // Handle menu open
     const handleClick = (event: React.MouseEvent<HTMLInputElement>) => {
@@ -212,57 +173,38 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
 
     const handleMapClose = () => {
         setShowCreateMapForm(false);
-        setNewMapListName(''); // Clear new list name when closing
+        setNewMapListName(''); 
     };
 
-// Handle option selection
-const handleSelectOption = (value: KlaviyoList | string) => {
-    if (value === 'createNew') {
-        setShowCreateForm(prev => !prev); 
-        if (!showCreateForm) {
-            setAnchorEl(textFieldRef.current); 
+    const handleSelectOption = (value: KlaviyoList | string) => {
+        if (value === 'createNew') {
+            setShowCreateForm(prev => !prev); 
+            if (!showCreateForm) {
+                setAnchorEl(textFieldRef.current); 
+            }
+        } else if (isKlaviyoList(value)) { 
+            // Проверка, является ли value объектом KlaviyoList
+            setSelectedOption({
+                id: value.id,
+                list_name: value.list_name
+            });
+            setIsDropdownValid(true);
+            handleClose();
+        } else {
+            setIsDropdownValid(false);
+            setSelectedOption(null); 
         }
-    } else if (typeof value === 'object' && value !== null) { 
-        setSelectedOption({
-            id: value.id,
-            list_name: value.list_name
-        }); 
-        handleClose();
-    }
-    console.log(typeof selectedOption === 'object' && selectedOption !== null && selectedOption.list_name !== '')
-    setIsDropdownValid(typeof selectedOption === 'object' && selectedOption !== null && selectedOption.list_name !== '');
-};
+    };
+    
+    const isKlaviyoList = (value: any): value is KlaviyoList => {
+        return value !== null &&
+               typeof value === 'object' &&
+               'id' in value &&
+               'list_name' in value; 
+    };
+    
 
     
-    const handleSelectMapOptionMaximiz = (value: string, event: React.MouseEvent<HTMLElement>, id: number) => {
-        event.stopPropagation();
-
-        if (value === 'createNewField') {
-            setShowCreateMapForm(prev => !prev); // Toggle form visibility
-
-            // Ensure dropdown remains open if it was already open or if form is being opened
-            if (openDropdown !== id) {
-                setOpenDropdownMaximiz(id); // Open dropdown if it’s not already open
-            }
-        } else {
-            handleDropdownMaximizClose(); // Close dropdown for other selections
-        }
-    };
-
-    const handleSelectMapOption = (value: string, event: React.MouseEvent<HTMLElement>, id: number) => {
-        event.stopPropagation(); // Prevent click event from closing the dropdown
-
-        if (value === 'createNewField') {
-            setShowCreateMapForm(prev => !prev); // Toggle form visibility
-
-            // Ensure dropdown remains open if it was already open or if form is being opened
-            if (openDropdown !== id) {
-                setOpenDropdown(id); // Open dropdown if it’s not already open
-            }
-        } else {
-            handleDropdownClose(); // Close dropdown for other selections
-        }
-    };
 
     // Handle Save action for the create new list form
     const handleSave = async() => {
@@ -286,38 +228,15 @@ const handleSelectOption = (value: KlaviyoList | string) => {
     
         // If valid, save and close
         if (valid) {
-            setSelectedOption({id: '-1', list_name: newListName}); // Update selected option with new list name
+            const newKlaviyoList = {id: '-1', list_name: newListName}
+            setSelectedOption(newKlaviyoList); // Update selected option with new list name
+            if(isKlaviyoList(newKlaviyoList)) {
+                setIsDropdownValid(true);
+            }
             handleClose();
         }
-    };
+        else {
 
-    const handleMapSave = (id: number) => {
-        let valid = true;
-    
-        // Validate List Name
-        if (newMapListName.trim() === '') {
-            setMapListNameError(true);
-            valid = false;
-        } else {
-            setMapListNameError(false);
-        }
-    
-       
-    
-        // If valid, save and close
-        if (valid) {
-            if (newMapListName.trim() === '') return; // Prevent saving empty values
-
-            // Update the value in the rows state
-            handleMapListChange(id, 'type', newMapListName);
-            setKlaviyoMapListOptions(prevOptions => [...prevOptions, newMapListName]);
-            // Optionally, reset the new value state if needed
-            setNewMapListName('');
-
-            
-            setShowCreateMapForm(false); // Close the form
-            setOpenDropdown(null); // Close the dropdown if needed
-            handleMapClose();
         }
     };
 
@@ -463,32 +382,6 @@ const handleSelectOption = (value: KlaviyoList | string) => {
                 return (
                     <Button
                         variant="contained"
-                        disabled={!apiKey || apiKeyError}
-                        onClick={handleNextTab}
-                        sx={{
-                            backgroundColor: '#5052B2',
-                            fontFamily: "Nunito Sans",
-                            fontSize: '14px',
-                            fontWeight: '600',
-                            lineHeight: '20px',
-                            letterSpacing: 'normal',
-                            color: "#fff",
-                            textTransform: 'none',
-                            padding: '10px 24px',
-                            boxShadow:'0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                            '&:hover': {
-                                backgroundColor: '#5052B2'
-                            },
-                            borderRadius: '4px',
-                        }}
-                    >
-                        Connect
-                    </Button>
-                );
-            case '2':
-                return (
-                    <Button
-                        variant="contained"
                         onClick={handleNextTab}
                         disabled={!selectedRadioValue}
                         sx={{
@@ -511,7 +404,7 @@ const handleSelectOption = (value: KlaviyoList | string) => {
                         Next
                     </Button>
                 );
-            case '3':
+            case '2':
                 return (
                     <Button
                         variant="contained"
@@ -537,7 +430,7 @@ const handleSelectOption = (value: KlaviyoList | string) => {
                         Next
                     </Button>
                 );
-            case '4':
+            case '3':
                 return (
                     <Button
                         variant="contained"
@@ -588,6 +481,7 @@ const handleSelectOption = (value: KlaviyoList | string) => {
         { id: 3, type: 'First name', value: 'First name' },
         { id: 4, type: 'Second name', value: 'Second name' },
         { id: 5, type: 'Job Title', value: 'Job Title' },
+        { id: 6, type: 'Location', value: 'Location'}
     ];
     
       const [rows, setRows] = useState<Row[]>(defaultRows);
@@ -643,38 +537,6 @@ const handleSelectOption = (value: KlaviyoList | string) => {
         setOpenDropdownMaximiz(null)
     }
 
-    const handleApiKeyChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setApiKey(event.target.value);
-        setApiKeyError(event.target.value === ''); // Set error if API Key is empty
-    };
-    
-    const handleSubmitApiKey = async() => {
-        const response = await axiosInstance.post('/integrations/', 
-            {
-                klaviyo: {
-                    api_key: apiKey
-                }
-            },
-            {
-                params: { 
-                    service_name: 'Klaviyo' 
-                }
-            });
-    }
-
-    const handleCreateList = async() => {
-        const response = await axiosInstance.post('/integrations')
-    }
-
-    const validateApiKey = () => {
-        // Your logic to validate the API key
-        if (apiKey.trim() === '') {
-          setApiKeyError(true);
-          return false;
-        }
-        setApiKeyError(false);
-        return true;
-    };
 
     const validateTab2 = () => {
         if (selectedRadioValue === null) {
@@ -688,17 +550,15 @@ const handleSelectOption = (value: KlaviyoList | string) => {
 
 
     const handleNextTab = async() => {
-        if (validateApiKey()) {
+        
           if(value === '1') {
-            await handleSubmitApiKey()
             await getKlaviyoList()
-            await getKlaviyoTags()
+            setValue((prevValue) => {
+                const nextValue = String(Number(prevValue) + 1);
+                return nextValue;
+              })
           }
-          setValue((prevValue) => {
-            const nextValue = String(Number(prevValue) + 1);
-            return nextValue;
-          });
-        } else if (value === '2') {
+         else if (value === '2') {
             if (validateTab2()) {
               setValue((prevValue) => String(Number(prevValue) + 1));
             }
@@ -714,7 +574,11 @@ const handleSelectOption = (value: KlaviyoList | string) => {
       const deleteOpen = Boolean(deleteAnchorEl);
     const deleteId = deleteOpen ? 'delete-popover' : undefined;
 
+
+
     return (
+        <>
+        {loading && <CustomizedProgressBar />}
         <Drawer
             anchor="right"
             open={open}
@@ -773,88 +637,12 @@ const handleSelectOption = (value: KlaviyoList | string) => {
                                 justifyContent:'flex-start'
                             }
                         }}}>
-                        <Tab label="API Key" value="1" sx={klaviyoStyles.tabHeading} />
-                        <Tab label="Suppression Sync" value="2" sx={klaviyoStyles.tabHeading} />
-                        <Tab label="Contact Sync" value="3" sx={klaviyoStyles.tabHeading} />
-                        <Tab label="Map data" value="4" sx={klaviyoStyles.tabHeading} />
+                        <Tab label="Suppression Sync" value="1" sx={klaviyoStyles.tabHeading} />
+                        <Tab label="Contact Sync" value="2" sx={klaviyoStyles.tabHeading} />
+                        <Tab label="Map data" value="3" sx={klaviyoStyles.tabHeading} />
                         </TabList>
                     </Box>
                     <TabPanel value="1" sx={{ p: 0 }}>
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                            <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)' }}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <Image src='/klaviyo.svg' alt='klaviyo' height={26} width={32} />
-                                    <Typography variant="h6" sx={{
-                                        fontFamily: 'Nunito Sans',
-                                        fontSize: '16px',
-                                        fontWeight: '600',
-                                        color: '#202124'
-                                    }}>API Key</Typography>
-                                    <Tooltip title="Enter the API key provided by Klaviyo" placement="right">
-                                        <Image src='/baseline-info-icon.svg' alt='baseline-info-icon' height={16} width={16} />
-                                    </Tooltip>
-                                </Box>
-                                <TextField
-                                    label="Enter API Key"
-                                    variant="outlined"
-                                    fullWidth
-                                    margin="normal"
-                                    error={apiKeyError}
-                                    helperText={apiKeyError ? 'API Key is required' : ''}
-                                    value={apiKey}
-                                    onChange={handleApiKeyChange}
-                                    InputLabelProps={{ sx: klaviyoStyles.inputLabel }}
-                                    InputProps={{ sx: klaviyoStyles.formInput }}
-                                />
-                            </Box>
-                            <Box sx={{ background: '#f0f0f0', border: '1px solid #efefef', borderRadius: '4px', p: 2 }}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', mb: 2 }}>
-                                    <Image src='/info-circle.svg' alt='info-circle' height={20} width={20} />
-                                    <Typography variant="subtitle1" sx={{
-                                        fontFamily: 'Nunito Sans',
-                                        fontSize: '16px',
-                                        fontWeight: '600',
-                                        color: '#202124',
-                                        lineHeight: 'normal'
-                                    }}>How to integrate Klaviyo</Typography>
-                                </Box>
-                                <List dense sx={{ p: 0 }}>
-                                    {instructions.map((instruction, index) => (
-                                        <ListItem key={instruction.id} sx={{ p: 0, alignItems: 'flex-start' }}>
-                                            <Typography
-                                                variant="body1"
-                                                sx={{
-                                                    display: 'inline-block',
-                                                    marginRight: '4px',
-                                                    fontFamily: 'Roboto',
-                                                    fontSize: '12px',
-                                                    fontWeight: '400',
-                                                    color: '#808080',
-                                                    lineHeight: '24px'
-                                                }}
-                                            >
-                                                {instructions.indexOf(instruction) + 1}.
-                                            </Typography>
-                                            <Typography
-                                                variant="body1"
-                                                sx={{
-                                                    display: 'inline',
-                                                    fontFamily: 'Roboto',
-                                                    fontSize: '12px',
-                                                    fontWeight: '400',
-                                                    color: '#808080',
-                                                    lineHeight: '24px'
-                                                }}
-                                            >
-                                                {highlightText(instruction.text, highlightConfig)}
-                                            </Typography>
-                                        </ListItem>
-                                    ))}
-                                </List>
-                            </Box>
-                        </Box>
-                    </TabPanel>
-                    <TabPanel value="2" sx={{ p: 0 }}>
                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                             <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)', display: 'flex', flexDirection:'column', gap: '16px' }}>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -1141,7 +929,7 @@ const handleSelectOption = (value: KlaviyoList | string) => {
                             </Box>
                         </Box>
                     </TabPanel>
-                    <TabPanel value="3" sx={{ p: 0 }}>
+                    <TabPanel value="2" sx={{ p: 0 }}>
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                             <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)' }}>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', mb: 3 }}>
@@ -1161,15 +949,15 @@ const handleSelectOption = (value: KlaviyoList | string) => {
                                 <ClickAwayListener onClickAway={handleClose}>
                                     <Box>
                                     <TextField
-                                    ref={textFieldRef}
+                                        ref={textFieldRef}
                                         variant="outlined"
                                         value={selectedOption?.list_name}
-                                        onClick={handleClick} // Shrinks the label when clicked
+                                        onClick={handleClick} 
                                         size="small"
                                         fullWidth
                                         label="Select or Create new list"
                                         InputLabelProps={{
-                                            shrink: isShrunk || selectedOption?.list_name !== "", // Shrinks label if clicked or if value is not empty
+                                            shrink: isShrunk , 
                                             sx: {
                                                 fontFamily: 'Nunito Sans',
                                             fontSize: '12px',
@@ -1457,7 +1245,7 @@ const handleSelectOption = (value: KlaviyoList | string) => {
                             </Box>
                         </Box>
                     </TabPanel>
-                    <TabPanel value="4" sx={{ p: 0 }}>
+                    <TabPanel value="3" sx={{ p: 0 }}>
                         <Box sx={{
                             borderRadius: '4px',
                             border: '1px solid #f0f0f0',
@@ -1483,7 +1271,7 @@ const handleSelectOption = (value: KlaviyoList | string) => {
                                             padding: '2px 4px',
                                             lineHeight: '16px'
                                         }}>
-                                            Test list 2
+                                            {selectedOption?.list_name}
                                         </Typography>
                             </Box>
 
@@ -1520,7 +1308,6 @@ const handleSelectOption = (value: KlaviyoList | string) => {
                                         fullWidth
                                         variant="outlined"
                                         disabled={true}
-                                        label={row.type}
                                         value={row.value}
                                         onChange={(e) => handleMapListChange(row.id, 'value', e.target.value)}
                                         InputLabelProps={{
@@ -1604,7 +1391,6 @@ const handleSelectOption = (value: KlaviyoList | string) => {
                                         fullWidth
                                         variant="outlined"
                                         disabled={true}
-                                        label={row.type}
                                         value={row.type}
                                         onChange={(e) => handleMapListChange(row.id, 'type', e.target.value)}
                                         InputLabelProps={{
@@ -1764,6 +1550,7 @@ const handleSelectOption = (value: KlaviyoList | string) => {
             </Box>
              
         </Drawer>
+        </>
     );
 };
 export default ConnectKlaviyo;
