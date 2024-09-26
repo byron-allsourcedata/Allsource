@@ -12,6 +12,8 @@ import json
 from typing import List
 import logging 
 from config.rmq_connection import publish_rabbitmq_message, RabbitMQConnection
+
+
 class KlaviyoIntegrationsService:
 
     def __init__(self, domain_persistence: UserDomainsPersistence, integrations_persistence: IntegrationsPresistence, leads_persistence: LeadsPersistence,
@@ -143,7 +145,7 @@ class KlaviyoIntegrationsService:
         }
         rabbitmq_connection = RabbitMQConnection()
         connection = await rabbitmq_connection.connect()
-        channel = await rabbitmq_connection.channel()
+        channel = await connection.channel()
         await channel.declare_queue(
             name=self.QUEUE_DATA_SYNC,
             durable=True
@@ -221,13 +223,8 @@ class KlaviyoIntegrationsService:
                 }
             }
         }
-
-        # Убираем поля со значением None
         json_data['data']['attributes'] = {k: v for k, v in json_data['data']['attributes'].items() if v is not None}
-
-        # Логируем JSON данные
         logging.debug("JSON data to send: %s", json.dumps(json_data, indent=2))
-
         response = self.__handle_request(
             method='POST',
             url='https://a.klaviyo.com/api/profiles/',
@@ -252,6 +249,28 @@ class KlaviyoIntegrationsService:
             ]
         }) 
 
+
+    def set_suppression(self, suppression: bool, domain_id: int):
+        credential = self.get_credentials(domain_id)
+        if not credential:
+            raise HTTPException(status_code=403, detail=IntegrationsStatus.CREDENTIALS_NOT_FOUND.value)
+        credential.suppression = suppression
+        self.integrations_persisntece.db.commit()
+        return {'message': 'successfuly'}
+
+
+    def get_profile(self, domain_id: int, date_last_sync: str, fileds: List[ContactFiled]) -> List[ContactSuppression]:
+        credentials = self.get_credentials(domain_id)
+        if not credentials:
+            raise HTTPException(status_code=403, detail=IntegrationsStatus.CREDENTIALS_NOT_FOUND.value)
+        params = {
+            'fields[profile]': ','.join(fileds),
+            'filter': f'greater-than(created,{date_last_sync})'
+        }
+        response = self.__handle_request(method='GET', url='https://a.klaviyo.com/api/profiles/', params=params)
+        if response.status_code != 200:
+            raise HTTPException(status_code=400, detail={'status': "Profiles from Klaviyo could not be retrieved"})
+        return [self.__mapped_profile_from_klaviyo(profile) for profile in response.json().get('data')]
 
 
     def __mapped_klaviyo_profile(self, lead: FiveXFiveUser) -> KlaviyoProfile:
@@ -289,3 +308,9 @@ class KlaviyoIntegrationsService:
             }
         }
 
+    def __mapped_profile_from_klaviyo(self, profile) -> ContactSuppression:
+        return ContactSuppression(
+            id=profile.get('id'),
+            email=profile.get('attributes').get('email'),
+            phone_number=profile.get('attributes').get('phone_number')
+        )
