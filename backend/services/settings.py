@@ -143,10 +143,10 @@ class SettingsService:
             invited, inviter_mail = team_data
             team_info = {
                 'email': invited.email,
-                'last_sign_in': invited.last_signed_in.strftime('%d.%m.%Y %H:%M') if invited.last_signed_in else None,
+                'last_sign_in': invited.last_signed_in.strftime('%b %d, %Y') if invited.last_signed_in else None,
                 'access_level': invited.team_access_level,
                 'invited_by': inviter_mail,
-                'added_on': invited.added_on.strftime('%d.%m.%Y %H:%M') if invited.added_on else None
+                'added_on': invited.added_on.strftime('%b %d, %Y') if invited.added_on else None
             }
             team_arr.append(team_info)
         result['teams'] = team_arr
@@ -164,7 +164,7 @@ class SettingsService:
             team_info = {
                 'email': invation_data.mail,
                 'role': invation_data.access_level,
-                'date': invation_data.date_invited_at.strftime('%d.%m.%Y %H:%M') if invation_data.date_invited_at else None,
+                'date': invation_data.date_invited_at.strftime('%b %d, %Y') if invation_data.date_invited_at else None,
                 'status': invation_data.status
             }
             result.append(team_info)

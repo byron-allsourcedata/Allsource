@@ -183,6 +183,18 @@ export const InviteUsersPopup: React.FC<InviteUsersPopupProps> = ({ open, onClos
                                     setInputValue('');
                                 }
                             }}
+                            onBlur={() => {
+                                if (inputValue) {
+                                    handleAddEmail(inputValue);
+                                    setInputValue('');
+                                }
+                            }}
+                            onFocus={() => {
+                                if (inputValue) {
+                                    handleAddEmail(inputValue);
+                                    setInputValue('');
+                                }
+                            }}
                             error={!!emailError} // Show error state if there is an error
                             helperText={emailError}
                             InputLabelProps={{

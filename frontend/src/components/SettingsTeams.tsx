@@ -107,6 +107,7 @@ export const SettingsTeams: React.FC = () => {
 
     const handleChangeUserRole = async (email: string, role: string): Promise<boolean> => {
         try {
+            setIsLoading(true);
             const response = await axiosInterceptorInstance.post('/settings/teams/change-user-role', { invite_user: email, access_level: role });
             if (response.status === 200) {
                 switch (response.data.status) {
@@ -126,6 +127,8 @@ export const SettingsTeams: React.FC = () => {
                     console.error('Error removing team member:', error);
                 }
             }
+        } finally {
+            setIsLoading(false);
         }
         return false;
     };
@@ -148,30 +151,34 @@ export const SettingsTeams: React.FC = () => {
         fetchPendingInvitationData();
     }, []);
 
-    const handleInviteUsersPopupOpen = () => {
-        axiosInterceptorInstance.get('/settings/teams/check-team-invitations-limit')
-            .then(response => {
-                if (response.status === 200) {
-                    switch (response.data) {
-                        case 'INVITATION_LIMIT_NOT_REACHED':
-                            setInviteUsersPopupOpen(true);
-                            break;
-                        case 'INVITATION_LIMIT_REACHED':
-                            setUpgradePlanPopup(true);
-                            showErrorToast('Invitation limit reached.');
-                            break;
-                        default:
-                            showErrorToast('Unknown response received.');
-                    }
+    const handleInviteUsersPopupOpen = async () => {
+        try {
+            setIsLoading(true);
+            const response = await axiosInterceptorInstance.get('/settings/teams/check-team-invitations-limit');
+            if (response.status === 200) {
+                switch (response.data) {
+                    case 'INVITATION_LIMIT_NOT_REACHED':
+                        setInviteUsersPopupOpen(true);
+                        break;
+                    case 'INVITATION_LIMIT_REACHED':
+                        setUpgradePlanPopup(true);
+                        showErrorToast('Invitation limit reached.');
+                        break;
+                    default:
+                        showErrorToast('Unknown response received.');
                 }
-            })
-            .catch(error => {
+            }
+        } catch (error) {
+            if (axios.isAxiosError(error)) {
                 if (error.response && error.response.status === 403) {
                     showErrorToast('Access denied: You do not have permission to send this invitation.');
                 } else {
                     console.error('Error revoking invitation:', error);
                 }
-            });
+            }
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const handleInviteUsersPopupClose = () => {
@@ -216,6 +223,7 @@ export const SettingsTeams: React.FC = () => {
 
         for (const email of emails) {
             try {
+                setIsLoading(true);
                 const response = await axiosInterceptorInstance.post('/settings/teams', { invite_user: email, access_level: role.toLowerCase() });
                 if (response.status === 200) {
                     switch (response.data.status) {
@@ -256,6 +264,8 @@ export const SettingsTeams: React.FC = () => {
                     console.error('Unexpected error:', err);
                 }
                 results.push(false);
+            } finally {
+                setIsLoading(false);
             }
         }
 
@@ -265,6 +275,7 @@ export const SettingsTeams: React.FC = () => {
 
     const handleRevokeInvitation = async (email: string) => {
         try {
+            setIsLoading(true);
             const response = await axiosInterceptorInstance.put('/settings/teams', { pending_invitation_revoke: email });
 
             if (response.status === 200) {
@@ -287,6 +298,8 @@ export const SettingsTeams: React.FC = () => {
                     console.error('Error revoking invitation:', error);
                 }
             }
+        } finally {
+            setIsLoading(false);
         }
         return false; // Return false if the request fails
     };
@@ -294,6 +307,7 @@ export const SettingsTeams: React.FC = () => {
 
     const handleRemoveTeamMember = async (email: string) => {
         try {
+            setIsLoading(true);
             const response = await axiosInterceptorInstance.put('/settings/teams', { remove_user: email });
 
             if (response.status === 200) {
@@ -321,6 +335,8 @@ export const SettingsTeams: React.FC = () => {
                     console.error('Error removing team member:', error);
                 }
             }
+        } finally {
+            setIsLoading(false);
         }
         return false; // Return false if the request fails or if no cases match
     };
