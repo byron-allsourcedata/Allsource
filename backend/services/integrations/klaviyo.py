@@ -249,8 +249,6 @@ class KlaviyoIntegrationsService:
             ]
         }) 
 
-
-
     def __mapped_klaviyo_profile(self, lead: FiveXFiveUser) -> KlaviyoProfile:
         first_email = (
             getattr(lead, 'business_email') or 
@@ -286,9 +284,3 @@ class KlaviyoIntegrationsService:
             }
         }
 
-    def __mapped_profile_from_klaviyo(self, profile) -> ContactSuppression:
-        return ContactSuppression(
-            id=profile.get('id'),
-            email=profile.get('attributes').get('email'),
-            phone_number=profile.get('attributes').get('phone_number')
-        )
