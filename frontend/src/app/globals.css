@@ -79,6 +79,14 @@ body::-webkit-scrollbar {
   font-family: 'Roboto';
 }
 
+.custom-handle {
+  width: 10px;
+  height: 100%;
+  background-color: #ccc;
+  position: absolute;
+  right: 0;
+  cursor: ew-resize;
+}
 
 
 

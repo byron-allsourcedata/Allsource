@@ -11,9 +11,9 @@ const CollectionRules: React.FC = () => {
             color: 'rgba(32, 33, 36, 1)',
             border: '1px solid rgba(240, 240, 240, 1)',
             boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.2)',
-            "@media (max-width: 600px)": {padding: '0px'} 
+            "@media (max-width: 900px)": {padding: '0px'} 
         }}>
-            <Box sx={{ width: '100%', padding: '20px', "@media (max-width: 600px)": {padding: '16px'} }}>
+            <Box sx={{ width: '100%', padding: '20px', "@media (max-width: 900px)": {padding: '16px'} }}>
                 <Typography className="main-text" sx={{ fontWeight: '600', lineHeight: '21.82px', marginBottom: '16px', fontSize: '1rem', color: 'rgba(32, 33, 36, 1)' }}>
                     Collection Rules
                 </Typography>
@@ -23,7 +23,7 @@ const CollectionRules: React.FC = () => {
                 </Typography>
 
                 <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                    <Box sx={{ display: 'flex', flexDirection: 'row', width: '100%', justifyContent: 'space-between', "@media (max-width: 600px)": {flexDirection: 'column'} }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'row', width: '100%', justifyContent: 'space-between', "@media (max-width: 900px)": {flexDirection: 'column'} }}>
                         <Box>
                             <Typography className="main-text"
                                 sx={{
@@ -65,12 +65,12 @@ const CollectionRules: React.FC = () => {
                                 backgroundColor: '#fff',
                                 borderRadius: '4px',
                                 width: '245px',
-                                "@media (max-width: 600px)": {width: '100%', height: '48px'}
+                                "@media (max-width: 900px)": {width: '100%', height: '48px'}
                             }}
                         />
                     </Box>
 
-                    <Box sx={{ display: 'flex', flexDirection: 'row', width: '100%', justifyContent: 'space-between', "@media (max-width: 600px)": {flexDirection: 'column'} }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'row', width: '100%', justifyContent: 'space-between', "@media (max-width: 900px)": {flexDirection: 'column'} }}>
                         <Box>
                             <Typography className="main-text"
                                 sx={{
@@ -113,7 +113,7 @@ const CollectionRules: React.FC = () => {
                                 backgroundColor: '#fff',
                                 borderRadius: '4px',
                                 width: '245px',
-                                "@media (max-width: 600px)": {width: '100%', height: '48px'}
+                                "@media (max-width: 900px)": {width: '100%', height: '48px'}
                             }}
                         />
                     </Box>
@@ -121,7 +121,7 @@ const CollectionRules: React.FC = () => {
             </Box>
 
 
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid rgba(228, 228, 228, 1)', pt: 2, padding: '24px', "@media (max-width: 600px)": {padding: '1rem',}  }}>
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid rgba(228, 228, 228, 1)', pt: 2, padding: '24px', "@media (max-width: 900px)": {padding: '1rem',}  }}>
                 <Button variant="outlined" sx={{
                     backgroundColor: '#fff', color: 'rgba(80, 82, 178, 1)', fontFamily: "Nunito Sans", textTransform: 'none', lineHeight: '22.4px',
                     fontWeight: '700', padding: '1em 5em', textWrap: 'nowrap', marginRight: '16px', border: '1px solid rgba(80, 82, 178, 1)', maxWidth: '98px', '&:hover': { backgroundColor: '#fff', boxShadow: '0 2px 2px rgba(0, 0, 0, 0.3)', }
