@@ -255,19 +255,33 @@ class SettingsService:
         
         
     def timestamp_to_date(self, timestamp):
-        return datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d')
+        return datetime.fromtimestamp(timestamp).strftime('%B %d, %Y')
+    
+    def calculate_dates(self, plan):
+        start_date = datetime.now()  # Замените на фактическую начальную дату
+        interval = plan['interval']
+        interval_count = plan['interval_count']
+
+        if interval == 'month':
+            end_date = start_date.replace(month=start_date.month + interval_count)
+        # Добавьте логику для других интервалов, если нужно
+
+        return start_date, end_date
             
-    def extract_subscription_details(self, customer_id):
+    def extract_subscription_details(self, customer_id, prospect_credits):
         subscription = get_billing_details_by_userid(customer_id)
         plan = subscription['items']['data'][0]['plan']
+        start_date, end_date = self.calculate_dates(plan)
+        is_active = subscription.get('status') == 'active'
         subscription_details = {
-            'Billing Cycle': f"{plan['interval_count']} {plan['interval']}(s)",
-            'Plan Name': determine_plan_name_from_product_id(plan['product']),
-            'Domains': 'N/A',
-            'Prospect Credits': 'N/A',
-            'Overage': OVERAGE_CONTACT,
-            'Next Billing Date': self.timestamp_to_date(subscription['current_period_end']),
-            'Monthly Total': f"{plan['amount'] / 100:.2f} {plan['currency']}"
+            'billing_cycle': f"{start_date.strftime('%b %d, %Y')} to {end_date.strftime('%b %d, %Y')}",
+            'plan_name': determine_plan_name_from_product_id(plan['product']),
+            'domains': 'N/A',
+            'prospect_credits': prospect_credits,
+            'overage': '0.49/contact',
+            'next_billing_date': self.timestamp_to_date(subscription['current_period_end']),
+            'monthly_total': f"${plan['amount'] / 100:,.0f}",
+            'active': is_active
         }
         
         return subscription_details
@@ -275,7 +289,7 @@ class SettingsService:
     def get_billing(self, user: dict):
         result = {}
         result['card_details'] = get_card_details_by_customer_id(user.get('customer_id'))
-        result['billing_details'] = self.extract_subscription_details(user.get('customer_id'))
+        result['billing_details'] = self.extract_subscription_details(user.get('customer_id'), user.get('prospect_credits'))
         result['usages_credits'] = {
                         'leads_credits': user.get('leads_credits'),
                         'plan_leads_credits': self.plan_persistence.get_current_plan(user_id=user.get('id')).leads_credits,

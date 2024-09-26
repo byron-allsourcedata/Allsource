@@ -26,21 +26,30 @@ def create_customer_google(user: dict):
     return customer_id
 
 def get_card_details_by_customer_id(customer_id):
+    customer = stripe.Customer.retrieve(customer_id)
     payment_methods = stripe.PaymentMethod.list(
         customer=customer_id,
         type='card'
     )
+    
     card_details = []
+    
+    default_payment_method_id = customer.invoice_settings.get('default_payment_method')
+    
     for pm in payment_methods.auto_paging_iter():
         card_info = {
             'id': pm.id,
             'last4': pm.card.last4,
             'brand': pm.card.brand,
             'exp_month': pm.card.exp_month,
-            'exp_year': pm.card.exp_year
+            'exp_year': pm.card.exp_year,
+            'is_default': pm.id == default_payment_method_id
         }
         card_details.append(card_info)
+    
     return card_details
+
+
 
 def add_card_to_customer(customer_id, payment_method_id):
     try:
