@@ -447,7 +447,13 @@ export const SettingsTeams: React.FC = () => {
                                             </Typography>
                                         </TableCell>
                                         <TableCell sx={teamsStyles.tableBodyColumn}>
-                                            <Button onClick={() => handleRevoke(invitation.email)}
+                                            <Button
+                                                onClick={() => {
+                                                    const confirmed = window.confirm('Are you sure you want to revoke this invitation?');
+                                                    if (confirmed) {
+                                                        handleRevoke(invitation.email);
+                                                    }
+                                                }}
                                                 sx={{
                                                     fontFamily: 'Roboto',
                                                     fontSize: '12px',
@@ -461,7 +467,10 @@ export const SettingsTeams: React.FC = () => {
                                                         background: 'transparent'
                                                     }
                                                 }}
-                                            >Revoke</Button></TableCell>
+                                            >
+                                                Revoke
+                                            </Button>
+                                        </TableCell>
                                     </TableRow>
                                 ))
                             )}
@@ -653,7 +662,12 @@ export const SettingsTeams: React.FC = () => {
                                         <TableCell sx={teamsStyles.tableBodyColumn}>
                                             {member.access_level !== 'owner' && (
                                                 <Button
-                                                    onClick={() => handleRemoveMember(member.email)}
+                                                    onClick={() => {
+                                                        const confirmed = window.confirm('Are you sure you want to remove this member?');
+                                                        if (confirmed) {
+                                                            handleRemoveMember(member.email);
+                                                        }
+                                                    }}
                                                     sx={{
                                                         fontFamily: 'Roboto',
                                                         fontSize: '12px',
@@ -671,7 +685,6 @@ export const SettingsTeams: React.FC = () => {
                                                     Remove
                                                 </Button>
                                             )}
-
                                         </TableCell>
                                     </TableRow>
                                 )))}
