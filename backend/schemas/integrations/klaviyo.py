@@ -20,3 +20,29 @@ class KlaviyoCustomer(BaseModel):
 class KlaviyoList(BaseModel):
     id: str
     list_name: str
+
+class KlaviyoTags(BaseModel):
+    id: str
+    tag_name: str
+
+
+class KlaviyoLocation(BaseModel):
+    address1: tp.Optional[str] = None
+    address2: tp.Optional[str] = None
+    city: tp.Optional[str] = None
+    contry: tp.Optional[str] = None
+    latitude: tp.Optional[str | int] = None
+    longitude: tp.Optional[str | int] = None
+    region: tp.Optional[str] = None
+    zip: tp.Optional[str] = None
+    timezone: tp.Optional[str] = None
+    ip: tp.Optional[str] = None
+
+class KlaviyoProfile(BaseModel):
+    email: tp.Optional[EmailStr] = None
+    phone_number: tp.Optional[str] = None
+    first_name: tp.Optional[str] = None
+    last_name: tp.Optional[str] = None
+    organization: tp.Optional[str] = None
+    title: tp.Optional[str] = None
+    location: tp.Optional[KlaviyoLocation] = None

@@ -49,6 +49,7 @@ FILES_PATH = 'outgoing/cookie_sync/resolved'
 LAST_PROCESSED_FILE_PATH = 'tmp/last_processed_file_resolved.txt'
 AMOUNT_CREDITS = 1
 QUEUE_CREDITS_CHARGING = 'credits_charging'
+QUEUE_DATA_SYNC = 'data_sync_leads'
 
 ROOT_BOT_CLIENT_EMAIL = 'onlineinet.ru@gmail.com'
 ROOT_BOT_CLIENT_DOMAIN = 'https://app.maximiz.ai'
@@ -154,9 +155,17 @@ async def process_user_data(table, index, five_x_five_user: FiveXFiveUser, sessi
         lead_user = LeadUser(five_x_five_user_id=five_x_five_user.id, user_id=user.id, behavior_type=behavior_type, domain_id=user_domain_id)
         session.add(lead_user)
         session.flush()
+        channel = await rmq_connection.channel()
+        await channel.declare_queue(
+            name=QUEUE_DATA_SYNC,
+            durable=True
+        )
+        publish_rabbitmq_message(rmq_connection, QUEUE_DATA_SYNC, {'domain_id': user_domain_id, 'leads_type': behavior_type, 'lead': {
+            'id': lead_user.id,
+            'five_x_five_user_id': lead_user.five_x_five_user_id
+        }})
     else:
         first_visit_id = lead_user.first_visit_id
-
     requested_at_str = str(table['EVENT_DATE'][index].as_py())
     requested_at = datetime.fromisoformat(requested_at_str).replace(tzinfo=None)
     thirty_minutes_ago = requested_at - timedelta(minutes=30)

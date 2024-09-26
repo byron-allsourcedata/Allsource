@@ -298,7 +298,7 @@ class LeadsPersistence:
         return leads, count, max_page
 
     def get_lead_data(self, lead_id):
-        lead = self.db.query(FiveXFiveUser).filter(FiveXFiveUser.id == lead_id).first()
+        return self.db.query(FiveXFiveUser).filter(FiveXFiveUser.id == lead_id).first()
 
     def get_ids_user_leads_ids(self, domain_id, leads_ids):
         lead_users = self.db.query(LeadUser).filter(LeadUser.domain_id == domain_id,
@@ -594,8 +594,8 @@ class LeadsPersistence:
             LeadUser.domain_id == user_id,
             FiveXFiveUser.business_email == email).all()
 
-    def get_leads_user(self, domain_id: int, **filter_by):
-        return self.db.query(LeadUser).filter_by(domain_id=domain_id ** filter_by)
+    def get_leads_domain(self, domain_id: int, **filter_by: dict):
+        return self.db.query(LeadUser).filter_by(domain_id=domain_id, **filter_by)
 
     def search_contact(self, start_letter, domain_id):
         letters = start_letter.split()

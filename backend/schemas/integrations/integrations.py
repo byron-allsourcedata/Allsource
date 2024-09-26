@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr
-from typing import Optional
+from typing import Optional, List
 
 
 class ShopifyOrBigcommerceCredentials(BaseModel):
@@ -60,9 +60,18 @@ class Lead(BaseModel):
 class ExportLeads(BaseModel):
     list_name: str
 
+class DataMap(BaseModel):
+    id: int
+    type: str
+    value: str
+
 class SyncCreate(BaseModel):
-    integration_id: int
-    sync_type: str
-    supression: bool
-    filter_by_contact_type: str
-    list_id: Optional[int] = None
+    list_id: Optional[str] = None
+    tags_id: Optional[str] = None
+    leads_type: Optional[str] = 'All' 
+    data_map: List[DataMap]
+
+
+class CreateListOrTags(BaseModel):
+    name: str
+

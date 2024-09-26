@@ -365,7 +365,7 @@ let viewedProductHandler;
         credential = self.get_credentials(domain_id)
         syncs = self.integrations_user_sync_persistence.get_filter_by(domain_id=domain_id)
         for sync in syncs:
-            leads_list = self.lead_persistence.get_leads_user(domain_id=sync.domain_id, status=sync.filter_by_contact_type)
+            leads_list = self.lead_persistence.get_leads_domain(domain_id=sync.domain_id, status=sync.filter_by_contact_type)
             for lead in leads_list:
                 self.__create_or_update_shopify_customer(self.lead_persistence.get_lead_data(lead.five_x_five_user_id), 
                                                          credential.shop_domain, credential.access_token)

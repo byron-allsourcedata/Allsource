@@ -227,7 +227,7 @@ def check_domain(
 ) -> UserDomains:
     current_domain = domain_persistence.get_domain_by_user(user.get('id'), domain_substr=CurrentDomain)
     if not current_domain or len(current_domain) == 0 :
-        raise HTTPException(status_code=404, detail={'status': "DOMAIN NOT FOUND"})
+        raise HTTPException(status_code=404, detail={'status': "DOMAIN_NOT_FOUND"})
     return current_domain[0]
 
 
@@ -384,14 +384,15 @@ def get_integration_service(db: Session = Depends(get_db),
                             lead_presistence: LeadsPersistence = Depends(get_leads_persistence),
                             lead_orders_persistence: LeadOrdersPersistence = Depends(get_lead_orders_persistence),
                             integrations_user_sync_persistence: IntegrationsUserSyncPersistence = Depends(get_integrations_user_sync_persistence),
-                            aws_service: AWSService = Depends(get_aws_service)
+                            aws_service: AWSService = Depends(get_aws_service), domain_persistence = Depends(get_user_domain_persistence)
                             ):
-    return IntegrationService(db, 
+    return IntegrationService(db,    
                               integration_presistence, 
                               lead_presistence, 
                               audience_persistence, 
                               lead_orders_persistence,
                               integrations_user_sync_persistence,
-                              aws_service)
+                              aws_service,
+                              domain_persistence)
 
 

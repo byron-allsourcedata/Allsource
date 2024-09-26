@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, Query, HTTPException, status
 from enums import UserAuthorizationStatus
-from dependencies import get_integration_service, IntegrationService, IntegrationsPresistence, get_integration_service, get_user_integrations_presistence, \
+from dependencies import get_integration_service, IntegrationService, IntegrationsPresistence, get_user_integrations_presistence, \
     check_user_authorization, check_domain, check_pixel_install_domain, check_user_authentication
-from schemas.integrations.integrations import IntegrationCredentials, ExportLeads, SyncCreate
+from schemas.integrations.integrations import *
 from enums import TeamAccessLevel
 
 router = APIRouter(prefix='/integrations', tags=['Integrations'])
@@ -24,8 +24,8 @@ async def get_credential_service(platform: str,
                                  user = Depends(check_user_authorization), domain = Depends(check_pixel_install_domain)
                                  ):
     with integration_service as service:
-        service = getattr(service, platform)
-        return service.get_credentials(user['id'])
+        service = getattr(service, platform.lower())
+        return service.get_credentials(domain.id)
 
 @router.post('/export/')
 async def export(export_query: ExportLeads, service_name: str = Query(...),
@@ -61,7 +61,7 @@ async def create_integration(creditional: IntegrationCredentials, service_name: 
         service = getattr(service, service_name.lower())
         if not service:
             raise HTTPException(status_code=404, detail=f'Service {service_name} not found') 
-        service.add_integration(user, domain, creditional)
+        service.add_integration(creditional, domain.id)
         return {'message': 'Successfuly'}
     
 
@@ -93,8 +93,35 @@ async def get_list(service_name: str = Query(...),
                    integration_service: IntegrationService = Depends(get_integration_service),
                    user = Depends(check_user_authorization), domain = Depends(check_pixel_install_domain)):
     with integration_service as service:
+        service = getattr(service, service_name.lower())
+        return service.get_list(domain.id)
+
+@router.post('/sync/list/', status_code=201)
+async def create_list(list_data: CreateListOrTags,
+                      service_name: str = Query(...),
+                      integrations_service: IntegrationService = Depends(get_integration_service),
+                      user = Depends(check_user_authorization), domain = Depends(check_pixel_install_domain)):
+    with integrations_service as service:
         service = getattr(service, service_name)
-        return service.get_list(user)
+        return service.create_list(list_data.name, domain.id)
+
+
+@router.get('/sync/tags/')
+async def get_tags(service_name: str = Query(...),
+                   integration_service: IntegrationService = Depends(get_integration_service),
+                   user = Depends(check_user_authentication), domain = Depends(check_pixel_install_domain)):
+    with integration_service as service:
+        service = getattr(service, service_name.lower())
+        return service.get_tags(domain.id)
+
+@router.post('/sync/tags/', status_code=201)
+async def create_tag(tag_data: CreateListOrTags,
+                      service_name: str = Query(...),
+                      integrations_service: IntegrationService = Depends(get_integration_service),
+                      user = Depends(check_user_authorization), domain = Depends(check_pixel_install_domain)):
+    with integrations_service as service:
+        service = getattr(service, service_name)
+        return service.create_tags(tag_data.name, domain.id)
 
 
 @router.post('/sync/', status_code=201)
@@ -109,6 +136,12 @@ async def create_sync(data: SyncCreate, service_name: str = Query(...),
                 detail="Access denied. Admins and standard only."
             )
     with integration_service as service:
-        service = getattr(service, service_name)
-        service.create_sync(user['id'], **data.model_dump())
+        service = getattr(service, service_name.lower())
+        await service.create_sync(
+            leads_type=data.leads_type,
+            list_id=data.list_id,
+            tags_id=data.tags_id,
+            data_map=data.data_map,
+            domain_id=domain.id
+        )
 

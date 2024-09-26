@@ -15,8 +15,10 @@ class UserDomainsPersistence:
             query = query.filter(UserDomains.domain.like(f"%{domain_substr}%"))
         return query.all()
 
-    def normalize_domain(self, domain: str) -> str:
+    def get_domain_by_filter(self, **filter_by):
+        return self.db.query(UserDomains).filter_by(**filter_by).all()
 
+    def normalize_domain(self, domain: str) -> str:
         domain = re.sub(r'^https?:\/\/', '', domain) 
         domain = re.sub(r'^www\.', '', domain) 
         return domain
@@ -36,6 +38,7 @@ class UserDomainsPersistence:
     def count_domain(self, user_id: int):
         return self.db.query(func.count(UserDomains.id)).filter_by(user_id=user_id).scalar()
     
+
     def delete_domain(self, user_id: int, domain: int):
         domain = self.db.query(UserDomains).filter(UserDomains.user_id == user_id, UserDomains.id == domain).first()
         if not domain:

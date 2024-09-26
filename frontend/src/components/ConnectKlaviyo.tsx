@@ -5,22 +5,33 @@ import TabList from '@mui/lab/TabList';
 import TabPanel from '@mui/lab/TabPanel';
 import Image from 'next/image';
 import CloseIcon from '@mui/icons-material/Close';
+import axiosInstance from '@/axios/axiosInterceptorInstance';
+import { showToast } from './ToastNotification';
+
 
 interface ConnectKlaviyoPopupProps {
     open: boolean;
     onClose: () => void;
 }
 
+
+type KlaviyoList = {
+    id: string
+    list_name: string
+}
+
+type KlaviyoTags = {
+    id: string
+    tags_name: string
+}
+
 const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) => {
 
     const [value, setValue] = React.useState('1');
-
     const [checked, setChecked] = useState(false);
-
     const [selectedRadioValue, setSelectedRadioValue] = useState('');
-
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-    const [selectedOption, setSelectedOption] = useState<string>(''); // Track selected option
+    const [selectedOption, setSelectedOption] = useState<KlaviyoList | null>(null);
     const [showCreateForm, setShowCreateForm] = useState<boolean>(false);
     const [newListName, setNewListName] = useState<string>('');
     const [tagName, setTagName] = useState<string>('');
@@ -28,6 +39,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
     const textFieldRef = useRef<HTMLDivElement>(null);
     const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
     const [openDropdown, setOpenDropdown] = useState<number | null>(null);
+    const [openDropdownMaximiz, setOpenDropdownMaximiz] = useState<number | null>(null)
     const [apiKey, setApiKey] = useState('');
     const [apiKeyError, setApiKeyError] = useState(false);
     const [tab2Error, setTab2Error] = useState(false);
@@ -39,7 +51,9 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
     const [newMapListName, setNewMapListName] = useState<string>('');
     const [showCreateMapForm, setShowCreateMapForm] = useState<boolean>(false);
     const [maplistNameError, setMapListNameError] = useState(false);
-    const [mapListOptions, setMapListOptions] = useState<string[]>([
+    const [klaviyoList, setKlaviyoList] = useState<KlaviyoList[]>([])
+    const [klaviyoTags, setKlaviyoTags] = useState<KlaviyoTags[]>([])
+    const [mapKlaviyoListOptions, setKlaviyoMapListOptions] = useState<string[]>([
         'Email',
         'Phone number',
         'First name',
@@ -49,13 +63,29 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
         'Job Title',
         'Location',
     ]);
-
+    const [mapMaximizListOptions, setMaximizMapListOptions] = useState<string[]>([
+        'First name',
+        'Second name',
+        'Gender',
+        'Age',
+        'Job Title',
+        'Location',
+    ])
+    useEffect(() => {
+        const fetchData = async() => {
+            const response = await axiosInstance.get('/integrations/credentials/klaviyo')
+            if(response.status == 200) {
+                setApiKey(response.data.access_token)
+            }
+        }
+        fetchData()
+    }, [])
       // Handle click outside to unshrink the label if input is empty
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (textFieldRef.current && !textFieldRef.current.contains(event.target as Node)) {
         // If clicked outside, reset shrink only if there is no input value
-        if (selectedOption === '') {
+        if (selectedOption?.list_name === '') {
             setIsShrunk(false);
           }
           if (isDropdownOpen) {
@@ -63,6 +93,8 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
           }
       }
     };
+
+    
 
     // Attach event listener for detecting click outside
     document.addEventListener('mousedown', handleClickOutside);
@@ -74,6 +106,85 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
   }, [selectedOption]);
 
     // Static options
+    
+    const getKlaviyoTags = async() => {
+        const response = await axiosInstance.get('/integrations/sync/tags/', {
+            params: {
+                service_name: 'Klaviyo'
+            }
+        })
+        setKlaviyoTags(response.data)
+    }
+
+    const getKlaviyoList = async() => {
+        const response = await axiosInstance.get('/integrations/sync/list/', {
+            params: {
+                service_name: 'Klaviyo'
+            }
+        })
+        setKlaviyoList(response.data)
+    }
+
+    const createNewList = async () => {
+        const newListResponse = await axiosInstance.post('/integrations/sync/list/', {
+            name: selectedOption?.list_name
+        }, {
+            params: {
+                service_name: 'klaviyo'
+            }
+        });
+    
+        if (newListResponse.status !== 201) {
+            throw new Error('Failed to create a new tags')
+        }
+    
+        return newListResponse.data;
+    };
+
+    const createTag = async() => {
+        const newTagsResponse = await axiosInstance.post('/integrations/sync/tags/', {
+            name: tagName
+        }, {
+            params: {
+                service_name: 'klaviyo'
+            }
+        })
+        if (newTagsResponse.status !== 201 && newTagsResponse.status !== 200) {
+            throw new Error('Failed to create a new tags')
+        }
+        return newTagsResponse.data
+    }
+
+    const handleSaveSync = async () => {
+        let list;
+        let tag = null;
+        if (selectedOption && selectedOption.id === '-1') {
+            list = await createNewList();
+        } else {
+            list = selectedOption;
+        }
+        if (tagName) {
+            tag = await createTag();
+        }
+        const response = await axiosInstance.post('/integrations/sync/', {
+            list_id: list.id,
+            tags_id: tag ? tag.id : null, 
+            leads_type: selectedRadioValue,
+            data_map: rows
+        }, {
+            params: {
+                service_name: 'klaviyo'
+            }
+        });
+        if (response.status === 201) {
+            onClose();
+            
+            showToast('Create data sync successfully');
+        }
+    };
+    
+
+
     const staticOptions = ['Email List', 'Phone List', 'SMS List', 'Maximiz Contacts', 'Preview List', 'Maximiz'];
 
     // Handle menu open
@@ -97,7 +208,6 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
         setShowCreateForm(false);
         setIsDropdownOpen(false);
         setNewListName(''); // Clear new list name when closing
-        setTagName(''); // Clear new list name when closing
     };
 
     const handleMapClose = () => {
@@ -105,22 +215,38 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
         setNewMapListName(''); // Clear new list name when closing
     };
 
-    // Handle option selection
-    const handleSelectOption = (value: string) => {
-        if (value === 'createNew') {
-            // If the form is already open, close it
-            if (showCreateForm) {
-                setShowCreateForm(false);
-            } else {
-                // If the form is not open, open it and keep the dropdown open
-                setShowCreateForm(true);
-                setAnchorEl(textFieldRef.current); // Keep the menu open
+// Handle option selection
+const handleSelectOption = (value: KlaviyoList | string) => {
+    if (value === 'createNew') {
+        setShowCreateForm(prev => !prev); 
+        if (!showCreateForm) {
+            setAnchorEl(textFieldRef.current); 
+        }
+    } else if (typeof value === 'object' && value !== null) { 
+        setSelectedOption({
+            id: value.id,
+            list_name: value.list_name
+        }); 
+        handleClose();
+    }
+    console.log(typeof selectedOption === 'object' && selectedOption !== null && selectedOption.list_name !== '')
+    setIsDropdownValid(typeof selectedOption === 'object' && selectedOption !== null && selectedOption.list_name !== '');
+};
+
+    
+    const handleSelectMapOptionMaximiz = (value: string, event: React.MouseEvent<HTMLElement>, id: number) => {
+        event.stopPropagation();
+
+        if (value === 'createNewField') {
+            setShowCreateMapForm(prev => !prev); // Toggle form visibility
+
+            // Ensure dropdown remains open if it was already open or if form is being opened
+            if (openDropdown !== id) {
+                setOpenDropdownMaximiz(id); // Open dropdown if it’s not already open
             }
         } else {
-            setSelectedOption(value);
-            handleClose();
+            handleDropdownMaximizClose(); // Close dropdown for other selections
         }
-        setIsDropdownValid(value !== '');
     };
 
     const handleSelectMapOption = (value: string, event: React.MouseEvent<HTMLElement>, id: number) => {
@@ -139,7 +265,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
     };
 
     // Handle Save action for the create new list form
-    const handleSave = () => {
+    const handleSave = async() => {
         let valid = true;
     
         // Validate List Name
@@ -160,7 +286,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
     
         // If valid, save and close
         if (valid) {
-            setSelectedOption(newListName); // Update selected option with new list name
+            setSelectedOption({id: '-1', list_name: newListName}); // Update selected option with new list name
             handleClose();
         }
     };
@@ -183,10 +309,8 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
             if (newMapListName.trim() === '') return; // Prevent saving empty values
 
             // Update the value in the rows state
-            handleMapListChange(id, 'selectValue', newMapListName);
-
-            setMapListOptions(prevOptions => [...prevOptions, newMapListName]);
-
+            handleMapListChange(id, 'type', newMapListName);
+            setKlaviyoMapListOptions(prevOptions => [...prevOptions, newMapListName]);
             // Optionally, reset the new value state if needed
             setNewMapListName('');
 
@@ -196,8 +320,6 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
             handleMapClose();
         }
     };
-    
-
 
 
     const handleSwitchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -419,6 +541,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                 return (
                     <Button
                         variant="contained"
+                        onClick={handleSaveSync}
                         sx={{
                             backgroundColor: '#5052B2',
                             fontFamily: "Nunito Sans",
@@ -460,13 +583,17 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
     }
 
     const defaultRows: Row[] = [
-        { id: 1, type: 'Email', value: '' },
-        { id: 2, type: 'Phone number', value: '' },
-      ];
+        { id: 1, type: 'Email', value: 'Email' },
+        { id: 2, type: 'Phone number', value: 'Phone number' },
+        { id: 3, type: 'First name', value: 'First name' },
+        { id: 4, type: 'Second name', value: 'Second name' },
+        { id: 5, type: 'Job Title', value: 'Job Title' },
+    ];
+    
       const [rows, setRows] = useState<Row[]>(defaultRows);
 
       // Update function with typed parameters
-      const handleMapListChange = (id: number, field: 'value' | 'selectValue', value: string) => {
+      const handleMapListChange = (id: number, field: 'value' | 'type', value: string) => {
         setRows(rows.map(row =>
           row.id === id ? { ...row, [field]: value } : row
         ));
@@ -494,9 +621,8 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
     const handleAddRow = () => {
         const newRow: Row = {
           id: Date.now(), // Unique ID for each new row
-          type: 'Enter new data',
+          type: '',
           value: '',
-          selectValue: '', // Ensure selectValue is present for new rows
           canDelete: true, // This new row can be deleted
         };
         setRows([...rows, newRow]);
@@ -505,15 +631,41 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
         setOpenDropdown(id); // Set the open state for the current dropdown
     };
 
+    const handleDropdownMaximizOpen = (id: number) => {
+        setOpenDropdownMaximiz(id)
+    }
+
     const handleDropdownClose = () => {
         setOpenDropdown(null); // Reset when dropdown closes
     };
+
+    const handleDropdownMaximizClose = () => {
+        setOpenDropdownMaximiz(null)
+    }
 
     const handleApiKeyChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setApiKey(event.target.value);
         setApiKeyError(event.target.value === ''); // Set error if API Key is empty
     };
     
+    const handleSubmitApiKey = async() => {
+        const response = await axiosInstance.post('/integrations/', 
+            {
+                klaviyo: {
+                    api_key: apiKey
+                }
+            },
+            {
+                params: { 
+                    service_name: 'Klaviyo' 
+                }
+            });
+    }
+
+    const handleCreateList = async() => {
+        const response = await axiosInstance.post('/integrations')
+    }
+
     const validateApiKey = () => {
         // Your logic to validate the API key
         if (apiKey.trim() === '') {
@@ -535,9 +687,13 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
 
 
 
-    const handleNextTab = () => {
+    const handleNextTab = async() => {
         if (validateApiKey()) {
-          // Increment tab value
+          if(value === '1') {
+            await handleSubmitApiKey()
+            await getKlaviyoList()
+            await getKlaviyoTags()
+          }
           setValue((prevValue) => {
             const nextValue = String(Number(prevValue) + 1);
             return nextValue;
@@ -547,7 +703,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
               setValue((prevValue) => String(Number(prevValue) + 1));
             }
           } else if (value === '3') {
-            // Validate Tab 3
+            
             if (isDropdownValid) {
                 // Proceed to next tab
                 setValue((prevValue) => String(Number(prevValue) + 1));
@@ -581,7 +737,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                 },
             }}
         >
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 3.5, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 3.5, px: 2, borderBottom: '1px solid #e4e4e4' }}>
                 <Typography variant="h6" sx={{ textAlign: 'center', color: '#202124', fontFamily: 'Nunito Sans', fontWeight: '600', fontSize: '16px', lineHeight: 'normal' }}>
                     Connect to Klaviyo
                 </Typography>
@@ -599,16 +755,9 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                     </IconButton>
                 </Box>
             </Box>
-            <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', height: '100%',
-                '@media (max-width: 480px)': {
-                        height: 'auto'
-                    }
-             }}>
-                <Box sx={{ width: '100%', padding: '16px 24px 24px 24px', position: 'relative', height: '100%', marginBottom: '100px',
-                    '@media (max-width: 480px)': {
-                        height: 'auto'
-                    }
-                 }}>
+            <Divider />
+            <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', height: '100%' }}>
+                <Box sx={{ width: '100%', padding: '16px 24px 24px 24px', position: 'relative' }}>
                 <TabContext value={value}>
                     <Box sx={{pb: 4}}>
                         <TabList centered aria-label="Connect to Klaviyo Tabs"
@@ -909,7 +1058,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                                                 }
                                                }}
                                             />
-                                            <FormControlLabel value="visitors" control={<Radio sx={{color: '#e4e4e4',
+                                            <FormControlLabel value="visitor" control={<Radio sx={{color: '#e4e4e4',
                                             '&.Mui-checked': {
                                                 color: '#5052b2', // checked color
                                             }
@@ -935,7 +1084,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                                                     }
                                                    }}
                                             />
-                                            <FormControlLabel value="viewProduct" control={<Radio sx={{color: '#e4e4e4',
+                                            <FormControlLabel value="viewed_product" control={<Radio sx={{color: '#e4e4e4',
                                             '&.Mui-checked': {
                                                 color: '#5052b2', // checked color
                                             }
@@ -961,7 +1110,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                                                     }
                                                    }}
                                               />
-                                            <FormControlLabel value="addToCart" control={<Radio sx={{color: '#e4e4e4',
+                                            <FormControlLabel value="added_to_cart" control={<Radio sx={{color: '#e4e4e4',
                                             '&.Mui-checked': {
                                                 color: '#5052b2', // checked color
                                             }
@@ -1014,13 +1163,13 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                                     <TextField
                                     ref={textFieldRef}
                                         variant="outlined"
-                                        value={selectedOption}
+                                        value={selectedOption?.list_name}
                                         onClick={handleClick} // Shrinks the label when clicked
                                         size="small"
                                         fullWidth
                                         label="Select or Create new list"
                                         InputLabelProps={{
-                                            shrink: isShrunk || selectedOption !== "", // Shrinks label if clicked or if value is not empty
+                                            shrink: isShrunk || selectedOption?.list_name !== "", // Shrinks label if clicked or if value is not empty
                                             sx: {
                                                 fontFamily: 'Nunito Sans',
                                             fontSize: '12px',
@@ -1285,12 +1434,12 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                                             )}
 
                                             {/* Show static options */}
-                                            {staticOptions.map((option, index) => (
-                                                <MenuItem key={index} onClick={() => handleSelectOption(option)} sx={{
+                                            {klaviyoList.map((klaviyo, option) => (
+                                                <MenuItem key={klaviyo.id} onClick={() => handleSelectOption(klaviyo)} sx={{
                                                     '&:hover': {
                                                         background: 'rgba(80, 82, 178, 0.10)'
                                                     } }}>
-                                                    <ListItemText primary={option}  primaryTypographyProps={{
+                                                    <ListItemText primary={klaviyo.list_name}  primaryTypographyProps={{
                                                         sx: {
                                                             fontFamily: "Nunito Sans",
                                                             fontSize: "14px",
@@ -1362,99 +1511,15 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                                 <Grid item xs="auto" sm={1}>&nbsp;</Grid>
                             </Grid>
 
-                            {rows.map((row, index) => (
+                            {defaultRows.map((row, index) => (
                                 <Box key={row.id} sx={{ mb: 2 }}> {/* Add margin between rows */}
                                 <Grid container spacing={2} alignItems="center" sx={{flexWrap: { xs: 'nowrap', sm: 'wrap' }}}>
                                     {/* Left Input Field */}
                                     <Grid item xs="auto" sm={5}>
-                                    <TextField
-                                        fullWidth
-                                        variant="outlined"
-                                        label={row.type}
-                                        value={row.value}
-                                        onChange={(e) => handleMapListChange(row.id, 'value', e.target.value)}
-                                        InputLabelProps={{
-                                            sx: {
-                                            fontFamily: 'Nunito Sans',
-                                            fontSize: '12px',
-                                            lineHeight: '16px',
-                                            color: 'rgba(17, 17, 19, 0.60)',
-                                            top: '-5px',
-                                            '&.Mui-focused': {
-                                                color: '#0000FF',
-                                                top: 0
-                                            },
-                                            '&.MuiInputLabel-shrink': {
-                                                top: 0
-                                            }
-                                            }
-                                        }}
-                                        InputProps={{
-                                            
-                                            sx: {
-                                                '&.MuiOutlinedInput-root': {
-                                                    height: '36px',
-                                                    '& .MuiOutlinedInput-input': {
-                                                        padding: '6.5px 8px',
-                                                        fontFamily: 'Roboto',
-                                                        color: '#202124',
-                                                        fontSize: '14px',
-                                                        fontWeight: '400',
-                                                        lineHeight: '20px'
-                                                    },
-                                                    '& .MuiOutlinedInput-notchedOutline': {
-                                                        borderColor: '#A3B0C2',
-                                                    },
-                                                    '&:hover .MuiOutlinedInput-notchedOutline': {
-                                                        borderColor: '#A3B0C2',
-                                                    },
-                                                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                                        borderColor: '#0000FF',
-                                                    },
-                                                    },
-                                                    '&+.MuiFormHelperText-root': {
-                                                        marginLeft: '0',
-                                                    },
-                                            }
-                                          }}
-                                    />
-                                    </Grid>
-                                    
-                                    {/* Middle Icon Toggle (Right Arrow or Close Icon) */}
-                                    <Grid item xs="auto" sm={1} container justifyContent="center">
-                                    {row.selectValue !== undefined ? (
-                                        row.selectValue ? (
-                                            <Image 
-                                                src='/chevron-right-purple.svg' 
-                                                alt='chevron-right-purple' 
-                                                height={18} 
-                                                width={18} // Adjust the size as needed
-                                            />
-                                            
-                                        ) : (
-                                            <Image 
-                                                src='/close-circle.svg' 
-                                                alt='close-circle' 
-                                                height={18} 
-                                                width={18} // Adjust the size as needed
-                                            />
-                                        )
-                                    ) : (
-                                        <Image 
-                                            src='/chevron-right-purple.svg' 
-                                            alt='chevron-right-purple' 
-                                            height={18} 
-                                            width={18} // Adjust the size as needed
-                                        /> // For the first two rows, always show the right arrow
-                                    )}
-                                    </Grid>
-                                    
-                                    {/* Right Side Input or Dropdown */}
-                                    <Grid item xs="auto" sm={5}>
-                                    {index < 2 ? ( // For the first two rows, show input fields
                                         <TextField
                                         fullWidth
                                         variant="outlined"
+                                        disabled={true}
                                         label={row.type}
                                         value={row.value}
                                         onChange={(e) => handleMapListChange(row.id, 'value', e.target.value)}
@@ -1503,249 +1568,90 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                                             }
                                           }}
                                         />
-                                    ) : (
-                                        
-                                        <TextField
-                                            fullWidth
-                                            variant="outlined"
-                                            label="Select"
-                                            select
-                                            sx={{minWidth: '194px'}}
-                                            value={row.selectValue || ""}
-                                            onChange={(e: React.ChangeEvent<{ value: unknown }>) =>
-                                                handleMapListChange(row.id, 'selectValue', e.target.value as string)
-                                            }
+                                    </Grid>
+                                    {/* Middle Icon Toggle (Right Arrow or Close Icon) */}
+                                    <Grid item xs="auto" sm={1} container justifyContent="center">
+                                    {row.selectValue !== undefined ? (
+                                        row.selectValue ? (
+                                            <Image 
+                                                src='/chevron-right-purple.svg' 
+                                                alt='chevron-right-purple' 
+                                                height={18} 
+                                                width={18} // Adjust the size as needed
+                                            />
                                             
-                                            InputLabelProps={{
-                                                sx: {
-                                                fontFamily: 'Nunito Sans',
-                                                fontSize: '12px',
-                                                lineHeight: '16px',
-                                                color: 'rgba(17, 17, 19, 0.60)',
-                                                top: '-8px',
-                                                '&.Mui-focused': {
-                                                    color: '#0000FF',
-                                                    top: '0'
-                                                },
-                                                '&.MuiInputLabel-shrink': {
-                                                    top: 0
-                                                }
-                                                }
-                                            }}
-                                            SelectProps={{
-                                                open: openDropdown === row.id,
-                                                onOpen: () => handleDropdownOpen(row.id),
-                                                // onClose: handleDropdownClose,
-                                                onClose: () => {
-                                                if (!showCreateMapForm) {
-                                                    handleDropdownClose();
-                                                  }
-                                                },
-                                                IconComponent: () => (
-                                                openDropdown === row.id ? (
-                                                    <Image src='/chevron-drop-up.svg' alt='chevron-drop-up' height={24} width={24} />
-                                                ) : (
-                                                    <Image src='/chevron-drop-down.svg' alt='chevron-drop-down' height={24} width={24} />
-                                                )
-                                                ),
-                                                sx: {
+                                        ) : (
+                                            <Image 
+                                                src='/close-circle.svg' 
+                                                alt='close-circle' 
+                                                height={18} 
+                                                width={18} // Adjust the size as needed
+                                            />
+                                        )
+                                    ) : (
+                                        <Image 
+                                            src='/chevron-right-purple.svg' 
+                                            alt='chevron-right-purple' 
+                                            height={18} 
+                                            width={18} // Adjust the size as needed
+                                        /> // For the first two rows, always show the right arrow
+                                    )}
+                                    </Grid>
+                                    
+                                    {/* Right Side Input or Dropdown */}
+                                    <Grid item xs="auto" sm={5}>
+                                        <TextField
+                                        fullWidth
+                                        variant="outlined"
+                                        disabled={true}
+                                        label={row.type}
+                                        value={row.type}
+                                        onChange={(e) => handleMapListChange(row.id, 'type', e.target.value)}
+                                        InputLabelProps={{
+                                            sx: {
+                                            fontFamily: 'Nunito Sans',
+                                            fontSize: '12px',
+                                            lineHeight: '16px',
+                                            color: 'rgba(17, 17, 19, 0.60)',
+                                            top: '-5px',
+                                            '&.Mui-focused': {
+                                                color: '#0000FF',
+                                                top: 0
+                                            },
+                                            '&.MuiInputLabel-shrink': {
+                                                top: 0
+                                            }
+                                            }
+                                        }}
+                                        InputProps={{
+                                            
+                                            sx: {
+                                                '&.MuiOutlinedInput-root': {
+                                                    height: '36px',
                                                     '& .MuiOutlinedInput-input': {
                                                         padding: '6.5px 8px',
+                                                        fontFamily: 'Roboto',
+                                                        color: '#202124',
+                                                        fontSize: '14px',
+                                                        fontWeight: '400',
+                                                        lineHeight: '20px'
                                                     },
-                                                paddingRight: '16px', // Adds space for the custom icon
-                                                fontFamily: 'Roboto',
-                                                fontSize: '14px',
-                                                lineHeight: '20px',
-                                                color: '#707071',
-                                                },
-                                            }}
-                                            onClick={(e) => {
-                                                if (openDropdown === row.id) {
-                                                  handleDropdownClose();
-                                                } else {
-                                                  handleDropdownOpen(row.id);
-                                                }
-                                              }}
-                                            >
-                                            {/* <MenuItem value="" sx= {{
-                                                            fontFamily: "Nunito Sans",
-                                                            fontSize: "14px",
-                                                            color: "#202124",
-                                                            lineHeight: "20px",
-                                                            fontWeight: '500'
-                                                        }}>Select</MenuItem> */}
-
-                                            <MenuItem 
-                                            
-                                            onClick={(e) => {
-                                                e.stopPropagation(); // Prevent click event from closing the dropdown
-                                                handleSelectMapOption('createNewField',e, row.id);
-                                              }} sx={{
-                                                borderBottom: showCreateMapForm ?  "none" : "1px solid #cdcdcd",
-                                                '&:hover': {
-                                                    background: 'rgba(80, 82, 178, 0.10)'
-                                                }
-                                            }}>
-                                                <ListItemText onClick={(e) => {
-                                                e.stopPropagation(); // Prevent click event from closing the dropdown
-                                                handleSelectMapOption('createNewField',e, row.id);
-                                              }} primary={`+ Add new field`} primaryTypographyProps={{
-                                                        sx: {
-                                                            fontFamily: "Nunito Sans",
-                                                            fontSize: "14px",
-                                                            color: showCreateMapForm ?  "#5052B2" : "#202124",
-                                                            fontWeight: "500",
-                                                            lineHeight: "20px",
-                                                            
-                                                        }
-                                                    }}/>
-                                            </MenuItem>
-
-                                            {/* Show Create New List form if 'showCreateForm' is true */}
-                                            {showCreateMapForm && (
-                                                <Box>
-                                                    <Box onClick={(e) => e.stopPropagation()}  sx={{
-                                                        display: 'flex',
-                                                        flexDirection: 'column',
-                                                        gap: '24px',
-                                                        p: 2,
-                                                        width: '208px',
-                                                        pt: 0
-                                                    }}>
-                                                    <Box
-                                                        sx={{
-                                                            
-                                                            
-                                                            mt: 1, // Margin-top to separate form from menu item
-                                                            display: 'flex',
-                                                            justifyContent: 'space-between',
-                                                            gap: '16px',
-                                                            '@media (max-width: 600px)': {
-                                                                flexDirection: 'column'
-                                                            },
-                                                        }}
-                                                    >
-                                                        <TextField
-                                                            label="List Name"
-                                                            variant="outlined"
-                                                            value={newMapListName}
-                                                            onChange={(e) => setNewMapListName(e.target.value)}
-                                                            size="small"
-                                                            fullWidth
-                                                            onKeyDown={(e) => e.stopPropagation()}
-                                                            error={listNameError}
-                                                            helperText={listNameError ? 'List Name is required' : ''}
-                                                            InputLabelProps={{
-                                                                sx: {
-                                                                fontFamily: 'Nunito Sans',
-                                                                fontSize: '12px',
-                                                                lineHeight: '16px',
-                                                                fontWeight: '400',
-                                                                color: 'rgba(17, 17, 19, 0.60)',
-                                                                '&.Mui-focused': {
-                                                                    color: '#0000FF',
-                                                                },
-                                                                }
-                                                            }}
-                                                            InputProps={{
-                                                                
-                                                                endAdornment: (
-                                                                    newListName && ( // Conditionally render close icon if input is not empty
-                                                                        <InputAdornment position="end">
-                                                                          <IconButton 
-                                                                            edge="end"
-                                                                            onClick={() => setNewMapListName('')} // Clear the text field when clicked
-                                                                          >
-                                                                            <Image 
-                                                                              src='/close-circle.svg' 
-                                                                              alt='close-circle' 
-                                                                              height={18} 
-                                                                              width={18} // Adjust the size as needed
-                                                                            />
-                                                                          </IconButton>
-                                                                        </InputAdornment>
-                                                                      )
-                                                                ),
-                                                                sx: {
-                                                                    '&.MuiOutlinedInput-root': {
-                                                                        height: '32px',
-                                                                        '& .MuiOutlinedInput-input': {
-                                                                            padding: '5px 16px 4px 16px',
-                                                                            fontFamily: 'Roboto',
-                                                                            color: '#202124',
-                                                                            fontSize: '14px',
-                                                                            fontWeight: '400',
-                                                                            lineHeight: '20px'
-                                                                        },
-                                                                        '& .MuiOutlinedInput-notchedOutline': {
-                                                                            borderColor: '#A3B0C2',
-                                                                        },
-                                                                        '&:hover .MuiOutlinedInput-notchedOutline': {
-                                                                            borderColor: '#A3B0C2',
-                                                                        },
-                                                                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                                                            borderColor: '#0000FF',
-                                                                        },
-                                                                        },
-                                                                        '&+.MuiFormHelperText-root': {
-                                                                            marginLeft: '0',
-                                                                        },
-                                                                }
-                                                              }}
-                                                        />
-                                                        
-                                                    </Box>
-                                                        <Box sx={{textAlign: 'right'}}>
-                                                        <Button variant="contained" onClick={() => handleMapSave(row.id)}
-                                                        disabled={maplistNameError || !newMapListName}
-                                                        sx={{
-                                                            borderRadius: '4px',
-                                                            border: '1px solid #5052B2',
-                                                            background: '#fff',
-                                                            boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                                                            fontFamily: 'Nunito Sans',
-                                                            fontSize: '14px',
-                                                            fontWeight: '600',
-                                                            lineHeight: '20px',
-                                                            color: '#5052b2',
-                                                            textTransform: 'none',
-                                                            padding: '4px 22px',
-                                                            '&:hover' : {
-                                                                background: 'transparent'
-                                                            },
-                                                            '&.Mui-disabled' : {
-                                                                background: 'transparent',
-                                                                color: '#5052b2'
-                                                            }
-                                                        }}>
-                                                                Save
-                                                            </Button>
-                                                        </Box>
-
-                                                        </Box>
-                                                    
-
-                                                    {/* Add a Divider to separate form from options */}
-                                                    <Divider sx={{ borderColor: '#cdcdcd' }} />
-                                                </Box>
-                                            )}
-
-                                            {mapListOptions.map(option => (
-                                                    <MenuItem key={option} value={option} sx= {{
-                                                        fontFamily: "Nunito Sans",
-                                                        fontSize: "14px",
-                                                        color: "#202124",
-                                                        lineHeight: "20px",
-                                                        fontWeight: '500'
-                                                    }}>
-                                                        {option}
-                                                    </MenuItem>
-                                                ))}
-
-                                            
-                                        </TextField>
-
-                                    )}
+                                                    '& .MuiOutlinedInput-notchedOutline': {
+                                                        borderColor: '#A3B0C2',
+                                                    },
+                                                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                        borderColor: '#A3B0C2',
+                                                    },
+                                                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                                        borderColor: '#0000FF',
+                                                    },
+                                                    },
+                                                    '&+.MuiFormHelperText-root': {
+                                                        marginLeft: '0',
+                                                    },
+                                            }
+                                          }}
+                                        />
                                     </Grid>
                                     
                                     {/* Delete Icon */}
@@ -1842,20 +1748,6 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                                 </Grid>
                                 </Box>
                             ))}
-                                
-                                <Button color="primary" onClick={handleAddRow} sx={{
-                                    fontFamily: 'Nunito Sans',
-                                    fontSize: '14px',
-                                    fontWeight: '600',
-                                    color: '#5052B2',
-                                    lineHeight: '22px',
-                                    textTransform: 'none',
-                                    '&:hover': {
-                                        background: '#fff'
-                                    }
-                                }}>
-                                    Add Row +
-                                    </Button>
 
                         </Box>
                     </TabPanel>
@@ -1863,12 +1755,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                 {/* Button based on selected tab */}
                     
             </Box>
-            <Box sx={{ px: 2, py: 3.5, border: '1px solid #e4e4e4', position: 'fixed', bottom: 0, right: 0, background: '#fff',
-                width: '620px',
-                '@media (max-width: 600px)': {
-                        width: '100%',
-                }
-             }}>
+            <Box sx={{ px: 2, py: 3.5, width: '100%', border: '1px solid #e4e4e4' }}>
                         <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
                             
                                 {getButton(value)}
