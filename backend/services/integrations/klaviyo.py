@@ -250,28 +250,6 @@ class KlaviyoIntegrationsService:
         }) 
 
 
-    def set_suppression(self, suppression: bool, domain_id: int):
-        credential = self.get_credentials(domain_id)
-        if not credential:
-            raise HTTPException(status_code=403, detail=IntegrationsStatus.CREDENTIALS_NOT_FOUND.value)
-        credential.suppression = suppression
-        self.integrations_persisntece.db.commit()
-        return {'message': 'successfuly'}
-
-
-    def get_profile(self, domain_id: int, date_last_sync: str, fileds: List[ContactFiled]) -> List[ContactSuppression]:
-        credentials = self.get_credentials(domain_id)
-        if not credentials:
-            raise HTTPException(status_code=403, detail=IntegrationsStatus.CREDENTIALS_NOT_FOUND.value)
-        params = {
-            'fields[profile]': ','.join(fileds),
-            'filter': f'greater-than(created,{date_last_sync})'
-        }
-        response = self.__handle_request(method='GET', url='https://a.klaviyo.com/api/profiles/', params=params)
-        if response.status_code != 200:
-            raise HTTPException(status_code=400, detail={'status': "Profiles from Klaviyo could not be retrieved"})
-        return [self.__mapped_profile_from_klaviyo(profile) for profile in response.json().get('data')]
-
 
     def __mapped_klaviyo_profile(self, lead: FiveXFiveUser) -> KlaviyoProfile:
         first_email = (
