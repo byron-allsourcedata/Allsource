@@ -1704,6 +1704,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                   "Abandoned cart",
                   "View Product",
                   "Converted sales",
+                  "Visitor",
                 ].map((label) => {
                   const isSelected = selectedFunnels.includes(label);
                   return (
