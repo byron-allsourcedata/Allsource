@@ -20,7 +20,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 app = FastAPI()
-subapi = FastAPI()
+external_api = FastAPI()
 
 
 @app.exception_handler(StarletteHTTPException)
@@ -65,7 +65,7 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
-subapi.add_middleware(
+external_api.add_middleware(
     CORSMiddleware,
     allow_origins=['*'],
     allow_credentials=False,
