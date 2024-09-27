@@ -197,9 +197,9 @@ async def process_user_data(table, index, five_x_five_user: FiveXFiveUser, sessi
         elif lead_behavior_type == 'viewed_product':
             if behavior_type == 'product_added_to_cart':
                 lead_behavior_type = behavior_type
-        process_leads_requests(requested_at=requested_at, page=page, leads_requests=leads_requests, visit_id=visit_id, session=session, behavior_type=lead_behavior_type)
+        process_leads_requests(requested_at=requested_at, page=page, leads_requests=leads_requests, visit_id=visit_id, session=session, behavior_type=lead_behavior_type, lead_id=lead_user.id)
     else:
-        lead_visit_id = add_new_leads_visits(visited_datetime=requested_at, lead_id=lead_user.id, session=session, behavior_type=behavior_type).id
+        lead_visit_id = add_new_leads_visits(visited_datetime=requested_at, lead_id=lead_user.id, session=session, behavior_type=behavior_type, lead_user=lead_user).id
         if is_first_request == True:
             lead_user.first_visit_id = lead_visit_id
             session.flush()
@@ -258,7 +258,7 @@ def convert_leads_requests_to_utc(leads_requests):
         else:
             request.requested_at = request.requested_at.astimezone(utc)
 
-def process_leads_requests(requested_at, page, leads_requests, visit_id, session: Session, behavior_type):
+def process_leads_requests(requested_at, page, leads_requests, visit_id, session: Session, behavior_type, lead_id):
     new_request = LeadsRequests(
         page=normalize_url(page),
         requested_at=requested_at,
@@ -298,7 +298,7 @@ def process_leads_requests(requested_at, page, leads_requests, visit_id, session
     session.flush()
 
 
-def add_new_leads_visits(visited_datetime, lead_id, session, behavior_type):
+def add_new_leads_visits(visited_datetime, lead_id, session, behavior_type, lead_user):
     start_date = visited_datetime.date()
     start_time = visited_datetime.time()
     date_page = visited_datetime + timedelta(seconds=10)
@@ -310,7 +310,22 @@ def add_new_leads_visits(visited_datetime, lead_id, session, behavior_type):
     )
     session.add(leads_visits)
     session.flush()
+    
+    leads_count = session.query(LeadsRequests) \
+            .filter(LeadsRequests.lead_id == lead_id) \
+            .count()
+    if lead_user.total_visit:
+        lead_user.total_visit += 1
+        lead_user.total_visit_time += int(end_time - start_time)
+        lead_user.avarage_visit_time = lead_user.total_visit_time // (len(leads_count) + 1)
+    else:
+        lead_user.total_visit = 1
+        lead_user.total_visit_time += int(end_time - start_time)
+        lead_user.avarage_visit_time += int(end_time - start_time)
+        
+    session.flush()
     return leads_visits
+
 
 
 def update_last_processed_file(file_key):

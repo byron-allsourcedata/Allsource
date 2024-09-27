@@ -84,7 +84,8 @@ class LeadsService:
         'first_visited_time': lead[60].strftime('%H:%M'),
         'time_spent': lead[61],
         'recurring_visits': lead[62],
-        'visitor_type': lead[63]
+        'visitor_type': lead[63],
+        'average_time_sec': lead[64]
     }
     for lead in leads
     ]   
