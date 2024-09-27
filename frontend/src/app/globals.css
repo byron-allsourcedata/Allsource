@@ -79,6 +79,80 @@ body::-webkit-scrollbar {
   font-family: 'Roboto';
 }
 
+/* Design Style guide */
+
+.heading-text {
+  font-family: 'Nunito Sans';
+  font-size: 22px;
+  line-height: normal;
+  font-weight: 500;
+  color: #202124;
+}
+
+.first-sub-title {
+  font-family: 'Nunito Sans';
+  font-size: 16px;
+  line-height: normal;
+  font-weight: 600;
+  color: #202124;
+}
+
+.second-sub-title{
+  font-family: 'Nunito Sans';
+  font-size: 14px;
+  line-height: normal;
+  font-weight: 500;
+  color: #202124;
+}
+
+.table-heading {
+  font-family: 'Nunito Sans';
+  font-size: 12px;
+  line-height: normal;
+  font-weight: 600;
+  color: #202124;
+}
+
+.table-data {
+  font-family: 'Roboto';
+  font-size: 12px;
+  line-height: normal;
+  font-weight: 400;
+  color: #5F6368;
+}
+
+.left-nav {
+  font-family: 'Nunito Sans';
+  font-size: 14px;
+  line-height: normal;
+  font-weight: 400;
+  color: #808080;
+}
+
+.paragraph {
+  font-family: 'Roboto';
+  font-size: 12px;
+  line-height: normal;
+  font-weight: 400;
+  color: #808080;
+  letter-spacing: 0.06px;
+}
+
+.button {
+  font-family: 'Nunito Sans';
+  font-size: 14px;
+  line-height: normal;
+  font-weight: 400;
+  color: #5052b2;
+}
+
+.hyperlink {
+  font-family: 'Nunito Sans';
+  font-size: 14px;
+  line-height: normal;
+  font-weight: 400;
+  color: #5052b2;
+}
 
 
 
