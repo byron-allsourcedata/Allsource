@@ -6,7 +6,7 @@ import { suppressionsStyles } from "@/css/suppressions";
 
 const SuppressionRules: React.FC = () => {
     /// Table
-    const [pendingInvitations, setPendingInvitations] = useState<any[]>([[1, 2, 3, 4, 5]]);
+    const [pendingInvitations, setPendingInvitations] = useState<any[]>([]);
 
     /// Switch Buttons
     const [checked, setChecked] = useState(false);
