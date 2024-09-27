@@ -593,7 +593,8 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                     
                 </Box>
             </Drawer>
-            <ConnectKlaviyo open={klaviyoIconPopupOpen} onClose={handleKlaviyoIconPopupClose}/>
+            
+            <ConnectKlaviyo open={klaviyoIconPopupOpen} onClose={handleKlaviyoIconPopupClose} onSaveSync={handleSave}/>
             <ConnectMeta open={metaIconPopupOpen} onClose={handleMetaIconPopupClose} />
         </>
     );

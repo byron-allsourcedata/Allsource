@@ -36,7 +36,7 @@ type KlaviyoTags = {
 }
 
 const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) => {
-    const [loading, setLoading] = useState(false
+    const [loading, setLoading] = useState(false)
     const [value, setValue] = React.useState('1');
     const [checked, setChecked] = useState(false);
     const [selectedRadioValue, setSelectedRadioValue] = useState('');
