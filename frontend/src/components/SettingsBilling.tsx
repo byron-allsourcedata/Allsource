@@ -1,11 +1,10 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Grid, IconButton, Switch, Divider, Popover, Drawer, LinearProgress, Tooltip, TextField, TablePagination } from '@mui/material';
+import { Box, Typography, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Grid, IconButton, Switch, Divider, Popover, Drawer, LinearProgress, Tooltip, TextField, TablePagination } from '@mui/material';
 import Image from 'next/image';
 import axiosInterceptorInstance from '@/axios/axiosInterceptorInstance';
 import CloseIcon from '@mui/icons-material/Close';
 import CustomizedProgressBar from '@/components/CustomizedProgressBar';
-import { ChevronLeft, ChevronRight } from '@mui/icons-material';
 
 type CardBrand = 'visa' | 'mastercard' | 'americanexpress' | 'discover';
 
@@ -133,11 +132,8 @@ export const SettingsBilling: React.FC = () => {
         try {
             setIsLoading(true);
             const response = await axiosInterceptorInstance.get('/settings/billing');
-            console.log('billing', response.data);
             setCardDetails(response.data.card_details);
             setBillingDetails(response.data.billing_details);
-            // const responseDefault = await axiosInterceptorInstance.get('/settings/billing-history');
-            // console.log('responseDefault', responseDefault.data);
 
 
         } catch (error) {
