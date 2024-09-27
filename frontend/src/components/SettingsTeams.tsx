@@ -162,7 +162,6 @@ export const SettingsTeams: React.FC = () => {
                         break;
                     case 'INVITATION_LIMIT_REACHED':
                         setUpgradePlanPopup(true);
-                        showErrorToast('Invitation limit reached.');
                         break;
                     default:
                         showErrorToast('Unknown response received.');
