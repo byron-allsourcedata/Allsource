@@ -112,7 +112,8 @@ class LeadsPersistence:
                 LeadsVisits.start_time.label('start_time'),
                 LeadsVisits.full_time_sec.label('time_on_site'),
                 recurring_visits_subquery.c.recurring_visits,
-                LeadUser.is_returning_visitor
+                LeadUser.is_returning_visitor,
+                LeadUser.avarage_visit_time
             )
                 .join(LeadUser, LeadUser.five_x_five_user_id == FiveXFiveUser.id)
                 .join(FirstNameAlias, FirstNameAlias.id == FiveXFiveUser.first_name_id)
@@ -133,7 +134,8 @@ class LeadsPersistence:
                 LeadsVisits.start_time,
                 LeadsVisits.full_time_sec,
                 LeadUser.is_returning_visitor,
-                recurring_visits_subquery.c.recurring_visits
+                recurring_visits_subquery.c.recurring_visits,
+                LeadUser.avarage_visit_time
             )
         )
         sort_options = {
@@ -146,7 +148,7 @@ class LeadsPersistence:
             'state': FiveXFiveLocations.state_id,
             'city': FiveXFiveLocations.city,
             'age': FiveXFiveUser.age_min,
-            'time_spent': LeadsVisits.full_time_sec,
+            'average_time_sec': LeadUser.avarage_visit_time,
             'status': LeadUser.is_returning_visitor,
             'funnel': LeadUser.behavior_type,
         }
@@ -176,6 +178,8 @@ class LeadsPersistence:
                     filters.append(LeadUser.is_converted_sales == True)
                 elif status_data == 'view_product':
                     filters.append(LeadUser.behavior_type == "viewed_product")
+                elif status_data == 'visitor':
+                    filters.append(LeadUser.behavior_type == "visitor")
                 elif status_data == 'abandoned_cart':
                     query = (
                         query
