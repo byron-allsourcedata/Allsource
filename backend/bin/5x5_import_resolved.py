@@ -199,7 +199,7 @@ async def process_user_data(table, index, five_x_five_user: FiveXFiveUser, sessi
                 lead_behavior_type = behavior_type
         process_leads_requests(requested_at=requested_at, page=page, leads_requests=leads_requests, visit_id=visit_id, session=session, behavior_type=lead_behavior_type, lead_id=lead_user.id)
     else:
-        lead_visit_id = add_new_leads_visits(visited_datetime=requested_at, lead_id=lead_user.id, session=session, behavior_type=behavior_type).id
+        lead_visit_id = add_new_leads_visits(visited_datetime=requested_at, lead_id=lead_user.id, session=session, behavior_type=behavior_type, lead_user=lead_user).id
         if is_first_request == True:
             lead_user.first_visit_id = lead_visit_id
             session.flush()
@@ -298,7 +298,7 @@ def process_leads_requests(requested_at, page, leads_requests, visit_id, session
     session.flush()
 
 
-def add_new_leads_visits(visited_datetime, lead_id, session, behavior_type):
+def add_new_leads_visits(visited_datetime, lead_id, session, behavior_type, lead_user):
     start_date = visited_datetime.date()
     start_time = visited_datetime.time()
     date_page = visited_datetime + timedelta(seconds=10)
@@ -311,7 +311,6 @@ def add_new_leads_visits(visited_datetime, lead_id, session, behavior_type):
     session.add(leads_visits)
     session.flush()
     
-    lead_user = session.query(LeadUser).filter(LeadUser.id == lead_id).first()
     leads_count = session.query(LeadsRequests) \
             .filter(LeadsRequests.lead_id == lead_id) \
             .count()
