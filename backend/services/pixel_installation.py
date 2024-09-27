@@ -3,6 +3,7 @@ import logging
 import os
 import re
 from sqlalchemy.orm import Session
+from sqlalchemy import or_
 from bs4 import BeautifulSoup
 import requests
 
@@ -89,9 +90,20 @@ class PixelInstallationService:
         result = {'success': False}
         result_parser = self.parse_website(url, domain)
         if result_parser:
-            self.db.query(UserDomains).filter(UserDomains.id == UserDomains.id).update(
-                {UserDomains.domain: url, UserDomains.is_pixel_installed: True},
-                synchronize_session=False)
+            self.db.query(UserDomains).filter(
+                UserDomains.user_id == user.get('id'),
+                or_(
+                    UserDomains.domain == normalize_url(url),
+                    UserDomains.domain == 'www.' + normalize_url(url)
+                )
+            ).update(
+                {
+                    UserDomains.domain: normalize_url(url),
+                    UserDomains.is_pixel_installed: True
+                },
+                synchronize_session=False
+            )
+
             self.db.commit()
             result['success'] = True
         result['user_id'] = user.get('id')
@@ -101,21 +113,13 @@ class PixelInstallationService:
         result = {'success': False}
         domain = self.db.query(UserDomains).filter(UserDomains.data_provider_id == pixelClientId).first()
         if domain:
-            is_pixel_installed = self.parse_website(url, domain)
-            if is_pixel_installed:
-                domain.is_pixel_installed = True
-                domain.domain = url
-                self.db.commit()
-                user = self.db.query(Users).filter(Users.id == domain.user_id).first()
-                if user:
-                    result['success'] = True
-                    result['user_id'] = user.id
+            domain.is_pixel_installed = True
+            domain.domain = normalize_url(url)
             self.db.commit()
-            
-            result['success'] = True
-            result['user_id'] = user.id
-        else:
-            result['success'] = False
+            user = self.db.query(Users).filter(Users.id == domain.user_id).first()
+            if user:
+                result['success'] = True
+                result['user_id'] = user.id
         return result
     
     

@@ -3,7 +3,8 @@ import logging
 from h11._abnf import status_code
 
 from config.base import Base
-from routers import router
+from routers import main_router
+from external_api_routers import subapi_router
 from fastapi.middleware.cors import CORSMiddleware
 import traceback
 from fastapi import FastAPI, Request
@@ -19,6 +20,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 app = FastAPI()
+external_api = FastAPI()
 
 
 @app.exception_handler(StarletteHTTPException)
@@ -57,11 +59,19 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 
 app.add_middleware(
     CORSMiddleware,
-    #allow_origins=Base.allowed_origins,
-    allow_origins=['*'],
+    allow_origins=Base.allowed_origins,
     allow_credentials=True,
     allow_methods=["GET", "POST", "OPTIONS", "PUT", "DELETE"],
     allow_headers=["*"]
 )
 
-app.include_router(router)
+external_api.add_middleware(
+    CORSMiddleware,
+    allow_origins=['*'],
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "OPTIONS", "PUT", "DELETE"],
+    allow_headers=["*"]
+)
+
+app.include_router(main_router)
+app.mount('/external_api', subapi_router)
