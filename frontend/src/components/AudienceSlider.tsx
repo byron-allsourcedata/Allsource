@@ -119,9 +119,6 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
         }
         return false;
     };
-    const handleSaveSync = async (newIntegrations: Integrations) => {
-        setIntegrations(prevIntegrations => [...prevIntegrations, newIntegrations]);
-    }
 
     const handleSave = async () => {
         try {
@@ -596,8 +593,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                     
                 </Box>
             </Drawer>
-
-            <ConnectKlaviyo open={klaviyoIconPopupOpen} onClose={handleKlaviyoIconPopupClose} onSaveSync={handleSaveSync}/>
+            <ConnectKlaviyo open={klaviyoIconPopupOpen} onClose={handleKlaviyoIconPopupClose}/>
             <ConnectMeta open={metaIconPopupOpen} onClose={handleMetaIconPopupClose} />
         </>
     );
