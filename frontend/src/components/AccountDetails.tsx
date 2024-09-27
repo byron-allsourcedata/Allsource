@@ -171,8 +171,21 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                             </Box>
                             <Box sx={{ display: 'flex', flexDirection: 'row', gap: 5, '@media (max-width: 600px)': { flexDirection: 'column', gap: 1 }, }}>
                                 <Typography variant="body1" gutterBottom sx={{ ...accountStyles.header_text, display: 'flex', flexDirection: 'row', gap: 1 }}>
-                                    <Image src={'/sms.svg'} width={18} height={18} alt='mail icon' />
-                                    {lead.personal_emails?.split(',')[0] || '--'}
+                                    {lead.personal_emails || lead.business_email ? (
+                                        <Link
+                                            href={`mailto:${lead.personal_emails ? lead.personal_emails.split(',')[0] : lead.business_email.split(',')[0]}`}
+                                            underline="none"
+                                            sx={{ ...accountStyles.header_text, display: 'flex', flexDirection: 'row', gap: 1 }}
+                                        >
+                                            <Image src={'/sms.svg'} width={18} height={18} alt='iphone icon' />
+                                            {lead.personal_emails ? lead.personal_emails.split(',')[0] : lead.business_email ? lead.business_email.split(',')[0] : '--'}
+                                        </Link>
+                                    ) : (
+                                        <>
+                                            <Image src={'/sms.svg'} width={18} height={18} alt='mail icon' />
+                                            <Typography sx={accountStyles.text}> --</Typography>
+                                        </>
+                                    )}
                                 </Typography>
                                 <Typography
                                     variant="body1"

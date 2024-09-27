@@ -1,6 +1,37 @@
+import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { Box, Typography, FormControlLabel, TextField, Checkbox, Button, Divider } from "@mui/material";
-
+import { useState } from "react";
+import { showErrorToast, showInfoToast } from "./ToastNotification";
 const CollectionRules: React.FC = () => {
+    const [pageViews, setPageViews] = useState<string>("");
+    const [seconds, setSeconds] = useState<string>("");
+
+    const handlePageViewsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setPageViews(e.target.value);
+    };
+
+    const handleSecondsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setSeconds(e.target.value);
+    };
+
+    const handleSave = async () => {
+        try {
+            const response = await axiosInstance.post('/suppressions/collection-rules', {
+                pageViews: parseInt(pageViews, 10),
+                seconds: parseInt(seconds, 10)
+            });
+            showInfoToast('Succesfully added rule')
+        } catch (error) {
+        }
+    };
+
+    const handleCancel = () => {
+        setPageViews('');
+        setSeconds('');
+    };
+
+    const isDisabled = !pageViews || !seconds;
+
     return (
         <Box sx={{
             backgroundColor: '#fff',
@@ -11,9 +42,9 @@ const CollectionRules: React.FC = () => {
             color: 'rgba(32, 33, 36, 1)',
             border: '1px solid rgba(240, 240, 240, 1)',
             boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.2)',
-            "@media (max-width: 900px)": {padding: '0px'} 
+            "@media (max-width: 900px)": { padding: '0px' }
         }}>
-            <Box sx={{ width: '100%', padding: '20px', "@media (max-width: 900px)": {padding: '16px'} }}>
+            <Box sx={{ width: '100%', padding: '20px', "@media (max-width: 900px)": { padding: '16px' } }}>
                 <Typography className="main-text" sx={{ fontWeight: '600', lineHeight: '21.82px', marginBottom: '16px', fontSize: '1rem', color: 'rgba(32, 33, 36, 1)' }}>
                     Collection Rules
                 </Typography>
@@ -23,7 +54,7 @@ const CollectionRules: React.FC = () => {
                 </Typography>
 
                 <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                    <Box sx={{ display: 'flex', flexDirection: 'row', width: '100%', justifyContent: 'space-between', "@media (max-width: 900px)": {flexDirection: 'column'} }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'row', width: '100%', justifyContent: 'space-between', "@media (max-width: 900px)": { flexDirection: 'column' } }}>
                         <Box>
                             <Typography className="main-text"
                                 sx={{
@@ -58,6 +89,9 @@ const CollectionRules: React.FC = () => {
                             label="Page Views"
                             variant="outlined"
                             placeholder="1"
+                            type="number"
+                            value={pageViews}
+                            onChange={handlePageViewsChange}
                             InputProps={{ style: { color: 'rgba(17, 17, 19, 1)', fontFamily: 'Nunito', fontWeight: 400, fontSize: '16px' } }}
                             InputLabelProps={{ style: { color: 'rgba(17, 17, 19, 0.6)', fontFamily: 'Nunito', fontWeight: 400, fontSize: '16px' } }}
                             sx={{
@@ -65,12 +99,12 @@ const CollectionRules: React.FC = () => {
                                 backgroundColor: '#fff',
                                 borderRadius: '4px',
                                 width: '245px',
-                                "@media (max-width: 900px)": {width: '100%', height: '48px'}
+                                "@media (max-width: 900px)": { width: '100%', height: '48px' }
                             }}
                         />
                     </Box>
 
-                    <Box sx={{ display: 'flex', flexDirection: 'row', width: '100%', justifyContent: 'space-between', "@media (max-width: 900px)": {flexDirection: 'column'} }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'row', width: '100%', justifyContent: 'space-between', "@media (max-width: 900px)": { flexDirection: 'column' } }}>
                         <Box>
                             <Typography className="main-text"
                                 sx={{
@@ -106,6 +140,9 @@ const CollectionRules: React.FC = () => {
                             label="Seconds"
                             variant="outlined"
                             placeholder="--"
+                            type="number"
+                            value={seconds}
+                            onChange={handleSecondsChange}
                             InputProps={{ style: { color: 'rgba(17, 17, 19, 1)', fontFamily: 'Nunito', fontWeight: 400, fontSize: '16px' } }}
                             InputLabelProps={{ style: { color: 'rgba(17, 17, 19, 0.6)', fontFamily: 'Nunito', fontWeight: 400, fontSize: '16px' } }}
                             sx={{
@@ -113,7 +150,7 @@ const CollectionRules: React.FC = () => {
                                 backgroundColor: '#fff',
                                 borderRadius: '4px',
                                 width: '245px',
-                                "@media (max-width: 900px)": {width: '100%', height: '48px'}
+                                "@media (max-width: 900px)": { width: '100%', height: '48px' }
                             }}
                         />
                     </Box>
@@ -121,16 +158,26 @@ const CollectionRules: React.FC = () => {
             </Box>
 
 
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid rgba(228, 228, 228, 1)', pt: 2, padding: '24px', "@media (max-width: 900px)": {padding: '1rem',}  }}>
-                <Button variant="outlined" sx={{
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid rgba(228, 228, 228, 1)', pt: 2, padding: '24px', "@media (max-width: 900px)": { padding: '1rem', } }}>
+                <Button variant="outlined" disabled={isDisabled} onClick={handleCancel} sx={{
                     backgroundColor: '#fff', color: 'rgba(80, 82, 178, 1)', fontFamily: "Nunito Sans", textTransform: 'none', lineHeight: '22.4px',
-                    fontWeight: '700', padding: '1em 5em', textWrap: 'nowrap', marginRight: '16px', border: '1px solid rgba(80, 82, 178, 1)', maxWidth: '98px', '&:hover': { backgroundColor: '#fff', boxShadow: '0 2px 2px rgba(0, 0, 0, 0.3)', }
+                    fontWeight: '700', padding: '1em 5em', textWrap: 'nowrap', marginRight: '16px', border: '1px solid rgba(80, 82, 178, 1)', maxWidth: '98px', '&:hover': { backgroundColor: '#fff', boxShadow: '0 2px 2px rgba(0, 0, 0, 0.3)', '&.Mui-disabled': {
+                        backgroundColor: 'rgba(80, 82, 178, 0.6)',
+                        color: 'rgba(80, 82, 178, 1)',
+                        cursor: 'not-allowed',
+                    } }
                 }}>
                     Cancel
                 </Button>
-                <Button variant="contained" sx={{
+                <Button variant="contained" disabled={isDisabled} onClick={handleSave} sx={{
                     backgroundColor: 'rgba(80, 82, 178, 1)', fontFamily: "Nunito Sans", textTransform: 'none', lineHeight: '22.4px',
-                    fontWeight: '700', padding: '1em 5em', textWrap: 'nowrap', maxWidth: '120px', '&:hover': { backgroundColor: 'rgba(80, 82, 178, 1)', boxShadow: '0 2px 2px rgba(0, 0, 0, 0.3)' }
+                    fontWeight: '700', padding: '1em 5em', textWrap: 'nowrap', maxWidth: '120px', '&:hover': { backgroundColor: 'rgba(80, 82, 178, 1)', boxShadow: '0 2px 2px rgba(0, 0, 0, 0.3)' },
+                    cursor: isDisabled ? 'not-allowed' : 'pointer', '&.Mui-disabled': {
+                        backgroundColor: 'rgba(80, 82, 178, 0.6)',
+                        color: 'white',
+                        cursor: 'not-allowed',
+
+                    }
                 }}>
                     Save
                 </Button>

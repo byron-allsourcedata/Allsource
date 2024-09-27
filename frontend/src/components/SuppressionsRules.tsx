@@ -2,6 +2,122 @@ import { Box, Typography, TextField, Button, Switch, Chip, InputAdornment, Divid
 import Image from "next/image";
 import { useRef, useState } from "react";
 import { suppressionsStyles } from "@/css/suppressions";
+import { ChevronLeft, ChevronRight } from "@mui/icons-material";
+
+
+interface CustomTablePaginationProps {
+    count: number;
+    page: number;
+    rowsPerPage: number;
+    onPageChange: (event: React.MouseEvent<HTMLButtonElement>, newPage: number) => void;
+    onRowsPerPageChange: (event: React.ChangeEvent<{ value: unknown }>) => void;
+}
+
+const CustomTablePagination: React.FC<CustomTablePaginationProps> = ({
+    count,
+    page,
+    rowsPerPage,
+    onPageChange,
+    onRowsPerPageChange,
+}) => {
+    const totalPages = Math.ceil(count / rowsPerPage);
+    const maxPagesToShow = 3;
+
+    const handlePageChange = (newPage: number) => {
+        if (newPage >= 0 && newPage < totalPages) {
+            onPageChange(null as any, newPage);
+        }
+    };
+
+    const getPageButtons = () => {
+        const pages = [];
+        let startPage = Math.max(0, page - Math.floor(maxPagesToShow / 2));
+        let endPage = Math.min(totalPages - 1, startPage + maxPagesToShow - 1);
+
+        if (endPage - startPage + 1 < maxPagesToShow) {
+            startPage = Math.max(0, endPage - maxPagesToShow + 1);
+        }
+
+        for (let i = startPage; i <= endPage; i++) {
+            pages.push(i);
+        }
+
+        return pages;
+    };
+
+    return (
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', padding: 1 }}>
+            <select
+                value={rowsPerPage}
+                onChange={onRowsPerPageChange}
+                style={{
+                    marginLeft: 8,
+                    border: '1px solid rgba(235, 235, 235, 1)',
+                    backgroundColor: 'rgba(255, 255, 255, 1)'
+                }}
+            >
+                {[10, 15, 25, 50].map((option) => (
+                    <option key={option} value={option}>
+                        {option} rows
+                    </option>
+                ))}
+            </select>
+            <Button
+                onClick={(e) => handlePageChange(page - 1)}
+                disabled={page === 0}
+                sx={{
+                    minWidth: '30px',
+                    minHeight: '30px',
+                }}
+            >
+                <ChevronLeft
+                    sx={{
+                        border: page === 0 ? 'none' : '1px solid rgba(235, 235, 235, 1)',
+                        borderRadius: '4px'
+                    }} />
+            </Button>
+            {totalPages > 1 && (
+                <>
+                    {page > 1 && <Button onClick={() => handlePageChange(0)} sx={suppressionsStyles.page_number}>1</Button>}
+                    {page > 2 && <Typography variant="body2" sx={{ mx: 1 }}>...</Typography>}
+                    {getPageButtons().map((pageNumber) => (
+                        <Button
+                            key={pageNumber}
+                            onClick={() => handlePageChange(pageNumber)}
+                            sx={{
+                                mx: 0.5, ...suppressionsStyles.page_number,
+                                border: page === pageNumber ? '1px solid rgba(80, 82, 178, 1)' : 'none',
+                                color: page === pageNumber ? 'rgba(80, 82, 178, 1)' : 'rgba(122, 122, 122, 1)',
+                                minWidth: '30px',
+                                minHeight: '30px',
+                                padding: 0
+                            }}
+                            variant={page === pageNumber ? 'contained' : 'text'}
+                        >
+                            {pageNumber + 1}
+                        </Button>
+                    ))}
+                    {totalPages - page > 3 && <Typography variant="body2" sx={{ mx: 1 }}>...</Typography>}
+                    {page < totalPages - 1 && <Button onClick={() => handlePageChange(totalPages - 1)}
+                        sx={suppressionsStyles.page_number}>{totalPages}</Button>}
+                </>
+            )}
+            <Button
+                onClick={(e) => handlePageChange(page + 1)}
+                disabled={page >= totalPages - 1}
+                sx={{
+                    minWidth: '30px',
+                    minHeight: '30px',
+                }}
+            >
+                <ChevronRight sx={{
+                    border: page >= totalPages - 1 ? 'none' : '1px solid rgba(235, 235, 235, 1)',
+                    borderRadius: '4px'
+                }} />
+            </Button>
+        </Box>
+    );
+};
 
 
 const SuppressionRules: React.FC = () => {
@@ -870,6 +986,18 @@ const SuppressionRules: React.FC = () => {
                             </TableBody>
                         </Table>
                     </TableContainer>
+                    {/* <CustomTablePagination
+                                        // count={count_leads ?? 0}
+                                        // page={page}
+                                        // rowsPerPage={rowsPerPage}
+                                        // onPageChange={handleChangePage}
+                                        // onRowsPerPageChange={handleChangeRowsPerPage}
+                                        count={10}
+                                        page={1}
+                                        rowsPerPage={3}
+                                        onPageChange={handleChangePage}
+                                        onRowsPerPageChange={handleChangeRowsPerPage}
+                    /> */}
                 </Box>
             </Box>
 
