@@ -53,7 +53,9 @@ from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.audience_persistence import AudiencePersistence
 from persistence.leads_order_persistence import LeadOrdersPersistence
 from persistence.domains import UserDomainsPersistence, UserDomains
+from persistence.suppressions_persistence import SuppressionPersistence
 from models.users import Users as User
+from services.suppressions import SuppressionService
 from exceptions import InvalidToken
 from enums import UserAuthorizationStatus
 from config.aws import get_s3_client
@@ -76,6 +78,9 @@ def get_plans_persistence(db: Session = Depends(get_db)):
 
 def get_leads_persistence(db: Session = Depends(get_db)):
     return LeadsPersistence(db=db)
+
+def get_suppression_persistence(db: Session = Depends(get_db)):
+    return SuppressionPersistence(db=db)
 
 
 def get_send_grid_persistence_service(db: Session = Depends(get_db)):
@@ -212,7 +217,14 @@ def check_user_authentication(Authorization: Annotated[str, Header()],
             }
         )
     if hasattr(user_data, 'team_member_id') and user_data.team_member_id:
-        user['team_member'] = user_persistence_service.get_user_team_member_by_id(user_data.team_member_id)
+        team_memer = user_persistence_service.get_user_team_member_by_id(user_data.team_member_id)
+        if team_memer.get('team_owner_id') is None or team_memer.get('team_owner_id') != user.get('id'):
+            raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={'status': UserAuthorizationStatus.TEAM_TOKEN_EXPIRED.value}
+        )
+        else:
+            user['team_member'] = team_memer
     return user
 
 
@@ -310,6 +322,9 @@ def get_settings_service(settings_persistence: SettingsPersistence = Depends(
                                    ):
     return SettingsService(settings_persistence=settings_persistence, plan_persistence=plan_persistence, user_persistence=user_persistence, send_grid_persistence=send_grid_persistence, subscription_service=subscription_service)
 
+
+def get_suppression_service(suppression_persistence: SuppressionPersistence = Depends(get_suppression_persistence)):
+    return SuppressionService(suppression_persistence=suppression_persistence)
 
 def get_plans_service(plans_persistence: PlansPersistence = Depends(get_plans_persistence),
                       subscription_service: SubscriptionService = Depends(get_subscription_service)):

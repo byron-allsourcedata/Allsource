@@ -41,7 +41,6 @@ axiosInterceptorInstance.interceptors.request.use(
 );
 
 
-
 const navigateTo = (path) => {
   window.location.href = path;
 };
@@ -64,6 +63,11 @@ axiosInterceptorInstance.interceptors.response.use(
               break;
             case "FILL_COMPANY_DETAILS":
               navigateTo("/account-setup");
+              break;
+            case "TEAM_TOKEN_EXPIRED":
+              localStorage.clear();
+              sessionStorage.clear();
+              navigateTo("/signin");
               break;
             case "NEED_CHOOSE_PLAN":
               navigateTo("/choose-plan");
