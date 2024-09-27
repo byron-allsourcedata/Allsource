@@ -24,7 +24,7 @@ const TrialStatus: React.FC = () => {
       if (daysDifference === null || daysDifference === undefined || isNaN(daysDifference)) {
         setStatusText('Trial Active');
         setBackgroundColor('#EAF8DD');
-        setTextColor('#6EC125');
+        setTextColor('#6EC125 !important');
         setIconColor('#6EC125');
       } else {
         if (daysDifference > 5) {
@@ -68,63 +68,61 @@ const TrialStatus: React.FC = () => {
 
   return (
     <>
-    <Box>
-      <Box sx={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '6.25px 10px',
-        backgroundColor: backgroundColor,
-        borderRadius: '3.27px',
-        color: textColor,
-        fontSize: '14px',
-        fontWeight: '500',
-        '@media (min-width: 901px)': {
-        marginRight: '2em'
-      }
-      }}>
-        {(statusText.includes('Free Trial Expired')) && (
-          <>
-          <Image src={'danger.svg'} width={20} height={20} alt="danger" />
-          </>
-        )}
-        {(statusText.includes('Free Trial Left')) && (
-          <AccessTimeIcon sx={{ color: iconColor }} />
-        )}
-        <Typography sx={{
-          marginRight: '5px',
-          fontFamily: 'Nunito',
-          lineHeight: '19.1px',
-          letterSpacing: '-0.02em',
-          pt: '1px',
-          textAlign: 'left',
+      <Box>
+        <Box sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '6.25px 10px',
+          backgroundColor: backgroundColor,
+          borderRadius: '3.27px',
+          color: textColor,
+          fontSize: '14px',
           fontWeight: '500',
-          marginLeft: '3px'
-          
+          '@media (min-width: 901px)': {
+            marginRight: '2em'
+          }
         }}>
-          {statusText}
-        </Typography>
-        {(statusText.includes('Trial Pending')) || statusText.includes('Trial Active') && (
-          <AccessTimeIcon sx={{ color: iconColor }} />
-        )}
-        {(statusText.includes('Free Trial Expired') || statusText.includes('Free Trial Left')) && (
-          <Button onClick={handleOpenSlider} sx={{ ml: 2, textTransform: 'none', padding:0, color: 'rgba(80, 82, 178, 1)' }}>
-            <Typography sx={{
-          marginRight: '5px',
-          fontFamily: 'Nunito',
-          lineHeight: '19.1px',
-          letterSpacing: '-0.02em',
-          textAlign: 'left',
-        }}>
-          Choose Plan
-        </Typography>
-          </Button>
-        )}
+          {(statusText.includes('Free Trial Expired')) && (
+            <>
+              <Image src={'danger.svg'} width={20} height={20} alt="danger" />
+            </>
+          )}
+          {(statusText.includes('Free Trial Left')) && (
+            <AccessTimeIcon sx={{ color: iconColor }} />
+          )}
+          <Typography sx={{
+            marginRight: '5px',
+            letterSpacing: '-0.02em',
+            pt: '1px',
+            fontFamily: 'Nunito Sans',
+            fontSize: '16px',
+            lineHeight: 'normal',
+            textAlign: 'left',
+            marginLeft: '3px'
+
+          }}>
+            {statusText}
+          </Typography>
+          {(statusText.includes('Trial Pending') || statusText.includes('Trial Active')) && (
+            <AccessTimeIcon sx={{ color: iconColor }} />
+          )}
+          {(statusText.includes('Free Trial Expired') || statusText.includes('Free Trial Left')) && (
+            <Button onClick={handleOpenSlider} sx={{ ml: 2, textTransform: 'none', padding: 0, color: 'rgba(80, 82, 178, 1) !important' }}>
+              <Typography className='first-sub-title' sx={{
+                marginRight: '5px',
+                letterSpacing: '-0.02em',
+                textAlign: 'left',
+              }}>
+                Choose Plan
+              </Typography>
+            </Button>
+          )}
+        </Box>
       </Box>
-      </Box>
-      <PlanSlider open={isSliderOpen} handleClose={handleCloseSlider} handleChoosePlan={handleChoosePlanSlider}/>
-     </>
-    
+      <PlanSlider open={isSliderOpen} handleClose={handleCloseSlider} handleChoosePlan={handleChoosePlanSlider} />
+    </>
+
   );
 };
 
