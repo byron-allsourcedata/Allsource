@@ -180,7 +180,7 @@ async def process_user_data(table, index, five_x_five_user: FiveXFiveUser, sessi
             .join(LeadsVisits, LeadsRequests.visit_id == LeadsVisits.id) \
             .filter(LeadsRequests.visit_id == visit_id) \
             .all()
-        leads_requests = [leads_request for leads_request, _, _ in leads_result]
+        leads_requests = [leads_request for leads_request, _, _, _ in leads_result]
         lead_visit_id = leads_result[0][1]
         lead_behavior_type = leads_result[0][2]
         lead_visit_full_time_sec = leads_result[0][3]
