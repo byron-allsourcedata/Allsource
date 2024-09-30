@@ -74,7 +74,8 @@ interface Invitation {
 const roleOptions = [
     { key: "admin", value: "Admin" },
     { key: "standard", value: "Standard" },
-    { key: "read-only", value: "Read Only" },
+    { key: "read_only", value: "Read Only" },
+    { key: "owner", value: "Owner" },
 ];
 
 export const SettingsTeams: React.FC = () => {
@@ -350,13 +351,14 @@ export const SettingsTeams: React.FC = () => {
     const handleSelectionChange = (e: SelectChangeEvent<string>, memberMail: string) => {
         const newRole = e.target.value as string;
         handleTeamRoleChange(memberMail, newRole);
-        setTeamSelectOpen(memberMail); // Keep the dropdown open after selection
+        setTeamSelectOpen(memberMail);
+        handleChangeUserRole(memberMail, newRole)
     };
 
     const handleTeamRoleChange = (email: string, newRole: string) => {
         setTeamMembers(prevMembers =>
             prevMembers.map(member =>
-                member.email === email ? { ...member, role: newRole } : member
+                member.email === email ? { ...member, access_level: newRole } : member
             )
         );
     };
@@ -382,118 +384,118 @@ export const SettingsTeams: React.FC = () => {
     }
 
     return (
-
         <Box>
-            <Box sx={{ marginBottom: 2 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', mb: 3 }}>
-                    <Typography variant="h6" sx={{
-                        fontFamily: 'Nunito Sans',
-                        fontSize: '16px',
-                        fontWeight: '600',
-                        color: '#202124',
-                        lineHeight: '22px'
-                    }}>Pending invitations</Typography>
-                    <Tooltip title="Team Info" placement="right">
-                        <Image src='/info-icon.svg' alt='info-icon' height={13} width={13} />
-                    </Tooltip>
-                </Box>
+            {pendingInvitations.length > 0 && (
+                <Box sx={{ marginBottom: 2 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', mb: 3 }}>
+                        <Typography variant="h6" sx={{
+                            fontFamily: 'Nunito Sans',
+                            fontSize: '16px',
+                            fontWeight: '600',
+                            color: '#202124',
+                            lineHeight: '22px'
+                        }}>Pending invitations</Typography>
+                        <Tooltip title="Team Info" placement="right">
+                            <Image src='/info-icon.svg' alt='info-icon' height={13} width={13} />
+                        </Tooltip>
+                    </Box>
 
-                <TableContainer sx={{
-                    border: '1px solid #EBEBEB',
-                    borderRadius: '4px 4px 0px 0px'
-                }}>
-                    <Table>
-                        <TableHead>
-                            <TableRow>
-                                <TableCell
-                                    sx={{
-                                        ...teamsStyles.tableColumn,
-                                        position: 'sticky', // Make the Name column sticky
-                                        left: 0, // Stick it to the left
-                                        zIndex: 9,
-                                        background: '#fff'
-                                    }}>Invited User</TableCell>
-                                <TableCell sx={teamsStyles.tableColumn}>Access Level</TableCell>
-                                <TableCell sx={teamsStyles.tableColumn}>Date Invited</TableCell>
-                                <TableCell sx={teamsStyles.tableColumn}>Status</TableCell>
-                                <TableCell sx={teamsStyles.tableColumn}>Actions</TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {pendingInvitations.length === 0 ? (
+                    <TableContainer sx={{
+                        border: '1px solid #EBEBEB',
+                        borderRadius: '4px 4px 0px 0px'
+                    }}>
+                        <Table>
+                            <TableHead>
                                 <TableRow>
-                                    <TableCell colSpan={5} sx={{
-                                        ...teamsStyles.tableBodyColumn,
-                                        textAlign: 'center'
-                                    }}>
-                                        No pending invitations
-                                    </TableCell>
+                                    <TableCell
+                                        sx={{
+                                            ...teamsStyles.tableColumn,
+                                            position: 'sticky', // Make the Name column sticky
+                                            left: 0, // Stick it to the left
+                                            zIndex: 9,
+                                            background: '#fff'
+                                        }}>Invited User</TableCell>
+                                    <TableCell sx={teamsStyles.tableColumn}>Access Level</TableCell>
+                                    <TableCell sx={teamsStyles.tableColumn}>Date Invited</TableCell>
+                                    <TableCell sx={teamsStyles.tableColumn}>Status</TableCell>
+                                    <TableCell sx={teamsStyles.tableColumn}>Actions</TableCell>
                                 </TableRow>
-                            ) : (
-                                pendingInvitations.map((invitation, index) => (
-                                    <TableRow key={index} sx={{
-                                        ...teamsStyles.tableBodyRow,
-                                        '&:hover': {
-                                            backgroundColor: '#F7F7F7',
-                                            '& .sticky-cell': {
-                                                backgroundColor: '#F7F7F7',
-                                            }
-                                        },
-
-                                    }}>
-                                        <TableCell className="sticky-cell" sx={{
+                            </TableHead>
+                            <TableBody>
+                                {pendingInvitations.length === 0 ? (
+                                    <TableRow>
+                                        <TableCell colSpan={5} sx={{
                                             ...teamsStyles.tableBodyColumn,
-                                            cursor: 'pointer', position: 'sticky', left: '0', zIndex: 9, backgroundColor: '#fff'
-                                        }}>{invitation.email}</TableCell>
-                                        <TableCell sx={teamsStyles.tableBodyColumn}>{invitation.role}</TableCell>
-                                        <TableCell sx={teamsStyles.tableBodyColumn}>{invitation.date}</TableCell>
-                                        <TableCell sx={teamsStyles.tableBodyColumn}>
-                                            <Typography component="span" sx={{
-                                                background: '#ececec',
-                                                padding: '6px 8px',
-                                                borderRadius: '2px',
-                                                fontFamily: 'Roboto',
-                                                fontSize: '12px',
-                                                fontWeight: '400',
-                                                lineHeight: '16px',
-                                                color: '#5f6368',
-                                            }}>
-                                                {invitation.status}
-                                            </Typography>
+                                            textAlign: 'center'
+                                        }}>
+                                            No pending invitations
                                         </TableCell>
-                                        <TableCell sx={teamsStyles.tableBodyColumn}>
-                                            <Button
-                                                onClick={() => {
-                                                    const confirmed = window.confirm('Are you sure you want to revoke this invitation?');
-                                                    if (confirmed) {
-                                                        handleRevoke(invitation.email);
-                                                    }
-                                                }}
-                                                sx={{
+                                    </TableRow>
+                                ) : (
+                                    pendingInvitations.map((invitation, index) => (
+                                        <TableRow key={index} sx={{
+                                            ...teamsStyles.tableBodyRow,
+                                            '&:hover': {
+                                                backgroundColor: '#F7F7F7',
+                                                '& .sticky-cell': {
+                                                    backgroundColor: '#F7F7F7',
+                                                }
+                                            },
+
+                                        }}>
+                                            <TableCell className="sticky-cell" sx={{
+                                                ...teamsStyles.tableBodyColumn,
+                                                cursor: 'pointer', position: 'sticky', left: '0', zIndex: 9, backgroundColor: '#fff'
+                                            }}>{invitation.email}</TableCell>
+                                            <TableCell sx={teamsStyles.tableBodyColumn}>{invitation.role}</TableCell>
+                                            <TableCell sx={teamsStyles.tableBodyColumn}>{invitation.date}</TableCell>
+                                            <TableCell sx={teamsStyles.tableBodyColumn}>
+                                                <Typography component="span" sx={{
+                                                    background: '#ececec',
+                                                    padding: '6px 8px',
+                                                    borderRadius: '2px',
                                                     fontFamily: 'Roboto',
                                                     fontSize: '12px',
                                                     fontWeight: '400',
                                                     lineHeight: '16px',
                                                     color: '#5f6368',
-                                                    position: 'relative',
-                                                    textAlign: 'center',
-                                                    textTransform: 'none',
-                                                    '&:hover': {
-                                                        background: 'transparent'
-                                                    }
-                                                }}
-                                            >
-                                                Revoke
-                                            </Button>
-                                        </TableCell>
-                                    </TableRow>
-                                ))
-                            )}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
-            </Box>
-
+                                                }}>
+                                                    {invitation.status}
+                                                </Typography>
+                                            </TableCell>
+                                            <TableCell sx={teamsStyles.tableBodyColumn}>
+                                                <Button
+                                                    onClick={() => {
+                                                        const confirmed = window.confirm('Are you sure you want to revoke this invitation?');
+                                                        if (confirmed) {
+                                                            handleRevoke(invitation.email);
+                                                        }
+                                                    }}
+                                                    sx={{
+                                                        fontFamily: 'Roboto',
+                                                        fontSize: '12px',
+                                                        fontWeight: '400',
+                                                        lineHeight: '16px',
+                                                        color: '#5f6368',
+                                                        position: 'relative',
+                                                        textAlign: 'center',
+                                                        textTransform: 'none',
+                                                        '&:hover': {
+                                                            background: 'transparent'
+                                                        }
+                                                    }}
+                                                >
+                                                    Revoke
+                                                </Button>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                )}
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
+                </Box>
+            )}
             <Divider sx={{ borderColor: '#e4e4e4' }} />
 
             <Box>
@@ -573,30 +575,41 @@ export const SettingsTeams: React.FC = () => {
                                             },
 
                                         }}
-                                        onClick={() => handleRowClick(member.email)} // Handle row click
+                                        onClick={() => handleRowClick(member.email)}
                                     >
-                                        <TableCell className="sticky-cell" sx={{
-                                            ...teamsStyles.tableBodyColumn,
-                                            cursor: 'pointer', position: 'sticky', left: '0', zIndex: 9, backgroundColor: '#fff'
-                                        }}>{member.email}</TableCell>
+                                        <TableCell
+                                            className="sticky-cell"
+                                            sx={{
+                                                ...teamsStyles.tableBodyColumn,
+                                                cursor: 'pointer',
+                                                position: 'sticky',
+                                                left: '0',
+                                                zIndex: 9,
+                                                backgroundColor: '#fff',
+                                                textAlign: 'left',
+                                            }}
+                                        >
+                                            {member.email}
+                                        </TableCell>
+
                                         <TableCell sx={teamsStyles.tableBodyColumn}>{member.last_sign_in}</TableCell>
                                         <TableCell sx={teamsStyles.tableBodyColumn} onClick={(e) => handleDropdownClick(e, member.email)}>
                                             <FormControl variant="outlined" sx={{ width: '100%' }}>
-                                                {member.access_level}
                                                 <Select
                                                     value={member.access_level}
                                                     onChange={(e) => handleSelectionChange(e, member.email)}
                                                     open={teamSelectOpen === member.email}
                                                     sx={{
                                                         '& .MuiOutlinedInput-notchedOutline': {
-                                                            border: 'none', // Remove the default border
+                                                            border: 'none',
                                                         },
                                                         '& .MuiOutlinedInput-input': {
+                                                            display: 'inline-block',
                                                             fontFamily: 'Roboto',
                                                             fontSize: '12px',
                                                             lineHeight: '16px',
                                                             color: '#5f6368',
-                                                            paddingBottom: '14px', // Add padding to accommodate the dotted line
+                                                            paddingBottom: '14px',
                                                         },
                                                         '& .MuiSelect-select': {
                                                             display: 'inline-block',
@@ -605,23 +618,15 @@ export const SettingsTeams: React.FC = () => {
                                                             width: 'auto',
                                                             padding: '0 !important',
                                                             margin: '0 auto',
-                                                            '&:after': {
-                                                                content: '""',
-                                                                position: 'absolute',
-                                                                left: 0,
-                                                                bottom: 0,
-                                                                width: '100%',
-                                                                borderBottom: '1px dashed #51627B', // Dashed line under the text
-                                                            },
                                                         },
                                                         '& .MuiSelect-icon': {
-                                                            display: 'none', // Hide the default dropdown icon
+                                                            display: 'none',
                                                         }
                                                     }}
                                                     input={
                                                         <OutlinedInput
                                                             endAdornment={
-                                                                teamSelectOpen === member.email && ( // Show arrow only if the row is selected
+                                                                teamSelectOpen === member.email && (
                                                                     <InputAdornment position="end" onClick={(e) => handleArrowClick(e, member.email)} sx={{ cursor: 'pointer' }}>
                                                                         <Image
                                                                             src={teamSelectOpen === member.email ? '/chevron-drop-up.svg' : '/chevron-drop-down.svg'}
@@ -634,7 +639,6 @@ export const SettingsTeams: React.FC = () => {
                                                             }
                                                         />
                                                     }
-
                                                     MenuProps={{
                                                         PaperProps: {
                                                             sx: {
@@ -645,31 +649,28 @@ export const SettingsTeams: React.FC = () => {
                                                                     color: '#202124',
                                                                     fontWeight: '600',
                                                                     '&:not(:last-child)': {
-                                                                        borderBottom: '1px dotted #ccc', // Dotted line separator between items
+                                                                        borderBottom: '1px dotted #ccc',
                                                                     },
                                                                 },
                                                             },
                                                         },
                                                     }}
                                                 >
-                                                    <Select
-                                                        onChange={(event) => {
-                                                            const selectedValue = event.target.value;
-                                                            const selectedOption = roleOptions.find(option => option.value === selectedValue);
-                                                            const selectedKey = selectedOption ? selectedOption.key : '';
-
-                                                            handleChangeUserRole(member.email, selectedKey).then(result => {
-                                                                if (result === true) {
-                                                                    member.access_level = selectedKey;
-                                                                }
-                                                            });
-                                                        }}>
-                                                        {roleOptions.map(option => (
-                                                            <MenuItem key={option.key} value={option.value}>{option.value}</MenuItem>
-                                                        ))}
-                                                    </Select>
-
+                                                    {roleOptions.map(option => (
+                                                        <MenuItem
+                                                            key={option.key}
+                                                            value={option.key}
+                                                            sx={{ display: option.key === "owner" ? 'none' : 'block' }}
+                                                        >
+                                                            {option.value}
+                                                        </MenuItem>
+                                                    ))}
                                                 </Select>
+                                                <Box sx={{
+                                                    borderBottom: '1px dashed #51627B',
+                                                    width: '40%',
+                                                    margin: '4px auto 0',
+                                                }} />
                                             </FormControl>
                                         </TableCell>
                                         <TableCell sx={teamsStyles.tableBodyColumn}>{member.invited_by}</TableCell>
