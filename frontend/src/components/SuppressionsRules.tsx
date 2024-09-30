@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { suppressionsStyles } from "@/css/suppressions";
 import { ChevronLeft, ChevronRight } from "@mui/icons-material";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
+import { showErrorToast, showToast } from "./ToastNotification";
 
 
 interface CustomTablePaginationProps {
@@ -129,9 +130,7 @@ const SuppressionRules: React.FC = () => {
     const [checked, setChecked] = useState(false);
     const [checkedUrl, setCheckedUrl] = useState(false);
     const [checkedUrlParameters, setCheckedUrlParameters] = useState(false);
-    const handleSwitchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setChecked(event.target.checked);
-    };
+
     const handleSwitchChangeURl = (event: React.ChangeEvent<HTMLInputElement>) => {
         setCheckedUrl(event.target.checked);
     };
@@ -139,6 +138,18 @@ const SuppressionRules: React.FC = () => {
         setCheckedUrlParameters(event.target.checked);
     };
     const label = { inputProps: { 'aria-label': 'Switch demo' } };
+
+    // First switch
+    const handleSwitchChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const isChecked = event.target.checked;
+        setChecked(isChecked);
+    
+        try {
+          const response = await axiosInstance.post('/suppressions/collecting-contacts');
+        } catch (error) {
+          console.error('Error occurred while updating switch status:', error);
+        }
+      };
 
 
 
@@ -160,6 +171,19 @@ const SuppressionRules: React.FC = () => {
         setChipData((prevChips) => prevChips.filter((chip) => chip !== chipToDelete));
     };
 
+    const handleSubmitUrl = async () => {        
+        try {
+            const response = await axiosInstance.post('/suppressions/certain-urls', chipData );
+            if (response.status === 200) {
+                console.log("URLs successfully sent:", response.data);
+                showToast('URLs successfully processed!');
+            }
+        } catch (error) {
+            console.error("Error while sending URLs:", error);
+            showErrorToast('An error occurred while sending URLs.');
+        }
+    };
+
     /// URL with Param suppressions
     const [inputValueParam, setInputValueParam] = useState('');
     const [chipDataParam, setChipDataParam] = useState<string[]>([]);
@@ -176,6 +200,19 @@ const SuppressionRules: React.FC = () => {
 
     const handleDeleteParam = (chipToDelete: string) => {
         setChipDataParam((prevChips) => prevChips.filter((chip) => chip !== chipToDelete));
+    };
+
+    const handleSubmitUrlParam = async () => {        
+        try {
+            const response = await axiosInstance.post('/suppressions/based-urls',chipDataParam);
+            if (response.status === 200) {
+                console.log("URLs successfully sent:", response.data);
+                showToast('URLs successfully processed!');
+            }
+        } catch (error) {
+            console.error("Error while sending URLs:", error);
+            showErrorToast('An error occurred while sending URLs.');
+        }
     };
 
 
@@ -197,15 +234,20 @@ const SuppressionRules: React.FC = () => {
         }
     };
 
-    const handleSubmit = () => {
-        // Здесь отправляем данные на бэкенд
-        console.log('Отправка данных на бэкенд: ', chipData);
-        // Пример POST запроса:
-        // axios.post('/api/save', { data: chipData })
-        //     .then(response => console.log(response))
-        //     .catch(error => console.error(error));
+    const handleSubmitEmail = async () => {        
+        try {
+            const response = await axiosInstance.post('/suppressions/suppression-multiple-emails', chipDataEmail);
+            if (response.status === 200) {
+                console.log("URLs successfully sent:", response.data);
+                showToast('URLs successfully processed!');
+            }
+        } catch (error) {
+            console.error("Error while sending URLs:", error);
+            showErrorToast('An error occurred while sending URLs.');
+        }
     };
 
+    // file CSV
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleFileUpload = (event: any) => {
@@ -216,6 +258,23 @@ const SuppressionRules: React.FC = () => {
     const handleClick = () => {
         if (fileInputRef.current) {
             fileInputRef.current.click(); // Проверяем наличие элемента перед вызовом
+        }
+    };
+
+    const downloadFile = async () => {
+        try {
+            const response = await axiosInstance.get('/sample-suppression-list', {
+                responseType: 'blob',
+            });
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', 'sample-suppression-list.csv');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } catch (error) {
+            showErrorToast('Error downloading the file.');
         }
     };
 
@@ -470,8 +529,10 @@ const SuppressionRules: React.FC = () => {
                                 label="URL"
                                 multiline
                                 rows={3}
+                                disabled={!checkedUrl}
                                 variant="outlined"
                                 fullWidth
+                                sx={{display: checkedUrl ? 'block' : 'none' }}
                                 margin="normal"
                                 value={inputValue}
                                 onKeyDown={handleKeyDownUrl}
@@ -510,13 +571,14 @@ const SuppressionRules: React.FC = () => {
                                 }}
                             />
                             <Box sx={{ padding: 0 }}>
-                                <Button variant="outlined" sx={{
+                                <Button variant="outlined" onClick={handleSubmitUrl} sx={{
                                     backgroundColor: '#fff',
                                     color: 'rgba(80, 82, 178, 1)',
                                     fontFamily: "Nunito Sans",
                                     textTransform: 'none',
                                     lineHeight: '22.4px',
                                     fontWeight: '700',
+                                    display: checkedUrl ? '' : 'none',
                                     padding: '1em 1em',
                                     marginBottom: 1,
                                     textWrap: 'nowrap',
@@ -647,6 +709,9 @@ const SuppressionRules: React.FC = () => {
                                 rows={3}
                                 variant="outlined"
                                 fullWidth
+                                sx={{
+                                    display: checkedUrlParameters ? '' : 'none',
+                                }}
                                 margin="normal"
                                 value={inputValueParam}
                                 onKeyDown={handleKeyDownUrlParameters}
@@ -685,13 +750,14 @@ const SuppressionRules: React.FC = () => {
                                 }}
                             />
                             <Box sx={{ padding: 0 }}>
-                                <Button variant="outlined" sx={{
+                                <Button variant="outlined" onClick={handleSubmitUrlParam} sx={{
                                     backgroundColor: '#fff',
                                     color: 'rgba(80, 82, 178, 1)',
                                     fontFamily: "Nunito Sans",
                                     textTransform: 'none',
                                     lineHeight: '22.4px',
                                     fontWeight: '700',
+                                    display: checkedUrlParameters ? '' : 'none',
                                     padding: '1em 1em',
                                     marginBottom: 1,
                                     textWrap: 'nowrap',
@@ -764,7 +830,7 @@ const SuppressionRules: React.FC = () => {
                             }}
                         />
                         <Box sx={{ padding: 0 }}>
-                            <Button variant="outlined" sx={{
+                            <Button variant="outlined" onClick={handleSubmitEmail} sx={{
                                 backgroundColor: '#fff',
                                 color: 'rgba(80, 82, 178, 1)',
                                 fontFamily: "Nunito Sans",
@@ -866,7 +932,7 @@ const SuppressionRules: React.FC = () => {
                             <Typography className="main-text"
                                 sx={{ ...suppressionsStyles.text, gap: 0.25, pt: 1, "@media (max-width: 700px)": {mb:1 }}}
                             >
-                                Sample doc: <Typography sx={{ ...suppressionsStyles.text, color: 'rgba(80, 82, 178, 1)', fontWeight: 400 }}>sample suppression-list.csv</Typography>
+                                Sample doc: <Typography onClick={downloadFile} sx={{ ...suppressionsStyles.text, color: 'rgba(80, 82, 178, 1)', cursor: 'pointer', fontWeight: 400 }}>sample suppression-list.csv</Typography>
                             </Typography>
 
                             <Box sx={{ width: '100%', display: 'flex', alignItems: 'flex-end', justifyContent: 'flex-end' }}>
