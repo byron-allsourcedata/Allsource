@@ -20,6 +20,11 @@ class SubscriptionStatus(Enum):
     UNKNOWN = "UNKNOWN"
     NEED_UPGRADE_PLAN = 'NEED_UPGRADE_PLAN'
     
+class SuppressionStatus(Enum):
+    SUCCESS = "SUCCESS"
+    INCOMPLETE = "INCOMPLETE"
+    COMPLETED = "completed"
+    
 class SettingStatus(Enum):
     INCORRECT_MAIL = 'INCORRECT_MAIL'
     SUCCESS = "SUCCESS"
