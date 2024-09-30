@@ -3,8 +3,8 @@ from sqlalchemy.orm import relationship
 from .base import Base, create_timestamps
 
 
-class Rules(Base):
-    __tablename__ = "rules"
+class SuppressionRule(Base):
+    __tablename__ = "suppressions_rules"
 
     id = Column(Integer, primary_key=True, nullable=False)
     created_at = Column(TIMESTAMP, nullable=True)
@@ -14,11 +14,12 @@ class Rules(Base):
     is_based_activation = Column(BOOLEAN, nullable=False, default=False)
     activate_based_urls = Column(VARCHAR, nullable=True)
     user_id = Column(Integer, nullable=False)
+    actual_contect_days = Column(Integer, nullable=False)
     page_views_limit = Column(VARCHAR, nullable=True)
     collection_timeout = Column(VARCHAR, nullable=True)
     suppressions_multiple_emails = Column(Integer, ForeignKey('suppression_emails.id'), nullable=True)
     
-    suppression_emails = relationship("SuppressionEmails", back_populates="rules")
+    suppression_emails = relationship("SuppressionEmails", back_populates="suppressions_rules")
     
     def to_dict(self):
             return {
@@ -31,4 +32,4 @@ class Rules(Base):
                 "suppressions_multiple_emails": self.suppressions_multiple_emails
             }
 
-event.listen(Rules, "before_insert", create_timestamps)
+event.listen(SuppressionRule, "before_insert", create_timestamps)

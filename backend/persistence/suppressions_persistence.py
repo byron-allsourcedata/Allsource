@@ -5,7 +5,7 @@ from models.suppressions_list import SuppressionList
 from sqlalchemy.orm import Session
 from enums import SuppressionStatus
 from sqlalchemy.dialects.postgresql import insert
-from models.rules import Rules
+from models.suppression_rule import SuppressionRule
 
 
 class SuppressionPersistence:
@@ -19,7 +19,7 @@ class SuppressionPersistence:
             list_name=list_name,
             created_at=datetime.now(),
             total_emails=None,
-            status='incomplete',
+            status=SuppressionStatus.INCOMPLETE.value.lower(),
             user_id=user_id
         )
 
@@ -31,7 +31,7 @@ class SuppressionPersistence:
 
         if email_list_ids:
             suppression_list.total_emails = email_list_ids
-            suppression_list.status = SuppressionStatus.COMPLETED
+            suppression_list.status = SuppressionStatus.COMPLETED.value.lower()
 
         self.db.add(suppression_list)
         self.db.commit()
@@ -76,11 +76,11 @@ class SuppressionPersistence:
         return suppression_lists
     
     def get_rules(self, user_id):
-        rules = self.db.query(Rules).filter(Rules.user_id == user_id).first()
+        rules = self.db.query(SuppressionRule).filter(SuppressionRule.user_id == user_id).first()
         return rules
     
     def save_rules_multiple_emails(self, user_id, emails):
-        rules = self.get_rules(user_id=user_id) or Rules(created_at=datetime.now(), user_id=user_id)
+        rules = self.get_rules(user_id=user_id) or SuppressionRule(created_at=datetime.now(), user_id=user_id)
 
         email_list_ids = self.save_suppression_emails(emails)
 
@@ -91,7 +91,7 @@ class SuppressionPersistence:
         self.db.commit()
         
     def process_collecting_contacts(self, user_id):
-        rules = self.get_rules(user_id=user_id) or Rules(created_at=datetime.now(), user_id=user_id, is_stop_collecting_contacts = False)
+        rules = self.get_rules(user_id=user_id) or SuppressionRule(created_at=datetime.now(), user_id=user_id, is_stop_collecting_contacts = False)
         if rules.is_stop_collecting_contacts == False:
             rules.is_stop_collecting_contacts = True
         else:
@@ -100,7 +100,7 @@ class SuppressionPersistence:
         self.db.commit()
         
     def process_certain_activation(self, user_id):
-        rules = self.get_rules(user_id=user_id) or Rules(created_at=datetime.now(), user_id=user_id, is_url_certain_activation = False)
+        rules = self.get_rules(user_id=user_id) or SuppressionRule(created_at=datetime.now(), user_id=user_id, is_url_certain_activation = False)
         if rules.is_url_certain_activation == False:
             rules.is_url_certain_activation = True
         else:
@@ -109,7 +109,7 @@ class SuppressionPersistence:
         self.db.commit()
     
     def process_certain_urls(self, user_id, url_list):
-        rules = self.get_rules(user_id=user_id) or Rules(created_at=datetime.now(), user_id=user_id)
+        rules = self.get_rules(user_id=user_id) or SuppressionRule(created_at=datetime.now(), user_id=user_id)
         
         cleaned_urls = [url.replace("/", "").replace(" ", "") for url in url_list if url]
         
@@ -121,7 +121,7 @@ class SuppressionPersistence:
         self.db.commit()
 
     def process_based_activation(self, user_id):
-        rules = self.get_rules(user_id=user_id) or Rules(created_at=datetime.now(), user_id=user_id, is_based_activation = False)
+        rules = self.get_rules(user_id=user_id) or SuppressionRule(created_at=datetime.now(), user_id=user_id, is_based_activation = False)
         if rules.is_based_activation == False:
             rules.is_based_activation = True
         else:
@@ -130,7 +130,7 @@ class SuppressionPersistence:
         self.db.commit()
         
     def process_based_urls(self, user_id, identifiers):
-        rules = self.get_rules(user_id=user_id) or Rules(created_at=datetime.now(), user_id=user_id)
+        rules = self.get_rules(user_id=user_id) or SuppressionRule(created_at=datetime.now(), user_id=user_id)
         cleaned_identifiers = [identifier.replace("utm_source", "").replace("=", "").replace(" ", "") for identifier in identifiers if identifier]
         
         if not cleaned_identifiers:
@@ -141,7 +141,7 @@ class SuppressionPersistence:
         self.db.commit()
         
     def process_page_views_limit(self, user_id, views):
-        rules = self.get_rules(user_id=user_id) or Rules(created_at=datetime.now(), user_id=user_id)
+        rules = self.get_rules(user_id=user_id) or SuppressionRule(created_at=datetime.now(), user_id=user_id)
         if not views:
             rules.page_views_limit = None
         else:
@@ -150,7 +150,7 @@ class SuppressionPersistence:
         self.db.commit()
         
     def process_collection_timeout(self, user_id, seconds):
-        rules = self.get_rules(user_id=user_id) or Rules(created_at=datetime.now(), user_id=user_id)
+        rules = self.get_rules(user_id=user_id) or SuppressionRule(created_at=datetime.now(), user_id=user_id)
         if not seconds:
             rules.collection_timeout = None
         else:
