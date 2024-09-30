@@ -152,20 +152,15 @@ class SuppressionPersistence:
         self.db.add(rules)
         self.db.commit()
         
-    def process_page_views_limit(self, user_id, views):
-        rules = self.get_rules(user_id=user_id) or SuppressionRule(created_at=datetime.now(), user_id=user_id)
-        if not views:
-            rules.page_views_limit = None
-        else:
-            rules.page_views_limit = views
-        self.db.add(rules)
-        self.db.commit()
-        
-    def process_collection_timeout(self, user_id, seconds):
+    def process_page_views_limit(self, user_id, page_views, seconds):
         rules = self.get_rules(user_id=user_id) or SuppressionRule(created_at=datetime.now(), user_id=user_id)
         if not seconds:
             rules.collection_timeout = None
+        if not page_views:
+            rules.page_views_limit = None
         else:
+            rules.page_views_limit = page_views
             rules.collection_timeout = seconds
         self.db.add(rules)
         self.db.commit()
+        

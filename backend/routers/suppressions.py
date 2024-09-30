@@ -4,7 +4,7 @@ from services.suppressions import SuppressionService
 from dependencies import get_suppression_service, check_user_authorization
 from fastapi.responses import FileResponse
 from enums import SuppressionStatus
-from schemas.suppressions import SuppressionRequest
+from schemas.suppressions import SuppressionRequest, CollectionRuleRequest
 
 router = APIRouter()
 
@@ -98,16 +98,9 @@ async def process_based_urls(suppression_request: SuppressionRequest,
     suppression_service.process_based_urls(user, suppression_request.data)
     return SuppressionStatus.SUCCESS
 
-@router.post("/page-views-limit")
-async def process_page_views_limit(suppression_request: SuppressionRequest,
+@router.post("/collection-rules")
+async def process_page_views_limit(collection_rule: CollectionRuleRequest,
     suppression_service: SuppressionService = Depends(get_suppression_service),
     user: User = Depends(check_user_authorization)):
-    suppression_service.process_page_views_limit(user, suppression_request.data)
-    return SuppressionStatus.SUCCESS
-
-@router.post("/collection-timeout")
-async def process_collection_timeout(suppression_request: SuppressionRequest,
-    suppression_service: SuppressionService = Depends(get_suppression_service),
-    user: User = Depends(check_user_authorization)):
-    suppression_service.process_collection_timeout(user, suppression_request.data)
+    suppression_service.process_page_views_limit(user, collection_rule.page_views, collection_rule.seconds)
     return SuppressionStatus.SUCCESS

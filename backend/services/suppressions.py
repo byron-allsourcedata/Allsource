@@ -77,7 +77,7 @@ class SuppressionService:
         self.suppression_persistence.save_rules_multiple_emails(user_id=user.get('id'), emails=emails)
         
     def get_rules(self, user: dict):
-        rules = self.get_rules(user.get('id'))
+        rules = self.suppression_persistence.get_rules(user.get('id'))
         if rules:
             return rules.to_dict
         return None
@@ -97,10 +97,5 @@ class SuppressionService:
     def process_based_urls(self, user: dict, identifiers):
         self.suppression_persistence.process_based_urls(user_id=user.get('id'), identifiers=identifiers)
         
-    def process_page_views_limit(self, user: dict, views: str):
-        self.suppression_persistence.process_page_views_limit(user_id=user.get('id'), views=views)
-        
-    def process_collection_timeout(self, user: dict, seconds: str):
-        self.suppression_persistence.process_collection_timeout(user_id=user.get('id'), seconds=seconds)
-    
-
+    def process_page_views_limit(self, user: dict, page_views: int, seconds: int):
+        self.suppression_persistence.process_page_views_limit(user_id=user.get('id'), page_views=page_views, seconds=seconds)
