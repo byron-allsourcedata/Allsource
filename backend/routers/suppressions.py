@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, UploadFile, File
+from fastapi import APIRouter, Depends, UploadFile, File, Query
 from models.users import User
 from services.suppressions import SuppressionService
 from dependencies import get_suppression_service, check_user_authorization
@@ -26,15 +26,17 @@ async def process_suppression_list(
 
 @router.get("/suppression-list")
 async def get_suppression_list(
+    page: int = Query(1, alias="page", ge=1, description="Page number"),
+    per_page: int = Query(15, alias="per_page", ge=1, le=100, description="Items per page"),
     suppression_service: SuppressionService = Depends(get_suppression_service),
     user: User = Depends(check_user_authorization)):
-    return suppression_service.get_suppression_list(user)
+    return suppression_service.get_suppression_list(user, page, per_page)
 
 @router.delete("/suppression-list")
 async def delete_suppression_list(suppression_request: SuppressionRequest,
     suppression_service: SuppressionService = Depends(get_suppression_service),
     user: User = Depends(check_user_authorization)):
-    if suppression_service.delete_suppression_list(user, suppression_request.suppression_list_ids):
+    if suppression_service.delete_suppression_list(user, suppression_request.suppression_list_id):
         return SuppressionStatus.SUCCESS
     return SuppressionStatus.INCOMPLETE
 
@@ -43,7 +45,7 @@ async def download_suppression_list(
     suppression_request: SuppressionRequest,
     suppression_service: SuppressionService = Depends(get_suppression_service),
     user: User = Depends(check_user_authorization)):
-    response = suppression_service.download_suppression_list(user, suppression_request.suppression_list_ids)
+    response = suppression_service.download_suppression_list(user, suppression_request.suppression_list_id)
     if response:
         return response
     return SuppressionStatus.INCOMPLETE

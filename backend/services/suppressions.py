@@ -36,8 +36,13 @@ class SuppressionService:
             
         return True
     
-    def get_suppression_list(self, user: dict):
-        return self.suppression_persistence.get_suppression_list(user_id=user.get('id'))
+    def get_suppression_list(self, user: dict, page, per_page):
+        suppression_list, total_count, max_page = self.suppression_persistence.get_suppression_list(user_id=user.get('id'), page=page, per_page=per_page)
+        return {
+            'suppression_list': suppression_list,
+            'total_count': total_count,
+            'max_page': max_page
+        }
     
     def delete_suppression_list(self, user: dict, suppression_list_id):
         if suppression_list_id:

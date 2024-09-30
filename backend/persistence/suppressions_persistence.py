@@ -1,4 +1,5 @@
 import datetime
+import math
 
 from models.suppression_emails import SuppressionEmails
 from models.suppressions_list import SuppressionList
@@ -53,16 +54,27 @@ class SuppressionPersistence:
         return email_list_ids
 
     
-    def get_suppression_list(self, user_id):
-        suppression_lists = self.db.query(SuppressionList).filter(SuppressionList.user_id == user_id).all()
+    def get_suppression_list(self, user_id, page, per_page):
+        offset = (page - 1) * per_page
+        suppression_lists = (
+            self.db.query(SuppressionList)
+            .filter(SuppressionList.user_id == user_id)
+            .limit(per_page)
+            .offset(offset)
+            .all()
+        )
         
         result = []
         for suppression in suppression_lists:
             total_count = len(suppression.suppression_emails)
             suppression.total_emails = total_count
             result.append(suppression.to_dict())
-        
-        return result
+
+        total_count = self.db.query(SuppressionList).filter(SuppressionList.user_id == user_id).count()
+        max_page = math.ceil(total_count / per_page)
+
+        return result, total_count, max_page
+
     
     def delete_suppression_list(self, user_id, suppression_list_id):
         self.db.query(SuppressionList).filter(
