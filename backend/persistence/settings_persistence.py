@@ -154,12 +154,12 @@ class SettingsPersistence:
         if  mail_remove_user == mail:
             result['error'] = "CANNOT_REMOVE_YOURSELF_FROM_TEAM"
             return result
-        
-        self.db.query(Users).filter(Users.email == mail_remove_user, Users.team_owner_id == user_id).update(
-            {Users.team_owner_id: None, Users.team_access_level: TeamAccessLevel.OWNER.value},
-            synchronize_session=False
-        )
+                
+        self.db.query(Users).filter(
+            Users.email == mail_remove_user,
+            Users.team_owner_id == user_id
+        ).delete()
         self.db.commit()
-        result['success'] = True
         
+        result['success'] = True
         return result
