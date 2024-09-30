@@ -80,13 +80,7 @@ class SuppressionPersistence:
         return rules
     
     def save_rules_multiple_emails(self, user_id, emails):
-        rules = self.get_rules(user_id=user_id)
-        if rules is None:
-            rules = Rules(
-                created_at = datetime.now(),
-                suppressions_multiple_emails = None,
-                user_id = user_id
-            )
+        rules = self.get_rules(user_id=user_id) or Rules(created_at=datetime.now(), user_id=user_id)
 
         email_list_ids = self.save_suppression_emails(emails)
 
@@ -97,13 +91,7 @@ class SuppressionPersistence:
         self.db.commit()
         
     def process_collecting_contacts(self, user_id):
-        rules = self.get_rules(user_id=user_id)
-        if rules is None:
-            rules = Rules(
-                created_at = datetime.now(),
-                is_stop_collecting_contacts = False,
-                user_id = user_id
-            )
+        rules = self.get_rules(user_id=user_id) or Rules(created_at=datetime.now(), user_id=user_id, is_stop_collecting_contacts = False)
         if rules.is_stop_collecting_contacts == False:
             rules.is_stop_collecting_contacts = True
         else:
@@ -112,17 +100,11 @@ class SuppressionPersistence:
         self.db.commit()
         
     def process_certain_activation(self, user_id):
-        rules = self.get_rules(user_id=user_id)
-        if rules is None:
-            rules = Rules(
-                created_at = datetime.now(),
-                activate_certain_urls = False,
-                user_id = user_id
-            )
-        if rules.activate_certain_urls == False:
-            rules.activate_certain_urls = True
+        rules = self.get_rules(user_id=user_id) or Rules(created_at=datetime.now(), user_id=user_id, is_url_certain_activation = False)
+        if rules.is_url_certain_activation == False:
+            rules.is_url_certain_activation = True
         else:
-            rules.activate_certain_urls = False
+            rules.is_url_certain_activation = False
         self.db.add(rules)
         self.db.commit()
     
@@ -132,8 +114,46 @@ class SuppressionPersistence:
         cleaned_urls = [url.replace("/", "").replace(" ", "") for url in url_list if url]
         
         if not cleaned_urls:
-            return
+            rules.activate_certain_urls = None
         
-        rules.activate_certain_urls = ''.join(cleaned_urls)
+        rules.activate_certain_urls = ', '.join(cleaned_urls)
+        self.db.add(rules)
+        self.db.commit()
+
+    def process_based_activation(self, user_id):
+        rules = self.get_rules(user_id=user_id) or Rules(created_at=datetime.now(), user_id=user_id, is_based_activation = False)
+        if rules.is_based_activation == False:
+            rules.is_based_activation = True
+        else:
+            rules.is_based_activation = False
+        self.db.add(rules)
+        self.db.commit()
+        
+    def process_based_urls(self, user_id, identifiers):
+        rules = self.get_rules(user_id=user_id) or Rules(created_at=datetime.now(), user_id=user_id)
+        cleaned_identifiers = [identifier.replace("utm_source", "").replace("=", "").replace(" ", "") for identifier in identifiers if identifier]
+        
+        if not cleaned_identifiers:
+            rules.activate_based_urls = None
+        
+        rules.activate_based_urls = ', '.join(cleaned_identifiers)
+        self.db.add(rules)
+        self.db.commit()
+        
+    def process_page_views_limit(self, user_id, views):
+        rules = self.get_rules(user_id=user_id) or Rules(created_at=datetime.now(), user_id=user_id)
+        if not views:
+            rules.page_views_limit = None
+        else:
+            rules.page_views_limit = views
+        self.db.add(rules)
+        self.db.commit()
+        
+    def process_collection_timeout(self, user_id, seconds):
+        rules = self.get_rules(user_id=user_id) or Rules(created_at=datetime.now(), user_id=user_id)
+        if not seconds:
+            rules.collection_timeout = None
+        else:
+            rules.collection_timeout = seconds
         self.db.add(rules)
         self.db.commit()

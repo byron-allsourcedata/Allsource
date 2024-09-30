@@ -39,20 +39,18 @@ class SuppressionService:
     def get_suppression_list(self, user: dict):
         return self.suppression_persistence.get_suppression_list(user_id=user.get('id'))
     
-    def delete_suppression_list(self, user: dict, suppression_list_ids):
-        if suppression_list_ids:
-            for suppression_list_id in suppression_list_ids:
-                self.suppression_persistence.delete_suppression_list(user_id=user.get('id'), suppression_list_id=suppression_list_id)
+    def delete_suppression_list(self, user: dict, suppression_list_id):
+        if suppression_list_id:
+            self.suppression_persistence.delete_suppression_list(user_id=user.get('id'), suppression_list_id=suppression_list_id)
             return True
         return False
     
-    def download_suppression_list(self, user: dict, suppression_list_ids):
-        if suppression_list_ids:
+    def download_suppression_list(self, user: dict, suppression_list_id):
+        if suppression_list_id:
             suppression_lists = []
-            for suppression_list_id in suppression_list_ids:
-                suppression_list = self.suppression_persistence.get_suppression_list_by_id(user_id=user.get('id'), suppression_list_id=suppression_list_id)
-                if suppression_list:
-                    suppression_lists.append(suppression_list)
+            suppression_list = self.suppression_persistence.get_suppression_list_by_id(user_id=user.get('id'), suppression_list_id=suppression_list_id)
+            if suppression_list:
+                suppression_lists.append(suppression_list)
 
             output = StringIO()
             writer = csv.writer(output)
@@ -87,4 +85,17 @@ class SuppressionService:
         
     def process_certain_urls(self, user: dict, urls):
         self.suppression_persistence.process_certain_urls(user_id=user.get('id'), url_list=urls)
+        
+    def process_based_activation(self, user: dict):
+        self.suppression_persistence.process_based_activation(user_id=user.get('id'))
+        
+    def process_based_urls(self, user: dict, identifiers):
+        self.suppression_persistence.process_based_urls(user_id=user.get('id'), identifiers=identifiers)
+        
+    def process_page_views_limit(self, user: dict, views: str):
+        self.suppression_persistence.process_page_views_limit(user_id=user.get('id'), views=views)
+        
+    def process_collection_timeout(self, user: dict, seconds: str):
+        self.suppression_persistence.process_collection_timeout(user_id=user.get('id'), seconds=seconds)
+    
 

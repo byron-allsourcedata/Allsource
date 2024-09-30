@@ -93,19 +93,19 @@ async def process_based_activation(
 async def process_based_urls(suppression_request: SuppressionRequest,
     suppression_service: SuppressionService = Depends(get_suppression_service),
     user: User = Depends(check_user_authorization)):
-    suppression_service.process_based_urls(user)
+    suppression_service.process_based_urls(user, suppression_request.data)
     return SuppressionStatus.SUCCESS
 
 @router.post("/page-views-limit")
 async def process_page_views_limit(suppression_request: SuppressionRequest,
     suppression_service: SuppressionService = Depends(get_suppression_service),
     user: User = Depends(check_user_authorization)):
-    suppression_service.process_page_views_limit(user)
+    suppression_service.process_page_views_limit(user, suppression_request.data)
     return SuppressionStatus.SUCCESS
 
 @router.post("/collection-timeout")
 async def process_collection_timeout(suppression_request: SuppressionRequest,
     suppression_service: SuppressionService = Depends(get_suppression_service),
     user: User = Depends(check_user_authorization)):
-    suppression_service.process_collection_timeout(user)
+    suppression_service.process_collection_timeout(user, suppression_request.data)
     return SuppressionStatus.SUCCESS
