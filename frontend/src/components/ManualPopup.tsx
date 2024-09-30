@@ -33,12 +33,8 @@ const openStyle = {
 };
 
 const maintext = {
-  fontFamily: 'Nunito',
-  fontSize: '14px',
-  fontWeight: '600',
-  lineHeight: '19.6px',
   textAlign: 'left',
-  color: 'rgba(0, 0, 0, 1)',
+  color: 'rgba(32,33, 36, 1) !important',
   padding: '0em 0em 0em 1em',
 };
 
@@ -49,8 +45,8 @@ const subtext = {
   lineHeight: '16.8px',
   textAlign: 'left',
   color: 'rgba(0, 0, 0, 1)',
-  paddingTop: '0em',
-  paddingLeft: '2.9em',
+  paddingTop: '0.25em',
+  paddingLeft: '3.7em',
 };
 
 interface PopupProps {
@@ -86,8 +82,8 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode }) => {
       sx={{ overflow: 'hidden' }}
     >
       <Box sx={{ ...style, ...(open ? openStyle : {}) }}>
-        <Box display="flex" justifyContent="space-between" sx={{ width: '100%', alignItems: 'center' }}>
-          <Typography variant="h6" component="h2" sx={{ fontFamily: 'Nunito', fontSize: '14px', fontWeight: '700', lineHeight: '19.1px', textAlign: 'left', color: 'rgba(28, 28, 28, 1)', '@media (max-width: 600px)': { pt: 2, pl: 2 } }}>
+        <Box display="flex" justifyContent="space-between" sx={{ width: '100%', alignItems: 'center', paddingBottom: '1rem' }}>
+          <Typography className='first-sub-title' sx={{  textAlign: 'left', '@media (max-width: 600px)': { pt: 2, pl: 2 } }}>
             Install Manually
           </Typography>
           <IconButton onClick={handleClose}>
@@ -95,10 +91,10 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode }) => {
           </IconButton>
         </Box>
         <Divider />
-        <Box sx={{ flex: 1, overflowY: 'auto', paddingBottom: '30px', '@media (max-width: 600px)': { p: 2 } }}>
+        <Box sx={{ flex: 1, overflowY: 'auto', paddingBottom: '10px', '@media (max-width: 600px)': { p: 2 } }}>
           <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', padding: '1em 0em 0em 0em', justifyContent: 'start' }}>
             <Image src='/1.svg' alt='1' width={28} height={28} />
-            <Typography sx={maintext}>Copy the pixel code</Typography>
+            <Typography className='first-sub-title' sx={maintext}>Copy the pixel code</Typography>
           </Box>
           <Box
             component="pre"
@@ -111,7 +107,7 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode }) => {
               border: '1px solid rgba(228, 228, 228, 1)',
               borderRadius: '10px',
               marginLeft: '3em',
-              maxHeight: '13em',
+              maxHeight: '14em',
               overflowY: 'auto',
               '@media (max-width: 600px)': {
                 maxHeight: '14em',
@@ -124,18 +120,18 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode }) => {
             >
               <ContentCopyIcon />
             </IconButton>
-            <code style={{ color: '#000000', fontSize: '12px', fontWeight: 600, fontFamily: 'Nunito', textWrap: 'nowrap' }}>{pixelCode}</code>
+            <code style={{ color: 'rgba(95, 99, 104, 1)', fontSize: '12px', margin: 0, fontWeight: 400, fontFamily: 'Nunito', textWrap: 'nowrap' }}>{pixelCode?.trim()}</code>
           </Box>
           <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', padding: '0.5em 0em 0em 0em', justifyContent: 'start' }}>
             <Image src='/2.svg' alt='2' width={28} height={28} />
-            <Typography sx={maintext}>Paste the pixel in your website</Typography>
+            <Typography className='first-sub-title' sx={maintext}>Paste the pixel in your website</Typography>
           </Box>
-          <Typography sx={subtext}>Paste the above pixel in the header of your website. The header script starts with &lt;head&gt; and ends with &lt;/head&gt;.</Typography>
+          <Typography className='paragraph' sx={subtext}>Paste the above pixel in the header of your website. The header script starts with &lt;head&gt; and ends with &lt;/head&gt;.</Typography>
           <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', padding: '1.25em 0em 0em 0em', justifyContent: 'start' }}>
             <Image src='/3.svg' alt='3' width={28} height={28} />
-            <Typography sx={maintext}>Verify Your Pixel</Typography>
+            <Typography className='first-sub-title' sx={maintext}>Verify Your Pixel</Typography>
           </Box>
-          <Typography sx={subtext}>Once the pixel is pasted in your website, wait for 10-15 mins and verify your pixel.</Typography>
+          <Typography className='paragraph' sx={subtext}>Once the pixel is pasted in your website, wait for 10-15 mins and verify your pixel.</Typography>
           <Box sx={{ position: 'relative', width: '100%', pt: 5, '@media (max-width: 600px)': { pt: 2 } }}>
             <Box
               sx={{
@@ -152,12 +148,9 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode }) => {
                 variant="h6"
                 component="div"
                 mb={2}
+                className='first-sub-title'
                 sx={{
-                  fontFamily: 'Nunito',
-                  fontWeight: '700',
-                  lineHeight: '21.82px',
                   textAlign: 'left',
-                  fontSize: '16px'
                 }}
               >
                 Send this to my developer
@@ -169,16 +162,14 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode }) => {
                   placeholder="Enter Email ID"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  className='paragraph'
                   sx={{
                     padding: '0.5rem 2em 0.5em 1em',
                     width: '65%',
                     border: '1px solid #e4e4e4',
                     borderRadius: '4px',
                     maxHeight: '2.5em',
-                    fontFamily: 'Nunito',
-                    fontSize: '16px',
-                    fontWeight: '500',
-                    lineHeight: '21.82px',
+                    fontSize: '14px !important',
                     textAlign: 'left',
                     backgroundColor: 'rgba(255, 255, 255, 1)',
                     boxShadow: 'none',
@@ -206,8 +197,8 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode }) => {
                     '@media (max-width: 600px)': { padding: '0.5em 1.5em', mr: 0, ml: 0, left: 0 }
                   }}
                 >
-                  <Typography sx={{
-                    fontFamily: 'Nunito', fontSize: '16px', fontWeight: '600', lineHeight: '22.4px', textAlign: 'left'
+                  <Typography className='second-sub-title' sx={{
+                    color:'rgba(80, 82, 178, 1) !important', textAlign: 'left'
                   }}>
                     Send
                   </Typography>
@@ -218,10 +209,10 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode }) => {
         </Box>
 
         <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-end', paddingBottom: '0em', '@media (max-width: 600px)': { justifyContent: 'center', pb: 3, width: '94%', pl: 2 } }}>
-          <Button variant="outlined" sx={{ mr: 2, backgroundColor: 'rgba(255, 255, 255, 1)', color: 'rgba(80, 82, 178, 1)', textTransform: 'none', padding: '0.75em 2em', border: '1px solid rgba(80, 82, 178, 1)', '@media (max-width: 600px)': { width: '100%' }, }}>
+          <Button variant="outlined" className='second-sub-title'  sx={{ mr: 2, backgroundColor: 'rgba(255, 255, 255, 1)', color: 'rgba(80, 82, 178, 1) !important', textTransform: 'none', padding: '0.75em 2em', border: '1px solid rgba(80, 82, 178, 1)', '@media (max-width: 600px)': { width: '100%' }, }}>
             Contact support
           </Button>
-          <Button variant="contained" onClick={handleClose} sx={{ backgroundColor: 'rgba(80, 82, 178, 1)', fontFamily: "Nunito", textTransform: 'none', padding: '0.75em 3em', '@media (max-width: 600px)': { width: '100%' } }}>
+          <Button variant="contained" onClick={handleClose} className='second-sub-title' sx={{ backgroundColor: 'rgba(80, 82, 178, 1)', color: 'rgba(255, 255, 255, 1) !important',  textTransform: 'none', padding: '0.75em 3em', '@media (max-width: 600px)': { width: '100%' } }}>
             Next
           </Button>
         </Box>

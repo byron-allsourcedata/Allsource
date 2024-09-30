@@ -33,10 +33,10 @@ const CustomButton = styled(Button)(({ theme }) => ({
   textAlign: "left",
   marginBottom: "8px",
   textTransform: "none",
-  fontFamily: "Nunito",
+  fontFamily: "Nunito Sans",
   fontSize: "14px",
   lineHeight: "20px",
-  fontWeight: "600",
+  fontWeight: "500",
   color: "rgba(74, 74, 74, 1)",
   opacity: 1,
   pointerEvents: "auto",
@@ -50,10 +50,10 @@ const CustomButton = styled(Button)(({ theme }) => ({
     height: "auto",
   },
   "& .MuiListItemText-root span": {
-    fontFamily: "Nunito",
+    fontFamily: "Nunito Sans",
     fontSize: "14px",
-    color: "#4a4a4a",
-    fontWeight: "600",
+    color: '#202124',
+    fontWeight: "500",
     lineHeight: "20px"
   }
 }));
@@ -125,7 +125,7 @@ export const ProgressSection: React.FC = () => {
         sx={{
           width: "90%",
           height: "100%",
-          padding: "2rem",
+          padding: "1.5rem",
           marginTop: "1.5rem",
           border: "1px solid #e4e4e4",
           borderRadius: "8px",
@@ -134,7 +134,7 @@ export const ProgressSection: React.FC = () => {
           marginBottom: "2rem",
           "@media (max-width: 1199px)": {
             width: "100%",
-            padding: "1.5rem",
+            padding: "1.25rem",
             margin: "1.5rem 0",
           },
         }}
@@ -143,12 +143,8 @@ export const ProgressSection: React.FC = () => {
           variant="h6"
           component="div"
           mb={2}
+          className="first-sub-title"
           sx={{
-            fontSize: "16px",
-            fontFamily: "Nunito",
-            color: "#4a4a4a",
-            fontWeight: "600",
-            lineHeight: "normal",
             marginBottom: "8px",
           }}
         >
@@ -165,13 +161,7 @@ export const ProgressSection: React.FC = () => {
           <Typography
             variant="body2"
             color="textSecondary"
-            sx={{
-              fontSize: "14px",
-              fontFamily: "Nunito",
-              color: "#787878",
-              fontWeight: "700",
-              lineHeight: "normal",
-            }}
+            className="paragraph"
           >
             Progress
           </Typography>
@@ -193,12 +183,8 @@ export const ProgressSection: React.FC = () => {
           <Typography
             variant="body2"
             color="textSecondary"
+            className="paragraph"
             sx={{
-              fontFamily: "Nunito",
-              fontSize: "14px",
-              color: "#000",
-              fontWeight: "400",
-              lineHeight: "normal",
               "@media (max-width: 1199px)": {
                 fontSize: "14px",
                 fontFamily: "Nunito",
@@ -227,7 +213,7 @@ export const ProgressSection: React.FC = () => {
                 sx={{ backgroundColor: "rgba(220, 220, 239, 1)" }}
               />
             </CustomListItemIcon>
-            <ListItemText primary="Activate Trial" />
+            <ListItemText className="second-sub-title" primary="Activate Trial" />
           </CustomButton>
           <CustomButton
           onClick={installManually}
@@ -243,7 +229,7 @@ export const ProgressSection: React.FC = () => {
             <CustomListItemIcon>
               <CodeIcon sx={{ backgroundColor: "rgba(220, 220, 239, 1)" }} />
             </CustomListItemIcon>
-            <ListItemText primary="Setup pixel" />
+            <ListItemText className="second-sub-title" primary="Setup pixel" />
           </CustomButton>
           <ManualPopup
               open={openmanually}
