@@ -41,6 +41,7 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
             flexBasis: '142px', // Sidebar fixed width
             flexShrink: 0, // Prevents shrinking
             minWidth: '142px', // Ensures minimum width
+            position: 'fixed'
             }}>
             <SliderProvider><Sidebar /></SliderProvider>
           </Grid>
@@ -49,9 +50,11 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
             flexGrow: 1, // Takes up remaining space
             paddingRight: '24px',
             minWidth: 0, // Prevents content from causing overflow
+            marginLeft: '170px',
             '@media (max-width: 899px)': {
                 padding: '0 16px 32px',
                 minWidth: '100%',
+                marginLeft: 0
             }
           }}>
           {children}

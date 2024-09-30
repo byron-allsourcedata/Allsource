@@ -161,17 +161,17 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
         return `${differenceInDays} days ago`;
     };
 
-    useEffect(() => {
-        // Проверка на мобильное устройство по ширине экрана
-        if (window.innerWidth >= 768) {
-            document.body.style.overflow = 'hidden';
-        }
+    // useEffect(() => {
+    //     // Проверка на мобильное устройство по ширине экрана
+    //     if (window.innerWidth >= 768) {
+    //         document.body.style.overflow = 'hidden';
+    //     }
 
-        return () => {
-            // Сброс overflow на 'auto' при размонтировании компонента
-            document.body.style.overflow = 'auto';
-        };
-    }, []);
+    //     return () => {
+    //         // Сброс overflow на 'auto' при размонтировании компонента
+    //         document.body.style.overflow = 'auto';
+    //     };
+    // }, []);
 
     const handleSaveAccountDetails = (field: 'full_name' | 'email_address') => {
         const accountData = {
