@@ -32,7 +32,7 @@ const TrialStatus: React.FC = () => {
           setBackgroundColor('#EAF8DD');
           setTextColor('#6EC125');
           setIconColor('#6EC125');
-        } else if (daysDifference <= 5) {
+        } else if (daysDifference <= 5 && daysDifference > 0) {
           setStatusText(`${daysDifference} days Free Trial Left.`);
           setBackgroundColor('rgba(255, 233, 131, 1)');
           setTextColor('rgba(0, 0, 0, 1)');
@@ -110,6 +110,7 @@ const TrialStatus: React.FC = () => {
           {(statusText.includes('Free Trial Expired') || statusText.includes('Free Trial Left')) && (
             <Button onClick={handleOpenSlider} sx={{ ml: 2, textTransform: 'none', padding: 0, color: 'rgba(80, 82, 178, 1) !important' }}>
               <Typography className='first-sub-title' sx={{
+                color: 'rgba(80, 82, 178, 1) !important',
                 marginRight: '5px',
                 letterSpacing: '-0.02em',
                 textAlign: 'left',
