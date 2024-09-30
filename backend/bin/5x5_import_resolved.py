@@ -152,7 +152,7 @@ async def process_user_data(table, index, five_x_five_user: FiveXFiveUser, sessi
             session.flush()
         
         is_first_request = True
-        lead_user = LeadUser(five_x_five_user_id=five_x_five_user.id, user_id=user.id, behavior_type=behavior_type, domain_id=user_domain_id)
+        lead_user = LeadUser(five_x_five_user_id=five_x_five_user.id, user_id=user.id, behavior_type=behavior_type, domain_id=user_domain_id, total_visit=0, avarage_visit_time=0, total_visit_time=0)
         session.add(lead_user)
         session.flush()
         channel = await rmq_connection.channel()
@@ -176,13 +176,14 @@ async def process_user_data(table, index, five_x_five_user: FiveXFiveUser, sessi
     leads_requests = None
     if current_visit_request:
         visit_id = current_visit_request[0]
-        leads_result = session.query(LeadsRequests, LeadsVisits.id, LeadsVisits.behavior_type) \
+        leads_result = session.query(LeadsRequests, LeadsVisits.id, LeadsVisits.behavior_type, LeadsVisits.full_time_sec) \
             .join(LeadsVisits, LeadsRequests.visit_id == LeadsVisits.id) \
             .filter(LeadsRequests.visit_id == visit_id) \
             .all()
-        leads_requests = [leads_request for leads_request, _, _ in leads_result]
+        leads_requests = [leads_request for leads_request, _, _, _ in leads_result]
         lead_visit_id = leads_result[0][1]
         lead_behavior_type = leads_result[0][2]
+        lead_visit_full_time_sec = leads_result[0][3]
         if lead_user.behavior_type in ('visitor', 'viewed_product') and behavior_type in (
         'viewed_product', 'product_added_to_cart') and lead_user.behavior_type != behavior_type:
             session.query(LeadUser).filter(LeadUser.id == lead_user.id).update({
@@ -197,7 +198,7 @@ async def process_user_data(table, index, five_x_five_user: FiveXFiveUser, sessi
         elif lead_behavior_type == 'viewed_product':
             if behavior_type == 'product_added_to_cart':
                 lead_behavior_type = behavior_type
-        process_leads_requests(requested_at=requested_at, page=page, leads_requests=leads_requests, visit_id=visit_id, session=session, behavior_type=lead_behavior_type, lead_id=lead_user.id)
+        process_leads_requests(requested_at=requested_at, page=page, leads_requests=leads_requests, visit_id=visit_id, lead_visit_full_time_sec=lead_visit_full_time_sec, session=session, behavior_type=lead_behavior_type, lead_user=lead_user)
     else:
         lead_visit_id = add_new_leads_visits(visited_datetime=requested_at, lead_id=lead_user.id, session=session, behavior_type=behavior_type, lead_user=lead_user).id
         if is_first_request == True:
@@ -258,7 +259,8 @@ def convert_leads_requests_to_utc(leads_requests):
         else:
             request.requested_at = request.requested_at.astimezone(utc)
 
-def process_leads_requests(requested_at, page, leads_requests, visit_id, session: Session, behavior_type, lead_id):
+def process_leads_requests(requested_at, page, leads_requests, visit_id, lead_visit_full_time_sec, session: Session, behavior_type, lead_user):
+    lead_id = lead_user.id
     new_request = LeadsRequests(
         page=normalize_url(page),
         requested_at=requested_at,
@@ -282,9 +284,11 @@ def process_leads_requests(requested_at, page, leads_requests, visit_id, session
             pages_set.add(normalize_url(current_request.page))
 
     pages_count = len(pages_set)
-
     average_time_sec = int(total_time_sec / len(leads_requests_sorted))
-    
+
+    lead_user.total_visit_time = lead_user.total_visit_time - lead_visit_full_time_sec + total_time_sec
+    lead_user.avarage_visit_time = int(lead_user.total_visit_time / lead_user.total_visit)
+
     session.query(LeadsVisits).filter_by(id=visit_id).update({
         'start_date': start_date,
         'start_time': start_time,
@@ -314,14 +318,10 @@ def add_new_leads_visits(visited_datetime, lead_id, session, behavior_type, lead
     leads_count = session.query(LeadsRequests) \
             .filter(LeadsRequests.lead_id == lead_id) \
             .count()
-    if lead_user.total_visit:
-        lead_user.total_visit += 1
-        lead_user.total_visit_time += int(end_time - start_time)
-        lead_user.avarage_visit_time = lead_user.total_visit_time // (len(leads_count) + 1)
-    else:
-        lead_user.total_visit = 1
-        lead_user.total_visit_time += int(end_time - start_time)
-        lead_user.avarage_visit_time += int(end_time - start_time)
+    
+    lead_user.total_visit += 1
+    lead_user.total_visit_time += 10
+    lead_user.avarage_visit_time = int(lead_user.total_visit_time / lead_user.total_visit)
         
     session.flush()
     return leads_visits
