@@ -241,14 +241,9 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
     >
       <Box sx={{ ...style, ...(open ? openStyle : {}) }}>
         <Box display="flex" justifyContent="space-between" sx={{ width: '100%', paddingBottom: '0.5em', alignItems: 'center' }}>
-          <Typography
+          <Typography className='first-sub-title'
             sx={{
-              fontFamily: 'Nunito',
-              fontSize: '20px',
-              fontWeight: '600',
-              lineHeight: '19.6px',
               textAlign: 'left',
-              color: 'rgba(28, 28, 28, 1)',
               '@media (max-width: 600px)': { padding: 2 },
             }}
           >
@@ -260,6 +255,10 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
         </Box>
 
         <Divider />
+
+        <Typography>
+          Setup Maximiz by connecting with one of the following CMS
+        </Typography>
 
         <Box sx={{ flex: 1, overflowY: 'auto', }}>
           {selectedCMS ? (
