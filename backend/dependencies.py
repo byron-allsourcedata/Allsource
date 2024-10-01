@@ -53,7 +53,6 @@ from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.audience_persistence import AudiencePersistence
 from persistence.leads_order_persistence import LeadOrdersPersistence
 from persistence.domains import UserDomainsPersistence, UserDomains
-
 from persistence.integrations.suppression import SuppressionPersistence
 from models.users import Users as User
 from services.suppressions import SuppressionService
