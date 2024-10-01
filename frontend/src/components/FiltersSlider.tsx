@@ -340,7 +340,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
       >
         <CloseIcon sx={{ fontSize: "14px" }} />
       </IconButton>
-      <Typography sx={{ fontFamily: "Nunito", fontSize: "12px", fontWeight: 500, color: 'rgba(74, 74, 74, 1)' }}>
+      <Typography className='table-data'>
         {label}
       </Typography>
     </Box>
@@ -1242,13 +1242,9 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
         >
           <Typography
             variant="h6"
+            className='first-sub-title'
             sx={{
               textAlign: "center",
-              color: "#4A4A4A",
-              fontFamily: "Nunito",
-              fontWeight: "600",
-              fontSize: "16px",
-              lineHeight: "22.4px",
             }}
           >
             Filter Search
@@ -1535,23 +1531,23 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                   </InputAdornment>
                 ),
                 sx: {
-                  fontFamily: 'Nunito',
-                  fontSize: '0.95em',
+                  fontFamily: 'Roboto',
+                  fontSize: '0.875rem',
                   fontWeight: 400,
-                  lineHeight: '16.8px',
+                  lineHeight: '19.6px',
                   textAlign: 'left',
-                  color: 'rgba(74, 74, 74, 1)',
+                  color: 'rgba(112, 112, 113, 1)',
                 },
               }}
               sx={{
                 padding: "1em 1em 0em 1em",
                 '& .MuiInputBase-input::placeholder': {
-                  fontFamily: 'Nunito',
-                  fontSize: '1em',
+                  fontFamily: 'Roboto',
+                  fontSize: '0.875rem',
                   fontWeight: 400,
-                  lineHeight: '16.8px',
+                  lineHeight: '19.6px',
                   textAlign: 'left',
-                  color: 'rgba(74, 74, 74, 1)',
+                  color: 'rgba(112, 112, 113, 1)',
                 },
               }}
             />
@@ -1629,6 +1625,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                     <Button
                       key={label}
                       onClick={() => handleButtonStatusClick(label)}
+                      className='second-sub-title'
                       sx={{
                         width: "calc(25% - 5px)",
                         height: "2em",
@@ -1638,8 +1635,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                         gap: "10px",
                         textAlign: "center",
                         borderRadius: "4px",
-                        fontFamily: "Nunito",
-                        opacity: 1,
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
@@ -1710,9 +1705,10 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                   return (
                     <Button
                       key={label}
+                      className='second-sub-title'
                       onClick={() => handleButtonLeadFunnelClick(label)}
                       sx={{
-                        width: "calc(25%)",
+                        width: "calc(25% - 8px)",
                         height: "2em",
                         textTransform: "none",
                         gap: "0px",
@@ -1820,7 +1816,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                         }}
                       />
                     }
-                    label={<Typography sx={{ ...filterStyles.collapse_font, color: checkedFilters.lastWeek ? "rgba(80, 82, 178, 1)" : "rgba(74, 74, 74, 1)" }}>Last week</Typography>}
+                    label={<Typography className='table-data' sx={{ color: checkedFilters.lastWeek ? "rgba(80, 82, 178, 1) !important" : "rgba(74, 74, 74, 1)" }}>Last week</Typography>}
                   />
                   <FormControlLabel
                     control={
@@ -1836,7 +1832,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                         }}
                       />
                     }
-                    label={<Typography sx={{ ...filterStyles.collapse_font, color: checkedFilters.last30Days ? "rgba(80, 82, 178, 1)" : "rgba(74, 74, 74, 1)" }}>Last 30 days</Typography>}
+                    label={<Typography className='table-data' sx={{ color: checkedFilters.last30Days ? "rgba(80, 82, 178, 1) !important" : "rgba(74, 74, 74, 1)" }}>Last 30 days</Typography>}
                   />
                 </Box>
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 0 }}>
@@ -1854,7 +1850,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                         }}
                       />
                     }
-                    label={<Typography sx={{ ...filterStyles.collapse_font, color: checkedFilters.last6Months ? "rgba(80, 82, 178, 1)" : "rgba(74, 74, 74, 1)" }}>Last 6 months</Typography>}
+                    label={<Typography className='table-data' sx={{ color: checkedFilters.last6Months ? "rgba(80, 82, 178, 1) !important" : "rgba(74, 74, 74, 1)" }}>Last 6 months</Typography>}
                   />
                   <FormControlLabel
                     control={
@@ -1870,7 +1866,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                         }}
                       />
                     }
-                    label={<Typography sx={{ ...filterStyles.collapse_font, color: checkedFilters.allTime ? "rgba(80, 82, 178, 1)" : "rgba(74, 74, 74, 1)" }}>All time</Typography>}
+                    label={<Typography className='table-data' sx={{  color: checkedFilters.allTime ? "rgba(80, 82, 178, 1) !important" : "rgba(74, 74, 74, 1)" }}>All time</Typography>}
                   />
                 </Box>
               </Box>
@@ -1898,14 +1894,14 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                         fullWidth: true,
                         sx: {
                           '& .MuiInputBase-input': {
-                            fontFamily: 'Nunito',
+                            fontFamily: 'Roboto',
                             fontSize: '14px',
                             fontWeight: 400,
                             lineHeight: '19.6px',
                             textAlign: 'left',
                           },
                           '& .MuiInputLabel-root': {
-                            fontFamily: 'Nunito',
+                            fontFamily: 'Roboto',
                             fontSize: '14px',
                             fontWeight: 400,
                             lineHeight: '19.6px',
@@ -1928,14 +1924,14 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                         fullWidth: true,
                         sx: {
                           '& .MuiInputBase-input': {
-                            fontFamily: 'Nunito',
+                            fontFamily: 'Roboto',
                             fontSize: '14px',
                             fontWeight: 400,
                             lineHeight: '19.6px',
                             textAlign: 'left',
                           },
                           '& .MuiInputLabel-root': {
-                            fontFamily: 'Nunito',
+                            fontFamily: 'Roboto',
                             fontSize: '14px',
                             fontWeight: 400,
                             lineHeight: '19.6px',
@@ -2012,7 +2008,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                         }}
                       />
                     }
-                    label={<Typography sx={{ ...filterStyles.collapse_font, color: checkedFiltersTime.morning ? "rgba(80, 82, 178, 1)" : "rgba(74, 74, 74, 1)" }}>Morning 12AM - 11AM</Typography>}
+                    label={<Typography className='table-data' sx={{ ...filterStyles.collapse_font, color: checkedFiltersTime.morning ? "rgba(80, 82, 178, 1) !important" : "rgba(74, 74, 74, 1)" }}>Morning 12AM - 11AM</Typography>}
                   />
                   <FormControlLabel
                     control={
@@ -2028,7 +2024,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                         }}
                       />
                     }
-                    label={<Typography sx={{ ...filterStyles.collapse_font, color: checkedFiltersTime.evening ? "rgba(80, 82, 178, 1)" : "rgba(74, 74, 74, 1)" }}>Evening 5PM - 9PM</Typography>}
+                    label={<Typography className='table-data' sx={{ ...filterStyles.collapse_font, color: checkedFiltersTime.evening ? "rgba(80, 82, 178, 1) !important" : "rgba(74, 74, 74, 1)" }}>Evening 5PM - 9PM</Typography>}
                   />
                 </Box>
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 0 }}>
@@ -2046,7 +2042,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                         }}
                       />
                     }
-                    label={<Typography sx={{ ...filterStyles.collapse_font, color: checkedFiltersTime.afternoon ? "rgba(80, 82, 178, 1)" : "rgba(74, 74, 74, 1)" }}>Afternoon 11AM - 5PM</Typography>}
+                    label={<Typography className='table-data' sx={{ ...filterStyles.collapse_font, color: checkedFiltersTime.afternoon ? "rgba(80, 82, 178, 1) !important" : "rgba(74, 74, 74, 1)" }}>Afternoon 11AM - 5PM</Typography>}
                   />
                   <FormControlLabel
                     control={
@@ -2062,7 +2058,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                         }}
                       />
                     }
-                    label={<Typography sx={{ ...filterStyles.collapse_font, color: checkedFiltersTime.all_day ? "rgba(80, 82, 178, 1)" : "rgba(74, 74, 74, 1)" }}>All day</Typography>}
+                    label={<Typography className='table-data' sx={{ ...filterStyles.collapse_font, color: checkedFiltersTime.all_day ? "rgba(80, 82, 178, 1) !important" : "rgba(74, 74, 74, 1)" }}>All day</Typography>}
                   />
                 </Box>
               </Box>
@@ -2089,14 +2085,14 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                         fullWidth: true,
                         sx: {
                           '& .MuiInputBase-input': {
-                            fontFamily: 'Nunito',
+                            fontFamily: 'Roboto',
                             fontSize: '14px',
                             fontWeight: 400,
                             lineHeight: '19.6px',
                             textAlign: 'left',
                           },
                           '& .MuiInputLabel-root': {
-                            fontFamily: 'Nunito',
+                            fontFamily: 'Roboto',
                             fontSize: '14px',
                             fontWeight: 400,
                             lineHeight: '19.6px',
@@ -2116,14 +2112,14 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                         fullWidth: true,
                         sx: {
                           '& .MuiInputBase-input': {
-                            fontFamily: 'Nunito',
+                            fontFamily: 'Roboto',
                             fontSize: '14px',
                             fontWeight: 400,
                             lineHeight: '19.6px',
                             textAlign: 'left',
                           },
                           '& .MuiInputLabel-root': {
-                            fontFamily: 'Nunito',
+                            fontFamily: 'Roboto',
                             fontSize: '14px',
                             fontWeight: 400,
                             lineHeight: '19.6px',
@@ -2194,10 +2190,10 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                 onKeyDown={handleAddTag}
                 InputProps={{
                   sx: {
-                    fontFamily: 'Nunito',
-                    fontSize: '0.95em',
+                    fontFamily: 'Roboto',
+                    fontSize: '0.875rem',
                     fontWeight: 400,
-                    lineHeight: '16.8px',
+                    lineHeight: '19.6px',
                     textAlign: 'left',
                     color: 'rgba(74, 74, 74, 1)',
                   },
@@ -2205,10 +2201,10 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                 sx={{
                   mb: '3px',
                   '& .MuiInputBase-input::placeholder': {
-                    fontFamily: 'Nunito',
-                    fontSize: '14px',
+                    fontFamily: 'Roboto',
+                    fontSize: '0.875rem',
                     fontWeight: 400,
-                    lineHeight: '16.8px',
+                    lineHeight: '19.6px',
                     textAlign: 'left',
                     color: 'rgba(74, 74, 74, 1)',
                   },
@@ -2289,7 +2285,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                         }}
                       />
                     }
-                    label={<Typography sx={{ ...filterStyles.collapse_font, color: checkedFiltersPageVisits.page ? "rgba(80, 82, 178, 1)" : "rgba(74, 74, 74, 1)" }}>1 page</Typography>}
+                    label={<Typography className='table-data' sx={{ color: checkedFiltersPageVisits.page ? "rgba(80, 82, 178, 1) !important" : "rgba(74, 74, 74, 1)" }}>1 page</Typography>}
                   />
                   <FormControlLabel sx={{ fontFamily: 'Nunito', fontWeight: 100 }}
                     control={
@@ -2305,7 +2301,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                         }}
                       />
                     }
-                    label={<Typography sx={{ ...filterStyles.collapse_font, color: checkedFiltersPageVisits.two_page ? "rgba(80, 82, 178, 1)" : "rgba(74, 74, 74, 1)" }}>2 pages</Typography>}
+                    label={<Typography className='table-data' sx={{  color: checkedFiltersPageVisits.two_page ? "rgba(80, 82, 178, 1) !important" : "rgba(74, 74, 74, 1)" }}>2 pages</Typography>}
                   />
                 </Box>
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 0 }}>
@@ -2323,7 +2319,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                         }}
                       />
                     }
-                    label={<Typography sx={{ ...filterStyles.collapse_font, color: checkedFiltersPageVisits.three_page ? "rgba(80, 82, 178, 1)" : "rgba(74, 74, 74, 1)" }}>3 pages</Typography>}
+                    label={<Typography className='table-data' sx={{ color: checkedFiltersPageVisits.three_page ? "rgba(80, 82, 178, 1) !important" : "rgba(74, 74, 74, 1)" }}>3 pages</Typography>}
                   />
                   <FormControlLabel sx={{ fontFamily: 'Nunito', fontWeight: 100 }}
                     control={
@@ -2339,7 +2335,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                         }}
                       />
                     }
-                    label={<Typography sx={{ ...filterStyles.collapse_font, color: checkedFiltersPageVisits.more_three ? "rgba(80, 82, 178, 1)" : "rgba(74, 74, 74, 1)" }}>More than 3 pages</Typography>}
+                    label={<Typography className='table-data' sx={{  color: checkedFiltersPageVisits.more_three ? "rgba(80, 82, 178, 1) !important" : "rgba(74, 74, 74, 1)" }}>More than 3 pages</Typography>}
                   />
                 </Box>
               </Box>
@@ -2407,7 +2403,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                         }}
                       />
                     }
-                    label={<Typography sx={{ ...filterStyles.collapse_font, color: checkedFiltersTimeSpent.under_10 ? "rgba(80, 82, 178, 1)" : "rgba(74, 74, 74, 1)" }}>under 10 secs</Typography>}
+                    label={<Typography className='table-data' sx={{ color: checkedFiltersTimeSpent.under_10 ? "rgba(80, 82, 178, 1) !important" : "rgba(74, 74, 74, 1)" }}>under 10 secs</Typography>}
                   />
                   <FormControlLabel
                     control={
@@ -2423,7 +2419,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                         }}
                       />
                     }
-                    label={<Typography sx={{ ...filterStyles.collapse_font, color: checkedFiltersTimeSpent.over_10 ? "rgba(80, 82, 178, 1)" : "rgba(74, 74, 74, 1)" }}>10-30 secs</Typography>}
+                    label={<Typography className='table-data' sx={{  color: checkedFiltersTimeSpent.over_10 ? "rgba(80, 82, 178, 1) !important" : "rgba(74, 74, 74, 1)" }}>10-30 secs</Typography>}
                   />
                 </Box>
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 0 }}>
@@ -2441,7 +2437,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                         }}
                       />
                     }
-                    label={<Typography sx={{ ...filterStyles.collapse_font, color: checkedFiltersTimeSpent.over_30 ? "rgba(80, 82, 178, 1)" : "rgba(74, 74, 74, 1)" }}>30-60 secs</Typography>}
+                    label={<Typography className='table-data' sx={{  color: checkedFiltersTimeSpent.over_30 ? "rgba(80, 82, 178, 1) !important" : "rgba(74, 74, 74, 1)" }}>30-60 secs</Typography>}
                   />
                   <FormControlLabel
                     control={
@@ -2457,7 +2453,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                         }}
                       />
                     }
-                    label={<Typography sx={{ ...filterStyles.collapse_font, color: checkedFiltersTimeSpent.over_60 ? "rgba(80, 82, 178, 1)" : "rgba(74, 74, 74, 1)" }}>Over 60 secs</Typography>}
+                    label={<Typography className='table-data' sx={{ color: checkedFiltersTimeSpent.over_60 ? "rgba(80, 82, 178, 1) !important" : "rgba(74, 74, 74, 1)" }}>Over 60 secs</Typography>}
                   />
                 </Box>
               </Box>
@@ -2468,7 +2464,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
             sx={{
               width: "100%",
               mb: 15,
-              border: "1px solid rgba(228, 228, 228, 1)",
+
               padding: "0.5em",
             }}
           >
@@ -2530,7 +2526,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                         }}
                       />
                     }
-                    label={<Typography sx={{ fontSize: '14px', fontFamily: 'Nunito', fontWeight: 400, color: selectedValues.includes(label) ? "rgba(80, 82, 178, 1)" : "rgba(74, 74, 74, 1)" }}>{label}</Typography>}
+                    label={<Typography className='table-data' sx={{ color: selectedValues.includes(label) ? "rgba(80, 82, 178, 1) !important" : "rgba(74, 74, 74, 1)" }}>{label}</Typography>}
                     sx={{
                       display: "flex",
                       color: "rgba(74, 74, 74, 1)",
@@ -2575,12 +2571,11 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
             <Button
               variant="contained"
               onClick={handleClearFilters}
+              className='second-sub-title'
               sx={{
-                color: "rgba(80, 82, 178, 1)",
+                color: "rgba(80, 82, 178, 1) !important",
                 backgroundColor: '#fff',
-                fontFamily: "Nunito",
                 border: ' 1px solid rgba(80, 82, 178, 1)',
-                fontSize: "16px",
                 textTransform: "none",
                 padding: "0.75em 2.5em",
                 '&:hover': {
@@ -2593,10 +2588,10 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
             <Button
               variant="contained"
               onClick={handleApply}
+              className='second-sub-title'
               sx={{
                 backgroundColor: "rgba(80, 82, 178, 1)",
-                fontFamily: "Nunito",
-                fontSize: "16px",
+                color: 'rgba(255, 255, 255, 1) !important',
                 textTransform: "none",
                 padding: "0.75em 2.5em",
                 '&:hover': {
