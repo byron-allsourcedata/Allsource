@@ -4,7 +4,7 @@ from datetime import datetime
 
 class LeadsSupperssion(Base):
 
-    __tablename__ = 'leads_suppressions'
+    __tablename__ = 'suppressed_contacts'
     
     id = Column(Integer, primary_key=True, autoincrement=True)
     id_service = Column(VARCHAR)

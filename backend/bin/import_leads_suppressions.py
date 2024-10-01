@@ -15,7 +15,10 @@ from services.integrations.base import IntegrationService
 from dependencies import (IntegrationsPresistence, LeadsPersistence, AudiencePersistence, 
                           LeadOrdersPersistence, IntegrationsUserSyncPersistence, 
                           AWSService, UserDomainsPersistence, SuppressionPersistence)
+
 import time 
+
+
 FIELD = ['id', 'email', 'phone_number']
 
 
