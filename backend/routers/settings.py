@@ -4,7 +4,9 @@ from services.settings import SettingsService
 from schemas.settings import AccountDetailsRequest, TeamsDetailsRequest, ResetEmailForm, PaymentCard, ApiKeysRequest
 from dependencies import get_settings_service, check_user_authorization_without_pixel, check_user_authentication
 from schemas.users import VerifyTokenResponse
-from enums import TeamAccessLevel
+from starlette.responses import StreamingResponse
+from enums import TeamAccessLevel, SettingStatus
+
 router = APIRouter()
 
 
@@ -118,6 +120,19 @@ def billing_overage(settings_service: SettingsService = Depends(get_settings_ser
                 detail="Access denied. Admins only."
             )
     return settings_service.billing_overage(user=user)
+
+@router.get("/billing/download-billing")
+def download_billing(invoice_id: str = Query(...), settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authorization_without_pixel)):
+    if user.get('team_member'):
+        team_member = user.get('team_member')
+        if team_member.get('team_access_level') != TeamAccessLevel.ADMIN.value or team_member.get('team_access_level') != TeamAccessLevel.OWNER.value:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied. Admins only."
+            )
+    result = settings_service.download_billing(invoice_id=invoice_id)
+    return StreamingResponse(result, media_type="text/csv",
+                                headers={"Content-Disposition": "attachment; filename=data.csv"})
 
 
 @router.put("/billing/default-card")

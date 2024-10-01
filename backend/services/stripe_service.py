@@ -74,6 +74,43 @@ def add_card_to_customer(customer_id, payment_method_id):
             'message': e.user_message
         }
         
+def get_billing_by_invoice_id(invoice_id):
+    try:
+        invoice = stripe.Invoice.retrieve(invoice_id)
+        return {
+            'status': 'SUCCESS',
+            'data': invoice
+        }
+    except stripe.error.InvalidRequestError as e:
+        return {
+            'status': 'ERROR',
+            'message': 'Invalid request: ' + str(e)
+        }
+    except stripe.error.AuthenticationError as e:
+        return {
+            'status': 'ERROR',
+            'message': 'Authentication error: ' + str(e)
+        }
+    except stripe.error.RateLimitError as e:
+        return {
+            'status': 'ERROR',
+            'message': 'Rate limit exceeded: ' + str(e)
+        }
+    except stripe.error.APIError as e:
+        return {
+            'status': 'ERROR',
+            'message': 'Stripe API error: ' + str(e)
+        }
+    except Exception as e:
+        return {
+            'status': 'ERROR',
+            'message': 'An unexpected error occurred: ' + str(e)
+        }
+
+
+    
+    
+        
 def detach_card_from_customer(payment_method_id):
     try:
         stripe.PaymentMethod.detach(payment_method_id)

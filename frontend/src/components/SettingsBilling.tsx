@@ -318,20 +318,38 @@ export const SettingsBilling: React.FC = () => {
 
     };
 
-    const fetchSaveBillingHistory = async () => {
-        // invoice_id = ''
-        // try {
-        //     setIsLoading(true);
-        //     const response = await axiosInterceptorInstance.get(`/settings/save-billing?invoice_id=${invoice_id}`);
-        //     setCardDetails(response.data.card_details);
-        //     setChecked(response.data.billing_details.overage);
-        //     setBillingDetails(response.data.billing_details);
-        // } catch (error) {
-        //     console.error('Error fetching data:', error);
-        // } finally {
-        //     setIsLoading(false);
-        // }
+    const fetchSaveBillingHistory = async (invoice_id: string) => {
+        try {
+            setIsLoading(true);
+            const response = await axiosInterceptorInstance.get(`/settings/billing/download-billing?invoice_id=${invoice_id}`, {
+                responseType: 'blob',
+            });
+    
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', 'billing_data.csv');
+
+            document.body.appendChild(link);
+            link.click();
+            if (link.parentNode) {
+                link.parentNode.removeChild(link);
+            }
+            window.URL.revokeObjectURL(url);
+        } catch (error: unknown) {
+            if (axios.isAxiosError(error)) {
+                showErrorToast(error.message);
+            } else if (error instanceof Error) {
+                showErrorToast(error.message);
+            } else {
+                showErrorToast("An unexpected error occurred.");
+            }
+        } finally {
+            setIsLoading(false);
+        }
     };
+    
+    
 
 
     // Handler for page change
@@ -1161,7 +1179,7 @@ export const SettingsBilling: React.FC = () => {
                                         </TableCell>
                                         <TableCell sx={billingStyles.tableBodyColumn}>
                                             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                                <IconButton >
+                                            <IconButton onClick={() => fetchSaveBillingHistory(history.invoice_id)}>
                                                     <Image
                                                         src='/download-icon.svg'
                                                         alt='download-icon'

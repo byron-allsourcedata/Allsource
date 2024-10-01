@@ -1,5 +1,7 @@
 import logging
 import os
+import csv
+import io
 
 from persistence.settings_persistence import SettingsPersistence
 from models.users import User
@@ -338,6 +340,50 @@ class SettingsService:
             'status': SettingStatus.SUCCESS,
             'is_leads_auto_charging': is_leads_auto_charging
             }
+
+    def download_billing(self, invoice_id):
+        result = get_billing_by_invoice_id(invoice_id)
+        if result['status'] != 'SUCCESS':
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Billing information not found.")
+        
+        output = io.StringIO()
+        writer = csv.writer(output)
+
+        fields_to_include = [
+            'id',
+            'account_country',
+            'account_name',
+            'amount_due',
+            'amount_paid',
+            'currency',
+            'customer_name',
+            'customer_email',
+            'billing_reason',
+            'created',
+            'status',
+            'invoice_pdf',
+            'hosted_invoice_url',
+        ]
+        writer.writerow(['Field', 'Value'])
+        for field in fields_to_include:
+            if field == 'created':
+                created_timestamp = result['data'].get(field)
+                formatted_date = datetime.fromtimestamp(created_timestamp).strftime("%B %d, %Y")
+                writer.writerow([field, formatted_date])
+            else:
+                value = result['data'].get(field)
+                writer.writerow([field, value])
+
+        line_items = result['data']['lines']['data']
+        writer.writerow(['Line Item Description', 'Amount'])
+        for item in line_items:
+            writer.writerow([item['description'], item['amount'] / 100])
+
+        output.seek(0)
+        return output
+
+
+        
     
     def default_card(self, user: dict, payment_method_id):
         return set_default_card_for_customer(user.get('customer_id'), payment_method_id)
