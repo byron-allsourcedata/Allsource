@@ -51,7 +51,7 @@ const CustomTablePagination: React.FC<CustomTablePaginationProps> = ({
 
     return (
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', padding: 1 }}>
-            <select
+            {page > 0 && ( <select
                 value={rowsPerPage}
                 onChange={onRowsPerPageChange}
                 style={{
@@ -66,6 +66,8 @@ const CustomTablePagination: React.FC<CustomTablePaginationProps> = ({
                     </option>
                 ))}
             </select>
+            )}
+            {page > 0 && (
             <Button
                 onClick={(e) => handlePageChange(page - 1)}
                 disabled={page === 0}
@@ -80,6 +82,7 @@ const CustomTablePagination: React.FC<CustomTablePaginationProps> = ({
                         borderRadius: '4px'
                     }} />
             </Button>
+            )}
             {totalPages > 1 && (
                 <>
                     {page > 1 && <Button onClick={() => handlePageChange(0)} sx={suppressionsStyles.page_number}>1</Button>}
@@ -106,6 +109,7 @@ const CustomTablePagination: React.FC<CustomTablePaginationProps> = ({
                         sx={suppressionsStyles.page_number}>{totalPages}</Button>}
                 </>
             )}
+            {page > 0 && (
             <Button
                 onClick={(e) => handlePageChange(page + 1)}
                 disabled={page >= totalPages - 1}
@@ -119,14 +123,13 @@ const CustomTablePagination: React.FC<CustomTablePaginationProps> = ({
                     borderRadius: '4px'
                 }} />
             </Button>
+        )}
         </Box>
     );
 };
 
 
 const SuppressionRules: React.FC = () => {
-    /// Table
-    const [suppressionsCSV, setSuppressionsCSV] = useState<any[]>([]);
 
     /// Switch Buttons
     const [checked, setChecked] = useState(false);
@@ -311,6 +314,51 @@ const SuppressionRules: React.FC = () => {
         } catch (error) {
             showErrorToast('Error uploading the file.');
         }
+    };
+
+
+    /// Table(pagination, download/update and etc)
+    interface SuppressionListResponse {
+        suppression_list: any[];
+        total_count: number;
+        max_page: number;
+    }
+
+    const [suppressionList, setSuppressionList] = useState<any[]>([]);
+    const [page, setPage] = useState(0);  // Текущая страница, начинаем с 0
+    const [rowsPerPage, setRowsPerPage] = useState(15);  // Количество строк на странице
+    const [totalCount, setTotalCount] = useState(0);  // Общее количество элементов
+  
+    // Функция для запроса данных с учетом пагинации
+    const fetchSuppressionList = async (page: number, perPage: number) => {
+      try {
+        const response = await axiosInstance.get<SuppressionListResponse>('/suppression-list', {
+          params: {
+            page: page + 1,  // Передаем на сервер номер страницы, начиная с 1
+            per_page: perPage,
+          },
+        });
+        setSuppressionList(response.data.suppression_list);
+        setTotalCount(response.data.total_count);
+      } catch (error) {
+        console.error('Ошибка при запросе suppression list:', error);
+      }
+    };
+  
+    // Запрос на сервер при изменении страницы или количества строк на странице
+    useEffect(() => {
+      fetchSuppressionList(page, rowsPerPage);
+    }, [page, rowsPerPage]);
+  
+    // Обработка изменения страницы
+    const handlePageChange = (event: React.MouseEvent<HTMLButtonElement>, newPage: number) => {
+      setPage(newPage);
+    };
+  
+    // Обработка изменения количества строк на странице
+    const handleRowsPerPageChange = (event: React.ChangeEvent<{ value: unknown }>) => {
+      setRowsPerPage(parseInt(event.target.value as string, 10));
+      setPage(0);  // Сбрасываем на первую страницу при изменении количества строк
     };
 
     return (
@@ -998,10 +1046,10 @@ const SuppressionRules: React.FC = () => {
                                 )}
                             </Box>
 
-                            <Typography className="main-text"
+                            <Typography className="main-text" component="div"
                                 sx={{ ...suppressionsStyles.text, gap: 0.25, pt: 1, "@media (max-width: 700px)": { mb: 1 } }}
                             >
-                                Sample doc: <Typography onClick={downloadFile} sx={{ ...suppressionsStyles.text, color: 'rgba(80, 82, 178, 1)', cursor: 'pointer', fontWeight: 400 }}>sample suppression-list.csv</Typography>
+                                Sample doc: <Typography onClick={downloadFile} component="span" sx={{ ...suppressionsStyles.text, color: 'rgba(80, 82, 178, 1)', cursor: 'pointer', fontWeight: 400 }}>sample suppression-list.csv</Typography>
                             </Typography>
 
                             <Box sx={{ width: '100%', display: 'flex', alignItems: 'flex-end', justifyContent: 'flex-end' }}>
@@ -1063,7 +1111,7 @@ const SuppressionRules: React.FC = () => {
                                 </TableRow>
                             </TableHead>
                             <TableBody>
-                                {suppressionsCSV.length === 0 ? (
+                                {suppressionList.length === 0 ? (
                                     <TableRow>
                                         <TableCell colSpan={5} sx={{
                                             ...suppressionsStyles.tableBodyColumn,
@@ -1073,7 +1121,7 @@ const SuppressionRules: React.FC = () => {
                                         </TableCell>
                                     </TableRow>
                                 ) : (
-                                    suppressionsCSV.map((invitation, index) => (
+                                    suppressionList.map((invitation, index) => (
                                         <TableRow key={index} sx={{
                                             ...suppressionsStyles.tableBodyRow,
                                             '&:hover': {
@@ -1122,18 +1170,18 @@ const SuppressionRules: React.FC = () => {
                             </TableBody>
                         </Table>
                     </TableContainer>
-                    {/* <CustomTablePagination
-                                        // count={count_leads ?? 0}
-                                        // page={page}
-                                        // rowsPerPage={rowsPerPage}
+                    <CustomTablePagination
+                                        count={totalCount}
+                                        page={page}
+                                        rowsPerPage={rowsPerPage}
+                                        onPageChange={handlePageChange}
+                                        onRowsPerPageChange={handleRowsPerPageChange}
+                                        // count={10}
+                                        // page={1}
+                                        // rowsPerPage={3}
                                         // onPageChange={handleChangePage}
                                         // onRowsPerPageChange={handleChangeRowsPerPage}
-                                        count={10}
-                                        page={1}
-                                        rowsPerPage={3}
-                                        onPageChange={handleChangePage}
-                                        onRowsPerPageChange={handleChangeRowsPerPage}
-                    /> */}
+                    />
                 </Box>
             </Box>
 
