@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, UploadFile, File, Query
 from models.users import User
 from services.suppression import SuppressionService
-from dependencies import get_suppression_service, check_user_authorization
+from dependencies import get_suppression_service, check_user_authorization, check_domain
 from fastapi.responses import FileResponse
 from enums import SuppressionStatus
 from schemas.suppressions import SuppressionRequest, CollectionRuleRequest
@@ -18,8 +18,9 @@ def get_sample_suppression_list(suppression_service: SuppressionService = Depend
 async def process_suppression_list(
     suppression_service: SuppressionService = Depends(get_suppression_service),
     user: User = Depends(check_user_authorization),
+    domain = Depends(check_domain),
     file: UploadFile = File(...)):
-    result = suppression_service.process_suppression_list(user, file)
+    result = suppression_service.process_suppression_list(file, domain.data_provider_id)
     if result:
         return SuppressionStatus.SUCCESS
     return SuppressionStatus.INCOMPLETE
@@ -29,14 +30,16 @@ async def get_suppression_list(
     page: int = Query(1, alias="page", ge=1, description="Page number"),
     per_page: int = Query(15, alias="per_page", ge=1, le=100, description="Items per page"),
     suppression_service: SuppressionService = Depends(get_suppression_service),
+    domain = Depends(check_domain),
     user: User = Depends(check_user_authorization)):
-    return suppression_service.get_suppression_list(user, page, per_page)
+    return suppression_service.get_suppression_list(page, per_page, domain.data_provider_id)
 
 @router.delete("/suppression-list")
 async def delete_suppression_list(suppression_request: SuppressionRequest,
     suppression_service: SuppressionService = Depends(get_suppression_service),
+    domain = Depends(check_domain),
     user: User = Depends(check_user_authorization)):
-    if suppression_service.delete_suppression_list(user, suppression_request.suppression_list_id):
+    if suppression_service.delete_suppression_list(suppression_request.suppression_list_id, domain.data_provider_id):
         return SuppressionStatus.SUCCESS
     return SuppressionStatus.INCOMPLETE
 
@@ -44,8 +47,9 @@ async def delete_suppression_list(suppression_request: SuppressionRequest,
 async def download_suppression_list(
     suppression_request: SuppressionRequest,
     suppression_service: SuppressionService = Depends(get_suppression_service),
+    domain = Depends(check_domain),
     user: User = Depends(check_user_authorization)):
-    response = suppression_service.download_suppression_list(user, suppression_request.suppression_list_id)
+    response = suppression_service.download_suppression_list(suppression_request.suppression_list_id, domain.data_provider_id)
     if response:
         return response
     return SuppressionStatus.INCOMPLETE
@@ -53,54 +57,62 @@ async def download_suppression_list(
 @router.post("/suppression-multiple-emails")
 async def process_suppression_multiple_emails(suppression_request: SuppressionRequest,
     suppression_service: SuppressionService = Depends(get_suppression_service),
+    domain = Depends(check_domain),
     user: User = Depends(check_user_authorization)):
-    suppression_service.process_suppression_multiple_emails(user, suppression_request.data)
+    suppression_service.process_suppression_multiple_emails(suppression_request.data, domain.data_provider_id)
     return SuppressionStatus.SUCCESS
 
 @router.post("/collecting-contacts")
 async def process_collecting_contacts(
     suppression_service: SuppressionService = Depends(get_suppression_service),
+    domain = Depends(check_domain),
     user: User = Depends(check_user_authorization)):
-    suppression_service.process_collecting_contacts(user)
+    suppression_service.process_collecting_contacts(domain.data_provider_id)
     return SuppressionStatus.SUCCESS
 
 @router.get("/rules")
 async def get_rules(
     suppression_service: SuppressionService = Depends(get_suppression_service),
+    domain = Depends(check_domain),
     user: User = Depends(check_user_authorization)):
-    return suppression_service.get_rules(user)
+    return suppression_service.get_rules(domain.data_provider_id)
 
 @router.post("/certain-activation")
 async def process_certain_activation(
     suppression_service: SuppressionService = Depends(get_suppression_service),
+    domain = Depends(check_domain),
     user: User = Depends(check_user_authorization)):
-    suppression_service.process_certain_activation(user)
+    suppression_service.process_certain_activation(domain.data_provider_id)
     return SuppressionStatus.SUCCESS
 
 @router.post("/certain-urls")
 async def process_certain_urls(suppression_request: SuppressionRequest,
     suppression_service: SuppressionService = Depends(get_suppression_service),
+    domain = Depends(check_domain),
     user: User = Depends(check_user_authorization)):
-    suppression_service.process_certain_urls(user, suppression_request.data)
+    suppression_service.process_certain_urls(suppression_request.data, domain.data_provider_id)
     return SuppressionStatus.SUCCESS
 
 @router.post("/based-activation")
 async def process_based_activation(
     suppression_service: SuppressionService = Depends(get_suppression_service),
+    domain = Depends(check_domain),
     user: User = Depends(check_user_authorization)):
-    suppression_service.process_based_activation(user)
+    suppression_service.process_based_activation(domain.data_provider_id)
     return SuppressionStatus.SUCCESS
 
 @router.post("/based-urls")
 async def process_based_urls(suppression_request: SuppressionRequest,
     suppression_service: SuppressionService = Depends(get_suppression_service),
+    domain = Depends(check_domain),
     user: User = Depends(check_user_authorization)):
-    suppression_service.process_based_urls(user, suppression_request.data)
+    suppression_service.process_based_urls(suppression_request.data, domain.data_provider_id)
     return SuppressionStatus.SUCCESS
 
 @router.post("/collection-rules")
 async def process_page_views_limit(collection_rule: CollectionRuleRequest,
     suppression_service: SuppressionService = Depends(get_suppression_service),
+    domain = Depends(check_domain),
     user: User = Depends(check_user_authorization)):
-    suppression_service.process_page_views_limit(user, collection_rule.page_views, collection_rule.seconds)
+    suppression_service.process_page_views_limit(collection_rule.page_views, collection_rule.seconds, domain.data_provider_id)
     return SuppressionStatus.SUCCESS

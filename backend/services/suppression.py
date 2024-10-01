@@ -17,7 +17,7 @@ class SuppressionService:
     def get_sample_suppression_list(self):
         return os.path.join(os.getcwd(), "sample-suppression-list.csv")
     
-    def process_suppression_list(self, user: dict, file: UploadFile):
+    def process_suppression_list(self, file: UploadFile, domain_id):
         file_name = file.filename
         if not file_name.lower().endswith('.csv'):
             return False
@@ -30,30 +30,30 @@ class SuppressionService:
             if email and (email is not None):
                 email_list.append(email)
         if len(email) > 0:
-            self.suppression_persistence.save_suppressions_list(user_id=user.get('id'), email_list=email_list, list_name=file_name)
+            self.suppression_persistence.save_suppressions_list(email_list=email_list, list_name=file_name, domain_id=domain_id)
         else:
-            self.suppression_persistence.save_suppressions_list(user_id=user.get('id'), email_list=email_list, list_name=file_name, bad_emails=True)
+            self.suppression_persistence.save_suppressions_list(email_list=email_list, list_name=file_name, bad_emails=True, domain_id=domain_id)
             
         return True
     
-    def get_suppression_list(self, user: dict, page, per_page):
-        suppression_list, total_count, max_page = self.suppression_persistence.get_suppression_list(user_id=user.get('id'), page=page, per_page=per_page)
+    def get_suppression_list(self, page, per_page, domain_id):
+        suppression_list, total_count, max_page = self.suppression_persistence.get_suppression_list(page=page, per_page=per_page, domain_id=domain_id)
         return {
             'suppression_list': suppression_list,
             'total_count': total_count,
             'max_page': max_page
         }
     
-    def delete_suppression_list(self, user: dict, suppression_list_id):
+    def delete_suppression_list(self, suppression_list_id, domain_id):
         if suppression_list_id:
-            self.suppression_persistence.delete_suppression_list(user_id=user.get('id'), suppression_list_id=suppression_list_id)
+            self.suppression_persistence.delete_suppression_list(suppression_list_id=suppression_list_id, domain_id=domain_id)
             return True
         return False
     
-    def download_suppression_list(self, user: dict, suppression_list_id):
+    def download_suppression_list(self, suppression_list_id, domain_id):
         if suppression_list_id:
             suppression_lists = []
-            suppression_list = self.suppression_persistence.get_suppression_list_by_id(user_id=user.get('id'), suppression_list_id=suppression_list_id)
+            suppression_list = self.suppression_persistence.get_suppression_list_by_id(suppression_list_id=suppression_list_id, domain_id=domain_id)
             if suppression_list:
                 suppression_lists.append(suppression_list)
 
@@ -73,29 +73,29 @@ class SuppressionService:
             return StreamingResponse(output, media_type="text/csv", headers={"Content-Disposition": "attachment; filename=suppression_list.csv"})
         return False
     
-    def process_suppression_multiple_emails(self, user: dict, emails):
-        self.suppression_persistence.save_rules_multiple_emails(user_id=user.get('id'), emails=emails)
+    def process_suppression_multiple_emails(self, user: dict, emails, domain_id):
+        self.suppression_persistence.save_rules_multiple_emails(emails=emails, domain_id=domain_id)
         
-    def get_rules(self, user: dict):
-        rules = self.suppression_persistence.get_rules(user.get('id'))
+    def get_rules(self, domain_id):
+        rules = self.suppression_persistence.get_rules(domain_id)
         if rules:
             return rules.to_dict
         return None
     
-    def process_collecting_contacts(self, user: dict):
-        self.suppression_persistence.process_collecting_contacts(user_id=user.get('id'))
+    def process_collecting_contacts(self, domain_id):
+        self.suppression_persistence.process_collecting_contacts(domain_id=domain_id)
         
-    def process_certain_activation(self, user: dict):
-        self.suppression_persistence.process_certain_activation(user_id=user.get('id'))
+    def process_certain_activation(self, domain_id):
+        self.suppression_persistence.process_certain_activation(domain_id=domain_id)
         
-    def process_certain_urls(self, user: dict, urls):
-        self.suppression_persistence.process_certain_urls(user_id=user.get('id'), url_list=urls)
+    def process_certain_urls(self, urls, domain_id):
+        self.suppression_persistence.process_certain_urls(url_list=urls, domain_id=domain_id)
         
-    def process_based_activation(self, user: dict):
-        self.suppression_persistence.process_based_activation(user_id=user.get('id'))
+    def process_based_activation(self, domain_id):
+        self.suppression_persistence.process_based_activation(domain_id=domain_id)
         
-    def process_based_urls(self, user: dict, identifiers):
-        self.suppression_persistence.process_based_urls(user_id=user.get('id'), identifiers=identifiers)
+    def process_based_urls(self, identifiers, domain_id):
+        self.suppression_persistence.process_based_urls(identifiers=identifiers, domain_id=domain_id)
         
-    def process_page_views_limit(self, user: dict, page_views: int, seconds: int):
-        self.suppression_persistence.process_page_views_limit(user_id=user.get('id'), page_views=page_views, seconds=seconds)
+    def process_page_views_limit(self, page_views: int, seconds: int, domain_id):
+        self.suppression_persistence.process_page_views_limit(page_views=page_views, seconds=seconds, domain_id=domain_id)
