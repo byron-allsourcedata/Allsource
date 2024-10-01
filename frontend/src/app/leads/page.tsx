@@ -433,7 +433,7 @@ const Leads: React.FC = () => {
                 const timeSpent = selectedFilters.find(filter => filter.label === 'Time Spent')?.value.split(', ') || [];
                 if (timeSpent.length > 0) {
                     const formattedTimeSpent = timeSpent.map(value => value.replace(/\s+/g, '_'));
-                    url += `&time_spent=${encodeURIComponent(formattedTimeSpent.join(','))}`;
+                    url += `&average_time_sec=${encodeURIComponent(formattedTimeSpent.join(','))}`;
                 }
             }
 
@@ -879,7 +879,7 @@ const Leads: React.FC = () => {
                 const timeSpent = selectedFilters.find(filter => filter.label === 'Time Spent')?.value.split(', ') || [];
                 if (timeSpent.length > 0) {
                     const formattedTimeSpent = timeSpent.map(value => value.replace(/\s+/g, '_'));
-                    params.push(`time_spent=${encodeURIComponent(formattedTimeSpent.join(','))}`);
+                    params.push(`average_time_sec=${encodeURIComponent(formattedTimeSpent.join(','))}`);
                 }
             }
 
@@ -1309,7 +1309,7 @@ const Leads: React.FC = () => {
                                                         { key: 'first_visited_date', label: 'Visited date', sortable: true },
                                                         { key: 'funnel', label: 'Lead Status' },
                                                         { key: 'status', label: 'Visitor Type' },
-                                                        { key: 'time_spent', label: 'Time on site' },
+                                                        { key: 'average_time_sec', label: 'Average time on site' },
                                                     ].map(({ key, label, sortable = true }) => (
                                                         <TableCell
                                                             key={key}
@@ -1320,7 +1320,7 @@ const Leads: React.FC = () => {
                                                                     left: 0, // Stick it to the left
                                                                     zIndex: 99
                                                                 }),
-                                                                ...(key === 'time_spent' && {
+                                                                ...(key === 'average_time_sec' && {
                                                                     '::after': {
                                                                         content: 'none'
                                                                     }
@@ -1446,7 +1446,7 @@ const Leads: React.FC = () => {
                                                         </TableCell>
 
                                                         <TableCell sx={leadsStyles.table_array}>
-                                                            {row.time_spent ? formatTimeSpent(row.time_spent) : '--'}
+                                                            {row.average_time_sec ? formatTimeSpent(row.average_time_sec) : '--'}
                                                         </TableCell>
 
                                                     </TableRow>

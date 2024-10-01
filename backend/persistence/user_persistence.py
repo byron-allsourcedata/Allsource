@@ -128,6 +128,7 @@ class UserPersistence:
                'team_access_level': user.team_access_level,
                'is_email_confirmed': user.is_email_confirmed,
                'change_email_sent_at': user.change_email_sent_at,
+               'team_owner_id': user.team_owner_id,
                'password': user.password
             }
         self.db.rollback()
