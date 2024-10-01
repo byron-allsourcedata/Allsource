@@ -1,10 +1,15 @@
 "use client";
-import React, { useState, useEffect } from 'react';
-import { Box, Typography, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Grid, IconButton, Switch, Divider, Popover, Drawer, LinearProgress, Tooltip, TextField, TablePagination } from '@mui/material';
+import React, { useState, useEffect, useRef } from 'react';
+import { loadStripe } from '@stripe/stripe-js';
+import { Box, Typography, Button, Table, TableBody, Modal, TableCell, TableContainer, TableHead, TableRow, Grid, IconButton, Switch, Divider, Popover, Drawer, LinearProgress, Tooltip, TextField, TablePagination } from '@mui/material';
 import Image from 'next/image';
+import { Elements } from '@stripe/react-stripe-js';
 import axiosInterceptorInstance from '@/axios/axiosInterceptorInstance';
 import CloseIcon from '@mui/icons-material/Close';
 import CustomizedProgressBar from '@/components/CustomizedProgressBar';
+import CheckoutForm from './CheckoutForm';
+import { showErrorToast, showToast } from './ToastNotification';
+import axios from 'axios';
 
 type CardBrand = 'visa' | 'mastercard' | 'americanexpress' | 'discover';
 
@@ -118,7 +123,7 @@ export const SettingsBilling: React.FC = () => {
     const [checked, setChecked] = useState(false);
     const [deleteAnchorEl, setDeleteAnchorEl] = useState<null | HTMLElement>(null);
     const [overageAnchorEl, setOverageAnchorEl] = useState<null | HTMLElement>(null);
-    const [selectedCardId, setSelectedCardId] = useState<number | null>(null);
+    const [selectedCardId, setSelectedCardId] = useState<string | null>();
     const [removePopupOpen, setRemovePopupOpen] = useState(false);
     const [sendInvoicePopupOpen, setSendInvoicePopupOpen] = useState(false);
     const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -127,6 +132,11 @@ export const SettingsBilling: React.FC = () => {
     const [totalRows, setTotalRows] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
     const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
+    const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '');
+    const [open, setOpen] = useState(false);
+
+    const handleOpen = () => setOpen(true);
+    const handleClose = () => setOpen(false);
 
     const fetchCardData = async () => {
         try {
@@ -201,29 +211,96 @@ export const SettingsBilling: React.FC = () => {
 
     const label = { inputProps: { 'aria-label': 'overage' } };
 
-    const handleClickOpen = (event: React.MouseEvent<HTMLElement>, id: number) => {
-        setDeleteAnchorEl(event.currentTarget);  // Set the current target as the anchor
-        setSelectedCardId(id);  // Set the ID of the row to delete
+    const handleClickOpen = (event: React.MouseEvent<HTMLElement>, id: string) => {
+        setDeleteAnchorEl(event.currentTarget);
+        setSelectedCardId(id);
     };
 
     const handleDeleteClose = () => {
         setDeleteAnchorEl(null);
-        setSelectedCardId(null);
     };
 
     const handleRemovePopupOpen = () => {
         setRemovePopupOpen(true);
         setDeleteAnchorEl(null);
-        setSelectedCardId(null);
+    };
 
+    const handleSetDefault = async() => {
+        try {
+            setIsLoading(true);
+            const payment_method_id = {
+                payment_method_id: selectedCardId
+            };
+            const response = await axiosInterceptorInstance.put('/settings/billing/default-card', {
+                data: payment_method_id
+            });
+            
+            if (response.status === 200) {
+                switch (response.data.status) {
+                    case 'SUCCESS':
+                        showToast('Delete user card successfully');
+                        setCardDetails(prevCardDetails => 
+                            prevCardDetails.filter(card => card.id !== selectedCardId)
+                        );
+                        break
+                    default:
+                        showErrorToast('Unknown response received.');
+                }
+            }
+        } catch (error) {
+            if (axios.isAxiosError(error)) {
+                if (error.response && error.response.status === 403) {
+                    showErrorToast('Access denied: You do not have permission to remove this member.');
+                } else {
+                    console.error('Error removing team member:', error);
+                }
+            }
+        } finally {
+            setIsLoading(false);
+            handleRemovePopupClose()
+            setSelectedCardId(null);
+        }
     };
 
     const handleRemovePopupClose = () => {
         setRemovePopupOpen(false);
-    };
-
-    const handleDelete = () => {
-
+    };    
+    
+    const handleDelete = async() => {
+        try {
+            setIsLoading(true);
+            const payment_method_id = {
+                payment_method_id: selectedCardId
+            };
+            const response = await axiosInterceptorInstance.delete('/settings/billing/delete-card', {
+                data: payment_method_id
+            });
+            
+            if (response.status === 200) {
+                switch (response.data.status) {
+                    case 'SUCCESS':
+                        showToast('Delete user card successfully');
+                        setCardDetails(prevCardDetails => 
+                            prevCardDetails.filter(card => card.id !== selectedCardId)
+                        );
+                        break
+                    default:
+                        showErrorToast('Unknown response received.');
+                }
+            }
+        } catch (error) {
+            if (axios.isAxiosError(error)) {
+                if (error.response && error.response.status === 403) {
+                    showErrorToast('Access denied: You do not have permission to remove this member.');
+                } else {
+                    console.error('Error removing team member:', error);
+                }
+            }
+        } finally {
+            setIsLoading(false);
+            handleRemovePopupClose()
+            setSelectedCardId(null);
+        }
     };
 
     const handleSendInvoicePopupOpen = () => {
@@ -249,6 +326,11 @@ export const SettingsBilling: React.FC = () => {
         setRowsPerPage(parseInt(event.target.value, 10));
         setPage(0);
     };
+
+    const handleCheckoutSuccess = (data: any) => {
+        setCardDetails(prevDetails => [...prevDetails, data]);
+    };
+    
 
     const getStatusStyles = (status: string) => {
         switch (status.toLowerCase()) {
@@ -422,7 +504,7 @@ export const SettingsBilling: React.FC = () => {
                                                     Remove
                                                 </Button>
                                                 {!card.is_default && (
-                                                    <Button sx={{
+                                                    <Button onClick={handleSetDefault} sx={{
                                                         border: 'none',
                                                         boxShadow: 'none',
                                                         color: '#202124',
@@ -450,8 +532,12 @@ export const SettingsBilling: React.FC = () => {
                                 </Box>
                             </Box>
                         ))}
+
                         <Box sx={{
-                            border: '1px dashed #5052B2', borderRadius: '4px', width: '62px', height: '62px',
+                            border: '1px dashed #5052B2',
+                            borderRadius: '4px',
+                            width: '62px',
+                            height: '62px',
                             display: 'flex',
                             justifyContent: 'center',
                             alignItems: 'center',
@@ -459,15 +545,26 @@ export const SettingsBilling: React.FC = () => {
                                 display: 'none'
                             }
                         }}>
-                            <Button sx={{
-                                '&:hover': {
-                                    background: 'transparent'
-                                }
-                            }}>
+                            <Button onClick={handleOpen}>
                                 <Image src="/add-square.svg" alt="add-square" height={32} width={32} />
                             </Button>
-
                         </Box>
+
+                        <Modal open={open} onClose={handleClose}>
+                            <Box sx={{
+                                bgcolor: 'white',
+                                borderRadius: '4px',
+                                padding: '16px',
+                                maxWidth: '400px',
+                                margin: '100px auto',
+                            }}>
+                                <Elements stripe={stripePromise}>
+                                    <CheckoutForm handleClose={handleClose} onSuccess={handleCheckoutSuccess}/>
+                                </Elements>
+                            </Box>
+                        </Modal>
+
+
                     </Box>
 
                 </Grid>

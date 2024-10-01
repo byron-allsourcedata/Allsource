@@ -9,6 +9,7 @@ import DomainButton from "@/components/DomainsButton";
 import NavigationMenu from "@/components/NavigationMenu";
 import { SliderProvider } from "../context/SliderContext";
 import { useTrial } from '../context/TrialProvider';
+import zIndex from "@mui/material/styles/zIndex";
 
 const headerStyles = {
   headers: {
@@ -19,6 +20,10 @@ const headerStyles = {
     minHeight: '8vh',
     color: 'rgba(244, 87, 69, 1)',
     borderBottom: `1px solid rgba(228, 228, 228, 1)`,
+    position: 'sticky',
+    top: 0,
+    background: '#fff',
+    zIndex: 9
   },
   logoContainer: {
     display: 'flex',
