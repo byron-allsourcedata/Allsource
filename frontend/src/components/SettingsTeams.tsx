@@ -540,11 +540,13 @@ export const SettingsTeams: React.FC = () => {
                             <TableRow>
                                 <TableCell sx={{
                                     ...teamsStyles.tableColumn,
-                                    position: 'sticky', // Make the Name column sticky
-                                    left: 0, // Stick it to the left
+                                    position: 'sticky',
+                                    left: 0,
                                     zIndex: 9,
-                                    background: '#fff'
+                                    background: '#fff',
+                                    textAlign: 'left'
                                 }}>User</TableCell>
+
                                 <TableCell sx={teamsStyles.tableColumn}>Last signed-in</TableCell>
                                 <TableCell sx={teamsStyles.tableColumn}>Access level</TableCell>
                                 <TableCell sx={teamsStyles.tableColumn}>Invited by</TableCell>
@@ -594,90 +596,92 @@ export const SettingsTeams: React.FC = () => {
 
                                         <TableCell sx={teamsStyles.tableBodyColumn}>{member.last_sign_in}</TableCell>
                                         <TableCell sx={teamsStyles.tableBodyColumn} onClick={(e) => handleDropdownClick(e, member.email)}>
-
-
-                                        <FormControl variant="outlined" sx={{ width: '100%' }}>
-    <Select
-        value={member.access_level}
-        onChange={(e) => handleSelectionChange(e, member.email)}
-        open={teamSelectOpen === member.email && member.access_level !== "owner"}
-        sx={{
-            '& .MuiOutlinedInput-notchedOutline': {
-                border: 'none',
-            },
-            '& .MuiOutlinedInput-input': {
-                display: 'inline-block',
-                fontFamily: 'Roboto',
-                fontSize: '12px',
-                lineHeight: '16px',
-                color: '#5f6368',
-                paddingBottom: '14px',
-            },
-            '& .MuiSelect-select': {
-                display: 'inline-block',
-                position: 'relative',
-                borderRadius: '0',
-                width: 'auto',
-                padding: '0 !important',
-                margin: '0 auto',
-            },
-            '& .MuiSelect-icon': {
-                display: 'none',
-            }
-        }}
-        input={
-            <OutlinedInput
-                endAdornment={
-                    teamSelectOpen === member.email && (
-                        <InputAdornment position="end" onClick={(e) => handleArrowClick(e, member.email)} sx={{ cursor: 'pointer' }}>
-                            <Image
-                                src={teamSelectOpen === member.email ? '/chevron-drop-up.svg' : '/chevron-drop-down.svg'}
-                                alt={teamSelectOpen === member.email ? 'chevron-drop-up' : 'chevron-drop-down'}
-                                height={24}
-                                width={24}
-                            />
-                        </InputAdornment>
-                    )
-                }
-            />
-        }
-        MenuProps={{
-            PaperProps: {
-                sx: {
-                    '& .MuiMenuItem-root': {
-                        fontFamily: 'Nunito Sans',
-                        fontSize: '12px',
-                        lineHeight: '16px',
-                        color: '#202124',
-                        fontWeight: '600',
-                        '&:not(:last-child)': {
-                            borderBottom: '1px dotted #ccc',
-                        },
-                    },
-                },
-            },
-        }}
-    >
-        {roleOptions.map(option => (
-            <MenuItem
-                key={option.key}
-                value={option.key}
-                sx={{ display: option.key === "owner" ? 'none' : 'block' }}
-            >
-                {option.value}
-            </MenuItem>
-        ))}
-    </Select>
-    <Box sx={{
-        borderBottom: '1px dashed #51627B',
-        width: '40%',
-        margin: '4px auto 0',
-    }} />
-</FormControl>
-
-
-
-
+                                            <FormControl variant="outlined" sx={{ width: '100%' }}>
+                                                <Select
+                                                    value={member.access_level}
+                                                    onChange={member.access_level === "owner" ? undefined : (e) => handleSelectionChange(e, member.email)}
+                                                    open={teamSelectOpen === member.email && member.access_level !== "owner"}
+                                                    sx={{
+                                                        '& .MuiOutlinedInput-notchedOutline': {
+                                                            border: 'none',
+                                                        },
+                                                        '& .MuiOutlinedInput-input': {
+                                                            display: 'inline-block',
+                                                            fontFamily: 'Roboto',
+                                                            fontSize: '12px',
+                                                            lineHeight: '16px',
+                                                            color: '#5f6368',
+                                                            paddingBottom: '14px',
+                                                        },
+                                                        '& .MuiSelect-select': {
+                                                            display: 'inline-block',
+                                                            position: 'relative',
+                                                            borderRadius: '0',
+                                                            width: 'auto',
+                                                            padding: '0 !important',
+                                                            margin: '0 auto',
+                                                            cursor: member.access_level === "owner" ? 'not-allowed' : 'pointer',
+                                                        },
+                                                        '& .MuiSelect-icon': {
+                                                            display: 'none',
+                                                        }
+                                                    }}
+                                                    input={
+                                                        <OutlinedInput
+                                                            endAdornment={
+                                                                teamSelectOpen === member.email && (
+                                                                    <InputAdornment position="end" onClick={(e) => handleArrowClick(e, member.email)} sx={{ cursor: 'pointer' }}>
+                                                                        <Image
+                                                                            src={teamSelectOpen === member.email ? '/chevron-drop-up.svg' : '/chevron-drop-down.svg'}
+                                                                            alt={teamSelectOpen === member.email ? 'chevron-drop-up' : 'chevron-drop-down'}
+                                                                            height={24}
+                                                                            width={24}
+                                                                        />
+                                                                    </InputAdornment>
+                                                                )
+                                                            }
+                                                        />
+                                                    }
+                                                    MenuProps={{
+                                                        PaperProps: {
+                                                            sx: {
+                                                                '& .MuiMenuItem-root': {
+                                                                    fontFamily: 'Nunito Sans',
+                                                                    fontSize: '12px',
+                                                                    lineHeight: '16px',
+                                                                    color: '#202124',
+                                                                    fontWeight: '600',
+                                                                    '&:not(:last-child)': {
+                                                                        borderBottom: '1px dotted #ccc',
+                                                                    },
+                                                                },
+                                                            },
+                                                        },
+                                                    }}
+                                                    onClick={(e) => {
+                                                        if (member.access_level === "owner") {
+                                                            e.stopPropagation();
+                                                        }
+                                                    }}
+                                                >
+                                                    {roleOptions.map(option => (
+                                                        <MenuItem
+                                                            key={option.key}
+                                                            value={option.key}
+                                                            sx={{ display: option.key === "owner" ? 'none' : 'block' }}
+                                                        >
+                                                            {option.value}
+                                                        </MenuItem>
+                                                    ))}
+                                                </Select>
+                                                {member.access_level !== "owner" && (
+                                                    <Box sx={{
+                                                        borderBottom: '1px dashed #51627B',
+                                                        width: '40%',
+                                                        margin: '4px auto 0',
+                                                    }} />
+                                                )}
+                                            </FormControl>
                                         </TableCell>
                                         <TableCell sx={teamsStyles.tableBodyColumn}>{member.invited_by}</TableCell>
                                         <TableCell sx={teamsStyles.tableBodyColumn}>{member.added_on}</TableCell>
