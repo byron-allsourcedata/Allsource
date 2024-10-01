@@ -194,7 +194,7 @@ class SettingsService:
                 'invitation_count': self.get_team_invitations_count(user)
             }
         if access_level not in {TeamAccessLevel.ADMIN.value, TeamAccessLevel.OWNER.value, TeamAccessLevel.STANDARD, TeamAccessLevel.READ_ONLY}:
-            access_level = TeamAccessLevel.READ_ONLY.value
+            raise HTTPException(status_code=500, detail={'error': SettingStatus.INVALID_ACCESS_LEVEL.value})
         exists_team_member = self.settings_persistence.exists_team_member(user_id=user.get('id'), user_mail=invite_user)
         if exists_team_member:
             return {

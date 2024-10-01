@@ -5,8 +5,9 @@ from sqlalchemy import update, or_
 from sqlalchemy.orm import aliased
 from datetime import datetime
 from models.users import Users
+from fastapi import HTTPException, status
 from models.teams_invitations import TeamInvitation
-from enums import TeamsInvitationStatus, TeamAccessLevel
+from enums import TeamsInvitationStatus, TeamAccessLevel, SettingStatus
 
 class SettingsPersistence:
     def __init__(self, db: Session):
@@ -39,9 +40,11 @@ class SettingsPersistence:
         self.db.commit()
         
     def change_user_role(self, email, access_level):
-        self.db.query(Users).filter(Users.email == email).update(
-            {Users.team_access_level: access_level},
-            synchronize_session=False)
+        user = self.db.query(Users).filter(Users.email == email).first()
+        if user:
+            if user.team_access_level == TeamAccessLevel.OWNER:
+                raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail={'error': SettingStatus.OWNER_ROLE_CHANGE_NOT_ALLOWED.value})
+            user.team_access_level = access_level
         self.db.commit()
         
     def set_reset_email_sent_now(self, user_id):
