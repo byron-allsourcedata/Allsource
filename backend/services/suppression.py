@@ -73,7 +73,7 @@ class SuppressionService:
             return StreamingResponse(output, media_type="text/csv", headers={"Content-Disposition": "attachment; filename=suppression_list.csv"})
         return False
     
-    def process_suppression_multiple_emails(self, user: dict, emails, domain_id):
+    def process_suppression_multiple_emails(self, emails, domain_id):
         self.suppression_persistence.save_rules_multiple_emails(emails=emails, domain_id=domain_id)
         
     def get_rules(self, domain_id):
