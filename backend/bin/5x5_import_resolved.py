@@ -55,7 +55,7 @@ QUEUE_DATA_SYNC = 'data_sync_leads'
 ROOT_BOT_CLIENT_EMAIL = 'onlineinet.ru@gmail.com'
 ROOT_BOT_CLIENT_DOMAIN = 'https://app.maximiz.ai'
 
-EMAIL_LIST = ['business_email', 'presonal_email', 'additional_personal_emails']
+EMAIL_LIST = ['business_email', 'personal_emails', 'additional_personal_emails']
 
 def create_sts_client(key_id, key_secret):
     return boto3.client('sts', aws_access_key_id=key_id, aws_secret_access_key=key_secret, region_name='us-west-2')
@@ -156,11 +156,7 @@ async def process_user_data(table, index, five_x_five_user: FiveXFiveUser, sessi
         
         is_first_request = True
         lead_user = LeadUser(five_x_five_user_id=five_x_five_user.id, user_id=user.id, behavior_type=behavior_type, domain_id=user_domain_id)
-        lead_suppression = False
-        emails_to_check = [
-            five_x_five_user.business_email.split(', '), 
-            five_x_five_user.personal_emails.split(', ')
-        ] + five_x_five_user.additional_personal_emails.split(', ')
+        emails_to_check = five_x_five_user.business_email.split(', ') + five_x_five_user.personal_emails.split(', ') + five_x_five_user.additional_personal_emails.split(', ')
         integrations_ids = [integration.id for integration in session.query(UserIntegration).filter(UserIntegration.is_with_suppression == True).all()]
         lead_suppression = session.query(LeadsSupperssion).filter(
             LeadsSupperssion.domain_id == user_domain_id,
