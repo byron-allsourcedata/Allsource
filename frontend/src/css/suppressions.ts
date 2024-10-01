@@ -130,5 +130,9 @@ export const suppressionsStyles: { [key: string]: SxProps<Theme> } = {
         '&:last-child::after': {
             content: 'none'
         }
-    }
+    },
+    page_number: {
+        backgroundColor: 'rgba(255, 255, 255, 1)',
+        color: 'rgba(80, 82, 178, 1)',
+      },
 }

@@ -19,6 +19,7 @@ export const InviteUsersPopup: React.FC<InviteUsersPopupProps> = ({ open, onClos
     const [emailError, setEmailError] = useState<string | null>(null);
     const [roleError, setRoleError] = useState<string | null>(null);
     const [inputValue, setInputValue] = useState('');
+    const [lastAddedEmail, setLastAddedEmail] = useState('');
 
 
     const availableEmails = ['Julie@gmail.com'];
@@ -178,24 +179,20 @@ export const InviteUsersPopup: React.FC<InviteUsersPopupProps> = ({ open, onClos
                             value={inputValue}
                             onChange={(e) => setInputValue(e.target.value)}
                             onKeyDown={(e) => {
-                                if (e.key === 'Enter') {
+                                if (e.key === 'Enter' && inputValue && inputValue !== lastAddedEmail) {
                                     handleAddEmail(inputValue);
+                                    setLastAddedEmail(inputValue);
                                     setInputValue('');
                                 }
                             }}
                             onBlur={() => {
-                                if (inputValue) {
+                                if (inputValue && inputValue !== lastAddedEmail) {
                                     handleAddEmail(inputValue);
+                                    setLastAddedEmail(inputValue);
                                     setInputValue('');
                                 }
                             }}
-                            onFocus={() => {
-                                if (inputValue) {
-                                    handleAddEmail(inputValue);
-                                    setInputValue('');
-                                }
-                            }}
-                            error={!!emailError} // Show error state if there is an error
+                            error={!!emailError}
                             helperText={emailError}
                             InputLabelProps={{
                                 sx: {
@@ -223,6 +220,7 @@ export const InviteUsersPopup: React.FC<InviteUsersPopupProps> = ({ open, onClos
                                 },
                             }}
                         />
+
                     )}
                     renderOption={(props, option) => (
                         <MenuItem {...props} key={option} sx={{

@@ -270,13 +270,11 @@ const DomainButton: React.FC = () => {
           padding: '7px',
         }}
       >
-        <Typography sx={{
+        <Typography className='second-sub-title' sx={{
           marginRight: '0.5em',
-          fontFamily: 'Nunito',
-          lineHeight: '19.1px',
           letterSpacing: '-0.02em',
           textAlign: 'left',
-          fontSize: '0.875rem',
+          color: 'rgba(98, 98, 98, 1) !important'
         }}>
           {currentDomain}
         </Typography>

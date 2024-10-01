@@ -53,14 +53,21 @@ def get_card_details_by_customer_id(customer_id):
 
 def add_card_to_customer(customer_id, payment_method_id):
     try:
-        stripe.PaymentMethod.attach(
+        payment_method = stripe.PaymentMethod.attach(
             payment_method_id,
             customer=customer_id
         )
         
+        card_details = payment_method.card
+        last4 = card_details.last4
+        brand = card_details.brand
+        
         return {
             'status': 'SUCCESS',
-            'message': 'Card successfully added'
+            'card_details': {
+                'last4': last4,
+                'brand': brand
+            }
         }
     except stripe.error.StripeError as e:
         return {
