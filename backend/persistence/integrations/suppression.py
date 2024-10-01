@@ -18,7 +18,6 @@ class SuppressionPersistence:
     
     def get_last_leads_suppression(self, domain_id: int, integration_id: int) -> LeadsSupperssion:
         try:
-            leads_suppression =  self.db.query(LeadsSupperssion).filter(LeadsSupperssion.domain_id == domain_id, LeadsSupperssion.integrations_id == integration_id).order_by(LeadsSupperssion.id.asc).all()
-            return leads_suppression[-1]
+            return self.db.query(LeadsSupperssion).filter(LeadsSupperssion.domain_id == domain_id, LeadsSupperssion.integrations_id == integration_id).order_by(LeadsSupperssion.id.decs).limit(1).first()
         except Exception:
             ...

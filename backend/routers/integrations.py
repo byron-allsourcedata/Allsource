@@ -12,10 +12,9 @@ async def get_integrations_service(type: str | None = Query(None), data_sync: bo
     filter = {}
     if type:
         filter['type'] = type 
-
     if data_sync is not None:
         filter['data_sync'] = data_sync  
-    return persistence.get_all_integrations_filter_by(**filter)
+    return persistence.get_integrations_service(**filter)
     
 
 @router.get('/credentials/')

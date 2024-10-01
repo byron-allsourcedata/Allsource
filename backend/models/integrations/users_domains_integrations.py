@@ -9,7 +9,7 @@ class UserIntegration(Base):
     access_token = Column(VARCHAR)
     service_name = Column(VARCHAR)
     data_center = Column(VARCHAR)
-    suppression = Column(Boolean)
+    is_with_suppression = Column(Boolean)
 
 
 class Integration(Base):

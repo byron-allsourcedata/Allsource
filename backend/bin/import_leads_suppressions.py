@@ -38,7 +38,7 @@ if __name__ == '__main__':
     )
     while True:
         logging.info('Start suppression sync')
-        integrations = integration_service.integration_persistence.get_all_integrations_filter_by(suppression=True)
+        integrations = integration_service.integration_persistence.get_all_integrations_filter_by(is_with_suppression=True)
         for integration in integrations:
             last_suppression_date = integration_service.suppression_persistence.get_last_leads_suppression(domain_id=integration.domain_id, integration_id=integration.id)
             with integration_service as service:
@@ -51,7 +51,7 @@ if __name__ == '__main__':
                         'email': contact.email,
                         'phone_number': contact.phone_number,
                         'domain_id': integration.domain_id,
-                        'integrations_id': integration.id
+                        'integration_id': integration.id
                     })
         logging.info('Stop suppression sync')
         time.sleep(12*60*60)

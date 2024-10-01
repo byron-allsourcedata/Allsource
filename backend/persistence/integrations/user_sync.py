@@ -1,6 +1,6 @@
 from models.integrations.integrations_users_sync import IntegrationUserSync
 from sqlalchemy.orm import Session
-from models.integrations.users_domains_integrations import UserIntegration, Integration
+from models.integrations.users_domains_integrations import UserIntegration
 
 class IntegrationsUserSyncPersistence:
 
@@ -23,10 +23,9 @@ class IntegrationsUserSyncPersistence:
             IntegrationUserSync.is_active, 
             IntegrationUserSync.last_sync_date,
             IntegrationUserSync.leads_type, 
-            Integration.service_name
+            UserIntegration.service_name
         ) \
         .join(UserIntegration, UserIntegration.id == IntegrationUserSync.integration_id) \
-        .join(Integration, Integration.service_name == UserIntegration.service_name) \
         .filter(IntegrationUserSync.domain_id == domain_id)
         if service_name:
             query = query.filter(UserIntegration.service_name == service_name)

@@ -40,7 +40,7 @@ from sqlalchemy.dialects.postgresql import insert
 from collections import defaultdict
 from datetime import datetime, timedelta
 from config.rmq_connection import publish_rabbitmq_message, RabbitMQConnection
-
+from models.integrations.users_domains_integrations import UserIntegration
 
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
@@ -158,13 +158,14 @@ async def process_user_data(table, index, five_x_five_user: FiveXFiveUser, sessi
         lead_user = LeadUser(five_x_five_user_id=five_x_five_user.id, user_id=user.id, behavior_type=behavior_type, domain_id=user_domain_id)
         lead_suppression = False
         emails_to_check = [
-            five_x_five_user.business_email, 
-            five_x_five_user.personal_emails
+            five_x_five_user.business_email.split(', '), 
+            five_x_five_user.personal_emails.split(', ')
         ] + five_x_five_user.additional_personal_emails.split(', ')
-
+        integrations_ids = [integration.id for integration in session.query(UserIntegration).filter(UserIntegration.is_with_suppression == True).all()]
         lead_suppression = session.query(LeadsSupperssion).filter(
             LeadsSupperssion.domain_id == user_domain_id,
-            LeadsSupperssion.email.in_(emails_to_check)
+            LeadsSupperssion.email.in_(emails_to_check),
+            LeadsSupperssion.integration_id.in_(integrations_ids)
         ).first() is not None
         if not lead_suppression:
             session.add(lead_user)

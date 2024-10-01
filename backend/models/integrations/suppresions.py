@@ -4,7 +4,7 @@ from datetime import datetime
 
 class LeadsSupperssion(Base):
 
-    __tablename__ = 'leads_suppression'
+    __tablename__ = 'leads_suppressions'
     
     id = Column(Integer, primary_key=True, autoincrement=True)
     id_service = Column(VARCHAR)
@@ -12,5 +12,5 @@ class LeadsSupperssion(Base):
     phone_number = Column(VARCHAR)
     domain_id = Column(Integer, nullable=False)
     created_at = Column(TIMESTAMP, default=datetime.now)
-    integrations_id = Column(Integer, nullable=False)
+    integration_id = Column(Integer, nullable=False)
     
