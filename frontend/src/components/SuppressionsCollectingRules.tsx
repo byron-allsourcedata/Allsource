@@ -17,7 +17,7 @@ const CollectionRules: React.FC = () => {
     const handleSave = async () => {
         try {
             const response = await axiosInstance.post('/suppressions/collection-rules', {
-                pageViews: parseInt(pageViews, 10),
+                page_views: parseInt(pageViews, 10),
                 seconds: parseInt(seconds, 10)
             });
             showInfoToast('Succesfully added rule')
