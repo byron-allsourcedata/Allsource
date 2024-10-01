@@ -143,6 +143,7 @@ export const SettingsBilling: React.FC = () => {
             setIsLoading(true);
             const response = await axiosInterceptorInstance.get('/settings/billing');
             setCardDetails(response.data.card_details);
+            setChecked(response.data.billing_details.overage)
             setBillingDetails(response.data.billing_details);
 
 
@@ -198,6 +199,7 @@ export const SettingsBilling: React.FC = () => {
         if (event.target.checked) {
             setOverageAnchorEl(event.currentTarget); // Set anchor to display popover
         } else {
+            handleSendChangeOverage()
             setOverageAnchorEl(null); // Hide popover if unchecked (No)
         }
     };
@@ -225,22 +227,23 @@ export const SettingsBilling: React.FC = () => {
         setDeleteAnchorEl(null);
     };
 
-    const handleSetDefault = async() => {
+    const handleSetDefault = async () => {
         try {
             setIsLoading(true);
-            const payment_method_id = {
-                payment_method_id: selectedCardId
-            };
-            const response = await axiosInterceptorInstance.put('/settings/billing/default-card', {
-                data: payment_method_id
-            });
-            
+            const response = await axiosInterceptorInstance.put('/settings/billing/default-card', { payment_method_id: selectedCardId });
+
             if (response.status === 200) {
                 switch (response.data.status) {
                     case 'SUCCESS':
                         showToast('Delete user card successfully');
-                        setCardDetails(prevCardDetails => 
-                            prevCardDetails.filter(card => card.id !== selectedCardId)
+                        setCardDetails(prevCardDetails =>
+                            prevCardDetails.map(card => {
+                                if (card.id === selectedCardId) {
+                                    return { ...card, is_default: true }
+                                } else {
+                                    return { ...card, is_default: false };
+                                }
+                            })
                         );
                         break
                     default:
@@ -257,16 +260,16 @@ export const SettingsBilling: React.FC = () => {
             }
         } finally {
             setIsLoading(false);
-            handleRemovePopupClose()
+            handleDeleteClose();
             setSelectedCardId(null);
         }
     };
 
     const handleRemovePopupClose = () => {
         setRemovePopupOpen(false);
-    };    
-    
-    const handleDelete = async() => {
+    };
+
+    const handleDeleteCard = async () => {
         try {
             setIsLoading(true);
             const payment_method_id = {
@@ -275,12 +278,12 @@ export const SettingsBilling: React.FC = () => {
             const response = await axiosInterceptorInstance.delete('/settings/billing/delete-card', {
                 data: payment_method_id
             });
-            
+
             if (response.status === 200) {
                 switch (response.data.status) {
                     case 'SUCCESS':
                         showToast('Delete user card successfully');
-                        setCardDetails(prevCardDetails => 
+                        setCardDetails(prevCardDetails =>
                             prevCardDetails.filter(card => card.id !== selectedCardId)
                         );
                         break
@@ -305,7 +308,6 @@ export const SettingsBilling: React.FC = () => {
 
     const handleSendInvoicePopupOpen = () => {
         setSendInvoicePopupOpen(true);
-
     };
 
     const handleSendInvoicePopupClose = () => {
@@ -316,9 +318,54 @@ export const SettingsBilling: React.FC = () => {
 
     };
 
+    const fetchSaveBillingHistory = async () => {
+        // invoice_id = ''
+        // try {
+        //     setIsLoading(true);
+        //     const response = await axiosInterceptorInstance.get(`/settings/save-billing?invoice_id=${invoice_id}`);
+        //     setCardDetails(response.data.card_details);
+        //     setChecked(response.data.billing_details.overage);
+        //     setBillingDetails(response.data.billing_details);
+        // } catch (error) {
+        //     console.error('Error fetching data:', error);
+        // } finally {
+        //     setIsLoading(false);
+        // }
+    };
+
+
     // Handler for page change
     const handleChangePage = (_: React.MouseEvent<HTMLButtonElement> | null, newPage: number) => {
         setPage(newPage);
+    };
+
+    const handleSendChangeOverage = async () => {
+        try {
+            setIsLoading(true);
+            const response = await axiosInterceptorInstance.post('/settings/billing/overage');
+
+            if (response.status === 200) {
+                switch (response.data.status) {
+                    case 'SUCCESS':
+                        setChecked(response.data.is_leads_auto_charging);
+                        showToast('Change overage successfully');
+                        break
+                    default:
+                        showErrorToast('Unknown response received.');
+                }
+            }
+        } catch (error) {
+            if (axios.isAxiosError(error)) {
+                if (error.response && error.response.status === 403) {
+                    showErrorToast('Access denied: You do not have permission to remove this member.');
+                } else {
+                    console.error('Error removing team member:', error);
+                }
+            }
+        } finally {
+            setOverageAnchorEl(null);
+            setIsLoading(false);
+        }
     };
 
     // Handler for rows per page change
@@ -330,7 +377,7 @@ export const SettingsBilling: React.FC = () => {
     const handleCheckoutSuccess = (data: any) => {
         setCardDetails(prevDetails => [...prevDetails, data]);
     };
-    
+
 
     const getStatusStyles = (status: string) => {
         switch (status.toLowerCase()) {
@@ -559,7 +606,7 @@ export const SettingsBilling: React.FC = () => {
                                 margin: '100px auto',
                             }}>
                                 <Elements stripe={stripePromise}>
-                                    <CheckoutForm handleClose={handleClose} onSuccess={handleCheckoutSuccess}/>
+                                    <CheckoutForm handleClose={handleClose} onSuccess={handleCheckoutSuccess} />
                                 </Elements>
                             </Box>
                         </Modal>
@@ -776,7 +823,7 @@ export const SettingsBilling: React.FC = () => {
                                                             }}>
                                                                 Cancel
                                                             </Button>
-                                                            <Button sx={{
+                                                            <Button onClick={handleSendChangeOverage} sx={{
                                                                 background: '#5052B2',
                                                                 borderRadius: '4px',
                                                                 border: '1px solid #5052b2',
@@ -1114,12 +1161,12 @@ export const SettingsBilling: React.FC = () => {
                                         </TableCell>
                                         <TableCell sx={billingStyles.tableBodyColumn}>
                                             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                                <IconButton>
+                                                <IconButton >
                                                     <Image
                                                         src='/download-icon.svg'
                                                         alt='download-icon'
                                                         height={20}
-                                                        width={20} // Adjust the size as needed
+                                                        width={20}
                                                     />
                                                 </IconButton>
                                                 <IconButton onClick={handleSendInvoicePopupOpen}>
@@ -1127,11 +1174,12 @@ export const SettingsBilling: React.FC = () => {
                                                         src='/share-icon.svg'
                                                         alt='share-icon'
                                                         height={20}
-                                                        width={20} // Adjust the size as needed
+                                                        width={20}
                                                     />
                                                 </IconButton>
                                             </Box>
                                         </TableCell>
+
                                     </TableRow>
                                 )))}
                         </TableBody>
@@ -1231,7 +1279,7 @@ export const SettingsBilling: React.FC = () => {
                                 }}>
                                     Cancel
                                 </Button>
-                                <Button onClick={handleDelete} sx={{
+                                <Button onClick={handleDeleteCard} sx={{
                                     background: '#5052B2',
                                     borderRadius: '4px',
                                     border: '1px solid #5052b2',

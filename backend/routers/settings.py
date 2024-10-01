@@ -108,6 +108,18 @@ def delete_card(payment_card: PaymentCard, settings_service: SettingsService = D
             )
     return settings_service.delete_card(payment_method_id=payment_card.payment_method_id)
 
+@router.post("/billing/overage")
+def billing_overage(settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authorization_without_pixel)):
+    if user.get('team_member'):
+        team_member = user.get('team_member')
+        if team_member.get('team_access_level') != TeamAccessLevel.ADMIN.value or team_member.get('team_access_level') != TeamAccessLevel.OWNER.value:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied. Admins only."
+            )
+    return settings_service.billing_overage(user=user)
+
+
 @router.put("/billing/default-card")
 def default_card(payment_card: PaymentCard, settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authorization_without_pixel)):
     if user.get('team_member'):
