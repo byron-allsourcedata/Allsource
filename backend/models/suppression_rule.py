@@ -1,5 +1,4 @@
-from sqlalchemy import Column, event, Integer, BOOLEAN, ForeignKey, TIMESTAMP, VARCHAR
-from sqlalchemy.orm import relationship
+from sqlalchemy import Column, event, Integer, BOOLEAN, ForeignKey, TIMESTAMP, VARCHAR, TEXT
 from .base import Base, create_timestamps
 
 
@@ -10,13 +9,13 @@ class SuppressionRule(Base):
     created_at = Column(TIMESTAMP, nullable=True)
     is_stop_collecting_contacts = Column(BOOLEAN, nullable=False, default=False)
     is_url_certain_activation = Column(BOOLEAN, nullable=False, default=False)
-    activate_certain_urls = Column(VARCHAR, nullable=True)
+    activate_certain_urls = Column(TEXT, nullable=True)
     is_based_activation = Column(BOOLEAN, nullable=False, default=False)
-    activate_based_urls = Column(VARCHAR, nullable=True)
+    activate_based_urls = Column(TEXT, nullable=True)
     domain_id = Column(Integer, nullable=False)
     actual_contect_days = Column(Integer, nullable=False)
-    page_views_limit = Column(VARCHAR, nullable=True)
-    collection_timeout = Column(VARCHAR, nullable=True)
+    page_views_limit = Column(Integer, nullable=True)
+    collection_timeout = Column(Integer, nullable=True)
     suppressions_multiple_emails = Column(Integer, ForeignKey('suppression_emails.id'), nullable=True)
     
     def to_dict(self):
