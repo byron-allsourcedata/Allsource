@@ -1,7 +1,6 @@
 import datetime
 import math
 
-from models.suppression_email import SuppressionEmail
 from models.suppressions_list import SuppressionList
 from sqlalchemy.orm import Session
 from enums import SuppressionStatus
@@ -28,31 +27,16 @@ class SuppressionPersistence:
         if bad_emails:
             self.db.add(suppression_list)
             self.db.commit()
+            return
+            
 
-        email_list_ids = self.save_suppression_emails(email_list)
-
-        if email_list_ids:
-            suppression_list.total_emails = email_list_ids
-            suppression_list.status = SuppressionStatus.COMPLETED.value.lower()
+        suppression_list.total_emails = email_list
+        suppression_list.status = SuppressionStatus.COMPLETED.value.lower()
 
         self.db.add(suppression_list)
         self.db.commit()
+        return
 
-        
-    def save_suppression_emails(self, email_list):
-        email_list_ids = []
-        for email in email_list:
-            suppression_emails = insert(SuppressionEmail).values(
-                email=email,
-            ).on_conflict_do_nothing().returning(SuppressionEmail.id)
-            
-            result = self.db.execute(suppression_emails)
-            self.db.flush()
-            
-            for row in result:
-                email_list_ids.append(row.id)
-        
-        return email_list_ids
 
     
     def get_suppression_list(self, page, per_page, domain_id):
@@ -94,12 +78,7 @@ class SuppressionPersistence:
     
     def save_rules_multiple_emails(self, domain_id, emails):
         rules = self.get_rules(domain_id=domain_id) or SuppressionRule(created_at=datetime.now(), domain_id=domain_id)
-
-        email_list_ids = self.save_suppression_emails(emails)
-
-        if email_list_ids:
-            rules.suppressions_multiple_emails = email_list_ids
-
+        rules.suppressions_multiple_emails = emails
         self.db.add(rules)
         self.db.commit()
         
