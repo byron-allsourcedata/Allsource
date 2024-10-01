@@ -23,7 +23,8 @@ class IntegrationsUserSyncPersistence:
             IntegrationUserSync.is_active, 
             IntegrationUserSync.last_sync_date,
             IntegrationUserSync.leads_type, 
-            UserIntegration.service_name
+            IntegrationUserSync.integration_id,
+            UserIntegration.service_name,
         ) \
         .join(UserIntegration, UserIntegration.id == IntegrationUserSync.integration_id) \
         .filter(IntegrationUserSync.domain_id == domain_id)
@@ -33,13 +34,15 @@ class IntegrationsUserSyncPersistence:
         return [{
             'id': sync.id,
             'created_at': sync.created_at,
+            'integration_id': sync.integration_id,
             'is_active': sync.is_active,
             'last_sync_date': sync.last_sync_date,
             'leads_type': sync.leads_type,
             'service_name': sync.service_name
         } for sync in syncs]
 
-    
+    def get_data_sync_filter_by(self, **filter_by):
+        return self.db.query(IntegrationUserSync).filter_by(**filter_by).all()
     
     def update_sync(self, update_data: dict, **filter_by, ):
         return self.db.query(IntegrationUserSync).filter_by(**filter_by).update(update_data)
