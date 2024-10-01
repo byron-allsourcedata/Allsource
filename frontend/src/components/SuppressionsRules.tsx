@@ -1,8 +1,9 @@
 import { Box, Typography, TextField, Button, Switch, Chip, InputAdornment, Divider, Tooltip, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, } from "@mui/material";
 import Image from "next/image";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { suppressionsStyles } from "@/css/suppressions";
 import { ChevronLeft, ChevronRight } from "@mui/icons-material";
+import axiosInstance from "@/axios/axiosInterceptorInstance";
 
 
 interface CustomTablePaginationProps {
@@ -122,7 +123,7 @@ const CustomTablePagination: React.FC<CustomTablePaginationProps> = ({
 
 const SuppressionRules: React.FC = () => {
     /// Table
-    const [pendingInvitations, setPendingInvitations] = useState<any[]>([]);
+    const [suppressionsCSV, setSuppressionsCSV] = useState<any[]>([]);
 
     /// Switch Buttons
     const [checked, setChecked] = useState(false);
@@ -927,7 +928,7 @@ const SuppressionRules: React.FC = () => {
                                 </TableRow>
                             </TableHead>
                             <TableBody>
-                                {pendingInvitations.length === 0 ? (
+                                {suppressionsCSV.length === 0 ? (
                                     <TableRow>
                                         <TableCell colSpan={5} sx={{
                                             ...suppressionsStyles.tableBodyColumn,
@@ -937,7 +938,7 @@ const SuppressionRules: React.FC = () => {
                                         </TableCell>
                                     </TableRow>
                                 ) : (
-                                    pendingInvitations.map((invitation, index) => (
+                                    suppressionsCSV.map((invitation, index) => (
                                         <TableRow key={index} sx={{
                                             ...suppressionsStyles.tableBodyRow,
                                             '&:hover': {

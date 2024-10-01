@@ -7,26 +7,22 @@ import SpaceDashboardIcon from '@mui/icons-material/SpaceDashboard';
 import LeadsIcon from '@mui/icons-material/People';
 import CategoryIcon from '@mui/icons-material/Category';
 import IntegrationsIcon from '@mui/icons-material/IntegrationInstructions';
-import AnalyticsIcon from '@mui/icons-material/Analytics';
 import FeaturedPlayListIcon from '@mui/icons-material/FeaturedPlayList';
-import RuleFolderIcon from '@mui/icons-material/RuleFolder';
 import AccountBoxIcon from '@mui/icons-material/AccountBox';
 import SettingsIcon from '@mui/icons-material/Settings';
 import Image from 'next/image';
 import { useSlider } from '@/context/SliderContext';
 import { AxiosError } from 'axios';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
-import { Height } from '@mui/icons-material';
 import Slider from "../components/Slider";
-import { useUser } from '@/context/UserContext';
 
 const sidebarStyles = {
     container: {
         width: '100%',
         flexShrink: 0,
-        fontFamily: 'Nunito',
+        fontFamily: 'Nunito Sans',
         fontSize: '14px',
-        fontWeight: '500',
+        fontWeight: '400',
         backgroundColor: 'rgba(255, 255, 255, 1)',
         borderRight: '1px solid rgba(228, 228, 228, 1)',
         height: '92vh',
@@ -52,9 +48,10 @@ const sidebarStyles = {
             marginBottom: '0px !important',
         },
         '& span.MuiTypography-root': {
-            fontFamily: 'Nunito',
+            fontFamily: 'Nunito Sans',
             fontSize: '0.875rem',
-            lineHeight: 'normal'
+            fontWeight: 400,
+            lineHeight: 'normal',
         }
     },
     listItemIcon: {
@@ -82,8 +79,9 @@ const sidebarStyles = {
             marginBottom: '0px !important',
         },
         '& span.MuiTypography-root': {
-            fontFamily: 'Nunito',
+            fontFamily: 'Nunito Sans',
             fontSize: '0.875rem',
+            fontWeight: 400,
             lineHeight: 'normal'
         }
     },
@@ -101,7 +99,8 @@ const sidebarStyles = {
         boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
     },
     ListItem: {
-        minHeight: '4.5em'
+        minHeight: '4.5em',
+        color:'rgba(59, 59, 59, 1)'
     },
     activeItem: {
         borderLeft: '3px solid rgba(80, 82, 178, 1)',
@@ -123,10 +122,10 @@ const SetupSection: React.FC<ProgressSectionProps> = ({ meData }) => {
             <Box display="flex" alignItems="center" mb={2}>
                 <Image src={'/Vector9.svg'} alt="Setup" width={20} height={20} />
                 <Typography variant="h6" component="div" ml={1} sx={{
-                    fontFamily: 'Nunito',
-                    fontWeight: '700',
+                    fontFamily: 'Nunito Sans',
+                    fontWeight: '400',
                     lineHeight: 'normal',
-                    color: '#000',
+                    color: 'rgba(0, 0, 0, 1)',
                     fontSize: '0.875rem'
                 }}>
                     Setup
@@ -145,9 +144,9 @@ const SetupSection: React.FC<ProgressSectionProps> = ({ meData }) => {
                 }}
             />
             <Typography variant="body2" color="textSecondary" mt={1} sx={{
-                fontFamily: 'Nunito',
+                fontFamily: 'Roboto',
                 lineHeight: 'normal',
-                color: '#000',
+                color: 'rgba(120, 120, 120, 1)',
                 fontSize: '0.625rem'
             }}>
                 {meData.percent_steps ? meData.percent_steps : 0}% complete
