@@ -1,17 +1,18 @@
 import httpx
 from sqlalchemy.orm import Session
-from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
+from services.aws import AWSService
 from persistence.leads_persistence import LeadsPersistence
 from persistence.leads_persistence import LeadsPersistence
 from persistence.leads_order_persistence import LeadOrdersPersistence
+from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
 from persistence.audience_persistence import AudiencePersistence
+from persistence.integrations.suppression import SuppressionPersistence
 from .woocommerce import WoocommerceIntegrationService
 from .shopify import ShopifyIntegrationService
 from .mailchimp import MailchimpIntegrationsService
 from .klaviyo import KlaviyoIntegrationsService
 from .bigcommerce import BigcommerceIntegrationsService
-from services.aws import AWSService
 
 class IntegrationService:
 
@@ -19,7 +20,7 @@ class IntegrationService:
                  lead_persistence: LeadsPersistence, audience_persistence: AudiencePersistence, 
                  lead_orders_persistence: LeadOrdersPersistence, 
                  integrations_user_sync_persistence: IntegrationsUserSyncPersistence,
-                 aws_service: AWSService, domain_persistence):
+                 aws_service: AWSService, domain_persistence, suppression_persistence: SuppressionPersistence):
         self.db = db
         self.client = httpx.Client()
         self.integration_persistence = integration_persistence
@@ -29,6 +30,7 @@ class IntegrationService:
         self.integrations_user_sync_persistence = integrations_user_sync_persistence
         self.aws_service = aws_service
         self.domain_persistence = domain_persistence
+        self.suppression_persistence = suppression_persistence
 
     def get_user_service_credentials(self, domain_id):
         return self.integration_persistence.get_integration_by_user(domain_id)
@@ -36,12 +38,12 @@ class IntegrationService:
     def delete_integration(self, serivce_name: str, user):
         self.integration_persistence.delete_integration(user['id'], serivce_name)
 
-    def get_sync_user(self, domain_id: int):
-        return self.integrations_user_sync_persistence.get_filter_by(domain_id=domain_id)
+    def get_sync_domain(self, domain_id: int, service_name: str = None):
+        return self.integrations_user_sync_persistence.get_filter_by(domain_id=domain_id, service_name=service_name)
 
     def get_sync_users(self):
         return self.integrations_user_sync_persistence.get_filter_by()
-
+    
     def __enter__(self):
         self.shopify = ShopifyIntegrationService(self.integration_persistence, 
                                                  self.lead_persistence,

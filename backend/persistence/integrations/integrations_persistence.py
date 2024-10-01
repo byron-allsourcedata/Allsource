@@ -35,10 +35,13 @@ class IntegrationsPresistence:
         result = self.db.query(UserIntegration) \
             .filter(UserIntegration.id == id).update(data, synchronize_session='fetch')
         self.db.commit()
+
+    def get_integrations_service(self, **filter_by):
+        return self.db.query(Integration).filter_by(**filter_by).all()
     
-    def get_integrations_service(self):
-        return self.db.query(Integration).all()
-    
+    def get_all_integrations_filter_by(self, **filter_by):
+        return self.db.query(UserIntegration).filter_by(**filter_by).all()
+
     def get_users_integrations(self, service_name):
         return self.db.query(UserIntegration).filter_by(service_name=service_name).first()
     
