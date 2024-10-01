@@ -34,12 +34,13 @@ from models.leads_users import LeadUser
 from models.users import Users
 from models.subscriptions import SubscriptionPlan
 from models.leads_orders import LeadOrders
+from models.integrations.suppresions import LeadsSupperssion
 from dotenv import load_dotenv
 from sqlalchemy.dialects.postgresql import insert
 from collections import defaultdict
 from datetime import datetime, timedelta
 from config.rmq_connection import publish_rabbitmq_message, RabbitMQConnection
-
+from models.integrations.users_domains_integrations import UserIntegration
 
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
@@ -53,6 +54,8 @@ QUEUE_DATA_SYNC = 'data_sync_leads'
 
 ROOT_BOT_CLIENT_EMAIL = 'onlineinet.ru@gmail.com'
 ROOT_BOT_CLIENT_DOMAIN = 'https://app.maximiz.ai'
+
+EMAIL_LIST = ['business_email', 'personal_emails', 'additional_personal_emails']
 
 def create_sts_client(key_id, key_secret):
     return boto3.client('sts', aws_access_key_id=key_id, aws_secret_access_key=key_secret, region_name='us-west-2')
@@ -153,17 +156,25 @@ async def process_user_data(table, index, five_x_five_user: FiveXFiveUser, sessi
         
         is_first_request = True
         lead_user = LeadUser(five_x_five_user_id=five_x_five_user.id, user_id=user.id, behavior_type=behavior_type, domain_id=user_domain_id)
-        session.add(lead_user)
-        session.flush()
-        channel = await rmq_connection.channel()
-        await channel.declare_queue(
-            name=QUEUE_DATA_SYNC,
-            durable=True
-        )
-        publish_rabbitmq_message(rmq_connection, QUEUE_DATA_SYNC, {'domain_id': user_domain_id, 'leads_type': behavior_type, 'lead': {
-            'id': lead_user.id,
-            'five_x_five_user_id': lead_user.five_x_five_user_id
-        }})
+        emails_to_check = five_x_five_user.business_email.split(', ') + five_x_five_user.personal_emails.split(', ') + five_x_five_user.additional_personal_emails.split(', ')
+        integrations_ids = [integration.id for integration in session.query(UserIntegration).filter(UserIntegration.is_with_suppression == True).all()]
+        lead_suppression = session.query(LeadsSupperssion).filter(
+            LeadsSupperssion.domain_id == user_domain_id,
+            LeadsSupperssion.email.in_(emails_to_check),
+            LeadsSupperssion.integration_id.in_(integrations_ids)
+        ).first() is not None
+        if not lead_suppression:
+            session.add(lead_user)
+            session.flush()
+            channel = await rmq_connection.channel()
+            await channel.declare_queue(
+                name=QUEUE_DATA_SYNC,
+                durable=True
+            )
+            publish_rabbitmq_message(rmq_connection, QUEUE_DATA_SYNC, {'domain_id': user_domain_id, 'leads_type': behavior_type, 'lead': {
+                'id': lead_user.id,
+                'five_x_five_user_id': lead_user.five_x_five_user_id
+            }})
     else:
         first_visit_id = lead_user.first_visit_id
     requested_at_str = str(table['EVENT_DATE'][index].as_py())
@@ -176,13 +187,14 @@ async def process_user_data(table, index, five_x_five_user: FiveXFiveUser, sessi
     leads_requests = None
     if current_visit_request:
         visit_id = current_visit_request[0]
-        leads_result = session.query(LeadsRequests, LeadsVisits.id, LeadsVisits.behavior_type) \
+        leads_result = session.query(LeadsRequests, LeadsVisits.id, LeadsVisits.behavior_type, LeadsVisits.full_time_sec) \
             .join(LeadsVisits, LeadsRequests.visit_id == LeadsVisits.id) \
             .filter(LeadsRequests.visit_id == visit_id) \
             .all()
-        leads_requests = [leads_request for leads_request, _, _ in leads_result]
+        leads_requests = [leads_request for leads_request, _, _, _ in leads_result]
         lead_visit_id = leads_result[0][1]
         lead_behavior_type = leads_result[0][2]
+        lead_visit_full_time_sec = leads_result[0][3]
         if lead_user.behavior_type in ('visitor', 'viewed_product') and behavior_type in (
         'viewed_product', 'product_added_to_cart') and lead_user.behavior_type != behavior_type:
             session.query(LeadUser).filter(LeadUser.id == lead_user.id).update({
@@ -197,7 +209,7 @@ async def process_user_data(table, index, five_x_five_user: FiveXFiveUser, sessi
         elif lead_behavior_type == 'viewed_product':
             if behavior_type == 'product_added_to_cart':
                 lead_behavior_type = behavior_type
-        process_leads_requests(requested_at=requested_at, page=page, leads_requests=leads_requests, visit_id=visit_id, session=session, behavior_type=lead_behavior_type, lead_id=lead_user.id)
+        process_leads_requests(requested_at=requested_at, page=page, leads_requests=leads_requests, visit_id=visit_id, lead_visit_full_time_sec=lead_visit_full_time_sec, session=session, behavior_type=lead_behavior_type, lead_user=lead_user)
     else:
         lead_visit_id = add_new_leads_visits(visited_datetime=requested_at, lead_id=lead_user.id, session=session, behavior_type=behavior_type, lead_user=lead_user).id
         if is_first_request == True:
@@ -258,7 +270,8 @@ def convert_leads_requests_to_utc(leads_requests):
         else:
             request.requested_at = request.requested_at.astimezone(utc)
 
-def process_leads_requests(requested_at, page, leads_requests, visit_id, session: Session, behavior_type, lead_id):
+def process_leads_requests(requested_at, page, leads_requests, visit_id, lead_visit_full_time_sec, session: Session, behavior_type, lead_user):
+    lead_id = lead_user.id
     new_request = LeadsRequests(
         page=normalize_url(page),
         requested_at=requested_at,
@@ -282,9 +295,11 @@ def process_leads_requests(requested_at, page, leads_requests, visit_id, session
             pages_set.add(normalize_url(current_request.page))
 
     pages_count = len(pages_set)
-
     average_time_sec = int(total_time_sec / len(leads_requests_sorted))
-    
+
+    lead_user.total_visit_time = lead_user.total_visit_time - lead_visit_full_time_sec + total_time_sec
+    lead_user.avarage_visit_time = int(lead_user.total_visit_time / lead_user.total_visit)
+
     session.query(LeadsVisits).filter_by(id=visit_id).update({
         'start_date': start_date,
         'start_time': start_time,
@@ -314,14 +329,10 @@ def add_new_leads_visits(visited_datetime, lead_id, session, behavior_type, lead
     leads_count = session.query(LeadsRequests) \
             .filter(LeadsRequests.lead_id == lead_id) \
             .count()
-    if lead_user.total_visit:
-        lead_user.total_visit += 1
-        lead_user.total_visit_time += int(end_time - start_time)
-        lead_user.avarage_visit_time = lead_user.total_visit_time // (len(leads_count) + 1)
-    else:
-        lead_user.total_visit = 1
-        lead_user.total_visit_time += int(end_time - start_time)
-        lead_user.avarage_visit_time += int(end_time - start_time)
+    
+    lead_user.total_visit += 1
+    lead_user.total_visit_time += 10
+    lead_user.avarage_visit_time = int(lead_user.total_visit_time / lead_user.total_visit)
         
     session.flush()
     return leads_visits

@@ -17,7 +17,7 @@ export const styles: { [key: string]: SxProps<Theme> } = {
       height: '48px',
       '& .MuiOutlinedInput-input': {
         padding: '12px 16px 13px 16px',
-        fontFamily: 'Nunito',
+        fontFamily: 'Nunito Sans',
       },
       '& .MuiOutlinedInput-notchedOutline': {
         borderColor: '#A3B0C2',
@@ -36,7 +36,7 @@ export const styles: { [key: string]: SxProps<Theme> } = {
   formField: {
     maxHeight: '56px',
     maxWidth: '100%',
-    fontFamily: 'Nunito',
+    fontFamily: 'Nunito Sans',
     '& .MuiInputBase-root': {
       maxHeight: '48px',
     },
@@ -60,7 +60,7 @@ export const styles: { [key: string]: SxProps<Theme> } = {
   submitButton: {
     backgroundColor: 'rgba(80, 82, 178, 1)',
     textTransform: 'none',
-    fontFamily: 'Nunito',
+    fontFamily: 'Nunito Sans',
     fontWeight: '600',
     fontSize: '16px',
     lineHeight: '22.4px',

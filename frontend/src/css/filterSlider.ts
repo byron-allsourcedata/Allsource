@@ -3,9 +3,9 @@ import { SxProps, Theme } from '@mui/system';
 export const filterStyles: { [key: string]: SxProps<Theme> } = {
     filter_name: {
         flexGrow: 1,
-        color: "rgba(115, 115, 115, 1)",
-        fontFamily: "Nunito",
-        fontWeight: "600",
+        color: "rgba(32, 33, 36, 1)",
+        fontFamily: "Nunito Sans",
+        fontWeight: "500",
         fontSize: "14px",
         lineHeight: "19.6px",
     },
@@ -31,8 +31,8 @@ export const filterStyles: { [key: string]: SxProps<Theme> } = {
         px: '8px',
         fontWeight: '400',
         fontSize: '12px',
-        fontFamily: 'Nunito',
-        color: '4a4a4a',
+        fontFamily: 'Nunito Sans',
+        color: 'rgba(74, 74, 74, 1)',
         lineHeight: '16px'
     },
     filter_form: {

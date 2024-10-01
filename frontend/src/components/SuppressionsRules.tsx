@@ -1,8 +1,12 @@
-import { Box, Typography, TextField, Button, Switch, Chip, InputAdornment, Divider, Tooltip, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, } from "@mui/material";
+import { Box, Typography, TextField, Button, Switch, Chip, InputAdornment, Divider, Tooltip, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, IconButton, } from "@mui/material";
 import Image from "next/image";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { suppressionsStyles } from "@/css/suppressions";
 import { ChevronLeft, ChevronRight } from "@mui/icons-material";
+import axiosInstance from "@/axios/axiosInterceptorInstance";
+import { showErrorToast, showToast } from "./ToastNotification";
+import DeleteIcon from '@mui/icons-material/Delete';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 
 
 interface CustomTablePaginationProps {
@@ -47,7 +51,7 @@ const CustomTablePagination: React.FC<CustomTablePaginationProps> = ({
 
     return (
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', padding: 1 }}>
-            <select
+            {page > 0 && ( <select
                 value={rowsPerPage}
                 onChange={onRowsPerPageChange}
                 style={{
@@ -62,6 +66,8 @@ const CustomTablePagination: React.FC<CustomTablePaginationProps> = ({
                     </option>
                 ))}
             </select>
+            )}
+            {page > 0 && (
             <Button
                 onClick={(e) => handlePageChange(page - 1)}
                 disabled={page === 0}
@@ -76,6 +82,7 @@ const CustomTablePagination: React.FC<CustomTablePaginationProps> = ({
                         borderRadius: '4px'
                     }} />
             </Button>
+            )}
             {totalPages > 1 && (
                 <>
                     {page > 1 && <Button onClick={() => handlePageChange(0)} sx={suppressionsStyles.page_number}>1</Button>}
@@ -102,6 +109,7 @@ const CustomTablePagination: React.FC<CustomTablePaginationProps> = ({
                         sx={suppressionsStyles.page_number}>{totalPages}</Button>}
                 </>
             )}
+            {page > 0 && (
             <Button
                 onClick={(e) => handlePageChange(page + 1)}
                 disabled={page >= totalPages - 1}
@@ -115,22 +123,19 @@ const CustomTablePagination: React.FC<CustomTablePaginationProps> = ({
                     borderRadius: '4px'
                 }} />
             </Button>
+        )}
         </Box>
     );
 };
 
 
 const SuppressionRules: React.FC = () => {
-    /// Table
-    const [pendingInvitations, setPendingInvitations] = useState<any[]>([]);
 
     /// Switch Buttons
     const [checked, setChecked] = useState(false);
     const [checkedUrl, setCheckedUrl] = useState(false);
     const [checkedUrlParameters, setCheckedUrlParameters] = useState(false);
-    const handleSwitchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setChecked(event.target.checked);
-    };
+
     const handleSwitchChangeURl = (event: React.ChangeEvent<HTMLInputElement>) => {
         setCheckedUrl(event.target.checked);
     };
@@ -138,6 +143,18 @@ const SuppressionRules: React.FC = () => {
         setCheckedUrlParameters(event.target.checked);
     };
     const label = { inputProps: { 'aria-label': 'Switch demo' } };
+
+    // First switch
+    const handleSwitchChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const isChecked = event.target.checked;
+        setChecked(isChecked);
+
+        try {
+            const response = await axiosInstance.post('/suppressions/collecting-contacts');
+        } catch (error) {
+            console.error('Error occurred while updating switch status:', error);
+        }
+    };
 
 
 
@@ -159,6 +176,19 @@ const SuppressionRules: React.FC = () => {
         setChipData((prevChips) => prevChips.filter((chip) => chip !== chipToDelete));
     };
 
+    const handleSubmitUrl = async () => {
+        try {
+            const response = await axiosInstance.post('/suppressions/certain-urls', chipData);
+            if (response.status === 200) {
+                console.log("URLs successfully sent:", response.data);
+                showToast('URLs successfully processed!');
+            }
+        } catch (error) {
+            console.error("Error while sending URLs:", error);
+            showErrorToast('An error occurred while sending URLs.');
+        }
+    };
+
     /// URL with Param suppressions
     const [inputValueParam, setInputValueParam] = useState('');
     const [chipDataParam, setChipDataParam] = useState<string[]>([]);
@@ -175,6 +205,19 @@ const SuppressionRules: React.FC = () => {
 
     const handleDeleteParam = (chipToDelete: string) => {
         setChipDataParam((prevChips) => prevChips.filter((chip) => chip !== chipToDelete));
+    };
+
+    const handleSubmitUrlParam = async () => {
+        try {
+            const response = await axiosInstance.post('/suppressions/based-urls', chipDataParam);
+            if (response.status === 200) {
+                console.log("URLs successfully sent:", response.data);
+                showToast('URLs successfully processed!');
+            }
+        } catch (error) {
+            console.error("Error while sending URLs:", error);
+            showErrorToast('An error occurred while sending URLs.');
+        }
     };
 
 
@@ -196,26 +239,126 @@ const SuppressionRules: React.FC = () => {
         }
     };
 
-    const handleSubmit = () => {
-        // Здесь отправляем данные на бэкенд
-        console.log('Отправка данных на бэкенд: ', chipData);
-        // Пример POST запроса:
-        // axios.post('/api/save', { data: chipData })
-        //     .then(response => console.log(response))
-        //     .catch(error => console.error(error));
+    const handleSubmitEmail = async () => {
+        try {
+            const response = await axiosInstance.post('/suppressions/suppression-multiple-emails', chipDataEmail);
+            if (response.status === 200) {
+                console.log("URLs successfully sent:", response.data);
+                showToast('URLs successfully processed!');
+            }
+        } catch (error) {
+            console.error("Error while sending URLs:", error);
+            showErrorToast('An error occurred while sending URLs.');
+        }
     };
 
+    // file CSV
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const [uploadedFile, setUploadedFile] = useState<File | null>(null);
 
     const handleFileUpload = (event: any) => {
         const file = event.target.files[0];
-        console.log(file);
+        if (file) {
+            setUploadedFile(file);
+        }
+    };
+
+    const handleDeleteFile = () => {
+        setUploadedFile(null); // Удаляем файл из состояния
     };
 
     const handleClick = () => {
         if (fileInputRef.current) {
             fileInputRef.current.click(); // Проверяем наличие элемента перед вызовом
         }
+    };
+
+    const downloadFile = async () => {
+        try {
+            const response = await axiosInstance.get('/sample-suppression-list', {
+                responseType: 'blob',
+            });
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', 'sample-suppression-list.csv');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } catch (error) {
+            showErrorToast('Error downloading the file.');
+        }
+    };
+
+    const saveFile = async () => {
+        if (!uploadedFile) {
+            showErrorToast('No file to upload.');
+            return;
+        }
+    
+        const formData = new FormData();
+        formData.append('file', uploadedFile); 
+    
+        try {
+            const response = await axiosInstance.post('/suppressions/suppression-list', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data', // Устанавливаем правильный тип контента
+                },
+            });
+    
+            if (response.status === 200) {
+                showToast('File uploaded successfully.');
+            } else {
+                showErrorToast('Failed to upload file.');
+            }
+        } catch (error) {
+            showErrorToast('Error uploading the file.');
+        }
+    };
+
+
+    /// Table(pagination, download/update and etc)
+    interface SuppressionListResponse {
+        suppression_list: any[];
+        total_count: number;
+        max_page: number;
+    }
+
+    const [suppressionList, setSuppressionList] = useState<any[]>([]);
+    const [page, setPage] = useState(0);  // Текущая страница, начинаем с 0
+    const [rowsPerPage, setRowsPerPage] = useState(15);  // Количество строк на странице
+    const [totalCount, setTotalCount] = useState(0);  // Общее количество элементов
+  
+    // Функция для запроса данных с учетом пагинации
+    const fetchSuppressionList = async (page: number, perPage: number) => {
+      try {
+        const response = await axiosInstance.get<SuppressionListResponse>('/suppression-list', {
+          params: {
+            page: page + 1,  // Передаем на сервер номер страницы, начиная с 1
+            per_page: perPage,
+          },
+        });
+        setSuppressionList(response.data.suppression_list);
+        setTotalCount(response.data.total_count);
+      } catch (error) {
+        console.error('Ошибка при запросе suppression list:', error);
+      }
+    };
+  
+    // Запрос на сервер при изменении страницы или количества строк на странице
+    useEffect(() => {
+      fetchSuppressionList(page, rowsPerPage);
+    }, [page, rowsPerPage]);
+  
+    // Обработка изменения страницы
+    const handlePageChange = (event: React.MouseEvent<HTMLButtonElement>, newPage: number) => {
+      setPage(newPage);
+    };
+  
+    // Обработка изменения количества строк на странице
+    const handleRowsPerPageChange = (event: React.ChangeEvent<{ value: unknown }>) => {
+      setRowsPerPage(parseInt(event.target.value as string, 10));
+      setPage(0);  // Сбрасываем на первую страницу при изменении количества строк
     };
 
     return (
@@ -469,8 +612,10 @@ const SuppressionRules: React.FC = () => {
                                 label="URL"
                                 multiline
                                 rows={3}
+                                disabled={!checkedUrl}
                                 variant="outlined"
                                 fullWidth
+                                sx={{ display: checkedUrl ? 'block' : 'none' }}
                                 margin="normal"
                                 value={inputValue}
                                 onKeyDown={handleKeyDownUrl}
@@ -509,13 +654,14 @@ const SuppressionRules: React.FC = () => {
                                 }}
                             />
                             <Box sx={{ padding: 0 }}>
-                                <Button variant="outlined" sx={{
+                                <Button variant="outlined" onClick={handleSubmitUrl} sx={{
                                     backgroundColor: '#fff',
                                     color: 'rgba(80, 82, 178, 1)',
                                     fontFamily: "Nunito Sans",
                                     textTransform: 'none',
                                     lineHeight: '22.4px',
                                     fontWeight: '700',
+                                    display: checkedUrl ? '' : 'none',
                                     padding: '1em 1em',
                                     marginBottom: 1,
                                     textWrap: 'nowrap',
@@ -646,6 +792,9 @@ const SuppressionRules: React.FC = () => {
                                 rows={3}
                                 variant="outlined"
                                 fullWidth
+                                sx={{
+                                    display: checkedUrlParameters ? '' : 'none',
+                                }}
                                 margin="normal"
                                 value={inputValueParam}
                                 onKeyDown={handleKeyDownUrlParameters}
@@ -684,13 +833,14 @@ const SuppressionRules: React.FC = () => {
                                 }}
                             />
                             <Box sx={{ padding: 0 }}>
-                                <Button variant="outlined" sx={{
+                                <Button variant="outlined" onClick={handleSubmitUrlParam} sx={{
                                     backgroundColor: '#fff',
                                     color: 'rgba(80, 82, 178, 1)',
                                     fontFamily: "Nunito Sans",
                                     textTransform: 'none',
                                     lineHeight: '22.4px',
                                     fontWeight: '700',
+                                    display: checkedUrlParameters ? '' : 'none',
                                     padding: '1em 1em',
                                     marginBottom: 1,
                                     textWrap: 'nowrap',
@@ -763,7 +913,7 @@ const SuppressionRules: React.FC = () => {
                             }}
                         />
                         <Box sx={{ padding: 0 }}>
-                            <Button variant="outlined" sx={{
+                            <Button variant="outlined" onClick={handleSubmitEmail} sx={{
                                 backgroundColor: '#fff',
                                 color: 'rgba(80, 82, 178, 1)',
                                 fontFamily: "Nunito Sans",
@@ -821,55 +971,89 @@ const SuppressionRules: React.FC = () => {
                                 2. The input must be in CSV format with a header, contain only one column labeled &apos;email&apos;, and be no larger than 100MB.
                             </Typography>
 
-                            <Box onClick={handleClick} // Делаем весь Box кликабельным
-                                sx={{
-                                    border: '1px dashed rgba(80, 82, 178, 1)',
-                                    borderRadius: '4px',
-                                    display: 'flex',
-                                    width: '45%',
-                                    maxHeight: '5rem',
-                                    alignItems: 'center',
-                                    padding: '16px',
-                                    gap: '16px',
-                                    mt: '1.5rem',
-                                    cursor: 'pointer', // Меняем на pointer, чтобы указать на интерактивность
-                                    '&:hover': {
-                                        backgroundColor: 'rgba(80, 82, 178, 0.09)', // Изменение фона при наведении
-                                    },
-                                    "@media (max-width: 700px)": {
-                                        width: '100%',
-                                    }
-                                }}
-                            >
-                                <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2, alignItems: 'center' }}>
-                                    <input
-                                        type="file"
-                                        ref={fileInputRef} // Используем реф для доступа к элементу
-                                        style={{ display: 'none' }} // Скрываем input
-                                        onChange={handleFileUpload}
-                                    />
-                                    <Button sx={{ padding: 0, margin: 0 }}>
-                                        <Image src='upload.svg' alt="upload" width={40} height={40} />
-                                    </Button>
-                                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', justifyContent: 'start' }}>
-                                        <Typography className="main-text" sx={{ color: 'rgba(80, 82, 178, 1)', mb: 0, padding: 0, fontWeight: 500 }}>
-                                            Upload a file
-                                        </Typography>
-                                        <Typography className="main-text" sx={{ color: 'rgba(32, 33, 36, 1)', mb: 0, padding: 0, fontWeight: 500 }}>
-                                            CSV. Max 100MB
-                                        </Typography>
+                            <Box sx={{width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'start', flexDirection: 'row', mt: '1.5rem', gap:2}}>
+
+                                <Box onClick={handleClick}
+                                    sx={{
+                                        border: '1px dashed rgba(80, 82, 178, 1)',
+                                        borderRadius: '4px',
+                                        display: 'flex',
+                                        width: '49%',
+                                        maxHeight: '5rem',
+                                        alignItems: 'center',
+                                        padding: '16px',
+                                        gap: '16px',
+                                        
+                                        cursor: 'pointer',
+                                        '&:hover': {
+                                            backgroundColor: 'rgba(80, 82, 178, 0.09)',
+                                        },
+                                        "@media (max-width: 700px)": {
+                                            width: '100%',
+                                        }
+                                    }}
+                                >
+                                    <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2, alignItems: 'center' }}>
+                                        <input
+                                            type="file"
+                                            ref={fileInputRef}
+                                            style={{ display: 'none' }}
+                                            onChange={handleFileUpload}
+                                        />
+                                        <Button sx={{ padding: 0, margin: 0 }}>
+                                            <Image src='upload.svg' alt="upload" width={40} height={40} />
+                                        </Button>
+                                        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', justifyContent: 'start' }}>
+                                            <Typography className="main-text" sx={{ color: 'rgba(80, 82, 178, 1)', mb: 0, padding: 0, fontWeight: 500 }}>
+                                                Upload a file
+                                            </Typography>
+                                            <Typography className="main-text" sx={{ color: 'rgba(32, 33, 36, 1)', mb: 0, padding: 0, fontWeight: 500 }}>
+                                                CSV. Max 100MB
+                                            </Typography>
+                                        </Box>
                                     </Box>
                                 </Box>
+                                {uploadedFile && (
+                                    <Box
+                                        sx={{
+                                            border: '1px solid rgba(218, 220, 224, 1)',
+                                            borderRadius: '8px',
+                                            display: 'flex',
+                                            width: '49%',
+                                            maxHeight: '5rem',
+                                            alignItems: 'center',
+                                            padding: '16px',
+                                            gap: '16px',
+                                            backgroundColor: '#FAFAFA',
+                                            "@media (max-width: 700px)": {
+                                                width: '100%',
+                                            }
+                                        }}
+                                    >
+                                        <Box sx={{ display: 'flex', flexDirection: 'column', flexGrow: 1, gap:1}}>
+                                            <Typography className="first-sub-title" sx={{ color: 'rgba(32, 33, 36, 1)', fontWeight: 500, display: 'flex', alignItems: 'center', gap:1 }}>
+                                                {uploadedFile.name} <CheckCircleIcon sx={{ color: 'green', fontSize: '17px', }} /> {/* Иконка подтверждения */}
+                                            </Typography>
+                                            <Typography className="table-heading" sx={{ color: 'rgba(114, 114, 114, 1)' }}>
+                                                {(uploadedFile.size / (1024 * 1024)).toFixed(2)}MB
+                                            </Typography>
+                                        </Box>
+                                        
+                                        <IconButton onClick={handleDeleteFile}>
+                                            <Image src={'/trash.svg'} alt="delete" width={24} height={24} />
+                                        </IconButton>
+                                    </Box>
+                                )}
                             </Box>
 
-                            <Typography className="main-text"
-                                sx={{ ...suppressionsStyles.text, gap: 0.25, pt: 1, "@media (max-width: 700px)": {mb:1 }}}
+                            <Typography className="main-text" component="div"
+                                sx={{ ...suppressionsStyles.text, gap: 0.25, pt: 1, "@media (max-width: 700px)": { mb: 1 } }}
                             >
-                                Sample doc: <Typography sx={{ ...suppressionsStyles.text, color: 'rgba(80, 82, 178, 1)', fontWeight: 400 }}>sample suppression-list.csv</Typography>
+                                Sample doc: <Typography onClick={downloadFile} component="span" sx={{ ...suppressionsStyles.text, color: 'rgba(80, 82, 178, 1)', cursor: 'pointer', fontWeight: 400 }}>sample suppression-list.csv</Typography>
                             </Typography>
 
                             <Box sx={{ width: '100%', display: 'flex', alignItems: 'flex-end', justifyContent: 'flex-end' }}>
-                                <Button variant="outlined" sx={{
+                                <Button variant="outlined" onClick={saveFile} sx={{
                                     backgroundColor: '#fff',
                                     color: 'rgba(80, 82, 178, 1)',
                                     fontFamily: "Nunito Sans",
@@ -927,7 +1111,7 @@ const SuppressionRules: React.FC = () => {
                                 </TableRow>
                             </TableHead>
                             <TableBody>
-                                {pendingInvitations.length === 0 ? (
+                                {suppressionList.length === 0 ? (
                                     <TableRow>
                                         <TableCell colSpan={5} sx={{
                                             ...suppressionsStyles.tableBodyColumn,
@@ -937,7 +1121,7 @@ const SuppressionRules: React.FC = () => {
                                         </TableCell>
                                     </TableRow>
                                 ) : (
-                                    pendingInvitations.map((invitation, index) => (
+                                    suppressionList.map((invitation, index) => (
                                         <TableRow key={index} sx={{
                                             ...suppressionsStyles.tableBodyRow,
                                             '&:hover': {
@@ -973,10 +1157,10 @@ const SuppressionRules: React.FC = () => {
                                                 width: '15%',  // Чтобы столбец занимал доступное пространство
                                                 textAlign: 'center'  // Выравнивание по центру
                                             }}>
-                                                <Button sx={{minWidth: 'auto', padding: '0.5rem',marginRight: '1rem' }}>
+                                                <Button sx={{ minWidth: 'auto', padding: '0.5rem', marginRight: '1rem' }}>
                                                     <Image src='download.svg' alt="donwload" width={11.67} height={15} />
                                                 </Button>
-                                                <Button sx={{minWidth: 'auto', padding: '0.5rem' }}>
+                                                <Button sx={{ minWidth: 'auto', padding: '0.5rem' }}>
                                                     <Image src='trash-icon-filled.svg' alt="delete" width={11.67} height={15} />
                                                 </Button>
                                             </TableCell>
@@ -986,18 +1170,18 @@ const SuppressionRules: React.FC = () => {
                             </TableBody>
                         </Table>
                     </TableContainer>
-                    {/* <CustomTablePagination
-                                        // count={count_leads ?? 0}
-                                        // page={page}
-                                        // rowsPerPage={rowsPerPage}
+                    <CustomTablePagination
+                                        count={totalCount}
+                                        page={page}
+                                        rowsPerPage={rowsPerPage}
+                                        onPageChange={handlePageChange}
+                                        onRowsPerPageChange={handleRowsPerPageChange}
+                                        // count={10}
+                                        // page={1}
+                                        // rowsPerPage={3}
                                         // onPageChange={handleChangePage}
                                         // onRowsPerPageChange={handleChangeRowsPerPage}
-                                        count={10}
-                                        page={1}
-                                        rowsPerPage={3}
-                                        onPageChange={handleChangePage}
-                                        onRowsPerPageChange={handleChangeRowsPerPage}
-                    /> */}
+                    />
                 </Box>
             </Box>
 

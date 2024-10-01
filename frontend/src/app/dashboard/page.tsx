@@ -85,6 +85,7 @@ const VerifyPixelIntegration: React.FC = () => {
         variant="h6"
         component="div"
         mb={2}
+        className="first-sub-title"
         sx={{
           fontFamily: "Nunito",
           fontWeight: "700",
@@ -121,9 +122,9 @@ const VerifyPixelIntegration: React.FC = () => {
             width: "50%",
             border: "1px solid #e4e4e4",
             borderRadius: "4px",
-            fontFamily: "Nunito",
-            fontSize: "16px",
-            fontWeight: "500",
+            fontFamily: "Roboto",
+            fontSize: "14px",
+            fontWeight: 400,
             lineHeight: "22.4px",
             textAlign: "left"
           }}
@@ -136,7 +137,9 @@ const VerifyPixelIntegration: React.FC = () => {
             textTransform: "none",
             background: "#fff",
             color: "rgba(80, 82, 178, 1)",
-            fontFamily: "Nunito",
+            fontFamily: "Nunito Sans",
+            fontWeight: 600,
+            fontSize: '14px',
             padding: "0.75em 1.5em",
             lineHeight: 'normal',
             '@media (max-width: 600px)': {
@@ -234,8 +237,8 @@ const SupportSection: React.FC = () => {
     >
       <Typography
         variant="body2"
-        color="textSecondary"
         mb={2}
+        className="first-sub-title"
         sx={{
           padding: "0em 0em 1.5em 0.5em",
           fontFamily: "Nunito",
@@ -263,10 +266,11 @@ const SupportSection: React.FC = () => {
             marginLeft: '1.6em',
             textWrap: "nowrap",
             color: "rgba(80, 82, 178, 1)",
-            fontFamily: "Nunito",
+            fontFamily: "Nunito Sans",
             border: "none",
             textDecoration: "none",
-            fontSize: "16px",
+            fontWeight: 600,
+            fontSize: "14px",
             lineHeight: "22.4px",
             backgroundColor: "transparent",
             textTransform: "none",
@@ -290,10 +294,11 @@ const SupportSection: React.FC = () => {
             textWrap: "nowrap",
             pt:'0.5em',
             color: "rgba(80, 82, 178, 1)",
-            fontFamily: "Nunito",
+            fontFamily: "Nunito Sans",
             border: "none",
+            fontWeight: 600,
+            fontSize: '14px',
             textDecoration: "none",
-            fontSize: "16px",
             lineHeight: "22.4px",
             backgroundColor: "transparent",
             textTransform: "none",
@@ -503,11 +508,13 @@ const Dashboard: React.FC = () => {
                 <Typography
                     variant="h4"
                     component="h1"
+                    className="heading-text"
                     sx={dashboardStyles.title}
                   >
                     Let’s Get Started!
                   </Typography>
-                  <Typography variant="body2" color="textSecondary" sx={dashboardStyles.description}>
+                  <Typography 
+                  className="table-data" sx={dashboardStyles.description}>
                     Install our pixel on your website to start capturing anonymous
                     visitor data on your store.
                   </Typography>
@@ -519,11 +526,12 @@ const Dashboard: React.FC = () => {
                   <Typography
                     variant="h4"
                     component="h1"
+                    className="heading-text"
                     sx={dashboardStyles.title}
                   >
                     Let’s Get Started!
                   </Typography>
-                  <Typography variant="body2" color="textSecondary" mb={4}>
+                  <Typography className="table-data" sx={dashboardStyles.description} mb={4}>
                     Install our pixel on your website to start capturing anonymous
                     visitor data on your store.
                   </Typography>

@@ -760,23 +760,23 @@ const Leads: React.FC = () => {
                 };
             case "viewed_product":
                 return {
-                    background: 'rgba(244, 252, 238, 1)',
-                    color: 'rgba(43, 91, 0, 1)',
+                    background: 'rgba(254, 238, 236, 1)',
+                    color: 'rgba(244, 87, 69, 1)',
                 };
             case 'visitor':
+                return {
+                    background: 'rgba(254, 243, 205, 1)',
+                    color: 'rgba(101, 79, 0, 1)',
+                };
+            case 'converted_sales':
                 return {
                     background: 'rgba(235, 243, 254, 1)',
                     color: 'rgba(20, 110, 246, 1)',
                 };
-            case 'Converted':
+            case 'abandoned_cart':
                 return {
-                    background: 'rgba(244, 252, 238, 1)',
-                    color: 'rgba(110, 193, 37, 1)',
-                };
-            case 'cart_abandoned':
-                return {
-                    background: 'rgba(254, 238, 236, 1)',
-                    color: 'rgba(244, 87, 69, 1)',
+                    background: 'rgba(241, 241, 249, 1)',
+                    color: 'rgba(80, 82, 178, 1)',
                 };
             default:
                 return {
@@ -798,6 +798,12 @@ const Leads: React.FC = () => {
         }
         if (text === 'viewed_product') {
             return "View Product"
+        }
+        if (text === 'abandoned_cart') {
+            return "Abandoned cart"
+        }
+        if (text === 'converted_sales') {
+            return "Converted sales"
         }
     };
 
@@ -1022,10 +1028,19 @@ const Leads: React.FC = () => {
                                 marginTop: '1.125rem'
                             }
                         }}>
-                        <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
-                            <Typography variant="h4" component="h1" sx={leadsStyles.title}>
-                                Resolved Contacts ({count_leads ? count_leads : 0})
+                        <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1 }}>
+                            <Typography className='first-sub-title' sx={{ fontWeight: 'bold' }}>
+                                Resolved Contacts
                             </Typography>
+                            <Tooltip title={
+                                (count_leads ?? 0) >= 0
+                                    ? `Number of leads: ${count_leads}`
+                                    : status === 'PIXEL_INSTALLATION_NEEDED'
+                                        ? 'Contacts automatically sync across devices and platforms.'
+                                        : 'Pixel installation is required.'
+                            } placement='right'>
+                                <Image src='/info-icon.svg' alt='info-icon' height={13} width={13} />
+                            </Tooltip>
                         </Box>
                         <Box sx={{
                             display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '15px',
@@ -1036,26 +1051,26 @@ const Leads: React.FC = () => {
                             <Button
                                 onClick={handleAudiencePopupOpen}
                                 aria-haspopup="true"
+                                disabled={status === 'PIXEL_INSTALLATION_NEEDED'}
+                                
                                 sx={{
                                     textTransform: 'none',
-                                    color: selectedRows.size === 0 ? 'rgba(128, 128, 128, 1)' : 'rgba(80, 82, 178, 1)',
+                                    color: status === 'PIXEL_INSTALLATION_NEEDED' ? 'rgba(128, 128, 128, 1)' : 'rgba(80, 82, 178, 1)',
                                     border: '1px solid rgba(80, 82, 178, 1)',
                                     borderRadius: '4px',
                                     padding: '9px 16px',
+                                    opacity: status === 'PIXEL_INSTALLATION_NEEDED' ? '0.4' : '1',
                                     minWidth: 'auto',
                                     '@media (max-width: 900px)': {
                                         display: 'none'
                                     }
                                 }}
                             >
-                                <Typography sx={{
+                                <Typography className='second-sub-title' sx={{
                                     marginRight: '0.5em',
-                                    fontFamily: 'Nunito',
-                                    lineHeight: '22.4px',
-                                    fontSize: '16px',
+                                    padding: 0.2,
                                     textAlign: 'left',
-                                    fontWeight: '500',
-                                    color: '#5052B2'
+                                    color: '#5052B2 !important'
                                 }}>
                                     Create Contact Sync
                                 </Typography>
@@ -1064,9 +1079,11 @@ const Leads: React.FC = () => {
                                 aria-controls={dropdownOpen ? 'account-dropdown' : undefined}
                                 aria-haspopup="true"
                                 aria-expanded={dropdownOpen ? 'true' : undefined}
+                                disabled={status === 'PIXEL_INSTALLATION_NEEDED'}
                                 sx={{
                                     textTransform: 'none',
                                     color: 'rgba(128, 128, 128, 1)',
+                                    opacity: status === 'PIXEL_INSTALLATION_NEEDED' ? '0.5' : '1',
                                     border: '1px solid rgba(184, 184, 184, 1)',
                                     borderRadius: '4px',
                                     padding: '8px',
@@ -1092,6 +1109,7 @@ const Leads: React.FC = () => {
                                     border: selectedFilters.length > 0 ? '1px solid rgba(80, 82, 178, 1)' : '1px solid rgba(184, 184, 184, 1)',
                                     borderRadius: '4px',
                                     padding: '8px',
+                                    opacity: status === 'PIXEL_INSTALLATION_NEEDED' ? '0.5' : '1',
                                     minWidth: 'auto',
                                     position: 'relative',
                                     '@media (max-width: 900px)': {
@@ -1132,6 +1150,7 @@ const Leads: React.FC = () => {
                                     color: 'rgba(128, 128, 128, 1)',
                                     border: '1px solid rgba(184, 184, 184, 1)',
                                     borderRadius: '4px',
+                                    opacity: status === 'PIXEL_INSTALLATION_NEEDED' ? '0.5' : '1',
                                     padding: '8px',
                                     minWidth: 'auto',
                                     '@media (max-width: 900px)': {
@@ -1224,7 +1243,7 @@ const Leads: React.FC = () => {
                     }}>
                         {status === 'PIXEL_INSTALLATION_NEEDED' ? (
                             <Box sx={centerContainerStyles}>
-                                <Typography variant="h5" sx={{
+                                <Typography variant="h5" className='first-sub-title' sx={{
                                     mb: 3,
                                     fontFamily: "Nunito",
                                     fontSize: "20px",
@@ -1236,7 +1255,7 @@ const Leads: React.FC = () => {
                                 </Typography>
                                 <Image src='/pixel_installation_needed.svg' alt='Need Pixel Install'
                                     height={250} width={300} />
-                                <Typography variant="body1" color="textSecondary" sx={{
+                                <Typography variant="body1" className='table-data' sx={{
                                     mt: 3,
                                     fontFamily: "Nunito",
                                     fontSize: "14px",
@@ -1249,14 +1268,16 @@ const Leads: React.FC = () => {
                                 <Button
                                     variant="contained"
                                     onClick={installPixel}
+                                    className='second-sub-title'
                                     sx={{
                                         backgroundColor: 'rgba(80, 82, 178, 1)',
-                                        fontFamily: "Nunito",
                                         textTransform: 'none',
                                         padding: '10px 24px',
-                                        fontSize: '16px',
                                         mt: 3,
-                                        lineHeight: '22px'
+                                        color: '#fff !important',
+                                        ':hover': {
+                                        backgroundColor: 'rgba(80, 82, 178, 1)'
+                                        }
                                     }}
                                 >
                                     Setup Pixel
@@ -1316,8 +1337,8 @@ const Leads: React.FC = () => {
                                                             sx={{
                                                                 ...leadsStyles.table_column,
                                                                 ...(key === 'name' && {
-                                                                    position: 'sticky', // Make the Name column sticky
-                                                                    left: 0, // Stick it to the left
+                                                                    position: 'sticky',
+                                                                    left: 0,
                                                                     zIndex: 99
                                                                 }),
                                                                 ...(key === 'average_time_sec' && {

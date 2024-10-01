@@ -135,7 +135,7 @@ const PixelInstallation: React.FC = () => {
         marginBottom: '1.5rem' ,
       }
       }}>
-      <Typography variant="h6" component="div" mb={1} sx={{
+      <Typography variant="h6" component="div" mb={1} className="first-sub-title" sx={{
         fontFamily: 'Nunito',
         fontWeight: '700',
         lineHeight: '21.82px',
@@ -150,7 +150,7 @@ const PixelInstallation: React.FC = () => {
         }}>
         1. Pixel Installation
       </Typography>
-      <Typography variant="body2" color="textSecondary" mb={2}
+      <Typography variant="body2" color="textSecondary" className="table-data" mb={2}
       sx={{
         fontFamily: 'Nunito',
         fontWeight: '500',
@@ -172,14 +172,14 @@ const PixelInstallation: React.FC = () => {
           <Button variant="outlined" fullWidth onClick={installManually} sx={buttonStyles}>
             <Image src={'/install_manually.svg'} alt="Install Manually" width={32} height={32}
             />
-            <Typography sx={typographyStyles}>Install Manually</Typography>
+            <Typography className="second-sub-title" sx={typographyStyles}>Install Manually</Typography>
           </Button>
           <ManualPopup open={openmanually} handleClose={handleManualClose} pixelCode={pixelCode} />
         </Grid>
         <Grid item xs={12} md={4}>
           <Button variant="outlined" fullWidth onClick={installGoogleTag} sx={buttonGoogle}>
             <Image src={'/install_gtm.svg'} alt="Install on Google Tag Manager" width={32} height={32} />
-            <Typography sx={typographyGoogle}>Install on Google Tag Manager</Typography>
+            <Typography className="second-sub-title" sx={typographyGoogle}>Install on Google Tag Manager</Typography>
           </Button>
           <GoogleTagPopup open={opengoogle} handleClose={handleGoogleClose}/>
         </Grid>
@@ -189,7 +189,7 @@ const PixelInstallation: React.FC = () => {
               <Image src={'/install_cms1.svg'} alt="Install on CMS" width={24} height={24} style={{marginRight:4}} />
               <Image src={'/install_cms2.svg'} alt="Install on CMS" width={24} height={24} />
             </Box>
-            <Typography sx={{...typographyStyles, pt: '9px'}}>Install on CMS</Typography>
+            <Typography className="second-sub-title" sx={{...typographyStyles, pt: '9px'}}>Install on CMS</Typography>
           </Button>
           <CRMPopup open={opencrm} handleClose={handleCRMClose} pixelCode={cmsData.manual || ''}  pixel_client_id={cmsData.pixel_client_id || ''} />
         </Grid>

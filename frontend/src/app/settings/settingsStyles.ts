@@ -41,7 +41,7 @@ export const planStyles: { [key: string]: SxProps<Theme> } = {
     textAlign: 'start',
     padding: '1.5rem 0rem 0',
     lineHeight: '22px',
-    color: '#000',
+    color: '#202124',
     fontFamily: 'Nunito Sans',
     '@media (max-width: 1199px)': {
       paddingTop: '1rem'

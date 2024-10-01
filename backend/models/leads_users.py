@@ -18,7 +18,7 @@ class LeadUser(Base):
     is_returning_visitor = Column(Boolean, nullable=False, default=False)
     is_converted_sales = Column(Boolean, nullable=False, default=False)
     total_visit = Column(Integer, nullable=True)
-    avarage_visit_time = Column(VARCHAR, nullable=True)
-    total_visit_time = Column(VARCHAR, nullable=True)
+    avarage_visit_time = Column(Integer, nullable=True)
+    total_visit_time = Column(Integer, nullable=True)
 
 event.listen(LeadUser, "before_insert", create_timestamps)
