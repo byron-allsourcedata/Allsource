@@ -34,6 +34,7 @@ from models.leads_users import LeadUser
 from models.users import Users
 from models.subscriptions import SubscriptionPlan
 from models.leads_orders import LeadOrders
+from models.integrations.suppresions import LeadsSupperssion
 from dotenv import load_dotenv
 from sqlalchemy.dialects.postgresql import insert
 from collections import defaultdict
@@ -53,6 +54,8 @@ QUEUE_DATA_SYNC = 'data_sync_leads'
 
 ROOT_BOT_CLIENT_EMAIL = 'onlineinet.ru@gmail.com'
 ROOT_BOT_CLIENT_DOMAIN = 'https://app.maximiz.ai'
+
+EMAIL_LIST = ['business_email', 'presonal_email', 'additional_personal_emails']
 
 def create_sts_client(key_id, key_secret):
     return boto3.client('sts', aws_access_key_id=key_id, aws_secret_access_key=key_secret, region_name='us-west-2')
@@ -153,17 +156,28 @@ async def process_user_data(table, index, five_x_five_user: FiveXFiveUser, sessi
         
         is_first_request = True
         lead_user = LeadUser(five_x_five_user_id=five_x_five_user.id, user_id=user.id, behavior_type=behavior_type, domain_id=user_domain_id)
-        session.add(lead_user)
-        session.flush()
-        channel = await rmq_connection.channel()
-        await channel.declare_queue(
-            name=QUEUE_DATA_SYNC,
-            durable=True
-        )
-        publish_rabbitmq_message(rmq_connection, QUEUE_DATA_SYNC, {'domain_id': user_domain_id, 'leads_type': behavior_type, 'lead': {
-            'id': lead_user.id,
-            'five_x_five_user_id': lead_user.five_x_five_user_id
-        }})
+        lead_suppression = False
+        emails_to_check = [
+            five_x_five_user.business_email, 
+            five_x_five_user.personal_emails
+        ] + five_x_five_user.additional_personal_emails.split(', ')
+
+        lead_suppression = session.query(LeadsSupperssion).filter(
+            LeadsSupperssion.domain_id == user_domain_id,
+            LeadsSupperssion.email.in_(emails_to_check)
+        ).first() is not None
+        if not lead_suppression:
+            session.add(lead_user)
+            session.flush()
+            channel = await rmq_connection.channel()
+            await channel.declare_queue(
+                name=QUEUE_DATA_SYNC,
+                durable=True
+            )
+            publish_rabbitmq_message(rmq_connection, QUEUE_DATA_SYNC, {'domain_id': user_domain_id, 'leads_type': behavior_type, 'lead': {
+                'id': lead_user.id,
+                'five_x_five_user_id': lead_user.five_x_five_user_id
+            }})
     else:
         first_visit_id = lead_user.first_visit_id
     requested_at_str = str(table['EVENT_DATE'][index].as_py())

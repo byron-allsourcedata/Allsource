@@ -1,5 +1,5 @@
 from models.base import Base
-from sqlalchemy import VARCHAR, Integer, Column, JSON
+from sqlalchemy import VARCHAR, Integer, Column, JSON, Boolean, TIMESTAMP
 
 class UserIntegration(Base):
     __tablename__ = 'users_domains_integrations'
@@ -9,6 +9,7 @@ class UserIntegration(Base):
     access_token = Column(VARCHAR)
     service_name = Column(VARCHAR)
     data_center = Column(VARCHAR)
+    suppression = Column(Boolean)
 
 
 class Integration(Base):
@@ -18,3 +19,5 @@ class Integration(Base):
     service_name = Column(VARCHAR)
     image_url = Column(VARCHAR)
     fields = Column(JSON)
+    type = Column(VARCHAR)
+    data_sync = Column(Boolean)

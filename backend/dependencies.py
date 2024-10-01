@@ -53,6 +53,7 @@ from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.audience_persistence import AudiencePersistence
 from persistence.leads_order_persistence import LeadOrdersPersistence
 from persistence.domains import UserDomainsPersistence, UserDomains
+from persistence.integrations.suppression import SuppressionPersistence
 from models.users import Users as User
 from exceptions import InvalidToken
 from enums import UserAuthorizationStatus
@@ -378,13 +379,17 @@ def get_integrations_user_sync_persistence(db: Session = Depends(get_db)) -> Int
 def get_aws_service(s3_client = Depends(get_s3_client)) -> AWSService:
     return AWSService(s3_client)
 
+def get_suppression_persistence(db: Session = Depends(get_db)) -> SuppressionPersistence:
+    return SuppressionPersistence(db)
+
 def get_integration_service(db: Session = Depends(get_db), 
                             audience_persistence = Depends(get_audience_persistence),
                             integration_presistence: IntegrationsPresistence = Depends(get_user_integrations_presistence),
                             lead_presistence: LeadsPersistence = Depends(get_leads_persistence),
                             lead_orders_persistence: LeadOrdersPersistence = Depends(get_lead_orders_persistence),
                             integrations_user_sync_persistence: IntegrationsUserSyncPersistence = Depends(get_integrations_user_sync_persistence),
-                            aws_service: AWSService = Depends(get_aws_service), domain_persistence = Depends(get_user_domain_persistence)
+                            aws_service: AWSService = Depends(get_aws_service), domain_persistence = Depends(get_user_domain_persistence),
+                            suppression_persitence: SuppressionPersistence = Depends(get_suppression_persistence)
                             ):
     return IntegrationService(db,    
                               integration_presistence, 
@@ -393,6 +398,7 @@ def get_integration_service(db: Session = Depends(get_db),
                               lead_orders_persistence,
                               integrations_user_sync_persistence,
                               aws_service,
-                              domain_persistence)
+                              domain_persistence, 
+                              suppression_persitence)
 
 
