@@ -289,6 +289,7 @@ class SettingsService:
         result = {}
         result['card_details'] = get_card_details_by_customer_id(user.get('customer_id'))
         result['billing_details'] = self.extract_subscription_details(user.get('customer_id'), user.get('prospect_credits'))
+        result['billing_details']['overage'] = user.get('is_leads_auto_charging')
         result['usages_credits'] = {
                         'leads_credits': user.get('leads_credits'),
                         'plan_leads_credits': self.plan_persistence.get_current_plan(user_id=user.get('id')).leads_credits,
@@ -330,6 +331,13 @@ class SettingsService:
     
     def delete_card(self, payment_method_id):
         return detach_card_from_customer(payment_method_id)
+    
+    def billing_overage(self, user):
+        is_leads_auto_charging = self.settings_persistence.billing_overage(user_id=user.get('id'))
+        return {
+            'status': SettingStatus.SUCCESS,
+            'is_leads_auto_charging': is_leads_auto_charging
+            }
     
     def default_card(self, user: dict, payment_method_id):
         return set_default_card_for_customer(user.get('customer_id'), payment_method_id)

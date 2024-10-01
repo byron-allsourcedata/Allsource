@@ -30,11 +30,11 @@ export const leadsStyles: { [key: string]: SxProps<Theme> } = {
   },
 
   table_array: {
-    fontFamily: 'Nunito', fontSize: '14px', fontWeight: '400',
-    lineHeight: '19.6px',
+    fontFamily: 'Roboto', fontSize: '12px', fontWeight: '400',
+    lineHeight: '16.8px',
     textAlign: 'left',
     textWrap: 'nowrap',
-    color: '#000',
+    color: 'rgba(95, 99, 104, 1)',
     '&::after': {
       content: '""',
       display: 'block',
@@ -48,7 +48,7 @@ export const leadsStyles: { [key: string]: SxProps<Theme> } = {
   }
   },
   table_array_status: {
-    fontFamily: 'Nunito', fontSize: '14px', border: '1px solid rgba(235, 235, 235, 1)', fontWeight: '400',
+    fontFamily: 'Nunito Sans', fontSize: '12px', border: '1px solid rgba(235, 235, 235, 1)', fontWeight: '400',
     lineHeight: '19.6px',
     textAlign: 'left',
     textWrap: 'nowrap',
@@ -56,11 +56,11 @@ export const leadsStyles: { [key: string]: SxProps<Theme> } = {
     color: 'rgba(20, 110, 246, 1)',
   },
   table_array_phone: {
-    fontFamily: 'Nunito', fontSize: '14px', fontWeight: '400',
-    lineHeight: '19.6px',
+    fontFamily: 'Roboto', fontSize: '12px', fontWeight: '400',
+    lineHeight: '16.8px',
     textAlign: 'left',
     textWrap: 'wrap',
-    color: '#000',
+    color: 'rgba(95, 99, 104, 1)',
     position: 'relative',
     '&::after': {
       content: '""',
@@ -75,7 +75,7 @@ export const leadsStyles: { [key: string]: SxProps<Theme> } = {
   }
   },
   table_column: {
-    fontFamily: 'Nunito', fontSize: '14px', fontWeight: '700',
+    fontFamily: 'Nunito Sans', fontSize: '12px', fontWeight: '600',
     lineHeight: '19.6px',
     textAlign: 'left',
     textWrap: 'nowrap',
@@ -115,7 +115,7 @@ export const leadsStyles: { [key: string]: SxProps<Theme> } = {
     fontSize: '14px',
     whiteSpace: 'nowrap',
     textAlign: 'start',
-    fontFamily: 'Nunito',
+    fontFamily: 'Nunito Sans',
     color: '#595959',
     '@media (max-width: 385px)': {
       fontSize: '12px'
@@ -134,7 +134,7 @@ export const leadsStyles: { [key: string]: SxProps<Theme> } = {
     // whiteSpace: 'nowrap',
     textAlign: 'start',
     padding: '0 0rem 0',
-    fontFamily: 'Nunito',
+    fontFamily: 'Nunito Sans',
     mr: '1.5em',
     '@media (max-width: 440px)': {
       fontSize: '16px'
@@ -169,7 +169,7 @@ export const leadsStyles: { [key: string]: SxProps<Theme> } = {
     width: '100%',
     maxWidth: '360px',
     padding: '220px 0px 24px',
-    fontFamily: 'Nunito',
+    fontFamily: 'Nunito Sans',
   },
   submitButton: {
     mt: 2,
@@ -184,6 +184,6 @@ export const leadsStyles: { [key: string]: SxProps<Theme> } = {
     textTransform: 'none',
     minHeight: '3rem',
     fontSize: '16px',
-    fontFamily: 'Nunito',
+    fontFamily: 'Nunito Sans',
   },
 };

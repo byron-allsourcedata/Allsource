@@ -39,6 +39,18 @@ class SettingsPersistence:
         self.db.execute(stmt)
         self.db.commit()
         
+    def billing_overage(self, user_id):
+        is_leads_auto_charging = False
+        user = self.db.query(Users).filter(Users.id == user_id).first()
+        if user.is_leads_auto_charging == True:
+            user.is_leads_auto_charging = is_leads_auto_charging
+        else:
+            is_leads_auto_charging = True
+            user.is_leads_auto_charging = is_leads_auto_charging
+        self.db.commit()
+        return is_leads_auto_charging
+        
+        
     def change_user_role(self, email, access_level):
         user = self.db.query(Users).filter(Users.email == email).first()
         if user:
