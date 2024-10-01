@@ -1,10 +1,12 @@
-import { Box, Typography, TextField, Button, Switch, Chip, InputAdornment, Divider, Tooltip, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, } from "@mui/material";
+import { Box, Typography, TextField, Button, Switch, Chip, InputAdornment, Divider, Tooltip, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, IconButton, } from "@mui/material";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { suppressionsStyles } from "@/css/suppressions";
 import { ChevronLeft, ChevronRight } from "@mui/icons-material";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { showErrorToast, showToast } from "./ToastNotification";
+import DeleteIcon from '@mui/icons-material/Delete';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 
 
 interface CustomTablePaginationProps {
@@ -143,13 +145,13 @@ const SuppressionRules: React.FC = () => {
     const handleSwitchChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const isChecked = event.target.checked;
         setChecked(isChecked);
-    
+
         try {
-          const response = await axiosInstance.post('/suppressions/collecting-contacts');
+            const response = await axiosInstance.post('/suppressions/collecting-contacts');
         } catch (error) {
-          console.error('Error occurred while updating switch status:', error);
+            console.error('Error occurred while updating switch status:', error);
         }
-      };
+    };
 
 
 
@@ -171,9 +173,9 @@ const SuppressionRules: React.FC = () => {
         setChipData((prevChips) => prevChips.filter((chip) => chip !== chipToDelete));
     };
 
-    const handleSubmitUrl = async () => {        
+    const handleSubmitUrl = async () => {
         try {
-            const response = await axiosInstance.post('/suppressions/certain-urls', chipData );
+            const response = await axiosInstance.post('/suppressions/certain-urls', chipData);
             if (response.status === 200) {
                 console.log("URLs successfully sent:", response.data);
                 showToast('URLs successfully processed!');
@@ -202,9 +204,9 @@ const SuppressionRules: React.FC = () => {
         setChipDataParam((prevChips) => prevChips.filter((chip) => chip !== chipToDelete));
     };
 
-    const handleSubmitUrlParam = async () => {        
+    const handleSubmitUrlParam = async () => {
         try {
-            const response = await axiosInstance.post('/suppressions/based-urls',chipDataParam);
+            const response = await axiosInstance.post('/suppressions/based-urls', chipDataParam);
             if (response.status === 200) {
                 console.log("URLs successfully sent:", response.data);
                 showToast('URLs successfully processed!');
@@ -234,7 +236,7 @@ const SuppressionRules: React.FC = () => {
         }
     };
 
-    const handleSubmitEmail = async () => {        
+    const handleSubmitEmail = async () => {
         try {
             const response = await axiosInstance.post('/suppressions/suppression-multiple-emails', chipDataEmail);
             if (response.status === 200) {
@@ -249,10 +251,17 @@ const SuppressionRules: React.FC = () => {
 
     // file CSV
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const [uploadedFile, setUploadedFile] = useState<File | null>(null);
 
     const handleFileUpload = (event: any) => {
         const file = event.target.files[0];
-        console.log(file);
+        if (file) {
+            setUploadedFile(file);
+        }
+    };
+
+    const handleDeleteFile = () => {
+        setUploadedFile(null); // Удаляем файл из состояния
     };
 
     const handleClick = () => {
@@ -275,6 +284,32 @@ const SuppressionRules: React.FC = () => {
             document.body.removeChild(link);
         } catch (error) {
             showErrorToast('Error downloading the file.');
+        }
+    };
+
+    const saveFile = async () => {
+        if (!uploadedFile) {
+            showErrorToast('No file to upload.');
+            return;
+        }
+    
+        const formData = new FormData();
+        formData.append('file', uploadedFile); 
+    
+        try {
+            const response = await axiosInstance.post('/suppressions/suppression-list', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data', // Устанавливаем правильный тип контента
+                },
+            });
+    
+            if (response.status === 200) {
+                showToast('File uploaded successfully.');
+            } else {
+                showErrorToast('Failed to upload file.');
+            }
+        } catch (error) {
+            showErrorToast('Error uploading the file.');
         }
     };
 
@@ -532,7 +567,7 @@ const SuppressionRules: React.FC = () => {
                                 disabled={!checkedUrl}
                                 variant="outlined"
                                 fullWidth
-                                sx={{display: checkedUrl ? 'block' : 'none' }}
+                                sx={{ display: checkedUrl ? 'block' : 'none' }}
                                 margin="normal"
                                 value={inputValue}
                                 onKeyDown={handleKeyDownUrl}
@@ -888,55 +923,89 @@ const SuppressionRules: React.FC = () => {
                                 2. The input must be in CSV format with a header, contain only one column labeled &apos;email&apos;, and be no larger than 100MB.
                             </Typography>
 
-                            <Box onClick={handleClick} // Делаем весь Box кликабельным
-                                sx={{
-                                    border: '1px dashed rgba(80, 82, 178, 1)',
-                                    borderRadius: '4px',
-                                    display: 'flex',
-                                    width: '45%',
-                                    maxHeight: '5rem',
-                                    alignItems: 'center',
-                                    padding: '16px',
-                                    gap: '16px',
-                                    mt: '1.5rem',
-                                    cursor: 'pointer', // Меняем на pointer, чтобы указать на интерактивность
-                                    '&:hover': {
-                                        backgroundColor: 'rgba(80, 82, 178, 0.09)', // Изменение фона при наведении
-                                    },
-                                    "@media (max-width: 700px)": {
-                                        width: '100%',
-                                    }
-                                }}
-                            >
-                                <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2, alignItems: 'center' }}>
-                                    <input
-                                        type="file"
-                                        ref={fileInputRef} // Используем реф для доступа к элементу
-                                        style={{ display: 'none' }} // Скрываем input
-                                        onChange={handleFileUpload}
-                                    />
-                                    <Button sx={{ padding: 0, margin: 0 }}>
-                                        <Image src='upload.svg' alt="upload" width={40} height={40} />
-                                    </Button>
-                                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', justifyContent: 'start' }}>
-                                        <Typography className="main-text" sx={{ color: 'rgba(80, 82, 178, 1)', mb: 0, padding: 0, fontWeight: 500 }}>
-                                            Upload a file
-                                        </Typography>
-                                        <Typography className="main-text" sx={{ color: 'rgba(32, 33, 36, 1)', mb: 0, padding: 0, fontWeight: 500 }}>
-                                            CSV. Max 100MB
-                                        </Typography>
+                            <Box sx={{width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'start', flexDirection: 'row', mt: '1.5rem', gap:2}}>
+
+                                <Box onClick={handleClick}
+                                    sx={{
+                                        border: '1px dashed rgba(80, 82, 178, 1)',
+                                        borderRadius: '4px',
+                                        display: 'flex',
+                                        width: '49%',
+                                        maxHeight: '5rem',
+                                        alignItems: 'center',
+                                        padding: '16px',
+                                        gap: '16px',
+                                        
+                                        cursor: 'pointer',
+                                        '&:hover': {
+                                            backgroundColor: 'rgba(80, 82, 178, 0.09)',
+                                        },
+                                        "@media (max-width: 700px)": {
+                                            width: '100%',
+                                        }
+                                    }}
+                                >
+                                    <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2, alignItems: 'center' }}>
+                                        <input
+                                            type="file"
+                                            ref={fileInputRef}
+                                            style={{ display: 'none' }}
+                                            onChange={handleFileUpload}
+                                        />
+                                        <Button sx={{ padding: 0, margin: 0 }}>
+                                            <Image src='upload.svg' alt="upload" width={40} height={40} />
+                                        </Button>
+                                        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', justifyContent: 'start' }}>
+                                            <Typography className="main-text" sx={{ color: 'rgba(80, 82, 178, 1)', mb: 0, padding: 0, fontWeight: 500 }}>
+                                                Upload a file
+                                            </Typography>
+                                            <Typography className="main-text" sx={{ color: 'rgba(32, 33, 36, 1)', mb: 0, padding: 0, fontWeight: 500 }}>
+                                                CSV. Max 100MB
+                                            </Typography>
+                                        </Box>
                                     </Box>
                                 </Box>
+                                {uploadedFile && (
+                                    <Box
+                                        sx={{
+                                            border: '1px solid rgba(218, 220, 224, 1)',
+                                            borderRadius: '8px',
+                                            display: 'flex',
+                                            width: '49%',
+                                            maxHeight: '5rem',
+                                            alignItems: 'center',
+                                            padding: '16px',
+                                            gap: '16px',
+                                            backgroundColor: '#FAFAFA',
+                                            "@media (max-width: 700px)": {
+                                                width: '100%',
+                                            }
+                                        }}
+                                    >
+                                        <Box sx={{ display: 'flex', flexDirection: 'column', flexGrow: 1, gap:1}}>
+                                            <Typography className="first-sub-title" sx={{ color: 'rgba(32, 33, 36, 1)', fontWeight: 500, display: 'flex', alignItems: 'center', gap:1 }}>
+                                                {uploadedFile.name} <CheckCircleIcon sx={{ color: 'green', fontSize: '17px', }} /> {/* Иконка подтверждения */}
+                                            </Typography>
+                                            <Typography className="table-heading" sx={{ color: 'rgba(114, 114, 114, 1)' }}>
+                                                {(uploadedFile.size / (1024 * 1024)).toFixed(2)}MB
+                                            </Typography>
+                                        </Box>
+                                        
+                                        <IconButton onClick={handleDeleteFile}>
+                                            <Image src={'/trash.svg'} alt="delete" width={24} height={24} />
+                                        </IconButton>
+                                    </Box>
+                                )}
                             </Box>
 
                             <Typography className="main-text"
-                                sx={{ ...suppressionsStyles.text, gap: 0.25, pt: 1, "@media (max-width: 700px)": {mb:1 }}}
+                                sx={{ ...suppressionsStyles.text, gap: 0.25, pt: 1, "@media (max-width: 700px)": { mb: 1 } }}
                             >
                                 Sample doc: <Typography onClick={downloadFile} sx={{ ...suppressionsStyles.text, color: 'rgba(80, 82, 178, 1)', cursor: 'pointer', fontWeight: 400 }}>sample suppression-list.csv</Typography>
                             </Typography>
 
                             <Box sx={{ width: '100%', display: 'flex', alignItems: 'flex-end', justifyContent: 'flex-end' }}>
-                                <Button variant="outlined" sx={{
+                                <Button variant="outlined" onClick={saveFile} sx={{
                                     backgroundColor: '#fff',
                                     color: 'rgba(80, 82, 178, 1)',
                                     fontFamily: "Nunito Sans",
@@ -1040,10 +1109,10 @@ const SuppressionRules: React.FC = () => {
                                                 width: '15%',  // Чтобы столбец занимал доступное пространство
                                                 textAlign: 'center'  // Выравнивание по центру
                                             }}>
-                                                <Button sx={{minWidth: 'auto', padding: '0.5rem',marginRight: '1rem' }}>
+                                                <Button sx={{ minWidth: 'auto', padding: '0.5rem', marginRight: '1rem' }}>
                                                     <Image src='download.svg' alt="donwload" width={11.67} height={15} />
                                                 </Button>
-                                                <Button sx={{minWidth: 'auto', padding: '0.5rem' }}>
+                                                <Button sx={{ minWidth: 'auto', padding: '0.5rem' }}>
                                                     <Image src='trash-icon-filled.svg' alt="delete" width={11.67} height={15} />
                                                 </Button>
                                             </TableCell>
