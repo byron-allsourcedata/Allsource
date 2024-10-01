@@ -1,12 +1,13 @@
 import datetime
 import math
 
-from models.suppression_emails import SuppressionEmails
+from models.suppression_email import SuppressionEmail
 from models.suppressions_list import SuppressionList
 from sqlalchemy.orm import Session
 from enums import SuppressionStatus
 from sqlalchemy.dialects.postgresql import insert
 from models.suppression_rule import SuppressionRule
+from models.users_domains import UserDomains
 
 
 class SuppressionPersistence:
@@ -14,14 +15,18 @@ class SuppressionPersistence:
     def __init__(self, db: Session):
         self.db = db
         
+    def get_domain_id(self, user_id):
+        return self.db.query(UserDomains.id).filter(UserDomains.user_id == user_id).scalar()
+    
     
     def save_suppressions_list(self, user_id, email_list, list_name, bad_emails=False):
+        domain_id = self.get_domain_id(user_id)
         suppression_list = SuppressionList(
             list_name=list_name,
             created_at=datetime.now(),
             total_emails=None,
             status=SuppressionStatus.INCOMPLETE.value.lower(),
-            user_id=user_id
+            domain_id=domain_id
         )
 
         if bad_emails:
@@ -41,9 +46,9 @@ class SuppressionPersistence:
     def save_suppression_emails(self, email_list):
         email_list_ids = []
         for email in email_list:
-            suppression_emails = insert(SuppressionEmails).values(
+            suppression_emails = insert(SuppressionEmail).values(
                 email=email,
-            ).on_conflict_do_nothing().returning(SuppressionEmails.id)
+            ).on_conflict_do_nothing().returning(SuppressionEmail.id)
             
             result = self.db.execute(suppression_emails)
             self.db.flush()
@@ -55,10 +60,11 @@ class SuppressionPersistence:
 
     
     def get_suppression_list(self, user_id, page, per_page):
+        domain_id = self.get_domain_id(user_id)
         offset = (page - 1) * per_page
         suppression_lists = (
             self.db.query(SuppressionList)
-            .filter(SuppressionList.user_id == user_id)
+            .filter(SuppressionList.domain_id == domain_id)
             .limit(per_page)
             .offset(offset)
             .all()
@@ -70,29 +76,32 @@ class SuppressionPersistence:
             suppression.total_emails = total_count
             result.append(suppression.to_dict())
 
-        total_count = self.db.query(SuppressionList).filter(SuppressionList.user_id == user_id).count()
+        total_count = self.db.query(SuppressionList).filter(SuppressionList.domain_id == domain_id).count()
         max_page = math.ceil(total_count / per_page)
 
         return result, total_count, max_page
 
     
     def delete_suppression_list(self, user_id, suppression_list_id):
+        domain_id = self.get_domain_id(user_id)
         self.db.query(SuppressionList).filter(
-            SuppressionList.user_id == user_id,
+            SuppressionList.domain_id == domain_id,
             SuppressionList.id == suppression_list_id
         ).delete()
         self.db.commit()
         
     def get_suppression_list_by_id(self, user_id, suppression_list_id):
-        suppression_lists = self.db.query(SuppressionList).filter(SuppressionList.user_id == user_id, SuppressionList.id == suppression_list_id).first()
+        domain_id = self.get_domain_id(user_id)
+        suppression_lists = self.db.query(SuppressionList).filter(SuppressionList.domain_id == domain_id, SuppressionList.id == suppression_list_id).first()
         return suppression_lists
     
-    def get_rules(self, user_id):
-        rules = self.db.query(SuppressionRule).filter(SuppressionRule.user_id == user_id).first()
+    def get_rules(self, domain_id):
+        rules = self.db.query(SuppressionRule).filter(SuppressionRule.domain_id == domain_id).first()
         return rules
     
     def save_rules_multiple_emails(self, user_id, emails):
-        rules = self.get_rules(user_id=user_id) or SuppressionRule(created_at=datetime.now(), user_id=user_id)
+        domain_id = self.get_domain_id(user_id)
+        rules = self.get_rules(domain_id=domain_id) or SuppressionRule(created_at=datetime.now(), domain_id=domain_id)
 
         email_list_ids = self.save_suppression_emails(emails)
 
@@ -103,7 +112,8 @@ class SuppressionPersistence:
         self.db.commit()
         
     def process_collecting_contacts(self, user_id):
-        rules = self.get_rules(user_id=user_id) or SuppressionRule(created_at=datetime.now(), user_id=user_id, is_stop_collecting_contacts = False)
+        domain_id = self.get_domain_id(user_id)
+        rules = self.get_rules(domain_id=domain_id) or SuppressionRule(created_at=datetime.now(), domain_id=domain_id, is_stop_collecting_contacts = False)
         if rules.is_stop_collecting_contacts == False:
             rules.is_stop_collecting_contacts = True
         else:
@@ -112,7 +122,8 @@ class SuppressionPersistence:
         self.db.commit()
         
     def process_certain_activation(self, user_id):
-        rules = self.get_rules(user_id=user_id) or SuppressionRule(created_at=datetime.now(), user_id=user_id, is_url_certain_activation = False)
+        domain_id = self.get_domain_id(user_id)
+        rules = self.get_rules(domain_id=domain_id) or SuppressionRule(created_at=datetime.now(), domain_id=domain_id, is_url_certain_activation = False)
         if rules.is_url_certain_activation == False:
             rules.is_url_certain_activation = True
         else:
@@ -121,7 +132,8 @@ class SuppressionPersistence:
         self.db.commit()
     
     def process_certain_urls(self, user_id, url_list):
-        rules = self.get_rules(user_id=user_id) or SuppressionRule(created_at=datetime.now(), user_id=user_id)
+        domain_id = self.get_domain_id(user_id)
+        rules = self.get_rules(domain_id=domain_id) or SuppressionRule(created_at=datetime.now(), domain_id=domain_id)
         
         cleaned_urls = [url.replace("/", "").replace(" ", "") for url in url_list if url]
         
@@ -133,7 +145,8 @@ class SuppressionPersistence:
         self.db.commit()
 
     def process_based_activation(self, user_id):
-        rules = self.get_rules(user_id=user_id) or SuppressionRule(created_at=datetime.now(), user_id=user_id, is_based_activation = False)
+        domain_id = self.get_domain_id(user_id)
+        rules = self.get_rules(domain_id=domain_id) or SuppressionRule(created_at=datetime.now(), domain_id=domain_id, is_based_activation = False)
         if rules.is_based_activation == False:
             rules.is_based_activation = True
         else:
@@ -142,7 +155,8 @@ class SuppressionPersistence:
         self.db.commit()
         
     def process_based_urls(self, user_id, identifiers):
-        rules = self.get_rules(user_id=user_id) or SuppressionRule(created_at=datetime.now(), user_id=user_id)
+        domain_id = self.get_domain_id(user_id)
+        rules = self.get_rules(domain_id=domain_id) or SuppressionRule(created_at=datetime.now(), user_id=user_id)
         cleaned_identifiers = [identifier.replace("utm_source", "").replace("=", "").replace(" ", "") for identifier in identifiers if identifier]
         
         if not cleaned_identifiers:
@@ -153,7 +167,8 @@ class SuppressionPersistence:
         self.db.commit()
         
     def process_page_views_limit(self, user_id, page_views, seconds):
-        rules = self.get_rules(user_id=user_id) or SuppressionRule(created_at=datetime.now(), user_id=user_id)
+        domain_id = self.get_domain_id(user_id)
+        rules = self.get_rules(domain_id=domain_id) or SuppressionRule(created_at=datetime.now(), user_id=user_id)
         if not seconds:
             rules.collection_timeout = None
         if not page_views:

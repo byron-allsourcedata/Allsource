@@ -13,13 +13,11 @@ class SuppressionRule(Base):
     activate_certain_urls = Column(VARCHAR, nullable=True)
     is_based_activation = Column(BOOLEAN, nullable=False, default=False)
     activate_based_urls = Column(VARCHAR, nullable=True)
-    user_id = Column(Integer, nullable=False)
+    domain_id = Column(Integer, nullable=False)
     actual_contect_days = Column(Integer, nullable=False)
     page_views_limit = Column(VARCHAR, nullable=True)
     collection_timeout = Column(VARCHAR, nullable=True)
     suppressions_multiple_emails = Column(Integer, ForeignKey('suppression_emails.id'), nullable=True)
-    
-    suppression_emails = relationship("SuppressionEmails", back_populates="suppressions_rules")
     
     def to_dict(self):
             return {

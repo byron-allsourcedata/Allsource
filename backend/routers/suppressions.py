@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, UploadFile, File, Query
 from models.users import User
-from services.suppressions import SuppressionService
+from services.suppression import SuppressionService
 from dependencies import get_suppression_service, check_user_authorization
 from fastapi.responses import FileResponse
 from enums import SuppressionStatus

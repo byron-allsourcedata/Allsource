@@ -6,7 +6,7 @@ import pandas as pd
 from fastapi import UploadFile
 from io import StringIO
 from fastapi.responses import StreamingResponse
-from persistence.suppressions_persistence import SuppressionPersistence
+from persistence.suppression_persistence import SuppressionPersistence
 
 
 class SuppressionService:

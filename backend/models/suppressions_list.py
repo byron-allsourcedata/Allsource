@@ -12,9 +12,7 @@ class SuppressionList(Base):
     created_at = Column(TIMESTAMP(precision=7), nullable=True)
     total_emails = Column(Integer, ForeignKey('suppression_emails.id'))
     status = Column(VARCHAR, nullable=False, default='incomplete')
-    user_id = Column(Integer, nullable=False)
-    
-    suppression_emails = relationship("suppression_emails", back_populates="suppressions_list")
+    domain_id = Column(Integer, nullable=False)
 
 
     def to_dict(self):

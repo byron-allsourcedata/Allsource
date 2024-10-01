@@ -53,9 +53,9 @@ from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.audience_persistence import AudiencePersistence
 from persistence.leads_order_persistence import LeadOrdersPersistence
 from persistence.domains import UserDomainsPersistence, UserDomains
-from persistence.suppressions_persistence import SuppressionPersistence
+from persistence.suppression_persistence import SuppressionPersistence
 from models.users import Users as User
-from services.suppressions import SuppressionService
+from services.suppression import SuppressionService
 from exceptions import InvalidToken
 from enums import UserAuthorizationStatus
 from config.aws import get_s3_client
