@@ -257,11 +257,11 @@ class LeadsPersistence:
             filters = []
             for visit in page_visits_list:
                 if visit == 'under_10':
-                    filters.append(LeadUser.avarage_visit_time < 10)
+                    filters.append(LeadUser.avarage_visit_time <= 10)
                 elif visit == '10-30_secs':
-                    filters.append(and_(LeadUser.avarage_visit_time >= 10, LeadUser.avarage_visit_time <= 30))
+                    filters.append(and_(LeadUser.avarage_visit_time > 10, LeadUser.avarage_visit_time <= 30))
                 elif visit == '30-60_secs':
-                    filters.append(and_(LeadUser.avarage_visit_time >= 30, LeadUser.avarage_visit_time <= 60))
+                    filters.append(and_(LeadUser.avarage_visit_time > 30, LeadUser.avarage_visit_time <= 60))
                 else:
                     filters.append(LeadUser.avarage_visit_time > 60)
             query = query.filter(or_(*filters))
