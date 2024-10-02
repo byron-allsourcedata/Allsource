@@ -15,7 +15,7 @@ class SuppressionPersistence:
         self.db = db
     
     
-    def save_suppressions_list(self, user_id, email_list, list_name, domain_id):
+    def save_suppressions_list(self, email_list, list_name, domain_id):
         suppression_list = SuppressionList(
             list_name=list_name,
             created_at=datetime.now(),
