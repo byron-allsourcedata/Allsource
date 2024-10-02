@@ -22,6 +22,7 @@ import PopupDetails from '@/components/AccountDetails';
 import CloseIcon from '@mui/icons-material/Close';
 import CustomizedProgressBar from '@/components/CustomizedProgressBar';
 import Tooltip from '@mui/material/Tooltip';
+import CustomToolTip from '@/components/customToolTip';
 
 
 
@@ -1029,18 +1030,15 @@ const Leads: React.FC = () => {
                             }
                         }}>
                         <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1 }}>
-                            <Typography className='first-sub-title' sx={{ fontWeight: 'bold' }}>
+                            <Typography className='first-sub-title'>
                                 Resolved Contacts
                             </Typography>
-                            <Tooltip title={
-                                (count_leads ?? 0) >= 0
+                            <CustomToolTip title={(count_leads ?? 0) >= 0
                                     ? `Number of leads: ${count_leads}`
                                     : status === 'PIXEL_INSTALLATION_NEEDED'
                                         ? 'Contacts automatically sync across devices and platforms.'
                                         : 'Pixel installation is required.'
-                            } placement='right'>
-                                <Image src='/info-icon.svg' alt='info-icon' height={13} width={13} />
-                            </Tooltip>
+                            }  />
                         </Box>
                         <Box sx={{
                             display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '15px',
@@ -1342,8 +1340,9 @@ const Leads: React.FC = () => {
                                                                     zIndex: 99
                                                                 }),
                                                                 ...(key === 'average_time_sec' && {
-                                                                    '::after': {
-                                                                        content: 'none'
+                                                                    '&::after': {
+                                                                        content: 'none',
+                                                                        borderColor: '#fff'
                                                                     }
                                                                 })
                                                             }}
