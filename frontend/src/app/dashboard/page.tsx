@@ -380,7 +380,7 @@ const Dashboard: React.FC = () => {
       }
       const fetchData = async () => {
         try {
-          const response = await axiosInstance.get("dashboard" ,{withCredentials: true});
+          const response = await axiosInstance.get("dashboard");
           setData(response.data);
           if (response.status === 200) {
             setShowCharts(true); // Set to true if response is 200
