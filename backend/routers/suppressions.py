@@ -36,7 +36,7 @@ async def delete_suppression_list(suppression_request: SuppressionRequest,
     suppression_service: SuppressionService = Depends(get_suppression_service),
     domain = Depends(check_domain),
     user: User = Depends(check_user_authorization)):
-    return suppression_service.delete_suppression_list(suppression_request.suppression_list_id, domain.data_provider_id):
+    return suppression_service.delete_suppression_list(suppression_request.suppression_list_id, domain.data_provider_id)
 
 @router.get("/download-suppression-list")
 async def download_suppression_list(
