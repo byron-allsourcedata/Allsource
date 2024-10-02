@@ -28,7 +28,7 @@ interface GoogleLoginResponse {
 const GoogleTagPopup: React.FC<PopupProps> = ({open, handleClose}) => {
     const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
     const clientSecret = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_SECRET
-    const dashboard_url: string = process.env.NEXT_PUBLIC_API_DASHBOARD_URL || 'http://localhost:8000';
+    const dashboard_url: string = process.env.NEXT_PUBLIC_API_DASHBOARD_URL || 'http://localhost:3000';
 
     const [loading, setLoading] = useState(false);
     const [session, setSession] = useState<{ token: string } | null>(null);
