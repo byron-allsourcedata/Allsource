@@ -306,7 +306,7 @@ const DataSync: React.FC = () => {
               border: "1px solid rgba(80, 82, 178, 1)",
               borderRadius: "4px",
               padding: "10px",
-              opacity: status === "PIXEL_INSTALLATION_NEEDED" ? "0.5" : "1",
+              //opacity: status === "PIXEL_INSTALLATION_NEEDED" ? "0.5" : "1",
               minWidth: "auto",
               position: "relative",
               "@media (max-width: 900px)": {
