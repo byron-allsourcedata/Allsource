@@ -58,10 +58,9 @@ class SuppressionService:
 
             output = StringIO()
             writer = csv.writer(output)
-            writer.writerow(['ID', 'List Name', 'Created At', 'Total Emails', 'Status'])
+            writer.writerow(['List Name', 'Created At', 'Total Emails', 'Status'])
             for suppression in suppression_lists:
                 writer.writerow([
-                    suppression.id,
                     suppression.list_name,
                     suppression.created_at,
                     suppression.total_emails,
