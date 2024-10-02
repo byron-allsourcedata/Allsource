@@ -67,5 +67,5 @@ def buy_credits(credits_used: int, payments_service: PaymentsService = Depends(g
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Access denied. Admins and standard only."
             )
-    return payments_service.charge_user_for_extra_credits(credits_used=credits_used, users=users)
+    return payments_service.charge_user_for_extra_credits(credits_used, users)
     

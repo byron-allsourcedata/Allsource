@@ -416,6 +416,25 @@ export const SettingsBilling: React.FC = () => {
         }
     };
 
+    const handleBuyCredits = async () => {
+        console.log('click')
+        // try {
+        //     setIsLoading(true);
+        //     const response = await axiosInterceptorInstance.get(`/subscriptions/buy-credits?credits_used=${10}`);
+        //     console.log(response);
+        // } catch (error: unknown) {
+        //     if (axios.isAxiosError(error)) {
+        //         showErrorToast(error.message);
+        //     } else if (error instanceof Error) {
+        //         showErrorToast(error.message);
+        //     } else {
+        //         showErrorToast("An unexpected error occurred.");
+        //     }
+        // } finally {
+        //     setIsLoading(false);
+        // }
+    };
+
     // Handler for rows per page change
     const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         setRowsPerPage(parseInt(event.target.value, 10));
@@ -1095,7 +1114,7 @@ export const SettingsBilling: React.FC = () => {
 
 
                     <Box sx={{ flexShrink: 0 }}>
-                        <Button sx={{
+                        <Button onClick={handleBuyCredits} sx={{
                             background: '#5052B2',
                             borderRadius: '4px',
                             border: '1px solid #5052b2',
