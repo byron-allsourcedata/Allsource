@@ -345,7 +345,7 @@ class SettingsService:
         result = get_billing_by_invoice_id(invoice_id)
         if result['status'] != 'SUCCESS':
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Billing information not found.")
-        
+
         output = io.StringIO()
         writer = csv.writer(output)
 
@@ -380,21 +380,30 @@ class SettingsService:
             writer.writerow([item['description'], item['amount'] / 100])
 
         output.seek(0)
-        
+
+        attachment = {
+            'content': output.getvalue(),
+            'type': 'text/csv',
+            'filename': 'invoice.csv',
+            'disposition': 'attachment'
+        }
+
         template_id = self.send_grid_persistence_service.get_template_by_alias(
-                SendgridTemplate.PAYMENT_INVOICE_TEMPLATE.value)
-    
+            SendgridTemplate.PAYMENT_INVOICE_TEMPLATE.value)
+
         mail_object = SendgridHandler()
         mail_object.send_sign_up_mail(
             to_emails=email,
             template_id=template_id,
-            template_placeholder={  
-                                    "full_name": user.get('full_name'),
-                                    "email": email
-                                }
+            template_placeholder={
+                "full_name": user.get('full_name'),
+                "email": email
+            },
+            attachments=[attachment]
         )
-        
+
         return SettingStatus.SUCCESS
+
     
     def download_billing(self, invoice_id):
         result = get_billing_by_invoice_id(invoice_id)

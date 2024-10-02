@@ -117,6 +117,7 @@ const billingStyles = {
 export const SettingsBilling: React.FC = () => {
     const [prospectData, setProspectData] = useState(0);
     const [contactsCollected, setContactsCollected] = useState(0);
+    const [planContactsCollected, setPlanContactsCollected] = useState(0);
     const [cardDetails, setCardDetails] = useState<any[]>([]);
     const [billingDetails, setBillingDetails] = useState<any>({});
     const [billingHistory, setBillingHistory] = useState<any[]>([]);
@@ -147,8 +148,9 @@ export const SettingsBilling: React.FC = () => {
             setCardDetails(response.data.card_details);
             setChecked(response.data.billing_details.overage)
             setBillingDetails(response.data.billing_details);
-
-
+            setContactsCollected(response.data.usages_credits.leads_credits);
+            setPlanContactsCollected(response.data.usages_credits.plan_leads_credits)
+            setProspectData(response.data.usages_credits.prospect_credits)
         } catch (error) {
             console.error('Error fetching data:', error);
         } finally {
@@ -321,7 +323,7 @@ export const SettingsBilling: React.FC = () => {
     const handleSendInvoice = async () => {
         try {
             setIsLoading(true);
-            const response = await axiosInterceptorInstance.post('/settings/send-billing', {email: email, invoice_id: selectedInvoiceId});
+            const response = await axiosInterceptorInstance.post('/settings/send-billing', { email: email, invoice_id: selectedInvoiceId });
             if (response.status === 200) {
                 switch (response.data.status) {
                     case 'SUCCESS':
@@ -352,7 +354,7 @@ export const SettingsBilling: React.FC = () => {
             const response = await axiosInterceptorInstance.get(`/settings/billing/download-billing?invoice_id=${invoice_id}`, {
                 responseType: 'blob',
             });
-    
+
             const url = window.URL.createObjectURL(new Blob([response.data]));
             const link = document.createElement('a');
             link.href = url;
@@ -376,8 +378,8 @@ export const SettingsBilling: React.FC = () => {
             setIsLoading(false);
         }
     };
-    
-    
+
+
 
 
     // Handler for page change
@@ -1030,12 +1032,13 @@ export const SettingsBilling: React.FC = () => {
                                 Contacts collected
                             </Typography>
                             <Typography className='main-text' sx={{ fontSize: '14px', fontWeight: '500', lineHeight: '20px', color: '#202124', mb: '12px' }}>
-                                46% Used
+                                {((contactsCollected / planContactsCollected) * 100).toFixed(2)}% Used
                             </Typography>
+
                         </Box>
                         <LinearProgress
                             variant="determinate"
-                            value={(120 / 250) * 100} // Adjust this calculation as needed
+                            value={(contactsCollected / planContactsCollected) * 100} // Adjust this calculation as needed
                             sx={{
                                 height: '8px',
                                 borderRadius: '4px',
@@ -1047,7 +1050,7 @@ export const SettingsBilling: React.FC = () => {
                             }}
                         />
                         <Typography className='second-text' sx={{ fontSize: '12px', fontWeight: '400', lineHeight: 'normal', color: '#787878', letterSpacing: '0.06px' }}>
-                            120 out of 250 Remaining
+                            {contactsCollected} out of {planContactsCollected} Remaining
                         </Typography>
                     </Box>
                     <Box sx={{
@@ -1065,19 +1068,18 @@ export const SettingsBilling: React.FC = () => {
 
 
                     <Box sx={{ width: '100%', marginBottom: 2 }}>
-
                         <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                             <Typography className='main-text' sx={{ fontSize: '14px', fontWeight: '500', lineHeight: '20px', color: '#202124', mb: '12px' }}>
                                 Prospect Data
                             </Typography>
                             <Typography className='main-text' sx={{ fontSize: '14px', fontWeight: '500', lineHeight: '20px', color: '#202124', mb: '12px' }}>
-                                0% Used
+                                {prospectData === 0 ? '100% Used' : `${((prospectData) * 100).toFixed(2)}% Used`}
                             </Typography>
                         </Box>
 
                         <LinearProgress
                             variant="determinate"
-                            value={0}
+                            value={prospectData === 0 ? 100 : (prospectData * 100)}
                             sx={{
                                 height: '8px',
                                 borderRadius: '4px',
@@ -1086,9 +1088,10 @@ export const SettingsBilling: React.FC = () => {
                             }}
                         />
                         <Typography className='second-text' sx={{ fontSize: '12px', fontWeight: '400', lineHeight: 'normal', color: '#787878', letterSpacing: '0.06px' }}>
-                            No data found
+                            {prospectData}
                         </Typography>
                     </Box>
+
 
 
                     <Box sx={{ flexShrink: 0 }}>
@@ -1207,7 +1210,7 @@ export const SettingsBilling: React.FC = () => {
                                         </TableCell>
                                         <TableCell sx={billingStyles.tableBodyColumn}>
                                             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                            <IconButton onClick={() => fetchSaveBillingHistory(history.invoice_id)}>
+                                                <IconButton onClick={() => fetchSaveBillingHistory(history.invoice_id)}>
                                                     <Image
                                                         src='/download-icon.svg'
                                                         alt='download-icon'
