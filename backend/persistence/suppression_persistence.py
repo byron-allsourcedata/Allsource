@@ -15,24 +15,16 @@ class SuppressionPersistence:
         self.db = db
     
     
-    def save_suppressions_list(self, user_id, email_list, list_name, domain_id, bad_emails=False):
+    def save_suppressions_list(self, user_id, email_list, list_name, domain_id):
         suppression_list = SuppressionList(
             list_name=list_name,
             created_at=datetime.now(),
             total_emails=None,
             status=SuppressionStatus.INCOMPLETE.value.lower(),
             domain_id=domain_id
-        )
-
-        if bad_emails:
-            self.db.add(suppression_list)
-            self.db.commit()
-            return
-            
-
+        )   
         suppression_list.total_emails = email_list
         suppression_list.status = SuppressionStatus.COMPLETED.value.lower()
-
         self.db.add(suppression_list)
         self.db.commit()
         return
