@@ -5,7 +5,7 @@ from .base import Base, create_timestamps
 
 
 class SuppressionList(Base):
-    __tablename__ = "suppressions_list"
+    __tablename__ = "suppressions_lists"
 
     id = Column(Integer, primary_key=True, nullable=False)
     list_name = Column(VARCHAR, nullable=False)
