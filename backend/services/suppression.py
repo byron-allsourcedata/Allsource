@@ -2,8 +2,7 @@ import logging
 import os
 import csv
 import pandas as pd
-
-from fastapi import UploadFile
+from fastapi import UploadFile, HTTPException, status
 from io import StringIO
 from fastapi.responses import StreamingResponse
 from persistence.suppression_persistence import SuppressionPersistence
@@ -29,10 +28,9 @@ class SuppressionService:
             email = row.get('email')
             if email and (email is not None):
                 email_list.append(email)
-        if len(email) > 0:
-            self.suppression_persistence.save_suppressions_list(email_list=email_list, list_name=file_name, domain_id=domain_id)
-        else:
-            self.suppression_persistence.save_suppressions_list(email_list=email_list, list_name=file_name, bad_emails=True, domain_id=domain_id)
+        if len(email) <= 0:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Email address cannot be empty.')
+        self.suppression_persistence.save_suppressions_list(email_list=email_list, list_name=file_name, domain_id=domain_id)
             
         return True
     
