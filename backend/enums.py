@@ -92,6 +92,7 @@ class LoginStatus(Enum):
 class PixelStatus(Enum):
     PIXEL_CODE_INSTALLED = 'PIXEL_CODE_INSTALLED'
     PIXEL_CODE_PARSE_FAILED = 'PIXEL_CODE_PARSE_FAILED'
+    USER_NOT_FOUND = 'USER_NOT_FOUND'
 
 
 class UpdatePasswordStatus(Enum):

@@ -220,11 +220,10 @@ def check_user_authentication(Authorization: Annotated[str, Header()],
         team_memer = user_persistence_service.get_user_team_member_by_id(user_data.team_member_id)
         if team_memer.get('team_owner_id') is None or team_memer.get('team_owner_id') != user.get('id'):
             raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail={'status': UserAuthorizationStatus.TEAM_TOKEN_EXPIRED.value}
-        )
-        else:
-            user['team_member'] = team_memer
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail={'status': UserAuthorizationStatus.TEAM_TOKEN_EXPIRED.value}
+            )
+        user['team_member'] = team_memer
     return user
 
 
@@ -245,8 +244,8 @@ def check_domain(
 
 def check_pixel_install_domain(domain: UserDomains = Depends(check_domain)):
     if not domain.is_pixel_installed:
-        raise HTTPException(status_code=403, detail={'status': UserAuthorizationStatus.PIXEL_INSTALLATION_NEEDED.value})
-    else: return domain
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail={'status': UserAuthorizationStatus.PIXEL_INSTALLATION_NEEDED.value})
+    return domain
 
 
 def get_domain_service(user_domain_persistence: UserDomainsPersistence = Depends(get_user_domain_persistence), 
