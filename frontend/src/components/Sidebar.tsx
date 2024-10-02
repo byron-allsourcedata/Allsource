@@ -217,7 +217,7 @@ const Sidebar: React.FC = () => {
                     </ListItemIcon>
                     <ListItemText primary="Contacts" />
                 </ListItem>
-                <ListItem button onClick={() => handleNavigation('/audience')} sx={isActive('/audience') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
+                <ListItem button onClick={() => handleNavigation('/data-sync')} sx={isActive('/data-sync') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
                         <CategoryIcon />
                     </ListItemIcon>
