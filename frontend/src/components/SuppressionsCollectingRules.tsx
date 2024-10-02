@@ -1,7 +1,7 @@
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { Box, Typography, FormControlLabel, TextField, Checkbox, Button, Divider } from "@mui/material";
 import { useState } from "react";
-import { showErrorToast, showInfoToast } from "./ToastNotification";
+import { showToast } from "./ToastNotification";
 const CollectionRules: React.FC = () => {
     const [pageViews, setPageViews] = useState<string>("");
     const [seconds, setSeconds] = useState<string>("");
@@ -20,7 +20,7 @@ const CollectionRules: React.FC = () => {
                 page_views: parseInt(pageViews, 10),
                 seconds: parseInt(seconds, 10)
             });
-            showInfoToast('Succesfully added rule')
+            showToast('Succesfully added rule')
         } catch (error) {
         }
     };
