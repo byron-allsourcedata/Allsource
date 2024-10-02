@@ -1,10 +1,10 @@
-import logging
 import os
 import csv
 import pandas as pd
-from fastapi import UploadFile, HTTPException, status
+from fastapi import UploadFile
 from io import StringIO
 from fastapi.responses import StreamingResponse
+from enums import SuppressionStatus
 from persistence.suppression_persistence import SuppressionPersistence
 
 
@@ -19,7 +19,7 @@ class SuppressionService:
     def process_suppression_list(self, file: UploadFile, domain_id):
         file_name = file.filename
         if not file_name.lower().endswith('.csv'):
-            return False
+            return SuppressionStatus.NO_EMAILS_FOUND
         contents = file.file.read().decode('utf-8')
         df = pd.read_csv(StringIO(contents))
         email_list = []
@@ -29,10 +29,10 @@ class SuppressionService:
             if email and (email is not None):
                 email_list.append(email)
         if len(email) <= 0:
-            return False
+            return SuppressionStatus.NO_EMAILS_FOUND
         self.suppression_persistence.save_suppressions_list(email_list=email_list, list_name=file_name, domain_id=domain_id)
             
-        return True
+        return SuppressionStatus.SUCCESS
     
     def get_suppression_list(self, page, per_page, domain_id):
         suppression_list, total_count, max_page = self.suppression_persistence.get_suppression_list(page=page, per_page=per_page, domain_id=domain_id)
@@ -45,8 +45,8 @@ class SuppressionService:
     def delete_suppression_list(self, suppression_list_id, domain_id):
         if suppression_list_id:
             self.suppression_persistence.delete_suppression_list(suppression_list_id=suppression_list_id, domain_id=domain_id)
-            return True
-        return False
+            return SuppressionStatus.INCOMPLETE
+        return SuppressionStatus.SUCCESS
     
     def download_suppression_list(self, suppression_list_id, domain_id):
         if suppression_list_id:
@@ -73,6 +73,7 @@ class SuppressionService:
     
     def process_suppression_multiple_emails(self, emails, domain_id):
         self.suppression_persistence.save_rules_multiple_emails(emails=emails, domain_id=domain_id)
+        return SuppressionStatus.SUCCESS
         
     def get_rules(self, domain_id):
         rules = self.suppression_persistence.get_rules(domain_id)
@@ -82,18 +83,24 @@ class SuppressionService:
     
     def process_collecting_contacts(self, domain_id):
         self.suppression_persistence.process_collecting_contacts(domain_id=domain_id)
+        return SuppressionStatus.SUCCESS
         
     def process_certain_activation(self, domain_id):
         self.suppression_persistence.process_certain_activation(domain_id=domain_id)
+        return SuppressionStatus.SUCCESS
         
     def process_certain_urls(self, urls, domain_id):
         self.suppression_persistence.process_certain_urls(url_list=urls, domain_id=domain_id)
+        return SuppressionStatus.SUCCESS
         
     def process_based_activation(self, domain_id):
         self.suppression_persistence.process_based_activation(domain_id=domain_id)
+        return SuppressionStatus.SUCCESS
         
     def process_based_urls(self, identifiers, domain_id):
         self.suppression_persistence.process_based_urls(identifiers=identifiers, domain_id=domain_id)
+        return SuppressionStatus.SUCCESS
         
     def process_page_views_limit(self, page_views: int, seconds: int, domain_id):
         self.suppression_persistence.process_page_views_limit(page_views=page_views, seconds=seconds, domain_id=domain_id)
+        return SuppressionStatus.SUCCESS
