@@ -124,6 +124,7 @@ export const SettingsBilling: React.FC = () => {
     const [deleteAnchorEl, setDeleteAnchorEl] = useState<null | HTMLElement>(null);
     const [overageAnchorEl, setOverageAnchorEl] = useState<null | HTMLElement>(null);
     const [selectedCardId, setSelectedCardId] = useState<string | null>();
+    const [selectedInvoiceId, setselectedInvoiceId] = useState<string | null>();
     const [removePopupOpen, setRemovePopupOpen] = useState(false);
     const [sendInvoicePopupOpen, setSendInvoicePopupOpen] = useState(false);
     const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -134,6 +135,7 @@ export const SettingsBilling: React.FC = () => {
     const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
     const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '');
     const [open, setOpen] = useState(false);
+    const [email, setEmail] = useState('');
 
     const handleOpen = () => setOpen(true);
     const handleClose = () => setOpen(false);
@@ -306,16 +308,42 @@ export const SettingsBilling: React.FC = () => {
         }
     };
 
-    const handleSendInvoicePopupOpen = () => {
+    const handleSendInvoicePopupOpen = (invoice_id: string) => {
+        setselectedInvoiceId(invoice_id)
         setSendInvoicePopupOpen(true);
     };
 
     const handleSendInvoicePopupClose = () => {
         setSendInvoicePopupOpen(false);
+        setselectedInvoiceId(null)
     };
 
-    const handleSendInvoice = () => {
-
+    const handleSendInvoice = async () => {
+        try {
+            setIsLoading(true);
+            const response = await axiosInterceptorInstance.post('/settings/send-billing', {email: email, invoice_id: selectedInvoiceId});
+            if (response.status === 200) {
+                switch (response.data.status) {
+                    case 'SUCCESS':
+                        showToast('Send invoice successfully');
+                        break
+                    default:
+                        showErrorToast('Unknown response received.');
+                }
+            }
+        } catch (error) {
+            if (axios.isAxiosError(error)) {
+                if (error.response && error.response.status === 403) {
+                    showErrorToast('Access denied: You do not have permission to remove this member.');
+                } else {
+                    console.error('Error removing team member:', error);
+                }
+            }
+        } finally {
+            setIsLoading(false);
+            handleSendInvoicePopupClose()
+            setselectedInvoiceId(null)
+        }
     };
 
     const fetchSaveBillingHistory = async (invoice_id: string) => {
@@ -1187,7 +1215,7 @@ export const SettingsBilling: React.FC = () => {
                                                         width={20}
                                                     />
                                                 </IconButton>
-                                                <IconButton onClick={handleSendInvoicePopupOpen}>
+                                                <IconButton onClick={() => handleSendInvoicePopupOpen(history.invoice_id)}>
                                                     <Image
                                                         src='/share-icon.svg'
                                                         alt='share-icon'
@@ -1358,7 +1386,7 @@ export const SettingsBilling: React.FC = () => {
                             color: '#4a4a4a',
                             marginBottom: '38px'
                         }}>
-                            Invoice with 23423443 ID will be shared to the email inbox directly.
+                            Invoice with {selectedInvoiceId} ID will be shared to the email inbox directly.
                             Please kindly check your mail inbox.
                         </Typography>
                         <TextField sx={billingStyles.formField}
@@ -1367,9 +1395,10 @@ export const SettingsBilling: React.FC = () => {
                             margin="normal"
                             InputLabelProps={{ sx: billingStyles.inputLabel }}
                             InputProps={{
-                                sx: billingStyles.formInput,
-
+                                sx: billingStyles.formInput
                             }}
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
                         />
                     </Box>
 

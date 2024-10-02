@@ -30,6 +30,11 @@ class TeamsDetailsRequest(BaseModel):
     
 class PaymentCard(BaseModel):
     payment_method_id: str = Field(...)
+    email: Optional[str] = None
+    
+class SendBilling(BaseModel):
+    invoice_id: str = Field(...)
+    email: str = Field(...)
     
 class ApiKeysRequest(BaseModel):
     id: Optional[str] = None

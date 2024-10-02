@@ -106,6 +106,7 @@ class SendgridTemplate(Enum):
     SEND_PIXEL_CODE_TEMPLATE = 'send_pixel_code_template'
     CHANGE_EMAIL_TEMPLATE = 'change_email_template'
     TEAM_MEMBERS_TEMPLATE = 'team_members_template'
+    PAYMENT_INVOICE_TEMPLATE = 'payment_invoice_template'
 
 
 class ResetPasswordEnum(Enum):

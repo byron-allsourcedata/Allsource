@@ -1,11 +1,11 @@
 from fastapi import APIRouter, Depends, Request as fastRequest, Query, HTTPException, status
 from models.users import User
 from services.settings import SettingsService
-from schemas.settings import AccountDetailsRequest, TeamsDetailsRequest, ResetEmailForm, PaymentCard, ApiKeysRequest
+from schemas.settings import AccountDetailsRequest, TeamsDetailsRequest, SendBilling, PaymentCard, ApiKeysRequest
 from dependencies import get_settings_service, check_user_authorization_without_pixel, check_user_authentication
 from schemas.users import VerifyTokenResponse
 from starlette.responses import StreamingResponse
-from enums import TeamAccessLevel, SettingStatus
+from enums import TeamAccessLevel
 
 router = APIRouter()
 
@@ -131,6 +131,19 @@ def download_billing(invoice_id: str = Query(...), settings_service: SettingsSer
                 detail="Access denied. Admins only."
             )
     result = settings_service.download_billing(invoice_id=invoice_id)
+    return StreamingResponse(result, media_type="text/csv",
+                                headers={"Content-Disposition": "attachment; filename=data.csv"})
+    
+@router.get("/billing/send-billing")
+def send_billing(send_billing: SendBilling, settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authorization_without_pixel)):
+    if user.get('team_member'):
+        team_member = user.get('team_member')
+        if team_member.get('team_access_level') != TeamAccessLevel.ADMIN.value or team_member.get('team_access_level') != TeamAccessLevel.OWNER.value:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied. Admins only."
+            )
+    result = settings_service.send_billing(invoice_id=send_billing.invoice_id, email=send_billing.email, user=user)
     return StreamingResponse(result, media_type="text/csv",
                                 headers={"Content-Disposition": "attachment; filename=data.csv"})
 
