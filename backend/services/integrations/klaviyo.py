@@ -119,19 +119,32 @@ class KlaviyoIntegrationsService:
             'status': IntegrationsStatus.SUCCESS.value
         }
     
-    async def create_sync(self, leads_type: str, list_id: str, tags_id: str, data_map: List[DataMap], domain_id: int):
+    def create_tag_relationships_lists(self, tags_id: str, list_id: str, api_key: str):
+        self.__handle_request(method='POST', url=f'https://a.klaviyo.com/api/tags/{tags_id}/relationships/lists/', json={
+             "data": [
+                {
+                    "type": "list",
+                    "id": list_id
+                }
+            ] 
+        }, api_key=api_key)
+    
+    async def create_sync(self, leads_type: str, list_id: str, list_name: str, tags_id: str, data_map: List[DataMap], domain_id: int):
         credentials = self.get_credentials(domain_id)
         data_syncs = self.sync_persistence.get_filter_by(domain_id=domain_id)
         for sync in data_syncs:
-            if sync.integration_id == credentials.id and sync.leads_type == leads_type:
+            if sync.get('integration_id') == credentials.id and sync.get('leads_type') == leads_type:
                 return
         sync = self.sync_persistence.create_sync({
             'integration_id': credentials.id,
             'list_id': list_id,
+            'list_name': list_name,
             'domain_id': domain_id,
             'leads_type': leads_type,
             'data_map': [data.model_dump_json() for data in data_map]
         })
+        if tags_id: 
+            self.create_tag_relationships_lists(tags_id=tags_id, list_id=list_id, api_key=credentials.access_token)
         message = {
             'sync':  {
                 'id': sync.id,
@@ -139,9 +152,10 @@ class KlaviyoIntegrationsService:
                 "integration_id": sync.integration_id, 
                 "leads_type": sync.leads_type, 
                 "list_id": sync.list_id, 
+                'data_map': sync.data_map
                 },
             'leads_type': leads_type,
-            'domain_id': domain_id,
+            'domain_id': domain_id
         }
         rabbitmq_connection = RabbitMQConnection()
         connection = await rabbitmq_connection.connect()
@@ -166,20 +180,23 @@ class KlaviyoIntegrationsService:
             credentials = self.get_credentials(domain.id)
             if not credentials:
                 return
-            data_syncs_list = self.sync_persistence.get_filter_by(
+            data_syncs_list = self.sync_persistence.get_data_sync_filter_by(
                 domain_id=domain.id,
                 integration_id=credentials.id,
                 is_active=True
             )
             if lead:
                 leads = [lead]
-            elif not leads_type:
+            elif not leads_type or leads_type == 'allContacts':
                 leads = self.leads_persistence.get_leads_domain(domain.id) 
             else:
                 leads = self.leads_persistence.get_leads_domain(domain.id, behavior_type=leads_type)
             for data_sync_item in data_syncs_list if not sync else [sync]:
+                if data_sync_item.data_map:
+                    data_map = [json.loads(item) for item in data_sync_item.data_map]
+                else: data_map = None
                 for lead in leads:
-                    profile = self.__create_profile(lead.five_x_five_user_id, credentials.access_token)
+                    profile = self.__create_profile(lead.five_x_five_user_id, credentials.access_token, data_map)
                     if profile:
                         self.__add_profile_to_list(data_sync_item.list_id, profile.get('id'), credentials.access_token)
                 self.sync_persistence.update_sync({
@@ -207,10 +224,13 @@ class KlaviyoIntegrationsService:
             return formatted_phone_number
         return None
 
-    def __create_profile(self, lead_id: int, api_key: str):
+    def __create_profile(self, lead_id: int, api_key: str, data_map):
         lead_data = self.leads_persistence.get_lead_data(lead_id)
         profile = self.__mapped_klaviyo_profile(lead_data)
-
+        if data_map:
+            properties = self.__map_properties(lead_data, data_map)
+        else:
+            properties = {}
         json_data = {
             'data': {
                 'type': 'profile',
@@ -220,11 +240,15 @@ class KlaviyoIntegrationsService:
                     'first_name': profile.first_name if profile.first_name is not None else None,
                     'last_name': profile.last_name if profile.last_name is not None else None,
                     'organization': profile.organization if profile.organization is not None else None,
+                    'location': profile.location if profile.location is not None else None,
+                    'title': profile.title if profile.title is not None else None,
+                    'properties': properties
                 }
             }
         }
         json_data['data']['attributes'] = {k: v for k, v in json_data['data']['attributes'].items() if v is not None}
         logging.debug("JSON data to send: %s", json.dumps(json_data, indent=2))
+        logging.info(json_data)
         response = self.__handle_request(
             method='POST',
             url='https://a.klaviyo.com/api/profiles/',
@@ -232,7 +256,6 @@ class KlaviyoIntegrationsService:
             json=json_data
         )
 
-        # Обработка ошибки
         if response.status_code != 201:
             logging.error("Error response: %s", response.text)
             return None 
@@ -247,7 +270,30 @@ class KlaviyoIntegrationsService:
                 "id": profile_id
                 }
             ]
-        }) 
+            }) 
+    def set_suppression(self, suppression: bool, domain_id: int):
+            credential = self.get_credentials(domain_id)
+            if not credential:
+                raise HTTPException(status_code=403, detail=IntegrationsStatus.CREDENTIALS_NOT_FOUND.value)
+            credential.suppression = suppression
+            self.integrations_persisntece.db.commit()
+            return {'message': 'successfuly'}  
+
+    def get_profile(self, domain_id: int, fields: List[ContactFiled], date_last_sync: str = None) -> List[ContactSuppression]:
+        credentials = self.get_credentials(domain_id)
+        if not credentials:
+            raise HTTPException(status_code=403, detail=IntegrationsStatus.CREDENTIALS_NOT_FOUND.value)
+        params = {
+            'fields[profile]': ','.join(fields),
+        }
+        if date_last_sync:
+            params['filter'] = f'greater-than(created,{date_last_sync})'
+        response = self.__handle_request(method='GET', url='https://a.klaviyo.com/api/profiles/', api_key=credentials.access_token, params=params)
+        if response.status_code != 200:
+            raise HTTPException(status_code=400, detail={'status': "Profiles from Klaviyo could not be retrieved"})
+        return [self.__mapped_profile_from_klaviyo(profile) for profile in response.json().get('data')]
+
+
 
     def __mapped_klaviyo_profile(self, lead: FiveXFiveUser) -> KlaviyoProfile:
         first_email = (
@@ -263,13 +309,33 @@ class KlaviyoIntegrationsService:
             getattr(lead, 'company_phone', None)
         )
 
+        location = {
+            "address1": getattr(lead, 'personal_address') or getattr(lead, 'company_address', None),
+            "city": getattr(lead, 'personal_city') or getattr(lead, 'company_city', None),
+            "region": getattr(lead, 'personal_state') or getattr(lead, 'company_state', None),
+            "zip": getattr(lead, 'personal_zip') or getattr(lead, 'company_zip', None),
+        }
+
         return KlaviyoProfile(
             email=first_email,
             phone_number=first_phone,
             first_name=getattr(lead, 'first_name', None),
             last_name=getattr(lead, 'last_name', None),
-            organization=getattr(lead, 'company_name', None)
-        )
+            organization=getattr(lead, 'company_name', None),
+            location=location,
+            title=getattr(lead, 'job_title', None))
+
+    def __map_properties(self, lead: FiveXFiveUser, data_map: List[DataMap]) -> dict:
+        properties = {}
+        for mapping in data_map:
+            five_x_five_field = mapping.get("type")  
+            new_field = mapping.get("value")  
+            value_field = getattr(lead, five_x_five_field, None)
+            if value_field is not None:
+                properties[new_field] = value_field
+        return properties
+
+
 
     def __mapped_tags(self, tag: dict):
         return KlaviyoTags(id=tag.get('id'), tag_name=tag.get('attributes').get('name'))
@@ -283,4 +349,11 @@ class KlaviyoIntegrationsService:
                 }
             }
         }
+    
+    def __mapped_profile_from_klaviyo(self, profile):
+        return ContactSuppression(
+            id=profile.get('id'),
+            email=profile.get('attributes').get('email'),
+            phone_number=profile.get('attributes').get('phone_number')
+        )
 

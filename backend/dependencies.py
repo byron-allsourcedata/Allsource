@@ -54,6 +54,7 @@ from persistence.audience_persistence import AudiencePersistence
 from persistence.leads_order_persistence import LeadOrdersPersistence
 from persistence.domains import UserDomainsPersistence, UserDomains
 from persistence.suppression_persistence import SuppressionPersistence
+from persistence.integrations.suppression import SuppressionPersistence
 from models.users import Users as User
 from services.suppression import SuppressionService
 from exceptions import InvalidToken
@@ -220,11 +221,10 @@ def check_user_authentication(Authorization: Annotated[str, Header()],
         team_memer = user_persistence_service.get_user_team_member_by_id(user_data.team_member_id)
         if team_memer.get('team_owner_id') is None or team_memer.get('team_owner_id') != user.get('id'):
             raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail={'status': UserAuthorizationStatus.TEAM_TOKEN_EXPIRED.value}
-        )
-        else:
-            user['team_member'] = team_memer
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail={'status': UserAuthorizationStatus.TEAM_TOKEN_EXPIRED.value}
+            )
+        user['team_member'] = team_memer
     return user
 
 
@@ -245,8 +245,8 @@ def check_domain(
 
 def check_pixel_install_domain(domain: UserDomains = Depends(check_domain)):
     if not domain.is_pixel_installed:
-        raise HTTPException(status_code=403, detail={'status': UserAuthorizationStatus.PIXEL_INSTALLATION_NEEDED.value})
-    else: return domain
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail={'status': UserAuthorizationStatus.PIXEL_INSTALLATION_NEEDED.value})
+    return domain
 
 
 def get_domain_service(user_domain_persistence: UserDomainsPersistence = Depends(get_user_domain_persistence), 
@@ -393,13 +393,17 @@ def get_integrations_user_sync_persistence(db: Session = Depends(get_db)) -> Int
 def get_aws_service(s3_client = Depends(get_s3_client)) -> AWSService:
     return AWSService(s3_client)
 
+def get_suppression_persistence(db: Session = Depends(get_db)) -> SuppressionPersistence:
+    return SuppressionPersistence(db)
+
 def get_integration_service(db: Session = Depends(get_db), 
                             audience_persistence = Depends(get_audience_persistence),
                             integration_presistence: IntegrationsPresistence = Depends(get_user_integrations_presistence),
                             lead_presistence: LeadsPersistence = Depends(get_leads_persistence),
                             lead_orders_persistence: LeadOrdersPersistence = Depends(get_lead_orders_persistence),
                             integrations_user_sync_persistence: IntegrationsUserSyncPersistence = Depends(get_integrations_user_sync_persistence),
-                            aws_service: AWSService = Depends(get_aws_service), domain_persistence = Depends(get_user_domain_persistence)
+                            aws_service: AWSService = Depends(get_aws_service), domain_persistence = Depends(get_user_domain_persistence),
+                            suppression_persitence: SuppressionPersistence = Depends(get_suppression_persistence)
                             ):
     return IntegrationService(db,    
                               integration_presistence, 
@@ -408,6 +412,7 @@ def get_integration_service(db: Session = Depends(get_db),
                               lead_orders_persistence,
                               integrations_user_sync_persistence,
                               aws_service,
-                              domain_persistence)
+                              domain_persistence, 
+                              suppression_persitence)
 
 

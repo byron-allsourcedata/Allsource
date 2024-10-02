@@ -17,7 +17,7 @@ from config.rmq_connection import RabbitMQConnection
 from services.integrations.base import IntegrationService
 from dependencies import (IntegrationsPresistence, LeadsPersistence, AudiencePersistence, 
                           LeadOrdersPersistence, IntegrationsUserSyncPersistence, 
-                          AWSService, UserDomainsPersistence)
+                          AWSService, UserDomainsPersistence, SuppressionPersistence)
 
 logging.basicConfig(level=logging.INFO)
 
@@ -26,7 +26,6 @@ QUEUE_NAME = 'data_sync_leads'
 async def on_message_received(message: IncomingMessage, session):
     try:
         message_body = json.loads(message.body)
-        
         await process_data_sync(message_body, session)
 
         await message.ack()
@@ -49,7 +48,8 @@ async def process_data_sync(message_body, session):
         lead_orders_persistence=LeadOrdersPersistence(session),
         integrations_user_sync_persistence=IntegrationsUserSyncPersistence(session),
         aws_service=AWSService(get_s3_client()),
-        domain_persistence=UserDomainsPersistence(session)
+        domain_persistence=UserDomainsPersistence(session),
+        suppression_persistence=SuppressionPersistence(session)
     )
     with integration_service as service:
         service.klaviyo.process_data_sync(message_body)
@@ -64,7 +64,6 @@ async def consume(rmq_connection: RabbitMQConnection, db_session):
             functools.partial(on_message_received, session=db_session)
         )
         logging.info(f"Waiting for messages in queue: {QUEUE_NAME}")
-        
         try:
             stop_event = asyncio.Event()
             while not stop_event.is_set(): 

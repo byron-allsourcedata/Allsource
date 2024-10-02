@@ -57,16 +57,15 @@ def add_card_to_customer(customer_id, payment_method_id):
             payment_method_id,
             customer=customer_id
         )
-        
-        card_details = payment_method.card
-        last4 = card_details.last4
-        brand = card_details.brand
-        
         return {
             'status': 'SUCCESS',
             'card_details': {
-                'last4': last4,
-                'brand': brand
+            'id': payment_method.id,
+            'last4': payment_method.card.last4,
+            'brand': payment_method.card.brand,
+            'exp_month': payment_method.card.exp_month,
+            'exp_year': payment_method.card.exp_year,
+            'is_default': False
             }
         }
     except stripe.error.StripeError as e:
@@ -74,6 +73,43 @@ def add_card_to_customer(customer_id, payment_method_id):
             'status': 'ERROR',
             'message': e.user_message
         }
+        
+def get_billing_by_invoice_id(invoice_id):
+    try:
+        invoice = stripe.Invoice.retrieve(invoice_id)
+        return {
+            'status': 'SUCCESS',
+            'data': invoice
+        }
+    except stripe.error.InvalidRequestError as e:
+        return {
+            'status': 'ERROR',
+            'message': 'Invalid request: ' + str(e)
+        }
+    except stripe.error.AuthenticationError as e:
+        return {
+            'status': 'ERROR',
+            'message': 'Authentication error: ' + str(e)
+        }
+    except stripe.error.RateLimitError as e:
+        return {
+            'status': 'ERROR',
+            'message': 'Rate limit exceeded: ' + str(e)
+        }
+    except stripe.error.APIError as e:
+        return {
+            'status': 'ERROR',
+            'message': 'Stripe API error: ' + str(e)
+        }
+    except Exception as e:
+        return {
+            'status': 'ERROR',
+            'message': 'An unexpected error occurred: ' + str(e)
+        }
+
+
+    
+    
         
 def detach_card_from_customer(payment_method_id):
     try:

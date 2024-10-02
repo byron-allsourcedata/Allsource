@@ -37,11 +37,11 @@ const openStyle = {
 
 const typographyStyles = {
   textTransform: 'none',
-  fontFamily: 'Nunito',
+  fontFamily: 'Nunito Sans',
   fontSize: '14px',
   fontWeight: '500',
   lineHeight: '19.6px',
-  color: 'rgba(74, 74, 74, 1)',
+  color: 'rgba(74, 74, 74, 1) !important',
   textWrap: 'nowrap',
   paddingTop: '1em',
   paddingBottom: '0.75em',
@@ -69,18 +69,14 @@ const buttonGoogle = {
 
 const typographyGoogle = {
   textTransform: 'none',
-  fontFamily: 'Nunito',
-  fontSize: '18px',
-  fontWeight: '450',
-  lineHeight: '19.6px',
-  color: 'rgba(74, 74, 74, 1)',
+  color: 'rgba(74, 74, 74, 1) !important',
   textWrap: 'wrap',
   paddingTop: '1em',
   paddingBottom: '0.25em',
 };
 
 const maintext = {
-  fontFamily: 'Nunito',
+  fontFamily: 'Nunito Sans',
   fontSize: '14px',
   fontWeight: '600',
   lineHeight: '19.6px',
@@ -90,7 +86,7 @@ const maintext = {
 };
 
 const subtext = {
-  fontFamily: 'Nunito',
+  fontFamily: 'Nunito Sans',
   fontSize: '15px',
   fontWeight: '600',
   lineHeight: '19.6px',
@@ -138,7 +134,7 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
     };
     fetchCredentials()
   }, [])
-  const [isFocused, setIsFocused] = useState(false);
+  const [isFocused, setIsFocused] = useState(true);
   const handleFocus = () => {
     setIsFocused(true);
   };
@@ -148,7 +144,7 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
   };
   const handleCopyToClipboard = () => {
     navigator.clipboard.writeText(pixel_client_id);
-    alert('Site ID copied to clipboard!');
+    showToast('Site ID copied to clipboard!');
   };
 
   const handleButtonClick = async (cms: string) => {
@@ -241,14 +237,9 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
     >
       <Box sx={{ ...style, ...(open ? openStyle : {}) }}>
         <Box display="flex" justifyContent="space-between" sx={{ width: '100%', paddingBottom: '0.5em', alignItems: 'center' }}>
-          <Typography
+          <Typography className='first-sub-title'
             sx={{
-              fontFamily: 'Nunito',
-              fontSize: '20px',
-              fontWeight: '600',
-              lineHeight: '19.6px',
               textAlign: 'left',
-              color: 'rgba(28, 28, 28, 1)',
               '@media (max-width: 600px)': { padding: 2 },
             }}
           >
@@ -260,6 +251,7 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
         </Box>
 
         <Divider />
+
 
         <Box sx={{ flex: 1, overflowY: 'auto', }}>
           {selectedCMS ? (
@@ -277,7 +269,7 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
                   >
                     <ArrowBackIcon sx={{ color: 'rgba(80, 82, 178, 1)', padding: 0 }} />
                   </Button>
-                  <Typography sx={{ ...subtext, marginTop: '0.75em' }}>
+                  <Typography className='table-data' sx={{ ...subtext, marginTop: '0.75em' }}>
                     Follow the instructions to install in Maximiz
                   </Typography>
                 </Box>
@@ -287,7 +279,7 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
                     <Box sx={{ flex: 1, overflowY: 'auto', paddingBottom: '1em', height: '100%' }}>
                       <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', padding: 0, justifyContent: 'start' }}>
                         <Image src='/1.svg' alt='1' width={28} height={28} />
-                        <Typography sx={{ ...maintext, textAlign: 'left', padding: '1em 0em 1em 1em', fontWeight: '500' }}>Enter your Shopify shop domain in the designated field. This allows our system to identify your store.</Typography>
+                        <Typography className='first-sub-title' sx={{ ...maintext, textAlign: 'left', padding: '1em 0em 1em 1em', fontWeight: '500' }}>Enter your Shopify shop domain in the designated field. This allows our system to identify your store.</Typography>
                       </Box>
                       <Box
                         component="pre"
@@ -313,7 +305,7 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
                       </Box>
                       <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'start' }}>
                         <Image src='/2.svg' alt='2' width={28} height={28} />
-                        <Typography sx={{ ...maintext, textAlign: 'left', padding: '1em 0em 1em 1em', fontWeight: '500', }}>Enter your Shopify API access token. This token is necessary for secure communication between your Shopify store and our application.</Typography>
+                        <Typography className='first-sub-title' sx={{ ...maintext, textAlign: 'left', padding: '1em 0em 1em 1em', fontWeight: '500', }}>Enter your Shopify API access token. This token is necessary for secure communication between your Shopify store and our application.</Typography>
                       </Box>
                       <Box
                         component="pre"
@@ -334,7 +326,7 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
                       </Box>
                       <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'start' }}>
                         <Image src='/3.svg' alt='3' width={28} height={28} />
-                        <Typography sx={{ ...maintext, textAlign: 'left', padding: '2em 1em 1em', fontWeight: '500', '@media (max-width: 600px)': { padding: '1em' } }}>Once you have submitted the required information, our system will automatically install the script on your Shopify store. You don’t need to take any further action.</Typography>
+                        <Typography className='first-sub-title' sx={{ ...maintext, textAlign: 'left', padding: '2em 1em 1em', fontWeight: '500', '@media (max-width: 600px)': { padding: '1em' } }}>Once you have submitted the required information, our system will automatically install the script on your Shopify store. You don’t need to take any further action.</Typography>
                       </Box>
                     </Box>
                     <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', maxHeight: '100%', padding: '0em 1em' }}>
@@ -366,18 +358,18 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
                     <Box sx={{ flex: 1, overflowY: 'auto', paddingBottom: '2em', }}>
                       <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', padding: '1em 0em 0em 0em', justifyContent: 'start' }}>
                         <Image src='/1.svg' alt='1' width={28} height={28} />
-                        <Typography sx={{ ...maintext, textAlign: 'center', padding: '1em 0em 1em 1em', fontWeight: '500', '@media (max-width: 600px)': { textAlign: 'left' } }}>Add our offical Maximiz pixel plugin to your Wordpress site.</Typography>
+                        <Typography className='first-sub-title' sx={{ ...maintext, textAlign: 'center', padding: '1em 0em 1em 1em', fontWeight: '500', '@media (max-width: 600px)': { textAlign: 'left' } }}>Add our offical Maximiz pixel plugin to your Wordpress site.</Typography>
                       </Box>
                       <Box>
                         <Button component={Link} href="https://maximiz-data.s3.us-east-2.amazonaws.com/maximiz.zip" variant="outlined" sx={{ ml: 5, backgroundColor: 'rgba(80, 82, 178, 1)', color: 'rgba(255, 255, 255, 1)', textTransform: 'none', padding: '1em 2em', border: '1px solid rgba(80, 82, 178, 1)', '&:hover': { backgroundColor: 'rgba(80, 82, 178, 1)' } }}>
-                          <Typography sx={{ fontFamily: 'Nunito', fontSize: '16px', fontWeight: '600', lineHeight: '22.4px', textAlign: 'left', textWrap: 'wrap' }}>Get plugin</Typography>
+                          <Typography className='second-sub-title' sx={{ fontSize: '14px !important', color: '#fff !important', textAlign: 'left', textWrap: 'wrap' }}>Get plugin</Typography>
                         </Button>
                       </Box>
                       <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', padding: '1em 0em 0em 0em', justifyContent: 'start', maxWidth: '100%', '@media (max-width: 600px)': { maxWidth: '95%' } }}>
                         <Box sx={{ paddingBottom: 11.5 }}>
                           <Image src='/2.svg' alt='2' width={28} height={28} />
                         </Box>
-                        <Typography
+                        <Typography className='first-sub-title'
                           sx={{
                             ...maintext,
                             textAlign: 'left',
@@ -412,7 +404,7 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
                                   color: '#000000',
                                   fontSize: '12px',
                                   fontWeight: 600,
-                                  fontFamily: 'Nunito',
+                                  fontFamily: 'Nunito Sans',
                                   textWrap: 'nowrap',
                                 }}
                               >
@@ -433,10 +425,10 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
                       </Box>
                       <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', padding: '1em 0em 0em 0em', justifyContent: 'start' }}>
                         <Image src='/3.svg' alt='3' width={28} height={28} />
-                        <Typography sx={{ ...maintext, textAlign: 'left', padding: '1em', fontWeight: '500' }}>Verify if Maximiz is receiving data from your site</Typography>
+                        <Typography className='first-sub-title' sx={{ ...maintext, textAlign: 'left', padding: '1em', fontWeight: '500' }}>Verify if Maximiz is receiving data from your site</Typography>
                       </Box>
-                      <Button variant="outlined" sx={{ ml: 5, backgroundColor: 'rgba(255, 255, 255, 1)', color: 'rgba(80, 82, 178, 1)', textTransform: 'none', padding: '1em 2em', border: '1px solid rgba(80, 82, 178, 1)' }}>
-                        <Typography sx={{ fontFamily: 'Nunito', fontSize: '16px', fontWeight: '600', lineHeight: '22.4px', textAlign: 'left', textWrap: 'wrap' }}>View installation</Typography>
+                      <Button variant="outlined" sx={{ ml: 5, backgroundColor: 'rgba(255, 255, 255, 1)',  textTransform: 'none', padding: '1em 2em', border: '1px solid rgba(80, 82, 178, 1)' }}>
+                        <Typography className='second-sub-title' sx={{ fontSize: '14px !important', color: 'rgba(80, 82, 178, 1) !important', lineHeight: '22.4px', textAlign: 'left', textWrap: 'wrap' }}>View installation</Typography>
                       </Button>
                     </Box>
                   </>
@@ -444,97 +436,99 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
               </Box>
             </>
           ) : (
-            <Box
-              sx={{
-                display: 'flex',
-                flexDirection: 'row',
-                alignItems: 'center',
-                padding: '2em 0em 0em 0em',
-                justifyContent: 'start',
-                gap: 3,
-                '@media (max-width: 600px)': {
-                  flexDirection: 'column',
-                },
-              }}
-            >
-              <Grid
-                item
-                xs={12}
-                md={6}
+            <><Box sx={{ display: 'flex', width: '100%', pt: '2rem' }}>
+                <Typography className='first-sub-title'>
+                  Setup Maximiz by connecting with one of the following CMS
+                </Typography>
+              </Box><Box
                 sx={{
                   display: 'flex',
-                  flexDirection: 'column',
+                  flexDirection: 'row',
                   alignItems: 'center',
-                  justifyContent: 'center',
-                  width: '100%',
+                  padding: '2em 0em 0em 0em',
+                  justifyContent: 'start',
+                  gap: 3,
+                  '@media (max-width: 600px)': {
+                    flexDirection: 'column',
+                  },
                 }}
               >
-                <Button
-                  variant="outlined"
-                  fullWidth
-                  onClick={() => handleButtonClick('Shopify')}
-                  sx={{
-                    ...buttonGoogle,
-                    '@media (max-width: 600px)': {
-                      width: '90%',
+                  <Grid
+                    item
+                    xs={12}
+                    md={6}
+                    sx={{
                       display: 'flex',
-                      flexDirection: 'row',
+                      flexDirection: 'column',
                       alignItems: 'center',
-                      justifyContent: 'start',
-                      gap: 1
-                    },
-                  }}
-                >
-                  <Image
-                    src={'/install_cms1.svg'}
-                    alt="Install on CMS"
-                    width={38}
-                    height={38}
-                    style={{ marginRight: 4 }}
-                  />
-                  <Typography sx={typographyGoogle}>Shopify</Typography>
-                </Button>
-              </Grid>
-              <Grid
-                item
-                xs={12}
-                md={6}
-                sx={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: '100%',
-                }}
-              >
-                <Button
-                  variant="outlined"
-                  fullWidth
-                  onClick={() => handleButtonClick('WordPress')}
-                  sx={{
-                    ...buttonStyles,
-                    '@media (max-width: 600px)': {
-                      width: '90%',
+                      justifyContent: 'center',
+                      width: '100%',
+                    }}
+                  >
+                    <Button
+                      variant="outlined"
+                      fullWidth
+                      onClick={() => handleButtonClick('Shopify')}
+                      sx={{
+                        ...buttonGoogle,
+                        '@media (max-width: 600px)': {
+                          width: '90%',
+                          display: 'flex',
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          justifyContent: 'start',
+                          gap: 1
+                        },
+                      }}
+                    >
+                      <Image
+                        src={'/install_cms1.svg'}
+                        alt="Install on CMS"
+                        width={38}
+                        height={38}
+                        style={{ marginRight: 4 }} />
+                      <Typography className='second-sub-title' sx={typographyGoogle}>Shopify</Typography>
+                    </Button>
+                  </Grid>
+                  <Grid
+                    item
+                    xs={12}
+                    md={6}
+                    sx={{
                       display: 'flex',
-                      flexDirection: 'row',
+                      flexDirection: 'column',
                       alignItems: 'center',
-                      justifyContent: 'start',
-                      gap: 1
-                    },
-                  }}
-                >
-                  <Image
-                    src={'/install_cms2.svg'}
-                    alt="Install on CMS"
-                    width={38}
-                    height={38}
-                  />
-                  <Typography sx={{ ...typographyStyles, pt: 1.75 }}>
-                    WordPress
-                  </Typography>
-                </Button>
-              </Grid>
-            </Box>
+                      justifyContent: 'center',
+                      width: '100%',
+                    }}
+                  >
+                    <Button
+                      variant="outlined"
+                      fullWidth
+                      onClick={() => handleButtonClick('WordPress')}
+                      sx={{
+                        ...buttonStyles,
+                        '@media (max-width: 600px)': {
+                          width: '90%',
+                          display: 'flex',
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          justifyContent: 'start',
+                          gap: 1
+                        },
+                      }}
+                    >
+                      <Image
+                        src={'/install_cms2.svg'}
+                        alt="Install on CMS"
+                        width={38}
+                        height={38} />
+                      <Typography className='second-sub-title' sx={{ ...typographyStyles, pt: 1.75 }}>
+                        WordPress
+                      </Typography>
+                    </Button>
+                  </Grid>
+                </Box></>
           )}
         </Box>
       </Box>

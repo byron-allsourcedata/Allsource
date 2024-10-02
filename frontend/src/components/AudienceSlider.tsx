@@ -10,6 +10,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import ConnectKlaviyo from './ConnectKlaviyo';
 import ConnectMeta from './ConnectMeta';
 import { fetchUserData } from '@/services/meService';
+import CreateKlaviyoSync from './CreateKlaviyoSync';
 
 interface AudiencePopupProps {
     open: boolean;
@@ -24,13 +25,19 @@ interface ListItem {
 }
 
 
-interface Integrations {
+interface IntegrationsCredentials {
     id: number
     access_token: string
     shop_domain: string
     data_center: string
     service_name: string
-    suppression: boolean
+    is_with_suppression: boolean
+}
+
+interface Integrations {
+    id: number
+    service_name: string
+    data_sync: boolean
 }
 
 const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLeads }) => {
@@ -45,6 +52,8 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
     const [metaIconPopupOpen, setMetaIconPopupOpen] = useState(false);
     const [selectedIntegration, setSelectedIntegration] = useState<string | null>(null);
     const [isExportDisabled, setIsExportDisabled] = useState(true);
+    const [integrationsCredentials, setIntegrationsCredentials] = useState<IntegrationsCredentials[]>([])
+    const [createKlaviyo, setCreateKlaviyo] = useState<boolean>(false)
     const [integrations, setIntegrations] = useState<Integrations[]>([])
     const fetchListItems = async () => {
         try {
@@ -57,9 +66,19 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
 
     useEffect(() => {
         const fetchData = async() => {
-            const response = await axiosInstance.get('/integrations/credentials/')
+            const response = await axiosInstance.get('/integrations/')
             if(response.status === 200) {
                 setIntegrations(response.data)
+            }
+        }
+        fetchData()
+    }, [])
+
+    useEffect(() => {
+        const fetchData = async() => {
+            const response = await axiosInstance.get('/integrations/credentials/')
+            if(response.status === 200) {
+                setIntegrationsCredentials(response.data)
             }
         }
         fetchData()
@@ -161,6 +180,8 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
 
     const handleKlaviyoIconPopupClose = () => {
         setKlaviyoIconPopupOpen(false);
+        setPlusIconPopupOpen(false)
+        onClose()
     };
 
     const handleMetaIconPopupOpen = () => {
@@ -175,6 +196,15 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
         setSelectedIntegration(integration);
         setIsExportDisabled(false); // Enable export button when an integration is selected
       };
+
+      const handleSaveSettings = (newIntegrations: IntegrationsCredentials) => {
+        setIntegrationsCredentials(prevIntegrations => [
+            ...prevIntegrations, 
+            newIntegrations
+        ]);
+        setKlaviyoIconPopupOpen(true)
+    }
+    
 
     return (
         <>
@@ -212,7 +242,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                             </Typography>
                             <List sx={{ display: 'flex', gap: '16px', py: 2, flexWrap: 'wrap' }}>
                                 {/* HubSpot */}
-                                {integrations.some(integration => integration.service_name === 'HubSpot') && (
+                                {integrationsCredentials.some(integration => integration.service_name === 'HubSpot') && (
                                     <ListItem sx={{p: 0, borderRadius: '4px', border: selectedIntegration === 'HubSpot' ? '1px solid #5052B2' : '1px solid #e4e4e4', width: 'auto',
                                         '@media (max-width:600px)': {
                                             flexBasis: 'calc(50% - 8px)'
@@ -238,7 +268,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                 )}
 
                                 {/* WordPress */}
-                                {integrations.some(integration => integration.service_name === 'WordPress') && (
+                                {integrationsCredentials.some(integration => integration.service_name === 'WordPress') && (
                                     <ListItem sx={{
                                         p: 0,
                                         borderRadius: '4px',
@@ -275,7 +305,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                 )}
 
                                 {/* Klaviyo */}
-                                {integrations.some(integration => integration.service_name === 'Klaviyo') && (
+                                {integrationsCredentials.some(integration => integration.service_name === 'Klaviyo') && (
                                     <ListItem sx={{
                                         p: 0,
                                         borderRadius: '4px',
@@ -310,7 +340,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                         </ListItemButton>
                                     </ListItem>
                                 )}
-
+                                
                                 <ListItem sx={{
                                     p: 0,
                                     borderRadius: '4px',
@@ -459,34 +489,39 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                             </Typography>
                             <List sx={{ display: 'flex', gap: '16px', py: 2, flexWrap: 'wrap' }}>
                                 {/* WordPress */}
-                                <ListItem sx={{p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',
-                                    '@media (max-width:600px)': {
-                                        flexBasis: 'calc(50% - 8px)'
-                                    }
-                                }}>
-                                    <ListItemButton sx={{p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center'}}>
-                                    <ListItemIcon sx={{minWidth: 'auto'}}>    
-                                        <Image src="/wordpress.svg" alt="wordpress" height={24} width={24} />
-                                    </ListItemIcon>
-                                    <ListItemText primary="WordPress" primaryTypographyProps={{
-                                            sx: {
-                                                fontFamily: "Nunito Sans",
-                                                fontSize: "14px",
-                                                color: "#4a4a4a",
-                                                fontWeight: "500",
-                                                lineHeight: "20px"
-                                            }
-                                        }} />
-                                    </ListItemButton>
-                                </ListItem>
+                                {integrations.some(integration => integration.service_name === 'WordPress') && (
+                                    !integrationsCredentials.some(integration => integration.service_name === 'WordPress') )&&(
+                                    <ListItem sx={{p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',
+                                        '@media (max-width:600px)': {
+                                            flexBasis: 'calc(50% - 8px)'
+                                        }
+                                    }}>
+                                        <ListItemButton sx={{p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center'}}>
+                                        <ListItemIcon sx={{minWidth: 'auto'}}>    
+                                            <Image src="/wordpress.svg" alt="wordpress" height={24} width={24} />
+                                        </ListItemIcon>
+                                        <ListItemText primary="WordPress" primaryTypographyProps={{
+                                                sx: {
+                                                    fontFamily: "Nunito Sans",
+                                                    fontSize: "14px",
+                                                    color: "#4a4a4a",
+                                                    fontWeight: "500",
+                                                    lineHeight: "20px"
+                                                }
+                                            }} />
+                                        </ListItemButton>
+                                    </ListItem>
+                                )}
 
                                 {/* Klaviyo */}
-                                <ListItem sx={{p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',
+                                {integrations.some(integration => integration.service_name === 'Klaviyo') && (
+                                    !integrationsCredentials.some(integration => integration.service_name === 'Klaviyo') )&&(
+                                    <ListItem sx={{p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',
                                     '@media (max-width:600px)': {
                                         flexBasis: 'calc(50% - 8px)'
                                     }
                                 }}>
-                                    <ListItemButton onClick={handleKlaviyoIconPopupOpen} sx={{p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center'}}>
+                                    <ListItemButton onClick={() => setCreateKlaviyo(true)} sx={{p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center'}}>
                                         <ListItemIcon sx={{minWidth: 'auto'}}>
                                             <Image src="/klaviyo.svg" alt="klaviyo" height={26} width={32} />
                                         </ListItemIcon>
@@ -500,8 +535,9 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                             }
                                         }}  />
                                     </ListItemButton>
-                                </ListItem>
-
+                                </ListItem> )}
+                                {integrations.some(integration => integration.service_name === 'Zepier') && (
+                                    !integrationsCredentials.some(integration => integration.service_name === 'Zepier') )&&(
                                 <ListItem sx={{p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',
                                     '@media (max-width:600px)': {
                                         flexBasis: 'calc(50% - 8px)'
@@ -522,7 +558,9 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                         }}  />
                                     </ListItemButton>
                                 </ListItem>
-
+                                    )}
+                                    {integrations.some(integration => integration.service_name === 'Shopify') && (
+                                        !integrationsCredentials.some(integration => integration.service_name === 'Shopify') )&&(
                                 <ListItem sx={{p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',
                                     '@media (max-width:600px)': {
                                         flexBasis: 'calc(50% - 8px)'
@@ -542,8 +580,9 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                             }
                                         }}  />
                                     </ListItemButton>
-                                </ListItem>
-
+                                </ListItem> )}
+                                {integrations.some(integration => integration.service_name === 'Elastic') && (
+                                    !integrationsCredentials.some(integration => integration.service_name === 'Elastic') )&&(
                                 <ListItem sx={{p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',
                                     '@media (max-width:600px)': {
                                         flexBasis: 'calc(50% - 8px)'
@@ -563,8 +602,9 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                             }
                                         }}  />
                                     </ListItemButton>
-                                </ListItem>
-
+                                </ListItem> )}
+                                {integrations.some(integration => integration.service_name === 'Meta') && (
+                                    !integrationsCredentials.some(integration => integration.service_name === 'Meta') )&&(
                                 <ListItem sx={{p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',
                                     '@media (max-width:600px)': {
                                         flexBasis: 'calc(50% - 8px)'
@@ -584,7 +624,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                             }
                                         }}  />
                                     </ListItemButton>
-                                </ListItem>
+                                </ListItem> )}
 
                             </List>
 
@@ -594,8 +634,9 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                 </Box>
             </Drawer>
             
-            <ConnectKlaviyo open={klaviyoIconPopupOpen} onClose={handleKlaviyoIconPopupClose} onSaveSync={handleSave}/>
+            <ConnectKlaviyo open={klaviyoIconPopupOpen} onClose={handleKlaviyoIconPopupClose}/>
             <ConnectMeta open={metaIconPopupOpen} onClose={handleMetaIconPopupClose} />
+            <CreateKlaviyoSync open={createKlaviyo} handleClose={() => setCreateKlaviyo(false)} onSave={handleSaveSettings} suppression={true}/>
         </>
     );
 };

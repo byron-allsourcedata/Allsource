@@ -1,6 +1,6 @@
 from pydantic import BaseModel, EmailStr
 from typing import Optional, List
-
+from enum import Enum
 
 class ShopifyOrBigcommerceCredentials(BaseModel):
     shop_domain: str
@@ -26,6 +26,8 @@ class FacebookCredentials(BaseModel):
     access_token: str
     ad_account_id: str
 
+class SupperssionSet(BaseModel):
+    suppression: bool
 
 
 class IntegrationCredentials(BaseModel):
@@ -37,6 +39,7 @@ class IntegrationCredentials(BaseModel):
     facebook: Optional[FacebookCredentials] = None
     sendlane: Optional[KlaviyoOrSandlaneCredentials] = None
     pixel_install: bool = False
+    supperssion: bool = False
 
 
 class Lead(BaseModel):
@@ -61,17 +64,27 @@ class ExportLeads(BaseModel):
     list_name: str
 
 class DataMap(BaseModel):
-    id: int
     type: str
     value: str
 
 class SyncCreate(BaseModel):
     list_id: Optional[str] = None
     tags_id: Optional[str] = None
+    list_name: Optional[str] = None
     leads_type: Optional[str] = 'All' 
     data_map: List[DataMap]
 
 
 class CreateListOrTags(BaseModel):
     name: str
+
+class ContactSuppression(BaseModel):
+    id: str
+    email: str
+    phone_number: Optional[str] = None
+
+class ContactFiled(Enum):
+    id = 'id'
+    email = 'email'
+    phone_number = 'phone_number'
 

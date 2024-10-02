@@ -8,8 +8,13 @@ from enums import TeamAccessLevel
 router = APIRouter(prefix='/integrations', tags=['Integrations'])
 
 @router.get('/')
-async def get_integrations_service(persistence: IntegrationsPresistence = Depends(get_user_integrations_presistence)):
-    return persistence.get_integrations_service()
+async def get_integrations_service(type: str | None = Query(None), data_sync: bool | None = Query(None),persistence: IntegrationsPresistence = Depends(get_user_integrations_presistence)):
+    filter = {}
+    if type:
+        filter['type'] = type 
+    if data_sync is not None:
+        filter['data_sync'] = data_sync  
+    return persistence.get_integrations_service(**filter)
     
 
 @router.get('/credentials/')
@@ -83,9 +88,9 @@ async def delete_integration(service_name: str = Query(...),
         raise HTTPException(status_code=400)
     
 @router.get('/sync/')
-async def get_sync(integration_service: IntegrationService = Depends(get_integration_service),
+async def get_sync(service_name: str | None = Query(...), integration_service: IntegrationService = Depends(get_integration_service),
                    user = Depends(check_user_authorization), domain = Depends(check_pixel_install_domain)):
-    return integration_service.get_sync_user(user['id'])
+    return integration_service.get_sync_domain(domain.id, service_name)
 
 
 @router.get('/sync/list/')
@@ -140,8 +145,25 @@ async def create_sync(data: SyncCreate, service_name: str = Query(...),
         await service.create_sync(
             leads_type=data.leads_type,
             list_id=data.list_id,
+            list_name=data.list_name,
             tags_id=data.tags_id,
             data_map=data.data_map,
             domain_id=domain.id
         )
 
+@router.post('/suppression/')
+async def set_suppression(suppression_data: SupperssionSet, service_name: str = Query(...),
+                          integration_service: IntegrationService = Depends(get_integration_service),
+                          user = Depends(check_user_authorization), domain = Depends(check_pixel_install_domain)):
+    if user.get('team_member'):
+        team_member = user.get('team_member')
+        if team_member.team_access_level != TeamAccessLevel.ADMIN or team_member.team_access_level != TeamAccessLevel.STANDARD:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied. Admins and standard only."
+            )
+    with integration_service as service: 
+        service.klaviyo.set_suppression()
+        service = getattr(service, service_name)
+        return service.set_supperssions(suppression_data.suppression, domain.id)
+        

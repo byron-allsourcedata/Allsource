@@ -59,19 +59,20 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=Base.allowed_origins,
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "OPTIONS", "PUT", "DELETE"],
-    allow_headers=["*"]
-)
-
-external_api.add_middleware(
-    CORSMiddleware,
     allow_origins=['*'],
     allow_credentials=False,
     allow_methods=["GET", "POST", "OPTIONS", "PUT", "DELETE"],
     allow_headers=["*"]
 )
 
-app.include_router(main_router)
-app.mount('/external_api', subapi_router)
+external_api.add_middleware(
+    CORSMiddleware,
+    allow_origins=Base.allowed_origins,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "OPTIONS", "PUT", "DELETE"],
+    allow_headers=["*"]
+)
+
+app.include_router(subapi_router)
+external_api.include_router(main_router)
+app.mount('/api', external_api)

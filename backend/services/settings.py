@@ -1,5 +1,7 @@
 import logging
 import os
+import csv
+import io
 
 from persistence.settings_persistence import SettingsPersistence
 from models.users import User
@@ -194,7 +196,7 @@ class SettingsService:
                 'invitation_count': self.get_team_invitations_count(user)
             }
         if access_level not in {TeamAccessLevel.ADMIN.value, TeamAccessLevel.OWNER.value, TeamAccessLevel.STANDARD, TeamAccessLevel.READ_ONLY}:
-            access_level = TeamAccessLevel.READ_ONLY.value
+            raise HTTPException(status_code=500, detail={'error': SettingStatus.INVALID_ACCESS_LEVEL.value})
         exists_team_member = self.settings_persistence.exists_team_member(user_id=user.get('id'), user_mail=invite_user)
         if exists_team_member:
             return {
@@ -289,6 +291,7 @@ class SettingsService:
         result = {}
         result['card_details'] = get_card_details_by_customer_id(user.get('customer_id'))
         result['billing_details'] = self.extract_subscription_details(user.get('customer_id'), user.get('prospect_credits'))
+        result['billing_details']['overage'] = user.get('is_leads_auto_charging')
         result['usages_credits'] = {
                         'leads_credits': user.get('leads_credits'),
                         'plan_leads_credits': self.plan_persistence.get_current_plan(user_id=user.get('id')).leads_credits,
@@ -330,6 +333,112 @@ class SettingsService:
     
     def delete_card(self, payment_method_id):
         return detach_card_from_customer(payment_method_id)
+    
+    def billing_overage(self, user):
+        is_leads_auto_charging = self.settings_persistence.billing_overage(user_id=user.get('id'))
+        return {
+            'status': SettingStatus.SUCCESS,
+            'is_leads_auto_charging': is_leads_auto_charging
+            }
+        
+    def send_billing(self, invoice_id, email, user):
+        result = get_billing_by_invoice_id(invoice_id)
+        if result['status'] != 'SUCCESS':
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Billing information not found.")
+        
+        output = io.StringIO()
+        writer = csv.writer(output)
+
+        fields_to_include = [
+            'id',
+            'account_country',
+            'account_name',
+            'amount_due',
+            'amount_paid',
+            'currency',
+            'customer_name',
+            'customer_email',
+            'billing_reason',
+            'created',
+            'status',
+            'invoice_pdf',
+            'hosted_invoice_url',
+        ]
+        writer.writerow(['Field', 'Value'])
+        for field in fields_to_include:
+            if field == 'created':
+                created_timestamp = result['data'].get(field)
+                formatted_date = datetime.fromtimestamp(created_timestamp).strftime("%B %d, %Y")
+                writer.writerow([field, formatted_date])
+            else:
+                value = result['data'].get(field)
+                writer.writerow([field, value])
+
+        line_items = result['data']['lines']['data']
+        writer.writerow(['Line Item Description', 'Amount'])
+        for item in line_items:
+            writer.writerow([item['description'], item['amount'] / 100])
+
+        output.seek(0)
+        
+        template_id = self.send_grid_persistence_service.get_template_by_alias(
+                SendgridTemplate.PAYMENT_INVOICE_TEMPLATE.value)
+    
+        mail_object = SendgridHandler()
+        mail_object.send_sign_up_mail(
+            to_emails=email,
+            template_id=template_id,
+            template_placeholder={  
+                                    "full_name": user.get('full_name'),
+                                    "email": email
+                                }
+        )
+        
+        return SettingStatus.SUCCESS
+    
+    def download_billing(self, invoice_id):
+        result = get_billing_by_invoice_id(invoice_id)
+        if result['status'] != 'SUCCESS':
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Billing information not found.")
+        
+        output = io.StringIO()
+        writer = csv.writer(output)
+
+        fields_to_include = [
+            'id',
+            'account_country',
+            'account_name',
+            'amount_due',
+            'amount_paid',
+            'currency',
+            'customer_name',
+            'customer_email',
+            'billing_reason',
+            'created',
+            'status',
+            'invoice_pdf',
+            'hosted_invoice_url',
+        ]
+        writer.writerow(['Field', 'Value'])
+        for field in fields_to_include:
+            if field == 'created':
+                created_timestamp = result['data'].get(field)
+                formatted_date = datetime.fromtimestamp(created_timestamp).strftime("%B %d, %Y")
+                writer.writerow([field, formatted_date])
+            else:
+                value = result['data'].get(field)
+                writer.writerow([field, value])
+
+        line_items = result['data']['lines']['data']
+        writer.writerow(['Line Item Description', 'Amount'])
+        for item in line_items:
+            writer.writerow([item['description'], item['amount'] / 100])
+
+        output.seek(0)
+        return output
+
+
+        
     
     def default_card(self, user: dict, payment_method_id):
         return set_default_card_for_customer(user.get('customer_id'), payment_method_id)

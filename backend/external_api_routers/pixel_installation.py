@@ -16,6 +16,8 @@ router = APIRouter()
 async def manual(pixel_installation_request: PixelInstallationRequest,
                  pixel_installation_service: PixelInstallationService = Depends(get_pixel_installation_service)):
     result = pixel_installation_service.check_pixel_installed_via_api(pixel_installation_request.pixelClientId, pixel_installation_request.url)
+    if not result.get('user_id'):
+        return PixelFormResponse(status=PixelStatus.USER_NOT_FOUND)
     queue_name = f"sse_events_{str(result['user_id'])}"
     rabbitmq_connection = RabbitMQConnection()
     connection = await rabbitmq_connection.connect()

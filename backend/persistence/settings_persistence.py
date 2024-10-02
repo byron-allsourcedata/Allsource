@@ -5,8 +5,9 @@ from sqlalchemy import update, or_
 from sqlalchemy.orm import aliased
 from datetime import datetime
 from models.users import Users
+from fastapi import HTTPException, status
 from models.teams_invitations import TeamInvitation
-from enums import TeamsInvitationStatus, TeamAccessLevel
+from enums import TeamsInvitationStatus, TeamAccessLevel, SettingStatus
 
 class SettingsPersistence:
     def __init__(self, db: Session):
@@ -38,10 +39,24 @@ class SettingsPersistence:
         self.db.execute(stmt)
         self.db.commit()
         
+    def billing_overage(self, user_id):
+        is_leads_auto_charging = False
+        user = self.db.query(Users).filter(Users.id == user_id).first()
+        if user.is_leads_auto_charging == True:
+            user.is_leads_auto_charging = is_leads_auto_charging
+        else:
+            is_leads_auto_charging = True
+            user.is_leads_auto_charging = is_leads_auto_charging
+        self.db.commit()
+        return is_leads_auto_charging
+        
+        
     def change_user_role(self, email, access_level):
-        self.db.query(Users).filter(Users.email == email).update(
-            {Users.team_access_level: access_level},
-            synchronize_session=False)
+        user = self.db.query(Users).filter(Users.email == email).first()
+        if user:
+            if user.team_access_level == TeamAccessLevel.OWNER:
+                raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail={'error': SettingStatus.OWNER_ROLE_CHANGE_NOT_ALLOWED.value})
+            user.team_access_level = access_level
         self.db.commit()
         
     def set_reset_email_sent_now(self, user_id):
@@ -154,12 +169,12 @@ class SettingsPersistence:
         if  mail_remove_user == mail:
             result['error'] = "CANNOT_REMOVE_YOURSELF_FROM_TEAM"
             return result
-        
-        self.db.query(Users).filter(Users.email == mail_remove_user, Users.team_owner_id == user_id).update(
-            {Users.team_owner_id: None, Users.team_access_level: TeamAccessLevel.OWNER.value},
-            synchronize_session=False
-        )
+                
+        self.db.query(Users).filter(
+            Users.email == mail_remove_user,
+            Users.team_owner_id == user_id
+        ).delete()
         self.db.commit()
-        result['success'] = True
         
+        result['success'] = True
         return result

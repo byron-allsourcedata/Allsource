@@ -6,7 +6,7 @@ import TabPanel from '@mui/lab/TabPanel';
 import Image from 'next/image';
 import CloseIcon from '@mui/icons-material/Close';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
-import { showToast } from './ToastNotification';
+import { showErrorToast, showToast } from './ToastNotification';
 import CustomizedProgressBar from './CustomizedProgressBar';
 
 interface Integrations {
@@ -21,7 +21,6 @@ interface Integrations {
 interface ConnectKlaviyoPopupProps {
     open: boolean;
     onClose: () => void;
-    onSaveSync: (newIntegration: Integrations) => void;
 }
 
 
@@ -34,6 +33,8 @@ type KlaviyoTags = {
     id: string
     tags_name: string
 }
+
+
 
 const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) => {
     const [loading, setLoading] = useState(false)
@@ -73,18 +74,84 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
           }
       }
     };
-
-    
-
-    // Attach event listener for detecting click outside
     document.addEventListener('mousedown', handleClickOutside);
     
-    // Clean up event listener on component unmount
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [selectedOption]);
 
+    const customFieldsList = [
+        { type: 'Gender', value: 'gender' },
+        { type: 'Company Name', value: 'company_name' },
+        { type: 'Company Domain', value: 'company_domain' },
+        { type: 'Company SIC', value: 'company_sic' },
+        { type: 'Company LinkedIn URL', value: 'company_linkedin_url' },
+        { type: 'Company Revenue', value: 'company_revenue' },
+        { type: 'Company Employee Count', value: 'company_employee_count' },
+        { type: 'Net Worth', value: 'net_worth' },
+        { type: 'Last Updated', value: 'last_updated' },
+        { type: 'Personal Emails Last Seen', value: 'personal_emails_last_seen' },
+        { type: 'Company Last Updated', value: 'company_last_updated' },
+        { type: 'Job Title Last Updated', value: 'job_title_last_updated' },
+        { type: 'Age Min', value: 'age_min' },
+        { type: 'Age Max', value: 'age_max' },
+        { type: 'Additional Personal Emails', value: 'additional_personal_emails' },
+        { type: 'LinkedIn URL', value: 'linkedin_url' },
+        { type: 'Married', value: 'married' },
+        { type: 'Children', value: 'children' },
+        { type: 'Income Range', value: 'income_range' },
+        { type: 'Homeowner', value: 'homeowner' },
+        { type: 'Seniority Level', value: 'seniority_level' },
+        { type: 'Department', value: 'department' },
+        { type: 'Primary Industry', value: 'primary_industry' },
+        { type: 'Work History', value: 'work_history' },
+        { type: 'Education History', value: 'education_history' },
+        { type: 'Company Description', value: 'company_description' },
+        { type: 'Related Domains', value: 'related_domains' },
+        { type: 'Social Connections', value: 'social_connections' },
+        { type: 'DPV Code', value: 'dpv_code' }
+    ];
+    const [customFields, setCustomFields] = useState([{ type: '', value: '' }]);
+
+    const handleAddField = () => {
+        console.log(customFields)
+        setCustomFields([...customFields, { type: '', value: '' }]);
+    };
+
+    const handleDeleteField = (index: number) => {
+        setCustomFields(customFields.filter((_, i) => i !== index));
+    };
+
+    const handleChangeField = (index: number, field: string, value: string) => {
+        setCustomFields(customFields.map((item, i) => (i === index ? { ...item, [field]: value } : item)));
+    };
+    const resetToDefaultValues = () => {
+        setLoading(false);
+        setValue('1');
+        setChecked(false);
+        setSelectedRadioValue('');
+        setAnchorEl(null);
+        setSelectedOption(null);
+        setShowCreateForm(false);
+        setNewListName('');
+        setTagName('');
+        setIsShrunk(false);
+        setIsDropdownOpen(false);
+        setOpenDropdown(null);
+        setOpenDropdownMaximiz(null);
+        setApiKeyError(false);
+        setTab2Error(false);
+        setIsDropdownValid(false);
+        setListNameError(false);
+        setTagNameError(false);
+        setDeleteAnchorEl(null);
+        setSelectedRowId(null);
+        setNewMapListName('');
+        setShowCreateMapForm(false);
+        setMapListNameError(false);
+        setKlaviyoList([]);
+    };
     // Static options
     const getKlaviyoList = async() => {
         setLoading(true)
@@ -127,34 +194,46 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
     }
 
     const handleSaveSync = async () => {
-        setLoading(true)
-        let list;
+        setLoading(true);
+        let list: KlaviyoList | null = null;
         let tag = null;
-        if (selectedOption && selectedOption.id === '-1') {
-            list = await createNewList();
-        } else {
-            list = selectedOption;
-        }
-        if (tagName) {
-            tag = await createTag();
-        }
-        const response = await axiosInstance.post('/integrations/sync/', {
-            list_id: list.id,
-            tags_id: tag ? tag.id : null, 
-            leads_type: selectedRadioValue,
-            data_map: rows
-        }, {
-            params: {
-                service_name: 'klaviyo'
+    
+        try {
+            if (selectedOption && selectedOption.id === '-1') {
+                list = await createNewList();
+            } else if (selectedOption) {
+                list = selectedOption;
+            } else {
+                showToast('Please select a valid option.');
+                return; 
             }
-        });
-        setLoading(false)
-        if (response.status === 201) {
-            onClose();
-            
-            showToast('Create data sync successfully');
+    
+            if (tagName) {
+                tag = await createTag();
+            }
+    
+            const response = await axiosInstance.post('/integrations/sync/', {
+                list_id: list?.id,
+                list_name: list?.list_name, 
+                tags_id: tag ? tag.id : null,
+                leads_type: selectedRadioValue,
+                data_map: customFields
+            }, {
+                params: {
+                    service_name: 'klaviyo'
+                }
+            });
+    
+            if (response.status === 201) {
+                resetToDefaultValues();
+                onClose();
+                showToast('Data sync created successfully');
+            }
+        } finally {
+            setLoading(false); 
         }
     };
+    
 
     // Handle menu open
     const handleClick = (event: React.MouseEvent<HTMLInputElement>) => {
@@ -180,6 +259,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
     };
 
     const handleMapClose = () => {
+        setValue('1')
         setShowCreateMapForm(false);
         setNewMapListName(''); 
     };
@@ -237,14 +317,11 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
         // If valid, save and close
         if (valid) {
             const newKlaviyoList = {id: '-1', list_name: newListName}
-            setSelectedOption(newKlaviyoList); // Update selected option with new list name
+            setSelectedOption(newKlaviyoList);
             if(isKlaviyoList(newKlaviyoList)) {
                 setIsDropdownValid(true);
             }
             handleClose();
-        }
-        else {
-
         }
     };
 
@@ -472,9 +549,6 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
         setSelectedRadioValue(event.target.value);
     };
 
-    /** Map List */
-
-    // Define the Row type
     interface Row {
         id: number;
         type: string;
@@ -494,17 +568,15 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
     
       const [rows, setRows] = useState<Row[]>(defaultRows);
 
-      // Update function with typed parameters
       const handleMapListChange = (id: number, field: 'value' | 'type', value: string) => {
         setRows(rows.map(row =>
           row.id === id ? { ...row, [field]: value } : row
         ));
       };
 
-    // Delete function with typed parameter
     const handleClickOpen = (event: React.MouseEvent<HTMLElement>, id: number) => {
-        setDeleteAnchorEl(event.currentTarget);  // Set the current target as the anchor
-        setSelectedRowId(id);  // Set the ID of the row to delete
+        setDeleteAnchorEl(event.currentTarget);  
+        setSelectedRowId(id);  
     };
 
     const handleDeleteClose = () => {
@@ -644,152 +716,13 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                                 justifyContent:'flex-start'
                             }
                         }}}>
-                        <Tab label="Suppression Sync" value="1" sx={klaviyoStyles.tabHeading} />
+                        <Tab label="Sync Type" value="1" sx={klaviyoStyles.tabHeading} />
                         <Tab label="Contact Sync" value="2" sx={klaviyoStyles.tabHeading} />
                         <Tab label="Map data" value="3" sx={klaviyoStyles.tabHeading} />
                         </TabList>
                     </Box>
                     <TabPanel value="1" sx={{ p: 0 }}>
                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                            <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)', display: 'flex', flexDirection:'column', gap: '16px' }}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <Image src='/klaviyo.svg' alt='klaviyo' height={26} width={32} />
-                                    <Typography variant="h6" sx={{
-                                        fontFamily: 'Nunito Sans',
-                                        fontSize: '16px',
-                                        fontWeight: '600',
-                                        color: '#202124',
-                                        lineHeight: 'normal'
-                                    }}>Eliminate Redundancy: Stop Paying for Contacts You Already Own</Typography>
-                                </Box>
-                                <Typography variant="subtitle1" sx={{
-                                        fontFamily: 'Roboto',
-                                        fontSize: '12px',
-                                        fontWeight: '400',
-                                        color: '#808080',
-                                        lineHeight: '20px',
-                                        letterSpacing: '0.06px'
-                                    }}>Sync your current list to avoid collecting contacts you already possess.
-                                    Newly added contacts in Klaviyo will be automatically suppressed each day.</Typography>
-                                
-
-                                        <Box sx={{ display: 'flex', gap: '32px', alignItems: 'center' }}>
-                                            <Typography variant="subtitle1" sx={{
-                                                fontFamily: 'Roboto',
-                                                fontSize: '12px',
-                                                fontWeight: '400',
-                                                color: '#808080',
-                                                lineHeight: 'normal',
-                                                letterSpacing: '0.06px'
-                                            }}>
-                                                Enable Automatic Contact Suppression
-                                            </Typography>
-
-                                            {/* Switch Control with Yes/No Labels */}
-                                            <Box position="relative" display="inline-block">
-                                                <Switch
-                                                    {...label}
-                                                    checked={checked}
-                                                    onChange={handleSwitchChange}
-                                                    sx={{
-                                                        width: 54, // Increase width to fit "Yes" and "No"
-                                                        height: 24,
-                                                        padding: 0,
-                                                        '& .MuiSwitch-switchBase': {
-                                                            padding: 0,
-                                                            top: '2px',
-                                                            left: '3px',
-                                                            '&.Mui-checked': {
-                                                                left: 0,
-                                                                transform: 'translateX(32px)', // Adjust for larger width
-                                                                color: '#fff',
-                                                                '&+.MuiSwitch-track': {
-                                                                    backgroundColor: checked ? '#5052b2' : '#7b7b7b',
-                                                                    opacity: checked ? '1' : '1',
-                                                                }
-                                                            },
-                                                        },
-                                                        '& .MuiSwitch-thumb': {
-                                                            width: 20,
-                                                            height: 20,
-                                                        },
-                                                        '& .MuiSwitch-track': {
-                                                            borderRadius: 20 / 2,
-                                                            backgroundColor: checked ? '#5052b2' : '#7b7b7b',
-                                                            opacity: checked ? '1' : '1',
-                                                            '& .MuiSwitch-track.Mui-checked': {
-                                                                backgroundColor: checked ? '#5052b2' : '#7b7b7b',
-                                                            opacity: checked ? '1' : '1',
-                                                            }
-                                                        },
-                                                    }}
-                                                />
-                                                <Box sx={{
-                                                    position: "absolute",
-                                                    top: "50%",
-                                                    left: "0px",
-                                                    width: "100%",
-                                                    display: "flex",
-                                                    justifyContent: "space-between",
-                                                    alignItems: "center",
-                                                    transform: "translateY(-50%)",
-                                                    pointerEvents: "none"
-                                                }}>
-                                                    {/* Conditional Rendering of Text */}
-                                                    {!checked && (
-                                                        <Typography
-                                                            variant="caption"
-                                                            sx={{
-                                                                fontFamily: 'Roboto',
-                                                                fontSize: '12px',
-                                                                color: '#fff',
-                                                                fontWeight: '400',
-                                                                marginRight: '8px',
-                                                                lineHeight: 'normal',
-                                                                width: '100%',
-                                                                textAlign: 'right',
-                                                            }}
-                                                        >
-                                                            No
-                                                        </Typography>
-                                                    )}
-
-                                                    {checked && (
-                                                        <Typography
-                                                            variant="caption"
-                                                            sx={{
-                                                                fontFamily: 'Roboto',
-                                                                fontSize: '12px',
-                                                                color: '#fff',
-                                                                fontWeight: '400',
-                                                                marginLeft: '6px',
-                                                                lineHeight: 'normal'
-                                                            }}
-                                                        >
-                                                            Yes
-                                                        </Typography>
-                                                    )}
-                                                </Box>
-                                            </Box>
-                                        </Box>
-
-
-
-
-                            </Box>
-                            <Box sx={{ background: '#efefef', borderRadius: '4px', px: 1.5, py: 1 }}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <Image src='/info-circle.svg' alt='info-circle' height={20} width={20} />
-                                    <Typography variant="subtitle1" sx={{
-                                        fontFamily: 'Roboto',
-                                        fontSize: '12px',
-                                        fontWeight: '400',
-                                        color: '#808080',
-                                        lineHeight: '20px',
-                                        letterSpacing: '0.06px'
-                                    }}>By performing this action, all your Klaviyo contacts will be added to your Grow suppression list, and new contacts will be imported daily around 6pm EST.</Typography>
-                                </Box>
-                            </Box>
                             <Box sx={{p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)', display: 'flex', flexDirection:'column', gap: '16px'}}>
                                 <Typography variant="h6" sx={{
                                         fontFamily: 'Nunito Sans',
@@ -1536,24 +1469,179 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                                     </Popover>
                                     </>
                                     )}
-                                     
+
                                     </Grid>
                                 </Grid>
                                 </Box>
                             ))}
-
-                        </Box>
-                    </TabPanel>
-                </TabContext>
+                <Box sx={{ mb: 2 }}>
+                {customFields.map((field, index) => (
+                    <Grid container spacing={2} alignItems="center" sx={{ flexWrap: { xs: 'nowrap', sm: 'wrap' } }} key={index}>
+                        <Grid item xs="auto" sm={5} mb={2}>
+                            <TextField
+                                select
+                                fullWidth
+                                variant="outlined"
+                                label='Custom Field'
+                                value={field.type}
+                                onChange={(e) => handleChangeField(index, 'type', e.target.value)}
+                                InputLabelProps={{
+                                    sx: {
+                                        fontFamily: 'Nunito Sans',
+                                        fontSize: '12px',
+                                        lineHeight: '16px',
+                                        color: 'rgba(17, 17, 19, 0.60)',
+                                        top: '-5px',
+                                        '&.Mui-focused': {
+                                            color: '#0000FF',
+                                            top: 0
+                                        },
+                                        '&.MuiInputLabel-shrink': {
+                                            top: 0
+                                        }
+                                    }
+                                }}
+                                InputProps={{
+                                    sx: {
+                                        '&.MuiOutlinedInput-root': {
+                                            height: '36px',
+                                            '& .MuiOutlinedInput-input': {
+                                                padding: '6.5px 8px',
+                                                fontFamily: 'Roboto',
+                                                color: '#202124',
+                                                fontSize: '14px',
+                                                fontWeight: '400',
+                                                lineHeight: '20px'
+                                            },
+                                            '& .MuiOutlinedInput-notchedOutline': {
+                                                borderColor: '#A3B0C2',
+                                            },
+                                            '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                borderColor: '#A3B0C2',
+                                            },
+                                            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                                borderColor: '#0000FF',
+                                            },
+                                        },
+                                        '&+.MuiFormHelperText-root': {
+                                            marginLeft: '0',
+                                        },
+                                    }
+                                }}
+                            >
+                                {customFieldsList.map((item) => (
+                                    <MenuItem key={item.value} value={item.value}>{item.type}</MenuItem>
+                                ))}
+                            </TextField>
+                        </Grid>
+                        <Grid item xs="auto" sm={1} mb={2} container justifyContent="center">
+                            <Image
+                                src='/chevron-right-purple.svg'
+                                alt='chevron-right-purple'
+                                height={18}
+                                width={18}
+                            />
+                        </Grid>
+                        <Grid item xs="auto" sm={5} mb={2}>
+                            <TextField
+                                fullWidth
+                                variant="outlined"
+                                value={field.value}
+                                onChange={(e) => handleChangeField(index, 'value', e.target.value)}
+                                placeholder="Enter value"
+                                InputLabelProps={{
+                                    sx: {
+                                        fontFamily: 'Nunito Sans',
+                                        fontSize: '12px',
+                                        lineHeight: '16px',
+                                        color: 'rgba(17, 17, 19, 0.60)',
+                                        top: '-5px',
+                                        '&.Mui-focused': {
+                                            color: '#0000FF',
+                                            top: 0,
+                                        },
+                                        '&.MuiInputLabel-shrink': {
+                                            top: 0,
+                                        },
+                                    },
+                                }}
+                                InputProps={{
+                                    sx: {
+                                        height: '36px',
+                                        '& .MuiOutlinedInput-input': {
+                                            padding: '6.5px 8px',
+                                            fontFamily: 'Roboto',
+                                            color: '#202124',
+                                            fontSize: '14px',
+                                            fontWeight: '400',
+                                            lineHeight: '20px',
+                                        },
+                                        '& .MuiOutlinedInput-notchedOutline': {
+                                            borderColor: '#A3B0C2',
+                                        },
+                                        '&:hover .MuiOutlinedInput-notchedOutline': {
+                                            borderColor: '#A3B0C2',
+                                        },
+                                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                            borderColor: '#0000FF',
+                                        },
+                                    },
+                                }}
+                            />
+                        </Grid>
+                        <Grid item xs="auto" mb={2} sm={1} container justifyContent="center">
+                            <IconButton onClick={() => handleDeleteField(index)}>
+                                <Image
+                                    src='/trash-icon-filled.svg'
+                                    alt='trash-icon-filled'
+                                    height={18}
+                                    width={18}
+                                />
+                            </IconButton>
+                        </Grid>
+                    </Grid>
+                ))}
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2, mr: 6 }}>
+                    <Button
+                        onClick={handleAddField}
+                        aria-haspopup="true"
+                        sx={{
+                            textTransform: 'none',
+                            border: '1px solid rgba(80, 82, 178, 1)',
+                            borderRadius: '4px',
+                            padding: '9px 16px',
+                            minWidth: 'auto',
+                            '@media (max-width: 900px)': {
+                                display: 'none'
+                            }
+                        }}
+                    >
+                        <Typography sx={{
+                            marginRight: '0.5em',
+                            fontFamily: 'Nunito',
+                            lineHeight: '22.4px',
+                            fontSize: '16px',
+                            textAlign: 'left',
+                            fontWeight: '500',
+                            color: '#5052B2'
+                        }}>
+                            Add
+                        </Typography>
+                    </Button>
+                </Box>
+            </Box>
+            </Box>
+            </TabPanel>
+        </TabContext>
                 {/* Button based on selected tab */}
                     
             </Box>
             <Box sx={{ px: 2, py: 3.5, width: '100%', border: '1px solid #e4e4e4' }}>
-                        <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
-                            
-                                {getButton(value)}
-                        </Box>
-                    </Box>
+                <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
+                    
+                        {getButton(value)}
+                </Box>
+            </Box>
             </Box>
              
         </Drawer>

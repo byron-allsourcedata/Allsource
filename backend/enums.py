@@ -36,6 +36,7 @@ class SettingStatus(Enum):
     INVITATION_LIMIT_REACHED = 'INVITATION_LIMIT_REACHED'
     INVITATION_LIMIT_NOT_REACHED = 'INVITATION_LIMIT_NOT_REACHED'
     INVALID_ACCESS_LEVEL = 'INVALID_ACCESS_LEVEL'
+    OWNER_ROLE_CHANGE_NOT_ALLOWED = 'OWNER_ROLE_CHANGE_NOT_ALLOWED'
 
 
 class VerificationEmail(Enum):
@@ -96,10 +97,11 @@ class LoginStatus(Enum):
 class PixelStatus(Enum):
     PIXEL_CODE_INSTALLED = 'PIXEL_CODE_INSTALLED'
     PIXEL_CODE_PARSE_FAILED = 'PIXEL_CODE_PARSE_FAILED'
+    USER_NOT_FOUND = 'USER_NOT_FOUND'
 
 
 class UpdatePasswordStatus(Enum):
-    PASSWORDS_DO_NOT_MATCH = "PASSWORDS_DO_NOT_MATCH"
+    PASSWORDS_DO_NOT_MATCH = 'PASSWORDS_DO_NOT_MATCH'
     PASSWORD_UPDATED_SUCCESSFULLY = 'PASSWORD_UPDATED_SUCCESSFULLY'
 
 
@@ -109,6 +111,7 @@ class SendgridTemplate(Enum):
     SEND_PIXEL_CODE_TEMPLATE = 'send_pixel_code_template'
     CHANGE_EMAIL_TEMPLATE = 'change_email_template'
     TEAM_MEMBERS_TEMPLATE = 'team_members_template'
+    PAYMENT_INVOICE_TEMPLATE = 'payment_invoice_template'
 
 
 class ResetPasswordEnum(Enum):
