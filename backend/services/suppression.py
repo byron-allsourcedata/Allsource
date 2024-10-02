@@ -29,7 +29,7 @@ class SuppressionService:
             if email and (email is not None):
                 email_list.append(email)
         if len(email) <= 0:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Email address cannot be empty')
+            return False
         self.suppression_persistence.save_suppressions_list(email_list=email_list, list_name=file_name, domain_id=domain_id)
             
         return True

@@ -24,6 +24,7 @@ class SuppressionStatus(Enum):
     SUCCESS = 'SUCCESS'
     INCOMPLETE = 'INCOMPLETE'
     COMPLETED = 'COMPLETED'
+    NO_EMAILS_FOUND = 'NO_EMAILS_FOUND'
     
 class SettingStatus(Enum):
     INCORRECT_MAIL = 'INCORRECT_MAIL'

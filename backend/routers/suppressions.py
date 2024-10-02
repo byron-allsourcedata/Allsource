@@ -23,7 +23,7 @@ async def process_suppression_list(
     result = suppression_service.process_suppression_list(file, domain.data_provider_id)
     if result:
         return SuppressionStatus.SUCCESS
-    return SuppressionStatus.INCOMPLETE
+    return SuppressionStatus.NO_EMAILS_FOUND
 
 @router.get("/suppression-list")
 async def get_suppression_list(
