@@ -7,7 +7,7 @@ from persistence.leads_order_persistence import LeadOrdersPersistence
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
 from persistence.audience_persistence import AudiencePersistence
-from persistence.integrations.suppression import SuppressionPersistence
+from persistence.integrations.suppression import IntegrationsSuppressionPersistence
 from .woocommerce import WoocommerceIntegrationService
 from .shopify import ShopifyIntegrationService
 from .mailchimp import MailchimpIntegrationsService
@@ -20,7 +20,7 @@ class IntegrationService:
                  lead_persistence: LeadsPersistence, audience_persistence: AudiencePersistence, 
                  lead_orders_persistence: LeadOrdersPersistence, 
                  integrations_user_sync_persistence: IntegrationsUserSyncPersistence,
-                 aws_service: AWSService, domain_persistence, suppression_persistence: SuppressionPersistence):
+                 aws_service: AWSService, domain_persistence, suppression_persistence: IntegrationsSuppressionPersistence):
         self.db = db
         self.client = httpx.Client()
         self.integration_persistence = integration_persistence

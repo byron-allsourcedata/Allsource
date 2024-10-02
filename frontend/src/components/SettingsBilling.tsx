@@ -1073,13 +1073,13 @@ export const SettingsBilling: React.FC = () => {
                                 Prospect Data
                             </Typography>
                             <Typography className='main-text' sx={{ fontSize: '14px', fontWeight: '500', lineHeight: '20px', color: '#202124', mb: '12px' }}>
-                                {prospectData === 0 ? '100% Used' : `${((prospectData) * 100).toFixed(2)}% Used`}
+                                0% Used
                             </Typography>
                         </Box>
 
                         <LinearProgress
                             variant="determinate"
-                            value={prospectData === 0 ? 100 : (prospectData * 100)}
+                            value={0}
                             sx={{
                                 height: '8px',
                                 borderRadius: '4px',
@@ -1088,7 +1088,7 @@ export const SettingsBilling: React.FC = () => {
                             }}
                         />
                         <Typography className='second-text' sx={{ fontSize: '12px', fontWeight: '400', lineHeight: 'normal', color: '#787878', letterSpacing: '0.06px' }}>
-                            {prospectData}
+                            {0}
                         </Typography>
                     </Box>
 

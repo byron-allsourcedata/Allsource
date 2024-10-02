@@ -178,7 +178,12 @@ const SuppressionRules: React.FC = () => {
 
     const handleSubmitUrl = async () => {
         try {
-            const response = await axiosInstance.post('/suppressions/certain-urls', chipData);
+            const dataToSend = chipData.length > 0 ? chipData : null;
+    
+            const response = await axiosInstance.post('/suppressions/certain-urls', {
+                data: dataToSend
+            });
+    
             if (response.status === 200) {
                 console.log("URLs successfully sent:", response.data);
                 showToast('URLs successfully processed!');
@@ -188,6 +193,7 @@ const SuppressionRules: React.FC = () => {
             showErrorToast('An error occurred while sending URLs.');
         }
     };
+    
 
     /// URL with Param suppressions
     const [inputValueParam, setInputValueParam] = useState('');
@@ -209,7 +215,11 @@ const SuppressionRules: React.FC = () => {
 
     const handleSubmitUrlParam = async () => {
         try {
-            const response = await axiosInstance.post('/suppressions/based-urls', chipDataParam);
+            const dataToSend = chipDataParam.length > 0 ? chipDataParam : null;
+            const response = await axiosInstance.post('/suppressions/based-urls', {
+                data: dataToSend
+            });
+    
             if (response.status === 200) {
                 console.log("URLs successfully sent:", response.data);
                 showToast('URLs successfully processed!');
@@ -241,7 +251,12 @@ const SuppressionRules: React.FC = () => {
 
     const handleSubmitEmail = async () => {
         try {
-            const response = await axiosInstance.post('/suppressions/suppression-multiple-emails', chipDataEmail);
+            const dataToSend = chipDataEmail.length > 0 ? chipDataEmail : null;
+    
+            const response = await axiosInstance.post('/suppressions/suppression-multiple-emails', {
+                data: dataToSend
+            });
+    
             if (response.status === 200) {
                 console.log("URLs successfully sent:", response.data);
                 showToast('URLs successfully processed!');
@@ -250,6 +265,7 @@ const SuppressionRules: React.FC = () => {
             console.error("Error while sending URLs:", error);
             showErrorToast('An error occurred while sending URLs.');
         }
+
     };
 
     // file CSV
@@ -275,7 +291,7 @@ const SuppressionRules: React.FC = () => {
 
     const downloadFile = async () => {
         try {
-            const response = await axiosInstance.get('/sample-suppression-list', {
+            const response = await axiosInstance.get('/suppressions/sample-suppression-list', {
                 responseType: 'blob',
             });
             const url = window.URL.createObjectURL(new Blob([response.data]));
@@ -332,7 +348,7 @@ const SuppressionRules: React.FC = () => {
     // Функция для запроса данных с учетом пагинации
     const fetchSuppressionList = async (page: number, perPage: number) => {
       try {
-        const response = await axiosInstance.get<SuppressionListResponse>('/suppression-list', {
+        const response = await axiosInstance.get<SuppressionListResponse>('/suppressions/suppression-list', {
           params: {
             page: page + 1,  // Передаем на сервер номер страницы, начиная с 1
             per_page: perPage,

@@ -20,7 +20,7 @@ async def process_suppression_list(
     user: User = Depends(check_user_authorization),
     domain = Depends(check_domain),
     file: UploadFile = File(...)):
-    return suppression_service.process_suppression_list(file, domain.data_provider_id)
+    return suppression_service.process_suppression_list(file, domain.id)
 
 @router.get("/suppression-list")
 async def get_suppression_list(
@@ -29,14 +29,14 @@ async def get_suppression_list(
     suppression_service: SuppressionService = Depends(get_suppression_service),
     domain = Depends(check_domain),
     user: User = Depends(check_user_authorization)):
-    return suppression_service.get_suppression_list(page, per_page, domain.data_provider_id)
+    return suppression_service.get_suppression_list(page, per_page, domain.id)
 
 @router.delete("/suppression-list")
 async def delete_suppression_list(suppression_request: SuppressionRequest,
     suppression_service: SuppressionService = Depends(get_suppression_service),
     domain = Depends(check_domain),
     user: User = Depends(check_user_authorization)):
-    return suppression_service.delete_suppression_list(suppression_request.suppression_list_id, domain.data_provider_id)
+    return suppression_service.delete_suppression_list(suppression_request.suppression_list_id, domain.id)
 
 @router.get("/download-suppression-list")
 async def download_suppression_list(
@@ -44,7 +44,7 @@ async def download_suppression_list(
     suppression_service: SuppressionService = Depends(get_suppression_service),
     domain = Depends(check_domain),
     user: User = Depends(check_user_authorization)):
-    response = suppression_service.download_suppression_list(suppression_request.suppression_list_id, domain.data_provider_id)
+    response = suppression_service.download_suppression_list(suppression_request.suppression_list_id, domain.id)
     if response:
         return response
     return SuppressionStatus.INCOMPLETE
@@ -54,53 +54,53 @@ async def process_suppression_multiple_emails(suppression_request: SuppressionRe
     suppression_service: SuppressionService = Depends(get_suppression_service),
     domain = Depends(check_domain),
     user: User = Depends(check_user_authorization)):
-    return suppression_service.process_suppression_multiple_emails(suppression_request.data, domain.data_provider_id)
+    return suppression_service.process_suppression_multiple_emails(suppression_request.data, domain.id)
 
 @router.post("/collecting-contacts")
 async def process_collecting_contacts(
     suppression_service: SuppressionService = Depends(get_suppression_service),
     domain = Depends(check_domain),
     user: User = Depends(check_user_authorization)):
-    return suppression_service.process_collecting_contacts(domain.data_provider_id) 
+    return suppression_service.process_collecting_contacts(domain.id) 
 
 @router.get("/rules")
 async def get_rules(
     suppression_service: SuppressionService = Depends(get_suppression_service),
     domain = Depends(check_domain),
     user: User = Depends(check_user_authorization)):
-    return suppression_service.get_rules(domain.data_provider_id)
+    return suppression_service.get_rules(domain.id)
 
 @router.post("/certain-activation")
 async def process_certain_activation(
     suppression_service: SuppressionService = Depends(get_suppression_service),
     domain = Depends(check_domain),
     user: User = Depends(check_user_authorization)):
-    return suppression_service.process_certain_activation(domain.data_provider_id)
+    return suppression_service.process_certain_activation(domain.id)
 
 @router.post("/certain-urls")
 async def process_certain_urls(suppression_request: SuppressionRequest,
     suppression_service: SuppressionService = Depends(get_suppression_service),
     domain = Depends(check_domain),
     user: User = Depends(check_user_authorization)):
-    return suppression_service.process_certain_urls(suppression_request.data, domain.data_provider_id) 
+    return suppression_service.process_certain_urls(suppression_request.data, domain.id) 
 
 @router.post("/based-activation")
 async def process_based_activation(
     suppression_service: SuppressionService = Depends(get_suppression_service),
     domain = Depends(check_domain),
     user: User = Depends(check_user_authorization)):
-    return suppression_service.process_based_activation(domain.data_provider_id) 
+    return suppression_service.process_based_activation(domain.id) 
 
 @router.post("/based-urls")
 async def process_based_urls(suppression_request: SuppressionRequest,
     suppression_service: SuppressionService = Depends(get_suppression_service),
     domain = Depends(check_domain),
     user: User = Depends(check_user_authorization)):
-    return suppression_service.process_based_urls(suppression_request.data, domain.data_provider_id) 
+    return suppression_service.process_based_urls(suppression_request.data, domain.id) 
 
 @router.post("/collection-rules")
 async def process_page_views_limit(collection_rule: CollectionRuleRequest,
     suppression_service: SuppressionService = Depends(get_suppression_service),
     domain = Depends(check_domain),
     user: User = Depends(check_user_authorization)):
-    return suppression_service.process_page_views_limit(collection_rule.page_views, collection_rule.seconds, domain.data_provider_id) 
+    return suppression_service.process_page_views_limit(collection_rule.page_views, collection_rule.seconds, domain.id) 

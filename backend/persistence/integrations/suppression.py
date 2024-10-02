@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from models.integrations.suppresions import LeadsSupperssion
 
-class SuppressionPersistence:
+class IntegrationsSuppressionPersistence:
 
     def __init__(self, db: Session) -> None:
         self.db = db

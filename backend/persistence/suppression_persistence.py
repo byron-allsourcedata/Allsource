@@ -1,4 +1,5 @@
-import datetime
+from datetime import datetime
+
 import math
 
 from models.suppressions_list import SuppressionList
@@ -19,12 +20,10 @@ class SuppressionPersistence:
         suppression_list = SuppressionList(
             list_name=list_name,
             created_at=datetime.now(),
-            total_emails=None,
-            status=SuppressionStatus.INCOMPLETE.value.lower(),
+            total_emails= ', '.join(email_list),
+            status=SuppressionStatus.COMPLETED.value.lower(),
             domain_id=domain_id
-        )   
-        suppression_list.total_emails = email_list
-        suppression_list.status = SuppressionStatus.COMPLETED.value.lower()
+        )
         self.db.add(suppression_list)
         self.db.commit()
         return
@@ -43,8 +42,6 @@ class SuppressionPersistence:
         
         result = []
         for suppression in suppression_lists:
-            total_count = len(suppression.suppression_emails)
-            suppression.total_emails = total_count
             result.append(suppression.to_dict())
 
         total_count = self.db.query(SuppressionList).filter(SuppressionList.domain_id == domain_id).count()
@@ -70,27 +67,34 @@ class SuppressionPersistence:
     
     def save_rules_multiple_emails(self, domain_id, emails):
         rules = self.get_rules(domain_id=domain_id) or SuppressionRule(created_at=datetime.now(), domain_id=domain_id)
-        rules.suppressions_multiple_emails = emails
+        rules.suppressions_multiple_emails = ', '.join(emails)
         self.db.add(rules)
         self.db.commit()
+
         
     def process_collecting_contacts(self, domain_id):
         rules = self.get_rules(domain_id=domain_id) or SuppressionRule(created_at=datetime.now(), domain_id=domain_id, is_stop_collecting_contacts = False)
+        is_stop_collecting_contacts = False
         if rules.is_stop_collecting_contacts == False:
-            rules.is_stop_collecting_contacts = True
+            is_stop_collecting_contacts = True
+            rules.is_stop_collecting_contacts = is_stop_collecting_contacts
         else:
-            rules.is_stop_collecting_contacts = False
+            rules.is_stop_collecting_contacts = is_stop_collecting_contacts
         self.db.add(rules)
         self.db.commit()
+        return is_stop_collecting_contacts
         
     def process_certain_activation(self, domain_id):
         rules = self.get_rules(domain_id=domain_id) or SuppressionRule(created_at=datetime.now(), domain_id=domain_id, is_url_certain_activation = False)
+        is_url_certain_activation = False
         if rules.is_url_certain_activation == False:
-            rules.is_url_certain_activation = True
+            is_url_certain_activation = True
+            rules.is_url_certain_activation = is_url_certain_activation
         else:
-            rules.is_url_certain_activation = False
+            rules.is_url_certain_activation = is_url_certain_activation
         self.db.add(rules)
         self.db.commit()
+        return is_url_certain_activation
     
     def process_certain_urls(self, domain_id, url_list):
         rules = self.get_rules(domain_id=domain_id) or SuppressionRule(created_at=datetime.now(), domain_id=domain_id)
@@ -106,12 +110,15 @@ class SuppressionPersistence:
 
     def process_based_activation(self, domain_id):
         rules = self.get_rules(domain_id=domain_id) or SuppressionRule(created_at=datetime.now(), domain_id=domain_id, is_based_activation = False)
+        is_based_activation = False
         if rules.is_based_activation == False:
-            rules.is_based_activation = True
+            is_based_activation = True
+            rules.is_based_activation = is_based_activation
         else:
-            rules.is_based_activation = False
+            rules.is_based_activation = is_based_activation
         self.db.add(rules)
         self.db.commit()
+        return is_based_activation
         
     def process_based_urls(self, domain_id, identifiers):
         rules = self.get_rules(domain_id=domain_id) or SuppressionRule(created_at=datetime.now(), domain_id=domain_id)

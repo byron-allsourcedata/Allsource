@@ -1,4 +1,4 @@
-from sqlalchemy import Column, event, Integer, ForeignKey
+from sqlalchemy import Column, event, Integer, ForeignKey, TEXT
 from sqlalchemy.dialects.postgresql import TIMESTAMP, VARCHAR
 from sqlalchemy.orm import relationship
 from .base import Base, create_timestamps
@@ -9,8 +9,8 @@ class SuppressionList(Base):
 
     id = Column(Integer, primary_key=True, nullable=False)
     list_name = Column(VARCHAR, nullable=False)
-    created_at = Column(TIMESTAMP(precision=7), nullable=True)
-    total_emails = Column(Integer, ForeignKey('suppression_emails.id'))
+    created_at = Column(TIMESTAMP(precision=7), nullable=False)
+    total_emails = Column(TEXT, nullable=False)
     status = Column(VARCHAR, nullable=False, default='incomplete')
     domain_id = Column(Integer, nullable=False)
 

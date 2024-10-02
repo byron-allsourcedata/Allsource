@@ -14,12 +14,13 @@ class SuppressionService:
         self.suppression_persistence = suppression_persistence
         
     def get_sample_suppression_list(self):
-        return os.path.join(os.getcwd(), "sample-suppression-list.csv")
+        return os.path.join(os.getcwd(), "data/sample-suppression-list.csv")
     
     def process_suppression_list(self, file: UploadFile, domain_id):
         file_name = file.filename
         if not file_name.lower().endswith('.csv'):
-            return SuppressionStatus.NO_EMAILS_FOUND
+            return SuppressionStatus.INCOMPLETE
+        file_name = file_name.replace('.csv', '')
         contents = file.file.read().decode('utf-8')
         df = pd.read_csv(StringIO(contents))
         email_list = []
@@ -82,20 +83,26 @@ class SuppressionService:
         return None
     
     def process_collecting_contacts(self, domain_id):
-        self.suppression_persistence.process_collecting_contacts(domain_id=domain_id)
-        return SuppressionStatus.SUCCESS
+        is_stop_collecting_contacts = self.suppression_persistence.process_collecting_contacts(domain_id=domain_id)
+        return {'status': SuppressionStatus.SUCCESS,
+                'is_stop_collecting_contacts': is_stop_collecting_contacts
+                }
         
     def process_certain_activation(self, domain_id):
-        self.suppression_persistence.process_certain_activation(domain_id=domain_id)
-        return SuppressionStatus.SUCCESS
+        is_url_certain_activation = self.suppression_persistence.process_certain_activation(domain_id=domain_id)
+        return {'status': SuppressionStatus.SUCCESS,
+                'is_url_certain_activation': is_url_certain_activation
+                }
         
     def process_certain_urls(self, urls, domain_id):
         self.suppression_persistence.process_certain_urls(url_list=urls, domain_id=domain_id)
         return SuppressionStatus.SUCCESS
         
     def process_based_activation(self, domain_id):
-        self.suppression_persistence.process_based_activation(domain_id=domain_id)
-        return SuppressionStatus.SUCCESS
+        is_based_activation = self.suppression_persistence.process_based_activation(domain_id=domain_id)
+        return {'status': SuppressionStatus.SUCCESS,
+                'is_based_activation': is_based_activation
+                }
         
     def process_based_urls(self, identifiers, domain_id):
         self.suppression_persistence.process_based_urls(identifiers=identifiers, domain_id=domain_id)
