@@ -145,6 +145,7 @@ async def create_sync(data: SyncCreate, service_name: str = Query(...),
         await service.create_sync(
             leads_type=data.leads_type,
             list_id=data.list_id,
+            list_name=data.list_name,
             tags_id=data.tags_id,
             data_map=data.data_map,
             domain_id=domain.id
