@@ -79,7 +79,7 @@ class SuppressionService:
     def get_rules(self, domain_id):
         rules = self.suppression_persistence.get_rules(domain_id)
         if rules:
-            return rules.to_dict
+            return rules.to_dict()
         return None
     
     def process_collecting_contacts(self, domain_id):

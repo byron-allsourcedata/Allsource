@@ -40,11 +40,11 @@ async def delete_suppression_list(suppression_request: SuppressionRequest,
 
 @router.get("/download-suppression-list")
 async def download_suppression_list(
-    suppression_request: SuppressionRequest,
+    suppression_list_id: int = Query(...),
     suppression_service: SuppressionService = Depends(get_suppression_service),
     domain = Depends(check_domain),
     user: User = Depends(check_user_authorization)):
-    response = suppression_service.download_suppression_list(suppression_request.suppression_list_id, domain.id)
+    response = suppression_service.download_suppression_list(suppression_list_id, domain.id)
     if response:
         return response
     return SuppressionStatus.INCOMPLETE
