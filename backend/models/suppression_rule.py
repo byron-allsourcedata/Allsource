@@ -16,7 +16,7 @@ class SuppressionRule(Base):
     actual_contect_days = Column(Integer, nullable=False)
     page_views_limit = Column(Integer, nullable=True)
     collection_timeout = Column(Integer, nullable=True)
-    suppressions_multiple_emails = Column(Integer, ForeignKey('suppression_emails.id'), nullable=True)
+    suppressions_multiple_emails = Column(TEXT, nullable=True)
     
     def to_dict(self):
             return {
