@@ -21,11 +21,13 @@ sys.path.append(parent_dir)
 from utils import normalize_url
 from models.leads_requests import LeadsRequests
 from models.users_domains import UserDomains
+from models.suppression_rule import SuppressionRule
 from models.leads_users_added_to_cart import LeadsUsersAddedToCart
 from models.leads_users_ordered import LeadsUsersOrdered
 from models.leads_visits import LeadsVisits
 from models.subscriptions import UserSubscriptions
 from models.five_x_five_hems import FiveXFiveHems
+from models.suppressions_list import SuppressionList
 from models.users_payments_transactions import UsersPaymentsTransactions
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
@@ -97,6 +99,12 @@ async def process_table(table, session, file_key, channel, root_user):
                 await process_user_data(table, i, five_x_five_user, session, channel, root_user)
             break
     update_last_processed_file(file_key)
+    
+def is_email_in_list(email, email_list):
+    return email in email_list
+
+def is_url_in_list(url, url_list):
+    return url in url_list
 
 
 async def process_user_data(table, index, five_x_five_user: FiveXFiveUser, session: Session, rmq_connection, root_user=None):
@@ -128,6 +136,34 @@ async def process_user_data(table, index, five_x_five_user: FiveXFiveUser, sessi
     lead_user = session.query(LeadUser).filter_by(five_x_five_user_id=five_x_five_user.id, user_id=user.id).first()
     is_first_request = False
     if not lead_user:
+        suppression_rule = session.query(SuppressionRule).filter(SuppressionRule.domain_id == user_domain_id).first()
+        if suppression_rule and suppression_rule.is_stop_collecting_contacts:
+            suppression_list = session.query(SuppressionList).filter(SuppressionList.domain_id == user_domain_id).first()
+            emails_to_check = [
+                five_x_five_user.business_email,
+                *five_x_five_user.personal_emails,
+                *five_x_five_user.additional_personal_emails,
+                *five_x_five_user.programmatic_business_emails
+            ]
+            
+            total_emails_list = suppression_list.total_emails.split(', ')
+            if any(email in emails_to_check for email in total_emails_list):
+                logging.info(f"total_emails exists in five_x_five_user: {total_emails_list}")
+                return
+            
+            multiple_emails_list = suppression_rule.suppressions_multiple_emails.split(', ')
+            if any(email in emails_to_check for email in multiple_emails_list):
+                logging.info(f"suppressions_multiple_emails exists in five_x_five_user: {multiple_emails_list}")
+                return
+            
+            if suppression_rule.is_url_certain_activation and any(url in page for url in suppression_rule.activate_certain_urls):
+                logging.info(f"activate_certain_urls exists: {suppression_rule.activate_certain_urls}")
+                return
+            
+            if suppression_rule.is_based_activation and any(url in page for url in suppression_rule.activate_based_urls):
+                logging.info(f"activate_based_urls exists: {suppression_rule.activate_based_urls}")
+                return
+            
         if root_user is None:
             users_payments_transactions = session.query(UsersPaymentsTransactions).filter(
                 UsersPaymentsTransactions.five_x_five_up_id == str(five_x_five_user.up_id),
