@@ -99,12 +99,6 @@ async def process_table(table, session, file_key, channel, root_user):
                 await process_user_data(table, i, five_x_five_user, session, channel, root_user)
             break
     update_last_processed_file(file_key)
-    
-def is_email_in_list(email, email_list):
-    return email in email_list
-
-def is_url_in_list(url, url_list):
-    return url in url_list
 
 
 async def process_user_data(table, index, five_x_five_user: FiveXFiveUser, session: Session, rmq_connection, root_user=None):
