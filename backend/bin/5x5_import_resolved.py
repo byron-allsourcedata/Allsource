@@ -155,7 +155,7 @@ async def process_user_data(table, index, five_x_five_user: FiveXFiveUser, sessi
             session.flush()
         
         is_first_request = True
-        lead_user = LeadUser(five_x_five_user_id=five_x_five_user.id, user_id=user.id, behavior_type=behavior_type, domain_id=user_domain_id)
+        lead_user = LeadUser(five_x_five_user_id=five_x_five_user.id, user_id=user.id, behavior_type=behavior_type, domain_id=user_domain_id, total_visit=0, avarage_visit_time=0, total_visit_time=0)
         emails_to_check = get_list_emails(five_x_five_user)
         integrations_ids = [integration.id for integration in session.query(UserIntegration).filter(UserIntegration.is_with_suppression == True).all()]
         lead_suppression = session.query(LeadsSupperssion).filter(
