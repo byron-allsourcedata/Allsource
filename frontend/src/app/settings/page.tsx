@@ -9,6 +9,7 @@ import { SettingsSubscription } from '@/components/SettingsSubscription';
 import { SettingsApiDetails } from '@/components/SettingsApiDetails';
 import axiosInterceptorInstance from '@/axios/axiosInterceptorInstance';
 import CustomizedProgressBar from '@/components/CustomizedProgressBar';
+import CustomTooltip from '@/components/customToolTip';
 
 const Settings: React.FC = () => {
     const [activeSection, setActiveSection] = useState<string>('accountDetails');
@@ -40,11 +41,20 @@ const Settings: React.FC = () => {
     
     return (
         <Box>
-            <Typography variant="h4" gutterBottom sx={planStyles.title}>
-                Settings
-            </Typography>
+            <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1, mb: 2, padding: '1.5rem 0rem 0',
+                '@media (max-width: 1199px)': {
+                    paddingTop: '1rem'
+                }
+            }}>
+                <Typography variant="h4" gutterBottom className='first-sub-title' sx={planStyles.title}>
+                    Settings
+                </Typography>
+                <CustomTooltip title={"The Settings menu allows you to customise your user experience, manage your account preferences, and adjust notifications."} linkText="Learn more" linkUrl="https://maximiz.ai"/>
+            </Box>
+            
             <Box sx={{ display: 'flex', gap: 4.25, marginBottom: 3, overflowX: 'auto' }}>
                 <Button
+                    className='tab-heading'
                     sx={planStyles.buttonHeading}
                     variant={activeSection === 'accountDetails' ? 'contained' : 'outlined'}
                     onClick={() => setActiveSection('accountDetails')}
@@ -52,6 +62,7 @@ const Settings: React.FC = () => {
                     Account Details
                 </Button>
                 <Button
+                    className='tab-heading'
                     sx={planStyles.buttonHeading}
                     variant={activeSection === 'teams' ? 'contained' : 'outlined'}
                     onClick={() => setActiveSection('teams')}
@@ -59,6 +70,7 @@ const Settings: React.FC = () => {
                     Teams
                 </Button>
                 <Button
+                    className='tab-heading'
                     sx={planStyles.buttonHeading}
                     variant={activeSection === 'billing' ? 'contained' : 'outlined'}
                     onClick={() => setActiveSection('billing')}
@@ -66,6 +78,7 @@ const Settings: React.FC = () => {
                     Billing
                 </Button>
                 <Button
+                    className='tab-heading'
                     sx={planStyles.buttonHeading}
                     variant={activeSection === 'subscription' ? 'contained' : 'outlined'}
                     onClick={() => setActiveSection('subscription')}
@@ -73,6 +86,7 @@ const Settings: React.FC = () => {
                     Subscription
                 </Button>
                 <Button
+                    className='tab-heading'
                     sx={planStyles.buttonHeading}
                     variant={activeSection === 'apiDetails' ? 'contained' : 'outlined'}
                     onClick={() => setActiveSection('apiDetails')}

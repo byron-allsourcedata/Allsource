@@ -243,7 +243,7 @@ const Signup: React.FC = () => {
       </Box>
       <Box sx={signupStyles.mainContent}>
         <Box sx={signupStyles.container}>
-          <Typography variant="h4" component="h1" sx={signupStyles.title}>
+          <Typography variant="h4" component="h1" className='heading-text' sx={signupStyles.title}>
             Create your Maximiz account
           </Typography>
           <GoogleLogin
@@ -317,14 +317,17 @@ const Signup: React.FC = () => {
 
           <Box sx={signupStyles.orDivider}>
             <Box sx={{ borderBottom: '1px solid #DCE1E8', flexGrow: 1 }} />
-            <Typography variant="body1" sx={signupStyles.orText}>
+            <Typography variant="body1" className='third-sub-title' sx={signupStyles.orText}>
               OR
             </Typography>
             <Box sx={{ borderBottom: '1px solid #DCE1E8', flexGrow: 1 }} />
           </Box>
           <Box component="form" onSubmit={handleSubmit} sx={signupStyles.form}>
             <TextField
-              InputLabelProps={{ sx: signupStyles.inputLabel }}
+              InputLabelProps={{ 
+                sx: signupStyles.inputLabel,
+                className: "form-input-label"
+              }}
               label="Full name"
               name="full_name"
               variant="outlined"
@@ -333,10 +336,15 @@ const Signup: React.FC = () => {
               onChange={handleChange}
               error={Boolean(errors.full_name)}
               helperText={errors.full_name}
-              InputProps={{ sx: signupStyles.formInput }}
+              InputProps={{
+                className: "form-input" 
+              }}
             />
             <TextField sx={signupStyles.formField}
-              InputLabelProps={{ sx: signupStyles.inputLabel }}
+              InputLabelProps={{
+                sx: signupStyles.inputLabel,
+                className: "form-input-label"
+              }}
               label="Email address"
               name="email"
               type="email"
@@ -347,11 +355,16 @@ const Signup: React.FC = () => {
               onChange={handleChange}
               error={Boolean(errors.email)}
               helperText={errors.email}
-              InputProps={{ sx: signupStyles.formInput }}
+              InputProps={{
+                className: "form-input"
+              }}
               disabled={user_teams_mail !== null}
             />
             <TextField sx={signupStyles.formField}
-              InputLabelProps={{ sx: signupStyles.inputLabel }}
+              InputLabelProps={{
+                sx: signupStyles.inputLabel,
+                className: "form-input-label"
+              }}
               label="Create password"
               name="password"
               type={showPassword ? 'text' : 'password'}
@@ -363,7 +376,7 @@ const Signup: React.FC = () => {
               error={Boolean(errors.password)}
               helperText={errors.password}
               InputProps={{
-                sx: signupStyles.formInput,
+                className: "form-input",
                 endAdornment: (
                   <InputAdornment position="end">
                     <IconButton onClick={togglePasswordVisibility} edge="end">
@@ -415,7 +428,7 @@ const Signup: React.FC = () => {
                 />
               }
               label={
-                <span tabIndex={-1}>
+                <span className='second-sub-title' tabIndex={-1} style={{ fontWeight: 400 }}>
                   I accept the{' '}
                   <Link
                     sx={signupStyles.checkboxContentLink}
@@ -433,7 +446,7 @@ const Signup: React.FC = () => {
             {errors.termsAccepted && (
               <FormHelperText error>{errors.termsAccepted}</FormHelperText>
             )}
-            <Button
+            <Button className='hyperlink-red'
               type="submit"
               variant="contained"
               sx={signupStyles.submitButton}
@@ -442,9 +455,9 @@ const Signup: React.FC = () => {
               Get Started
             </Button>
           </Box>
-          <Typography variant="body2" sx={signupStyles.loginText}>
+          <Typography variant="body2" className='second-sub-title' sx={signupStyles.loginText}>
             Already have an account?{' '}
-            <Link href="/signin" sx={signupStyles.loginLink}>
+            <Link href="/signin" sx={signupStyles.loginLink} className='hyperlink-red'>
               Login
             </Link>
           </Typography>
