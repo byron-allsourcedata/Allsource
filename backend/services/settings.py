@@ -346,49 +346,11 @@ class SettingsService:
         if result['status'] != 'SUCCESS':
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Billing information not found.")
 
-        output = io.StringIO()
-        writer = csv.writer(output)
+        invoice_number = result['data'].get('id', '')
+        invoice_date = datetime.fromtimestamp(result['data'].get('created', 0)).strftime("%B %d, %Y")
+        total = result['data'].get('amount_due', 0) / 100
 
-        fields_to_include = [
-            'id',
-            'account_country',
-            'account_name',
-            'amount_due',
-            'amount_paid',
-            'currency',
-            'customer_name',
-            'customer_email',
-            'billing_reason',
-            'created',
-            'status',
-            'invoice_pdf',
-            'hosted_invoice_url',
-        ]
-        writer.writerow(['Field', 'Value'])
-        for field in fields_to_include:
-            if field == 'created':
-                created_timestamp = result['data'].get(field)
-                formatted_date = datetime.fromtimestamp(created_timestamp).strftime("%B %d, %Y")
-                writer.writerow([field, formatted_date])
-            else:
-                value = result['data'].get(field)
-                writer.writerow([field, value])
-
-        line_items = result['data']['lines']['data']
-        writer.writerow(['Line Item Description', 'Amount'])
-        for item in line_items:
-            writer.writerow([item['description'], item['amount'] / 100])
-
-        output.seek(0)
-
-        attachment = {
-            'content': output.getvalue(),
-            'type': 'text/csv',
-            'filename': 'invoice.csv',
-            'disposition': 'attachment'
-        }
-
-        template_id = self.send_grid_persistence_service.get_template_by_alias(
+        template_id = self.send_grid_persistence.get_template_by_alias(
             SendgridTemplate.PAYMENT_INVOICE_TEMPLATE.value)
 
         mail_object = SendgridHandler()
@@ -396,13 +358,16 @@ class SettingsService:
             to_emails=email,
             template_id=template_id,
             template_placeholder={
-                "full_name": user.get('full_name'),
-                "email": email
-            },
-            attachments=[attachment]
+                "full_name": user.get('full_name', ''),
+                "invoice_number": invoice_number,
+                "invoice_date": invoice_date,
+                "total": f"{total:.2f}",
+                "link": result['data'].get('hosted_invoice_url', '')
+            }
         )
 
         return SettingStatus.SUCCESS
+
 
     
     def download_billing(self, invoice_id):

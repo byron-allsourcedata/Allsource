@@ -323,9 +323,9 @@ export const SettingsBilling: React.FC = () => {
     const handleSendInvoice = async () => {
         try {
             setIsLoading(true);
-            const response = await axiosInterceptorInstance.post('/settings/send-billing', { email: email, invoice_id: selectedInvoiceId });
+            const response = await axiosInterceptorInstance.post('/settings/billing/send-billing', { email: email, invoice_id: selectedInvoiceId });
             if (response.status === 200) {
-                switch (response.data.status) {
+                switch (response.data) {
                     case 'SUCCESS':
                         showToast('Send invoice successfully');
                         break
