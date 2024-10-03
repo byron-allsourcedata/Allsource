@@ -46,8 +46,8 @@ class SuppressionService:
     def delete_suppression_list(self, suppression_list_id, domain_id):
         if suppression_list_id:
             self.suppression_persistence.delete_suppression_list(suppression_list_id=suppression_list_id, domain_id=domain_id)
-            return SuppressionStatus.INCOMPLETE
-        return SuppressionStatus.SUCCESS
+            return SuppressionStatus.SUCCESS
+        return SuppressionStatus.INCOMPLETE
     
     def download_suppression_list(self, suppression_list_id, domain_id):
         if suppression_list_id:

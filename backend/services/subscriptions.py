@@ -16,7 +16,7 @@ from .stripe_service import determine_plan_name_from_product_id
 
 ACTIVE_STATUSES = ["active", "trialing", "completed"]
 TRIAL_STUB_PLAN_ID = '1'
-PRICE_CREDIT = 0.2
+PRICE_CREDIT = 0.49
 logger = logging.getLogger(__name__)
 
 

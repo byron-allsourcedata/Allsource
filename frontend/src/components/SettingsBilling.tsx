@@ -417,23 +417,33 @@ export const SettingsBilling: React.FC = () => {
     };
 
     const handleBuyCredits = async () => {
-        console.log('click')
-        // try {
-        //     setIsLoading(true);
-        //     const response = await axiosInterceptorInstance.get(`/subscriptions/buy-credits?credits_used=${10}`);
-        //     console.log(response);
-        // } catch (error: unknown) {
-        //     if (axios.isAxiosError(error)) {
-        //         showErrorToast(error.message);
-        //     } else if (error instanceof Error) {
-        //         showErrorToast(error.message);
-        //     } else {
-        //         showErrorToast("An unexpected error occurred.");
-        //     }
-        // } finally {
-        //     setIsLoading(false);
-        // }
+        try {
+            setIsLoading(true);
+            const response = await axiosInterceptorInstance.get(`/subscriptions/buy-credits?credits_used=${10}`);
+            if (response && response.data.status) {
+                showToast(response.data.status);
+                if (response.data.status == 'PAYMENT_SUCCESS'){
+                    setProspectData(prospectData + 10)
+                }
+            }            
+            else if (response.data.link) {
+                window.location.href = response.data.link;
+            } else {
+                showErrorToast("Payment link not found.");
+            }
+        } catch (error: unknown) {
+            if (axios.isAxiosError(error)) {
+                showErrorToast(error.message);
+            } else if (error instanceof Error) {
+                showErrorToast(error.message);
+            } else {
+                showErrorToast("An unexpected error occurred.");
+            }
+        } finally {
+            setIsLoading(false);
+        }
     };
+    
 
     // Handler for rows per page change
     const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -1098,7 +1108,7 @@ export const SettingsBilling: React.FC = () => {
 
                         <LinearProgress
                             variant="determinate"
-                            value={0}
+                            value={100}
                             sx={{
                                 height: '8px',
                                 borderRadius: '4px',
@@ -1107,7 +1117,7 @@ export const SettingsBilling: React.FC = () => {
                             }}
                         />
                         <Typography className='second-text' sx={{ fontSize: '12px', fontWeight: '400', lineHeight: 'normal', color: '#787878', letterSpacing: '0.06px' }}>
-                            {0}
+                            {prospectData}
                         </Typography>
                     </Box>
 
