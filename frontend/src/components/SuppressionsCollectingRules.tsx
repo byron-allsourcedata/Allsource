@@ -1,7 +1,10 @@
 import axiosInstance from "@/axios/axiosInterceptorInstance";
-import { Box, Typography, FormControlLabel, TextField, Checkbox, Button, Divider } from "@mui/material";
-import { useState } from "react";
+import { Box, Typography, TextField, Button } from "@mui/material";
+import { useCallback, useEffect, useState } from "react";
 import { showToast } from "./ToastNotification";
+import CustomizedProgressBar from "./CustomizedProgressBar";
+
+
 const CollectionRules: React.FC = () => {
     const [pageViews, setPageViews] = useState<string>("");
     const [seconds, setSeconds] = useState<string>("");
@@ -16,12 +19,15 @@ const CollectionRules: React.FC = () => {
 
     const handleSave = async () => {
         try {
+            setLoading(true)
             const response = await axiosInstance.post('/suppressions/collection-rules', {
                 page_views: parseInt(pageViews, 10),
                 seconds: parseInt(seconds, 10)
             });
-            showToast('Succesfully added rule')
+            showToast('Succesfully updated rule')
         } catch (error) {
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -31,6 +37,29 @@ const CollectionRules: React.FC = () => {
     };
 
     const isDisabled = !pageViews || !seconds;
+
+    const [loading, setLoading] = useState(false);
+
+    const fetchRules = useCallback(async () => {
+        setLoading(true);
+        try {
+            const response = await axiosInstance.get("/suppressions/rules");
+            const data = response.data
+            setPageViews(data.page_views_limit)
+            setSeconds(data.collection_timeout)
+        } catch (err) {
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchRules();
+    }, [fetchRules]);
+
+    if (loading) {
+        return <CustomizedProgressBar />;
+    }
 
     return (
         <Box sx={{
