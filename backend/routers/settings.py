@@ -130,9 +130,7 @@ def download_billing(invoice_id: str = Query(...), settings_service: SettingsSer
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Access denied. Admins only."
             )
-    result = settings_service.download_billing(invoice_id=invoice_id)
-    return StreamingResponse(result, media_type="text/csv",
-                                headers={"Content-Disposition": "attachment; filename=data.csv"})
+    return settings_service.download_billing(invoice_id=invoice_id)
     
 @router.post("/billing/send-billing")
 def send_billing(send_billing: SendBilling, settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authorization_without_pixel)):

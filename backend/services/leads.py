@@ -25,9 +25,14 @@ class LeadsService:
         'first_name': lead[1],
         'programmatic_business_emails': lead[2],
         'mobile_phone': lead[3],
-        'direct_number': lead[4],
+        'personal_phone': lead[4].strip() if lead[4] else None,
         'gender': lead[5],
-        'personal_phone': lead[6],
+        'direct_number': (
+            ', '.join(
+                num.strip() for num in lead[6].split(',')
+                if all(num.strip() != direct.strip() for direct in lead[4].split(','))
+            ) or None
+        ) if lead[6] else None,
         'business_email': lead[7],
         'personal_emails': lead[8],
         'last_name': lead[9],
