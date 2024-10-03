@@ -526,11 +526,15 @@ const SuppressionRules: React.FC = () => {
             const ChipData = data.activate_certain_urls
                 ? data.activate_certain_urls.split(',').map((url: string) => `/${url.trim()}`)
                 : [];
+            const ChipDataParam = data.activate_based_urls
+                ? data.activate_based_urls.split(',').map((url: string) => `/${url.trim()}`)
+                : [];
             setChecked(data.is_stop_collecting_contacts)
             setCheckedUrl(data.is_url_certain_activation)
             setCheckedUrlParameters(data.is_based_activation)
             setChipDataEmail(EmailChip);
             setChipData(ChipData)
+            setChipDataParam(ChipDataParam)
         } catch (err) {
         } finally {
             setLoading(false);
@@ -1220,7 +1224,7 @@ const SuppressionRules: React.FC = () => {
                                                 {uploadedFile.name}
                                                 {isFileNameDuplicate ? (
                                                     <Tooltip title={"File name must be unique."}>
-                                                    <CancelIcon sx={{ color: 'red', fontSize: '17px' }} />
+                                                        <CancelIcon sx={{ color: 'red', fontSize: '17px' }} />
                                                     </Tooltip>
                                                 ) : (
                                                     <CheckCircleIcon sx={{ color: 'green', fontSize: '17px' }} />
