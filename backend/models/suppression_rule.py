@@ -24,6 +24,7 @@ class SuppressionRule(Base):
                 "is_url_certain_activation": self.is_url_certain_activation,
                 "activate_certain_urls": self.activate_certain_urls,
                 "is_based_activation": self.is_based_activation,
+                "activate_based_urls": self.activate_based_urls,
                 "page_views_limit": self.page_views_limit,
                 "collection_timeout": self.collection_timeout,
                 "suppressions_multiple_emails": self.suppressions_multiple_emails
