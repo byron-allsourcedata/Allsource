@@ -18,7 +18,7 @@ import Slider from "../components/Slider";
 
 const sidebarStyles = {
     container: {
-        width: '100%',
+        width: '10vw',
         flexShrink: 0,
         fontFamily: 'Nunito Sans',
         fontSize: '14px',
@@ -28,9 +28,9 @@ const sidebarStyles = {
         height: '92vh',
         display: 'flex',
         overflow: 'hidden',
+        position: 'fixed',
         flexDirection: 'column',
         justifyContent: 'start',
-        position: 'relative'
     },
     menu: {
         alignItems: 'center',
