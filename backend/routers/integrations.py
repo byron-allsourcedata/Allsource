@@ -141,7 +141,6 @@ async def create_sync(data: SyncCreate, service_name: str = Query(...),
                 detail="Access denied. Admins and standard only."
             )
     data = {k: v for k, v in data.model_dump().items() if v}
-    print(data)
     with integration_service as service:
         service = getattr(service, service_name.lower())
         await service.create_sync(
@@ -166,7 +165,3 @@ async def set_suppression(suppression_data: SupperssionSet, service_name: str = 
         service = getattr(service, service_name)
         return service.set_supperssions(suppression_data.suppression, domain.id)
         
-@router.get('/test')
-async def test(integration_service: IntegrationService = Depends(get_integration_service)):
-    with integration_service as service:
-        return service.meta.test()
