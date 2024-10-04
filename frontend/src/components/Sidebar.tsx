@@ -15,10 +15,11 @@ import { useSlider } from '@/context/SliderContext';
 import { AxiosError } from 'axios';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 import Slider from "../components/Slider";
+import zIndex from '@mui/material/styles/zIndex';
 
 const sidebarStyles = {
     container: {
-        width: '10vw',
+        width: '100%',
         flexShrink: 0,
         fontFamily: 'Nunito Sans',
         fontSize: '14px',
@@ -28,9 +29,9 @@ const sidebarStyles = {
         height: '92vh',
         display: 'flex',
         overflow: 'hidden',
-        position: 'fixed',
         flexDirection: 'column',
         justifyContent: 'start',
+        position: 'relative'
     },
     menu: {
         alignItems: 'center',
