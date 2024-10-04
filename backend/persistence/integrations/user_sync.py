@@ -22,9 +22,16 @@ class IntegrationsUserSyncPersistence:
             IntegrationUserSync.created_at, 
             IntegrationUserSync.is_active, 
             IntegrationUserSync.last_sync_date,
-            IntegrationUserSync.leads_type, 
+            IntegrationUserSync.leads_type,
+            IntegrationUserSync.list_name,
             IntegrationUserSync.integration_id,
+            IntegrationUserSync.sync_status,
+            IntegrationUserSync.platform_user_id,
+            IntegrationUserSync.no_of_contacts,
+            IntegrationUserSync.is_active,
+            IntegrationUserSync.created_by,
             UserIntegration.service_name,
+            UserIntegration.is_with_suppression
         ) \
         .join(UserIntegration, UserIntegration.id == IntegrationUserSync.integration_id) \
         .filter(IntegrationUserSync.domain_id == domain_id)
@@ -33,16 +40,24 @@ class IntegrationsUserSyncPersistence:
         syncs = query.all()
         return [{
             'id': sync.id,
-            'created_at': sync.created_at,
+            'createdDate': sync.created_at.strftime('%b %d, %Y') if sync.created_at else None,
+            'name': sync.list_name,
+            'lastSync': sync.last_sync_date.strftime('%b %d, %Y') if sync.last_sync_date else None,
+            'type': sync.leads_type,
+            'platform': sync.service_name.lower(),
             'integration_id': sync.integration_id,
+            'dataSync': sync.is_active,
+            'suppression': sync.is_with_suppression,
+            'contacts': sync.no_of_contacts,
+            'createdBy': sync.created_by,
             'is_active': sync.is_active,
-            'last_sync_date': sync.last_sync_date,
-            'leads_type': sync.leads_type,
-            'service_name': sync.service_name
+            'accountId': sync.platform_user_id,
+            'syncStatus': sync.sync_status,
         } for sync in syncs]
 
     def get_data_sync_filter_by(self, **filter_by):
         return self.db.query(IntegrationUserSync).filter_by(**filter_by).all()
     
-    def update_sync(self, update_data: dict, **filter_by, ):
+    def update_sync(self, update_data: dict, **filter_by):
+        update_data['no_of_contacts'] = IntegrationUserSync.no_of_contacts + 1
         return self.db.query(IntegrationUserSync).filter_by(**filter_by).update(update_data)

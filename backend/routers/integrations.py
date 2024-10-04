@@ -87,8 +87,8 @@ async def delete_integration(service_name: str = Query(...),
     except:
         raise HTTPException(status_code=400)
     
-@router.get('/sync/')
-async def get_sync(service_name: str | None = Query(...), integration_service: IntegrationService = Depends(get_integration_service),
+@router.get('/sync')
+async def get_sync(service_name: str | None = Query(None), integration_service: IntegrationService = Depends(get_integration_service),
                    user = Depends(check_user_authorization), domain = Depends(check_pixel_install_domain)):
     return integration_service.get_sync_domain(domain.id, service_name)
 
@@ -148,7 +148,8 @@ async def create_sync(data: SyncCreate, service_name: str = Query(...),
             list_name=data.list_name,
             tags_id=data.tags_id,
             data_map=data.data_map,
-            domain_id=domain.id
+            domain_id=domain.id,
+            created_by=user.get('full_name')
         )
 
 @router.post('/suppression/')
