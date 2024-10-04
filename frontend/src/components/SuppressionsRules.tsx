@@ -1,12 +1,14 @@
-import { Box, Typography, TextField, Button, Switch, Chip, InputAdornment, Divider, Tooltip, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, IconButton, } from "@mui/material";
+import { Box, Typography, TextField, Button, Switch, Chip, InputAdornment, Divider, Tooltip, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, IconButton, DialogActions, DialogContent, DialogContentText, Popover, } from "@mui/material";
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { suppressionsStyles } from "@/css/suppressions";
 import { ChevronLeft, ChevronRight } from "@mui/icons-material";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { showErrorToast, showToast } from "./ToastNotification";
 import dayjs from 'dayjs';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import CustomizedProgressBar from "./CustomizedProgressBar";
+import CancelIcon from '@mui/icons-material/Cancel'
 
 
 interface CustomTablePaginationProps {
@@ -60,7 +62,7 @@ const CustomTablePagination: React.FC<CustomTablePaginationProps> = ({
                     backgroundColor: 'rgba(255, 255, 255, 1)'
                 }}
             >
-                {[10, 15, 25, 50].map((option) => (
+                {[5, 10, 15, 25].map((option) => (
                     <option key={option} value={option}>
                         {option} rows
                     </option>
@@ -129,25 +131,15 @@ const CustomTablePagination: React.FC<CustomTablePaginationProps> = ({
 };
 
 
-interface SuppressionRulesProps {
-    rules: any;
-}
 
-const SuppressionRules: React.FC<SuppressionRulesProps> = ({ rules }) => {
-
-    console.log(rules)
+const SuppressionRules: React.FC = () => {
+    const [loading, setLoading] = useState(false);
 
     /// Switch Buttons
     const [checked, setChecked] = useState(false);
     const [checkedUrl, setCheckedUrl] = useState(false);
     const [checkedUrlParameters, setCheckedUrlParameters] = useState(false);
 
-    const handleSwitchChangeURl = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setCheckedUrl(event.target.checked);
-    };
-    const handleSwitchChangeURlParameters = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setCheckedUrlParameters(event.target.checked);
-    };
     const label = { inputProps: { 'aria-label': 'Switch demo' } };
 
     // First switch
@@ -156,9 +148,12 @@ const SuppressionRules: React.FC<SuppressionRulesProps> = ({ rules }) => {
         setChecked(isChecked);
 
         try {
+            setLoading(true)
             const response = await axiosInstance.post('/suppressions/collecting-contacts');
         } catch (error) {
             console.error('Error occurred while updating switch status:', error);
+        } finally {
+            setLoading(false)
         }
     };
 
@@ -184,7 +179,8 @@ const SuppressionRules: React.FC<SuppressionRulesProps> = ({ rules }) => {
 
     const handleSubmitUrl = async () => {
         try {
-            const dataToSend = chipData.length > 0 ? chipData : null;
+            setLoading(true)
+            const dataToSend = chipData.length > 0 ? chipData : [];
 
             const response = await axiosInstance.post('/suppressions/certain-urls', {
                 data: dataToSend
@@ -197,6 +193,23 @@ const SuppressionRules: React.FC<SuppressionRulesProps> = ({ rules }) => {
         } catch (error) {
             console.error("Error while sending URLs:", error);
             showErrorToast('An error occurred while sending URLs.');
+        }
+        finally {
+            setLoading(false)
+        }
+    };
+
+    // Second switch
+    const handleSwitchChangeURl = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        setCheckedUrl(event.target.checked);
+
+        try {
+            setLoading(true)
+            const response = await axiosInstance.post('/suppressions/certain-activation');
+        } catch (error) {
+            console.error('Error occurred while updating switch status:', error);
+        } finally {
+            setLoading(false)
         }
     };
 
@@ -221,18 +234,31 @@ const SuppressionRules: React.FC<SuppressionRulesProps> = ({ rules }) => {
 
     const handleSubmitUrlParam = async () => {
         try {
-            const dataToSend = chipDataParam.length > 0 ? chipDataParam : null;
+            setLoading(true)
+            const dataToSend = chipDataParam.length > 0 ? chipDataParam : [];
             const response = await axiosInstance.post('/suppressions/based-urls', {
                 data: dataToSend
             });
 
             if (response.status === 200) {
-                console.log("URLs successfully sent:", response.data);
                 showToast('URLs successfully processed!');
             }
         } catch (error) {
-            console.error("Error while sending URLs:", error);
             showErrorToast('An error occurred while sending URLs.');
+        } finally {
+            setLoading(false)
+        }
+    };
+
+    const handleSwitchChangeURlParameters = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        setCheckedUrlParameters(event.target.checked);
+        try {
+            setLoading(true)
+            const response = await axiosInstance.post('/suppressions/based-activation');
+        } catch (error) {
+            console.error('Error occurred while updating switch status:', error);
+        } finally {
+            setLoading(false)
         }
     };
 
@@ -257,19 +283,21 @@ const SuppressionRules: React.FC<SuppressionRulesProps> = ({ rules }) => {
 
     const handleSubmitEmail = async () => {
         try {
-            const dataToSend = chipDataEmail.length > 0 ? chipDataEmail : null;
+            setLoading(true)
+            const dataToSend = chipDataEmail.length > 0 ? chipDataEmail : [];
 
             const response = await axiosInstance.post('/suppressions/suppression-multiple-emails', {
                 data: dataToSend
             });
 
             if (response.status === 200) {
-                console.log("URLs successfully sent:", response.data);
-                showToast('URLs successfully processed!');
+                showToast('Emails successfully processed!');
             }
         } catch (error) {
             console.error("Error while sending URLs:", error);
             showErrorToast('An error occurred while sending URLs.');
+        } finally {
+            setLoading(false)
         }
 
     };
@@ -277,26 +305,40 @@ const SuppressionRules: React.FC<SuppressionRulesProps> = ({ rules }) => {
     // file CSV
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+    const [isFileNameDuplicate, setIsFileNameDuplicate] = useState<boolean>(false);
 
     const handleFileUpload = (event: any) => {
         const file = event.target.files[0];
-        if (file) {
-            setUploadedFile(file);
+
+        const fileName = file.name.endsWith('.csv')
+            ? file.name.slice(0, -4)
+            : file.name;
+
+        const isDuplicate = suppressionList.some(suppressionFile => suppressionFile.list_name === fileName);
+
+        if (isDuplicate) {
+            setIsFileNameDuplicate(true);
+        } else {
+            setIsFileNameDuplicate(false);
         }
+
+        setUploadedFile(file);
+
     };
 
     const handleDeleteFile = () => {
-        setUploadedFile(null); // Удаляем файл из состояния
+        setUploadedFile(null);
     };
 
     const handleClick = () => {
         if (fileInputRef.current) {
-            fileInputRef.current.click(); // Проверяем наличие элемента перед вызовом
+            fileInputRef.current.click();
         }
     };
 
     const downloadFile = async () => {
         try {
+            setLoading(true)
             const response = await axiosInstance.get('/suppressions/sample-suppression-list', {
                 responseType: 'blob',
             });
@@ -307,8 +349,11 @@ const SuppressionRules: React.FC<SuppressionRulesProps> = ({ rules }) => {
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+
         } catch (error) {
             showErrorToast('Error downloading the file.');
+        } finally {
+            setLoading(false)
         }
     };
 
@@ -318,28 +363,43 @@ const SuppressionRules: React.FC<SuppressionRulesProps> = ({ rules }) => {
             return;
         }
 
+        const fileName = uploadedFile.name.endsWith('.csv')
+            ? uploadedFile.name.slice(0, -4)
+            : uploadedFile.name;
+
+        const isFileNameDuplicate = suppressionList.some(file => file.list_name === fileName);
+
+        if (isFileNameDuplicate) {
+            showErrorToast('File name must be unique.');
+            return;
+        }
+
         const formData = new FormData();
         formData.append('file', uploadedFile);
 
         try {
+            setLoading(true)
             const response = await axiosInstance.post('/suppressions/suppression-list', formData, {
                 headers: {
-                    'Content-Type': 'multipart/form-data', // Устанавливаем правильный тип контента
+                    'Content-Type': 'multipart/form-data',
                 },
             });
 
             if (response.status === 200) {
                 showToast('File uploaded successfully.');
+                handleUpdateSuppressionList()
             } else {
                 showErrorToast('Failed to upload file.');
             }
         } catch (error) {
             showErrorToast('Error uploading the file.');
         }
+        finally {
+            setLoading(false)
+        }
     };
 
 
-    /// Table(pagination, download/update and etc)
     interface SuppressionListResponse {
         suppression_list: any[];
         total_count: number;
@@ -347,80 +407,148 @@ const SuppressionRules: React.FC<SuppressionRulesProps> = ({ rules }) => {
     }
 
     const [suppressionList, setSuppressionList] = useState<any[]>([]);
-    const [page, setPage] = useState(0);  // Текущая страница, начинаем с 0
-    const [rowsPerPage, setRowsPerPage] = useState(15);  // Количество строк на странице
-    const [totalCount, setTotalCount] = useState(0);  // Общее количество элементов
+    const [page, setPage] = useState(0);
+    const [rowsPerPage, setRowsPerPage] = useState(5);
+    const [totalCount, setTotalCount] = useState(0);
 
-    // Функция для запроса данных с учетом пагинации
     const fetchSuppressionList = async (page: number, perPage: number) => {
         try {
+            setLoading(true)
             const response = await axiosInstance.get<SuppressionListResponse>('/suppressions/suppression-list', {
                 params: {
-                    page: page + 1,  // Передаем на сервер номер страницы, начиная с 1
+                    page: page + 1,
                     per_page: perPage,
                 },
             });
             setSuppressionList(response.data.suppression_list);
             setTotalCount(response.data.total_count);
         } catch (error) {
-            console.error('Ошибка при запросе suppression list:', error);
+        }
+        finally {
+            setLoading(false)
         }
     };
 
-    // Запрос на сервер при изменении страницы или количества строк на странице
     useEffect(() => {
-        fetchSuppressionList(page, rowsPerPage);
+        try {
+            setLoading(true)
+            fetchSuppressionList(page, rowsPerPage);
+        }
+        finally {
+            setLoading(false)
+        }
+
     }, [page, rowsPerPage]);
 
-    // Обработка изменения страницы
+    const handleUpdateSuppressionList = () => {
+        fetchSuppressionList(page, rowsPerPage);
+    };
+
     const handlePageChange = (event: React.MouseEvent<HTMLButtonElement>, newPage: number) => {
         setPage(newPage);
     };
 
-    // Обработка изменения количества строк на странице
     const handleRowsPerPageChange = (event: React.ChangeEvent<{ value: unknown }>) => {
         setRowsPerPage(parseInt(event.target.value as string, 10));
-        setPage(0);  // Сбрасываем на первую страницу при изменении количества строк
     };
 
-    const handleDeleteTableFile = async (id: number) => {
+    const handleDownloadFile = async (id: number) => {
         try {
-          await axiosInstance.delete('/suppressions/suppression-list', {
-            data: {
-              suppression_list_id: id
-            }
-          });
-          // Обновляем список после удаления
-          fetchSuppressionList(page, rowsPerPage);
-        } catch (error) {
-          console.error('Ошибка при удалении suppression list:', error);
-        }
-      };
+            setLoading(true)
+            const response = await axiosInstance.get('/suppressions/download-suppression-list', {
+                params: {
+                    suppression_list_id: id
+                },
+                responseType: 'blob'
+            });
 
-      const handleDownloadFile = async (id: number) => {
-        try {
-          const response = await axiosInstance.get('/suppressions/download-suppression-list', {
-            params: {
-              suppression_list_id: id
-            },
-            responseType: 'blob'  // Указываем тип ответа blob для скачивания файла
-          });
-      
-          // Создаем ссылку для скачивания
-          const url = window.URL.createObjectURL(new Blob([response.data]));
-          const link = document.createElement('a');
-          link.href = url;
-          link.setAttribute('download', `suppression_list_${id}.csv`);  // Имя скачиваемого файла
-          document.body.appendChild(link);
-          link.click();
-      
-          // Очищаем объект URL после скачивания
-          window.URL.revokeObjectURL(url);
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `suppression_list_${id}.csv`);
+            document.body.appendChild(link);
+            link.click();
+
+            window.URL.revokeObjectURL(url);
         } catch (error) {
-          console.error('Ошибка при скачивании suppression list:', error);
+        } finally {
+            setLoading(false)
         }
-      };
-      
+    };
+
+    const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+    const [selectedFileId, setSelectedFileId] = useState<number | null>(null);
+
+    // Открытие Popover
+    const handleClickOpen = (event: React.MouseEvent<HTMLElement>, id: number) => {
+        setSelectedFileId(id);
+        setAnchorEl(event.currentTarget);
+    };
+
+    // Закрытие Popover
+    const handleClose = () => {
+        setAnchorEl(null);
+        setSelectedFileId(null);
+    };
+
+    const handleDeleteTableFile = async () => {
+        if (selectedFileId === null) return;
+
+        try {
+            setLoading(true)
+            const response = await axiosInstance.delete('/suppressions/suppression-list', {
+                data: {
+                    suppression_list_id: selectedFileId
+                }
+            });
+            if (response.data.status === "SUCCESS") {
+                showToast("Successfully deleted file")
+            }
+            else {
+                showErrorToast("Error deleting suppression list")
+            }
+            fetchSuppressionList(page, rowsPerPage);
+            handleClose();
+        } catch (error) {
+        } finally {
+            setLoading(false)
+        }
+    };
+
+    const fetchRules = useCallback(async () => {
+        try {
+            setLoading(true)
+            const response = await axiosInstance.get("/suppressions/rules");
+            const data = response.data
+            const EmailChip = data.suppressions_multiple_emails
+                ? data.suppressions_multiple_emails.split(',').map((email: string) => email.trim())
+                : [];
+            const ChipData = data.activate_certain_urls
+                ? data.activate_certain_urls.split(',').map((url: string) => `/${url.trim()}`)
+                : [];
+            const ChipDataParam = data.activate_based_urls
+                ? data.activate_based_urls.split(',').map((url: string) => `/${url.trim()}`)
+                : [];
+            setChecked(data.is_stop_collecting_contacts)
+            setCheckedUrl(data.is_url_certain_activation)
+            setCheckedUrlParameters(data.is_based_activation)
+            setChipDataEmail(EmailChip);
+            setChipData(ChipData)
+            setChipDataParam(ChipDataParam)
+        } catch (err) {
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchRules();
+    }, [fetchRules]);
+
+
+    if (loading) {
+        return <CustomizedProgressBar />;
+    }
 
     return (
         <Box>
@@ -1093,8 +1221,16 @@ const SuppressionRules: React.FC<SuppressionRulesProps> = ({ rules }) => {
                                     >
                                         <Box sx={{ display: 'flex', flexDirection: 'column', flexGrow: 1, gap: 1 }}>
                                             <Typography className="first-sub-title" sx={{ color: 'rgba(32, 33, 36, 1)', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                {uploadedFile.name} <CheckCircleIcon sx={{ color: 'green', fontSize: '17px', }} /> {/* Иконка подтверждения */}
+                                                {uploadedFile.name}
+                                                {isFileNameDuplicate ? (
+                                                    <Tooltip title={"File name must be unique."}>
+                                                        <CancelIcon sx={{ color: 'red', fontSize: '17px' }} />
+                                                    </Tooltip>
+                                                ) : (
+                                                    <CheckCircleIcon sx={{ color: 'green', fontSize: '17px' }} />
+                                                )}
                                             </Typography>
+
                                             <Typography className="table-heading" sx={{ color: 'rgba(114, 114, 114, 1)' }}>
                                                 {(uploadedFile.size / (1024 * 1024)).toFixed(2)}MB
                                             </Typography>
@@ -1160,10 +1296,8 @@ const SuppressionRules: React.FC<SuppressionRulesProps> = ({ rules }) => {
                                     <TableCell
                                         sx={{
                                             ...suppressionsStyles.tableColumn,
-                                            position: 'sticky', // Make the Name column sticky
-                                            left: 0, // Stick it to the left
+                                            left: 0,
                                             zIndex: 9,
-                                            background: '#fff'
                                         }}>List name</TableCell>
                                     <TableCell sx={suppressionsStyles.tableColumn}>Date</TableCell>
                                     <TableCell sx={suppressionsStyles.tableColumn}>Total</TableCell>
@@ -1192,25 +1326,18 @@ const SuppressionRules: React.FC<SuppressionRulesProps> = ({ rules }) => {
                                                 }
                                             },
                                         }}>
-                                            {/* Отображаем название списка (list_name) */}
                                             <TableCell className="sticky-cell" sx={{
                                                 ...suppressionsStyles.tableBodyColumn,
-                                                cursor: 'pointer', position: 'sticky', left: '0', zIndex: 9, backgroundColor: '#fff'
+                                                cursor: 'pointer', position: 'sticky', left: '0', zIndex: 9
                                             }}>
                                                 {suppression.list_name}
                                             </TableCell>
-
-                                            {/* Отображаем дату создания (created_at), преобразуем формат */}
                                             <TableCell sx={suppressionsStyles.tableBodyColumn}>
-                                                {dayjs(suppression.created_at).format('MMM D, YYYY')} {/* Формат Sep 10, 2024 */}
+                                                {dayjs(suppression.created_at).format('MMM D, YYYY')}
                                             </TableCell>
-
-                                            {/* Отображаем список email (total_emails) */}
                                             <TableCell sx={suppressionsStyles.tableBodyColumn}>
                                                 {suppression.total_emails.split(', ').length}
                                             </TableCell>
-
-                                            {/* Отображаем статус (status) */}
                                             <TableCell sx={suppressionsStyles.tableBodyColumn}>
                                                 <Typography component="span" sx={{
                                                     background: 'rgba(234, 248, 221, 1)',
@@ -1226,8 +1353,6 @@ const SuppressionRules: React.FC<SuppressionRulesProps> = ({ rules }) => {
                                                     {suppression.status}
                                                 </Typography>
                                             </TableCell>
-
-                                            {/* Колонка с кнопками "download" и "delete" */}
                                             <TableCell sx={{
                                                 ...suppressionsStyles.tableColumn,
                                                 maxWidth: '10.8125rem',
@@ -1242,16 +1367,73 @@ const SuppressionRules: React.FC<SuppressionRulesProps> = ({ rules }) => {
                                                 </Button>
                                                 <Button
                                                     sx={{ minWidth: 'auto', padding: '0.5rem' }}
-                                                    onClick={() => handleDeleteTableFile(suppression.id)}
+                                                    onClick={(event) => handleClickOpen(event, suppression.id)}
+
                                                 >
                                                     <Image src='trash-icon-filled.svg' alt="delete" width={11.67} height={15} />
                                                 </Button>
+                                                <Popover
+                                                    open={Boolean(anchorEl)}
+                                                    anchorEl={anchorEl}
+                                                    onClose={handleClose}
+                                                    anchorOrigin={{
+                                                        vertical: 'bottom',
+                                                        horizontal: 'right',
+                                                    }}
+                                                    transformOrigin={{
+                                                        vertical: 'top',
+                                                        horizontal: 'center',
+                                                    }}
+                                                    PaperProps={{
+                                                        sx: {
+                                                            padding: '0.125rem',
+                                                            width: '15.875rem',
+                                                            boxShadow: 0,
+                                                            borderRadius: '8px',
+                                                            border: '0.5px solid rgba(175, 175, 175, 1)'
+                                                        }
+                                                    }}
+                                                >
+                                                    <Typography className="first-sub-title" sx={{ paddingLeft: 2, pt: 1, pb: 0 }}>Confirm Deletion</Typography>
+                                                    <DialogContent sx={{ padding: 2 }}>
+                                                        <DialogContentText className="table-data">
+                                                            Are you sure you want to delete this list data?
+                                                        </DialogContentText>
+                                                    </DialogContent>
+                                                    <DialogActions>
+                                                        <Button className="second-sub-title" onClick={handleClose} sx={{
+                                                            backgroundColor: '#fff',
+                                                            color: 'rgba(80, 82, 178, 1) !important',
+                                                            fontSize: '14px',
+                                                            textTransform: 'none',
+                                                            padding: '0.75em 1em',
+                                                            border: '1px solid rgba(80, 82, 178, 1)',
+                                                            maxWidth: '50px',
+                                                            maxHeight: '30px',
+                                                            '&:hover': { backgroundColor: '#fff', boxShadow: '0 2px 2px rgba(0, 0, 0, 0.3)' },
+                                                        }}>
+                                                            Cancel
+                                                        </Button>
+                                                        <Button className="second-sub-title" onClick={handleDeleteTableFile} sx={{
+                                                            backgroundColor: 'rgba(80, 82, 178, 1)',
+                                                            color: '#fff !important',
+                                                            fontSize: '14px',
+                                                            textTransform: 'none',
+                                                            padding: '0.75em 1em',
+                                                            border: '1px solid rgba(80, 82, 178, 1)',
+                                                            maxWidth: '60px',
+                                                            maxHeight: '30px',
+                                                            '&:hover': { backgroundColor: 'rgba(80, 82, 178, 1)', boxShadow: '0 2px 2px rgba(0, 0, 0, 0.3)' },
+                                                        }}>
+                                                            Delete
+                                                        </Button>
+                                                    </DialogActions>
+                                                </Popover>
                                             </TableCell>
                                         </TableRow>
                                     ))
                                 )}
                             </TableBody>
-
                         </Table>
                     </TableContainer>
                     <CustomTablePagination
@@ -1260,18 +1442,9 @@ const SuppressionRules: React.FC<SuppressionRulesProps> = ({ rules }) => {
                         rowsPerPage={rowsPerPage}
                         onPageChange={handlePageChange}
                         onRowsPerPageChange={handleRowsPerPageChange}
-                    // count={10}
-                    // page={1}
-                    // rowsPerPage={3}
-                    // onPageChange={handleChangePage}
-                    // onRowsPerPageChange={handleChangeRowsPerPage}
                     />
                 </Box>
             </Box>
-
-
-
-
         </Box>
     );
 };

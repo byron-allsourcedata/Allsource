@@ -156,12 +156,12 @@ async def process_user_data(table, index, five_x_five_user: FiveXFiveUser, sessi
         
         is_first_request = True
         lead_user = LeadUser(five_x_five_user_id=five_x_five_user.id, user_id=user.id, behavior_type=behavior_type, domain_id=user_domain_id, total_visit=0, avarage_visit_time=0, total_visit_time=0)
-        emails_to_check = five_x_five_user.business_email.split(', ') + five_x_five_user.personal_emails.split(', ') + five_x_five_user.additional_personal_emails.split(', ')
+        emails_to_check = get_list_emails(five_x_five_user)
         integrations_ids = [integration.id for integration in session.query(UserIntegration).filter(UserIntegration.is_with_suppression == True).all()]
         lead_suppression = session.query(LeadsSupperssion).filter(
             LeadsSupperssion.domain_id == user_domain_id,
             LeadsSupperssion.email.in_(emails_to_check),
-            LeadsSupperssion.integration_id.in_(integrations_ids)
+            LeadsSupperssion.integration_id.in_(integrations_ids)   
         ).first() is not None
         if not lead_suppression:
             session.add(lead_user)
@@ -261,6 +261,13 @@ async def process_user_data(table, index, five_x_five_user: FiveXFiveUser, sessi
     session.flush()
     
     session.commit()
+
+def get_list_emails(five_x_five_user: FiveXFiveUser):
+    business_emails = five_x_five_user.business_email.split(', ') if five_x_five_user.business_email else []
+    personal_emails = five_x_five_user.personal_emails.split(', ') if five_x_five_user.personal_emails else []
+    additional_personal_emails = five_x_five_user.additional_personal_emails.split(', ') if five_x_five_user.additional_personal_emails else []
+    all_emails = business_emails + personal_emails + additional_personal_emails
+    return list(set(all_emails))
 
 def convert_leads_requests_to_utc(leads_requests):
     utc = pytz.utc
