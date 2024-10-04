@@ -8,14 +8,11 @@ import { UpgradePlanPopup } from './UpgradePlanPopup';
 import { InviteUsersPopup } from './InviteUsersPopup';
 import { showErrorToast, showToast } from './ToastNotification';
 import CustomizedProgressBar from '@/components/CustomizedProgressBar';
+import CustomTooltip from './customToolTip';
 
 const teamsStyles = {
     tableColumn: {
-        fontFamily: 'Nunito Sans',
-        fontSize: '12px',
-        fontWeight: '600',
-        lineHeight: '16px',
-        color: '#202124',
+        lineHeight: '16px !important',
         position: 'relative',
         textAlign: 'center',
         '&::after': {
@@ -39,11 +36,7 @@ const teamsStyles = {
         }
     },
     tableBodyColumn: {
-        fontFamily: 'Roboto',
-        fontSize: '12px',
-        fontWeight: '400',
-        lineHeight: '16px',
-        color: '#5f6368',
+        lineHeight: '16px !important',
         position: 'relative',
         textAlign: 'center',
         '&::after': {
@@ -388,16 +381,10 @@ export const SettingsTeams: React.FC = () => {
             {pendingInvitations.length > 0 && (
                 <Box sx={{ marginBottom: 2 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', mb: 3 }}>
-                        <Typography variant="h6" sx={{
-                            fontFamily: 'Nunito Sans',
-                            fontSize: '16px',
-                            fontWeight: '600',
-                            color: '#202124',
-                            lineHeight: '22px'
+                        <Typography variant="h6" className='first-sub-title' sx={{
+                            lineHeight: '22px !important'
                         }}>Pending invitations</Typography>
-                        <Tooltip title="Team Info" placement="right">
-                            <Image src='/info-icon.svg' alt='info-icon' height={13} width={13} />
-                        </Tooltip>
+                        <CustomTooltip title={"The Settings menu allows you to customise your user experience, manage your account preferences, and adjust notifications."} linkText="Learn more" linkUrl="https://maximiz.ai"/>
                     </Box>
 
                     <TableContainer sx={{
@@ -408,6 +395,7 @@ export const SettingsTeams: React.FC = () => {
                             <TableHead>
                                 <TableRow>
                                     <TableCell
+                                    className='table-heading'
                                         sx={{
                                             ...teamsStyles.tableColumn,
                                             position: 'sticky', // Make the Name column sticky
@@ -415,16 +403,16 @@ export const SettingsTeams: React.FC = () => {
                                             zIndex: 9,
                                             background: '#fff'
                                         }}>Invited User</TableCell>
-                                    <TableCell sx={teamsStyles.tableColumn}>Access Level</TableCell>
-                                    <TableCell sx={teamsStyles.tableColumn}>Date Invited</TableCell>
-                                    <TableCell sx={teamsStyles.tableColumn}>Status</TableCell>
-                                    <TableCell sx={teamsStyles.tableColumn}>Actions</TableCell>
+                                    <TableCell className='table-heading' sx={teamsStyles.tableColumn}>Access Level</TableCell>
+                                    <TableCell className='table-heading' sx={teamsStyles.tableColumn}>Date Invited</TableCell>
+                                    <TableCell className='table-heading' sx={teamsStyles.tableColumn}>Status</TableCell>
+                                    <TableCell className='table-heading' sx={teamsStyles.tableColumn}>Actions</TableCell>
                                 </TableRow>
                             </TableHead>
                             <TableBody>
                                 {pendingInvitations.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={5} sx={{
+                                        <TableCell className='table-data' colSpan={5} sx={{
                                             ...teamsStyles.tableBodyColumn,
                                             textAlign: 'center'
                                         }}>
@@ -443,28 +431,24 @@ export const SettingsTeams: React.FC = () => {
                                             },
 
                                         }}>
-                                            <TableCell className="sticky-cell" sx={{
+                                            <TableCell className="sticky-cell table-data" sx={{
                                                 ...teamsStyles.tableBodyColumn,
                                                 cursor: 'pointer', position: 'sticky', left: '0', zIndex: 9, backgroundColor: '#fff'
                                             }}>{invitation.email}</TableCell>
-                                            <TableCell sx={teamsStyles.tableBodyColumn}>{invitation.role}</TableCell>
-                                            <TableCell sx={teamsStyles.tableBodyColumn}>{invitation.date}</TableCell>
-                                            <TableCell sx={teamsStyles.tableBodyColumn}>
-                                                <Typography component="span" sx={{
+                                            <TableCell className='table-data' sx={teamsStyles.tableBodyColumn}>{invitation.role}</TableCell>
+                                            <TableCell className='table-data' sx={teamsStyles.tableBodyColumn}>{invitation.date}</TableCell>
+                                            <TableCell className='table-data' sx={teamsStyles.tableBodyColumn}>
+                                                <Typography component="span" className='table-data' sx={{
                                                     background: '#ececec',
                                                     padding: '6px 8px',
                                                     borderRadius: '2px',
-                                                    fontFamily: 'Roboto',
-                                                    fontSize: '12px',
-                                                    fontWeight: '400',
-                                                    lineHeight: '16px',
-                                                    color: '#5f6368',
+                                                    lineHeight: '16px !important'
                                                 }}>
                                                     {invitation.status}
                                                 </Typography>
                                             </TableCell>
-                                            <TableCell sx={teamsStyles.tableBodyColumn}>
-                                                <Button
+                                            <TableCell className='table-data' sx={teamsStyles.tableBodyColumn}>
+                                                <Button className='table-data'
                                                     onClick={() => {
                                                         const confirmed = window.confirm('Are you sure you want to revoke this invitation?');
                                                         if (confirmed) {
@@ -472,11 +456,7 @@ export const SettingsTeams: React.FC = () => {
                                                         }
                                                     }}
                                                     sx={{
-                                                        fontFamily: 'Roboto',
-                                                        fontSize: '12px',
-                                                        fontWeight: '400',
-                                                        lineHeight: '16px',
-                                                        color: '#5f6368',
+                                                        lineHeight: '16px !important',
                                                         position: 'relative',
                                                         textAlign: 'center',
                                                         textTransform: 'none',
@@ -501,28 +481,18 @@ export const SettingsTeams: React.FC = () => {
             <Box>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', my: 3.75, alignItems: 'center' }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <Typography variant="h6" sx={{
-                            fontFamily: 'Nunito Sans',
-                            fontSize: '16px',
-                            fontWeight: '600',
-                            color: '#202124',
-                            lineHeight: '22px'
+                        <Typography variant="h6" className='first-sub-title' sx={{
+                            lineHeight: '22px !important'
                         }}>Team members</Typography>
-                        <Typography variant='h6' sx={{
+                        <Typography variant='h6' className='table-data' sx={{
                             background: '#EDEDF7',
                             borderRadius: '4px',
-                            fontFamily: 'Roboto',
-                            fontSize: '12px',
-                            fontWeight: '400',
-                            color: '#5f6368',
                             padding: '4px 6px',
-                            lineHeight: '16px'
+                            lineHeight: '16px !important'
                         }}>
                             {memberCount}/{memberLimit} Member limit
                         </Typography>
-                        <Tooltip title="Team Info" placement="right">
-                            <Image src='/info-icon.svg' alt='info-icon' height={13} width={13} />
-                        </Tooltip>
+                        <CustomTooltip title={"Team Info"} linkText="Learn more" linkUrl="https://maximiz.ai"/>
                     </Box>
                     <Box sx={{ border: '1px dashed #5052B2', borderRadius: '4px' }}>
                         <Button onClick={handleInviteUsersPopupOpen}><Image src="/add-square.svg" alt="add-square" height={24} width={24} /></Button>
@@ -538,7 +508,7 @@ export const SettingsTeams: React.FC = () => {
                     <Table>
                         <TableHead>
                             <TableRow>
-                                <TableCell sx={{
+                                <TableCell className='table-heading' sx={{
                                     ...teamsStyles.tableColumn,
                                     position: 'sticky',
                                     left: 0,
@@ -547,17 +517,17 @@ export const SettingsTeams: React.FC = () => {
                                     textAlign: 'left'
                                 }}>User</TableCell>
 
-                                <TableCell sx={teamsStyles.tableColumn}>Last signed-in</TableCell>
-                                <TableCell sx={teamsStyles.tableColumn}>Access level</TableCell>
-                                <TableCell sx={teamsStyles.tableColumn}>Invited by</TableCell>
-                                <TableCell sx={teamsStyles.tableColumn}>Added on</TableCell>
-                                <TableCell sx={teamsStyles.tableColumn}>Actions</TableCell>
+                                <TableCell className='table-heading' sx={teamsStyles.tableColumn}>Last signed-in</TableCell>
+                                <TableCell className='table-heading' sx={teamsStyles.tableColumn}>Access level</TableCell>
+                                <TableCell className='table-heading' sx={teamsStyles.tableColumn}>Invited by</TableCell>
+                                <TableCell className='table-heading' sx={teamsStyles.tableColumn}>Added on</TableCell>
+                                <TableCell className='table-heading' sx={teamsStyles.tableColumn}>Actions</TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
                             {teamMembers.length === 0 ? (
                                 <TableRow sx={teamsStyles.tableBodyRow}>
-                                    <TableCell colSpan={5} sx={{
+                                    <TableCell className='table-data' colSpan={5} sx={{
                                         ...teamsStyles.tableBodyColumn,
                                         textAlign: 'center'
                                     }}>
@@ -580,7 +550,7 @@ export const SettingsTeams: React.FC = () => {
                                         onClick={() => handleRowClick(member.email)}
                                     >
                                         <TableCell
-                                            className="sticky-cell"
+                                            className="sticky-cell table-data"
                                             sx={{
                                                 ...teamsStyles.tableBodyColumn,
                                                 cursor: 'pointer',
@@ -594,10 +564,11 @@ export const SettingsTeams: React.FC = () => {
                                             {member.email}
                                         </TableCell>
 
-                                        <TableCell sx={teamsStyles.tableBodyColumn}>{member.last_sign_in}</TableCell>
-                                        <TableCell sx={teamsStyles.tableBodyColumn} onClick={(e) => handleDropdownClick(e, member.email)}>
-                                            <FormControl variant="outlined" sx={{ width: '100%' }}>
+                                        <TableCell className='table-data' sx={teamsStyles.tableBodyColumn}>{member.last_sign_in}</TableCell>
+                                        <TableCell className='table-data' sx={teamsStyles.tableBodyColumn} onClick={(e) => handleDropdownClick(e, member.email)}>
+                                            <FormControl variant="outlined" sx={{ width: '100%', position: 'relative' }}>
                                                 <Select
+                                                    className='second-text'
                                                     value={member.access_level}
                                                     onChange={member.access_level === "owner" ? undefined : (e) => handleSelectionChange(e, member.email)}
                                                     open={teamSelectOpen === member.email && member.access_level !== "owner"}
@@ -621,27 +592,21 @@ export const SettingsTeams: React.FC = () => {
                                                             padding: '0 !important',
                                                             margin: '0 auto',
                                                             cursor: member.access_level === "owner" ? 'not-allowed' : 'pointer',
+                                                            ...(member.access_level !== "owner" && {
+                                                                '&:after': {
+                                                                    content: '""',
+                                                                    position: 'absolute',
+                                                                    left: 0,
+                                                                    bottom: 0,
+                                                                    width: '100%',
+                                                                    borderBottom: '1px dashed #51627B', // Dashed line under the text
+                                                                }
+                                                            })
                                                         },
                                                         '& .MuiSelect-icon': {
                                                             display: 'none',
                                                         }
                                                     }}
-                                                    input={
-                                                        <OutlinedInput
-                                                            endAdornment={
-                                                                teamSelectOpen === member.email && (
-                                                                    <InputAdornment position="end" onClick={(e) => handleArrowClick(e, member.email)} sx={{ cursor: 'pointer' }}>
-                                                                        <Image
-                                                                            src={teamSelectOpen === member.email ? '/chevron-drop-up.svg' : '/chevron-drop-down.svg'}
-                                                                            alt={teamSelectOpen === member.email ? 'chevron-drop-up' : 'chevron-drop-down'}
-                                                                            height={24}
-                                                                            width={24}
-                                                                        />
-                                                                    </InputAdornment>
-                                                                )
-                                                            }
-                                                        />
-                                                    }
                                                     MenuProps={{
                                                         PaperProps: {
                                                             sx: {
@@ -674,20 +639,33 @@ export const SettingsTeams: React.FC = () => {
                                                         </MenuItem>
                                                     ))}
                                                 </Select>
-                                                {member.access_level !== "owner" && (
-                                                    <Box sx={{
-                                                        borderBottom: '1px dashed #51627B',
-                                                        width: '40%',
-                                                        margin: '4px auto 0',
-                                                    }} />
-                                                )}
+                                                 {/* Chevron Icon Positioned Absolutely */}
+                                                    {teamSelectOpen === member.email && member.access_level !== "owner" && (
+                                                        <span
+                                                            onClick={(e) => handleArrowClick(e, member.email)}
+                                                            style={{
+                                                                position: 'absolute',
+                                                                right: '10px',
+                                                                top: '50%',
+                                                                transform: 'translateY(-50%)',
+                                                                cursor: 'pointer',
+                                                            }}
+                                                        >
+                                                            <Image
+                                                                src={teamSelectOpen === member.email ? '/chevron-drop-up.svg' : '/chevron-drop-down.svg'}
+                                                                alt={teamSelectOpen === member.email ? 'chevron-drop-up' : 'chevron-drop-down'}
+                                                                height={24}
+                                                                width={24}
+                                                            />
+                                                        </span>
+                                                    )}
                                             </FormControl>
                                         </TableCell>
-                                        <TableCell sx={teamsStyles.tableBodyColumn}>{member.invited_by}</TableCell>
-                                        <TableCell sx={teamsStyles.tableBodyColumn}>{member.added_on}</TableCell>
-                                        <TableCell sx={teamsStyles.tableBodyColumn}>
+                                        <TableCell className='table-data' sx={teamsStyles.tableBodyColumn}>{member.invited_by}</TableCell>
+                                        <TableCell className='table-data' sx={teamsStyles.tableBodyColumn}>{member.added_on}</TableCell>
+                                        <TableCell className='table-data' sx={teamsStyles.tableBodyColumn}>
                                             {member.access_level !== 'owner' && (
-                                                <Button
+                                                <Button className='table-data'
                                                     onClick={() => {
                                                         const confirmed = window.confirm('Are you sure you want to remove this member?');
                                                         if (confirmed) {
@@ -695,11 +673,7 @@ export const SettingsTeams: React.FC = () => {
                                                         }
                                                     }}
                                                     sx={{
-                                                        fontFamily: 'Roboto',
-                                                        fontSize: '12px',
-                                                        fontWeight: '400',
-                                                        lineHeight: '16px',
-                                                        color: '#5f6368',
+                                                        lineHeight: '16px !important',
                                                         position: 'relative',
                                                         textAlign: 'center',
                                                         textTransform: 'none',

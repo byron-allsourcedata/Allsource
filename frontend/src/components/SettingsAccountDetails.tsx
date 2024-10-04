@@ -943,7 +943,7 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
                                 onFocus={handleFocus(companyWebsite, setIsCompanyWebsiteFocused, setIsCompanyWebsiteTyping)}
                                 onBlur={handleBlur(companyWebsite, setIsCompanyWebsiteFocused, setIsCompanyWebsiteTyping)}
                             />
-                            <Button variant="contained" color="primary" onClick={() => handleSaveBusinessInfo('companyWebsite')}
+                            <Button className='hyperlink-red' variant="contained" color="primary" onClick={() => handleSaveBusinessInfo('companyWebsite')}
                                 sx={{
                                     borderRadius: '4px',
                                     border: '1px solid #5052B2',
@@ -1013,7 +1013,7 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
                                 onFocus={handleFocus(monthlyVisits, setIsMonthlyVisitsFocused, setIsMonthlyVisitsTyping)}
                                 onBlur={handleBlur(monthlyVisits, setIsMonthlyVisitsFocused, setIsMonthlyVisitsTyping)}
                             />
-                            <Button variant="contained" color="primary" onClick={() => handleSaveBusinessInfo('monthlyVisits')}
+                            <Button className='hyperlink-red' variant="contained" color="primary" onClick={() => handleSaveBusinessInfo('monthlyVisits')}
                                 sx={{
                                     borderRadius: '4px',
                                     border: '1px solid #5052B2',

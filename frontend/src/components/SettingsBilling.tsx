@@ -10,6 +10,7 @@ import CustomizedProgressBar from '@/components/CustomizedProgressBar';
 import CheckoutForm from './CheckoutForm';
 import { showErrorToast, showToast } from './ToastNotification';
 import axios from 'axios';
+import CustomTooltip from './customToolTip';
 
 type CardBrand = 'visa' | 'mastercard' | 'americanexpress' | 'discover';
 
@@ -22,11 +23,7 @@ const cardBrandImages: Record<CardBrand, string> = {
 
 const billingStyles = {
     tableColumn: {
-        fontFamily: 'Nunito Sans',
-        fontSize: '12px',
-        fontWeight: '600',
-        lineHeight: '16px',
-        color: '#202124',
+        lineHeight: '16px !important',
         position: 'relative',
         textAlign: 'center',
         '&::after': {
@@ -50,11 +47,7 @@ const billingStyles = {
         }
     },
     tableBodyColumn: {
-        fontFamily: 'Roboto',
-        fontSize: '12px',
-        fontWeight: '400',
-        lineHeight: '16px',
-        color: '#5f6368',
+        lineHeight: '16px !important',
         position: 'relative',
         textAlign: 'center',
         '&::after': {
@@ -76,12 +69,14 @@ const billingStyles = {
         margin: '0'
     },
     inputLabel: {
-        fontFamily: 'Nunito Sans',
-        fontSize: '12px',
-        lineHeight: '16px',
-        color: 'rgba(17, 17, 19, 0.60)',
+        top: '-3px',
         '&.Mui-focused': {
-            color: '#0000FF',
+            top: 0,
+            color: 'rgba(17, 17, 19, 0.6)',
+            fontFamily: 'Nunito Sans',
+            fontWeight: 400,
+            fontSize: '12px',
+            lineHeight: '16px'
         },
     },
     formInput: {
@@ -89,27 +84,13 @@ const billingStyles = {
             margin: 0,
         },
         '&.MuiOutlinedInput-root': {
-            height: '48px',
             '& .MuiOutlinedInput-input': {
-                padding: '12px 16px 13px 16px',
                 fontFamily: 'Roboto',
                 color: '#202124',
                 fontSize: '14px',
                 lineHeight: '20px'
-            },
-            '& .MuiOutlinedInput-notchedOutline': {
-                borderColor: '#A3B0C2',
-            },
-            '&:hover .MuiOutlinedInput-notchedOutline': {
-                borderColor: '#A3B0C2',
-            },
-            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                borderColor: '#0000FF',
-            },
-        },
-        '&+.MuiFormHelperText-root': {
-            marginLeft: '0',
-        },
+            }
+        }
     }
 }
 
@@ -509,12 +490,7 @@ export const SettingsBilling: React.FC = () => {
                 <Grid item xs={12} md={6} sx={{ padding: '0px' }}>
                     <Box sx={{ border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)', p: 3, height: '100%' }}>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 2 }}>
-                            <Typography className="main-text" sx={{
-                                fontSize: '1rem',
-                                fontWeight: '600',
-                                lineHeight: 'normal',
-                                color: '#202124'
-                            }}>
+                            <Typography className="first-sub-title">
                                 Card Details
                             </Typography>
                             <Button
@@ -559,13 +535,9 @@ export const SettingsBilling: React.FC = () => {
                                     </Box>
                                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: '8px', justifyContent: 'center' }}>
                                         <Box sx={{ display: 'flex', gap: 1 }}>
-                                            <Typography className="main-text" sx={{
-                                                fontSize: '1rem',
-                                                fontWeight: '600',
-                                                lineHeight: 'normal',
-                                                color: '#202124',
+                                            <Typography className="first-sub-title" sx={{
                                                 '@media (max-width: 600px)': {
-                                                    fontSize: '12px'
+                                                    fontSize: '12px !important'
                                                 }
                                             }}>
                                                 {`${card.brand.charAt(0).toUpperCase() + card.brand.slice(1)} (**** ${card.last4})`}
@@ -620,14 +592,13 @@ export const SettingsBilling: React.FC = () => {
                                         }}>
 
                                             <Box sx={{ my: 2 }}>
-                                                <Button onClick={handleRemovePopupOpen} sx={{
+                                                <Button 
+                                                className='hyperlink-red'
+                                                onClick={handleRemovePopupOpen} sx={{
                                                     border: 'none',
                                                     boxShadow: 'none',
-                                                    color: '#202124',
-                                                    fontFamily: 'Nunito Sans',
-                                                    fontSize: '14px',
-                                                    fontWeight: '600',
-                                                    lineHeight: 'normal',
+                                                    color: '#202124 !important',
+                                                    lineHeight: 'normal !important',
                                                     textTransform: 'none',
                                                     minWidth: 'auto',
                                                     width: '100%',
@@ -642,27 +613,28 @@ export const SettingsBilling: React.FC = () => {
                                                 }}>
                                                     Remove
                                                 </Button>
-                                                <Button onClick={handleSetDefault} sx={{
-                                                    border: 'none',
-                                                    boxShadow: 'none',
-                                                    color: '#202124',
-                                                    fontFamily: 'Nunito Sans',
-                                                    fontSize: '14px',
-                                                    fontWeight: '600',
-                                                    lineHeight: 'normal',
-                                                    textTransform: 'none',
-                                                    minWidth: 'auto',
-                                                    width: '100%',
-                                                    padding: '4px 0 4px 16px',
-                                                    textAlign: 'left',
-                                                    display: 'block',
-                                                    borderRadius: '0',
-                                                    '&:hover': {
-                                                        backgroundColor: 'rgba(80, 82, 178, 0.10)'
-                                                    }
-                                                }}>
-                                                    Set as default
-                                                </Button>
+                                                {!card.is_default && (
+                                                    <Button
+                                                        className='hyperlink-red'
+                                                        onClick={handleSetDefault} sx={{
+                                                        border: 'none',
+                                                        boxShadow: 'none',
+                                                        color: '#202124 !important',
+                                                        lineHeight: 'normal !important',
+                                                        textTransform: 'none',
+                                                        minWidth: 'auto',
+                                                        width: '100%',
+                                                        padding: '4px 0 4px 16px',
+                                                        textAlign: 'left',
+                                                        display: 'block',
+                                                        borderRadius: '0',
+                                                        '&:hover': {
+                                                            backgroundColor: 'rgba(80, 82, 178, 0.10)'
+                                                        }
+                                                    }}>
+                                                        Set as default
+                                                    </Button>
+                                                )}
                                             </Box>
 
                                         </Box>
@@ -709,12 +681,7 @@ export const SettingsBilling: React.FC = () => {
                 <Grid item xs={12} md={6} sx={{ padding: '0px' }}>
                     <Box sx={{ border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)', p: 3 }}>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', pb: 2 }}>
-                            <Typography className="main-text" sx={{
-                                fontSize: '1rem',
-                                fontWeight: '600',
-                                lineHeight: 'normal',
-                                color: '#202124'
-                            }}>
+                            <Typography className="first-sub-title">
                                 Billing Details
                             </Typography>
                             {billingDetails.active && (
@@ -750,12 +717,10 @@ export const SettingsBilling: React.FC = () => {
                                                     gap: '12px'
                                                 }
                                             }}>
-                                                <Typography className="main-text" sx={{
+                                                <Typography className="third-sub-title" sx={{
                                                     width: '130px',
-                                                    fontSize: '12px',
-                                                    fontWeight: '600',
-                                                    lineHeight: '16px',
-                                                    color: '#202124',
+                                                    fontWeight: '600 !important',
+                                                    lineHeight: '16px !important',
                                                     '@media (max-width: 600px)': {
                                                         width: '110px'
                                                     }
@@ -822,9 +787,9 @@ export const SettingsBilling: React.FC = () => {
                                                     {/* Conditional Rendering of Text */}
                                                     {!checked && (
                                                         <Typography
+                                                            className='second-text'
                                                             variant="caption"
                                                             sx={{
-                                                                fontFamily: 'Roboto',
                                                                 fontSize: '12px',
                                                                 color: '#fff',
                                                                 fontWeight: '400',
@@ -840,9 +805,9 @@ export const SettingsBilling: React.FC = () => {
 
                                                     {checked && (
                                                         <Typography
+                                                            className='second-text'
                                                             variant="caption"
                                                             sx={{
-                                                                fontFamily: 'Roboto',
                                                                 fontSize: '12px',
                                                                 color: '#fff',
                                                                 fontWeight: '400',
@@ -880,53 +845,37 @@ export const SettingsBilling: React.FC = () => {
                                                             width: 'auto'
                                                         }
                                                     }}>
-                                                        <Typography variant="body1" sx={{
-                                                            color: '#202124',
-                                                            fontFamily: 'Nunito Sans',
-                                                            fontSize: '16px',
-                                                            fontWeight: '600',
-                                                            lineHeight: 'normal',
+                                                        <Typography variant="body1" className='first-sub-title' sx={{
                                                             paddingBottom: '8px'
                                                         }}>Enable Overage</Typography>
-                                                        <Typography variant="body2" sx={{
-                                                            color: '#5f6368',
-                                                            fontFamily: 'Roboto',
-                                                            fontSize: '12px',
-                                                            fontWeight: '400',
-                                                            lineHeight: '16px',
+                                                        <Typography variant="body2" className='paragraph' sx={{
+                                                            color: '#5f6368 !important',
+                                                            lineHeight: '16px !important',
                                                             paddingBottom: '24px'
                                                         }}>
                                                             On enabling overage, we will send 10,000 contacts that were collected after 7th September, when your plan exceeded the limit and from now  new contacts will be added with overage charge
                                                             $0.49/contact.
                                                         </Typography>
                                                         <Box display="flex" justifyContent="flex-end" mt={2}>
-                                                            <Button onClick={handleOverageClose} sx={{
+                                                            <Button className='hyperlink-red' onClick={handleOverageClose} sx={{
                                                                 borderRadius: '4px',
                                                                 border: '1px solid #5052b2',
                                                                 boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                                                                color: '#5052b2',
-                                                                fontFamily: 'Nunito Sans',
-                                                                fontSize: '14px',
-                                                                fontWeight: '600',
-                                                                lineHeight: '20px',
+                                                                color: '#5052b2 !important',
                                                                 marginRight: '16px',
                                                                 textTransform: 'none'
                                                             }}>
                                                                 Cancel
                                                             </Button>
-                                                            <Button onClick={handleSendChangeOverage} sx={{
+                                                            <Button className='hyperlink-red' onClick={handleSendChangeOverage} sx={{
                                                                 background: '#5052B2',
                                                                 borderRadius: '4px',
                                                                 border: '1px solid #5052b2',
                                                                 boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                                                                color: '#fff',
-                                                                fontFamily: 'Nunito Sans',
-                                                                fontSize: '14px',
-                                                                fontWeight: '600',
-                                                                lineHeight: '20px',
+                                                                color: '#fff !important',
                                                                 textTransform: 'none',
                                                                 '&:hover': {
-                                                                    color: '#5052B2'
+                                                                    color: '#5052B2 !important'
                                                                 }
                                                             }}>
                                                                 Confirm
@@ -969,13 +918,10 @@ export const SettingsBilling: React.FC = () => {
                                                         lineHeight: '16px',
                                                         color: '#4a4a4a'
                                                     }}>Next Billing Date</Typography>
-                                                    <Typography className='main-text' sx={{
-                                                        fontSize: '16px',
-                                                        fontWeight: '700',
-                                                        lineHeight: 'normal',
-                                                        color: '#202124',
+                                                    <Typography className='first-sub-title' sx={{
+                                                        fontWeight: '700 !important',
                                                         '@media (max-width: 600px)': {
-                                                            fontSize: '12px'
+                                                            fontSize: '12px !important'
                                                         }
 
                                                     }}>On {renderValue(value)}</Typography>
@@ -996,11 +942,8 @@ export const SettingsBilling: React.FC = () => {
                                                                 lineHeight: '16px',
                                                                 color: '#4a4a4a'
                                                             }}>Monthly Total</Typography>
-                                                            <Typography className='main-text' sx={{
-                                                                fontSize: '16px',
-                                                                fontWeight: '700',
-                                                                lineHeight: 'normal',
-                                                                color: '#202124'
+                                                            <Typography className='first-sub-title' sx={{
+                                                                fontWeight: '700 !important'
                                                             }}>{renderValue(nextValue)}</Typography>
                                                         </Box>
                                                     );
@@ -1027,24 +970,19 @@ export const SettingsBilling: React.FC = () => {
                                             gap: '12px'
                                         }
                                     }}>
-                                        <Typography className="main-text" sx={{
+                                        <Typography className="first-sub-title" sx={{
                                             width: '130px',
-                                            fontSize: '12px',
-                                            fontWeight: '600',
-                                            lineHeight: '16px',
-                                            color: '#202124',
+                                            fontSize: '12px !important',
+                                            lineHeight: '16px !important',
                                             '@media (max-width: 600px)': {
                                                 width: '110px'
                                             }
                                         }}>
                                             {formatKey(key)}
                                         </Typography>
-                                        <Typography className="second-text" sx={{
-                                            fontSize: '12px',
-                                            fontWeight: '400',
-                                            lineHeight: '16px',
-                                            color: '#5f6368',
-                                            letterSpacing: '0.06px'
+                                        <Typography className="paragraph" sx={{
+                                            lineHeight: '16px !important',
+                                            color: '#5f6368 !important'
                                         }}>{renderValue(value)}</Typography>
                                     </Box>
                                 );
@@ -1057,7 +995,7 @@ export const SettingsBilling: React.FC = () => {
             </Grid>
 
             <Box sx={{ borderRadius: '4px', border: '1px solid #f0f0f0', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)', p: 3, marginBottom: 2 }}>
-                <Typography className='main-text' sx={{ fontSize: '16px', fontWeight: '600', lineHeight: 'normal', color: '#202124', mb: 2 }}>
+                <Typography className='first-sub-title' sx={{ mb: 2 }}>
                     Usages
                 </Typography>
                 <Box sx={{
@@ -1071,10 +1009,10 @@ export const SettingsBilling: React.FC = () => {
 
                     <Box sx={{ width: '100%' }}>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <Typography className='main-text' sx={{ fontSize: '14px', fontWeight: '500', lineHeight: '20px', color: '#202124', mb: '12px' }}>
+                            <Typography className='second-sub-title' sx={{  lineHeight: '20px !important', mb: '12px' }}>
                                 Contacts collected
                             </Typography>
-                            <Typography className='main-text' sx={{ fontSize: '14px', fontWeight: '500', lineHeight: '20px', color: '#202124', mb: '12px' }}>
+                            <Typography className='second-sub-title' sx={{ lineHeight: '20px !important', mb: '12px' }}>
                                 {((contactsCollected / planContactsCollected) * 100).toFixed(2)}% Used
                             </Typography>
 
@@ -1092,7 +1030,7 @@ export const SettingsBilling: React.FC = () => {
                                 },
                             }}
                         />
-                        <Typography className='second-text' sx={{ fontSize: '12px', fontWeight: '400', lineHeight: 'normal', color: '#787878', letterSpacing: '0.06px' }}>
+                        <Typography className='paragraph' sx={{ color: '#787878' }}>
                             {contactsCollected} out of {planContactsCollected} Remaining
                         </Typography>
                     </Box>
@@ -1112,10 +1050,10 @@ export const SettingsBilling: React.FC = () => {
 
                     <Box sx={{ width: '100%', marginBottom: 2 }}>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <Typography className='main-text' sx={{ fontSize: '14px', fontWeight: '500', lineHeight: '20px', color: '#202124', mb: '12px' }}>
+                            <Typography className='second-sub-title' sx={{ lineHeight: '20px !important', mb: '12px' }}>
                                 Prospect Data
                             </Typography>
-                            <Typography className='main-text' sx={{ fontSize: '14px', fontWeight: '500', lineHeight: '20px', color: '#202124', mb: '12px' }}>
+                            <Typography className='second-sub-title' sx={{ lineHeight: '20px !important', mb: '12px' }}>
                                 0% Used
                             </Typography>
                         </Box>
@@ -1130,28 +1068,24 @@ export const SettingsBilling: React.FC = () => {
                                 mb: 1
                             }}
                         />
-                        <Typography className='second-text' sx={{ fontSize: '12px', fontWeight: '400', lineHeight: 'normal', color: '#787878', letterSpacing: '0.06px' }}>
-                            {prospectData}
+                        <Typography className='paragraph' sx={{ color: '#787878 !important' }}>
+                            {0}
                         </Typography>
                     </Box>
 
 
 
                     <Box sx={{ flexShrink: 0 }}>
-                        <Button onClick={handleBuyCredits} sx={{
+                        <Button className='hyperlink-red' onClick={handleBuyCredits} sx={{
                             background: '#5052B2',
                             borderRadius: '4px',
                             border: '1px solid #5052b2',
                             boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                            color: '#fff',
-                            fontFamily: 'Nunito Sans',
-                            fontSize: '14px',
-                            fontWeight: '600',
-                            lineHeight: '20px',
+                            color: '#fff !important',
                             textTransform: 'none',
                             padding: '10px 24px',
                             '&:hover': {
-                                color: '#5052B2'
+                                color: '#5052B2 !important'
                             }
                         }}>Buy Credits</Button>
                     </Box>
@@ -1171,16 +1105,10 @@ export const SettingsBilling: React.FC = () => {
             }} />
             <Box sx={{ marginTop: '30px' }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', mb: 3 }}>
-                    <Typography variant="h6" sx={{
-                        fontFamily: 'Nunito Sans',
-                        fontSize: '16px',
-                        fontWeight: '600',
-                        color: '#202124',
-                        lineHeight: '22px'
+                    <Typography variant="h6" className='first-sub-title' sx={{
+                        lineHeight: '22px !important'
                     }}>Billing History</Typography>
-                    <Tooltip title="Billing Info" placement="right">
-                        <Image src='/info-icon.svg' alt='info-icon' height={13} width={13} />
-                    </Tooltip>
+                    <CustomTooltip title={"Billing History"} linkText="Learn more" linkUrl="https://maximiz.ai"/>
                 </Box>
                 <TableContainer sx={{
                     border: '1px solid #EBEBEB',
@@ -1189,24 +1117,26 @@ export const SettingsBilling: React.FC = () => {
                     <Table>
                         <TableHead>
                             <TableRow>
-                                <TableCell sx={{
+                                <TableCell 
+                                className='table-heading'
+                                sx={{
                                     ...billingStyles.tableColumn,
                                     position: 'sticky', // Make the Name column sticky
                                     left: 0, // Stick it to the left
                                     zIndex: 9,
                                     background: '#fff'
                                 }}>Date</TableCell>
-                                <TableCell sx={billingStyles.tableColumn}>Invoice ID</TableCell>
-                                <TableCell sx={billingStyles.tableColumn}>Pricing Plan</TableCell>
-                                <TableCell sx={billingStyles.tableColumn}>Total</TableCell>
-                                <TableCell sx={billingStyles.tableColumn}>Status</TableCell>
-                                <TableCell sx={billingStyles.tableColumn}>Actions</TableCell>
+                                <TableCell className='table-heading' sx={billingStyles.tableColumn}>Invoice ID</TableCell>
+                                <TableCell className='table-heading' sx={billingStyles.tableColumn}>Pricing Plan</TableCell>
+                                <TableCell className='table-heading' sx={billingStyles.tableColumn}>Total</TableCell>
+                                <TableCell className='table-heading' sx={billingStyles.tableColumn}>Status</TableCell>
+                                <TableCell className='table-heading' sx={billingStyles.tableColumn}>Actions</TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
                             {billingHistory.length === 0 ? (
                                 <TableRow sx={billingStyles.tableBodyRow}>
-                                    <TableCell colSpan={5} sx={{
+                                    <TableCell className='table-data' colSpan={5} sx={{
                                         ...billingStyles.tableBodyColumn,
                                         textAlign: 'center'
                                     }}>
@@ -1227,31 +1157,27 @@ export const SettingsBilling: React.FC = () => {
 
                                         }}
                                     >
-                                        <TableCell className="sticky-cell" sx={{
+                                        <TableCell className="sticky-cell table-data" sx={{
                                             ...billingStyles.tableBodyColumn,
                                             cursor: 'pointer', position: 'sticky', left: '0', zIndex: 9, backgroundColor: '#fff'
                                         }}>{history.date}</TableCell>
-                                        <TableCell sx={billingStyles.tableBodyColumn}>{history.invoice_id}</TableCell>
-                                        <TableCell sx={billingStyles.tableBodyColumn}>
+                                        <TableCell className='table-data' sx={billingStyles.tableBodyColumn}>{history.invoice_id}</TableCell>
+                                        <TableCell className='table-data' sx={billingStyles.tableBodyColumn}>
                                             {history.pricing_plan}
                                         </TableCell>
-                                        <TableCell sx={billingStyles.tableBodyColumn}>{history.total}</TableCell>
-                                        <TableCell sx={billingStyles.tableBodyColumn}>
-                                            <Typography component="span" sx={{
+                                        <TableCell className='table-data' sx={billingStyles.tableBodyColumn}>{history.total}</TableCell>
+                                        <TableCell className='table-data' sx={billingStyles.tableBodyColumn}>
+                                            <Typography component="span" className='table-data' sx={{
                                                 ...getStatusStyles(history.status),
                                                 background: '#eaf8dd',
                                                 padding: '6px 8px',
                                                 borderRadius: '2px',
-                                                fontFamily: 'Roboto',
-                                                fontSize: '12px',
-                                                fontWeight: '400',
-                                                lineHeight: 'normal',
-                                                color: '#2b5b00',
+                                                color: '#2b5b00 !important',
                                             }}>
                                                 {history.status}
                                             </Typography>
                                         </TableCell>
-                                        <TableCell sx={billingStyles.tableBodyColumn}>
+                                        <TableCell className='table-data' sx={billingStyles.tableBodyColumn}>
                                             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                                 <IconButton onClick={() => fetchSaveBillingHistory(history.invoice_id)}>
                                                     <Image
@@ -1316,7 +1242,7 @@ export const SettingsBilling: React.FC = () => {
             >
 
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 3.5, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
-                    <Typography variant="h6" sx={{ textAlign: 'center', color: '#202124', fontFamily: 'Nunito Sans', fontWeight: '600', fontSize: '16px', lineHeight: 'normal' }}>
+                    <Typography variant="h6" className='first-sub-title' sx={{ textAlign: 'center' }}>
                         Confirm Deletion
                     </Typography>
                     <IconButton onClick={handleRemovePopupClose} sx={{ p: 0 }}>
@@ -1327,20 +1253,17 @@ export const SettingsBilling: React.FC = () => {
                 <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', gap: 5, height: '100%' }}>
                     <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center' }}>
                         <Image src='/delete-card-icon.svg' alt='delete-card-icon' width={403} height={403} />
-                        <Typography className='main-text' sx={{
-                            fontSize: '14px',
-                            fontWeight: '600',
-                            lineHeight: '20px',
-                            color: '#4a4a4a',
+                        <Typography className='second-sub-title' sx={{
+                            fontWeight: '600 !important',
+                            lineHeight: '20px !important',
+                            color: '#4a4a4a !important',
                             marginBottom: '20px'
                         }}>
                             Delete card detail
                         </Typography>
-                        <Typography className='second-text' sx={{
-                            fontSize: '12px',
-                            fontWeight: '400',
-                            lineHeight: '16px',
-                            color: '#5f6368'
+                        <Typography className='paragraph' sx={{
+                            lineHeight: '16px !important',
+                            color: '#5f6368 !important'
                         }}>
                             To remove your default payment method, you need to set another payment <br />
                             method as the default first!
@@ -1356,35 +1279,27 @@ export const SettingsBilling: React.FC = () => {
                             }
                         }}>
                             <Box display="flex" justifyContent="flex-end" mt={2}>
-                                <Button onClick={handleRemovePopupClose} sx={{
+                                <Button className="hyperlink-red" onClick={handleRemovePopupClose} sx={{
                                     borderRadius: '4px',
                                     border: '1px solid #5052b2',
                                     boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                                    color: '#5052b2',
-                                    fontFamily: 'Nunito Sans',
-                                    fontSize: '14px',
-                                    fontWeight: '600',
-                                    lineHeight: '20px',
+                                    color: '#5052b2 !important',
                                     marginRight: '16px',
                                     textTransform: 'none',
                                     padding: '10px 24px'
                                 }}>
                                     Cancel
                                 </Button>
-                                <Button onClick={handleDeleteCard} sx={{
+                                <Button className="hyperlink-red" onClick={handleDeleteCard} sx={{
                                     background: '#5052B2',
                                     borderRadius: '4px',
                                     border: '1px solid #5052b2',
                                     boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                                    color: '#fff',
-                                    fontFamily: 'Nunito Sans',
-                                    fontSize: '14px',
-                                    fontWeight: '600',
-                                    lineHeight: '20px',
+                                    color: '#fff !important',
                                     textTransform: 'none',
                                     padding: '10px 24px',
                                     '&:hover': {
-                                        color: '#5052B2'
+                                        color: '#5052B2 !important'
                                     }
                                 }}>
                                     Delete
@@ -1415,7 +1330,7 @@ export const SettingsBilling: React.FC = () => {
             >
 
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 3.5, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
-                    <Typography variant="h6" sx={{ textAlign: 'center', color: '#202124', fontFamily: 'Nunito Sans', fontWeight: '600', fontSize: '16px', lineHeight: 'normal' }}>
+                    <Typography variant="h6" className='first-sub-title' sx={{ textAlign: 'center' }}>
                         Send Invoice
                     </Typography>
                     <IconButton onClick={handleSendInvoicePopupClose} sx={{ p: 0 }}>
@@ -1425,11 +1340,9 @@ export const SettingsBilling: React.FC = () => {
 
                 <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', gap: 5, height: '100%' }}>
                     <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', p: 4 }}>
-                        <Typography className='main-text' sx={{
-                            fontSize: '14px',
-                            fontWeight: '600',
-                            lineHeight: 'normal',
-                            color: '#4a4a4a',
+                        <Typography className='second-sub-title' sx={{
+                            fontWeight: '600 !important',
+                            color: '#4a4a4a !important',
                             marginBottom: '38px'
                         }}>
                             Invoice with {selectedInvoiceId} ID will be shared to the email inbox directly.
@@ -1439,8 +1352,12 @@ export const SettingsBilling: React.FC = () => {
                             label="Enter Email ID"
                             fullWidth
                             margin="normal"
-                            InputLabelProps={{ sx: billingStyles.inputLabel }}
+                            InputLabelProps={{ 
+                                className: "form-input-label",
+                                sx: billingStyles.inputLabel 
+                            }}
                             InputProps={{
+                                className: "form-input" ,
                                 sx: billingStyles.formInput
                             }}
                             value={email}
@@ -1457,35 +1374,27 @@ export const SettingsBilling: React.FC = () => {
                             }
                         }}>
                             <Box display="flex" justifyContent="flex-end" mt={2}>
-                                <Button onClick={handleSendInvoicePopupClose} sx={{
+                                <Button className='hyperlink-red' onClick={handleSendInvoicePopupClose} sx={{
                                     borderRadius: '4px',
                                     border: '1px solid #5052b2',
                                     boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                                    color: '#5052b2',
-                                    fontFamily: 'Nunito Sans',
-                                    fontSize: '14px',
-                                    fontWeight: '600',
-                                    lineHeight: '20px',
+                                    color: '#5052b2 !important',
                                     marginRight: '16px',
                                     textTransform: 'none',
                                     padding: '10px 24px'
                                 }}>
                                     Cancel
                                 </Button>
-                                <Button onClick={handleSendInvoice} sx={{
+                                <Button className='hyperlink-red' onClick={handleSendInvoice} sx={{
                                     background: '#5052B2',
                                     borderRadius: '4px',
                                     border: '1px solid #5052b2',
                                     boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                                    color: '#fff',
-                                    fontFamily: 'Nunito Sans',
-                                    fontSize: '14px',
-                                    fontWeight: '600',
-                                    lineHeight: '20px',
+                                    color: '#fff !important',
                                     textTransform: 'none',
                                     padding: '10px 24px',
                                     '&:hover': {
-                                        color: '#5052B2'
+                                        color: '#5052B2 !important'
                                     }
                                 }}>
                                     Send
