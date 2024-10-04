@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { Box, Typography, Button } from '@mui/material';
 import { useRouter, useSearchParams } from 'next/navigation'; // Импорт для работы с URL
 import { planStyles } from './settingsStyles';
@@ -13,9 +13,9 @@ import CustomizedProgressBar from '@/components/CustomizedProgressBar';
 
 const Settings: React.FC = () => {
     const [activeSection, setActiveSection] = useState<string>('accountDetails');
-    const [accountDetails, setAccountDetails] = useState<any>(null); 
+    const [accountDetails, setAccountDetails] = useState<any>(null);
     const [isLoading, setIsLoading] = useState<boolean>(true);
-    
+
     const router = useRouter();
     const searchParams = useSearchParams(); // Получаем query-параметры из URL
 
@@ -51,7 +51,7 @@ const Settings: React.FC = () => {
     if (isLoading) {
         return <CustomizedProgressBar />;
     }
-    
+
     return (
         <Box>
             <Typography variant="h4" gutterBottom sx={planStyles.title}>
@@ -118,4 +118,12 @@ const Settings: React.FC = () => {
     );
 };
 
-export default Settings;
+const SettingsPage: React.FC = () => {
+    return (
+        <Suspense fallback={<CustomizedProgressBar />}>
+            return <Settings />;
+        </Suspense>
+    )
+};
+
+export default SettingsPage;

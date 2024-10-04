@@ -49,7 +49,6 @@ class IntegrationsUserSyncPersistence:
             'suppression': sync.is_with_suppression,
             'contacts': sync.no_of_contacts,
             'createdBy': sync.created_by,
-            'is_active': sync.is_active,
             'accountId': sync.platform_user_id,
             'syncStatus': sync.sync_status,
         } for sync in syncs]

@@ -149,7 +149,16 @@ const DataSync: React.FC = () => {
 
   if (isLoading) {
     return <CustomizedProgressBar />;
-}
+  }
+
+  const formatFunnelText = (text: boolean) => {
+    if (text === false) {
+      return 'Enable';
+    }
+    if (text === true) {
+      return 'Disable';
+    }
+  };
 
   return (
     <Box sx={datasyncStyle.mainContent}>
@@ -439,18 +448,18 @@ const DataSync: React.FC = () => {
                           fontFamily: "Roboto",
                           fontSize: "12px",
                           color:
-                            row.dataSync === "Enable"
+                            row.dataSync === true
                               ? "rgba(43, 91, 0, 1) !important"
                               : "rgba(74, 74, 74, 1)!important",
                           backgroundColor:
-                            row.dataSync === "Enable"
+                            row.dataSync === true
                               ? "rgba(234, 248, 221, 1) !important"
                               : "rgba(219, 219, 219, 1) !important",
                           padding: "3px 14.5px",
                           maxHeigh: "1.25rem",
                         }}
                       >
-                        {row.dataSync}
+                         {formatFunnelText(row.dataSync)}
                       </Typography>
                     </Box>
                   </TableCell>
@@ -537,7 +546,7 @@ const DataSync: React.FC = () => {
               }}
               onClick={handleToggleSync}
             >
-              {data.find((row) => row.id === selectedId)?.dataSync === "Enable"
+              {data.find((row) => row.id === selectedId)?.dataSync === true
                 ? "Disable Sync"
                 : "Enable Sync"}
             </Button>
