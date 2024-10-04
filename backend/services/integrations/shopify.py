@@ -363,13 +363,6 @@ let viewedProductHandler;
         sync = self.integrations_user_sync_persistence.create_sync(data)
         return {'status': 'Successfuly', 'detail': sync}
     
-    def delete_sync(self, list_id: str):
-        result = self.integrations_user_sync_persistence.delete_sync(list_id=list_id)
-        if result:
-            return {'status': 'SUCCESS'}
-        else:
-            return {'status': 'FAILED'}
-    
 
     def __export_sync(self, domain_id: int):
         credential = self.get_credentials(domain_id)

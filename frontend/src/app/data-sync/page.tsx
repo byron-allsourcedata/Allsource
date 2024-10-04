@@ -130,9 +130,37 @@ const DataSync: React.FC = () => {
   const open = Boolean(anchorEl);
   const id = open ? "simple-popover" : undefined;
 
-  const handleToggleSync = () => {
-    console.log(`Toggling sync for id: ${selectedId}`);
-    handleClose();
+  const handleToggleSync = async () => {
+    try {
+      setIsLoading(true);
+      const response = await axiosInterceptorInstance.post(`/integrations/sync/switch-toggle`, {});
+      
+      if (response.status === 200) {
+        switch (response.data.status) {
+          case 'SUCCESS':
+            showToast('Integrations sync delete successfully');
+            setData(prevData => prevData.filter(item => item.id !== selectedId));
+            break
+            case 'FAILED':
+              showErrorToast('Integrations sync delete failed'); 
+              break
+          default:
+            showErrorToast('Unknown response received.');
+        }
+      }
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        if (error.response && error.response.status === 403) {
+          showErrorToast('Access denied: You do not have permission to remove this member.');
+        } else {
+          console.error('Error removing team member:', error);
+        }
+      }
+    } finally {
+      setIsLoading(false);
+      setSelectedId(null);
+      handleClose();
+    }
   };
 
   const handleEdit = () => {
@@ -140,9 +168,10 @@ const DataSync: React.FC = () => {
     handleClose();
   };
 
+  
+
   const handleDelete = async () => {
     try {
-      console.log(selectedId)
       setIsLoading(true);
       const response = await axiosInterceptorInstance.delete(`/integrations/sync`, {
         params: {
@@ -150,11 +179,11 @@ const DataSync: React.FC = () => {
         }
       });
       
-
       if (response.status === 200) {
         switch (response.data.status) {
           case 'SUCCESS':
-            showToast('Integrations sync delete successfully'); 
+            showToast('Integrations sync delete successfully');
+            setData(prevData => prevData.filter(item => item.id !== selectedId));
             break
             case 'FAILED':
               showErrorToast('Integrations sync delete failed'); 

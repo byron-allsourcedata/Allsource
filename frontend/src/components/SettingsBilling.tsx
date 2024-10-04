@@ -1138,7 +1138,7 @@ export const SettingsBilling: React.FC = () => {
 
 
                     <Box sx={{ flexShrink: 0 }}>
-                        <Button onClick={handleBuyCredits} disabled={true} sx={{
+                        <Button onClick={handleBuyCredits} sx={{
                             background: '#5052B2',
                             borderRadius: '4px',
                             border: '1px solid #5052b2',
