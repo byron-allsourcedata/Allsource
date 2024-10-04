@@ -11,6 +11,7 @@ import ConnectKlaviyo from './ConnectKlaviyo';
 import ConnectMeta from './ConnectMeta';
 import { fetchUserData } from '@/services/meService';
 import CreateKlaviyoSync from './CreateKlaviyoSync';
+import MetaConnectButton from './MetaConnectButton';
 
 interface AudiencePopupProps {
     open: boolean;
@@ -26,12 +27,12 @@ interface ListItem {
 
 
 interface IntegrationsCredentials {
-    id: number
-    access_token: string
-    shop_domain: string
-    data_center: string
+    id?: number
+    access_token?: string
+    shop_domain?: string
+    data_center?: string
     service_name: string
-    is_with_suppression: boolean
+    is_with_suppression?: boolean
 }
 
 interface Integrations {
@@ -55,6 +56,8 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
     const [integrationsCredentials, setIntegrationsCredentials] = useState<IntegrationsCredentials[]>([])
     const [createKlaviyo, setCreateKlaviyo] = useState<boolean>(false)
     const [integrations, setIntegrations] = useState<Integrations[]>([])
+    const [metaConnectApp, setMetaConnectApp] = useState(false)
+
     const fetchListItems = async () => {
         try {
             const response = await axiosInstance.get('/audience/list');
@@ -190,6 +193,8 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
 
     const handleMetaIconPopupClose = () => {
         setMetaIconPopupOpen(false);
+        setPlusIconPopupOpen(false)
+        onClose()
     };
 
     const handleIntegrationSelect = (integration: string) => {
@@ -197,14 +202,21 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
         setIsExportDisabled(false); // Enable export button when an integration is selected
       };
 
-      const handleSaveSettings = (newIntegrations: IntegrationsCredentials) => {
+      const handleSaveSettingsKlaviyo = (newIntegrations: IntegrationsCredentials) => {
         setIntegrationsCredentials(prevIntegrations => [
             ...prevIntegrations, 
             newIntegrations
         ]);
         setKlaviyoIconPopupOpen(true)
     }
-    
+
+    const handleCloseMetaConnectApp = () => {
+        setIntegrationsCredentials(prevIntegratiosn => [...prevIntegratiosn, {
+            service_name: 'Meta'
+        }])
+        setMetaIconPopupOpen(true)
+        setMetaConnectApp(false)
+    }
 
     return (
         <>
@@ -241,6 +253,28 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                 Choose from integrated platform
                             </Typography>
                             <List sx={{ display: 'flex', gap: '16px', py: 2, flexWrap: 'wrap' }}>
+                                {/* Meta */}
+                                {integrationsCredentials.some(integration => integration.service_name === 'Meta')&&(
+                                <ListItem  sx={{p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',
+                                    '@media (max-width:600px)': {
+                                        flexBasis: 'calc(50% - 8px)'
+                                    }
+                                }}>
+                                    <ListItemButton onClick={() => setMetaIconPopupOpen(true)} sx={{p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center'}}>
+                                        <ListItemIcon sx={{minWidth: 'auto'}}>
+                                            <Image src="/meta-icon.svg" alt="meta" height={26} width={32} />
+                                        </ListItemIcon>
+                                        <ListItemText primary="Meta" primaryTypographyProps={{
+                                            sx: {
+                                                fontFamily: "Nunito Sans",
+                                                fontSize: "14px",
+                                                color: "#4a4a4a",
+                                                fontWeight: "500",
+                                                lineHeight: "20px"
+                                            }
+                                        }}  />
+                                    </ListItemButton>
+                                </ListItem>  )}
                                 {/* HubSpot */}
                                 {integrationsCredentials.some(integration => integration.service_name === 'HubSpot') && (
                                     <ListItem sx={{p: 0, borderRadius: '4px', border: selectedIntegration === 'HubSpot' ? '1px solid #5052B2' : '1px solid #e4e4e4', width: 'auto',
@@ -605,12 +639,12 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                 </ListItem> )}
                                 {integrations.some(integration => integration.service_name === 'Meta') && (
                                     !integrationsCredentials.some(integration => integration.service_name === 'Meta') )&&(
-                                <ListItem sx={{p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',
+                                <ListItem  sx={{p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',
                                     '@media (max-width:600px)': {
                                         flexBasis: 'calc(50% - 8px)'
                                     }
                                 }}>
-                                    <ListItemButton onClick={handleMetaIconPopupOpen} sx={{p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center'}}>
+                                    <ListItemButton onClick={() => setMetaConnectApp(true)} sx={{p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center'}}>
                                         <ListItemIcon sx={{minWidth: 'auto'}}>
                                             <Image src="/meta-icon.svg" alt="meta" height={26} width={32} />
                                         </ListItemIcon>
@@ -625,18 +659,16 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                         }}  />
                                     </ListItemButton>
                                 </ListItem> )}
-
                             </List>
-
                         </Box>
                     </Box>
-                    
                 </Box>
             </Drawer>
             
             <ConnectKlaviyo open={klaviyoIconPopupOpen} onClose={handleKlaviyoIconPopupClose}/>
             <ConnectMeta open={metaIconPopupOpen} onClose={handleMetaIconPopupClose} />
-            <CreateKlaviyoSync open={createKlaviyo} handleClose={() => setCreateKlaviyo(false)} onSave={handleSaveSettings} suppression={true}/>
+            <CreateKlaviyoSync open={createKlaviyo} handleClose={() => setCreateKlaviyo(false)} onSave={handleSaveSettingsKlaviyo} suppression={true}/>
+            <MetaConnectButton open={metaConnectApp} onClose={handleCloseMetaConnectApp}/>
         </>
     );
 };

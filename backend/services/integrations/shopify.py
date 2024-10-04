@@ -328,20 +328,22 @@ let viewedProductHandler;
             }
         }
     
-    def __order_sync(self, user_id):
-        credential = self.get_credentials(user_id)
-        orders = [self.__mapped_customer_shopify_order(order) for order in self.__get_orders(credential.shop_domain, credential.access_token)]
+    def order_sync(self, domain_id):
+        credential = self.get_credentials(domain_id)
+        orders = [self.__mapped_customer_shopify_order(order) for order in self.__get_orders(credential.shop_domain, credential.access_token) if order]
         for order in orders:
-            lead_user = self.lead_persistence.get_leads_user_filter_by_email(user_id, order.email)
-            if lead_user and len(lead_user) > 0: 
-                self.lead_orders_persistence.create_lead_order({
-                    'shopify_user_id': order.shopify_user_id,
-                    'lead_user_id': lead_user[0].id,
-                    'shopify_order_id': order.order_shopify_id,
-                    'currency_code': order.currency_code,
-                    'total_price': order.total_price,
-                    'created_at_shopify': order.created_at_shopify
-                })
+            try:
+                lead_user = self.lead_persistence.get_leads_user_filter_by_email(domain_id, order.email)
+                if lead_user and len(lead_user) > 0: 
+                    self.lead_orders_persistence.create_lead_order({
+                        'shopify_user_id': order.shopify_user_id,
+                        'lead_user_id': lead_user[0].id,
+                        'shopify_order_id': order.order_shopify_id,
+                        'currency_code': order.currency_code,
+                        'total_price': order.total_price,
+                        'created_at_shopify': order.created_at_shopify
+                    })
+            except: pass
 
 
     def create_sync(self, domain_id: int, 
@@ -384,10 +386,7 @@ let viewedProductHandler;
         self.__save_customer(customers, user_id)
 
 
-    def sync(self, domain_id):
-        self.__import_sync(domain_id)
-        self.__order_sync(domain_id)
-        self.__export_sync(domain_id)
+    
 
 # -------------------------------MAPPED-SHOPIFY-DATA------------------------------------ #
 
@@ -454,7 +453,8 @@ let viewedProductHandler;
             }]}
     
     def __mapped_customer_shopify_order(self, order) -> ShopifyOrderAPI:
-        return ShopifyOrderAPI(
+        try:
+            return ShopifyOrderAPI(
             order_shopify_id=order.get('id'),
             shopify_user_id=order.get('customer').get('id'),
             total_price=float(order.get('total_price')),
@@ -462,3 +462,4 @@ let viewedProductHandler;
             created_at_shopify=order.get('created_at'),
             email=order.get('customer').get('email')
         )
+        except: return None

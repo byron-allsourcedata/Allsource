@@ -47,9 +47,8 @@ class ShopifyCustomer(BaseModel):
 
 
 class ShopifyOrderAPI(BaseModel):
-    order_shopify_id: int 
-    shopify_user_id: int
-    total_price: float
-    currency_code: str
-    created_at_shopify: str
-    email: EmailStr
+    order_shopify_id: Optional[int] = None
+    shopify_user_id: Optional[str]= None
+    total_price: Optional[float] = None
+    created_at_shopify: Optional[str] = None
+    email: Optional[EmailStr] = None

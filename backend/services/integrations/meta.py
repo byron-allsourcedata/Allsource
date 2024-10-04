@@ -64,13 +64,13 @@ class MetaIntegrationsService:
         credential = self.get_long_lived_token(credentials.meta.access_token)
         new_integration = self.integrations_persisntece.create_integration({
             'domain_id': domain_id,
-            'ad_account_id': credentials.meta.ad_account_id,
+            'ad_account_id': credentials.meta.ad_account_id.replace('act_', ''),
             'access_token': credential.get('access_token'),
             'expire_access_token': credential.get('expires_in'),
             'last_access_token_update': datetime.now(),
             'platform_user_id': credentials.meta.platform_user_id,
             'full_name': credentials.meta.full_name,
-            'service_name': 'Meta'
+            'service_name': 'Meta',
         })
         integrations = self.integrations_persisntece.get_all_integrations_filter_by(platform_user_id=credentials.meta.platform_user_id)
         for integration in integrations:
@@ -115,13 +115,13 @@ class MetaIntegrationsService:
             'description': description if description else None,
             'customer_file_source': 'USER_PROVIDED_ONLY',
         }
-        return AdAccount(credential.ad_account_id).create_custom_audience(
+        return AdAccount(f'act_{credential.ad_account_id}').create_custom_audience(
             fields=fields,
             params=params,
         )
        
 
-    async def create_sync(self, domain_id: int, data_map: List[DataMap] = None, leads_type: str = None, list_id: str = None, list_name: str = None,):
+    async def create_sync(self, domain_id: int, created_by, data_map: List[DataMap] = None, leads_type: str = None, list_id: str = None, list_name: str = None,):
         credentials = self.get_credentials(domain_id)
         data_syncs = self.sync_persistence.get_data_sync_filter_by(domain_id=domain_id)
         for sync in data_syncs:
@@ -132,7 +132,8 @@ class MetaIntegrationsService:
             'list_id': list_id,
             'list_name': list_name,
             'domain_id': domain_id,
-            'data_map': [data.model_dump_json() for data in data_map] if data_map else None
+            'data_map': [data.model_dump_json() for data in data_map] if data_map else None,
+            'created_by': created_by
         })
         message = {
             'sync':  {
@@ -166,6 +167,8 @@ class MetaIntegrationsService:
         domains = self.domain_persistence.get_domain_by_filter(**{'id': domain_id} if domain_id else {})
         for domain in domains:
             credentials = self.get_credentials(domain.id)
+            credentials.access_token = self.get_long_lived_token(credentials.access_token).get('access_token')
+            self.integrations_persisntece.db.commit()
             if not credentials:
                 return
             data_syncs_list = self.sync_persistence.get_data_sync_filter_by(
@@ -206,7 +209,7 @@ class MetaIntegrationsService:
             ],
             "data": [profile]
         }
-        url = f'https://graph.facebook.com/v20.0/{custom_audience_id}/users'
+        url = f'https://graph.facebook.com/v20.0/act_{custom_audience_id}/users'
         response = self.__handle_request('POST', url=url, data={
             'access_token': access_token,
             'payload': payload,

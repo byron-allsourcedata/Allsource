@@ -707,7 +707,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                         color: '#5052b2',
                         textDecorationColor: '#5052b2'
                     }}>Tutorial</Link>
-                    <IconButton onClick={onClose} sx={{ p: 0 }}>
+                    <IconButton onClick={handlePopupClose} sx={{ p: 0 }}>
                         <CloseIcon sx={{ width: '20px', height: '20px' }} />
                     </IconButton>
                 </Box>
