@@ -25,6 +25,9 @@ import axiosInstance from '../../axios/axiosInterceptorInstance';
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import { leadsStyles } from "../leads/leadsStyles";
+import axiosInterceptorInstance from '@/axios/axiosInterceptorInstance';
+import { showErrorToast, showToast } from "@/components/ToastNotification";
+import axios from "axios";
 
 const DataSync: React.FC = () => {
   const [order, setOrder] = useState<"asc" | "desc" | undefined>(undefined);
@@ -38,7 +41,7 @@ const DataSync: React.FC = () => {
     setOrderBy(property);
   };
 
-  const handleResetFilters = async () => {
+  const handleIntegrationsSync = async () => {
     try {
       setIsLoading(true)
       const response = await axiosInstance.get('/integrations/sync');
@@ -53,7 +56,7 @@ const DataSync: React.FC = () => {
   };
 
   useEffect(() => {
-    handleResetFilters();
+    handleIntegrationsSync();
   }, []);
 
   const statusIcon = (status: string) => {
@@ -127,9 +130,37 @@ const DataSync: React.FC = () => {
   const open = Boolean(anchorEl);
   const id = open ? "simple-popover" : undefined;
 
-  const handleToggleSync = () => {
-    console.log(`Toggling sync for id: ${selectedId}`);
-    handleClose();
+  const handleToggleSync = async () => {
+    try {
+      setIsLoading(true);
+      const response = await axiosInterceptorInstance.post(`/integrations/sync/switch-toggle`, {});
+      
+      if (response.status === 200) {
+        switch (response.data.status) {
+          case 'SUCCESS':
+            showToast('Integrations sync delete successfully');
+            setData(prevData => prevData.filter(item => item.id !== selectedId));
+            break
+            case 'FAILED':
+              showErrorToast('Integrations sync delete failed'); 
+              break
+          default:
+            showErrorToast('Unknown response received.');
+        }
+      }
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        if (error.response && error.response.status === 403) {
+          showErrorToast('Access denied: You do not have permission to remove this member.');
+        } else {
+          console.error('Error removing team member:', error);
+        }
+      }
+    } finally {
+      setIsLoading(false);
+      setSelectedId(null);
+      handleClose();
+    }
   };
 
   const handleEdit = () => {
@@ -137,9 +168,43 @@ const DataSync: React.FC = () => {
     handleClose();
   };
 
-  const handleDelete = () => {
-    console.log(`Deleting item with id: ${selectedId}`);
-    handleClose();
+  
+
+  const handleDelete = async () => {
+    try {
+      setIsLoading(true);
+      const response = await axiosInterceptorInstance.delete(`/integrations/sync`, {
+        params: {
+          list_id: selectedId
+        }
+      });
+      
+      if (response.status === 200) {
+        switch (response.data.status) {
+          case 'SUCCESS':
+            showToast('Integrations sync delete successfully');
+            setData(prevData => prevData.filter(item => item.id !== selectedId));
+            break
+            case 'FAILED':
+              showErrorToast('Integrations sync delete failed'); 
+              break
+          default:
+            showErrorToast('Unknown response received.');
+        }
+      }
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        if (error.response && error.response.status === 403) {
+          showErrorToast('Access denied: You do not have permission to remove this member.');
+        } else {
+          console.error('Error removing team member:', error);
+        }
+      }
+    } finally {
+      setIsLoading(false);
+      setSelectedId(null);
+      handleClose();
+    }
   };
 
   const handleRepairSync = () => {
@@ -459,7 +524,7 @@ const DataSync: React.FC = () => {
                           maxHeigh: "1.25rem",
                         }}
                       >
-                         {formatFunnelText(row.dataSync)}
+                        {formatFunnelText(row.dataSync)}
                       </Typography>
                     </Box>
                   </TableCell>

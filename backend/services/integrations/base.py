@@ -13,6 +13,7 @@ from .shopify import ShopifyIntegrationService
 from .mailchimp import MailchimpIntegrationsService
 from .klaviyo import KlaviyoIntegrationsService
 from .bigcommerce import BigcommerceIntegrationsService
+from .meta import MetaIntegrationsService
 
 class IntegrationService:
 
@@ -40,6 +41,19 @@ class IntegrationService:
 
     def get_sync_domain(self, domain_id: int, service_name: str = None):
         return self.integrations_user_sync_persistence.get_filter_by(domain_id=domain_id, service_name=service_name)
+    
+    def delete_sync_domain(self, domain_id: int, list_id, service_name: str = None):
+        result = self.integrations_user_sync_persistence.delete_sync(domain_id=domain_id, list_id=list_id)
+        if result:
+            return {'status': 'SUCCESS'}
+        else:
+            return {'status': 'FAILED'}
+        
+    def switch_sync_toggle(self, domain_id, list_id):
+        result = self.integrations_user_sync_persistence.switch_sync_toggle(domain_id=domain_id, list_id=list_id)
+        if result:
+            return {'status': 'SUCCESS', 'data_sync': result}
+        return {'status': 'FAILED'}
 
     def get_sync_users(self):
         return self.integrations_user_sync_persistence.get_filter_by()
@@ -50,14 +64,18 @@ class IntegrationService:
                                                  self.lead_orders_persistence,
                                                  self.integrations_user_sync_persistence,
                                                  self.client, self.aws_service, self.db)
-        self.bigcommerce = BigcommerceIntegrationsService(self.integration_persistence, 
-                                                          self.lead_persistence, 
-                                                          self.client)
+        # self.bigcommerce = BigcommerceIntegrationsService(self.integration_persistence, 
+        #                                                   self.lead_persistence, 
+        #                                                   self.client)
         self.klaviyo = KlaviyoIntegrationsService(self.domain_persistence, 
                                                 self.integration_persistence,  
                                                 self.lead_persistence,
                                                 self.integrations_user_sync_persistence,)
-        self.mailchimp = MailchimpIntegrationsService(self.integration_persistence)
+        self.meta = MetaIntegrationsService(self.domain_persistence, 
+                                                self.integration_persistence,  
+                                                self.lead_persistence,
+                                                self.integrations_user_sync_persistence,)
+        # self.mailchimp = MailchimpIntegrationsService(self.integration_persistence)
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):

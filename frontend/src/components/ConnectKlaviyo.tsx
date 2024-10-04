@@ -8,6 +8,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { showErrorToast, showToast } from './ToastNotification';
 import CustomizedProgressBar from './CustomizedProgressBar';
+import { stringify } from 'querystring';
 
 interface Integrations {
     id: number
@@ -62,27 +63,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
     const [showCreateMapForm, setShowCreateMapForm] = useState<boolean>(false);
     const [maplistNameError, setMapListNameError] = useState(false);
     const [klaviyoList, setKlaviyoList] = useState<KlaviyoList[]>([])
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (textFieldRef.current && !textFieldRef.current.contains(event.target as Node)) {
-        // If clicked outside, reset shrink only if there is no input value
-        if (selectedOption?.list_name === '') {
-            setIsShrunk(false);
-          }
-          if (isDropdownOpen) {
-            setIsDropdownOpen(false); // Close dropdown when clicking outside
-          }
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [selectedOption]);
-
-    const customFieldsList = [
-        { type: 'Gender', value: 'gender' },
+    const [customFieldsList, setCustomFieldsList] = useState([{ type: 'Gender', value: 'gender' },
         { type: 'Company Name', value: 'company_name' },
         { type: 'Company Domain', value: 'company_domain' },
         { type: 'Company SIC', value: 'company_sic' },
@@ -110,12 +91,35 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
         { type: 'Company Description', value: 'company_description' },
         { type: 'Related Domains', value: 'related_domains' },
         { type: 'Social Connections', value: 'social_connections' },
-        { type: 'DPV Code', value: 'dpv_code' }
-    ];
-    const [customFields, setCustomFields] = useState([{ type: '', value: '' }]);
+        { type: 'DPV Code', value: 'dpv_code' }]);
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (textFieldRef.current && !textFieldRef.current.contains(event.target as Node)) {
+        // If clicked outside, reset shrink only if there is no input value
+        if (selectedOption?.list_name === '') {
+            setIsShrunk(false);
+          }
+          if (isDropdownOpen) {
+            setIsDropdownOpen(false); // Close dropdown when clicking outside
+          }
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [selectedOption]);
+
+    const [customFields, setCustomFields] = useState<{type: string, value: string}[]>([]);
+
+    useEffect(() => {
+        setCustomFields(customFieldsList.map(field => ({ type: field.value, value: field.type })))
+    }, [open])
+    
+    
 
     const handleAddField = () => {
-        console.log(customFields)
         setCustomFields([...customFields, { type: '', value: '' }]);
     };
 
@@ -124,6 +128,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
     };
 
     const handleChangeField = (index: number, field: string, value: string) => {
+
         setCustomFields(customFields.map((item, i) => (i === index ? { ...item, [field]: value } : item)));
     };
     const resetToDefaultValues = () => {
@@ -150,7 +155,6 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
         setNewMapListName('');
         setShowCreateMapForm(false);
         setMapListNameError(false);
-        setKlaviyoList([]);
     };
     // Static options
     const getKlaviyoList = async() => {
@@ -163,6 +167,10 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
         setKlaviyoList(response.data)
         setLoading(false)
     }
+    useEffect(() => {
+        getKlaviyoList()
+    }, [open])
+
     const createNewList = async () => {
         const newListResponse = await axiosInstance.post('/integrations/sync/list/', {
             name: selectedOption?.list_name
@@ -339,16 +347,10 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
 
     const klaviyoStyles = {
         tabHeading: {
-            fontFamily: 'Nunito Sans',
-            fontSize: '14px',
-            color: '#707071',
-            fontWeight: '500',
-            lineHeight: '20px',
             textTransform: 'none',
             padding: 0,
             minWidth: 'auto',
             px: 2,
-            pointerEvents: 'none',
             '@media (max-width: 600px)': {
                 alignItems: 'flex-start',
                 p: 0
@@ -520,6 +522,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                     <Button
                         variant="contained"
                         onClick={handleSaveSync}
+                        disabled={!selectedOption || !selectedRadioValue.trim()}
                         sx={{
                             backgroundColor: '#5052B2',
                             fontFamily: "Nunito Sans",
@@ -631,7 +634,6 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
     const handleNextTab = async() => {
         
           if(value === '1') {
-            await getKlaviyoList()
             setValue((prevValue) => {
                 const nextValue = String(Number(prevValue) + 1);
                 return nextValue;
@@ -653,7 +655,14 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
       const deleteOpen = Boolean(deleteAnchorEl);
     const deleteId = deleteOpen ? 'delete-popover' : undefined;
 
+    const handleChangeTab = (event: React.SyntheticEvent, newValue: string) => {
+        setValue(newValue);
+      };
 
+      const handlePopupClose = () => {
+        resetToDefaultValues()
+        onClose()
+      }
 
     return (
         <>
@@ -661,7 +670,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
         <Drawer
             anchor="right"
             open={open}
-            onClose={onClose}
+            onClose={handlePopupClose}
             PaperProps={{
                 sx: {
                     width: '620px',
@@ -680,13 +689,12 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                 },
             }}
         >
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 3.5, px: 2, borderBottom: '1px solid #e4e4e4' }}>
-                <Typography variant="h6" sx={{ textAlign: 'center', color: '#202124', fontFamily: 'Nunito Sans', fontWeight: '600', fontSize: '16px', lineHeight: 'normal' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 3.5, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
+                <Typography variant="h6" className="first-sub-title" sx={{ textAlign: 'center' }}>
                     Connect to Klaviyo
                 </Typography>
                 <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
-                    <Link href="#" sx={{
-                        fontFamily: 'Nunito Sans',
+                    <Link href="#" className="main-text" sx={{
                         fontSize: '14px',
                         fontWeight: '600',
                         lineHeight: '20px',
@@ -715,38 +723,137 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                                 gap: '16px',
                                 justifyContent:'flex-start'
                             }
-                        }}}>
-                        <Tab label="Sync Type" value="1" sx={klaviyoStyles.tabHeading} />
-                        <Tab label="Contact Sync" value="2" sx={klaviyoStyles.tabHeading} />
-                        <Tab label="Map data" value="3" sx={klaviyoStyles.tabHeading} />
+                        }}} onChange={handleChangeTab}>
+                        <Tab label="Suppression Sync" value="1" className='tab-heading' sx={klaviyoStyles.tabHeading} />
+                        <Tab label="Contact Sync" value="2" className='tab-heading' sx={klaviyoStyles.tabHeading} />
+                        <Tab label="Map data" value="3" className='tab-heading' sx={klaviyoStyles.tabHeading} />
                         </TabList>
                     </Box>
                     <TabPanel value="1" sx={{ p: 0 }}>
                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                            <Box sx={{p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)', display: 'flex', flexDirection:'column', gap: '16px'}}>
-                                <Typography variant="h6" sx={{
-                                        fontFamily: 'Nunito Sans',
-                                        fontSize: '16px',
-                                        fontWeight: '600',
-                                        color: '#202124',
-                                        lineHeight: 'normal'
-                                    }}>Sync Type</Typography>
-                                    <Typography variant="subtitle1" sx={{
-                                        fontFamily: 'Roboto',
-                                        fontSize: '12px',
-                                        fontWeight: '400',
-                                        color: '#808080',
-                                        lineHeight: 'normal',
+                            <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)', display: 'flex', flexDirection:'column', gap: '16px' }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <Image src='/klaviyo.svg' alt='klaviyo' height={26} width={32} />
+                                    <Typography variant="h6" className='first-sub-title'>Eliminate Redundancy: Stop Paying for Contacts You Already Own</Typography>
+                                </Box>
+                                <Typography variant="subtitle1" className='paragraph' sx={{
+                                        lineHeight: '20px',
                                         letterSpacing: '0.06px'
-                                    }}>Synchronise data gathered from this moment onward in real-time.</Typography>
+                                    }}>Sync your current list to avoid collecting contacts you already possess.
+                                    Newly added contacts in Klaviyo will be automatically suppressed each day.</Typography>
+                                
+
+                                        <Box sx={{ display: 'flex', gap: '32px', alignItems: 'center' }}>
+                                            <Typography variant="subtitle1" className='paragraph'>
+                                                Enable Automatic Contact Suppression
+                                            </Typography>
+
+                                            {/* Switch Control with Yes/No Labels */}
+                                            <Box position="relative" display="inline-block">
+                                                <Switch
+                                                    {...label}
+                                                    checked={checked}
+                                                    onChange={handleSwitchChange}
+                                                    sx={{
+                                                        width: 54, // Increase width to fit "Yes" and "No"
+                                                        height: 24,
+                                                        padding: 0,
+                                                        '& .MuiSwitch-switchBase': {
+                                                            padding: 0,
+                                                            top: '2px',
+                                                            left: '3px',
+                                                            '&.Mui-checked': {
+                                                                left: 0,
+                                                                transform: 'translateX(32px)', // Adjust for larger width
+                                                                color: '#fff',
+                                                                '&+.MuiSwitch-track': {
+                                                                    backgroundColor: checked ? '#5052b2' : '#7b7b7b',
+                                                                    opacity: checked ? '1' : '1',
+                                                                }
+                                                            },
+                                                        },
+                                                        '& .MuiSwitch-thumb': {
+                                                            width: 20,
+                                                            height: 20,
+                                                        },
+                                                        '& .MuiSwitch-track': {
+                                                            borderRadius: 20 / 2,
+                                                            backgroundColor: checked ? '#5052b2' : '#7b7b7b',
+                                                            opacity: checked ? '1' : '1',
+                                                            '& .MuiSwitch-track.Mui-checked': {
+                                                                backgroundColor: checked ? '#5052b2' : '#7b7b7b',
+                                                            opacity: checked ? '1' : '1',
+                                                            }
+                                                        },
+                                                    }}
+                                                />
+                                                <Box sx={{
+                                                    position: "absolute",
+                                                    top: "50%",
+                                                    left: "0px",
+                                                    width: "100%",
+                                                    display: "flex",
+                                                    justifyContent: "space-between",
+                                                    alignItems: "center",
+                                                    transform: "translateY(-50%)",
+                                                    pointerEvents: "none"
+                                                }}>
+                                                    {/* Conditional Rendering of Text */}
+                                                    {!checked && (
+                                                        <Typography
+                                                            variant="caption"
+                                                            sx={{
+                                                                fontFamily: 'Roboto',
+                                                                fontSize: '12px',
+                                                                color: '#fff',
+                                                                fontWeight: '400',
+                                                                marginRight: '8px',
+                                                                lineHeight: 'normal',
+                                                                width: '100%',
+                                                                textAlign: 'right',
+                                                            }}
+                                                        >
+                                                            No
+                                                        </Typography>
+                                                    )}
+
+                                                    {checked && (
+                                                        <Typography
+                                                            variant="caption"
+                                                            sx={{
+                                                                fontFamily: 'Roboto',
+                                                                fontSize: '12px',
+                                                                color: '#fff',
+                                                                fontWeight: '400',
+                                                                marginLeft: '6px',
+                                                                lineHeight: 'normal'
+                                                            }}
+                                                        >
+                                                            Yes
+                                                        </Typography>
+                                                    )}
+                                                </Box>
+                                            </Box>
+                                        </Box>
+
+
+
+
+                            </Box>
+                            <Box sx={{ background: '#efefef', borderRadius: '4px', px: 1.5, py: 1 }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <Image src='/info-circle.svg' alt='info-circle' height={20} width={20} />
+                                    <Typography variant="subtitle1" className='paragraph' sx={{
+                                        lineHeight: '20px'
+                                    }}>By performing this action, all your Klaviyo contacts will be added to your Grow suppression list, and new contacts will be imported daily around 6pm EST.</Typography>
+                                </Box>
+                            </Box>
+                            <Box sx={{p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)', display: 'flex', flexDirection:'column', gap: '16px'}}>
+                                <Typography variant="h6" className='first-sub-title'>Sync Type</Typography>
+                                    <Typography variant="subtitle1" className='paragraph'>Synchronise data gathered from this moment onward in real-time.</Typography>
                                     
                                     <FormControl sx={{gap: '16px'}} error={tab2Error}>
-                                        <FormLabel id="contact-type-radio-buttons-group-label" sx={{
-                                            fontFamily: 'Nunito Sans',
-                                            fontSize: '16px',
-                                            fontWeight: '600',
-                                            color: '#202124',
-                                            lineHeight: 'normal',
+                                        <FormLabel id="contact-type-radio-buttons-group-label" className='first-sub-title' sx={{
                                             '&.Mui-focused': {
                                                 color: '#000',
                                                 transform: 'none !important'
@@ -874,12 +981,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                             <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)' }}>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', mb: 3 }}>
                                     <Image src='/klaviyo.svg' alt='klaviyo' height={26} width={32} />
-                                    <Typography variant="h6" sx={{
-                                        fontFamily: 'Nunito Sans',
-                                        fontSize: '16px',
-                                        fontWeight: '600',
-                                        color: '#202124'
-                                    }}>Contact sync</Typography>
+                                    <Typography variant="h6" className='first-sub-title'>Contact sync</Typography>
                                     <Tooltip title="Sync data with list" placement="right">
                                         <Image src='/baseline-info-icon.svg' alt='baseline-info-icon' height={16} width={16} />
                                     </Tooltip>
@@ -1162,7 +1264,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                                             )}
 
                                             {/* Show static options */}
-                                            {klaviyoList.map((klaviyo, option) => (
+                                            {klaviyoList && klaviyoList.map((klaviyo, option) => (
                                                 <MenuItem key={klaviyo.id} onClick={() => handleSelectOption(klaviyo)} sx={{
                                                     '&:hover': {
                                                         background: 'rgba(80, 82, 178, 0.10)'
@@ -1194,13 +1296,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                             overflowX: 'auto'
                         }}>
                             <Box sx={{display: 'flex', gap: '8px', marginBottom: '20px'}}>
-                            <Typography variant="h6" sx={{
-                                            fontFamily: 'Nunito Sans',
-                                            fontSize: '16px',
-                                            fontWeight: '600',
-                                            color: '#202124',
-                                            lineHeight: 'normal'
-                                        }}>Map list</Typography>
+                            <Typography variant="h6" className='first-sub-title'>Map list</Typography>
                                         <Typography variant='h6' sx={{
                                             background: '#EDEDF7',
                                             borderRadius: '3px',
@@ -1414,12 +1510,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                                             boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.12)',
                                             padding: '16px 21px 16px 16px'
                                         }}>
-                                            <Typography variant="body1" sx={{
-                                                color: '#202124',
-                                                fontFamily: 'Nunito Sans',
-                                                fontSize: '16px',
-                                                fontWeight: '600',
-                                                lineHeight: 'normal',
+                                            <Typography variant="body1" className='first-sub-title' sx={{
                                                 paddingBottom: '12px'
                                             }}>Confirm Deletion</Typography>
                                             <Typography variant="body2" sx={{
@@ -1529,10 +1620,17 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                                     }
                                 }}
                             >
+                                
                                 {customFieldsList.map((item) => (
-                                    <MenuItem key={item.value} value={item.value}>{item.type}</MenuItem>
-                                ))}
-                            </TextField>
+                    <MenuItem 
+                        key={item.value} 
+                        value={item.value} 
+                        disabled={customFields.some(f => f.type === item.value)} // Дизейблим выбранные
+                    >
+                        {item.type}
+                    </MenuItem>
+                ))}
+            </TextField>
                         </Grid>
                         <Grid item xs="auto" sm={1} mb={2} container justifyContent="center">
                             <Image
