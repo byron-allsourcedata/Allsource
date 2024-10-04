@@ -152,10 +152,10 @@ const DataSync: React.FC = () => {
   }
 
   const formatFunnelText = (text: boolean) => {
-    if (text === false) {
+    if (text === true) {
       return 'Enable';
     }
-    if (text === true) {
+    if (text === false) {
       return 'Disable';
     }
   };
