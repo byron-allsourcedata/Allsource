@@ -269,15 +269,20 @@ class SettingsService:
 
         return start_date, end_date
             
-    def extract_subscription_details(self, customer_id, prospect_credits):
+    def extract_subscription_details(self, customer_id, prospect_credits, user_id):
         subscription = get_billing_details_by_userid(customer_id)
         plan = subscription['items']['data'][0]['plan']
         start_date, end_date = self.calculate_dates(plan)
         is_active = subscription.get('status') == 'active'
+        current_plan = self.plan_persistence.get_current_plan(user_id=user_id)
+        
+        user_subscription = self.plan_persistence.get_user_subscription(user_id=user_id)
+        user_limit_domain = user_subscription.domains_limit if user_subscription else 0
+        plan_limit_domain = current_plan.domains_limit if current_plan else 0
         subscription_details = {
             'billing_cycle': f"{start_date.strftime('%b %d, %Y')} to {end_date.strftime('%b %d, %Y')}",
             'plan_name': determine_plan_name_from_product_id(plan['product']),
-            'domains': 'N/A',
+            'domains': f"{plan_limit_domain - user_limit_domain}/{plan_limit_domain}",
             'prospect_credits': prospect_credits,
             'overage': '0.49/contact',
             'next_billing_date': self.timestamp_to_date(subscription['current_period_end']),
@@ -290,7 +295,7 @@ class SettingsService:
     def get_billing(self, user: dict):
         result = {}
         result['card_details'] = get_card_details_by_customer_id(user.get('customer_id'))
-        result['billing_details'] = self.extract_subscription_details(user.get('customer_id'), user.get('prospect_credits'))
+        result['billing_details'] = self.extract_subscription_details(user.get('customer_id'), user.get('prospect_credits'), user.get('id'))
         result['billing_details']['overage'] = user.get('is_leads_auto_charging')
         result['usages_credits'] = {
                         'leads_credits': user.get('leads_credits'),
@@ -375,41 +380,8 @@ class SettingsService:
         if result['status'] != 'SUCCESS':
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Billing information not found.")
         
-        output = io.StringIO()
-        writer = csv.writer(output)
-
-        fields_to_include = [
-            'id',
-            'account_country',
-            'account_name',
-            'amount_due',
-            'amount_paid',
-            'currency',
-            'customer_name',
-            'customer_email',
-            'billing_reason',
-            'created',
-            'status',
-            'invoice_pdf',
-            'hosted_invoice_url',
-        ]
-        writer.writerow(['Field', 'Value'])
-        for field in fields_to_include:
-            if field == 'created':
-                created_timestamp = result['data'].get(field)
-                formatted_date = datetime.fromtimestamp(created_timestamp).strftime("%B %d, %Y")
-                writer.writerow([field, formatted_date])
-            else:
-                value = result['data'].get(field)
-                writer.writerow([field, value])
-
-        line_items = result['data']['lines']['data']
-        writer.writerow(['Line Item Description', 'Amount'])
-        for item in line_items:
-            writer.writerow([item['description'], item['amount'] / 100])
-
-        output.seek(0)
-        return output
+        hosted_invoice_url = result['data'].get('hosted_invoice_url', '')
+        return hosted_invoice_url
 
 
         

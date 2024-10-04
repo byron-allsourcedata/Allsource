@@ -63,7 +63,8 @@ const TrialStatus: React.FC = () => {
   };
 
   const handleChoosePlanSlider = () => {
-    router.push('/choose-plan')
+    router.push('/settings?section=subscription')
+    setIsSliderOpen(false)
   };
 
   return (

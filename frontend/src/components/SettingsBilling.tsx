@@ -227,11 +227,29 @@ export const SettingsBilling: React.FC = () => {
     };
 
     const handleRemovePopupOpen = () => {
+        const cardToRemove = cardDetails.find(card => card.id === selectedCardId);
+
+        if (cardToRemove) {
+            if (cardToRemove.is_default) {
+                showErrorToast('Cannot delete default card');
+                return;
+            }
+        }
+
         setRemovePopupOpen(true);
         setDeleteAnchorEl(null);
     };
 
+
     const handleSetDefault = async () => {
+        const cardToRemove = cardDetails.find(card => card.id === selectedCardId);
+
+        if (cardToRemove) {
+            if (cardToRemove.is_default) {
+                showErrorToast('The bank card is already default');
+                return;
+            }
+        }
         try {
             setIsLoading(true);
             const response = await axiosInterceptorInstance.put('/settings/billing/default-card', { payment_method_id: selectedCardId });
@@ -351,21 +369,19 @@ export const SettingsBilling: React.FC = () => {
     const fetchSaveBillingHistory = async (invoice_id: string) => {
         try {
             setIsLoading(true);
-            const response = await axiosInterceptorInstance.get(`/settings/billing/download-billing?invoice_id=${invoice_id}`, {
-                responseType: 'blob',
-            });
-
-            const url = window.URL.createObjectURL(new Blob([response.data]));
-            const link = document.createElement('a');
-            link.href = url;
-            link.setAttribute('download', 'billing_data.csv');
-
-            document.body.appendChild(link);
-            link.click();
-            if (link.parentNode) {
-                link.parentNode.removeChild(link);
+            const response = await axiosInterceptorInstance.get(`/settings/billing/download-billing?invoice_id=${invoice_id}`);
+            const link = response.data;
+            if (link) {
+                console.log(link)
+                const a = document.createElement('a');
+                a.href = link;
+                a.target = '_blank';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            } else {
+                showErrorToast("Download billing not found.");
             }
-            window.URL.revokeObjectURL(url);
         } catch (error: unknown) {
             if (axios.isAxiosError(error)) {
                 showErrorToast(error.message);
@@ -378,8 +394,6 @@ export const SettingsBilling: React.FC = () => {
             setIsLoading(false);
         }
     };
-
-
 
 
     // Handler for page change
@@ -422,10 +436,10 @@ export const SettingsBilling: React.FC = () => {
             const response = await axiosInterceptorInstance.get(`/subscriptions/buy-credits?credits_used=${10}`);
             if (response && response.data.status) {
                 showToast(response.data.status);
-                if (response.data.status == 'PAYMENT_SUCCESS'){
+                if (response.data.status == 'PAYMENT_SUCCESS') {
                     setProspectData(prospectData + 10)
                 }
-            }            
+            }
             else if (response.data.link) {
                 window.location.href = response.data.link;
             } else {
@@ -443,7 +457,7 @@ export const SettingsBilling: React.FC = () => {
             setIsLoading(false);
         }
     };
-    
+
 
     // Handler for rows per page change
     const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -604,6 +618,7 @@ export const SettingsBilling: React.FC = () => {
                                         <Box sx={{
                                             minWidth: '230px'
                                         }}>
+
                                             <Box sx={{ my: 2 }}>
                                                 <Button onClick={handleRemovePopupOpen} sx={{
                                                     border: 'none',
@@ -627,30 +642,29 @@ export const SettingsBilling: React.FC = () => {
                                                 }}>
                                                     Remove
                                                 </Button>
-                                                {!card.is_default && (
-                                                    <Button onClick={handleSetDefault} sx={{
-                                                        border: 'none',
-                                                        boxShadow: 'none',
-                                                        color: '#202124',
-                                                        fontFamily: 'Nunito Sans',
-                                                        fontSize: '14px',
-                                                        fontWeight: '600',
-                                                        lineHeight: 'normal',
-                                                        textTransform: 'none',
-                                                        minWidth: 'auto',
-                                                        width: '100%',
-                                                        padding: '4px 0 4px 16px',
-                                                        textAlign: 'left',
-                                                        display: 'block',
-                                                        borderRadius: '0',
-                                                        '&:hover': {
-                                                            backgroundColor: 'rgba(80, 82, 178, 0.10)'
-                                                        }
-                                                    }}>
-                                                        Set as default
-                                                    </Button>
-                                                )}
+                                                <Button onClick={handleSetDefault} sx={{
+                                                    border: 'none',
+                                                    boxShadow: 'none',
+                                                    color: '#202124',
+                                                    fontFamily: 'Nunito Sans',
+                                                    fontSize: '14px',
+                                                    fontWeight: '600',
+                                                    lineHeight: 'normal',
+                                                    textTransform: 'none',
+                                                    minWidth: 'auto',
+                                                    width: '100%',
+                                                    padding: '4px 0 4px 16px',
+                                                    textAlign: 'left',
+                                                    display: 'block',
+                                                    borderRadius: '0',
+                                                    '&:hover': {
+                                                        backgroundColor: 'rgba(80, 82, 178, 0.10)'
+                                                    }
+                                                }}>
+                                                    Set as default
+                                                </Button>
                                             </Box>
+
                                         </Box>
                                     </Popover>
                                 </Box>
@@ -754,7 +768,7 @@ export const SettingsBilling: React.FC = () => {
                                                     lineHeight: '16px',
                                                     color: '#5f6368',
                                                     letterSpacing: '0.06px'
-                                                }}>{renderValue(value)}</Typography>
+                                                }}>$ 0.49/contact</Typography>
                                             </Box>
                                             <Box position="relative" display="inline-block">
                                                 <Switch
