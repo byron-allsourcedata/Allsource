@@ -140,14 +140,12 @@ async def create_sync(data: SyncCreate, service_name: str = Query(...),
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Access denied. Admins and standard only."
             )
+    data = {k: v for k, v in data.model_dump().items() if v}
+    print(data)
     with integration_service as service:
         service = getattr(service, service_name.lower())
         await service.create_sync(
-            leads_type=data.leads_type,
-            list_id=data.list_id,
-            list_name=data.list_name,
-            tags_id=data.tags_id,
-            data_map=data.data_map,
+            **data,
             domain_id=domain.id
         )
 
@@ -167,3 +165,7 @@ async def set_suppression(suppression_data: SupperssionSet, service_name: str = 
         service = getattr(service, service_name)
         return service.set_supperssions(suppression_data.suppression, domain.id)
         
+@router.get('/test')
+async def test(integration_service: IntegrationService = Depends(get_integration_service)):
+    with integration_service as service:
+        return service.meta.test()
