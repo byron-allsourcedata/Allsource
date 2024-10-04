@@ -38,11 +38,11 @@ const Suppressions: React.FC = () => {
     return (
         <Box sx={suppressionsStyle.mainContent}>
             <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%', mt: 2, ml:2, "@media (max-width: 600px)": {flexDirection: 'column', display: 'flex', alignItems: 'flex-start'}, "@media (max-width: 440px)": {flexDirection: 'column', pt:8, justifyContent: 'flex-start'} }}>
-                <Box sx={{ flexShrink: 0, display: 'flex', flexDirection: 'row', alignItems: 'center', width:'0%', gap: 1, "@media (max-width: 600px)": {mb:2 }}}>
+                <Box sx={{ flexShrink: 0, display: 'flex', flexDirection: 'row', alignItems: 'center', width: '10%', gap: 1, "@media (max-width: 600px)": {mb:2 }}}>
                     <Typography className="first-sub-title">Suppressions</Typography>
                     <CustomTooltip title={"Suppressions help manage and filter out contacts or data points that should not receive communications or updates."} linkText="Learn more" linkUrl="https://maximiz.ai"/>
                 </Box>
-                <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center', alignItems: 'center',  }}>
+                <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center', width:'90%', pr: '10%', alignItems: 'center', "@media (max-width: 600px)":{ width:'97%', pr: '0',}   }}>
                     <Tabs
                         value={tabIndex}
                         onChange={handleTabChange}
@@ -123,7 +123,7 @@ const Suppressions: React.FC = () => {
 const SuppressionsPage: React.FC = () => {
     return (
         <Suspense fallback={<CustomizedProgressBar />}>
-        <Suppressions />
+            <Suppressions />
         </Suspense>
     );
 };
