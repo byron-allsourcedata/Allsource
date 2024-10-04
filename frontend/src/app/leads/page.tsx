@@ -457,18 +457,14 @@ const Leads: React.FC = () => {
                 }
             }
 
-            console.log('1234')
             const response = await axiosInstance.get(url);
             const [leads, count] = response.data;
 
             setData(Array.isArray(leads) ? leads : []);
             setCount(count || 0);
             setStatus(response.data.status);
-
         } catch (error) {
             if (error instanceof AxiosError && error.response?.status === 403) {
-                console.log('response', error)
-                console.log('response data', error.response)
                 if (error.response.data.detail.status === 'NEED_BOOK_CALL') {
                     sessionStorage.setItem('is_slider_opened', 'true');
                     setShowSlider(true);
