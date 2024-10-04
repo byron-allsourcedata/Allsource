@@ -613,30 +613,27 @@ export const SettingsBilling: React.FC = () => {
                                                     }}>
                                                     Remove
                                                 </Button>
-                                                {!card.is_default && (
-                                                    <Button
-                                                        className='hyperlink-red'
-                                                        onClick={handleSetDefault} sx={{
-                                                            border: 'none',
-                                                            boxShadow: 'none',
-                                                            color: '#202124 !important',
-                                                            lineHeight: 'normal !important',
-                                                            textTransform: 'none',
-                                                            minWidth: 'auto',
-                                                            width: '100%',
-                                                            padding: '4px 0 4px 16px',
-                                                            textAlign: 'left',
-                                                            display: 'block',
-                                                            borderRadius: '0',
-                                                            '&:hover': {
-                                                                backgroundColor: 'rgba(80, 82, 178, 0.10)'
-                                                            }
-                                                        }}>
-                                                        Set as default
-                                                    </Button>
-                                                )}
+                                                <Button
+                                                    className='hyperlink-red'
+                                                    onClick={handleSetDefault} sx={{
+                                                        border: 'none',
+                                                        boxShadow: 'none',
+                                                        color: '#202124 !important',
+                                                        lineHeight: 'normal !important',
+                                                        textTransform: 'none',
+                                                        minWidth: 'auto',
+                                                        width: '100%',
+                                                        padding: '4px 0 4px 16px',
+                                                        textAlign: 'left',
+                                                        display: 'block',
+                                                        borderRadius: '0',
+                                                        '&:hover': {
+                                                            backgroundColor: 'rgba(80, 82, 178, 0.10)'
+                                                        }
+                                                    }}>
+                                                    Set as default
+                                                </Button>
                                             </Box>
-
                                         </Box>
                                     </Popover>
                                 </Box>

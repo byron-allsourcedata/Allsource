@@ -75,16 +75,28 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ handleClose, onSuccess }) =
     return (
         <Box sx={{ padding: '16px' }}>
             <CardElement options={{ hidePostalCode: true }} />
+            <Box sx={{mt: 4}}>
             <Button 
                 onClick={handleButtonClick} 
                 sx={{
-                    marginTop: '16px',
-                    '&:hover': {
-                        background: 'transparent',
-                    },
+                    backgroundColor: '#fff',
+                    color: 'rgba(80, 82, 178, 1)',
+                    fontFamily: "Nunito Sans",
+                    textTransform: 'none',
+                    lineHeight: '22.4px',
+                    fontWeight: '700',
+                    padding: '0.5em 0.5em',
+                    marginBottom: 1,
+                    textWrap: 'nowrap',
+                    fontSize: '16px',
+                    border: '1px solid rgba(80, 82, 178, 1)',
+                    maxWidth: '79px',
+                    maxHeight: '40px',
+                    '&:hover': { backgroundColor: '#fff', boxShadow: '0 2px 2px rgba(0, 0, 0, 0.3)' },
                 }}>
-                <img src="/add-square.svg" alt="add-square" height={32} width={32} />
+                    Save
             </Button>
+            </Box>
         </Box>
     );
 };
