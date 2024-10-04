@@ -103,7 +103,8 @@ class SubscriptionService:
 
     def is_user_has_active_subscription(self, user_id):
         user_plan = self.db.query(UserSubscriptions.plan_end).filter(
-            UserSubscriptions.user_id == user_id
+            UserSubscriptions.user_id == user_id,
+            UserSubscriptions.status.in_(('active', 'canceled'))
         ).order_by(desc(UserSubscriptions.plan_end)).first()
         if user_plan:
             if user_plan.plan_end:
