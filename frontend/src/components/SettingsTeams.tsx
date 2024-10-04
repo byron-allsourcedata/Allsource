@@ -220,11 +220,11 @@ export const SettingsTeams: React.FC = () => {
 
     const handleSendInvitation = async (emails: string[], role: string) => {
         const results = [];
-
+        role = role.toLowerCase().replace(/\s+/g, '_');
         for (const email of emails) {
             try {
                 setIsLoading(true);
-                const response = await axiosInterceptorInstance.post('/settings/teams', { invite_user: email, access_level: role.toLowerCase() });
+                const response = await axiosInterceptorInstance.post('/settings/teams', { invite_user: email, access_level: role });
                 if (response.status === 200) {
                     switch (response.data.status) {
                         case 'SUCCESS':
