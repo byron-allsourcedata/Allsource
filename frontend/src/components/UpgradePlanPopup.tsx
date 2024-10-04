@@ -67,26 +67,20 @@ export const UpgradePlanPopup: React.FC<Props> = ({ open, handleClose, limitName
               />
             </Box>
             <Box sx={{ paddingRight: 2, paddingLeft: 2 }}>
-              <Typography sx={{
+              <Typography className='first-sub-title' sx={{
                 width: '100%',
                 textAlign: 'justify',
-                fontFamily: 'Nunito Sans',
-                fontWeight: 600,
-                fontSize: '16px',
-                color: 'rgba(32, 33, 36, 1)',
                 mb: 2
               }} variant='h6'>
                 You have reached the maximum {limitName} limit for your current plan. To add more {limitName}, please consider upgrading your plan.
                 </Typography>
-              <Typography sx={{
+              <Typography className='paragraph' sx={{
                 width: '100%',
-                fontFamily: 'Roboto',
-                fontSize: '14px',
-                fontWeight: 400,
-                lineHeight: '21px',
+                fontSize: '14px !important',
+                lineHeight: '21px !important',
                 letterSpacing: '0.005em',
                 textAlign: 'left',
-                color: 'rgba(95, 99, 104, 1)'
+                color: 'rgba(95, 99, 104, 1) !important'
               }}>Maximiz provides cutting-edge tools and features tailored to elevate your business performance, delivering superior results and unlocking your full potential.</Typography>
             </Box>
           </Box>

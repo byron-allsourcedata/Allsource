@@ -59,15 +59,12 @@ export const resetStyles: { [key: string]: SxProps<Theme> } = {
         },
       },
       title: {
-        fontWeight: 'bold',
-        fontSize: '28px',
+        fontWeight: '600',
         whiteSpace: 'nowrap',
         textAlign: 'center',
         paddingBottom: '16px',
-        fontFamily: 'Nunito',
-        lineHeight: 'normal',
+        lineHeight: '30px',
         '@media (max-width: 440px)': {
-            fontSize: '24px',
             paddingBottom: '1rem',
         },
       },
@@ -97,38 +94,32 @@ export const resetStyles: { [key: string]: SxProps<Theme> } = {
         mb: '24px',
       },
       orText: {
-        px: 2,
-        fontWeight: 'regular',
-        fontSize: '14px',
-        fontFamily: 'Nunito',
+        px: 2
       },
       form: {
-        width: '100%',
-        fontFamily: 'Nunito',
+        width: '100%'
       },
       inputLabel: {
-        fontFamily: 'Nunito',
-        fontSize: '16px',
-        lineHeight: 'normal',
-        color: 'rgba(17, 17, 19, 0.60)',
         top: '-3px',
         '&.Mui-focused': {
-          color: '#0000FF',
-        },
+            color: 'rgba(17, 17, 19, 0.6)',
+            fontFamily: 'Nunito Sans',
+            fontWeight: 400,
+            fontSize: '12px',
+            lineHeight: '16px'
+          },
       },
       submitButton: {
         mt: 2,
         backgroundColor: '#F45745',
-        color: '#FFFFFF',
+        color: '#FFFFFF !important',
         '&:hover': {
           backgroundColor: red[700],
         },
-        fontWeight: 'bold',
+        fontWeight: '600',
         padding: '10px 8px',
         textTransform: 'none',
-        fontSize: '16px',
-        fontFamily: 'Nunito',
-        lineHeight: 'normal',
+        lineHeight: '20px',
         marginTop: '52px',
         '@media (max-width: 440px)': {
           margin: '0',
@@ -151,12 +142,9 @@ export const resetStyles: { [key: string]: SxProps<Theme> } = {
         fontSize: '16px',
       },
       text: {
-        fontSize: '14px',
-        fontFamily: 'Nunito',
-        fontWeight: '500',
         textAlign: 'center',
-        color: '#000',
         paddingBottom: '52px',
+        letterSpacing: '0.07px'
         
       },
       loginLink: {

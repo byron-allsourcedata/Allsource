@@ -88,15 +88,17 @@ const ResetPassword: React.FC = () => {
 
       <Box sx={resetStyles.mainContent}>
         <Box sx={resetStyles.container}>
-          <Typography variant="h4" component="h1" sx={resetStyles.title}>
+          <Typography variant="h4" component="h1" className='heading-text' sx={resetStyles.title}>
             Forgot your password?
           </Typography>
-          <Typography sx={resetStyles.text}>
+          <Typography className='second-sub-title' sx={resetStyles.text}>
           No worries! Let&apos;s get you back on track with a new password, pronto! Just follow the steps sent to your email
           </Typography>
           <Box component="form" onSubmit={handleSubmit} sx={resetStyles.form}>
             <TextField sx={resetStyles.formField}
-              InputLabelProps={{ sx: resetStyles.inputLabel }}
+              InputLabelProps={{
+                className: "form-input-label",
+                sx: resetStyles.inputLabel }}
               label="Email address"
               name="email"
               type="email"
@@ -107,9 +109,11 @@ const ResetPassword: React.FC = () => {
               onChange={handleChange}
               error={Boolean(errors.email)}
               helperText={errors.email}
-              InputProps={{ sx: resetStyles.formInput }}
+              InputProps={{ 
+                className: "form-input" 
+               }}
             />
-            <Button
+            <Button className='hyperlink-red'
               type="submit"
               variant="contained"
               sx={resetStyles.submitButton}

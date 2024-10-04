@@ -58,12 +58,10 @@ export const confirmStyles: { [key: string]: SxProps<Theme> } = {
       },
     },
     title: {
-      fontWeight: 'bold',
-      fontSize: '28px',
+      fontWeight: '600',
       whiteSpace: 'nowrap',
       textAlign: 'center',
       paddingBottom: '16px',
-      fontFamily: 'Nunito',
       lineHeight: 'normal',
       '@media (max-width: 440px)': {
           fontSize: '24px',
@@ -96,15 +94,11 @@ export const confirmStyles: { [key: string]: SxProps<Theme> } = {
         mb: '24px',
       },
       orText: {
-        px: 2,
-        fontWeight: 'regular',
-        fontSize: '14px',
-        fontFamily: 'Nunito',
+        px: 2
       },
       form: {
         width: '100%',
         maxWidth: '384px',
-        fontFamily: 'Nunito',
       },
       inputLabel: {
         fontFamily: 'Nunito',
@@ -114,20 +108,18 @@ export const confirmStyles: { [key: string]: SxProps<Theme> } = {
         mt: 2,
         backgroundColor: '#FFFFFF',
         border: '1px solid transparent',
-        borderColor: '#F45745',
+        borderColor: '#F45745 !important',
         borderRadius: '0.25rem',
-        color: '#F45745',
+        color: '#F45745 !important',
         '&:hover': {
           borderColor: '#F45745',
           backgroundColor: 'white',
         },
-        fontWeight: 'bold',
+        fontWeight: '600',
         m: '3.25rem 0 0',
         textTransform: 'none',
-        fontSize: '16px',
-        fontFamily: 'Nunito',
         padding: '0.625rem 0.5rem',
-        lineHeight: 'normal',
+        lineHeight: '20px',
         '@media (max-width: 440px)': {
             margin: '2rem 0 0',
             padding: '0.625rem 1.5rem',
@@ -146,10 +138,8 @@ export const confirmStyles: { [key: string]: SxProps<Theme> } = {
         fontSize: '16px',
       },
       text: {
-        fontSize: '14px',
-        fontFamily: 'Nunito',
-        fontWeight: '500',
         textAlign: 'center',
+        letterSpacing: '0.07px',
         '&:nth-of-type(1)': {
           paddingBottom: '1rem',
           '@media (max-width: 440px)': {
@@ -160,7 +150,6 @@ export const confirmStyles: { [key: string]: SxProps<Theme> } = {
       loginLink: {
         color: '#F45745',
         cursor: 'pointer',
-        fontFamily: 'Nunito',
         textDecoration: 'none',
       },
 }

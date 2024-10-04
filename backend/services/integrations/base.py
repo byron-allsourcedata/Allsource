@@ -13,6 +13,7 @@ from .shopify import ShopifyIntegrationService
 from .mailchimp import MailchimpIntegrationsService
 from .klaviyo import KlaviyoIntegrationsService
 from .bigcommerce import BigcommerceIntegrationsService
+from .meta import MetaIntegrationsService
 
 class IntegrationService:
 
@@ -63,14 +64,18 @@ class IntegrationService:
                                                  self.lead_orders_persistence,
                                                  self.integrations_user_sync_persistence,
                                                  self.client, self.aws_service, self.db)
-        self.bigcommerce = BigcommerceIntegrationsService(self.integration_persistence, 
-                                                          self.lead_persistence, 
-                                                          self.client)
+        # self.bigcommerce = BigcommerceIntegrationsService(self.integration_persistence, 
+        #                                                   self.lead_persistence, 
+        #                                                   self.client)
         self.klaviyo = KlaviyoIntegrationsService(self.domain_persistence, 
                                                 self.integration_persistence,  
                                                 self.lead_persistence,
                                                 self.integrations_user_sync_persistence,)
-        self.mailchimp = MailchimpIntegrationsService(self.integration_persistence)
+        self.meta = MetaIntegrationsService(self.domain_persistence, 
+                                                self.integration_persistence,  
+                                                self.lead_persistence,
+                                                self.integrations_user_sync_persistence,)
+        # self.mailchimp = MailchimpIntegrationsService(self.integration_persistence)
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):

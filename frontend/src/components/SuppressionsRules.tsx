@@ -387,7 +387,8 @@ const SuppressionRules: React.FC = () => {
 
             if (response.status === 200) {
                 showToast('File uploaded successfully.');
-                handleUpdateSuppressionList()
+                handleUpdateSuppressionList();
+                handleDeleteFile();
             } else {
                 showErrorToast('Failed to upload file.');
             }
@@ -395,7 +396,7 @@ const SuppressionRules: React.FC = () => {
             showErrorToast('Error uploading the file.');
         }
         finally {
-            setLoading(false)
+            setLoading(false);
         }
     };
 
@@ -501,7 +502,7 @@ const SuppressionRules: React.FC = () => {
                     suppression_list_id: selectedFileId
                 }
             });
-            if (response.data.status === "SUCCESS") {
+            if (response.data === "SUCCESS") {
                 showToast("Successfully deleted file")
             }
             else {
@@ -546,12 +547,14 @@ const SuppressionRules: React.FC = () => {
     }, [fetchRules]);
 
 
-    if (loading) {
-        return <CustomizedProgressBar />;
-    }
 
     return (
         <Box>
+            {loading && (
+                <Box sx={suppressionsStyles.loaderOverlay}>
+                    <CustomizedProgressBar />
+                </Box>
+            )}
             <Box sx={suppressionsStyles.box}>
                 <Box sx={suppressionsStyles.container}>
                     <Typography className="main-text" sx={suppressionsStyles.title}>

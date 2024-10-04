@@ -59,12 +59,10 @@ export const signupStyles: { [key: string]: SxProps<Theme> } = {
     },
   },
   title: {
-    fontWeight: 'bold',
-    fontSize: '28px',
+    fontWeight: '600',
     whiteSpace: 'nowrap',
     textAlign: 'center',
     paddingBottom: '33px',
-    fontFamily: 'Nunito',
     lineHeight: 'normal',
     overflow: 'hidden',
     textOverflow: 'ellipsis',
@@ -72,7 +70,6 @@ export const signupStyles: { [key: string]: SxProps<Theme> } = {
     maxWidth: '100%',
     '@media (max-width: 440px)': {
         paddingBottom: '2rem',
-        fontSize: '24px'
     },
   },
   googleButton: {
@@ -105,59 +102,45 @@ export const signupStyles: { [key: string]: SxProps<Theme> } = {
   },
   orText: {
     px: '36px',
-    fontWeight: 'regular',
-    fontSize: '14px',
-    fontFamily: 'Nunito',
     '@media (max-width: 440px)': {
       marginTop: '16px',
       marginBottom: '16px',
     }
   },
   form: {
-    width: '100%',
-    fontFamily: 'Nunito',
+    width: '100%'
   },
   inputLabel: {
-    fontFamily: 'Nunito',
-    fontSize: '16px',
-    lineHeight: 'normal',
-    color: 'rgba(17, 17, 19, 0.60)',
     top: '-3px',
     '&.Mui-focused': {
-        color: '#0000FF',
-      },
+      color: 'rgba(17, 17, 19, 0.6)',
+      fontFamily: 'Nunito Sans',
+      fontWeight: 400,
+      fontSize: '12px',
+      lineHeight: '16px'
+    },
   },
   submitButton: {
     mt: 2,
     backgroundColor: '#F45745',
-    color: '#fff',
+    color: '#fff !important',
     '&:hover': {
       backgroundColor: red[700],
     },
-    fontWeight: 'bold',
     margin: '24px 0px 0 0px',
     textTransform: 'none',
     minHeight: '3rem',
-    fontSize: '16px',
-    fontFamily: 'Nunito',
     '@media (max-width: 440px)': {
         marginTop: '32px',
     }
   },
   loginText: {
     mt: 2,
-    margin: '43px 0 0',
-    fontFamily: 'Nunito',
-    fontSize: '14px',
-    fontWeight: '500',
+    margin: '43px 0 0'
   },
   loginLink: {
-    color: '#F45745',
     cursor: 'pointer',
-    fontWeight: 'bold',
-    fontFamily: 'Nunito',
     textDecoration: 'none',
-    fontSize: '16px',
   },
   formField: {
     marginTop: '24px',
@@ -170,8 +153,7 @@ formInput: {
     '&.MuiOutlinedInput-root': {
       height: '48px',
       '& .MuiOutlinedInput-input': {
-        padding: '12px 16px 13px 16px',
-        fontFamily: 'Nunito',
+        padding: '12px 16px 13px 16px'
       },
       '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
         borderColor: '#0000FF',
@@ -183,18 +165,19 @@ formInput: {
   },
   passwordValidationText: {
     '& .MuiTypography-root' : {
-      fontFamily: 'Nunito',
+      fontFamily: 'Nunito Sans',
       fontSize: '12px',
       fontWeight: '400',
-      color: 'rgba(17, 17, 19, 0.60)',
+      color: '#707071',
+      lineHeight: '22px'
     }
   },
   passwordValidationTextSuccess: {
     '& .MuiTypography-root' : {
-      fontFamily: 'Nunito',
+      fontFamily: 'Nunito Sans',
       fontSize: '12px',
       fontWeight: '400',
-      color: '#111113',
+      color: '#202124',
     }
   },
   passwordContentList: {
@@ -215,9 +198,11 @@ formInput: {
   checkboxContentField: {
     display: 'table',
     textAlign: 'left',
-    color: '#000',
-    fontFamily: 'Nunito',
+    color: '#202124',
+    fontFamily: 'Nunito Sans',
     fontSize: '14px',
+    fontWeight: '400',
+    lineHeight: 'normal',
     marginTop: '24px',
     marginLeft: '0',
     marginRight: '0',
@@ -259,10 +244,10 @@ formInput: {
     },
   },
   checkboxContentLink: {
-      color: '#000',
-      fontFamily: 'Nunito',
+      color: '#202124',
+      fontFamily: 'Nunito Sans',
       fontSize: '14px',
-      textDecorationColor: '#000',
+      textDecorationColor: '#202124',
       '& img': {
         position: 'relative',
         top: '3px',

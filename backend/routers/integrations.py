@@ -139,14 +139,11 @@ async def create_sync(data: SyncCreate, service_name: str = Query(...),
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Access denied. Admins and standard only."
             )
+    data = {k: v for k, v in data.model_dump().items() if v}
     with integration_service as service:
         service = getattr(service, service_name.lower())
         await service.create_sync(
-            leads_type=data.leads_type,
-            list_id=data.list_id,
-            list_name=data.list_name,
-            tags_id=data.tags_id,
-            data_map=data.data_map,
+            **data,
             domain_id=domain.id,
             created_by=user.get('full_name')
         )
