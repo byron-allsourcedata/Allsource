@@ -51,7 +51,7 @@ class IntegrationService:
         
     def switch_sync_toggle(self, domain_id, list_id):
         result = self.integrations_user_sync_persistence.switch_sync_toggle(domain_id=domain_id, list_id=list_id)
-        if result:
+        if result is not None:
             return {'status': 'SUCCESS', 'data_sync': result}
         return {'status': 'FAILED'}
 

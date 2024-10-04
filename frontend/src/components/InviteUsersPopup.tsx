@@ -108,7 +108,7 @@ export const InviteUsersPopup: React.FC<InviteUsersPopupProps> = ({ open, onClos
             </Box>
             <Box sx={{ padding: '30px 32px 0 32px', display: 'flex', flexDirection: 'column', gap: '32px' }}>
                 <Typography variant="h6" className='first-sub-title'>
-                    Invite your team to review or collaborate on this Maxixmiz project.
+                    Invite your team to review or collaborate on this Maximiz project.
                 </Typography>
 
                 <Autocomplete

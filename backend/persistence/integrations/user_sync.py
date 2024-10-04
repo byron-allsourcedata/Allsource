@@ -25,7 +25,7 @@ class IntegrationsUserSyncPersistence:
         active = False
         sync = self.db.query(IntegrationUserSync).filter(IntegrationUserSync.id == list_id, IntegrationUserSync.domain_id == domain_id).first()
         if sync:
-            if sync.is_active == True:
+            if sync.is_active == False:
                 active = True
                 sync.is_active = active
             else:

@@ -89,7 +89,16 @@ export const SettingsTeams: React.FC = () => {
             setIsLoading(true);
             const response = await axiosInterceptorInstance.get('/settings/teams');
             const data = response.data;
-            setTeamMembers(data.teams)
+            setTeamMembers(data.teams.sort((a: any, b: any) => {
+                if (a.access_level === 'owner' && b.access_level !== 'owner') {
+                    return -1;
+                }
+                if (a.access_level !== 'owner' && b.access_level === 'owner') {
+                    return 1;
+                }
+                return 0;
+            }));
+
             setMemberLimit(data.member_limit)
             setMemberCount(data.member_count)
         } catch (error) {
@@ -384,7 +393,7 @@ export const SettingsTeams: React.FC = () => {
                         <Typography variant="h6" className='first-sub-title' sx={{
                             lineHeight: '22px !important'
                         }}>Pending invitations</Typography>
-                        <CustomTooltip title={"The Settings menu allows you to customise your user experience, manage your account preferences, and adjust notifications."} linkText="Learn more" linkUrl="https://maximiz.ai"/>
+                        <CustomTooltip title={"The Settings menu allows you to customise your user experience, manage your account preferences, and adjust notifications."} linkText="Learn more" linkUrl="https://maximiz.ai" />
                     </Box>
 
                     <TableContainer sx={{
@@ -395,7 +404,7 @@ export const SettingsTeams: React.FC = () => {
                             <TableHead>
                                 <TableRow>
                                     <TableCell
-                                    className='table-heading'
+                                        className='table-heading'
                                         sx={{
                                             ...teamsStyles.tableColumn,
                                             position: 'sticky', // Make the Name column sticky
@@ -492,7 +501,7 @@ export const SettingsTeams: React.FC = () => {
                         }}>
                             {memberCount}/{memberLimit} Member limit
                         </Typography>
-                        <CustomTooltip title={"Team Info"} linkText="Learn more" linkUrl="https://maximiz.ai"/>
+                        <CustomTooltip title={"Team Info"} linkText="Learn more" linkUrl="https://maximiz.ai" />
                     </Box>
                     <Box sx={{ border: '1px dashed #5052B2', borderRadius: '4px' }}>
                         <Button onClick={handleInviteUsersPopupOpen}><Image src="/add-square.svg" alt="add-square" height={24} width={24} /></Button>
@@ -639,30 +648,34 @@ export const SettingsTeams: React.FC = () => {
                                                         </MenuItem>
                                                     ))}
                                                 </Select>
-                                                 {/* Chevron Icon Positioned Absolutely */}
-                                                    {teamSelectOpen === member.email && member.access_level !== "owner" && (
-                                                        <span
-                                                            onClick={(e) => handleArrowClick(e, member.email)}
-                                                            style={{
-                                                                position: 'absolute',
-                                                                right: '10px',
-                                                                top: '50%',
-                                                                transform: 'translateY(-50%)',
-                                                                cursor: 'pointer',
-                                                            }}
-                                                        >
-                                                            <Image
-                                                                src={teamSelectOpen === member.email ? '/chevron-drop-up.svg' : '/chevron-drop-down.svg'}
-                                                                alt={teamSelectOpen === member.email ? 'chevron-drop-up' : 'chevron-drop-down'}
-                                                                height={24}
-                                                                width={24}
-                                                            />
-                                                        </span>
-                                                    )}
+                                                {/* Chevron Icon Positioned Absolutely */}
+                                                {teamSelectOpen === member.email && member.access_level !== "owner" && (
+                                                    <span
+                                                        onClick={(e) => handleArrowClick(e, member.email)}
+                                                        style={{
+                                                            position: 'absolute',
+                                                            right: '10px',
+                                                            top: '50%',
+                                                            transform: 'translateY(-50%)',
+                                                            cursor: 'pointer',
+                                                        }}
+                                                    >
+                                                        <Image
+                                                            src={teamSelectOpen === member.email ? '/chevron-drop-up.svg' : '/chevron-drop-down.svg'}
+                                                            alt={teamSelectOpen === member.email ? 'chevron-drop-up' : 'chevron-drop-down'}
+                                                            height={24}
+                                                            width={24}
+                                                        />
+                                                    </span>
+                                                )}
                                             </FormControl>
                                         </TableCell>
-                                        <TableCell className='table-data' sx={teamsStyles.tableBodyColumn}>{member.invited_by}</TableCell>
-                                        <TableCell className='table-data' sx={teamsStyles.tableBodyColumn}>{member.added_on}</TableCell>
+                                        <TableCell className='table-data' sx={teamsStyles.tableBodyColumn}>
+                                            {member.invited_by || '--'}
+                                        </TableCell>
+                                        <TableCell className='table-data' sx={teamsStyles.tableBodyColumn}>
+                                            {member.added_on || '--'}
+                                        </TableCell>
                                         <TableCell className='table-data' sx={teamsStyles.tableBodyColumn}>
                                             {member.access_level !== 'owner' && (
                                                 <Button className='table-data'

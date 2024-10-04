@@ -417,7 +417,7 @@ export const SettingsBilling: React.FC = () => {
             const response = await axiosInterceptorInstance.get(`/subscriptions/buy-credits?credits_used=${10}`);
             if (response && response.data.status) {
                 showToast(response.data.status);
-                if (response.data.status == 'PAYMENT_SUCCESS') {
+                if (response.data.status == 'Payment success') {
                     setProspectData(prospectData + 10)
                 }
             }
@@ -592,31 +592,9 @@ export const SettingsBilling: React.FC = () => {
                                         }}>
 
                                             <Box sx={{ my: 2 }}>
-                                                <Button 
-                                                className='hyperlink-red'
-                                                onClick={handleRemovePopupOpen} sx={{
-                                                    border: 'none',
-                                                    boxShadow: 'none',
-                                                    color: '#202124 !important',
-                                                    lineHeight: 'normal !important',
-                                                    textTransform: 'none',
-                                                    minWidth: 'auto',
-                                                    width: '100%',
-                                                    padding: '4px 0 4px 16px',
-                                                    textAlign: 'left',
-                                                    display: 'block',
-                                                    borderRadius: '0',
-                                                    '&:hover': {
-                                                        backgroundColor: 'rgba(80, 82, 178, 0.10)'
-                                                    }
-
-                                                }}>
-                                                    Remove
-                                                </Button>
-                                                {!card.is_default && (
-                                                    <Button
-                                                        className='hyperlink-red'
-                                                        onClick={handleSetDefault} sx={{
+                                                <Button
+                                                    className='hyperlink-red'
+                                                    onClick={handleRemovePopupOpen} sx={{
                                                         border: 'none',
                                                         boxShadow: 'none',
                                                         color: '#202124 !important',
@@ -631,7 +609,29 @@ export const SettingsBilling: React.FC = () => {
                                                         '&:hover': {
                                                             backgroundColor: 'rgba(80, 82, 178, 0.10)'
                                                         }
+
                                                     }}>
+                                                    Remove
+                                                </Button>
+                                                {!card.is_default && (
+                                                    <Button
+                                                        className='hyperlink-red'
+                                                        onClick={handleSetDefault} sx={{
+                                                            border: 'none',
+                                                            boxShadow: 'none',
+                                                            color: '#202124 !important',
+                                                            lineHeight: 'normal !important',
+                                                            textTransform: 'none',
+                                                            minWidth: 'auto',
+                                                            width: '100%',
+                                                            padding: '4px 0 4px 16px',
+                                                            textAlign: 'left',
+                                                            display: 'block',
+                                                            borderRadius: '0',
+                                                            '&:hover': {
+                                                                backgroundColor: 'rgba(80, 82, 178, 0.10)'
+                                                            }
+                                                        }}>
                                                         Set as default
                                                     </Button>
                                                 )}
@@ -1009,7 +1009,7 @@ export const SettingsBilling: React.FC = () => {
 
                     <Box sx={{ width: '100%' }}>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <Typography className='second-sub-title' sx={{  lineHeight: '20px !important', mb: '12px' }}>
+                            <Typography className='second-sub-title' sx={{ lineHeight: '20px !important', mb: '12px' }}>
                                 Contacts collected
                             </Typography>
                             <Typography className='second-sub-title' sx={{ lineHeight: '20px !important', mb: '12px' }}>
@@ -1076,18 +1076,26 @@ export const SettingsBilling: React.FC = () => {
 
 
                     <Box sx={{ flexShrink: 0 }}>
-                        <Button className='hyperlink-red' onClick={handleBuyCredits} sx={{
-                            background: '#5052B2',
-                            borderRadius: '4px',
-                            border: '1px solid #5052b2',
-                            boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                            color: '#fff !important',
-                            textTransform: 'none',
-                            padding: '10px 24px',
-                            '&:hover': {
-                                color: '#5052B2 !important'
-                            }
-                        }}>Buy Credits</Button>
+                        <Button
+                            className='hyperlink-red'
+                            disabled={true}
+                            onClick={handleBuyCredits}
+                            sx={{
+                                background: '#5052B2',
+                                borderRadius: '4px',
+                                border: '1px solid #5052b2',
+                                boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
+                                color: '#fff !important',
+                                textTransform: 'none',
+                                padding: '10px 24px',
+                                '&:hover': {
+                                    color: '#5052B2 !important'
+                                }
+                            }}
+                        >
+                            Buy Credits
+                        </Button>
+
                     </Box>
 
                 </Box>
@@ -1108,7 +1116,7 @@ export const SettingsBilling: React.FC = () => {
                     <Typography variant="h6" className='first-sub-title' sx={{
                         lineHeight: '22px !important'
                     }}>Billing History</Typography>
-                    <CustomTooltip title={"Billing History"} linkText="Learn more" linkUrl="https://maximiz.ai"/>
+                    <CustomTooltip title={"Billing History"} linkText="Learn more" linkUrl="https://maximiz.ai" />
                 </Box>
                 <TableContainer sx={{
                     border: '1px solid #EBEBEB',
@@ -1117,15 +1125,15 @@ export const SettingsBilling: React.FC = () => {
                     <Table>
                         <TableHead>
                             <TableRow>
-                                <TableCell 
-                                className='table-heading'
-                                sx={{
-                                    ...billingStyles.tableColumn,
-                                    position: 'sticky', // Make the Name column sticky
-                                    left: 0, // Stick it to the left
-                                    zIndex: 9,
-                                    background: '#fff'
-                                }}>Date</TableCell>
+                                <TableCell
+                                    className='table-heading'
+                                    sx={{
+                                        ...billingStyles.tableColumn,
+                                        position: 'sticky', // Make the Name column sticky
+                                        left: 0, // Stick it to the left
+                                        zIndex: 9,
+                                        background: '#fff'
+                                    }}>Date</TableCell>
                                 <TableCell className='table-heading' sx={billingStyles.tableColumn}>Invoice ID</TableCell>
                                 <TableCell className='table-heading' sx={billingStyles.tableColumn}>Pricing Plan</TableCell>
                                 <TableCell className='table-heading' sx={billingStyles.tableColumn}>Total</TableCell>
@@ -1352,12 +1360,12 @@ export const SettingsBilling: React.FC = () => {
                             label="Enter Email ID"
                             fullWidth
                             margin="normal"
-                            InputLabelProps={{ 
+                            InputLabelProps={{
                                 className: "form-input-label",
-                                sx: billingStyles.inputLabel 
+                                sx: billingStyles.inputLabel
                             }}
                             InputProps={{
-                                className: "form-input" ,
+                                className: "form-input",
                                 sx: billingStyles.formInput
                             }}
                             value={email}

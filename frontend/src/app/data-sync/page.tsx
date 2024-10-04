@@ -133,17 +133,22 @@ const DataSync: React.FC = () => {
   const handleToggleSync = async () => {
     try {
       setIsLoading(true);
-      const response = await axiosInterceptorInstance.post(`/integrations/sync/switch-toggle`, {});
-      
+      const response = await axiosInterceptorInstance.post(`/integrations/sync/switch-toggle`, {
+        list_id: String(selectedId)
+      });
       if (response.status === 200) {
         switch (response.data.status) {
           case 'SUCCESS':
-            showToast('Integrations sync delete successfully');
-            setData(prevData => prevData.filter(item => item.id !== selectedId));
+            showToast('successfully');
+            setData(prevData => 
+              prevData.map(item => 
+                item.id === selectedId ? { ...item, dataSync: response.data.data_sync } : item
+              )
+            );
             break
-            case 'FAILED':
-              showErrorToast('Integrations sync delete failed'); 
-              break
+          case 'FAILED':
+            showErrorToast('Integrations sync delete failed');
+            break
           default:
             showErrorToast('Unknown response received.');
         }
@@ -168,7 +173,7 @@ const DataSync: React.FC = () => {
     handleClose();
   };
 
-  
+
 
   const handleDelete = async () => {
     try {
@@ -178,16 +183,16 @@ const DataSync: React.FC = () => {
           list_id: selectedId
         }
       });
-      
+
       if (response.status === 200) {
         switch (response.data.status) {
           case 'SUCCESS':
             showToast('Integrations sync delete successfully');
             setData(prevData => prevData.filter(item => item.id !== selectedId));
             break
-            case 'FAILED':
-              showErrorToast('Integrations sync delete failed'); 
-              break
+          case 'FAILED':
+            showErrorToast('Integrations sync delete failed');
+            break
           default:
             showErrorToast('Unknown response received.');
         }
