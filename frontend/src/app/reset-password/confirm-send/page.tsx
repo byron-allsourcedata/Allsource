@@ -37,18 +37,18 @@ const ConfirmSend: React.FC = () => {
       </Box>
       <Box sx={confirmStyles.mainContent}>
         <Box sx={confirmStyles.container}>
-          <Typography variant="h4" component="h1" sx={confirmStyles.title}>
+          <Typography variant="h4" component="h1" className='heading-text' sx={confirmStyles.title}>
           Help is on the way
           </Typography>
-          <Typography sx={confirmStyles.text}>
+          <Typography className='second-sub-title' sx={confirmStyles.text}>
           Please check your email {email}. If you run into any hiccups, our support team is ready to rock &apos;n&apos; roll and help you out.
           </Typography>
-          <Typography sx={confirmStyles.text}>
+          <Typography className='second-sub-title' sx={confirmStyles.text}>
             Please check your spam folder or <Link href="/reset-password" sx={confirmStyles.loginLink}>try sending again.</Link>
           </Typography>
 
           <Box component="form" onSubmit={handleSubmit} sx={confirmStyles.form}>
-            <Button
+            <Button className='hyperlink-red'
               type="submit"
               variant="contained"
               sx={confirmStyles.submitButton}

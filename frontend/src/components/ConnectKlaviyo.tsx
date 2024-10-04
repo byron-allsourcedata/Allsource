@@ -347,11 +347,6 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
 
     const klaviyoStyles = {
         tabHeading: {
-            fontFamily: 'Nunito Sans',
-            fontSize: '14px',
-            color: '#707071',
-            fontWeight: '500',
-            lineHeight: '20px',
             textTransform: 'none',
             padding: 0,
             minWidth: 'auto',
@@ -694,13 +689,12 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                 },
             }}
         >
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 3.5, px: 2, borderBottom: '1px solid #e4e4e4' }}>
-                <Typography variant="h6" sx={{ textAlign: 'center', color: '#202124', fontFamily: 'Nunito Sans', fontWeight: '600', fontSize: '16px', lineHeight: 'normal' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 3.5, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
+                <Typography variant="h6" className="first-sub-title" sx={{ textAlign: 'center' }}>
                     Connect to Klaviyo
                 </Typography>
                 <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
-                    <Link href="#" sx={{
-                        fontFamily: 'Nunito Sans',
+                    <Link href="#" className="main-text" sx={{
                         fontSize: '14px',
                         fontWeight: '600',
                         lineHeight: '20px',
@@ -730,37 +724,136 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                                 justifyContent:'flex-start'
                             }
                         }}} onChange={handleChangeTab}>
-                        <Tab label="Sync Type" value="1" sx={klaviyoStyles.tabHeading} />
-                        <Tab label="Contact Sync" value="2" sx={klaviyoStyles.tabHeading} />
-                        <Tab label="Map data" value="3" sx={klaviyoStyles.tabHeading} />
+                        <Tab label="Suppression Sync" value="1" className='tab-heading' sx={klaviyoStyles.tabHeading} />
+                        <Tab label="Contact Sync" value="2" className='tab-heading' sx={klaviyoStyles.tabHeading} />
+                        <Tab label="Map data" value="3" className='tab-heading' sx={klaviyoStyles.tabHeading} />
                         </TabList>
                     </Box>
                     <TabPanel value="1" sx={{ p: 0 }}>
                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                            <Box sx={{p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)', display: 'flex', flexDirection:'column', gap: '16px'}}>
-                                <Typography variant="h6" sx={{
-                                        fontFamily: 'Nunito Sans',
-                                        fontSize: '16px',
-                                        fontWeight: '600',
-                                        color: '#202124',
-                                        lineHeight: 'normal'
-                                    }}>Sync Type</Typography>
-                                    <Typography variant="subtitle1" sx={{
-                                        fontFamily: 'Roboto',
-                                        fontSize: '12px',
-                                        fontWeight: '400',
-                                        color: '#808080',
-                                        lineHeight: 'normal',
+                            <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)', display: 'flex', flexDirection:'column', gap: '16px' }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <Image src='/klaviyo.svg' alt='klaviyo' height={26} width={32} />
+                                    <Typography variant="h6" className='first-sub-title'>Eliminate Redundancy: Stop Paying for Contacts You Already Own</Typography>
+                                </Box>
+                                <Typography variant="subtitle1" className='paragraph' sx={{
+                                        lineHeight: '20px',
                                         letterSpacing: '0.06px'
-                                    }}>Synchronise data gathered from this moment onward in real-time.</Typography>
+                                    }}>Sync your current list to avoid collecting contacts you already possess.
+                                    Newly added contacts in Klaviyo will be automatically suppressed each day.</Typography>
+                                
+
+                                        <Box sx={{ display: 'flex', gap: '32px', alignItems: 'center' }}>
+                                            <Typography variant="subtitle1" className='paragraph'>
+                                                Enable Automatic Contact Suppression
+                                            </Typography>
+
+                                            {/* Switch Control with Yes/No Labels */}
+                                            <Box position="relative" display="inline-block">
+                                                <Switch
+                                                    {...label}
+                                                    checked={checked}
+                                                    onChange={handleSwitchChange}
+                                                    sx={{
+                                                        width: 54, // Increase width to fit "Yes" and "No"
+                                                        height: 24,
+                                                        padding: 0,
+                                                        '& .MuiSwitch-switchBase': {
+                                                            padding: 0,
+                                                            top: '2px',
+                                                            left: '3px',
+                                                            '&.Mui-checked': {
+                                                                left: 0,
+                                                                transform: 'translateX(32px)', // Adjust for larger width
+                                                                color: '#fff',
+                                                                '&+.MuiSwitch-track': {
+                                                                    backgroundColor: checked ? '#5052b2' : '#7b7b7b',
+                                                                    opacity: checked ? '1' : '1',
+                                                                }
+                                                            },
+                                                        },
+                                                        '& .MuiSwitch-thumb': {
+                                                            width: 20,
+                                                            height: 20,
+                                                        },
+                                                        '& .MuiSwitch-track': {
+                                                            borderRadius: 20 / 2,
+                                                            backgroundColor: checked ? '#5052b2' : '#7b7b7b',
+                                                            opacity: checked ? '1' : '1',
+                                                            '& .MuiSwitch-track.Mui-checked': {
+                                                                backgroundColor: checked ? '#5052b2' : '#7b7b7b',
+                                                            opacity: checked ? '1' : '1',
+                                                            }
+                                                        },
+                                                    }}
+                                                />
+                                                <Box sx={{
+                                                    position: "absolute",
+                                                    top: "50%",
+                                                    left: "0px",
+                                                    width: "100%",
+                                                    display: "flex",
+                                                    justifyContent: "space-between",
+                                                    alignItems: "center",
+                                                    transform: "translateY(-50%)",
+                                                    pointerEvents: "none"
+                                                }}>
+                                                    {/* Conditional Rendering of Text */}
+                                                    {!checked && (
+                                                        <Typography
+                                                            variant="caption"
+                                                            sx={{
+                                                                fontFamily: 'Roboto',
+                                                                fontSize: '12px',
+                                                                color: '#fff',
+                                                                fontWeight: '400',
+                                                                marginRight: '8px',
+                                                                lineHeight: 'normal',
+                                                                width: '100%',
+                                                                textAlign: 'right',
+                                                            }}
+                                                        >
+                                                            No
+                                                        </Typography>
+                                                    )}
+
+                                                    {checked && (
+                                                        <Typography
+                                                            variant="caption"
+                                                            sx={{
+                                                                fontFamily: 'Roboto',
+                                                                fontSize: '12px',
+                                                                color: '#fff',
+                                                                fontWeight: '400',
+                                                                marginLeft: '6px',
+                                                                lineHeight: 'normal'
+                                                            }}
+                                                        >
+                                                            Yes
+                                                        </Typography>
+                                                    )}
+                                                </Box>
+                                            </Box>
+                                        </Box>
+
+
+
+
+                            </Box>
+                            <Box sx={{ background: '#efefef', borderRadius: '4px', px: 1.5, py: 1 }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <Image src='/info-circle.svg' alt='info-circle' height={20} width={20} />
+                                    <Typography variant="subtitle1" className='paragraph' sx={{
+                                        lineHeight: '20px'
+                                    }}>By performing this action, all your Klaviyo contacts will be added to your Grow suppression list, and new contacts will be imported daily around 6pm EST.</Typography>
+                                </Box>
+                            </Box>
+                            <Box sx={{p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)', display: 'flex', flexDirection:'column', gap: '16px'}}>
+                                <Typography variant="h6" className='first-sub-title'>Sync Type</Typography>
+                                    <Typography variant="subtitle1" className='paragraph'>Synchronise data gathered from this moment onward in real-time.</Typography>
                                     
                                     <FormControl sx={{gap: '16px'}} error={tab2Error}>
-                                        <FormLabel id="contact-type-radio-buttons-group-label" sx={{
-                                            fontFamily: 'Nunito Sans',
-                                            fontSize: '16px',
-                                            fontWeight: '600',
-                                            color: '#202124',
-                                            lineHeight: 'normal',
+                                        <FormLabel id="contact-type-radio-buttons-group-label" className='first-sub-title' sx={{
                                             '&.Mui-focused': {
                                                 color: '#000',
                                                 transform: 'none !important'
@@ -888,12 +981,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                             <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)' }}>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', mb: 3 }}>
                                     <Image src='/klaviyo.svg' alt='klaviyo' height={26} width={32} />
-                                    <Typography variant="h6" sx={{
-                                        fontFamily: 'Nunito Sans',
-                                        fontSize: '16px',
-                                        fontWeight: '600',
-                                        color: '#202124'
-                                    }}>Contact sync</Typography>
+                                    <Typography variant="h6" className='first-sub-title'>Contact sync</Typography>
                                     <Tooltip title="Sync data with list" placement="right">
                                         <Image src='/baseline-info-icon.svg' alt='baseline-info-icon' height={16} width={16} />
                                     </Tooltip>
@@ -1208,13 +1296,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                             overflowX: 'auto'
                         }}>
                             <Box sx={{display: 'flex', gap: '8px', marginBottom: '20px'}}>
-                            <Typography variant="h6" sx={{
-                                            fontFamily: 'Nunito Sans',
-                                            fontSize: '16px',
-                                            fontWeight: '600',
-                                            color: '#202124',
-                                            lineHeight: 'normal'
-                                        }}>Map list</Typography>
+                            <Typography variant="h6" className='first-sub-title'>Map list</Typography>
                                         <Typography variant='h6' sx={{
                                             background: '#EDEDF7',
                                             borderRadius: '3px',
@@ -1428,12 +1510,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                                             boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.12)',
                                             padding: '16px 21px 16px 16px'
                                         }}>
-                                            <Typography variant="body1" sx={{
-                                                color: '#202124',
-                                                fontFamily: 'Nunito Sans',
-                                                fontSize: '16px',
-                                                fontWeight: '600',
-                                                lineHeight: 'normal',
+                                            <Typography variant="body1" className='first-sub-title' sx={{
                                                 paddingBottom: '12px'
                                             }}>Confirm Deletion</Typography>
                                             <Typography variant="body2" sx={{

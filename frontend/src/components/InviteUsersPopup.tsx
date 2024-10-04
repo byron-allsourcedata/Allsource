@@ -99,7 +99,7 @@ export const InviteUsersPopup: React.FC<InviteUsersPopupProps> = ({ open, onClos
             }}
         >
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 3.5, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
-                <Typography variant="h6" sx={{ textAlign: 'center', color: '#202124', fontFamily: 'Nunito Sans', fontWeight: '600', fontSize: '16px', lineHeight: 'normal' }}>
+                <Typography variant="h6" className='first-sub-title' sx={{ textAlign: 'center' }}>
                     Invite Users
                 </Typography>
                 <IconButton onClick={onClose} sx={{ p: 0 }}>
@@ -107,7 +107,7 @@ export const InviteUsersPopup: React.FC<InviteUsersPopupProps> = ({ open, onClos
                 </IconButton>
             </Box>
             <Box sx={{ padding: '30px 32px 0 32px', display: 'flex', flexDirection: 'column', gap: '32px' }}>
-                <Typography variant="h6" sx={{ color: '#202124', fontFamily: 'Nunito Sans', fontWeight: '600', fontSize: '16px', lineHeight: 'normal' }}>
+                <Typography variant="h6" className='first-sub-title'>
                     Invite your team to review or collaborate on this Maxixmiz project.
                 </Typography>
 
@@ -138,12 +138,12 @@ export const InviteUsersPopup: React.FC<InviteUsersPopupProps> = ({ open, onClos
                                             />
                                         </IconButton>
                                     }
+                                    className='second-text'
                                     sx={{
                                         marginRight: 0.5,
                                         backgroundColor: '#ededf7',
                                         border: 'none',
                                         borderRadius: '3px',
-                                        fontFamily: 'Roboto',
                                         fontSize: '12px',
                                         color: '#5F6368',
                                         fontWeight: '400',
@@ -195,12 +195,10 @@ export const InviteUsersPopup: React.FC<InviteUsersPopupProps> = ({ open, onClos
                             error={!!emailError}
                             helperText={emailError}
                             InputLabelProps={{
+                                className: 'third-sub-title',
                                 sx: {
-                                    fontFamily: 'Nunito Sans',
-                                    fontSize: '12px',
-                                    lineHeight: '16px',
-                                    fontWeight: '400',
-                                    color: 'rgba(17, 17, 19, 0.60)',
+                                    lineHeight: '16px !important',
+                                    color: 'rgba(17, 17, 19, 0.60) !important',
                                     '&.Mui-focused': {
                                         color: '#0000FF',
                                     },
@@ -223,8 +221,7 @@ export const InviteUsersPopup: React.FC<InviteUsersPopupProps> = ({ open, onClos
 
                     )}
                     renderOption={(props, option) => (
-                        <MenuItem {...props} key={option} sx={{
-                            fontFamily: 'Roboto',
+                        <MenuItem className='second-text' {...props} key={option} sx={{
                             color: '#202124',
                             fontSize: '14px',
                             lineHeight: '20px'
@@ -237,7 +234,7 @@ export const InviteUsersPopup: React.FC<InviteUsersPopupProps> = ({ open, onClos
 
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: '16px' }}>
                     <FormControl variant="outlined" sx={{ width: '100%', minHeight: '48px', lineHeight: 'normal' }}>
-                        <InputLabel sx={{ fontFamily: 'Nunito Sans', fontSize: '12px', lineHeight: '16px' }}>Access level</InputLabel>
+                        <InputLabel className='main-text' sx={{ fontSize: '12px', lineHeight: '16px' }}>Access level</InputLabel>
                         <Select
                             value={role}
                             onChange={handleRoleChange}
@@ -274,8 +271,7 @@ export const InviteUsersPopup: React.FC<InviteUsersPopupProps> = ({ open, onClos
                             }
                         >
                             {roles.map((roleOption) => (
-                                <MenuItem key={roleOption} value={roleOption} sx={{
-                                    fontFamily: 'Roboto',
+                                <MenuItem className='second-text' key={roleOption} value={roleOption} sx={{
                                     color: '#202124',
                                     fontSize: '14px',
                                     lineHeight: '20px'
@@ -286,15 +282,11 @@ export const InviteUsersPopup: React.FC<InviteUsersPopupProps> = ({ open, onClos
                         </Select>
                         {roleError && <FormHelperText error>{roleError}</FormHelperText>}
                     </FormControl>
-                    <Button sx={{
+                    <Button className='hyperlink-red' sx={{
                         border: '1px solid #5052b2',
                         borderRadius: '4px',
                         padding: '10px 24px',
-                        fontFamily: 'Nunito Sans',
-                        fontSize: '14px',
-                        fontWeight: '600',
-                        color: '#5052b2',
-                        lineHeight: '20px',
+                        color: '#5052b2 !important',
                         textTransform: 'none',
                         height: '40px'
                     }}

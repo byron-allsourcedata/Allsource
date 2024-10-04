@@ -61,15 +61,12 @@ export const loginStyles: { [key: string]: SxProps<Theme> } = {
         },
     },
     title: {
-        fontWeight: 'bold',
-        fontSize: '28px',
+        fontWeight: '600',
         whiteSpace: 'nowrap',
         textAlign: 'center',
         paddingBottom: '33px',
-        fontFamily: 'Nunito',
-        lineHeight: 'normal',
+        lineHeight: '30px',
         '@media (max-width: 440px)': {
-            fontSize: '24px',
             paddingBottom: '2rem',
         },
     },
@@ -101,38 +98,32 @@ export const loginStyles: { [key: string]: SxProps<Theme> } = {
         }
     },
     orText: {
-        px: '36px',
-        fontWeight: 'regular',
-        fontSize: '14px',
-        fontFamily: 'Nunito',
+        px: '36px'
     },
     form: {
-        width: '100%',
-        fontFamily: 'Nunito',
+        width: '100%'
     },
     inputLabel: {
-        fontFamily: 'Nunito',
-        fontSize: '16px',
-        lineHeight: 'normal',
-        color: 'rgba(17, 17, 19, 0.60)',
         top: '-3px',
         '&.Mui-focused': {
-            color: '#0000FF',
+            color: 'rgba(17, 17, 19, 0.6)',
+            fontFamily: 'Nunito Sans',
+            fontWeight: 400,
+            fontSize: '12px',
+            lineHeight: '16px'
           },
     },
     submitButton: {
         mt: 2,
         backgroundColor: '#F45745',
-        color: '#FFFFFF',
+        color: '#FFFFFF !important',
         '&:hover': {
             backgroundColor: red[700],
           },
-        fontWeight: 'bold',
         margin: '0',
         padding: '10px 24px',
         textTransform: 'none',
-        fontSize: '16px',
-        fontFamily: 'Nunito',
+        lineHeight: '20px',
         '@media (max-width: 440px)': {
             marginTop: '20px',
             '&:hover': {
@@ -143,9 +134,7 @@ export const loginStyles: { [key: string]: SxProps<Theme> } = {
     loginText: {
         mt: 2,
         margin: '43px 0 0',
-        fontFamily: 'Nunito',
-        fontSize: '14px',
-        fontWeight: '500',
+        lineHeight: '20px',
         '@media (max-width: 440px)': {
             marginTop: '83px',
         }
@@ -153,17 +142,12 @@ export const loginStyles: { [key: string]: SxProps<Theme> } = {
     resetPassword: {
         mt: 2,
         margin: '0 0 24px',
-        fontFamily: 'Nunito',
-        fontSize: '16px',
         textAlign: 'left',
     },
     loginLink: {
         color: '#F45745',
         cursor: 'pointer',
-        fontWeight: 'bold',
-        fontFamily: 'Nunito',
         textDecoration: 'none',
-        fontSize: '16px',
     },
     formField: {
         marginTop: '0',
@@ -176,16 +160,15 @@ export const loginStyles: { [key: string]: SxProps<Theme> } = {
           height: '48px',
           '& .MuiOutlinedInput-input': {
             padding: '12px 16px 13px 16px',
-            fontFamily: 'Nunito',
           },
           '& .MuiOutlinedInput-notchedOutline': {
-            borderColor: '#A3B0C2',
+            borderColor: 'rgba(208, 213, 221, 1)',
           },
           '&:hover .MuiOutlinedInput-notchedOutline': {
-            borderColor: '#A3B0C2',
+            borderColor: 'rgba(208, 213, 221, 1)',
           },
           '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-            borderColor: '#0000FF',
+            borderColor: 'rgba(208, 213, 221, 1)',
           },
         },
         '&+.MuiFormHelperText-root': {

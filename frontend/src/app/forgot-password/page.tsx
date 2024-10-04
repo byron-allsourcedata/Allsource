@@ -171,15 +171,17 @@ const ForgotPassword: React.FC = () => {
       </Box>
       <Box sx={updatepasswordStyles.mainContent}>
         <Box sx={updatepasswordStyles.container}>
-          <Typography variant="h4" component="h1" sx={updatepasswordStyles.title}>
+          <Typography variant="h4" component="h1" className='heading-text' sx={updatepasswordStyles.title}>
             Change your password
           </Typography>
-          <Typography sx={updatepasswordStyles.text}>
+          <Typography className='second-sub-title' sx={updatepasswordStyles.text}>
             Update your password to enhance account security and maintain access control.
           </Typography>
           <Box component="form" onSubmit={handleSubmit} sx={updatepasswordStyles.form}>
             <TextField sx={updatepasswordStyles.formField}
-              InputLabelProps={{ sx: updatepasswordStyles.inputLabel }}
+              InputLabelProps={{
+                className: "form-input-label",
+                sx: updatepasswordStyles.inputLabel }}
               label="New password"
               name="password"
               type={showPassword ? 'text' : 'password'}
@@ -191,6 +193,7 @@ const ForgotPassword: React.FC = () => {
               error={Boolean(errors.password)}
               helperText={errors.password}
               InputProps={{
+                className: "form-input",
                 sx: updatepasswordStyles.formInput,
                 endAdornment: (
                   <InputAdornment position="end">
@@ -228,7 +231,9 @@ const ForgotPassword: React.FC = () => {
               </ListItem>
           </List>
             <TextField
-              InputLabelProps={{ sx: updatepasswordStyles.inputLabel }}
+              InputLabelProps={{ 
+                className: "form-input-label",
+                sx: updatepasswordStyles.inputLabel }}
               label="Confirm password"
               name="confirmPassword"
               type={showConfirmPassword ? 'text' : 'password'}
@@ -240,6 +245,7 @@ const ForgotPassword: React.FC = () => {
               error={Boolean(errors.confirmPassword)}
               helperText={errors.confirmPassword}
               InputProps={{
+                className: "form-input",
                 sx: updatepasswordStyles.formInput,
                 endAdornment: (
                   <InputAdornment position="end">
@@ -267,7 +273,7 @@ const ForgotPassword: React.FC = () => {
                 ),
               }}
             />
-            <Button
+            <Button className='hyperlink-red'
               type="submit"
               variant="contained"
               sx={updatepasswordStyles.submitButton}

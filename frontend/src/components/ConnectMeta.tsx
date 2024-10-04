@@ -209,11 +209,6 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose }) => {
 
     const metaStyles = {
         tabHeading: {
-            fontFamily: 'Nunito Sans',
-            fontSize: '14px',
-            color: '#707071',
-            fontWeight: '500',
-            lineHeight: '20px',
             textTransform: 'none',
             cursor: 'pointer',
             padding: 0,
@@ -494,12 +489,11 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose }) => {
             }}
         >
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 3.5, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
-                <Typography variant="h6" sx={{ textAlign: 'center', color: '#202124', fontFamily: 'Nunito Sans', fontWeight: '600', fontSize: '16px', lineHeight: 'normal' }}>
+                <Typography variant="h6" className='first-sub-title' sx={{ textAlign: 'center' }}>
                     Connect to Meta
                 </Typography>
                 <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
-                    <Link href="#" sx={{
-                        fontFamily: 'Nunito Sans',
+                    <Link href="#" className="main-text" sx={{
                         fontSize: '14px',
                         fontWeight: '600',
                         lineHeight: '20px',
@@ -535,9 +529,9 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose }) => {
                                 gap: '16px'
                             }
                         }}} onChange={handleChangeTab}>
-                        <Tab label="Login" value="1" sx={{...metaStyles.tabHeading}}/>
-                        <Tab label="Contact Sync" value="2" sx={{...metaStyles.tabHeading}} />
-                        <Tab label="Map data" value="3" sx={{...metaStyles.tabHeading}} />
+                        <Tab label="Login" value="1" className='tab-heading' sx={metaStyles.tabHeading} />
+                        <Tab label="Contact Sync" value="2" className='tab-heading' sx={metaStyles.tabHeading} />
+                        <Tab label="Map data" value="3" className='tab-heading' sx={metaStyles.tabHeading} />
                         </TabList>
                     </Box>
                     <TabPanel value="1" sx={{ p: 0 }}>
@@ -603,13 +597,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose }) => {
                             <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)' }}>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', mb: 3 }}>
                                     <Image src='/meta-icon.svg' alt='meta-icon' height={24} width={36} />
-                                    <Typography variant="h6" sx={{
-                                        fontFamily: 'Nunito Sans',
-                                        fontSize: '16px',
-                                        fontWeight: '600',
-                                        color: '#202124',
-                                        lineHeight: 'normal'
-                                    }}>Contact sync</Typography>
+                                    <Typography variant="h6" className='first-sub-title'>Contact sync</Typography>
                                     <Tooltip title="Sync data with list" placement="right">
                                         <Image src='/baseline-info-icon.svg' alt='baseline-info-icon' height={16} width={16} />
                                     </Tooltip>
@@ -874,13 +862,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose }) => {
                             overflowX: 'auto'
                         }}>
                             <Box sx={{display: 'flex', gap: '8px', marginBottom: '20px'}}>
-                            <Typography variant="h6" sx={{
-                                            fontFamily: 'Nunito Sans',
-                                            fontSize: '16px',
-                                            fontWeight: '600',
-                                            color: '#202124',
-                                            lineHeight: 'normal'
-                                        }}>Map list</Typography>
+                            <Typography variant="h6" className='first-sub-title'>Map list</Typography>
                                         <Typography variant='h6' sx={{
                                             background: '#EDEDF7',
                                             borderRadius: '3px',
@@ -1334,12 +1316,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose }) => {
                                             boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.12)',
                                             padding: '16px 21px 16px 16px'
                                         }}>
-                                            <Typography variant="body1" sx={{
-                                                color: '#202124',
-                                                fontFamily: 'Nunito Sans',
-                                                fontSize: '16px',
-                                                fontWeight: '600',
-                                                lineHeight: 'normal',
+                                            <Typography variant="body1" className='first-sub-title' sx={{
                                                 paddingBottom: '12px'
                                             }}>Confirm Deletion</Typography>
                                             <Typography variant="body2" sx={{

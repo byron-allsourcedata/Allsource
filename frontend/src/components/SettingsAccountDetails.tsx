@@ -18,34 +18,27 @@ const accontDetailsStyles = {
         lineHeight: '16px',
         color: 'rgba(17, 17, 19, 0.60)',
         '&.Mui-focused': {
-            color: '#0000FF',
+            color: 'rgba(17, 17, 19, 0.6)',
+            fontFamily: 'Nunito Sans',
+            fontWeight: 400,
+            fontSize: '12px',
+            lineHeight: '16px'
         },
     },
     formInput: {
-        '&.MuiFormControl-root': {
-            margin: 0,
-        },
         '&.MuiOutlinedInput-root': {
-            height: '48px',
             '& .MuiOutlinedInput-input': {
-                padding: '12px 16px 13px 16px',
-                fontFamily: 'Roboto',
-                color: '#202124',
-                fontSize: '14px',
-                lineHeight: '20px'
+                color: '#202124 !important',
             },
             '& .MuiOutlinedInput-notchedOutline': {
-                borderColor: '#A3B0C2',
+                borderColor: '#5052B2',
             },
             '&:hover .MuiOutlinedInput-notchedOutline': {
-                borderColor: '#A3B0C2',
+                borderColor: '#5052B2',
             },
             '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                borderColor: '#0000FF',
+                borderColor: '#5052B2',
             },
-        },
-        '&+.MuiFormHelperText-root': {
-            marginLeft: '0',
         },
     },
     orDivider: {
@@ -60,21 +53,22 @@ const accontDetailsStyles = {
 
     },
     passwordValidationText: {
-        '& .MuiTypography-root': {
-            fontFamily: 'Nunito',
-            fontSize: '12px',
-            fontWeight: '400',
-            color: 'rgba(17, 17, 19, 0.60)',
+        '& .MuiTypography-root' : {
+          fontFamily: 'Nunito Sans',
+          fontSize: '12px',
+          fontWeight: '400',
+          color: '#707071',
+          lineHeight: '22px'
         }
-    },
-    passwordValidationTextSuccess: {
-        '& .MuiTypography-root': {
-            fontFamily: 'Nunito',
-            fontSize: '12px',
-            fontWeight: '400',
-            color: '#111113',
+      },
+      passwordValidationTextSuccess: {
+        '& .MuiTypography-root' : {
+          fontFamily: 'Nunito Sans',
+          fontSize: '12px',
+          fontWeight: '400',
+          color: '#202124',
         }
-    },
+      },
     passwordContentList: {
         display: 'flex',
         padding: '0',
@@ -366,12 +360,9 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
 
             }}>
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
-                    <Typography variant="h6" sx={{
-                        fontFamily: 'Nunito Sans',
-                        fontSize: '16px',
-                        fontWeight: '600',
-                        color: '#4a4a4a',
-                        lineHeight: '22px'
+                    <Typography variant="h6" className='first-sub-title' sx={{
+                        color: '#4a4a4a !important',
+                        lineHeight: '22px !important'
                     }}>Name</Typography>
                     <Box sx={{
                         display: 'flex', gap: 2,
@@ -386,8 +377,11 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
                             onChange={handleChange(setFullName, setIsTyping, setIsModified)}
                             fullWidth
                             margin="normal"
-                            InputLabelProps={{ sx: accontDetailsStyles.inputLabel }}
+                            InputLabelProps={{
+                                className: "form-input-label",
+                                sx: accontDetailsStyles.inputLabel }}
                             InputProps={{
+                                className: "form-input" ,
                                 sx: accontDetailsStyles.formInput,
                                 endAdornment: (
                                     <InputAdornment position="end">
@@ -417,17 +411,13 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
                             onFocus={handleFocus(fullName, setIsFocused, setIsTyping)}
                             onBlur={handleBlur(fullName, setIsFocused, setIsTyping)}
                         />
-                        <Button variant="contained" color="primary" onClick={() => handleSaveAccountDetails('full_name')}
+                        <Button className='hyperlink-red' variant="contained" color="primary" onClick={() => handleSaveAccountDetails('full_name')}
                             sx={{
                                 borderRadius: '4px',
                                 border: '1px solid #5052B2',
                                 background: '#fff',
                                 boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                                fontFamily: 'Nunito Sans',
-                                fontSize: '14px',
-                                fontWeight: '600',
-                                lineHeight: '20px',
-                                color: '#5052b2',
+                                color: '#5052b2 !important',
                                 textTransform: 'none',
                                 padding: '10px 24px',
                                 height: '40px',
@@ -477,8 +467,11 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
                             onChange={handleChange(setEmailAddress, setIsEmailTyping, setIsEmailModified)}
                             fullWidth
                             margin="normal"
-                            InputLabelProps={{ sx: accontDetailsStyles.inputLabel }}
+                            InputLabelProps={{ 
+                                className: "form-input-label",
+                                sx: accontDetailsStyles.inputLabel }}
                             InputProps={{
+                                className: "form-input",
                                 sx: accontDetailsStyles.formInput,
                                 endAdornment: (
                                     <InputAdornment position="end">
@@ -532,17 +525,13 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
                             onFocus={handleFocus(emailAddress, setIsEmailFocused, setIsEmailTyping)}
                             onBlur={handleBlur(emailAddress, setIsEmailFocused, setIsEmailTyping)}
                         />
-                        <Button variant="contained" color="primary" onClick={() => handleSaveAccountDetails('email_address')}
+                        <Button className='hyperlink-red' variant="contained" color="primary" onClick={() => handleSaveAccountDetails('email_address')}
                             sx={{
                                 borderRadius: '4px',
                                 border: '1px solid #5052B2',
                                 background: '#fff',
                                 boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                                fontFamily: 'Nunito Sans',
-                                fontSize: '14px',
-                                fontWeight: '600',
-                                lineHeight: '20px',
-                                color: '#5052b2',
+                                color: '#5052b2 !important',
                                 textTransform: 'none',
                                 padding: '10px 24px',
                                 height: '40px',
@@ -577,44 +566,32 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
                             display: 'none'
                         }
                     }}>
-                        <Typography variant="h6" sx={{
-                            fontFamily: 'Nunito Sans',
-                            fontSize: '16px',
-                            fontWeight: '600',
-                            color: '#4a4a4a',
-                            lineHeight: '22px'
+                        <Typography variant="h6" className='first-sub-title' sx={{
+                            color: '#4a4a4a !important',
+                            lineHeight: '22px !important'
                         }}>Password</Typography>
-                        <Typography variant="body2" sx={{
-                            fontFamily: 'Nunito Sans',
-                            fontSize: '12px',
-                            lineHeight: '16px',
-                            color: 'rgba(17, 17, 19, 0.60)'
+                        <Typography variant="body2" className='third-sub-title' sx={{
+                            lineHeight: '16px !important',
+                            color: 'rgba(17, 17, 19, 0.60) !important'
                         }}>
                             Last changed: <strong>{calculateDaysAgo(resetPasswordDate)}</strong>
                         </Typography>
                     </Box>
-                    <Typography variant="h6" sx={{
-                        fontFamily: 'Nunito Sans',
-                        fontSize: '16px',
-                        fontWeight: '600',
-                        color: '#4a4a4a',
-                        lineHeight: '22px',
-                        '@media (max-width: 600px)': {
-                            display: 'none'
-                        }
-                    }}>Password</Typography>
+                    <Typography variant="h6" className='first-sub-title' sx={{
+                            color: '#4a4a4a !important',
+                            lineHeight: '22px !important',
+                            '@media (max-width: 600px)': {
+                                display: 'none'
+                            }
+                        }}>Password</Typography>
                     <Box sx={{ display: 'flex', gap: 2, justifyContent: 'space-between', alignItems: 'center', maxWidth: '78%' }}>
-                        <Button variant="contained" color="secondary" onClick={handleChangePasswordPopupOpen}
+                        <Button className='hyperlink-red' variant="contained" color="secondary" onClick={handleChangePasswordPopupOpen}
                             sx={{
                                 borderRadius: '4px',
                                 border: '1px solid #5052B2',
                                 background: '#fff',
                                 boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                                fontFamily: 'Nunito Sans',
-                                fontSize: '14px',
-                                fontWeight: '600',
-                                lineHeight: '20px',
-                                color: '#5052b2',
+                                color: '#5052b2 !important',
                                 textTransform: 'none',
                                 padding: '10px 24px',
                                 height: '40px',
@@ -625,11 +602,9 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
                         >
                             Change password
                         </Button>
-                        <Typography variant="body2" sx={{
-                            fontFamily: 'Nunito Sans',
-                            fontSize: '12px',
-                            lineHeight: '16px',
-                            color: 'rgba(17, 17, 19, 0.60)',
+                        <Typography variant="body2" className='third-sub-title' sx={{
+                            lineHeight: '16px !important',
+                            color: 'rgba(17, 17, 19, 0.60) !important',
                             '@media (max-width: 600px)': {
                                 display: 'none'
                             }
@@ -655,13 +630,8 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
                         }}
                     >
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '24px 32px 24px', borderBottom: '1px solid #e4e4e4' }}>
-                            <Typography variant="h6" sx={{
-                                textAlign: 'center',
-                                color: '#202124',
-                                fontFamily: 'Nunito Sans',
-                                fontWeight: '600',
-                                fontSize: '16px',
-                                lineHeight: 'normal'
+                            <Typography variant="h6" className='first-sub-title' sx={{
+                                textAlign: 'center'
                             }}>
                                 Change password
                             </Typography>
@@ -672,18 +642,16 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
                         <Divider />
                         <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', height: '100%' }}>
                             <Box sx={{ px: 4, py: 3, width: '100%', display: 'flex', flexDirection: 'column', gap: 4 }}>
-                                <Typography variant="h6" sx={{
-                                    color: '#202124',
-                                    fontFamily: 'Nunito Sans',
-                                    fontWeight: '600',
-                                    fontSize: '16px',
-                                    lineHeight: 'normal'
-                                }}>
+                                <Typography variant="h6" className='first-sub-title'>
                                     Update your password to enhance account security and maintain access control.
                                 </Typography>
 
-                                <TextField sx={accontDetailsStyles.formField}
-                                    InputLabelProps={{ sx: accontDetailsStyles.inputLabel }}
+                                <TextField sx={{...accontDetailsStyles.formField,
+                                    maxWidth: '100%'
+                                }}
+                                    InputLabelProps={{ 
+                                        className: "form-input-label",
+                                        sx: accontDetailsStyles.inputLabel }}
                                     label="Current Password"
                                     type={showCurrentPassword ? 'text' : 'password'}
                                     value={currentPassword}
@@ -691,6 +659,7 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
                                     fullWidth
                                     margin="normal"
                                     InputProps={{
+                                        className: "form-input",
                                         sx: accontDetailsStyles.formInput,
                                         endAdornment: (
                                             <InputAdornment position="end">
@@ -706,8 +675,12 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
                                         ),
                                     }}
                                 />
-                                <TextField sx={accontDetailsStyles.formField}
-                                    InputLabelProps={{ sx: accontDetailsStyles.inputLabel }}
+                                <TextField sx={{...accontDetailsStyles.formField,
+                                    maxWidth: '100%'
+                                    }}
+                                    InputLabelProps={{ 
+                                        className: "form-input-label",
+                                        sx: accontDetailsStyles.inputLabel }}
                                     label="New Password"
                                     type={showPassword ? 'text' : 'password'}
                                     value={newPassword}
@@ -717,6 +690,7 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
                                     fullWidth
                                     margin="normal"
                                     InputProps={{
+                                        className: "form-input",
                                         sx: accontDetailsStyles.formInput,
                                         endAdornment: (
                                             <InputAdornment position="end">
@@ -753,8 +727,12 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
                                     </ListItem>
                                 </List>
                                 <TextField
-                                    sx={accontDetailsStyles.formField}
-                                    InputLabelProps={{ sx: accontDetailsStyles.inputLabel }}
+                                    sx={{...accontDetailsStyles.formField,
+                                        maxWidth: '100%'
+                                    }}
+                                    InputLabelProps={{
+                                        className: "form-input-label", 
+                                        sx: accontDetailsStyles.inputLabel }}
                                     label="Confirm New Password"
                                     type={showConfirmPassword ? 'text' : 'password'}
                                     value={confirmNewPassword}
@@ -764,6 +742,7 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
                                     error={Boolean(errors.confirmNewPassword)}
                                     helperText={errors.confirmNewPassword}
                                     InputProps={{
+                                        className: "form-input",
                                         sx: accontDetailsStyles.formInput,
                                         endAdornment: (
                                             <InputAdornment position="end">
@@ -795,15 +774,12 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
                         <Box sx={{ px: 2, py: 3.5, width: '100%', border: '1px solid #e4e4e4' }}>
                             <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
                                 <Button
+                                    className='hyperlink-red'
                                     onClick={handleChangePasswordPopupClose}
                                     sx={{
                                         backgroundColor: '#fff',
-                                        fontFamily: "Nunito Sans",
-                                        fontSize: '14px',
-                                        fontWeight: '600',
-                                        lineHeight: '20px',
                                         letterSpacing: 'normal',
-                                        color: "#5052b2",
+                                        color: "#5052b2 !important",
                                         textTransform: 'none',
                                         padding: '10px 24px',
                                         border: '1px solid #5052B2',
@@ -817,15 +793,12 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
                                     Cancel
                                 </Button>
                                 <Button
+                                    className='hyperlink-red'
                                     onClick={handleChangePassword}
                                     sx={{
                                         backgroundColor: '#5052B2',
-                                        fontFamily: "Nunito Sans",
-                                        fontSize: '14px',
-                                        fontWeight: '600',
-                                        lineHeight: '20px',
                                         letterSpacing: 'normal',
-                                        color: "#fff",
+                                        color: "#fff !important",
                                         textTransform: 'none',
                                         padding: '10px 24px',
                                         '&:hover': {
@@ -847,12 +820,9 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
 
                     {/* Business Info Section */}
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-                        <Typography variant="h6" sx={{
-                            fontFamily: 'Nunito Sans',
-                            fontSize: '16px',
-                            fontWeight: '600',
-                            color: '#4a4a4a',
-                            lineHeight: '22px'
+                        <Typography variant="h6" className='first-sub-title' sx={{
+                            color: '#4a4a4a !important',
+                            lineHeight: '22px !important'
                         }}>
                             Business Info
                         </Typography>
@@ -869,8 +839,11 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
                                 onChange={handleChange(setOrganizationName, setIsOrganizationNameTyping, setIsOrganizationNameModified)}
                                 fullWidth
                                 margin="normal"
-                                InputLabelProps={{ sx: accontDetailsStyles.inputLabel }}
+                                InputLabelProps={{ 
+                                    className: "form-input-label",
+                                    sx: accontDetailsStyles.inputLabel }}
                                 InputProps={{
+                                    className: "form-input",
                                     sx: accontDetailsStyles.formInput,
                                     endAdornment: (
                                         <InputAdornment position="end">
@@ -900,17 +873,13 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
                                 onFocus={handleFocus(organizationName, setIsOrganizationNameFocused, setIsOrganizationNameTyping)}
                                 onBlur={handleBlur(organizationName, setIsOrganizationNameFocused, setIsOrganizationNameTyping)}
                             />
-                            <Button variant="contained" color="primary" onClick={() => handleSaveBusinessInfo('organizationName')}
+                            <Button className='hyperlink-red' variant="contained" color="primary" onClick={() => handleSaveBusinessInfo('organizationName')}
                                 sx={{
                                     borderRadius: '4px',
                                     border: '1px solid #5052B2',
                                     background: '#fff',
                                     boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                                    fontFamily: 'Nunito Sans',
-                                    fontSize: '14px',
-                                    fontWeight: '600',
-                                    lineHeight: '20px',
-                                    color: '#5052b2',
+                                    color: '#5052b2 !important',
                                     textTransform: 'none',
                                     padding: '10px 24px',
                                     height: '40px',
@@ -940,8 +909,11 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
                                 onChange={handleChange(setCompanyWebsite, setIsCompanyWebsiteTyping, setIsCompanyWebsiteModified)}
                                 fullWidth
                                 margin="normal"
-                                InputLabelProps={{ sx: accontDetailsStyles.inputLabel }}
+                                InputLabelProps={{ 
+                                    className: "form-input-label",
+                                    sx: accontDetailsStyles.inputLabel }}
                                 InputProps={{
+                                    className: "form-input",
                                     sx: accontDetailsStyles.formInput,
                                     endAdornment: (
                                         <InputAdornment position="end">
@@ -971,17 +943,13 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
                                 onFocus={handleFocus(companyWebsite, setIsCompanyWebsiteFocused, setIsCompanyWebsiteTyping)}
                                 onBlur={handleBlur(companyWebsite, setIsCompanyWebsiteFocused, setIsCompanyWebsiteTyping)}
                             />
-                            <Button variant="contained" color="primary" onClick={() => handleSaveBusinessInfo('companyWebsite')}
+                            <Button className='hyperlink-red' variant="contained" color="primary" onClick={() => handleSaveBusinessInfo('companyWebsite')}
                                 sx={{
                                     borderRadius: '4px',
                                     border: '1px solid #5052B2',
                                     background: '#fff',
                                     boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                                    fontFamily: 'Nunito Sans',
-                                    fontSize: '14px',
-                                    fontWeight: '600',
-                                    lineHeight: '20px',
-                                    color: '#5052b2',
+                                    color: '#5052b2 !important',
                                     textTransform: 'none',
                                     padding: '10px 24px',
                                     height: '40px',
@@ -1011,8 +979,11 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
                                 onChange={handleChange(setMonthlyVisits, setIsMonthlyVisitsTyping, setIsMonthlyVisitsModified)}
                                 fullWidth
                                 margin="normal"
-                                InputLabelProps={{ sx: accontDetailsStyles.inputLabel }}
+                                InputLabelProps={{ sx: accontDetailsStyles.inputLabel,
+                                    className: "form-input-label"
+                                 }}
                                 InputProps={{
+                                    className: "form-input",
                                     sx: accontDetailsStyles.formInput,
                                     endAdornment: (
                                         <InputAdornment position="end">
@@ -1042,17 +1013,13 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
                                 onFocus={handleFocus(monthlyVisits, setIsMonthlyVisitsFocused, setIsMonthlyVisitsTyping)}
                                 onBlur={handleBlur(monthlyVisits, setIsMonthlyVisitsFocused, setIsMonthlyVisitsTyping)}
                             />
-                            <Button variant="contained" color="primary" onClick={() => handleSaveBusinessInfo('monthlyVisits')}
+                            <Button className='hyperlink-red' variant="contained" color="primary" onClick={() => handleSaveBusinessInfo('monthlyVisits')}
                                 sx={{
                                     borderRadius: '4px',
                                     border: '1px solid #5052B2',
                                     background: '#fff',
                                     boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                                    fontFamily: 'Nunito Sans',
-                                    fontSize: '14px',
-                                    fontWeight: '600',
-                                    lineHeight: '20px',
-                                    color: '#5052b2',
+                                    color: '#5052b2 !important',
                                     textTransform: 'none',
                                     padding: '10px 24px',
                                     height: '40px',
