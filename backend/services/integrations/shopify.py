@@ -347,18 +347,28 @@ let viewedProductHandler;
     def create_sync(self, domain_id: int, 
                     integration_id: int, 
                     sync_type: str,  
-                    supression: bool, 
-                    filter_by_contact_type: str):
+                    supression: bool,
+                    list_name: str,
+                    filter_by_contact_type: str, created_by: str):
         data = {
             'domain_id': domain_id,
             'integration_id': integration_id,
             'sync_type': sync_type,
             'supression': supression,
-            'filter_by_contact_type': filter_by_contact_type
+            'list_name': list_name,
+            'filter_by_contact_type': filter_by_contact_type,
+            'created_by': created_by
         }
 
         sync = self.integrations_user_sync_persistence.create_sync(data)
         return {'status': 'Successfuly', 'detail': sync}
+    
+    def delete_sync(self, list_id: str):
+        result = self.integrations_user_sync_persistence.delete_sync(list_id=list_id)
+        if result:
+            return {'status': 'SUCCESS'}
+        else:
+            return {'status': 'FAILED'}
     
 
     def __export_sync(self, domain_id: int):

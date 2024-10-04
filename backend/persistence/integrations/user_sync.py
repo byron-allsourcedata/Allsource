@@ -13,6 +13,15 @@ class IntegrationsUserSyncPersistence:
         self.db.commit()
         return sync
     
+    def delete_sync(self, list_id):
+        sync = self.db.query(IntegrationUserSync).filter(IntegrationUserSync.id == list_id).first()
+        if sync:
+            self.db.delete(sync)
+            self.db.commit()
+            return True
+        return False
+
+    
     def get_all(self):
         return self.db.query(IntegrationUserSync).all()
     
