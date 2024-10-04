@@ -1,11 +1,11 @@
 "use client";
 import { Box, Typography, Tabs, Tab } from "@mui/material";
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import { suppressionsStyle } from './suppressions';
 import CollectionRules from "@/components/SuppressionsCollectingRules";
 import SuppressionRules from "@/components/SuppressionsRules";
 import CustomTooltip from "@/components/customToolTip";
-import axiosInstance from "@/axios/axiosInterceptorInstance";
+
 
 interface TabPanelProps {
     children?: React.ReactNode;
@@ -29,37 +29,10 @@ const TabPanel: React.FC<TabPanelProps> = ({ children, value, index, ...other })
 
 const Suppressions: React.FC = () => {
     const [tabIndex, setTabIndex] = useState(0);
-    const [rules, setRules] = useState<any>(null);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-
-    // Функция для получения данных
-    const fetchRules = useCallback(async () => {
-        setLoading(true);
-        setError(null);
-        try {
-            const response = await axiosInstance.get("/suppressions/rules");
-            setRules(response.data);
-        } catch (err) {
-            setError("Failed to load suppression rules");
-        } finally {
-            setLoading(false);
-        }
-    }, []);
-
-    // useEffect для первоначального запроса данных
-    useEffect(() => {
-        fetchRules();
-    }, [fetchRules]);
-
-    // Функция обновления данных по необходимости
-    const handleUpdateRules = () => {
-        fetchRules(); // Повторный запрос данных
-    };
-
     const handleTabChange = (event: React.SyntheticEvent, newIndex: number) => {
         setTabIndex(newIndex);
     };
+
 
     return (
         <Box sx={suppressionsStyle.mainContent}>
@@ -134,7 +107,7 @@ const Suppressions: React.FC = () => {
             </Box>
             <Box sx={{ width: '100%' }}>
                 <TabPanel value={tabIndex} index={0}>
-                    <SuppressionRules rules={rules} />
+                    <SuppressionRules />
                 </TabPanel>
             </Box>
             <Box sx={{ width: '100%', padding: 0, margin: 0 }}>

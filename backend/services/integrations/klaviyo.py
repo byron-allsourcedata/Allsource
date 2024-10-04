@@ -131,7 +131,7 @@ class KlaviyoIntegrationsService:
             ] 
         }, api_key=api_key)
     
-    async def create_sync(self, leads_type: str, list_id: str, list_name: str, data_map: List[DataMap], domain_id: int,  tags_id: str = None):
+    async def create_sync(self, leads_type: str, list_id: str, list_name: str, data_map: List[DataMap], domain_id: int, created_by: str, tags_id: str = None):
         credentials = self.get_credentials(domain_id)
         data_syncs = self.sync_persistence.get_filter_by(domain_id=domain_id)
         for sync in data_syncs:
@@ -143,7 +143,8 @@ class KlaviyoIntegrationsService:
             'list_name': list_name,
             'domain_id': domain_id,
             'leads_type': leads_type,
-            'data_map': data_map
+            'data_map': data_map,
+            'created_by': created_by,
         })
         if tags_id: 
             self.create_tag_relationships_lists(tags_id=tags_id, list_id=list_id, api_key=credentials.access_token)

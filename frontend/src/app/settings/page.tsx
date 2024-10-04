@@ -1,6 +1,7 @@
 "use client";
-import React, { useState, useEffect } from 'react';
-import { Box, Typography, Button, TextField, Dialog, DialogActions, Tooltip, Slider, DialogContent, DialogTitle, IconButton, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, TableSortLabel, InputAdornment, Drawer, Divider, List, ListItem, ListItemIcon, ListItemText } from '@mui/material';
+import React, { useState, useEffect, Suspense } from 'react';
+import { Box, Typography, Button } from '@mui/material';
+import { useRouter, useSearchParams } from 'next/navigation'; // Импорт для работы с URL
 import { planStyles } from './settingsStyles';
 import { SettingsAccountDetails } from '@/components/SettingsAccountDetails';
 import { SettingsTeams } from '@/components/SettingsTeams';
@@ -12,8 +13,11 @@ import CustomizedProgressBar from '@/components/CustomizedProgressBar';
 
 const Settings: React.FC = () => {
     const [activeSection, setActiveSection] = useState<string>('accountDetails');
-    const [accountDetails, setAccountDetails] = useState<any>(null); 
+    const [accountDetails, setAccountDetails] = useState<any>(null);
     const [isLoading, setIsLoading] = useState<boolean>(true);
+
+    const router = useRouter();
+    const searchParams = useSearchParams(); // Получаем query-параметры из URL
 
     // Функция для получения данных аккаунта
     const fetchAccountDetails = async () => {
@@ -29,15 +33,25 @@ const Settings: React.FC = () => {
         }
     };
 
-    // useEffect для загрузки данных один раз при монтировании
+    // useEffect для установки активного раздела из URL-параметра
     useEffect(() => {
+        const sectionFromUrl = searchParams.get('section'); // Извлекаем параметр "section"
+        if (sectionFromUrl) {
+            setActiveSection(sectionFromUrl);
+        }
         fetchAccountDetails();
-    }, []);
-    
+    }, [searchParams]);
+
+    // Функция для изменения активного раздела и обновления URL
+    const handleTabChange = (section: string) => {
+        setActiveSection(section);
+        router.push(`/settings?section=${section}`); // Обновляем URL при смене таба
+    };
+
     if (isLoading) {
         return <CustomizedProgressBar />;
     }
-    
+
     return (
         <Box>
             <Typography variant="h4" gutterBottom sx={planStyles.title}>
@@ -47,35 +61,35 @@ const Settings: React.FC = () => {
                 <Button
                     sx={planStyles.buttonHeading}
                     variant={activeSection === 'accountDetails' ? 'contained' : 'outlined'}
-                    onClick={() => setActiveSection('accountDetails')}
+                    onClick={() => handleTabChange('accountDetails')}
                 >
                     Account Details
                 </Button>
                 <Button
                     sx={planStyles.buttonHeading}
                     variant={activeSection === 'teams' ? 'contained' : 'outlined'}
-                    onClick={() => setActiveSection('teams')}
+                    onClick={() => handleTabChange('teams')}
                 >
                     Teams
                 </Button>
                 <Button
                     sx={planStyles.buttonHeading}
                     variant={activeSection === 'billing' ? 'contained' : 'outlined'}
-                    onClick={() => setActiveSection('billing')}
+                    onClick={() => handleTabChange('billing')}
                 >
                     Billing
                 </Button>
                 <Button
                     sx={planStyles.buttonHeading}
                     variant={activeSection === 'subscription' ? 'contained' : 'outlined'}
-                    onClick={() => setActiveSection('subscription')}
+                    onClick={() => handleTabChange('subscription')}
                 >
                     Subscription
                 </Button>
                 <Button
                     sx={planStyles.buttonHeading}
                     variant={activeSection === 'apiDetails' ? 'contained' : 'outlined'}
-                    onClick={() => setActiveSection('apiDetails')}
+                    onClick={() => handleTabChange('apiDetails')}
                 >
                     API Details
                 </Button>
@@ -97,14 +111,19 @@ const Settings: React.FC = () => {
                 <SettingsSubscription />
             )}
 
-
             {activeSection === 'apiDetails' && (
                 <SettingsApiDetails />
-                
             )}
-
         </Box>
     );
 };
 
-export default Settings;
+const SettingsPage: React.FC = () => {
+    return (
+        <Suspense fallback={<CustomizedProgressBar />}>
+            <Settings />
+        </Suspense>
+    )
+};
+
+export default SettingsPage;
