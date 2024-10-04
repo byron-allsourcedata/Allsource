@@ -8,6 +8,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { showErrorToast, showToast } from './ToastNotification';
 import CustomizedProgressBar from './CustomizedProgressBar';
+import { stringify } from 'querystring';
 
 interface Integrations {
     id: number
@@ -62,27 +63,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
     const [showCreateMapForm, setShowCreateMapForm] = useState<boolean>(false);
     const [maplistNameError, setMapListNameError] = useState(false);
     const [klaviyoList, setKlaviyoList] = useState<KlaviyoList[]>([])
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (textFieldRef.current && !textFieldRef.current.contains(event.target as Node)) {
-        // If clicked outside, reset shrink only if there is no input value
-        if (selectedOption?.list_name === '') {
-            setIsShrunk(false);
-          }
-          if (isDropdownOpen) {
-            setIsDropdownOpen(false); // Close dropdown when clicking outside
-          }
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [selectedOption]);
-
-    const customFieldsList = [
-        { type: 'Gender', value: 'gender' },
+    const [customFieldsList, setCustomFieldsList] = useState([{ type: 'Gender', value: 'gender' },
         { type: 'Company Name', value: 'company_name' },
         { type: 'Company Domain', value: 'company_domain' },
         { type: 'Company SIC', value: 'company_sic' },
@@ -110,12 +91,35 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
         { type: 'Company Description', value: 'company_description' },
         { type: 'Related Domains', value: 'related_domains' },
         { type: 'Social Connections', value: 'social_connections' },
-        { type: 'DPV Code', value: 'dpv_code' }
-    ];
-    const [customFields, setCustomFields] = useState([{ type: '', value: '' }]);
+        { type: 'DPV Code', value: 'dpv_code' }]);
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (textFieldRef.current && !textFieldRef.current.contains(event.target as Node)) {
+        // If clicked outside, reset shrink only if there is no input value
+        if (selectedOption?.list_name === '') {
+            setIsShrunk(false);
+          }
+          if (isDropdownOpen) {
+            setIsDropdownOpen(false); // Close dropdown when clicking outside
+          }
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [selectedOption]);
+
+    const [customFields, setCustomFields] = useState<{type: string, value: string}[]>([]);
+
+    useEffect(() => {
+        setCustomFields(customFieldsList.map(field => ({ type: field.value, value: field.type })))
+    }, [open])
+    
+    
 
     const handleAddField = () => {
-        console.log(customFields)
         setCustomFields([...customFields, { type: '', value: '' }]);
     };
 
@@ -124,6 +128,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
     };
 
     const handleChangeField = (index: number, field: string, value: string) => {
+
         setCustomFields(customFields.map((item, i) => (i === index ? { ...item, [field]: value } : item)));
     };
     const resetToDefaultValues = () => {
@@ -150,7 +155,6 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
         setNewMapListName('');
         setShowCreateMapForm(false);
         setMapListNameError(false);
-        setKlaviyoList([]);
     };
     // Static options
     const getKlaviyoList = async() => {
@@ -163,6 +167,10 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
         setKlaviyoList(response.data)
         setLoading(false)
     }
+    useEffect(() => {
+        getKlaviyoList()
+    }, [open])
+
     const createNewList = async () => {
         const newListResponse = await axiosInstance.post('/integrations/sync/list/', {
             name: selectedOption?.list_name
@@ -348,7 +356,6 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
             padding: 0,
             minWidth: 'auto',
             px: 2,
-            pointerEvents: 'none',
             '@media (max-width: 600px)': {
                 alignItems: 'flex-start',
                 p: 0
@@ -520,6 +527,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                     <Button
                         variant="contained"
                         onClick={handleSaveSync}
+                        disabled={!selectedOption || !selectedRadioValue.trim()}
                         sx={{
                             backgroundColor: '#5052B2',
                             fontFamily: "Nunito Sans",
@@ -631,7 +639,6 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
     const handleNextTab = async() => {
         
           if(value === '1') {
-            await getKlaviyoList()
             setValue((prevValue) => {
                 const nextValue = String(Number(prevValue) + 1);
                 return nextValue;
@@ -653,7 +660,14 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
       const deleteOpen = Boolean(deleteAnchorEl);
     const deleteId = deleteOpen ? 'delete-popover' : undefined;
 
+    const handleChangeTab = (event: React.SyntheticEvent, newValue: string) => {
+        setValue(newValue);
+      };
 
+      const handlePopupClose = () => {
+        resetToDefaultValues()
+        onClose()
+      }
 
     return (
         <>
@@ -661,7 +675,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
         <Drawer
             anchor="right"
             open={open}
-            onClose={onClose}
+            onClose={handlePopupClose}
             PaperProps={{
                 sx: {
                     width: '620px',
@@ -715,7 +729,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                                 gap: '16px',
                                 justifyContent:'flex-start'
                             }
-                        }}}>
+                        }}} onChange={handleChangeTab}>
                         <Tab label="Sync Type" value="1" sx={klaviyoStyles.tabHeading} />
                         <Tab label="Contact Sync" value="2" sx={klaviyoStyles.tabHeading} />
                         <Tab label="Map data" value="3" sx={klaviyoStyles.tabHeading} />
@@ -1162,7 +1176,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                                             )}
 
                                             {/* Show static options */}
-                                            {klaviyoList.map((klaviyo, option) => (
+                                            {klaviyoList && klaviyoList.map((klaviyo, option) => (
                                                 <MenuItem key={klaviyo.id} onClick={() => handleSelectOption(klaviyo)} sx={{
                                                     '&:hover': {
                                                         background: 'rgba(80, 82, 178, 0.10)'
@@ -1529,10 +1543,17 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                                     }
                                 }}
                             >
+                                
                                 {customFieldsList.map((item) => (
-                                    <MenuItem key={item.value} value={item.value}>{item.type}</MenuItem>
-                                ))}
-                            </TextField>
+                    <MenuItem 
+                        key={item.value} 
+                        value={item.value} 
+                        disabled={customFields.some(f => f.type === item.value)} // Дизейблим выбранные
+                    >
+                        {item.type}
+                    </MenuItem>
+                ))}
+            </TextField>
                         </Grid>
                         <Grid item xs="auto" sm={1} mb={2} container justifyContent="center">
                             <Image
