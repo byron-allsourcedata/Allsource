@@ -121,7 +121,7 @@ const Settings: React.FC = () => {
 const SettingsPage: React.FC = () => {
     return (
         <Suspense fallback={<CustomizedProgressBar />}>
-            <Settings />;
+            <Settings />
         </Suspense>
     )
 };
