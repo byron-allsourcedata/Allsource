@@ -120,6 +120,7 @@ const CustomTablePagination: React.FC<CustomTablePaginationProps> = ({
                                 border: page === pageNumber ? '1px solid rgba(80, 82, 178, 1)' : 'none',
                                 color: page === pageNumber ? 'rgba(80, 82, 178, 1)' : 'rgba(122, 122, 122, 1)',
                                 minWidth: '30px',
+                                ':hover': {backgroundColor: '#fff'},
                                 minHeight: '30px',
                                 padding: 0
                             }}

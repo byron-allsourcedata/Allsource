@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Drawer, Backdrop, Box, Typography, IconButton, Button, Divider, Link } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { accountStyles } from '../css/accountDetails';
@@ -70,6 +70,26 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
             console.error('Error during the download process:', error);
         }
     };
+
+    // Обработчик для закрытия при нажатии на Esc
+    const handleKeyDown = (event: KeyboardEvent) => {
+        if (event.key === 'Escape') {
+            onClose();
+        }
+    };
+
+    useEffect(() => {
+        if (open) {
+            window.addEventListener('keydown', handleKeyDown);
+        } else {
+            window.removeEventListener('keydown', handleKeyDown);
+        }
+
+        // Очистка при размонтировании или закрытии
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [open]);
 
     return (
         <>

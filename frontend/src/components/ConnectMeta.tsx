@@ -5,22 +5,30 @@ import TabList from '@mui/lab/TabList';
 import TabPanel from '@mui/lab/TabPanel';
 import Image from 'next/image';
 import CloseIcon from '@mui/icons-material/Close';
+import FacebookLogin from '@greatsumini/react-facebook-login';
+import axiosInstance from '@/axios/axiosInterceptorInstance';
+import { showErrorToast, showToast } from './ToastNotification';
+import { create } from 'lodash';
+import { cursorTo } from 'readline';
+
 
 interface ConnectMetaPopupProps {
     open: boolean;
     onClose: () => void;
 }
 
+
 const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose }) => {
 
     const [value, setValue] = React.useState('1');
-
+    const [listID, setListID] = useState<string>('')
     const [checked, setChecked] = useState(false);
-
     const [selectedRadioValue, setSelectedRadioValue] = useState('');
-
+    const [accessToken, setAccessToken] = useState('')
+    const [userID, setUserID] = useState('')
+    const [fullName, setFullName] = useState<string | undefined>(undefined)
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-    const [selectedOption, setSelectedOption] = useState<string>(''); // Track selected option
+    const [selectedOption, setSelectedOption] = useState<string>('');
     const [showCreateForm, setShowCreateForm] = useState<boolean>(false);
     const [newListName, setNewListName] = useState<string>('');
     const [tagName, setTagName] = useState<string>('');
@@ -88,7 +96,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose }) => {
     setIsDropdownOpen(prev => !prev);
     setAnchorEl(textFieldRef.current);
   };
-
+  const handleConnectToFacebook = () => {}
     // Handle menu close
     const handleClose = () => {
         setAnchorEl(null);
@@ -202,10 +210,10 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose }) => {
     const metaStyles = {
         tabHeading: {
             textTransform: 'none',
+            cursor: 'pointer',
             padding: 0,
             minWidth: 'auto',
             px: 2,
-            pointerEvents: 'none',
             '@media (max-width: 600px)': {
                 alignItems: 'flex-start',
                 p: 0
@@ -285,6 +293,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose }) => {
                 return (
                     <Button
                         variant="contained"
+                        onClick={createDataSync}
                         sx={{
                             backgroundColor: '#5052B2',
                             fontFamily: "Nunito Sans",
@@ -393,6 +402,8 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose }) => {
 
     const handleNextTab = () => {
         if (value === '2') {
+            createIntegration()
+            createList()
             // Validate Tab 3
             if (isDropdownValid && validateAdId()) {
                 // Proceed to next tab
@@ -403,6 +414,56 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose }) => {
 
     const deleteOpen = Boolean(deleteAnchorEl);
     const deleteId = deleteOpen ? 'delete-popover' : undefined;
+
+    const createIntegration = async() => {
+        const response = await axiosInstance.post('/integrations/', {
+            meta: {
+                ad_account_id: adId,
+                access_token: accessToken,
+                platform_user_id: userID,
+                full_name: fullName
+            }
+        }, {
+            params: {
+                service_name: 'meta'
+            }
+        })
+        if(response.status === 200) {
+            showToast('Connect to Meta Successfuly')
+        }
+    }
+
+    const createDataSync = async() => {
+        console.log(listID)
+        const response = await axiosInstance.post('/integrations/sync/', {
+            list_id: listID,
+            list_name: selectedOption
+        }, {
+            params: {
+                service_name: 'meta'
+            }
+        });
+        if (response.status === 201) {
+            showToast('Create Sync Meta')
+        }
+    }
+
+    const createList = async() => {
+        const response = await axiosInstance.post('/integrations/sync/list/', {
+            name: selectedOption
+        }, {
+            params: {
+                service_name: 'meta'
+            }
+        })
+        setListID(response.data.id)
+    }
+
+    
+
+    const handleChangeTab = (event: React.SyntheticEvent, newValue: string) => {
+        setValue(newValue);
+      };
 
     return (
         <Drawer
@@ -467,7 +528,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose }) => {
                             '@media (max-width: 600px)': {
                                 gap: '16px'
                             }
-                        }}}>
+                        }}} onChange={handleChangeTab}>
                         <Tab label="Login" value="1" className='tab-heading' sx={metaStyles.tabHeading} />
                         <Tab label="Contact Sync" value="2" className='tab-heading' sx={metaStyles.tabHeading} />
                         <Tab label="Map data" value="3" className='tab-heading' sx={metaStyles.tabHeading} />
@@ -475,15 +536,38 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose }) => {
                     </Box>
                     <TabPanel value="1" sx={{ p: 0 }}>
                             <Box sx={{ display: 'flex', flexDirection: 'column', gap: '12px', p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)' }}>
-                                
-                                <Image src='/meta-icon.svg' alt='meta-icon' height={24} width={36} />
-                                    <Typography variant="h6" className='first-sub-title' sx={{
-                                        marginTop: '12px'
-                                    }}>login to your Facebook</Typography>
-                                    <Button
-                                    fullWidth
+                                <FacebookLogin
+                                    appId="470766002467450"
+                                    scope='ads_read,ads_management'
+                                    onSuccess={(response) => {
+                                        setValue('2')
+                                        setAccessToken(response.accessToken)
+                                        setUserID(response.userID)
+                                    }}
+                                    onFail={(error) => {
+                                    console.log('Login Failed!', error);
+                                    }}
+                                    onProfileSuccess={(response) => {
+                                        setFullName(response.name)
+                                    }}
+                                    render={({ onClick, logout }) => (
+                                    <>
+                                        <Image src='/meta-icon.svg' alt='meta-icon' height={24} width={36} />
+                                        <Typography variant="h6" sx={{
+                                        fontFamily: 'Nunito Sans',
+                                        fontSize: '16px',
+                                        fontWeight: '600',
+                                        color: '#202124',
+                                        marginTop: '12px',
+                                        lineHeight: 'normal'
+                                        }}>
+                                        login to your Facebook
+                                        </Typography>
+                                        <Button
+                                        fullWidth
+                                        onClick={onClick}
                                         variant="contained"
-                                        startIcon={<Image src='/facebook-icon.svg' alt='facebook' height={24} width={24} /> }
+                                        startIcon={<Image src='/facebook-icon.svg' alt='facebook' height={24} width={24} />}
                                         sx={{
                                             backgroundColor: '#0066ff',
                                             fontFamily: "Nunito Sans",
@@ -495,14 +579,16 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose }) => {
                                             textTransform: 'none',
                                             padding: '14.5px 24px',
                                             '&:hover': {
-                                                backgroundColor: '#0066ff'
+                                            backgroundColor: '#0066ff'
                                             },
                                             borderRadius: '6px',
                                             border: '1px solid #0066ff',
                                         }}
-                                    >
+                                        >
                                         Connect to Facebook
-                                    </Button>
+                                        </Button>
+                                    </>
+                                    )}/>                            
                             </Box>
                     </TabPanel>
                     

@@ -99,14 +99,13 @@ const Settings: React.FC = () => {
                 >
                     Subscription
                 </Button>
-                <Button
-                    className='tab-heading'
+                {/* <Button
                     sx={planStyles.buttonHeading}
                     variant={activeSection === 'apiDetails' ? 'contained' : 'outlined'}
                     onClick={() => handleTabChange('apiDetails')}
                 >
                     API Details
-                </Button>
+                </Button> */}
             </Box>
 
             {activeSection === 'accountDetails' && (
