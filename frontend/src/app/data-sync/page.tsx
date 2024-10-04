@@ -14,12 +14,14 @@ import {
   Popover,
   Tooltip,
 } from "@mui/material";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { datasyncStyle } from "./datasyncStyle";
 import CustomTooltip from "@/components/customToolTip";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import Image from "next/image";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import CustomizedProgressBar from '@/components/CustomizedProgressBar';
+import axiosInstance from '../../axios/axiosInterceptorInstance';
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import { leadsStyles } from "../leads/leadsStyles";
@@ -27,6 +29,8 @@ import { leadsStyles } from "../leads/leadsStyles";
 const DataSync: React.FC = () => {
   const [order, setOrder] = useState<"asc" | "desc" | undefined>(undefined);
   const [orderBy, setOrderBy] = useState<string | undefined>(undefined);
+  const [isLoading, setIsLoading] = useState(true);
+  const [data, setData] = useState<any[]>([]);
 
   const handleSortRequest = (property: string) => {
     const isAsc = orderBy === property && order === "asc";
@@ -34,50 +38,23 @@ const DataSync: React.FC = () => {
     setOrderBy(property);
   };
 
-  const data = [
-    {
-      id: 1,
-      name: "List 1",
-      type: "All Contacts",
-      contacts: "1,00,102,100",
-      createdBy: "Nexus AI",
-      createdDate: "Aug 27, 2024",
-      platform: "klaviyo",
-      accountId: "12322233",
-      dataSync: "Enable",
-      lastSync: "Aug 27, 2024 00:15:11 GMT",
-      syncStatus: "success",
-      suppression: "On",
-    },
-    {
-      id: 2,
-      name: "List 2",
-      type: "Visitors",
-      contacts: "1,00,102,100",
-      createdBy: "Nexus AI",
-      createdDate: "Aug 27, 2024",
-      platform: "klaviyo",
-      accountId: "12992622",
-      dataSync: "Disable",
-      lastSync: "Aug 27, 2024 00:15:11 GMT",
-      syncStatus: "error",
-      suppression: "Off",
-    },
-    {
-      id: 3,
-      name: "List 3",
-      type: "Add to Cart",
-      contacts: "2403",
-      createdBy: "Nexus AI",
-      createdDate: "Aug 27, 2024",
-      platform: "meta",
-      accountId: "12322233",
-      dataSync: "Enable",
-      lastSync: "Aug 27, 2024 00:15:11 GMT",
-      syncStatus: "success",
-      suppression: "On",
-    },
-  ];
+  const handleResetFilters = async () => {
+    try {
+      setIsLoading(true)
+      const response = await axiosInstance.get('/integrations/sync');
+
+      setData(response.data);
+    } catch (error) {
+      console.error('Error fetching leads:', error);
+    }
+    finally {
+      setIsLoading(false)
+    }
+  };
+
+  useEffect(() => {
+    handleResetFilters();
+  }, []);
 
   const statusIcon = (status: string) => {
     switch (status) {
@@ -168,6 +145,19 @@ const DataSync: React.FC = () => {
   const handleRepairSync = () => {
     console.log(`Repairing sync for id: ${selectedId}`);
     handleClose();
+  };
+
+  if (isLoading) {
+    return <CustomizedProgressBar />;
+  }
+
+  const formatFunnelText = (text: boolean) => {
+    if (text === true) {
+      return 'Enable';
+    }
+    if (text === false) {
+      return 'Disable';
+    }
   };
 
   return (
@@ -458,18 +448,18 @@ const DataSync: React.FC = () => {
                           fontFamily: "Roboto",
                           fontSize: "12px",
                           color:
-                            row.dataSync === "Enable"
+                            row.dataSync === true
                               ? "rgba(43, 91, 0, 1) !important"
                               : "rgba(74, 74, 74, 1)!important",
                           backgroundColor:
-                            row.dataSync === "Enable"
+                            row.dataSync === true
                               ? "rgba(234, 248, 221, 1) !important"
                               : "rgba(219, 219, 219, 1) !important",
                           padding: "3px 14.5px",
                           maxHeigh: "1.25rem",
                         }}
                       >
-                        {row.dataSync}
+                         {formatFunnelText(row.dataSync)}
                       </Typography>
                     </Box>
                   </TableCell>
@@ -556,7 +546,7 @@ const DataSync: React.FC = () => {
               }}
               onClick={handleToggleSync}
             >
-              {data.find((row) => row.id === selectedId)?.dataSync === "Enable"
+              {data.find((row) => row.id === selectedId)?.dataSync === true
                 ? "Disable Sync"
                 : "Enable Sync"}
             </Button>

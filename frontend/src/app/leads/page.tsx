@@ -1419,8 +1419,8 @@ const Leads: React.FC = () => {
                                                         <TableCell sx={leadsStyles.table_array_phone}>
                                                             {row.mobile_phone
                                                                 ? row.mobile_phone.split(',')[0]
-                                                                : row.personal_number
-                                                                    ? row.personal_number.split(',')[0]
+                                                                : row.personal_phone
+                                                                    ? row.personal_phone.split(',')[0]
                                                                     : row.direct_number
                                                                         ? row.direct_number.split(',')[0]
                                                                         : '--'}
