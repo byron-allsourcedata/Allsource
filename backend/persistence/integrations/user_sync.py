@@ -28,7 +28,6 @@ class IntegrationsUserSyncPersistence:
             IntegrationUserSync.sync_status,
             IntegrationUserSync.platform_user_id,
             IntegrationUserSync.no_of_contacts,
-            IntegrationUserSync.is_active,
             IntegrationUserSync.created_by,
             UserIntegration.service_name,
             UserIntegration.is_with_suppression
