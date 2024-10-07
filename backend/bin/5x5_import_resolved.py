@@ -106,26 +106,27 @@ async def process_table(session, cookie_sync_by_hour, channel, root_user):
     for key, possible_leads in cookie_sync_by_hour.items():
         for possible_lead in reversed(possible_leads):
             up_id = possible_lead['UP_ID']
-            if not up_id:
+            if up_id is None or up_id == 'None':
                 up_ids = session.query(FiveXFiveHems.up_id).filter(
                     FiveXFiveHems.sha256_lc_hem == str(possible_lead['SHA256_LOWER_CASE'])).all()
                 if len(up_ids) == 0:
-                    logging.info(f"Not found SHA256_LOWER_CASE {possible_lead['SHA256_LOWER_CASE']}")
+                    logging.warning(f"Not found SHA256_LOWER_CASE {possible_lead['SHA256_LOWER_CASE']}")
                     continue
                 elif len(up_ids) > 1:
                     logging.info(f"Too many SHA256_LOWER_CASEs {possible_lead['SHA256_LOWER_CASE']}")
                     continue
                 up_id = up_ids[0][0]
                 logging.info(f"Lead found by SHA256_LOWER_CASE {possible_lead['SHA256_LOWER_CASE']}")
-            five_x_five_user = session.query(FiveXFiveUser).filter(FiveXFiveUser.up_id == str(up_id).lower()).first()
-            if five_x_five_user:
-                logging.info(f"Lead found by UP_ID {possible_lead['UP_ID']}")
-                await process_user_data(possible_lead, five_x_five_user, session, channel, None)
-                if root_user:
-                    await process_user_data(possible_lead, five_x_five_user, session, channel, root_user)
-                break
-            else:
-                logging.info(f"Not found by UP_ID {possible_lead['UP_ID']}")
+            if up_id is not None and up_id != 'None':
+                five_x_five_user = session.query(FiveXFiveUser).filter(FiveXFiveUser.up_id == str(up_id).lower()).first()
+                if five_x_five_user:
+                    logging.info(f"Lead found by UP_ID {up_id}")
+                    await process_user_data(possible_lead, five_x_five_user, session, channel, None)
+                    if root_user:
+                        await process_user_data(possible_lead, five_x_five_user, session, channel, root_user)
+                    break
+                else:
+                    logging.warning(f"Not found by UP_ID {up_id}")
 
 
 async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, session: Session, rmq_connection, root_user=None):
@@ -197,7 +198,7 @@ async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, sess
                 name=QUEUE_DATA_SYNC,
                 durable=True
             )
-            publish_rabbitmq_message(rmq_connection, QUEUE_DATA_SYNC, {'domain_id': user_domain_id, 'leads_type': behavior_type, 'lead': {
+            await publish_rabbitmq_message(rmq_connection, QUEUE_DATA_SYNC, {'domain_id': user_domain_id, 'leads_type': behavior_type, 'lead': {
                 'id': lead_user.id,
                 'five_x_five_user_id': lead_user.five_x_five_user_id
             }})
