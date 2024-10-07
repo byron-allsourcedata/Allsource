@@ -106,20 +106,26 @@ async def process_table(session, cookie_sync_by_hour, channel, root_user):
     for key, possible_leads in cookie_sync_by_hour.items():
         for possible_lead in reversed(possible_leads):
             up_id = possible_lead['UP_ID']
-            possible_lead['PARTNER_UID']
             if not up_id:
                 up_ids = session.query(FiveXFiveHems.up_id).filter(
                     FiveXFiveHems.sha256_lc_hem == str(possible_lead['SHA256_LOWER_CASE'])).all()
-                if len(up_ids) != 1:
+                if len(up_ids) == 0:
+                    logging.info(f"Not found SHA256_LOWER_CASE {possible_lead['SHA256_LOWER_CASE']}")
+                    continue
+                elif len(up_ids) > 1:
+                    logging.info(f"Too many SHA256_LOWER_CASEs {possible_lead['SHA256_LOWER_CASE']}")
                     continue
                 up_id = up_ids[0][0]
+                logging.info(f"Lead found by SHA256_LOWER_CASE {possible_lead['SHA256_LOWER_CASE']}")
             five_x_five_user = session.query(FiveXFiveUser).filter(FiveXFiveUser.up_id == str(up_id).lower()).first()
             if five_x_five_user:
-                logging.info(f"UP_ID {up_id} found in table")
+                logging.info(f"Lead found by UP_ID {possible_lead['UP_ID']}")
                 await process_user_data(possible_lead, five_x_five_user, session, channel, None)
                 if root_user:
                     await process_user_data(possible_lead, five_x_five_user, session, channel, root_user)
                 break
+            else:
+                logging.info(f"Not found by UP_ID {possible_lead['UP_ID']}")
 
 
 async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, session: Session, rmq_connection, root_user=None):
@@ -135,13 +141,9 @@ async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, sess
                     .filter(UserDomains.data_provider_id == str(partner_uid_client_id)) \
                     .first()
     if not result:
-        logging.info(f"result not found with client_id {partner_uid_client_id}")
+        logging.info(f"Customer not found {partner_uid_client_id}")
         return
     user, user_domain_id = result
-    if not user:
-        logging.info(f"User not found with client_id {partner_uid_client_id}")
-        return
-    
     page = partner_uid_dict.get('current_page')
     if page is None:
         json_headers = json.loads(str(possible_lead['JSON_HEADERS']).lower())
@@ -163,7 +165,7 @@ async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, sess
             session.add(user_payment_transactions)
             if (user.leads_credits - AMOUNT_CREDITS) < 0:
                 if user.is_leads_auto_charging is False:
-                    logging.info(f"User eads_auto_charging is False")
+                    logging.info(f"User leads_auto_charging is False")
                     return
                 user.leads_credits -= AMOUNT_CREDITS
                 if user.leads_credits % 100 == 0:
@@ -172,7 +174,8 @@ async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, sess
                         queue_name=QUEUE_CREDITS_CHARGING,
                         message_body={'customer_id': user.customer_id, 'credits': user.leads_credits}
                     )
-                    logging.info({'customer_id': user.customer_id, 'credits': user.leads_credits})
+                    customer_data = {'customer_id': user.customer_id, 'credits': user.leads_credits}
+                    logging.info(f"Push to rmq {customer_data}")
             else:
                 user.leads_credits -= AMOUNT_CREDITS
             session.flush()
