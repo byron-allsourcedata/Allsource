@@ -9,7 +9,6 @@ import DomainButton from "@/components/DomainsButton";
 import NavigationMenu from "@/components/NavigationMenu";
 import { SliderProvider } from "../context/SliderContext";
 import { useTrial } from '../context/TrialProvider';
-import zIndex from "@mui/material/styles/zIndex";
 
 const headerStyles = {
   headers: {
