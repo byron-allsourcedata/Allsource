@@ -5,7 +5,7 @@ from dependencies import get_integration_service, IntegrationService, Integratio
 from schemas.integrations.integrations import *
 from enums import TeamAccessLevel
 
-router = APIRouter(prefix='/integrations', tags=['Integrations'])
+router = APIRouter()
 
 @router.get('/')
 async def get_integrations_service(type: str | None = Query(None), data_sync: bool | None = Query(None),persistence: IntegrationsPresistence = Depends(get_user_integrations_presistence)):

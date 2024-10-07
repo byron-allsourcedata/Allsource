@@ -4,7 +4,7 @@ from dependencies import get_domain_service, check_user_authentication, UserDoma
 from schemas.domains import DomainScheme
 from urllib.parse import unquote
 from enums import TeamAccessLevel
-router = APIRouter(prefix='/domains', tags=['Domains'])
+router = APIRouter()
 
 
 @router.post('/', status_code=201)

@@ -435,7 +435,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose }) => {
 
     const createDataSync = async() => {
         console.log(listID)
-        const response = await axiosInstance.post('/integrations/sync/', {
+        const response = await axiosInstance.post('/data-sync/sync/', {
             list_id: listID,
             list_name: selectedOption
         }, {

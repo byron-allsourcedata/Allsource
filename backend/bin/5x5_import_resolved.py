@@ -7,7 +7,6 @@ import asyncio
 import traceback
 import pytz
 import re
-from pprint import pprint
 import urllib.parse
 from datetime import time as dt_time
 import time
@@ -107,8 +106,6 @@ async def process_table(session, cookie_sync_by_hour, channel, root_user):
     for key, possible_leads in cookie_sync_by_hour.items():
         for possible_lead in reversed(possible_leads):
             up_id = possible_lead['UP_ID']
-            print(up_id)
-            print(str(possible_lead['PARTNER_UID']).lower())
             possible_lead['PARTNER_UID']
             if not up_id:
                 up_ids = session.query(FiveXFiveHems.up_id).filter(
