@@ -1170,7 +1170,7 @@ export const SettingsBilling: React.FC = () => {
                                         <TableCell className='table-data' sx={billingStyles.tableBodyColumn}>
                                             {history.pricing_plan}
                                         </TableCell>
-                                        <TableCell className='table-data' sx={billingStyles.tableBodyColumn}>{history.total}</TableCell>
+                                        <TableCell className='table-data' sx={billingStyles.tableBodyColumn}>${history.total}</TableCell>
                                         <TableCell className='table-data' sx={billingStyles.tableBodyColumn}>
                                             <Typography component="span" className='table-data' sx={{
                                                 ...getStatusStyles(history.status),

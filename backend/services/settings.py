@@ -257,7 +257,7 @@ class SettingsService:
         
         
     def timestamp_to_date(self, timestamp):
-        return datetime.fromtimestamp(timestamp).strftime('%B %d, %Y')
+        return datetime.fromtimestamp(timestamp).strftime('%b %d, %Y')
     
     def calculate_dates(self, plan):
         start_date = datetime.now()
