@@ -20,6 +20,14 @@ class IntegrationsUserSyncPersistence:
             self.db.commit()
             return True
         return False
+    
+    def edit_sync(self, domain_id, list_id):
+        sync = self.db.query(IntegrationUserSync).filter(IntegrationUserSync.id == list_id, IntegrationUserSync.domain_id == domain_id).first()
+        if sync:
+            self.db.delete(sync)
+            self.db.commit()
+            return True
+        return False
 
     def switch_sync_toggle(self, domain_id, list_id):
         active = False

@@ -348,7 +348,7 @@ class SubscriptionService:
 
         if status == "active":
             user = self.db.query(User).filter(User.id == user_subscription.user_id).first()
-            user.leads_credits = leads_credits if user.leads_credits >= 0 else user.leads_credits = leads_credits - user.leads_credits
+            user.leads_credits = leads_credits if user.leads_credits >= 0 else  leads_credits - user.leads_credits
             user.prospect_credits = prospect_credits
             self.db.commit()
 
