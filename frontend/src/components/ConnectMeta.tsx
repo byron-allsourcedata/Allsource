@@ -15,10 +15,11 @@ import { cursorTo } from 'readline';
 interface ConnectMetaPopupProps {
     open: boolean;
     onClose: () => void;
+    data: any
 }
 
 
-const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose }) => {
+const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) => {
 
     const [value, setValue] = React.useState('1');
     const [listID, setListID] = useState<string>('')

@@ -565,14 +565,16 @@ export const SettingsBilling: React.FC = () => {
                                     </Box>
                                 </Box>
                                 <Box>
-                                    <IconButton onClick={(event) => handleClickOpen(event, card.id)}>
-                                        <Image
-                                            src='/more.svg'
-                                            alt='more'
-                                            height={20}
-                                            width={20} // Adjust the size as needed
-                                        />
-                                    </IconButton>
+                                    {!card.is_default && (
+                                        <IconButton onClick={(event) => handleClickOpen(event, card.id)}>
+                                            <Image
+                                                src='/more.svg'
+                                                alt='more'
+                                                height={20}
+                                                width={20}
+                                            />
+                                        </IconButton>
+                                    )}
                                     <Popover
                                         id={deleteId}
                                         open={deleteOpen}
