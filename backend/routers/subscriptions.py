@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Request as fastRequest, HTTPException, status
+from fastapi import APIRouter, Depends, Request as fastRequest, HTTPException, status, Query
 
 from dependencies import get_plans_service, get_payments_service, get_webhook, check_user_authentication, check_user_authorization_without_pixel
 from models.users import Users
@@ -11,8 +11,8 @@ router = APIRouter()
 
 
 @router.get("/stripe-plans")
-async def get_subscription_plans(plans_service: PlansService = Depends(get_plans_service), users: Users = Depends(check_user_authentication)):
-    return plans_service.get_subscription_plans()
+async def get_subscription_plans(period: str = Query(...), plans_service: PlansService = Depends(get_plans_service), users: Users = Depends(check_user_authentication)):
+    return plans_service.get_subscription_plans(period=period)
 
 
 @router.get("/session/new")

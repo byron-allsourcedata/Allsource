@@ -33,8 +33,8 @@ class PlansService:
     def get_additional_credits_price_id(self):
         return self.subscription_service.get_additional_credits_price_id()
 
-    def get_subscription_plans(self):
-        stripe_plans = self.plans_persistence.get_stripe_plans()
+    def get_subscription_plans(self, period):
+        stripe_plans = self.plans_persistence.get_stripe_plans(period)
         response = {"stripe_plans": []}
         for stripe_plan in stripe_plans:
             response["stripe_plans"].append(
