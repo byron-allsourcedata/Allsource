@@ -48,7 +48,8 @@ class PlansService:
                     "domains_limit": stripe_plan.domains_limit,
                     "integrations_limit": stripe_plan.integrations_limit,
                     "leads_credits": stripe_plan.leads_credits,
-                    "prospect_credits": stripe_plan.prospect_credits
+                    "prospect_credits": stripe_plan.prospect_credits,
+                    "features": stripe_plan.features
                 }
             )
         return response
