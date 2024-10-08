@@ -37,10 +37,10 @@ class PlansService:
         stripe_plans = self.plans_persistence.get_stripe_plans(period)
         current_plan = self.plans_persistence.get_current_plan(user_id=user.get('id'))
         response = {"stripe_plans": []}
-        
+        plan_order = ["Basic", "Teams", "Business"]
+        stripe_plans.sort(key=lambda plan: plan_order.index(plan.title) if plan.title in plan_order else len(plan_order))
         for stripe_plan in stripe_plans:
             is_active = current_plan.title == stripe_plan.title
-            
             response["stripe_plans"].append(
                 {
                     "interval": stripe_plan.interval,
@@ -58,8 +58,8 @@ class PlansService:
                     "img_path": stripe_plan.img_path
                 }
             )
-        
         return response
+
 
     
     def get_subscription_id(self, user):
