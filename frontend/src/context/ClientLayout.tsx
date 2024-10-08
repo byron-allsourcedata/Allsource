@@ -53,7 +53,7 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
         <Grid item xs={12} md lg sx={{
           position: 'relative',
           flexGrow: 1,
-          padding: '16px 24px',
+          padding: '16px 0px 0px 24px',
           minWidth: 0,
           marginLeft: '142px',
           '@media (max-width: 899px)': {
