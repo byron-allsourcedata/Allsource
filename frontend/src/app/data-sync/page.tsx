@@ -44,7 +44,7 @@ const DataSync: React.FC = () => {
   const handleIntegrationsSync = async () => {
     try {
       setIsLoading(true)
-      const response = await axiosInstance.get('/integrations/sync');
+      const response = await axiosInstance.get('/data-sync/sync');
 
       setData(response.data);
     } catch (error) {
@@ -133,7 +133,7 @@ const DataSync: React.FC = () => {
   const handleToggleSync = async () => {
     try {
       setIsLoading(true);
-      const response = await axiosInterceptorInstance.post(`/integrations/sync/switch-toggle`, {
+      const response = await axiosInterceptorInstance.post(`/data-sync/sync/switch-toggle`, {
         list_id: String(selectedId)
       });
       if (response.status === 200) {
@@ -168,9 +168,34 @@ const DataSync: React.FC = () => {
     }
   };
 
-  const handleEdit = () => {
-    console.log(`Editing item with id: ${selectedId}`);
-    handleClose();
+  const handleEdit = async () => {
+    // try {
+    //   setIsLoading(true);
+    //   const response = await axiosInterceptorInstance.get(`/data-sync/sync?list_id=${selectedId}`);
+    //   if (response.status === 200) {
+    //     switch (response.data.status) {
+    //       case 'SUCCESS':
+    //         break
+    //       case 'FAILED':
+    //         showErrorToast('Integrations sync not found');
+    //         break
+    //       default:
+    //         showErrorToast('Unknown response received.');
+    //     }
+    //   }
+    // } catch (error) {
+    //   if (axios.isAxiosError(error)) {
+    //     if (error.response && error.response.status === 403) {
+    //       showErrorToast('Access denied: You do not have permission to remove this member.');
+    //     } else {
+    //       console.error('Error removing team member:', error);
+    //     }
+    //   }
+    // } finally {
+    //   setIsLoading(false);
+    //   setSelectedId(null);
+    //   handleClose();
+    // }
   };
 
 
@@ -178,7 +203,7 @@ const DataSync: React.FC = () => {
   const handleDelete = async () => {
     try {
       setIsLoading(true);
-      const response = await axiosInterceptorInstance.delete(`/integrations/sync`, {
+      const response = await axiosInterceptorInstance.delete(`/data-sync/sync`, {
         params: {
           list_id: selectedId
         }

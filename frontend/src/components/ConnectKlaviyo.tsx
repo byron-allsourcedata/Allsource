@@ -220,7 +220,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
                 tag = await createTag();
             }
     
-            const response = await axiosInstance.post('/integrations/sync/', {
+            const response = await axiosInstance.post('/data-sync/sync/', {
                 list_id: list?.id,
                 list_name: list?.list_name, 
                 tags_id: tag ? tag.id : null,

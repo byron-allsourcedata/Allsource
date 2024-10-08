@@ -300,13 +300,14 @@ const DomainButton: React.FC = () => {
         </Box>
         {domains.map((domain) => (
           <MenuItem key={domain.id}>
-            <Box sx={{
+            <Box onClick={() => handleSetDomain(domain.domain)} sx={{
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
+              cursor: 'pointer',
               width: '20rem'
             }}>
-              <Typography onClick={() => handleSetDomain(domain.domain)}>
+              <Typography>
                 {domain.domain.replace('https://', '')}
               </Typography>
               {deleteDomainPopup && deleteDomain  && (

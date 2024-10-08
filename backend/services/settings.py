@@ -388,16 +388,6 @@ class SettingsService:
     
     def default_card(self, user: dict, payment_method_id):
         return set_default_card_for_customer(user.get('customer_id'), payment_method_id)
-    
-    def get_subscription_plan(self, user: dict):
-        result = {}
-        current_plan = self.plan_persistence.get_current_plan(user_id=user.get('id'))
-        current_plan = {
-            'current_plan_id': current_plan.id,
-            'current_plan_name': current_plan.title
-        }
-        result['current_plan'] = current_plan
-        return result
         
         
     def get_api_details(self, user):

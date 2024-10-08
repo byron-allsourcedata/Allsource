@@ -1,5 +1,5 @@
 from sqlalchemy import Column, event, Integer
-from sqlalchemy.dialects.postgresql import BOOLEAN, INTEGER, NUMERIC, TIMESTAMP, VARCHAR
+from sqlalchemy.dialects.postgresql import BOOLEAN, INTEGER, NUMERIC, VARCHAR, JSONB
 
 from .base import Base, create_timestamps, update_timestamps
 
@@ -25,6 +25,8 @@ class SubscriptionPlan(Base):
     prospect_credits = Column(INTEGER, nullable=True)
     users_limit = Column(Integer, nullable=True)
     members_limit = Column(Integer, nullable=True)
+    features = Column(JSONB, nullable=True)
+    is_crown = Column(BOOLEAN, nullable=False)
 
 
 event.listen(SubscriptionPlan, "before_insert", create_timestamps)
