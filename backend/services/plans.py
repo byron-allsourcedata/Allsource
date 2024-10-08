@@ -33,10 +33,14 @@ class PlansService:
     def get_additional_credits_price_id(self):
         return self.subscription_service.get_additional_credits_price_id()
 
-    def get_subscription_plans(self):
-        stripe_plans = self.plans_persistence.get_stripe_plans()
+    def get_subscription_plans(self, period, user):
+        stripe_plans = self.plans_persistence.get_stripe_plans(period)
+        current_plan = self.plans_persistence.get_current_plan(user_id=user.get('id'))
         response = {"stripe_plans": []}
+        plan_order = ["Basic", "Teams", "Business"]
+        stripe_plans.sort(key=lambda plan: plan_order.index(plan.title) if plan.title in plan_order else len(plan_order))
         for stripe_plan in stripe_plans:
+            is_active = current_plan.title == stripe_plan.title
             response["stripe_plans"].append(
                 {
                     "interval": stripe_plan.interval,
@@ -48,10 +52,15 @@ class PlansService:
                     "domains_limit": stripe_plan.domains_limit,
                     "integrations_limit": stripe_plan.integrations_limit,
                     "leads_credits": stripe_plan.leads_credits,
-                    "prospect_credits": stripe_plan.prospect_credits
+                    "prospect_credits": stripe_plan.prospect_credits,
+                    "features": stripe_plan.features,
+                    "is_active": is_active,
+                    "is_crown": stripe_plan.is_crown
                 }
             )
         return response
+
+
     
     def get_subscription_id(self, user):
         return self.subscription_service.get_subscription_id_by_user_id(user.get('id'))

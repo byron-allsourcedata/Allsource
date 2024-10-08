@@ -22,6 +22,7 @@ interface Integrations {
 interface ConnectKlaviyoPopupProps {
     open: boolean;
     onClose: () => void;
+    data: any
 }
 
 
@@ -37,11 +38,11 @@ type KlaviyoTags = {
 
 
 
-const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) => {
+const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, data }) => {
     const [loading, setLoading] = useState(false)
     const [value, setValue] = React.useState('1');
     const [checked, setChecked] = useState(false);
-    const [selectedRadioValue, setSelectedRadioValue] = useState('');
+    const [selectedRadioValue, setSelectedRadioValue] = useState(data?.type);
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [selectedOption, setSelectedOption] = useState<KlaviyoList | null>(null);
     const [showCreateForm, setShowCreateForm] = useState<boolean>(false);
@@ -61,6 +62,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
     const [selectedRowId, setSelectedRowId] = useState<number | null>(null);
     const [newMapListName, setNewMapListName] = useState<string>('');
     const [showCreateMapForm, setShowCreateMapForm] = useState<boolean>(false);
+    const [UpdateKlaviuo, setUpdateKlaviuo] = useState<any>(null);
     const [maplistNameError, setMapListNameError] = useState(false);
     const [klaviyoList, setKlaviyoList] = useState<KlaviyoList[]>([])
     const [customFieldsList, setCustomFieldsList] = useState([{ type: 'Gender', value: 'gender' },
@@ -111,10 +113,32 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
     };
   }, [selectedOption]);
 
-    const [customFields, setCustomFields] = useState<{type: string, value: string}[]>([]);
+  const [customFields, setCustomFields] = useState<{type: string, value: string}[]>([]);
+
 
     useEffect(() => {
+        const foundItem = klaviyoList.find(item => item.list_name === data?.name);
+        if (foundItem) {
+            setUpdateKlaviuo(data.id)
+            setSelectedOption({
+                id: foundItem.id,
+                list_name: foundItem.list_name
+            });
+        } else {
+            setSelectedOption(null);
+        }
+        setSelectedRadioValue(data?.type);
+
+    }, [data]);
+
+    
+
+    useEffect(() => {
+        if (data?.data_map){
+            setCustomFields(data?.data_map);
+        }else{
         setCustomFields(customFieldsList.map(field => ({ type: field.value, value: field.type })))
+    }
     }, [open])
     
     
@@ -189,7 +213,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
     };
 
     const createTag = async() => {
-        const newTagsResponse = await axiosInstance.post('/integrations/sync/tags/', {
+        const newTagsResponse = await axiosInstance.post('/data-sync/sync/tags', {
             name: tagName
         }, {
             params: {
@@ -220,24 +244,44 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose }) =
             if (tagName) {
                 tag = await createTag();
             }
-    
-            const response = await axiosInstance.post('/data-sync/sync/', {
-                list_id: list?.id,
-                list_name: list?.list_name, 
-                tags_id: tag ? tag.id : null,
-                leads_type: selectedRadioValue,
-                data_map: customFields
-            }, {
-                params: {
-                    service_name: 'klaviyo'
+            if (UpdateKlaviuo){
+                const response = await axiosInstance.put(`/data-sync/sync`, {
+                    integrations_users_sync_id: UpdateKlaviuo,
+                    list_id: list?.id,
+                    list_name: list?.list_name, 
+                    tags_id: tag ? tag.id : null,
+                    leads_type: selectedRadioValue,
+                    data_map: customFields
+                }, {
+                    params: {
+                        service_name: 'klaviyo'
+                    }
+                });
+                if (response.status === 201 || response.status === 200) {
+                    resetToDefaultValues();
+                    onClose();
+                    showToast('Data sync updated successfully');
                 }
-            });
-    
-            if (response.status === 201) {
-                resetToDefaultValues();
-                onClose();
-                showToast('Data sync created successfully');
+            }else{
+                const response = await axiosInstance.post('/data-sync/sync/', {
+                    list_id: list?.id,
+                    list_name: list?.list_name, 
+                    tags_id: tag ? tag.id : null,
+                    leads_type: selectedRadioValue,
+                    data_map: customFields
+                }, {
+                    params: {
+                        service_name: 'klaviyo'
+                    }
+                });
+                if (response.status === 201 || response.status === 200) {
+                    resetToDefaultValues();
+                    onClose();
+                    showToast('Data sync created successfully');
+                }
             }
+            
+            
         } finally {
             setLoading(false); 
         }

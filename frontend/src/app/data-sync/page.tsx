@@ -23,6 +23,8 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CustomizedProgressBar from '@/components/CustomizedProgressBar';
 import axiosInstance from '../../axios/axiosInterceptorInstance';
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
+import ConnectKlaviyo from '@/components/ConnectKlaviyo';
+import ConnectMeta from '@/components/ConnectMeta';
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import { leadsStyles } from "../leads/leadsStyles";
 import axiosInterceptorInstance from '@/axios/axiosInterceptorInstance';
@@ -34,6 +36,8 @@ const DataSync: React.FC = () => {
   const [orderBy, setOrderBy] = useState<string | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(true);
   const [data, setData] = useState<any[]>([]);
+  const [klaviyoIconPopupOpen, setKlaviyoIconPopupOpen] = useState(false);
+  const [metaIconPopupOpen, setMetaIconPopupOpen] = useState(false);
 
   const handleSortRequest = (property: string) => {
     const isAsc = orderBy === property && order === "asc";
@@ -140,8 +144,8 @@ const DataSync: React.FC = () => {
         switch (response.data.status) {
           case 'SUCCESS':
             showToast('successfully');
-            setData(prevData => 
-              prevData.map(item => 
+            setData(prevData =>
+              prevData.map(item =>
                 item.id === selectedId ? { ...item, dataSync: response.data.data_sync } : item
               )
             );
@@ -168,34 +172,27 @@ const DataSync: React.FC = () => {
     }
   };
 
+  const handleKlaviyoIconPopupClose = () => {
+    setKlaviyoIconPopupOpen(false);
+    setSelectedId(null);
+  };
+
+  const handleMetaIconPopupClose = () => {
+    setMetaIconPopupOpen(false);
+    setSelectedId(null);
+  };
+
   const handleEdit = async () => {
-    // try {
-    //   setIsLoading(true);
-    //   const response = await axiosInterceptorInstance.get(`/data-sync/sync?list_id=${selectedId}`);
-    //   if (response.status === 200) {
-    //     switch (response.data.status) {
-    //       case 'SUCCESS':
-    //         break
-    //       case 'FAILED':
-    //         showErrorToast('Integrations sync not found');
-    //         break
-    //       default:
-    //         showErrorToast('Unknown response received.');
-    //     }
-    //   }
-    // } catch (error) {
-    //   if (axios.isAxiosError(error)) {
-    //     if (error.response && error.response.status === 403) {
-    //       showErrorToast('Access denied: You do not have permission to remove this member.');
-    //     } else {
-    //       console.error('Error removing team member:', error);
-    //     }
-    //   }
-    // } finally {
-    //   setIsLoading(false);
-    //   setSelectedId(null);
-    //   handleClose();
-    // }
+    const foundItem = data.find(item => item.id === selectedId);
+    const dataSyncValue = foundItem ? foundItem.platform : null;
+
+    if (dataSyncValue === 'klaviyo') {
+      setKlaviyoIconPopupOpen(true)
+      setAnchorEl(null);
+    } else if (dataSyncValue === 'meta') {
+      setMetaIconPopupOpen(true)
+      setAnchorEl(null);
+    }
   };
 
 
@@ -702,7 +699,10 @@ const DataSync: React.FC = () => {
           </Box>
         </Popover>
       </Box>
+      <ConnectKlaviyo open={klaviyoIconPopupOpen} onClose={handleKlaviyoIconPopupClose} data={data.find(item => item.id === selectedId)}/>
+      <ConnectMeta open={metaIconPopupOpen} onClose={handleMetaIconPopupClose} data={data.find(item => item.id === selectedId)}/>
     </Box>
+
   );
 };
 

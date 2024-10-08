@@ -48,13 +48,7 @@ class IntegrationService:
             return {'status': 'SUCCESS'}
         else:
             return {'status': 'FAILED'}
-        
-    def edit_sync(self, domain_id: int, list_id, service_name: str = None):
-        result = self.integrations_user_sync_persistence.edit_sync(domain_id=domain_id, list_id=list_id)
-        if result:
-            return {'status': 'SUCCESS'}
-        else:
-            return {'status': 'FAILED'}
+
         
     def switch_sync_toggle(self, domain_id, list_id):
         result = self.integrations_user_sync_persistence.switch_sync_toggle(domain_id=domain_id, list_id=list_id)

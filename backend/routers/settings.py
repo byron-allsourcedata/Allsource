@@ -155,10 +155,6 @@ def default_card(payment_card: PaymentCard, settings_service: SettingsService = 
             )
     return settings_service.default_card(user=user, payment_method_id=payment_card.payment_method_id)
 
-@router.get("/subscription")
-def get_subscription_plan(settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authorization_without_pixel)):
-    return settings_service.get_subscription_plan(user=user)
-
 @router.get("/api-details")
 def get_api_details(settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authorization_without_pixel)):
     return settings_service.get_api_details(user=user)

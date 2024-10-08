@@ -33,7 +33,7 @@ export const SettingsSubscription: React.FC = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const response = await axiosInterceptorInstance.get('/subscriptions/stripe-plans');
+                const response = await axiosInterceptorInstance.get('/subscriptions/stripe-plans?period=monthly');
                 setPlans(response.data.stripe_plans);
             } catch (error) {
                 console.error('Error fetching data:', error);
