@@ -1,5 +1,5 @@
 import axiosInstance from "@/axios/axiosInterceptorInstance";
-import { Box, colors, Divider, LinearProgress, linearProgressClasses, Typography } from "@mui/material";
+import { Box, Divider, Typography } from "@mui/material";
 import { useState } from "react";
 import CustomizedProgressBar from "./CustomizedProgressBar";
 import StatsCard from "./StatsCard";
@@ -10,42 +10,8 @@ import CardContent from '@mui/material/CardContent';
 import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
 import { LineChart } from '@mui/x-charts/LineChart';
-import { BorderAll } from "@mui/icons-material";
 import { PieChart } from '@mui/x-charts/PieChart';
-import { useDrawingArea } from '@mui/x-charts/hooks'
-
-function AreaGradient({ color, id }: { color: string; id: string }) {
-    return (
-        <defs>
-            <linearGradient id={id} x1="50%" y1="0%" x2="50%" y2="100%">
-                <stop offset="0%" stopColor={color} stopOpacity={0.5} />
-                <stop offset="100%" stopColor={color} stopOpacity={0} />
-            </linearGradient>
-        </defs>
-    );
-}
-
-interface PieCenterLabelProps {
-    primaryText: string;
-    secondaryText: string;
-}
-
-function PieCenterLabel({ primaryText, secondaryText }: PieCenterLabelProps) {
-    const { width, height, left, top } = useDrawingArea();
-    const primaryY = top + height / 2 - 10;
-    const secondaryY = primaryY + 24;
-
-    return (
-        <React.Fragment>
-            <Typography>
-                {primaryText}
-            </Typography>
-            <Typography>
-                {secondaryText}
-            </Typography>
-        </React.Fragment>
-    );
-}
+import { useMediaQuery } from '@mui/material';
 
 function getDaysInMonth(month: number, year: number) {
     const date = new Date(year, month, 0);
@@ -61,8 +27,6 @@ function getDaysInMonth(month: number, year: number) {
     }
     return days;
 }
-
-
 
 
 const DashboardRevenue: React.FC = () => {
@@ -104,6 +68,12 @@ const DashboardRevenue: React.FC = () => {
             [seriesId]: !prev[seriesId], // переключаем видимость
         }));
     };
+
+    const isLargeScreen = useMediaQuery('(min-width:1200px)');
+    const isMediumScreen = useMediaQuery('(min-width:768px)');
+
+    // Настраиваем размеры диаграммы в зависимости от размера экрана
+    const chartSize = isLargeScreen ? 400 : isMediumScreen ? 300 : 200;
 
     const series = [
         {
@@ -184,14 +154,23 @@ const DashboardRevenue: React.FC = () => {
         'rgba(249, 199, 79, 1)',
     ]
 
-    
-    const getPercentage = (value: number, total: number) => {
-        return ((value / total) * 100).toFixed(1);
-    };
-
-
     const totalValue = dataChart.reduce((acc, curr) => acc + curr.value, 0);
 
+
+    /// Meta
+    const metadata =
+    {
+        id: 'meta',
+        label: 'Meta',
+        curve: 'linear',
+        stack: 'total',
+        showMark: false,
+        area: false,
+        stackOrder: 'ascending',
+        data: [300, 900, 600, 1200, 1500, 1800, 2400, 2100, 2700, 3000, 1800, 3300,
+            3600, 3900, 4200, 4500, 3900, 4800, 5100, 5400, 4800, 5700, 6000,
+            6300, 6600, 6900, 7200, 7500, 7800, 8100, 8400],
+    }
 
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', pr: 0 }}>
@@ -296,7 +275,7 @@ const DashboardRevenue: React.FC = () => {
                                         }
                                         onClick={() => handleChipClick(seriesId as keyof VisibleSeries)}
                                         sx={{
-                                            cursor: 'wait',
+                                            cursor: 'pointer',
                                             backgroundColor: visibleSeries[seriesId as keyof VisibleSeries] ? 'rgba(237, 237, 247, 1)' : '#fff',
                                             borderRadius: '4px', // Закругленные углы
                                             maxHeight: '25px',
@@ -333,8 +312,8 @@ const DashboardRevenue: React.FC = () => {
 
             <Divider />
 
-            <Box sx={{ display: 'flex', flexDirection: 'row', width: '100%', gap: 3, mt: 3 }}>
-                <Box sx={{ width: '50%', display: 'flex', flexDirection: 'column', }}>
+            <Box sx={{ display: 'flex', flexDirection: 'row', width: '100%', gap: 3, mt: 3, '@media (max-width: 900px)': {flexDirection: 'column'}  }}>
+                <Box sx={{ width: '50%', display: 'flex', flexDirection: 'column', '@media (max-width: 900px)': {width: '100%'} }}>
                     <Box sx={{ display: 'flex', flexDirection: 'row', width: '100%', justifyContent: 'space-between' }}>
                         <Box sx={{
                             display: 'flex',
@@ -407,7 +386,7 @@ const DashboardRevenue: React.FC = () => {
                     </Box>
                 </Box>
 
-                <Box sx={{ width: '50%', display: 'flex', flexDirection: 'column', }}>
+                <Box sx={{ width: '50%', display: 'flex', flexDirection: 'column', '@media (max-width: 900px)': {width: '100%'} }}>
                     <Box sx={{ display: 'flex', flexDirection: 'row', width: '100%', justifyContent: 'space-between' }}>
                         <Box sx={{
                             display: 'flex',
@@ -482,8 +461,8 @@ const DashboardRevenue: React.FC = () => {
                 </Box>
             </Box>
 
-            <Box sx={{ display: 'flex', flexDirection: 'row', width: '100%', gap: 3 }}>
-                <Box sx={{ width: '50%', display: 'flex', flexDirection: 'column', }}>
+            <Box sx={{ display: 'flex', flexDirection: 'row', width: '100%', gap: 3, '@media (max-width: 900px)': {flexDirection: 'column'}  }}>
+                <Box sx={{ width: '50%', display: 'flex', flexDirection: 'column', '@media (max-width: 900px)': {width: '100%'} }}>
                     <Box sx={{ display: 'flex', flexDirection: 'row', width: '100%', justifyContent: 'space-between' }}>
                         <Box sx={{
                             display: 'flex',
@@ -556,7 +535,7 @@ const DashboardRevenue: React.FC = () => {
                     </Box>
                 </Box>
 
-                <Box sx={{ width: '50%', display: 'flex', flexDirection: 'column', }}>
+                <Box sx={{ width: '50%', display: 'flex', flexDirection: 'column', '@media (max-width: 900px)': {width: '100%'}}}>
                     <Box sx={{ display: 'flex', flexDirection: 'row', width: '100%', justifyContent: 'space-between' }}>
                         <Box sx={{
                             display: 'flex',
@@ -588,7 +567,7 @@ const DashboardRevenue: React.FC = () => {
                     <Box sx={{ mb: 3, boxShadow: '0px 2px 10px 0px rgba(0, 0, 0, 0.1)', width: '100%' }}>
                         <Card
                             variant="outlined"
-                            sx={{ display: 'flex', flexDirection: 'row', gap: '16px', flexGrow: 1, justifyContent: 'space-between', width: '100%' }}
+                            sx={{ display: 'flex', flexDirection: 'row', gap: '16px', flexGrow: 1, justifyContent: 'center', width: '100%' }}
                         >
                             <CardContent sx={{ flexGrow: 1 }}>
                                 <Box sx={{ display: 'flex', alignItems: 'start', justifyContent: 'start', width: '100%', }}>
@@ -604,13 +583,13 @@ const DashboardRevenue: React.FC = () => {
                                             {
                                                 type: 'pie',
                                                 arcLabel: (item) => {
-                                                    const percentage = ((item.value / totalValue) * 100).toFixed(1); // Вычисление процента
-                                                    return `${percentage}%`; // Форматирование метки
+                                                    const percentage = ((item.value / totalValue) * 100).toFixed(1);
+                                                    return `${percentage}%`;
                                                 },
                                                 arcLabelMinAngle: 35,
                                                 data: dataChart,
-                                                innerRadius: 85,
-                                                outerRadius: 130,
+                                                innerRadius: chartSize * 0.17, 
+                                                outerRadius: chartSize * 0.3,
                                                 paddingAngle: 0,
                                                 highlightScope: { faded: 'global', highlighted: 'item' },
                                             },
@@ -625,8 +604,7 @@ const DashboardRevenue: React.FC = () => {
                                 </Box>
                             </CardContent>
 
-                            {/* Легенда справа от диаграммы */}
-                            <Stack sx={{ padding: 2, display: 'flex', alignItems: 'start', justifyContent: 'center', mr: 10 }}>
+                            <Stack sx={{ padding: 2, display: 'flex', alignItems: 'start', justifyContent: 'center', }}>
                                 {countries.map((country, index) => (
                                     <Stack
                                         key={index}
@@ -642,16 +620,16 @@ const DashboardRevenue: React.FC = () => {
                                                     gap: 2,
                                                 }}
                                             >
-                                                <Typography variant="body2" sx={{ fontFamily: 'Roboto',fontSize: '12px',fontWeight: 400,lineHeight: '11.72px',textAlign: 'left',display: 'flex', flexDirection: 'row', alignItems: 'center', gap:0.5 }}>
-                                                   {/* Кружок перед текстом */}
-                                                <Box
-                                                    sx={{
-                                                        width: 12,
-                                                        height: 12,
-                                                        borderRadius: '50%',
-                                                        backgroundColor: country.color,
-                                                    }}
-                                                /> {country.name}
+                                                <Typography variant="body2" sx={{ fontFamily: 'Roboto', fontSize: '12px', fontWeight: 400, lineHeight: '11.72px', textAlign: 'left', display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 0.5 }}>
+                                                    {/* Кружок перед текстом */}
+                                                    <Box
+                                                        sx={{
+                                                            width: 12,
+                                                            height: 12,
+                                                            borderRadius: '50%',
+                                                            backgroundColor: country.color,
+                                                        }}
+                                                    /> {country.name}
                                                 </Typography>
                                             </Stack>
                                         </Stack>
@@ -661,6 +639,72 @@ const DashboardRevenue: React.FC = () => {
                         </Card>
                     </Box>
                 </Box>
+            </Box>
+
+            <Box sx={{ mb: 3, boxShadow: '0px 2px 10px 0px rgba(0, 0, 0, 0.1)' }}>
+                <Card variant="outlined" sx={{ width: '100%' }}>
+                    <CardContent>
+                        <Stack sx={{ justifyContent: 'space-between', flexDirection: 'row' }}>
+                            <Stack
+                                direction="row"
+                                sx={{
+                                    alignContent: { xs: 'center', sm: 'flex-start' },
+                                    alignItems: 'center',
+                                    gap: 1,
+                                }}
+                            >
+                                <Box sx={{
+                                    display: 'flex',
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    paddingTop: '10px',
+                                    paddingBottom: '10px',
+                                    pr: '6px',
+                                    pl: '6px',
+                                    width: '32px',
+                                    height: '32px',
+                                    borderRadius: '4px',
+                                    backgroundColor: 'rgba(41, 130, 215, 0.1)'
+                                }}>
+                                    <Image src={'/meta-icon.svg'} alt={'View Products'} width={19.46} height={13} />
+                                </Box>
+                                <Typography variant="h4" component="div" sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', color: 'rgba(74, 74, 74, 1)', fontFamily: 'Nunito Sans', fontSize: '14px', fontWeight: 500, lineHeight: '19.6px', textAlign: 'left', gap: 1 }}>
+                                    Meta Contacts -<Typography component="span" sx={{ fontFamily: 'Nunito Sans', color: 'rgba(74, 74, 74, 1)', fontSize: '22px', fontWeight: 600, lineHeight: '30.01px', textAlign: 'left' }}>$22,301</Typography>
+                                </Typography>
+                            </Stack>
+
+                        </Stack>
+
+                        <LineChart
+                            colors={['rgba(5, 104, 225, 1)']}
+                            xAxis={[{ scaleType: 'point', data, tickInterval: (index, i) => (i + 1) % 5 === 0 }]}
+                            series={[{
+                                id: 'meta',
+                                label: 'Meta Contacts',
+                                curve: 'linear',
+                                stack: 'total',
+                                showMark: false,
+                                area: false,
+                                stackOrder: 'ascending',
+                                data: [500, 900, 700, 1400, 1100, 1700, 2300, 2000, 2600, 2900, 2300, 3200,
+                                    3500, 3800, 4100, 4400, 2900, 4700, 5000, 5300, 5600, 5900, 6200,
+                                    6500, 5600, 6800, 7100, 7400, 7700, 8000, 8200],
+                            }]}
+                            height={250}
+                            margin={{ left: 50, right: 20, top: 20, bottom: 20 }}
+                            grid={{ horizontal: true }}
+                            sx={{
+                                border: 'none',
+                            }}
+                            slotProps={{
+                                legend: { hidden: true },
+                            }}
+                        >
+
+                        </LineChart>
+
+                    </CardContent>
+                </Card>
             </Box>
         </Box>
     )
