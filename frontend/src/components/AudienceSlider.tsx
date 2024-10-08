@@ -634,8 +634,8 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                 </Box>
             </Drawer>
             
-            <ConnectKlaviyo open={klaviyoIconPopupOpen} onClose={handleKlaviyoIconPopupClose}/>
-            <ConnectMeta open={metaIconPopupOpen} onClose={handleMetaIconPopupClose} />
+            <ConnectKlaviyo data = {null} open={klaviyoIconPopupOpen} onClose={handleKlaviyoIconPopupClose}/>
+            <ConnectMeta data = {null} open={metaIconPopupOpen} onClose={handleMetaIconPopupClose} />
             <CreateKlaviyoSync open={createKlaviyo} handleClose={() => setCreateKlaviyo(false)} onSave={handleSaveSettings} suppression={true}/>
         </>
     );
