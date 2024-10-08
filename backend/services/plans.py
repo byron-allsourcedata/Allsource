@@ -55,7 +55,7 @@ class PlansService:
                     "prospect_credits": stripe_plan.prospect_credits,
                     "features": stripe_plan.features,
                     "is_active": is_active,
-                    "img_path": stripe_plan.img_path
+                    "is_crown": stripe_plan.is_crown
                 }
             )
         return response
