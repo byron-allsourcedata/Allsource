@@ -11,8 +11,8 @@ router = APIRouter()
 
 
 @router.get("/stripe-plans")
-async def get_subscription_plans(period: str = Query(...), plans_service: PlansService = Depends(get_plans_service), users: Users = Depends(check_user_authentication)):
-    return plans_service.get_subscription_plans(period=period)
+async def get_subscription_plans(period: str = Query(...), plans_service: PlansService = Depends(get_plans_service), user: Users = Depends(check_user_authentication)):
+    return plans_service.get_subscription_plans(period=period, user=user)
 
 
 @router.get("/session/new")

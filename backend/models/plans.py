@@ -26,6 +26,7 @@ class SubscriptionPlan(Base):
     users_limit = Column(Integer, nullable=True)
     members_limit = Column(Integer, nullable=True)
     features = Column(JSONB, nullable=True)
+    img_path = Column(VARCHAR, nullable=True)
 
 
 event.listen(SubscriptionPlan, "before_insert", create_timestamps)
