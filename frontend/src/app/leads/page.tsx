@@ -1032,13 +1032,11 @@ const Leads: React.FC = () => {
                         }}>
                         <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1 }}>
                             <Typography className='first-sub-title'>
-                                Resolved Contacts
+                                Resolved Contacts ({count_leads})
                             </Typography>
-                            <CustomToolTip title={(count_leads ?? 0) >= 0
-                                ? `Number of leads: ${count_leads}`
-                                : status === 'PIXEL_INSTALLATION_NEEDED'
-                                    ? 'Contacts automatically sync across devices and platforms.'
-                                    : 'Pixel installation is required.'
+                            <CustomToolTip title={ status === 'PIXEL_INSTALLATION_NEEDED'
+                                    ? 'Pixel installation is required.'
+                                    : 'Contacts automatically sync across devices and platforms.'
                             } />
                         </Box>
                         <Box sx={{
