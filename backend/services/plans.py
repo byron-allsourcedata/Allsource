@@ -41,11 +41,14 @@ class PlansService:
                 {
                     "interval": stripe_plan.interval,
                     "price": stripe_plan.price,
-                    "trial_days": stripe_plan.trial_days,
                     "title": stripe_plan.title,
                     "description": stripe_plan.description,
                     "stripe_price_id": stripe_plan.stripe_price_id,
                     "currency": stripe_plan.currency,
+                    "domains_limit": stripe_plan.domains_limit,
+                    "integrations_limit": stripe_plan.integrations_limit,
+                    "leads_credits": stripe_plan.leads_credits,
+                    "prospect_credits": stripe_plan.prospect_credits
                 }
             )
         return response

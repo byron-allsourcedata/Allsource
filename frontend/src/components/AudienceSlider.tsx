@@ -10,8 +10,9 @@ import SearchIcon from '@mui/icons-material/Search';
 import ConnectKlaviyo from './ConnectKlaviyo';
 import ConnectMeta from './ConnectMeta';
 import { fetchUserData } from '@/services/meService';
-import CreateKlaviyoSync from './CreateKlaviyoSync';
+import CreateKlaviyoSync from './KlaviyoIntegrationPopup';
 import MetaConnectButton from './MetaConnectButton';
+import AlivbleIntagrationsSlider from './AvalibleIntegrationsSlider';
 
 interface AudiencePopupProps {
     open: boolean;
@@ -239,7 +240,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                 }}
             >
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 3.5, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
-                    <Typography variant="h6" sx={{ textAlign: 'center', color: '#202124', fontFamily: 'Nunito Sans', fontWeight: '600', fontSize: '16px', lineHeight: '22px' }}>
+                    <Typography variant="h6" className="first-sub-title" sx={{ textAlign: 'center',  }}>
                         Create contact sync
                     </Typography>
                     <IconButton onClick={onClose} sx={{p: 0}}>
@@ -249,7 +250,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                 <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', gap: 5, height: '100%' }}>
                     <Box sx={{px: 3, py: 2,  width: '100%'}}>
                         <Box sx={{px: 2, py: 3, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)'}}>
-                            <Typography variant="h6" sx={{ color: '#202124', fontFamily: 'Nunito Sans', fontWeight: '600', fontSize: '16px', lineHeight: '22px' }}>
+                            <Typography variant="h6" className="first-sub-title">
                                 Choose from integrated platform
                             </Typography>
                             <List sx={{ display: 'flex', gap: '16px', py: 2, flexWrap: 'wrap' }}>
@@ -434,240 +435,11 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                     </Box> */}
                 </Box>
             </Drawer>
-
-            <Drawer
-                anchor="right"
-                open={plusIconPopupOpen}
-                onClose={handlePlusIconPopupClose}
-                PaperProps={{
-                    sx: {
-                        width: '620px',
-                        position: 'fixed',
-                        zIndex: 1301,
-                        top: 0,
-                        bottom: 0,
-                        '@media (max-width: 600px)': {
-                            width: '100%',
-                        }
-                    },
-                }}
-            >
-                
-                
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 3.5, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
-                    <Typography variant="h6" sx={{ textAlign: 'center', color: '#202124', fontFamily: 'Nunito Sans', fontWeight: '600', fontSize: '16px', lineHeight: 'normal' }}>
-                        Add an Integration
-                    </Typography>
-                    <IconButton onClick={handlePlusIconPopupClose} sx={{p: 0}}>
-                        <CloseIcon sx={{width: '20px', height: '20px'}} />
-                    </IconButton>
-                </Box>
-                <Box>
-                <TextField
-                    placeholder="Search integrations"
-                    variant="outlined"
-                    fullWidth
-                    InputProps={{
-                    startAdornment: (
-                        <InputAdornment position="start" sx={{
-                            marginRight: "4px"
-                        }}>
-                        <Button
-                            sx={{ textTransform: "none", textDecoration: "none", minWidth: "auto", padding: "0" }}
-                        >
-                            <SearchIcon
-                            sx={{ color: "rgba(101, 101, 101, 1)" }}
-                            fontSize="medium"
-                            />
-                        </Button>
-                        </InputAdornment>
-                    ),
-                    sx: {
-                        paddingLeft: "12px",
-                        paddingRight: "12px",
-                        color: "#707071",
-                        fontFamily: "Roboto",
-                        fontSize: "14px",
-                        fontWeight: "400",
-                        lineHeight: "20px",
-                        "& .MuiOutlinedInput-notchedOutline": {
-                            borderColor: "#e4e4e4",
-                        },
-                        '& .MuiOutlinedInput-input': {
-                            padding: '16px 0',
-                            fontFamily: 'Roboto',
-                            height: 'auto',
-                            '@media (max-width:600px)': {
-                                padding: '13px 0',
-                            }
-                        },
-                        '&::placeholder': {
-                            color: "#707071",
-                            fontFamily: "Roboto",
-                            fontSize: "14px",
-                            fontWeight: "400",
-                            lineHeight: "20px",
-                        }
-
-                    }
-
-                    }}
-                    sx={{ px: 3, py: 2, paddingBottom: '0' }}
-                />
-                </Box>
-                <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', gap: 5, height: '100%' }}>
-                    <Box sx={{px: 3, py: 2,  width: '100%'}}>
-                        <Box sx={{px: 2, py: 3, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)'}}>
-                            <Typography variant="h6" sx={{ color: '#202124', fontFamily: 'Nunito Sans', fontWeight: '600', fontSize: '16px', lineHeight: 'normal' }}>
-                                Available integrations platform
-                            </Typography>
-                            <List sx={{ display: 'flex', gap: '16px', py: 2, flexWrap: 'wrap' }}>
-                                {/* WordPress */}
-                                {integrations.some(integration => integration.service_name === 'WordPress') && (
-                                    !integrationsCredentials.some(integration => integration.service_name === 'WordPress') )&&(
-                                    <ListItem sx={{p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',
-                                        '@media (max-width:600px)': {
-                                            flexBasis: 'calc(50% - 8px)'
-                                        }
-                                    }}>
-                                        <ListItemButton sx={{p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center'}}>
-                                        <ListItemIcon sx={{minWidth: 'auto'}}>    
-                                            <Image src="/wordpress.svg" alt="wordpress" height={24} width={24} />
-                                        </ListItemIcon>
-                                        <ListItemText primary="WordPress" primaryTypographyProps={{
-                                                sx: {
-                                                    fontFamily: "Nunito Sans",
-                                                    fontSize: "14px",
-                                                    color: "#4a4a4a",
-                                                    fontWeight: "500",
-                                                    lineHeight: "20px"
-                                                }
-                                            }} />
-                                        </ListItemButton>
-                                    </ListItem>
-                                )}
-
-                                {/* Klaviyo */}
-                                {integrations.some(integration => integration.service_name === 'Klaviyo') && (
-                                    !integrationsCredentials.some(integration => integration.service_name === 'Klaviyo') )&&(
-                                    <ListItem sx={{p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',
-                                    '@media (max-width:600px)': {
-                                        flexBasis: 'calc(50% - 8px)'
-                                    }
-                                }}>
-                                    <ListItemButton onClick={() => setCreateKlaviyo(true)} sx={{p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center'}}>
-                                        <ListItemIcon sx={{minWidth: 'auto'}}>
-                                            <Image src="/klaviyo.svg" alt="klaviyo" height={26} width={32} />
-                                        </ListItemIcon>
-                                        <ListItemText primary="Klaviyo" primaryTypographyProps={{
-                                            sx: {
-                                                fontFamily: "Nunito Sans",
-                                                fontSize: "14px",
-                                                color: "#4a4a4a",
-                                                fontWeight: "500",
-                                                lineHeight: "20px"
-                                            }
-                                        }}  />
-                                    </ListItemButton>
-                                </ListItem> )}
-                                {integrations.some(integration => integration.service_name === 'Zepier') && (
-                                    !integrationsCredentials.some(integration => integration.service_name === 'Zepier') )&&(
-                                <ListItem sx={{p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',
-                                    '@media (max-width:600px)': {
-                                        flexBasis: 'calc(50% - 8px)'
-                                    }
-                                }}>
-                                    <ListItemButton sx={{p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center'}}>
-                                        <ListItemIcon sx={{minWidth: 'auto'}}>
-                                            <Image src="/zapier-icon.svg" alt="zapier" height={26} width={32} />
-                                        </ListItemIcon>
-                                        <ListItemText primary="Zapier" primaryTypographyProps={{
-                                            sx: {
-                                                fontFamily: "Nunito Sans",
-                                                fontSize: "14px",
-                                                color: "#4a4a4a",
-                                                fontWeight: "500",
-                                                lineHeight: "20px"
-                                            }
-                                        }}  />
-                                    </ListItemButton>
-                                </ListItem>
-                                    )}
-                                    {integrations.some(integration => integration.service_name === 'Shopify') && (
-                                        !integrationsCredentials.some(integration => integration.service_name === 'Shopify') )&&(
-                                <ListItem sx={{p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',
-                                    '@media (max-width:600px)': {
-                                        flexBasis: 'calc(50% - 8px)'
-                                    }
-                                }}>
-                                    <ListItemButton sx={{p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center'}}>
-                                        <ListItemIcon sx={{minWidth: 'auto'}}>
-                                            <Image src="/shopify-icon.svg" alt="shopify" height={26} width={32} />
-                                        </ListItemIcon>
-                                        <ListItemText primary="Shopify" primaryTypographyProps={{
-                                            sx: {
-                                                fontFamily: "Nunito Sans",
-                                                fontSize: "14px",
-                                                color: "#4a4a4a",
-                                                fontWeight: "500",
-                                                lineHeight: "20px"
-                                            }
-                                        }}  />
-                                    </ListItemButton>
-                                </ListItem> )}
-                                {integrations.some(integration => integration.service_name === 'Elastic') && (
-                                    !integrationsCredentials.some(integration => integration.service_name === 'Elastic') )&&(
-                                <ListItem sx={{p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',
-                                    '@media (max-width:600px)': {
-                                        flexBasis: 'calc(50% - 8px)'
-                                    }
-                                }}>
-                                    <ListItemButton sx={{p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center'}}>
-                                        <ListItemIcon sx={{minWidth: 'auto'}}>
-                                            <Image src="/elastic-icon.svg" alt="elastic" height={26} width={32} />
-                                        </ListItemIcon>
-                                        <ListItemText primary="Elastic" primaryTypographyProps={{
-                                            sx: {
-                                                fontFamily: "Nunito Sans",
-                                                fontSize: "14px",
-                                                color: "#4a4a4a",
-                                                fontWeight: "500",
-                                                lineHeight: "20px"
-                                            }
-                                        }}  />
-                                    </ListItemButton>
-                                </ListItem> )}
-                                {integrations.some(integration => integration.service_name === 'Meta') && (
-                                    !integrationsCredentials.some(integration => integration.service_name === 'Meta') )&&(
-                                <ListItem  sx={{p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',
-                                    '@media (max-width:600px)': {
-                                        flexBasis: 'calc(50% - 8px)'
-                                    }
-                                }}>
-                                    <ListItemButton onClick={() => setMetaConnectApp(true)} sx={{p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center'}}>
-                                        <ListItemIcon sx={{minWidth: 'auto'}}>
-                                            <Image src="/meta-icon.svg" alt="meta" height={26} width={32} />
-                                        </ListItemIcon>
-                                        <ListItemText primary="Meta" primaryTypographyProps={{
-                                            sx: {
-                                                fontFamily: "Nunito Sans",
-                                                fontSize: "14px",
-                                                color: "#4a4a4a",
-                                                fontWeight: "500",
-                                                lineHeight: "20px"
-                                            }
-                                        }}  />
-                                    </ListItemButton>
-                                </ListItem> )}
-                            </List>
-                        </Box>
-                    </Box>
-                </Box>
-            </Drawer>
+            <AlivbleIntagrationsSlider open={plusIconPopupOpen} onClose={handlePlusIconPopupClose} isContactSync={true} integrations={integrations} integrationsCredentials={integrationsCredentials} />
             
             <ConnectKlaviyo open={klaviyoIconPopupOpen} onClose={handleKlaviyoIconPopupClose}/>
             <ConnectMeta open={metaIconPopupOpen} onClose={handleMetaIconPopupClose} />
-            <CreateKlaviyoSync open={createKlaviyo} handleClose={() => setCreateKlaviyo(false)} onSave={handleSaveSettingsKlaviyo} suppression={true}/>
+            <CreateKlaviyoSync open={createKlaviyo} handleClose={() => setCreateKlaviyo(false)} onSave={handleSaveSettingsKlaviyo} />
             <MetaConnectButton open={metaConnectApp} onClose={handleCloseMetaConnectApp}/>
         </>
     );

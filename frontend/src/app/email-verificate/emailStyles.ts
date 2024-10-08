@@ -53,19 +53,16 @@ export const emailStyles: { [key: string]: SxProps<Theme> } = {
   },
   title: {
     mb: 2,
-    fontWeight: 'bold',
-    fontSize: '28px',
+    fontWeight: '600',
     whiteSpace: 'nowrap',
     textAlign: 'center',
-    padding: '1.5rem 1rem 2.5rem',
-    fontFamily: 'Nunito',
+    padding: '1.5rem 1rem 2.5rem'
   },
   icon: {
     marginBottom: '20px',
   },
   form: {
     maxWidth: '100%',
-    fontFamily: 'Nunito',
     text: 'nowrap',
     alignItems: 'center',
     padding: '1em 2.25em'
@@ -90,26 +87,26 @@ export const emailStyles: { [key: string]: SxProps<Theme> } = {
     fontFamily: 'Nunito',
   },
   text: {
-    fontFamily: 'Nunito',
-    fontSize: '14px',
+    letterSpacing: '0.07px',
     textAlign: 'center',
   },
   resetPassword: {
     mt: 2,
     margin: '1em 0em 0em',
-    fontFamily: 'Nunito',
-    fontSize: '16px',
     textTransform: 'none',
     textDecoration: 'none',
     textWrap: 'nowrap'
   },
   loginLink: {
-    color: '#F45745',
     cursor: 'pointer',
-    fontWeight: 'bold',
-    fontFamily: 'Nunito',
     textDecoration: 'none',
     margin: '16px 89px 24px',
     textTransform: 'none',
+    '&:hover': {
+      background: 'transparent'
+    },
+    '&.Mui-disabled': {
+      color: 'rgba(74, 74, 74, 0.30)'
+    }
   },
 }

@@ -230,10 +230,11 @@ class SubscriptionService:
             members_limit=members_limit-1
         )
         self.db.add(subscription_obj)
-        user = self.db.query(User).filter(User.id == user_id).first()
-        user.leads_credits = leads_credits
-        user.prospect_credits = prospect_credits
-        self.db.commit()
+        if status == "active":
+            user = self.db.query(User).filter(User.id == user_id).first()
+            user.leads_credits = leads_credits
+            user.prospect_credits = prospect_credits
+            self.db.commit()
         return subscription_obj
     
     def create_payment_from_webhook(self, user_id, stripe_payload):
@@ -347,7 +348,7 @@ class SubscriptionService:
 
         if status == "active":
             user = self.db.query(User).filter(User.id == user_subscription.user_id).first()
-            user.leads_credits = leads_credits
+            user.leads_credits = leads_credits if user.leads_credits >= 0 else  leads_credits - user.leads_credits
             user.prospect_credits = prospect_credits
             self.db.commit()
 

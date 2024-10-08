@@ -13,6 +13,34 @@ class IntegrationsUserSyncPersistence:
         self.db.commit()
         return sync
     
+    def delete_sync(self, domain_id, list_id):
+        sync = self.db.query(IntegrationUserSync).filter(IntegrationUserSync.id == list_id, IntegrationUserSync.domain_id == domain_id).first()
+        if sync:
+            self.db.delete(sync)
+            self.db.commit()
+            return True
+        return False
+    
+    def edit_sync(self, domain_id, list_id):
+        sync = self.db.query(IntegrationUserSync).filter(IntegrationUserSync.id == list_id, IntegrationUserSync.domain_id == domain_id).first()
+        if sync:
+            self.db.delete(sync)
+            self.db.commit()
+            return True
+        return False
+
+    def switch_sync_toggle(self, domain_id, list_id):
+        active = False
+        sync = self.db.query(IntegrationUserSync).filter(IntegrationUserSync.id == list_id, IntegrationUserSync.domain_id == domain_id).first()
+        if sync:
+            if sync.is_active == False:
+                active = True
+                sync.is_active = active
+            else:
+                sync.is_active = active
+            self.db.commit()
+            return active
+    
     def get_all(self):
         return self.db.query(IntegrationUserSync).all()
     

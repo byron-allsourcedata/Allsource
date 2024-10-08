@@ -6,6 +6,7 @@ import tempfile
 import asyncio
 import traceback
 import pytz
+import re
 import urllib.parse
 from datetime import time as dt_time
 import time
@@ -57,6 +58,7 @@ ROOT_BOT_CLIENT_DOMAIN = 'https://app.maximiz.ai'
 
 EMAIL_LIST = ['business_email', 'personal_emails', 'additional_personal_emails']
 
+
 def create_sts_client(key_id, key_secret):
     return boto3.client('sts', aws_access_key_id=key_id, aws_secret_access_key=key_secret, region_name='us-west-2')
 
@@ -67,8 +69,29 @@ def assume_role(role_arn, sts_client):
     logging.info(f"Assumed role '{role_arn}', got temporary credentials.")
     return credentials
 
+async def save_files_by_hour(table, cookie_sync_by_hour):
+    for i in (range(len(table))):
+        ip = str(table['IP'][i])
+        requested_at_str = str(table['EVENT_DATE'][i].as_py())
+        requested_at = datetime.fromisoformat(requested_at_str).replace(tzinfo=None)
+        key = f"{requested_at}_{ip}"
+        if key not in cookie_sync_by_hour:
+            cookie_sync_by_hour[key] = []
+        lead_info = {
+            'TROVO_ID:': str(table['TROVO_ID'][i]),
+            'PARTNER_ID': str(table['PARTNER_ID'][i]),
+            'PARTNER_UID': str(table['PARTNER_UID'][i]),
+            'SHA256_LOWER_CASE': str(table['SHA256_LOWER_CASE'][i]),
+            'IP': str(table['IP'][i]),
+            'JSON_HEADERS': str(table['JSON_HEADERS'][i]),
+            'EVENT_DATE': str(table['EVENT_DATE'][i]),
+            'UP_ID': str(table['UP_ID'][i])
+        }
+        cookie_sync_by_hour[key].append(lead_info)
+        
 
-async def process_file(bucket, file_key, session, channel, root_user):
+
+async def process_file(bucket, file_key, cookie_sync_by_hour):
     obj = bucket.Object(file_key)
     file_data = obj.get()['Body'].read()
     if file_key.endswith('.snappy.parquet'):
@@ -76,31 +99,38 @@ async def process_file(bucket, file_key, session, channel, root_user):
             temp_file.write(file_data)
             temp_file.seek(0)
             table = pq.read_table(temp_file.name)
-            await process_table(table, session, file_key, channel, root_user)
+            await save_files_by_hour(table, cookie_sync_by_hour)
 
 
-async def process_table(table, session, file_key, channel, root_user):
-    for i in reversed(range(len(table))):
-        up_id = table['UP_ID'][i]
-        five_x_five_user = 1
-        if not up_id.is_valid:
-            up_ids = session.query(FiveXFiveHems.up_id).filter(
-                FiveXFiveHems.sha256_lc_hem == str(table['SHA256_LOWER_CASE'][i])).all()
-            if len(up_ids) != 1:
-                continue
-            up_id = up_ids[0][0]
-        five_x_five_user = session.query(FiveXFiveUser).filter(FiveXFiveUser.up_id == str(up_id).lower()).first()
-        if five_x_five_user:
-            logging.info(f"UP_ID {up_id} found in table")
-            await process_user_data(table, i, five_x_five_user, session, channel, None)
-            if root_user:
-                await process_user_data(table, i, five_x_five_user, session, channel, root_user)
-            break
-    update_last_processed_file(file_key)
+async def process_table(session, cookie_sync_by_hour, channel, root_user):
+    for key, possible_leads in cookie_sync_by_hour.items():
+        for possible_lead in reversed(possible_leads):
+            up_id = possible_lead['UP_ID']
+            if up_id is None or up_id == 'None':
+                up_ids = session.query(FiveXFiveHems.up_id).filter(
+                    FiveXFiveHems.sha256_lc_hem == str(possible_lead['SHA256_LOWER_CASE'])).all()
+                if len(up_ids) == 0:
+                    logging.warning(f"Not found SHA256_LOWER_CASE {possible_lead['SHA256_LOWER_CASE']}")
+                    continue
+                elif len(up_ids) > 1:
+                    logging.info(f"Too many SHA256_LOWER_CASEs {possible_lead['SHA256_LOWER_CASE']}")
+                    continue
+                up_id = up_ids[0][0]
+                logging.info(f"Lead found by SHA256_LOWER_CASE {possible_lead['SHA256_LOWER_CASE']}")
+            if up_id is not None and up_id != 'None':
+                five_x_five_user = session.query(FiveXFiveUser).filter(FiveXFiveUser.up_id == str(up_id).lower()).first()
+                if five_x_five_user:
+                    logging.info(f"Lead found by UP_ID {up_id}")
+                    await process_user_data(possible_lead, five_x_five_user, session, channel, None)
+                    if root_user:
+                        await process_user_data(possible_lead, five_x_five_user, session, channel, root_user)
+                    break
+                else:
+                    logging.warning(f"Not found by UP_ID {up_id}")
 
 
-async def process_user_data(table, index, five_x_five_user: FiveXFiveUser, session: Session, rmq_connection, root_user=None):
-    partner_uid_decoded = urllib.parse.unquote(str(table['PARTNER_UID'][index]).lower())
+async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, session: Session, rmq_connection, root_user=None):
+    partner_uid_decoded = urllib.parse.unquote(str(possible_lead['PARTNER_UID']).lower())
     partner_uid_dict = json.loads(partner_uid_decoded)
     partner_uid_client_id = partner_uid_dict.get('client_id')
     page = partner_uid_dict.get('current_page')
@@ -112,16 +142,12 @@ async def process_user_data(table, index, five_x_five_user: FiveXFiveUser, sessi
                     .filter(UserDomains.data_provider_id == str(partner_uid_client_id)) \
                     .first()
     if not result:
-        logging.info(f"result not found with client_id {partner_uid_client_id}")
+        logging.info(f"Customer not found {partner_uid_client_id}")
         return
     user, user_domain_id = result
-    if not user:
-        logging.info(f"User not found with client_id {partner_uid_client_id}")
-        return
-    
     page = partner_uid_dict.get('current_page')
     if page is None:
-        json_headers = json.loads(str(table['JSON_HEADERS'][index]).lower())
+        json_headers = json.loads(str(possible_lead['JSON_HEADERS']).lower())
         referer = json_headers.get('referer')[0]
         page = referer
     behavior_type = 'visitor' if not partner_uid_dict.get('action') else partner_uid_dict.get('action')
@@ -140,7 +166,7 @@ async def process_user_data(table, index, five_x_five_user: FiveXFiveUser, sessi
             session.add(user_payment_transactions)
             if (user.leads_credits - AMOUNT_CREDITS) < 0:
                 if user.is_leads_auto_charging is False:
-                    logging.info(f"User eads_auto_charging is False")
+                    logging.info(f"User leads_auto_charging is False")
                     return
                 user.leads_credits -= AMOUNT_CREDITS
                 if user.leads_credits % 100 == 0:
@@ -149,7 +175,8 @@ async def process_user_data(table, index, five_x_five_user: FiveXFiveUser, sessi
                         queue_name=QUEUE_CREDITS_CHARGING,
                         message_body={'customer_id': user.customer_id, 'credits': user.leads_credits}
                     )
-                    logging.info({'customer_id': user.customer_id, 'credits': user.leads_credits})
+                    customer_data = {'customer_id': user.customer_id, 'credits': user.leads_credits}
+                    logging.info(f"Push to rmq {customer_data}")
             else:
                 user.leads_credits -= AMOUNT_CREDITS
             session.flush()
@@ -171,13 +198,13 @@ async def process_user_data(table, index, five_x_five_user: FiveXFiveUser, sessi
                 name=QUEUE_DATA_SYNC,
                 durable=True
             )
-            publish_rabbitmq_message(rmq_connection, QUEUE_DATA_SYNC, {'domain_id': user_domain_id, 'leads_type': behavior_type, 'lead': {
+            await publish_rabbitmq_message(rmq_connection, QUEUE_DATA_SYNC, {'domain_id': user_domain_id, 'leads_type': behavior_type, 'lead': {
                 'id': lead_user.id,
                 'five_x_five_user_id': lead_user.five_x_five_user_id
             }})
     else:
         first_visit_id = lead_user.first_visit_id
-    requested_at_str = str(table['EVENT_DATE'][index].as_py())
+    requested_at_str = str(possible_lead['EVENT_DATE'])
     requested_at = datetime.fromisoformat(requested_at_str).replace(tzinfo=None)
     thirty_minutes_ago = requested_at - timedelta(minutes=30)
     current_visit_request = session.query(LeadsRequests.visit_id).filter(
@@ -261,6 +288,7 @@ async def process_user_data(table, index, five_x_five_user: FiveXFiveUser, sessi
     session.flush()
     
     session.commit()
+    
 
 def get_list_emails(five_x_five_user: FiveXFiveUser):
     business_emails = five_x_five_user.business_email.split(', ') if five_x_five_user.business_email else []
@@ -333,10 +361,6 @@ def add_new_leads_visits(visited_datetime, lead_id, session, behavior_type, lead
     session.add(leads_visits)
     session.flush()
     
-    leads_count = session.query(LeadsRequests) \
-            .filter(LeadsRequests.lead_id == lead_id) \
-            .count()
-    
     lead_user.total_visit += 1
     lead_user.total_visit_time += 10
     lead_user.avarage_visit_time = int(lead_user.total_visit_time / lead_user.total_visit)
@@ -352,58 +376,44 @@ def update_last_processed_file(file_key):
         file.write(file_key)
 
 
-def check_visitors(bucket, files):
-    all_visitors_per_day = defaultdict(lambda: {'unique_visitors': set(), 'views': 0, 'null_uids': 0})
-
-    for file in files:
-        obj = bucket.Object(file.key)
-        file_data = obj.get()['Body'].read()
-
-        if file.key.endswith('.snappy.parquet'):
-            with tempfile.NamedTemporaryFile(delete=False) as temp_file:
-                temp_file.write(file_data)
-                temp_file.close()
-                table = pq.read_table(temp_file.name)
-                os.remove(temp_file.name)
-
-                for i in range(len(table)):
-                    event_date = table['EVENT_DATE'][i].as_py().date()
-                    up_id = table['UP_ID'][i]
-
-                    all_visitors_per_day[event_date]['views'] += 1
-
-                    if not up_id.is_valid:
-                        all_visitors_per_day[event_date]['null_uids'] += 1
-                    else:
-                        all_visitors_per_day[event_date]['unique_visitors'].add(up_id)
-
-    for date, data in all_visitors_per_day.items():
-        num_visitors = len(data['unique_visitors'])
-        num_null_uids = data['null_uids']
-        num_views = data['views']
-        print(
-            f"Date: {date}, Number of unique visitors: {num_visitors}, Number of views: {num_views}, Number of null UIDs: {num_null_uids}")
-
-
 async def process_files(sts_client, session, channel, root_user):
-    try:
-        with open(LAST_PROCESSED_FILE_PATH, "r") as file:
-            last_processed_file = file.read().strip()
-    except FileNotFoundError:
-        last_processed_file = None
     credentials = assume_role(os.getenv('S3_ROLE_ARN'), sts_client)
     s3 = boto3.resource('s3', region_name='us-west-2', aws_access_key_id=credentials['AccessKeyId'],
                         aws_secret_access_key=credentials['SecretAccessKey'],
                         aws_session_token=credentials['SessionToken'])
 
     bucket = s3.Bucket(BUCKET_NAME)
-    if last_processed_file:
-        files = bucket.objects.filter(Prefix=FILES_PATH, Marker=last_processed_file)
-    else:
-        files = bucket.objects.filter(Prefix=FILES_PATH)
-    for file in files:
-        await process_file(bucket, file.key, session, channel, root_user)
-
+    try:
+        while True:
+            try:
+                with open(LAST_PROCESSED_FILE_PATH, "r") as file:
+                    last_processed_file = file.read().strip()
+            except FileNotFoundError:
+                last_processed_file = None
+                
+            if last_processed_file:
+                files = bucket.objects.filter(Prefix=FILES_PATH, Marker=last_processed_file)
+            else:
+                files = bucket.objects.filter(Prefix=FILES_PATH)
+            
+            file_iterator = iter(files)
+            first_file = next(file_iterator)
+            match_file_by_hours = re.search(r'y=(\d{4})/m=(\d{2})/d=(\d{2})/h=(\d{2})/', first_file.key)
+            year = int(match_file_by_hours.group(1))
+            month = int(match_file_by_hours.group(2))
+            day = int(match_file_by_hours.group(3))
+            hour = int(match_file_by_hours.group(4))
+            time_key = f"{FILES_PATH}/y={year}/m={month:02d}/d={day:02d}/h={hour:02d}"
+            cookie_sync_by_hour = {}
+            files = bucket.objects.filter(Prefix=time_key)
+            last_processed_file_name = ''
+            for file in files:
+                await process_file(bucket, file.key, cookie_sync_by_hour)
+                last_processed_file_name = file.key
+            await process_table(session, cookie_sync_by_hour, channel, root_user)
+            update_last_processed_file(last_processed_file_name)
+    except StopIteration:
+        pass
 
 async def main():
     sts_client = create_sts_client(os.getenv('S3_KEY_ID'), os.getenv('S3_KEY_SECRET'))

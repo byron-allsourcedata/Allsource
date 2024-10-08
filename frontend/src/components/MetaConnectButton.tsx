@@ -2,13 +2,14 @@ import FacebookLogin from "@greatsumini/react-facebook-login";
 import { Box, Button, Drawer, IconButton, Link, TextField, Typography } from "@mui/material";
 import Image from 'next/image';
 import CloseIcon from '@mui/icons-material/Close';
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { showToast } from "./ToastNotification";
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 
 interface MetaConnectPopupProps {
     open: boolean
     onClose: () => void
+    initAdId?: string
 }
 
 const metaStyles = {
@@ -69,7 +70,7 @@ const metaStyles = {
       
 }
 
-const MetaConnectButton = ({open, onClose}: MetaConnectPopupProps) => {
+const MetaConnectButton = ({open, onClose, initAdId}: MetaConnectPopupProps) => {
     const [accessToken, setAccessToken] = useState('')
     const [adId, setAdId] = useState('');
     const [adIdError, setAdIdError] = useState(false);
@@ -78,6 +79,9 @@ const MetaConnectButton = ({open, onClose}: MetaConnectPopupProps) => {
         setAdId(event.target.value);
         setAdIdError(event.target.value === ''); // Set error if API Key is empty
     };
+    useEffect(() => {
+        setAdId(initAdId || '')
+    }, [initAdId])
 
     const handleCreateIntegration = async(userID?: string, fullName?: string) => {
         setLoading(true)

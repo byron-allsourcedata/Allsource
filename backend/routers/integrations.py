@@ -5,7 +5,7 @@ from dependencies import get_integration_service, IntegrationService, Integratio
 from schemas.integrations.integrations import *
 from enums import TeamAccessLevel
 
-router = APIRouter(prefix='/integrations', tags=['Integrations'])
+router = APIRouter()
 
 @router.get('/')
 async def get_integrations_service(type: str | None = Query(None), data_sync: bool | None = Query(None),persistence: IntegrationsPresistence = Depends(get_user_integrations_presistence)):
@@ -92,7 +92,6 @@ async def get_sync(service_name: str | None = Query(None), integration_service: 
                    user = Depends(check_user_authorization), domain = Depends(check_pixel_install_domain)):
     return integration_service.get_sync_domain(domain.id, service_name)
 
-
 @router.get('/sync/list/')
 async def get_list(service_name: str = Query(...), 
                    integration_service: IntegrationService = Depends(get_integration_service),
@@ -148,6 +147,48 @@ async def create_sync(data: SyncCreate, service_name: str = Query(...),
             domain_id=domain.id,
             created_by=user.get('full_name')
         )
+        
+@router.delete('/sync', status_code=200)
+async def delete_sync(list_id: str = Query(...), 
+                      service_name: str | None = Query(None),
+                      integration_service: IntegrationService = Depends(get_integration_service),
+                      user = Depends(check_user_authorization), domain = Depends(check_pixel_install_domain)):
+    if user.get('team_member'):
+        team_member = user.get('team_member')
+        if team_member.get('team_access_level') not in {TeamAccessLevel.ADMIN.value, TeamAccessLevel.OWNER.value, TeamAccessLevel.STANDARD.value}:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied. Admins and standard only."
+            )
+    return integration_service.delete_sync_domain(domain.id, list_id)
+
+@router.post('/sync/switch-toggle', status_code=200)
+async def switch_toggle(data: SyncCreate,
+                        service_name: str | None = Query(None),
+                        integration_service: IntegrationService = Depends(get_integration_service),
+                        user = Depends(check_user_authorization), domain = Depends(check_pixel_install_domain)):
+    if user.get('team_member'):
+        team_member = user.get('team_member')
+        if team_member.get('team_access_level') not in {TeamAccessLevel.ADMIN.value, TeamAccessLevel.OWNER.value, TeamAccessLevel.STANDARD.value}:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied. Admins and standard only."
+            )
+    return integration_service.switch_sync_toggle(domain.id, data.list_id)
+
+@router.put('/sync', status_code=200)
+async def edit_sync(list_id: str = Query(...), 
+                      service_name: str | None = Query(None),
+                      integration_service: IntegrationService = Depends(get_integration_service),
+                      user = Depends(check_user_authorization), domain = Depends(check_pixel_install_domain)):
+    if user.get('team_member'):
+        team_member = user.get('team_member')
+        if team_member.get('team_access_level') not in {TeamAccessLevel.ADMIN.value, TeamAccessLevel.OWNER.value, TeamAccessLevel.STANDARD.value}:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied. Admins and standard only."
+            )
+    return integration_service.edit_sync(domain.id, list_id)
 
 @router.post('/suppression/')
 async def set_suppression(suppression_data: SupperssionSet, service_name: str = Query(...),

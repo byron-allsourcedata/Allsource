@@ -120,6 +120,7 @@ const CustomTablePagination: React.FC<CustomTablePaginationProps> = ({
                                 border: page === pageNumber ? '1px solid rgba(80, 82, 178, 1)' : 'none',
                                 color: page === pageNumber ? 'rgba(80, 82, 178, 1)' : 'rgba(122, 122, 122, 1)',
                                 minWidth: '30px',
+                                ':hover': {backgroundColor: '#fff'},
                                 minHeight: '30px',
                                 padding: 0
                             }}
@@ -456,7 +457,6 @@ const Leads: React.FC = () => {
                 }
             }
 
-
             const response = await axiosInstance.get(url);
             const [leads, count] = response.data;
 
@@ -465,17 +465,18 @@ const Leads: React.FC = () => {
             setStatus(response.data.status);
         } catch (error) {
             if (error instanceof AxiosError && error.response?.status === 403) {
-                if (error.response.data.status === 'NEED_BOOK_CALL') {
+                if (error.response.data.detail.status === 'NEED_BOOK_CALL') {
                     sessionStorage.setItem('is_slider_opened', 'true');
                     setShowSlider(true);
-                } else if (error.response.data.status === 'PIXEL_INSTALLATION_NEEDED') {
-                    setStatus(error.response.data.status || null);
+                } else if (error.response.data.detail.status === 'PIXEL_INSTALLATION_NEEDED') {
+                    setStatus(error.response.data.detail.status);
                 } else {
                     setShowSlider(false);
                 }
             } else {
                 console.error('Error fetching data:', error);
             }
+            setIsLoading(false);
         } finally {
             setIsLoading(false);
         }
@@ -1031,13 +1032,11 @@ const Leads: React.FC = () => {
                         }}>
                         <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1 }}>
                             <Typography className='first-sub-title'>
-                                Resolved Contacts
+                                Resolved Contacts ({count_leads})
                             </Typography>
-                            <CustomToolTip title={(count_leads ?? 0) >= 0
-                                ? `Number of leads: ${count_leads}`
-                                : status === 'PIXEL_INSTALLATION_NEEDED'
-                                    ? 'Contacts automatically sync across devices and platforms.'
-                                    : 'Pixel installation is required.'
+                            <CustomToolTip title={ status === 'PIXEL_INSTALLATION_NEEDED'
+                                    ? 'Pixel installation is required.'
+                                    : 'Contacts automatically sync across devices and platforms.'
                             } />
                         </Box>
                         <Box sx={{

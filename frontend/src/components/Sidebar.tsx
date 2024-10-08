@@ -15,6 +15,7 @@ import { useSlider } from '@/context/SliderContext';
 import { AxiosError } from 'axios';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 import Slider from "../components/Slider";
+import zIndex from '@mui/material/styles/zIndex';
 
 const sidebarStyles = {
     container: {

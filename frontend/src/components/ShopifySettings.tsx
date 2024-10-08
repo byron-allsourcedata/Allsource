@@ -13,19 +13,20 @@ interface CreateKlaviyoProps {
     handleClose: () => void
     onSave: (integration: IntegrationsCredentials) => void 
     open: boolean
-    suppression: boolean
+    initApiKey?: string 
 }
 
 interface IntegrationsCredentials {
     id: number
     access_token: string
+    ad_account_id: string
     shop_domain: string
     data_center: string
     service_name: string
     is_with_suppression: boolean
 }
 
-const klaviyoStyles = {
+const shopifySettingsStyle = {
     tabHeading: {
         fontFamily: 'Nunito Sans',
         fontSize: '14px',
@@ -82,7 +83,7 @@ const klaviyoStyles = {
       },
 }
 
-const CreateKlaviyoSync = ({ handleClose, open, suppression, onSave }: CreateKlaviyoProps) => {
+const ShopifySettings = ({ handleClose, open, onSave, initApiKey}: CreateKlaviyoProps) => {
     const [apiKey, setApiKey] = useState('');
     const [apiKeyError, setApiKeyError] = useState(false);
     const [loading, setLoading] = useState(false)
@@ -93,6 +94,9 @@ const CreateKlaviyoSync = ({ handleClose, open, suppression, onSave }: CreateKla
     const [selectedRadioValue, setSelectedRadioValue] = useState('');
     const [isDropdownValid, setIsDropdownValid] = useState(false);
 
+    useEffect(() => {
+        setApiKey(initApiKey || '')
+    }, [initApiKey])
 
     const handleRadioChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setSelectedRadioValue(event.target.value);
@@ -108,14 +112,14 @@ const CreateKlaviyoSync = ({ handleClose, open, suppression, onSave }: CreateKla
         setApiKeyError(!value); 
     };
 
-    const instructions = [
-        { id: 'unique-id-1', text: 'Go to the Klaviyo website and log into your account.' },
-        { id: 'unique-id-2', text: 'Click on the Settings option located in your Klaviyo account options.' },
-        { id: 'unique-id-3', text: 'Click Create Private API Key Name to Maximiz.' },
-        { id: 'unique-id-4', text: 'Assign full access permissions to Lists and Profiles, and read access permissions to Metrics, Events, and Templates for your Klaviyo key.' },
-        { id: 'unique-id-5', text: 'Click Create.' },
-        { id: 'unique-id-6', text: 'Copy the API key in the next screen and paste to API Key field located in Maximiz Klaviyo section.' },
-        { id: 'unique-id-7', text: 'Click Connect.' },
+    const instructions: any[] = [
+        // { id: 'unique-id-1', text: 'Go to the Klaviyo website and log into your account.' },
+        // { id: 'unique-id-2', text: 'Click on the Settings option located in your Klaviyo account options.' },
+        // { id: 'unique-id-3', text: 'Click Create Private API Key Name to Maximiz.' },
+        // { id: 'unique-id-4', text: 'Assign full access permissions to Lists and Profiles, and read access permissions to Metrics, Events, and Templates for your Klaviyo key.' },
+        // { id: 'unique-id-5', text: 'Click Create.' },
+        // { id: 'unique-id-6', text: 'Copy the API key in the next screen and paste to API Key field located in Maximiz Klaviyo section.' },
+        // { id: 'unique-id-7', text: 'Click Connect.' },
     ];
 
     type HighlightConfig = {
@@ -195,6 +199,7 @@ const CreateKlaviyoSync = ({ handleClose, open, suppression, onSave }: CreateKla
             data_center: '',
             access_token: apiKey,
             is_with_suppression: checked,
+            ad_account_id: '',
             shop_domain: ''
         })
         handleClose()
@@ -285,7 +290,7 @@ const CreateKlaviyoSync = ({ handleClose, open, suppression, onSave }: CreateKla
         >
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 3.5, px: 2, borderBottom: '1px solid #e4e4e4' }}>
                 <Typography variant="h6" sx={{ textAlign: 'center', color: '#202124', fontFamily: 'Nunito Sans', fontWeight: '600', fontSize: '16px', lineHeight: 'normal' }}>
-                    Connect to Klaviyo
+                    Shopify Settings
                 </Typography>
                 <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
                     <Link href="#" sx={{
@@ -319,26 +324,25 @@ const CreateKlaviyoSync = ({ handleClose, open, suppression, onSave }: CreateKla
                                 justifyContent:'flex-start'
                             }
                         }}}>
-                        <Tab label="API Key" value="1" sx={{...klaviyoStyles.tabHeading, cursor: 'pointer'}} />
-                        {suppression && <Tab label="Suppression Sync" value="2" sx={klaviyoStyles.tabHeading} />}
+                        <Tab label="Acess Token" value="1" sx={{...shopifySettingsStyle.tabHeading, cursor: 'pointer'}} />
                         </TabList>
                     </Box>
                     <TabPanel value="1" sx={{p: 0}}>
                         <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)' }}>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <Image src='/klaviyo.svg' alt='klaviyo' height={26} width={32} />
+                                <Image src='/shopify-icon.svg' alt='Shopify' height={26} width={32} />
                                 <Typography variant="h6" sx={{
                                     fontFamily: 'Nunito Sans',
                                     fontSize: '16px',
                                     fontWeight: '600',
                                     color: '#202124'
-                                }}>API Key</Typography>
-                                <Tooltip title="Enter the API key provided by Klaviyo" placement="right">
+                                }}>Access Token</Typography>
+                                <Tooltip title="Enter the Access Token provided by Shopify" placement="right">
                                     <Image src='/baseline-info-icon.svg' alt='baseline-info-icon' height={16} width={16} />
                                 </Tooltip>
                             </Box>
                             <TextField
-                                label="Enter API Key"
+                                label="Enter Access Token"
                                 variant="outlined"
                                 fullWidth
                                 margin="normal"
@@ -346,10 +350,11 @@ const CreateKlaviyoSync = ({ handleClose, open, suppression, onSave }: CreateKla
                                 helperText={apiKeyError ? 'API Key is required' : ''}
                                 value={apiKey}
                                 onChange={handleApiKeyChange}
-                                InputLabelProps={{ sx: klaviyoStyles.inputLabel }}
-                                InputProps={{ sx: klaviyoStyles.formInput }}
+                                InputLabelProps={{ sx: shopifySettingsStyle.inputLabel }}
+                                InputProps={{ sx: shopifySettingsStyle.formInput }}
                             />
                         </Box>
+                        {instructions.length > 0 && (
                         <Box sx={{ background: '#f0f0f0', border: '1px solid #efefef', borderRadius: '4px', p: 2 }}>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', mb: 2 }}>
                                 <Image src='/info-circle.svg' alt='info-circle' height={20} width={20} />
@@ -362,182 +367,39 @@ const CreateKlaviyoSync = ({ handleClose, open, suppression, onSave }: CreateKla
                                 }}>How to integrate Klaviyo</Typography>
                             </Box>
                             <List dense sx={{ p: 0 }}>
-                                {instructions.map((instruction, index) => (
-                                    <ListItem key={instruction.id} sx={{ p: 0, alignItems: 'flex-start' }}>
-                                        <Typography
-                                            variant="body1"
-                                            sx={{
-                                                display: 'inline-block',
-                                                marginRight: '4px',
-                                                fontFamily: 'Roboto',
-                                                fontSize: '12px',
-                                                fontWeight: '400',
-                                                color: '#808080',
-                                                lineHeight: '24px'
-                                            }}
-                                        >
-                                            {index + 1}.
-                                        </Typography>
-                                        <Typography
-                                            variant="body1"
-                                            sx={{
-                                                display: 'inline',
-                                                fontFamily: 'Roboto',
-                                                fontSize: '12px',
-                                                fontWeight: '400',
-                                                color: '#808080',
-                                                lineHeight: '24px'
-                                            }}
-                                        >
-                                            {highlightText(instruction.text, highlightConfig)}
-                                        </Typography>
-                                    </ListItem>
-                                ))}
+                            {instructions.map((instruction, index) => (
+                                <ListItem key={instruction.id} sx={{ p: 0, alignItems: 'flex-start' }}>
+                                    <Typography
+                                        variant="body1"
+                                        sx={{
+                                            display: 'inline-block',
+                                            marginRight: '4px',
+                                            fontFamily: 'Roboto',
+                                            fontSize: '12px',
+                                            fontWeight: '400',
+                                            color: '#808080',
+                                            lineHeight: '24px'
+                                        }}
+                                    >
+                                        {index + 1}.
+                                    </Typography>
+                                    <Typography
+                                        variant="body1"
+                                        sx={{
+                                            display: 'inline',
+                                            fontFamily: 'Roboto',
+                                            fontSize: '12px',
+                                            fontWeight: '400',
+                                            color: '#808080',
+                                            lineHeight: '24px'
+                                        }}
+                                    >
+                                        {highlightText(instruction.text, highlightConfig)}
+                                    </Typography>
+                                </ListItem>
+                            ))}
                             </List>
-                        </Box>
-                    </TabPanel>
-                    <TabPanel value="2" sx={{ p: 0 }}>
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                            <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)', display: 'flex', flexDirection:'column', gap: '16px' }}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <Image src='/klaviyo.svg' alt='klaviyo' height={26} width={32} />
-                                    <Typography variant="h6" sx={{
-                                        fontFamily: 'Nunito Sans',
-                                        fontSize: '16px',
-                                        fontWeight: '600',
-                                        color: '#202124',
-                                        lineHeight: 'normal'
-                                    }}>Eliminate Redundancy: Stop Paying for Contacts You Already Own</Typography>
-                                </Box>
-                                <Typography variant="subtitle1" sx={{
-                                        fontFamily: 'Roboto',
-                                        fontSize: '12px',
-                                        fontWeight: '400',
-                                        color: '#808080',
-                                        lineHeight: '20px',
-                                        letterSpacing: '0.06px'
-                                    }}>Sync your current list to avoid collecting contacts you already possess.
-                                    Newly added contacts in Klaviyo will be automatically suppressed each day.</Typography>
-                                
-
-                                        <Box sx={{ display: 'flex', gap: '32px', alignItems: 'center' }}>
-                                            <Typography variant="subtitle1" sx={{
-                                                fontFamily: 'Roboto',
-                                                fontSize: '12px',
-                                                fontWeight: '400',
-                                                color: '#808080',
-                                                lineHeight: 'normal',
-                                                letterSpacing: '0.06px'
-                                            }}>
-                                                Enable Automatic Contact Suppression
-                                            </Typography>
-
-                                            {/* Switch Control with Yes/No Labels */}
-                                            <Box position="relative" display="inline-block">
-                                                <Switch
-                                                    {...label}
-                                                    checked={checked}
-                                                    onChange={handleSwitchChange}
-                                                    sx={{
-                                                        width: 54, // Increase width to fit "Yes" and "No"
-                                                        height: 24,
-                                                        padding: 0,
-                                                        '& .MuiSwitch-switchBase': {
-                                                            padding: 0,
-                                                            top: '2px',
-                                                            left: '3px',
-                                                            '&.Mui-checked': {
-                                                                left: 0,
-                                                                transform: 'translateX(32px)', // Adjust for larger width
-                                                                color: '#fff',
-                                                                '&+.MuiSwitch-track': {
-                                                                    backgroundColor: checked ? '#5052b2' : '#7b7b7b',
-                                                                    opacity: checked ? '1' : '1',
-                                                                }
-                                                            },
-                                                        },
-                                                        '& .MuiSwitch-thumb': {
-                                                            width: 20,
-                                                            height: 20,
-                                                        },
-                                                        '& .MuiSwitch-track': {
-                                                            borderRadius: 20 / 2,
-                                                            backgroundColor: checked ? '#5052b2' : '#7b7b7b',
-                                                            opacity: checked ? '1' : '1',
-                                                            '& .MuiSwitch-track.Mui-checked': {
-                                                                backgroundColor: checked ? '#5052b2' : '#7b7b7b',
-                                                            opacity: checked ? '1' : '1',
-                                                            }
-                                                        },
-                                                    }}
-                                                />
-                                                <Box sx={{
-                                                    position: "absolute",
-                                                    top: "50%",
-                                                    left: "0px",
-                                                    width: "100%",
-                                                    display: "flex",
-                                                    justifyContent: "space-between",
-                                                    alignItems: "center",
-                                                    transform: "translateY(-50%)",
-                                                    pointerEvents: "none"
-                                                }}>
-                                                    {/* Conditional Rendering of Text */}
-                                                    {!checked && (
-                                                        <Typography
-                                                            variant="caption"
-                                                            sx={{
-                                                                fontFamily: 'Roboto',
-                                                                fontSize: '12px',
-                                                                color: '#fff',
-                                                                fontWeight: '400',
-                                                                marginRight: '8px',
-                                                                lineHeight: 'normal',
-                                                                width: '100%',
-                                                                textAlign: 'right',
-                                                            }}
-                                                        >
-                                                            No
-                                                        </Typography>
-                                                    )}
-
-                                                    {checked && (
-                                                        <Typography
-                                                            variant="caption"
-                                                            sx={{
-                                                                fontFamily: 'Roboto',
-                                                                fontSize: '12px',
-                                                                color: '#fff',
-                                                                fontWeight: '400',
-                                                                marginLeft: '6px',
-                                                                lineHeight: 'normal'
-                                                            }}
-                                                        >
-                                                            Yes
-                                                        </Typography>
-                                                    )}
-                                                </Box>
-                                            </Box>
-                                        </Box>
-
-
-
-
-                            </Box>
-                            <Box sx={{ background: '#efefef', borderRadius: '4px', px: 1.5, py: 1 }}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <Image src='/info-circle.svg' alt='info-circle' height={20} width={20} />
-                                    <Typography variant="subtitle1" sx={{
-                                        fontFamily: 'Roboto',
-                                        fontSize: '12px',
-                                        fontWeight: '400',
-                                        color: '#808080',
-                                        lineHeight: '20px',
-                                        letterSpacing: '0.06px'
-                                    }}>By performing this action, all your Klaviyo contacts will be added to your Grow suppression list, and new contacts will be imported daily around 6pm EST.</Typography>
-                                </Box>
-                            </Box>
-                        </Box>
+                        </Box>)}
                     </TabPanel>
                     </TabContext>
                     </Box>
@@ -552,4 +414,4 @@ const CreateKlaviyoSync = ({ handleClose, open, suppression, onSave }: CreateKla
     );
 }
 
-export default CreateKlaviyoSync;
+export default ShopifySettings;
