@@ -426,7 +426,8 @@ const Dashboard: React.FC = () => {
 
       fetchData();
     } else {
-      router.push("/signin");
+      // router.push("/signin");
+      setIsLoading(false);
     }
   }, [setShowSlider, setTrial, setDaysLeft, router]);
 
@@ -441,7 +442,7 @@ const Dashboard: React.FC = () => {
 
   return (
     <>
-        {showCharts ? (
+        {!showCharts ? (
           <>
               <Grid
                 sx={{
