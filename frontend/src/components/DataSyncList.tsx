@@ -181,28 +181,53 @@ import { datasyncStyle } from "@/app/data-sync/datasyncStyle";
       }
     };
   
-    const handleKlaviyoIconPopupClose = () => {
+    const handleKlaviyoIconPopupClose = async () => {
       setKlaviyoIconPopupOpen(false);
       setSelectedId(null);
+      try {
+        const response = await axiosInstance.get(`/data-sync/sync?integrations_users_sync_id=${selectedId}`);
+        if (response){
+          setData(prevData => 
+            prevData.map(item => 
+                item.id === selectedId ? { ...item, ...response.data } : item
+            )
+        );      
+        }
+      } catch (error) {
+        console.error('Error fetching leads:', error);
+      }
     };
   
-    const handleMetaIconPopupClose = () => {
+    const handleMetaIconPopupClose = async () => {
       setMetaIconPopupOpen(false);
       setSelectedId(null);
+      try {
+        const response = await axiosInstance.get(`/data-sync/sync?integrations_users_sync_id=${selectedId}`);
+        if (response){
+          setData(prevData => 
+            prevData.map(item => 
+                item.id === selectedId ? { ...item, ...response.data } : item
+            )
+        );      
+        }
+      } catch (error) {
+        console.error('Error fetching leads:', error);
+      }
     };
   
     const handleEdit = async () => {
       const foundItem = data.find(item => item.id === selectedId);
-      const dataSyncValue = foundItem ? foundItem.platform : null;
-  
-      if (dataSyncValue === 'klaviyo') {
-        setKlaviyoIconPopupOpen(true)
-        setAnchorEl(null);
-      } else if (dataSyncValue === 'meta') {
-        setMetaIconPopupOpen(true)
-        setAnchorEl(null);
-      }
-    };
+      const dataSyncPlatform = foundItem ? foundItem.platform : null;
+      if (dataSyncPlatform) {
+          if (dataSyncPlatform === 'klaviyo') {
+            setKlaviyoIconPopupOpen(true);
+          } else if (dataSyncPlatform === 'meta') {
+            setMetaIconPopupOpen(true);
+          }
+          setIsLoading(false);
+          setAnchorEl(null);
+        }
+      };
   
   
   

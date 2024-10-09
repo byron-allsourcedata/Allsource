@@ -174,30 +174,52 @@ const DataSync = () => {
     }
   };
 
-  const handleKlaviyoIconPopupClose = () => {
+  const handleKlaviyoIconPopupClose = async () => {
     setKlaviyoIconPopupOpen(false);
     setSelectedId(null);
+    try {
+      const response = await axiosInstance.get(`/data-sync/sync?integrations_users_sync_id=${selectedId}`);
+      if (response){
+        setData(prevData => 
+          prevData.map(item => 
+              item.id === selectedId ? { ...item, ...response.data } : item
+          )
+      );      
+      }
+    } catch (error) {
+      console.error('Error fetching leads:', error);
+    }
   };
 
-  const handleMetaIconPopupClose = () => {
+  const handleMetaIconPopupClose = async () => {
     setMetaIconPopupOpen(false);
     setSelectedId(null);
+    try {
+      const response = await axiosInstance.get(`/data-sync/sync?integrations_users_sync_id=${selectedId}`);
+      if (response){
+        setData(prevData => 
+          prevData.map(item => 
+              item.id === selectedId ? { ...item, ...response.data } : item
+          )
+      );      
+      }
+    } catch (error) {
+      console.error('Error fetching leads:', error);
+    }
   };
 
   const handleEdit = async () => {
     const foundItem = data.find(item => item.id === selectedId);
-    const dataSyncValue = foundItem ? foundItem.platform : null;
-
-    if (dataSyncValue === 'klaviyo') {
-      setKlaviyoIconPopupOpen(true)
-      setAnchorEl(null);
-    } else if (dataSyncValue === 'meta') {
-      setMetaIconPopupOpen(true)
-      setAnchorEl(null);
-    }
-  };
-
-
+    const dataSyncPlatform = foundItem ? foundItem.platform : null;
+    if (dataSyncPlatform) {
+        if (dataSyncPlatform === 'klaviyo') {
+          setKlaviyoIconPopupOpen(true);
+        } else if (dataSyncPlatform === 'meta') {
+          setMetaIconPopupOpen(true);
+        }
+        setAnchorEl(null);
+      }
+    };
 
   const handleDelete = async () => {
     try {
@@ -403,8 +425,6 @@ const DataSync = () => {
       <Box sx={{ width: "100%", pl: 0.5, pt: 3, pr: 1 }}>
         <DataSyncList />
       </Box>
-      <ConnectKlaviyo open={klaviyoIconPopupOpen} onClose={handleKlaviyoIconPopupClose} data={data.find(item => item.id === selectedId)}/>
-      <ConnectMeta open={metaIconPopupOpen} onClose={handleMetaIconPopupClose} data={data.find(item => item.id === selectedId)}/>
     </Box>
 
   );

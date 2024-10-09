@@ -11,9 +11,9 @@ from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.leads_persistence import LeadsPersistence
 from persistence.domains import UserDomainsPersistence
 import httpx
-# from facebook_business.adobjects.adaccount import AdAccount
-# from facebook_business.adobjects.customaudience import CustomAudience
-# from facebook_business.api import FacebookAdsApi
+from facebook_business.adobjects.adaccount import AdAccount
+from facebook_business.adobjects.customaudience import CustomAudience
+from facebook_business.api import FacebookAdsApi
 from fastapi import HTTPException
 from enums import IntegrationsStatus
 from datetime import datetime
@@ -121,7 +121,7 @@ class MetaIntegrationsService:
         )
        
 
-    async def create_sync(self, domain_id: int, created_by, data_map: List[DataMap] = None, leads_type: str = None, list_id: str = None, list_name: str = None,):
+    async def create_sync(self, domain_id: int, created_by: str, data_map: List[DataMap] = None, leads_type: str = None, list_id: str = None, list_name: str = None,):
         credentials = self.get_credentials(domain_id)
         data_syncs = self.sync_persistence.get_data_sync_filter_by(domain_id=domain_id)
         for sync in data_syncs:
