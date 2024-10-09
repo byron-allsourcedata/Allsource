@@ -70,11 +70,10 @@ const DashboardRevenue: React.FC = () => {
     const handleChipClick = (seriesId: keyof VisibleSeries) => {
         setVisibleSeries((prev) => ({
             ...prev,
-            [seriesId]: !prev[seriesId], // переключаем видимость
+            [seriesId]: !prev[seriesId],
         }));
     };
 
-    // Опции для выпадающего списка
     const options = [
         { id: 'revenue', label: 'Total Revenue', color: 'rgba(180, 218, 193, 1)' },
         { id: 'visitors', label: 'Total Visitors', color: 'rgba(252, 229, 204, 1)' },
@@ -82,28 +81,24 @@ const DashboardRevenue: React.FC = () => {
         { id: 'abondoned_cart', label: 'Abandoned cart', color: 'rgba(254, 238, 236, 1)' },
     ];
 
-    // Преобразуем состояние visibleSeries в массив выбранных графиков
     const selectedGraphs = options
         .filter((option) => visibleSeries[option.id as keyof VisibleSeries])
         .map((option) => option.id);
 
-    // Функция обработки изменения выбора в Select
     const handleToggleSeries = (event: SelectChangeEvent<string[]>) => {
-        const selectedValues = event.target.value as string[]; // Массив выбранных графиков
-    
+        const selectedValues = event.target.value as string[];
+
         setVisibleSeries((prev) => {
             const updatedVisibleSeries: VisibleSeries = { ...prev };
-    
+
             if (selectedValues.includes("All revenue type")) {
-                // Если "All revenue type" уже выбран, сбрасываем все фильтры
                 if (selectedValues.length === 1) {
                     options.forEach((option) => {
-                        updatedVisibleSeries[option.id as keyof VisibleSeries] = true; // Устанавливаем все графики как видимые
+                        updatedVisibleSeries[option.id as keyof VisibleSeries] = true;
                     });
                 } else {
-                    // Если "All revenue type" в списке, но выбраны другие, сбрасываем
                     options.forEach((option) => {
-                        updatedVisibleSeries[option.id as keyof VisibleSeries] = false; // Убираем видимость всех графиков
+                        updatedVisibleSeries[option.id as keyof VisibleSeries] = false;
                     });
                 }
             } else {
@@ -111,16 +106,15 @@ const DashboardRevenue: React.FC = () => {
                     updatedVisibleSeries[option.id as keyof VisibleSeries] = selectedValues.includes(option.id);
                 });
             }
-    
+
             return updatedVisibleSeries;
         });
     };
-    
+
 
     const isLargeScreen = useMediaQuery('(min-width:1200px)');
     const isMediumScreen = useMediaQuery('(min-width:768px)');
 
-    // Настраиваем размеры диаграммы в зависимости от размера экрана
     const chartSize = isLargeScreen ? 400 : isMediumScreen ? 300 : 200;
 
     const series = [
@@ -172,7 +166,7 @@ const DashboardRevenue: React.FC = () => {
                 3000, 3400, 3700, 3200, 3900, 4100, 3500, 4300, 4500, 4000, 4700,
                 5000, 5200, 4800, 5400, 5600, 5900, 6100, 6300, 7800],
         },
-    ].filter((s) => visibleSeries[s.id as keyof VisibleSeries]); // фильтруем видимые серии
+    ].filter((s) => visibleSeries[s.id as keyof VisibleSeries]);
     const filteredSeries = series.filter((s) => visibleSeries[s.id as keyof VisibleSeries]) as [];
 
 
@@ -321,7 +315,7 @@ const DashboardRevenue: React.FC = () => {
                                         sx={{
                                             cursor: 'pointer',
                                             backgroundColor: visibleSeries[seriesId as keyof VisibleSeries] ? 'rgba(237, 237, 247, 1)' : '#fff',
-                                            borderRadius: '4px', // Закругленные углы
+                                            borderRadius: '4px',
                                             maxHeight: '25px',
                                             border: 'none',
                                             '@media (max-width: 900px)': { display: 'none' }
@@ -337,10 +331,8 @@ const DashboardRevenue: React.FC = () => {
                                         onChange={handleToggleSeries}
                                         displayEmpty
                                         renderValue={(selected) => {
-                                            // Проверяем, выбраны ли все графики
                                             const isAllSelected = selected.length === options.length;
 
-                                            // Если выбраны все, отображаем "All revenue type"
                                             return isAllSelected
                                                 ? 'All revenue type'
                                                 : selected.map((id) => options.find((option) => option.id === id)?.label).join(', ');
@@ -362,7 +354,7 @@ const DashboardRevenue: React.FC = () => {
                                                 sx={{
                                                     fontFamily: 'Nunito Sans',
                                                     fontWeight: 600,
-                                                     fontSize: '14px',
+                                                    fontSize: '14px',
                                                     color: selectedGraphs.length == 4 ? 'rgba(80, 82, 178, 1)' : 'inherit' // Изменяем цвет текста
                                                 }}
                                             >
@@ -370,14 +362,16 @@ const DashboardRevenue: React.FC = () => {
                                             </Typography>
                                         </MenuItem>
                                         {options.map((option) => (
-                                            <MenuItem key={option.id} value={option.id} sx={{backgroundColor: selectedGraphs.includes(option.id) ? 'transparent' : 'inherit',
+                                            <MenuItem key={option.id} value={option.id} sx={{
+                                                backgroundColor: selectedGraphs.includes(option.id) ? 'transparent' : 'inherit',
                                                 '&.Mui-selected': {
-                                                    backgroundColor: 'transparent', // Убираем цвет фона для выбранного элемента
+                                                    backgroundColor: 'transparent',
                                                 },
                                                 '&:hover': {
-                                                    backgroundColor: 'transparent' // Убираем цвет фона при наведении
-                                                }}} >
-                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1,  }}>
+                                                    backgroundColor: 'transparent'
+                                                }
+                                            }} >
+                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, }}>
                                                     <Box
                                                         sx={{
                                                             width: 10,
@@ -386,7 +380,7 @@ const DashboardRevenue: React.FC = () => {
                                                             backgroundColor: option.color,
                                                         }}
                                                     />
-                                                    <Typography sx={{ fontFamily: 'Nunito Sans', fontWeight: 600, fontSize: '14px', color: selectedGraphs.includes(option.id)  ? 'rgba(80, 82, 178, 1)' : 'inherit' }}>
+                                                    <Typography sx={{ fontFamily: 'Nunito Sans', fontWeight: 600, fontSize: '14px', color: selectedGraphs.includes(option.id) ? 'rgba(80, 82, 178, 1)' : 'inherit' }}>
                                                         {option.label}
                                                     </Typography>
                                                 </Box>
@@ -399,7 +393,7 @@ const DashboardRevenue: React.FC = () => {
                         </Stack>
 
                         <LineChart
-                            colors={series.map(s => colorMapping[s.id as keyof typeof colorMapping])} // Получаем цвет из colorMapping по id
+                            colors={series.map(s => colorMapping[s.id as keyof typeof colorMapping])}
                             xAxis={[{ scaleType: 'point', data, tickInterval: (index, i) => (i + 1) % 5 === 0 }]}
                             series={filteredSeries}
                             height={250}
@@ -469,7 +463,7 @@ const DashboardRevenue: React.FC = () => {
                                     }
                                 }}
                             />
-                            <Typography component='div' sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', fontWeight: '600', fontSize: '12px', justifyContent: 'flex-end', fontFamily: 'Nunito Sans', lineHeight: '16.08px', color: 'rgba(74, 74, 74, 1)', '@media (max-width: 900px)': { alignItems: 'end'} }}>
+                            <Typography component='div' sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', fontWeight: '600', fontSize: '12px', justifyContent: 'flex-end', fontFamily: 'Nunito Sans', lineHeight: '16.08px', color: 'rgba(74, 74, 74, 1)', '@media (max-width: 900px)': { alignItems: 'end' } }}>
                                 Total Order <Typography component='span' sx={{ fontFamily: 'Nunito Sans', fontSize: '16px', fontWeight: 700, lineHeight: '21.82px', color: 'rgba(32, 33, 36, 1)', textAlign: 'left' }}>555</Typography>
                             </Typography>
                         </Box>
@@ -554,7 +548,7 @@ const DashboardRevenue: React.FC = () => {
                                     }
                                 }}
                             />
-                            <Typography component='div' sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', fontWeight: '600', fontSize: '12px', justifyContent: 'flex-end', fontFamily: 'Nunito Sans', lineHeight: '16.08px', color: 'rgba(74, 74, 74, 1)', '@media (max-width: 900px)': { alignItems: 'end'} }}>
+                            <Typography component='div' sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', fontWeight: '600', fontSize: '12px', justifyContent: 'flex-end', fontFamily: 'Nunito Sans', lineHeight: '16.08px', color: 'rgba(74, 74, 74, 1)', '@media (max-width: 900px)': { alignItems: 'end' } }}>
                                 Total Order <Typography component='span' sx={{ fontFamily: 'Nunito Sans', fontSize: '16px', fontWeight: 700, lineHeight: '21.82px', color: 'rgba(32, 33, 36, 1)', textAlign: 'left' }}>1111</Typography>
                             </Typography>
                         </Box>
@@ -640,7 +634,7 @@ const DashboardRevenue: React.FC = () => {
                                     }
                                 }}
                             />
-                            <Typography component='div' sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', fontWeight: '600', fontSize: '12px', justifyContent: 'flex-end', fontFamily: 'Nunito Sans', lineHeight: '16.08px', color: 'rgba(74, 74, 74, 1)', '@media (max-width: 900px)': { alignItems: 'end'} }}>
+                            <Typography component='div' sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', fontWeight: '600', fontSize: '12px', justifyContent: 'flex-end', fontFamily: 'Nunito Sans', lineHeight: '16.08px', color: 'rgba(74, 74, 74, 1)', '@media (max-width: 900px)': { alignItems: 'end' } }}>
                                 Total Order <Typography component='span' sx={{ fontFamily: 'Nunito Sans', fontSize: '16px', fontWeight: 700, lineHeight: '21.82px', color: 'rgba(32, 33, 36, 1)', textAlign: 'left' }}>555</Typography>
                             </Typography>
                         </Box>
