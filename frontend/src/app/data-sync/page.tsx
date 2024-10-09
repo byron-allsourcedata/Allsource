@@ -189,7 +189,7 @@ const DataSync: React.FC = () => {
     }
   };
 
-  const handleMetaIconPopupClose = () => {
+  const handleMetaIconPopupClose = async () => {
     setMetaIconPopupOpen(false);
     setSelectedId(null);
     try {
