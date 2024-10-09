@@ -61,6 +61,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (textFieldRef.current && !textFieldRef.current.contains(event.target as Node)) {
+
         // If clicked outside, reset shrink only if there is no input value
         if (selectedOption === '') {
             setIsShrunk(false);
@@ -339,7 +340,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
         { id: 1, type: 'Email', value: '' },
         { id: 2, type: 'Phone number', value: '' },
       ];
-      const [rows, setRows] = useState<Row[]>(defaultRows);
+      const [rows, setRows] = useState<Row[]>(data?.data_map || defaultRows);
 
       // Update function with typed parameters
       const handleMapListChange = (id: number, field: 'value' | 'selectValue', value: string) => {

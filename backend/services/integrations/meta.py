@@ -121,7 +121,7 @@ class MetaIntegrationsService:
         )
        
 
-    async def create_sync(self, domain_id: int, data_map: List[DataMap] = None, leads_type: str = None, list_id: str = None, list_name: str = None,):
+    async def create_sync(self, domain_id: int, created_by: str, data_map: List[DataMap] = None, leads_type: str = None, list_id: str = None, list_name: str = None,):
         credentials = self.get_credentials(domain_id)
         data_syncs = self.sync_persistence.get_data_sync_filter_by(domain_id=domain_id)
         for sync in data_syncs:
@@ -131,6 +131,7 @@ class MetaIntegrationsService:
             'integration_id': credentials.id,
             'list_id': list_id,
             'list_name': list_name,
+            'created_by': created_by,
             'domain_id': domain_id,
             'data_map': [data.model_dump_json() for data in data_map] if data_map else None
         })

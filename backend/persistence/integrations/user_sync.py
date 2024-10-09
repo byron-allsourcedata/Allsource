@@ -45,7 +45,7 @@ class IntegrationsUserSyncPersistence:
     def get_all(self):
         return self.db.query(IntegrationUserSync).all()
     
-    def get_filter_by(self, domain_id, service_name: str = None):
+    def get_filter_by(self, domain_id, service_name: str = None, integrations_users_sync_id: str = None):
         query = self.db.query(
             IntegrationUserSync.id, 
             IntegrationUserSync.created_at, 
@@ -55,17 +55,37 @@ class IntegrationsUserSyncPersistence:
             IntegrationUserSync.list_name,
             IntegrationUserSync.integration_id,
             IntegrationUserSync.sync_status,
-            IntegrationUserSync.platform_user_id,
             IntegrationUserSync.no_of_contacts,
             IntegrationUserSync.created_by,
             IntegrationUserSync.data_map,
             UserIntegration.service_name,
-            UserIntegration.is_with_suppression
-        ) \
-        .join(UserIntegration, UserIntegration.id == IntegrationUserSync.integration_id) \
+            UserIntegration.is_with_suppression,
+            UserIntegration.platform_user_id
+        ).join(UserIntegration, UserIntegration.id == IntegrationUserSync.integration_id) \
         .filter(IntegrationUserSync.domain_id == domain_id)
+
         if service_name:
             query = query.filter(UserIntegration.service_name == service_name)
+        if integrations_users_sync_id:
+            sync = query.filter(IntegrationUserSync.id == integrations_users_sync_id).first()
+            if sync:
+                return {
+                    'id': sync.id,
+                    'createdDate': sync.created_at.strftime('%b %d, %Y') if sync.created_at else None,
+                    'name': sync.list_name,
+                    'lastSync': sync.last_sync_date.strftime('%b %d, %Y') if sync.last_sync_date else None,
+                    'type': sync.leads_type,
+                    'platform': sync.service_name.lower(),
+                    'integration_id': sync.integration_id,
+                    'dataSync': sync.is_active,
+                    'suppression': sync.is_with_suppression,
+                    'contacts': sync.no_of_contacts,
+                    'createdBy': sync.created_by,
+                    'accountId': sync.platform_user_id,
+                    'data_map': sync.data_map,
+                    'syncStatus': sync.sync_status
+                }
+        
         syncs = query.all()
         return [{
             'id': sync.id,
@@ -83,6 +103,7 @@ class IntegrationsUserSyncPersistence:
             'data_map': sync.data_map,
             'syncStatus': sync.sync_status,
         } for sync in syncs]
+
 
     def get_data_sync_filter_by(self, **filter_by):
         return self.db.query(IntegrationUserSync).filter_by(**filter_by).all()
