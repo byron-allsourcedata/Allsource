@@ -26,7 +26,9 @@ import axiosInterceptorInstance from '@/axios/axiosInterceptorInstance';
 import { showErrorToast, showToast } from "@/components/ToastNotification";
 import AlivbleIntagrationsSlider from "@/components/AvalibleIntegrationsSlider";
 import ShopifySettings from "@/components/ShopifySettings";
-
+import PixelInstallation from "@/components/PixelInstallation";
+import VerifyPixelIntegration from "@/components/VerifyPixelIntegration";
+import DataSyncList from "@/components/DataSyncList";
 
 interface IntegrationBoxProps {
     image: string;
@@ -706,7 +708,7 @@ const UserIntegrationsList = ({ integrationsCredentials, changeTab = () => { }, 
             integrationsCredentials={integrationsCredentials} 
         />
         <Box>
-            {(activeService && activeService != 'Shopify') && (<DataSyncIntegration service_name={activeService} />)}
+            {(activeService && activeService != 'Shopify') && (<DataSyncList service_name={activeService} />)}
         </Box>
         </>
     );
@@ -717,6 +719,7 @@ const IntegrationsAvailable = ({ integrationsCredentials: integrations }: Integr
     const [search, setSearch] = useState<string>('');
     const [openMetaConnect, setOpenMetaConnect] = useState(false)
     const [openKlaviyoConnect, setOpenKlaviyoConnect] = useState(false)
+    const [openShopifyConnect, setOpenShopifyConnect] = useState(false)
     const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
         setSearch(event.target.value);
     };
@@ -736,6 +739,7 @@ const IntegrationsAvailable = ({ integrationsCredentials: integrations }: Integr
     const handleClose = () => {
         setOpenMetaConnect(false)
         setOpenKlaviyoConnect(false)
+        setOpenShopifyConnect(false)
     }
 
     const handleOnSave = () => {}
@@ -764,9 +768,11 @@ const IntegrationsAvailable = ({ integrationsCredentials: integrations }: Integr
                     <Box key={integrationAvailable.service_name}
                     onClick={() => {
                         if (integrationAvailable.service_name === 'Meta') {
-                            setOpenMetaConnect(true);
+                          setOpenMetaConnect(true);
                         } else if (integrationAvailable.service_name === 'Klaviyo') {
-                            setOpenKlaviyoConnect(true);
+                          setOpenKlaviyoConnect(true);
+                        } else if(integrationAvailable.service_name === 'Shopify') {
+                          setOpenShopifyConnect(true)
                         }
                     }}>
                         <IntegrationBox
@@ -782,10 +788,489 @@ const IntegrationsAvailable = ({ integrationsCredentials: integrations }: Integr
                 open={openMetaConnect} 
                 onClose={handleClose} 
             />
+            <ShopifySettings open={openShopifyConnect} handleClose={handleClose} onSave={handleOnSave}/>
         </Box>
     );
 };
 
+
+const PixelManagment = () => {
+  const [value, setValue] = useState('1')
+
+  const handleTabChange = (event: React.SyntheticEvent, newValue: string) => {
+    setValue(newValue);
+  };
+  const [data, setData] = useState<any[]>([]);
+  const [order, setOrder] = useState<"asc" | "desc" | undefined>(undefined);
+  const [orderBy, setOrderBy] = useState<string | undefined>(undefined);
+  const [isLoading, setIsLoading] = useState(true);
+  const handleSortRequest = (property: string) => {
+      const isAsc = orderBy === property && order === "asc";
+      setOrder(isAsc ? "desc" : "asc");
+      setOrderBy(property);
+      };
+  useEffect(() => {
+      const fetchData = async() => {
+              const response = await axiosInstance.get('/data-sync/sync')
+              if(response.status === 200) { setData(response.data) }
+      }
+      fetchData()
+  }, [])
+  
+  const statusIcon = (status: string) => {
+      switch (status) {
+        case "success":
+          return <CheckCircleIcon sx={{ color: "green", fontSize: "16px" }} />;
+        case "error":
+          return (
+            <Tooltip
+              title={"Please choose repair sync in action section."}
+              placement='bottom-end'
+              componentsProps={{
+                tooltip: {
+                  sx: {
+                    backgroundColor: "rgba(217, 217, 217, 1)",
+                    color: "rgba(128, 128, 128, 1)",
+                    fontFamily: "Roboto",
+                    fontWeight: "400",
+                    fontSize: "10px",
+                    boxShadow: "0px 4px 4px 0px rgba(0, 0, 0, 0.12)",
+                    border: "0.2px solid rgba(240, 240, 240, 1)",
+                    borderRadius: "4px",
+                    maxWidth: "100%",
+                    padding: "8px 10px",
+                  },
+                },
+              }}
+            >
+              <Image
+                src={"/danger-icon.svg"}
+                alt="klaviyo"
+                width={16}
+                height={16}
+              />
+            </Tooltip>
+          );
+        default:
+          return null;
+      }
+    };
+  
+  const platformIcon = (platform: string) => {
+  switch (platform) {
+      case "klaviyo":
+      return (
+          <Image src={"/klaviyo.svg"} alt="klaviyo" width={18} height={18} />
+      );
+      case "meta":
+      return (
+          <Image src={"/meta-icon.svg"} alt="klaviyo" width={18} height={18} />
+      );
+      default:
+      return null;
+  } }
+  const formatFunnelText = (text: boolean) => {
+      if (text === true) {
+        return 'Enable';
+      }
+      if (text === false) {
+        return 'Disable';
+      }
+    };
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const handleClick = (event: any, id: number) => {
+  setAnchorEl(event.currentTarget);
+  setSelectedId(id);
+  };
+
+  const handleClose = () => {
+  setAnchorEl(null);
+  setSelectedId(null);
+  };
+
+  const open = Boolean(anchorEl);
+  const id = open ? "simple-popover" : undefined;
+
+  const handleToggleSync = async () => {
+      try {
+        setIsLoading(true);
+        const response = await axiosInterceptorInstance.post(`/data-sync/sync/switch-toggle`, {
+          list_id: String(selectedId)
+        });
+        if (response.status === 200) {
+          switch (response.data.status) {
+            case 'SUCCESS':
+              showToast('successfully');
+              setData(prevData => 
+                prevData.map(item => 
+                  item.id === selectedId ? { ...item, dataSync: response.data.data_sync } : item
+                )
+              );
+              break
+            case 'FAILED':
+              showErrorToast('Integrations sync delete failed');
+              break
+            default:
+              showErrorToast('Unknown response received.');
+          }
+        }
+      } catch (error) {
+        if (axios.isAxiosError(error)) {
+          if (error.response && error.response.status === 403) {
+            showErrorToast('Access denied: You do not have permission to remove this member.');
+          } else {
+            console.error('Error removing team member:', error);
+          }
+        }
+      } finally {
+        setIsLoading(false);
+        setSelectedId(null);
+        handleClose();
+      }
+    };
+
+  const handleEdit = () => { }
+  const handleDelete = () => { }
+  const handleRepairSync = () => { }
+  return (
+    <>
+      <TabContext value={value}>
+        <TabList
+          centered
+          aria-label="Integrations Tabs"
+          TabIndicatorProps={{ sx: { backgroundColor: "#5052b2" } }}
+          sx={{
+              width: 'fit-content',
+              "& .MuiTabs-flexContainer": {
+                  justifyContent: 'center',
+                  "@media (max-width: 600px)": { gap: '16px' }
+              }
+          }}
+          onChange={handleTabChange}
+      >
+        <Tab label="Connections" value="1" sx={{ ...integrationStyle.tabHeading }} />
+        <Tab label="Pixel Setups" value="2" sx={{ ...integrationStyle.tabHeading }} />
+    </TabList>
+        <TabPanel value="1">
+        <Box sx={{
+          mt: '1rem',
+          display: "flex",
+          flexDirection: "row",
+          alignItems: "center",
+          "@media (max-width: 600px)": { mb: 2 },
+      }}>
+          {/* Title and Tooltip */}
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1}}>
+              <Typography
+                  className="first-sub-title"
+                  sx={{
+                      fontFamily: "Nunito Sans",
+                      fontSize: "16px",
+                      lineHeight: "normal",
+                      fontWeight: 600,
+                      color: "#202124",
+                  }}
+              >
+                  Connections Details
+              </Typography>
+              <CustomTooltip
+                  title={"How data synch works and to customise your sync settings"}
+                  linkText="Learn more"
+                  linkUrl="https://maximiz.ai"
+              />
+          </Box>
+          {/* CONTENT */}
+          </Box>
+          <Box mt={4}>
+          <TableContainer
+          component={Paper}
+          sx={{
+            border: "1px solid rgba(235, 235, 235, 1)",
+            boxShadow: 'unset',
+            overflowY: "auto",
+          }}
+        >
+            <Table>
+              <TableHead>
+                <TableRow>
+                  {[
+                    { key: "platform", label: "Destination" },
+                    { key: "account_id", label: "Account ID" },
+                    { key: "list_name", label: "List Name" },
+                    { key: "data_sync", label: "Data Sync" },
+                    { key: "sync_status", label: "Sync Status" },
+                    { key: "action", label: "Action" },
+                  ].map(({ key, label}) => (
+                    <TableCell
+                      key={key}
+                      sx={{
+                        ...integrationsStyle.table_column,
+                        position: "relative",
+                        ...(key === "list_name" && {
+                          position: "sticky",
+                          left: 0,
+                          zIndex: 99,
+                        }),
+                        ...(key === "suppression" && {
+                          "::after": {
+                            content: "none",
+                          },
+                        }),
+                      }}
+                    >
+                      <Box sx={{ display: "flex", alignItems: "center" }}>
+                        <Typography
+                          variant="body2"
+                          sx={{ ...integrationsStyle.table_column, borderRight: "0" }}
+                        >
+                          {label}
+                        </Typography>
+                      </Box>
+                    </TableCell>
+                  ))}
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {data.map((row, index) => (
+                  <TableRow
+                    key={row.id}
+                    sx={{
+                      "&:hover": {
+                        backgroundColor: "rgba(247, 247, 247, 1)",
+                        "& .sticky-cell": {
+                          backgroundColor: "rgba(247, 247, 247, 1)",
+                        },
+                      },
+                    }}
+                  >
+                    <TableCell
+                      className="sticky-cell"
+                      sx={{
+                        ...integrationsStyle.table_array,
+                        position: "sticky",
+                        left: "0",
+                        zIndex: 9,
+                        backgroundColor: "rgba(255, 255, 255, 1)",
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          display: "flex",
+                          padding: "2px 8px",
+                          borderRadius: "2px",
+                          justifyContent: "center",
+                          textTransform: "capitalize",
+                        }}
+                      >
+                        {platformIcon(row.platform)}
+                        <Typography
+                          variant="body2"
+                          sx={{ ...integrationsStyle.table_array, borderRight: "0", fontSize: '0.8rem', marginLeft: '1rem' }}
+                        >
+                          {row.platform}
+                        </Typography>
+                        
+                      </Box>
+                    </TableCell>                    
+                    <TableCell sx={integrationsStyle.table_array}>
+                      {row.accountId}
+                    </TableCell>
+                    <TableCell
+                      className="sticky-cell"
+                      sx={{
+                        ...integrationsStyle.table_array,
+                        position: "sticky",
+                        left: "0",
+                        zIndex: 9,
+                        backgroundColor: "rgba(255, 255, 255, 1)",
+                      }}
+                    >
+                      {row.name}
+                    </TableCell>
+                    <TableCell sx={integrationsStyle.table_array}>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          padding: "2px 8px",
+                          borderRadius: "2px",
+                          justifyContent: "center",
+                          textTransform: "capitalize",
+                        }}
+                      >
+                        <Typography
+                          className="paragraph"
+                          sx={{
+                            fontFamily: "Roboto",
+                            fontSize: "12px",
+                            color:
+                              row.dataSync === true
+                                ? "rgba(43, 91, 0, 1) !important"
+                                : "rgba(74, 74, 74, 1)!important",
+                            backgroundColor:
+                              row.dataSync === true
+                                ? "rgba(234, 248, 221, 1) !important"
+                                : "rgba(219, 219, 219, 1) !important",
+                            padding: "3px 14.5px",
+                            maxHeigh: "1.25rem",
+                          }}
+                        >
+                          {formatFunnelText(row.dataSync)}
+                        </Typography>
+                      </Box>
+                    </TableCell>
+                    <TableCell
+                      sx={{ ...integrationsStyle.table_column, position: "relative" }}
+                    >
+                      <Box
+                        sx={{
+                          display: "flex",
+                          padding: "2px 8px",
+                          borderRadius: "2px",
+                          justifyContent: "center",
+                        }}
+                      >
+                        {statusIcon(row.syncStatus)}
+                      </Box>
+                    </TableCell>
+                    <TableCell sx={{ ...integrationsStyle.table_array }}>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          padding: "2px 8px",
+                          borderRadius: "2px",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          textTransform: "capitalize",
+                        }}
+                      >
+                        {row.suppression}
+                        <IconButton
+                          sx={{ padding: 0, margin: 0, borderRadius: 4 }}
+                          onClick={(e) => handleClick(e, row.id)}
+                        >
+                          <Image
+                            src={"more.svg"}
+                            alt="more"
+                            width={20}
+                            height={20}
+                          />
+                        </IconButton>
+                      </Box>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+          <Popover
+          id={id}
+          open={open}
+          anchorEl={anchorEl}
+          onClose={handleClose}
+          anchorOrigin={{
+            vertical: "bottom",
+            horizontal: "left",
+          }}
+        >
+          <Box
+            sx={{
+              p: 1,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "flex-start",
+              width: "100%",
+              maxWidth: "160px",
+            }}
+          >
+            <Button
+              sx={{
+                justifyContent: "flex-start",
+                width: "100%",
+                textTransform: "none",
+                fontFamily: "Nunito Sans",
+                fontSize: "14px",
+                color: "rgba(32, 33, 36, 1)",
+                fontWeight: 600,
+                ":hover": {
+                  color: "rgba(80, 82, 178, 1)",
+                  backgroundColor: "background: rgba(80, 82, 178, 0.1)",
+                },
+              }}
+              onClick={handleToggleSync}
+            >
+              {data.find((row) => row.id === selectedId)?.dataSync === true
+                ? "Disable Sync"
+                : "Enable Sync"}
+            </Button>
+            <Button
+              sx={{
+                justifyContent: "flex-start",
+                width: "100%",
+                textTransform: "none",
+                fontFamily: "Nunito Sans",
+                fontSize: "14px",
+                color: "rgba(32, 33, 36, 1)",
+                fontWeight: 600,
+                ":hover": {
+                  color: "rgba(80, 82, 178, 1)",
+                  backgroundColor: "background: rgba(80, 82, 178, 0.1)",
+                },
+              }}
+              onClick={handleEdit}
+            >
+              Edit
+            </Button>
+            <Button
+              sx={{
+                justifyContent: "flex-start",
+                width: "100%",
+                textTransform: "none",
+                fontFamily: "Nunito Sans",
+                fontSize: "14px",
+                color: "rgba(32, 33, 36, 1)",
+                fontWeight: 600,
+                ":hover": {
+                  color: "rgba(80, 82, 178, 1)",
+                  backgroundColor: "background: rgba(80, 82, 178, 0.1)",
+                },
+              }}
+              onClick={handleDelete}
+            >
+              Delete
+            </Button>
+            <Button
+              sx={{
+                justifyContent: "flex-start",
+                width: "100%",
+                color: "rgba(32, 33, 36, 1)",
+                textTransform: "none",
+                fontFamily: "Nunito Sans",
+                fontSize: "14px",
+                fontWeight: 600,
+                ":hover": {
+                  color: "rgba(80, 82, 178, 1)",
+                  backgroundColor: "background: rgba(80, 82, 178, 0.1)",
+                },
+              }}
+              onClick={handleRepairSync}
+            >
+              Repair Sync
+            </Button>
+          </Box>
+        </Popover>
+          </Box>
+        </TabPanel>
+        <TabPanel value="2">
+          <PixelInstallation />
+          <VerifyPixelIntegration />
+        </TabPanel>
+      </TabContext>
+      
+    </>
+
+  )
+}
 
 const Integrations = () => {
     const [value, setValue] = useState('1');
@@ -954,7 +1439,7 @@ const Integrations = () => {
                             integrations={integrations}/>
                         </TabPanel>
                         <TabPanel value="3" sx={{ px: 0 }}>
-                            <Typography>Pixel Management content goes here.</Typography>
+                            <PixelManagment />
                         </TabPanel>
                     </>
                 )}

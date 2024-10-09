@@ -9,7 +9,7 @@ import CustomizedProgressBar from "./CustomizedProgressBar";
 import CloseIcon from '@mui/icons-material/Close';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 
-interface CreateKlaviyoProps {
+interface ShopifyProps {
     handleClose: () => void
     onSave: (integration: IntegrationsCredentials) => void 
     open: boolean
@@ -83,7 +83,7 @@ const shopifySettingsStyle = {
       },
 }
 
-const ShopifySettings = ({ handleClose, open, onSave, initApiKey}: CreateKlaviyoProps) => {
+const ShopifySettings = ({ handleClose, open, onSave, initApiKey}: ShopifyProps) => {
     const [apiKey, setApiKey] = useState('');
     const [apiKeyError, setApiKeyError] = useState(false);
     const [loading, setLoading] = useState(false)
@@ -158,10 +158,11 @@ const ShopifySettings = ({ handleClose, open, onSave, initApiKey}: CreateKlaviyo
 
     const handleApiKeySave = async() => {
         const response = await axiosInstance.post('/integrations/', {
-            klaviyo: {
-                api_key: apiKey
+            shopify: {
+                shop_domain: sessionStorage.getItem('domain'),
+                access_token: apiKey
             }
-        }, {params: {service_name: 'klaviyo'}})
+        }, {params: {service_name: 'shopify'}})
         if(response.status === 200) {
             handleNextTab()
         }
@@ -290,7 +291,7 @@ const ShopifySettings = ({ handleClose, open, onSave, initApiKey}: CreateKlaviyo
         >
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 3.5, px: 2, borderBottom: '1px solid #e4e4e4' }}>
                 <Typography variant="h6" sx={{ textAlign: 'center', color: '#202124', fontFamily: 'Nunito Sans', fontWeight: '600', fontSize: '16px', lineHeight: 'normal' }}>
-                    Shopify Settings
+                    Shopify Connect
                 </Typography>
                 <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
                     <Link href="#" sx={{

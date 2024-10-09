@@ -5,6 +5,7 @@ import KlaviyoIntegrationPopup from "./KlaviyoIntegrationPopup"
 import { useState } from "react"
 import SearchIcon from '@mui/icons-material/Search';
 import CloseIcon from '@mui/icons-material/Close';
+import ShopifySettings from "./ShopifySettings"
 
 
 interface AvailableIntegrationsSliderProps {
@@ -18,10 +19,11 @@ interface AvailableIntegrationsSliderProps {
 const AlivbleIntagrationsSlider = ({open, isContactSync = false, integrations, integrationsCredentials, onClose}: AvailableIntegrationsSliderProps) => {
     const [openMetaConnect, setOpenMetaConnect] = useState(false)
     const [openKlaviyoConnect, setOpenKlaviyoConnect] = useState(false)
-
+    const [openShopifuConnect, setOpenShopifyConnect] = useState(false)
     const handleClose = () => {
         setOpenMetaConnect(false)
         setOpenKlaviyoConnect(false)
+        setOpenShopifyConnect(false)
     }
 
     const handleSave = () => {}
@@ -201,7 +203,7 @@ const AlivbleIntagrationsSlider = ({open, isContactSync = false, integrations, i
                                         flexBasis: 'calc(50% - 8px)'
                                     }
                                 }}>
-                                    <ListItemButton sx={{p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center'}}>
+                                    <ListItemButton onClick={() => setOpenShopifyConnect(true)} sx={{p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center'}}>
                                         <ListItemIcon sx={{minWidth: 'auto'}}>
                                             <Image src="/shopify-icon.svg" alt="shopify" height={26} width={32} />
                                         </ListItemIcon>
@@ -267,6 +269,7 @@ const AlivbleIntagrationsSlider = ({open, isContactSync = false, integrations, i
         </Drawer>
         <MetaConnectButton open={openMetaConnect} onClose={handleClose}/>
         <KlaviyoIntegrationPopup open={openKlaviyoConnect} handleClose={handleClose} onSave={handleSave}/>
+        <ShopifySettings open={openShopifuConnect} handleClose={handleClose} onSave={handleSave} />
         </>
     )
 }
