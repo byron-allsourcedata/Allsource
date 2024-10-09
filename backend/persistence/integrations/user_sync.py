@@ -13,6 +13,14 @@ class IntegrationsUserSyncPersistence:
         self.db.commit()
         return sync
     
+    def edit_sync(self, data: dict, integrations_users_sync_id: int) -> IntegrationUserSync:
+        sync = self.db.query(IntegrationUserSync).filter_by(id=integrations_users_sync_id).first()
+        if sync:
+            for key, value in data.items():
+                setattr(sync, key, value)
+            self.db.commit()
+        return sync
+    
     def delete_sync(self, domain_id, list_id):
         sync = self.db.query(IntegrationUserSync).filter(IntegrationUserSync.id == list_id, IntegrationUserSync.domain_id == domain_id).first()
         if sync:
@@ -20,14 +28,7 @@ class IntegrationsUserSyncPersistence:
             self.db.commit()
             return True
         return False
-    
-    def edit_sync(self, domain_id, list_id):
-        sync = self.db.query(IntegrationUserSync).filter(IntegrationUserSync.id == list_id, IntegrationUserSync.domain_id == domain_id).first()
-        if sync:
-            self.db.delete(sync)
-            self.db.commit()
-            return True
-        return False
+
 
     def switch_sync_toggle(self, domain_id, list_id):
         active = False
@@ -57,6 +58,7 @@ class IntegrationsUserSyncPersistence:
             IntegrationUserSync.platform_user_id,
             IntegrationUserSync.no_of_contacts,
             IntegrationUserSync.created_by,
+            IntegrationUserSync.data_map,
             UserIntegration.service_name,
             UserIntegration.is_with_suppression
         ) \
@@ -78,6 +80,7 @@ class IntegrationsUserSyncPersistence:
             'contacts': sync.no_of_contacts,
             'createdBy': sync.created_by,
             'accountId': sync.platform_user_id,
+            'data_map': sync.data_map,
             'syncStatus': sync.sync_status,
         } for sync in syncs]
 
