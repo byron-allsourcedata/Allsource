@@ -45,7 +45,6 @@ export const dashboardStyles: { [key: string]: SxProps<Theme> } = {
     gap: '5.25rem'
   },
   title: {
-    mb: 2,
     fontWeight: 'bold',
     fontSize: '16px',
     whiteSpace: 'nowrap',
