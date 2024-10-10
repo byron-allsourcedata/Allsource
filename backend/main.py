@@ -23,7 +23,7 @@ app = FastAPI()
 external_api = FastAPI()
 
 
-@app.exception_handler(StarletteHTTPException)
+@external_api.exception_handler(StarletteHTTPException)
 async def http_exception_handler(request: Request, exc: StarletteHTTPException):
     if exc.status_code is not None and not (exc.status_code == 403 or exc.status_code == 401):
         logger.error(f"HTTP Exception: {exc.detail}\n{traceback.format_exc()}")
@@ -33,7 +33,7 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
     )
 
 
-@app.exception_handler(Exception)
+@external_api.exception_handler(Exception)
 async def http_exception_handler(request: Request, exc: Exception):
     logger.error(f"HTTP Exception: {str(exc)}\n{traceback.format_exc()}")
     return JSONResponse(
@@ -45,7 +45,7 @@ async def http_exception_handler(request: Request, exc: Exception):
     )
 
 
-@app.exception_handler(RequestValidationError)
+@external_api.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
     logger.error(f"Validation Exception: {exc.errors()}\n{traceback.format_exc()}")
     return JSONResponse(
