@@ -131,7 +131,7 @@ async def process_user_data(table, index, five_x_five_user: FiveXFiveUser, sessi
     is_first_request = False
     if not lead_user:
         suppression_rule = session.query(SuppressionRule).filter(SuppressionRule.domain_id == user_domain_id).first()
-        if suppression_rule and suppression_rule.is_stop_collecting_contacts:
+        if suppression_rule:
             suppression_list = session.query(SuppressionList).filter(SuppressionList.domain_id == user_domain_id).first()
             emails_to_check = [
                 five_x_five_user.business_email,
