@@ -104,24 +104,31 @@ async def process_file(bucket, file_key, cookie_sync_by_hour):
             await save_files_by_hour(table, cookie_sync_by_hour)
 
 
-async def process_table(table, session, file_key, channel, root_user):
-    for i in reversed(range(len(table))):
-        up_id = table['UP_ID'][i]
-        five_x_five_user = 1
-        if not up_id.is_valid:
-            up_ids = session.query(FiveXFiveHems.up_id).filter(
-                FiveXFiveHems.sha256_lc_hem == str(table['SHA256_LOWER_CASE'][i])).all()
-            if len(up_ids) != 1:
-                continue
-            up_id = up_ids[0][0]
-        five_x_five_user = session.query(FiveXFiveUser).filter(FiveXFiveUser.up_id == str(up_id).lower()).first()
-        if five_x_five_user:
-            logging.info(f"UP_ID {up_id} found in table")
-            await process_user_data(table, i, five_x_five_user, session, channel, None)
-            if root_user:
-                await process_user_data(table, i, five_x_five_user, session, channel, root_user)
-            break
-    update_last_processed_file(file_key)
+async def process_table(session, cookie_sync_by_hour, channel, root_user):
+    for key, possible_leads in cookie_sync_by_hour.items():
+        for possible_lead in reversed(possible_leads):
+            up_id = possible_lead['UP_ID']
+            if up_id is None or up_id == 'None':
+                up_ids = session.query(FiveXFiveHems.up_id).filter(
+                    FiveXFiveHems.sha256_lc_hem == str(possible_lead['SHA256_LOWER_CASE'])).all()
+                if len(up_ids) == 0:
+                    logging.warning(f"Not found SHA256_LOWER_CASE {possible_lead['SHA256_LOWER_CASE']}")
+                    continue
+                elif len(up_ids) > 1:
+                    logging.info(f"Too many SHA256_LOWER_CASEs {possible_lead['SHA256_LOWER_CASE']}")
+                    continue
+                up_id = up_ids[0][0]
+                logging.info(f"Lead found by SHA256_LOWER_CASE {possible_lead['SHA256_LOWER_CASE']}")
+            if up_id is not None and up_id != 'None':
+                five_x_five_user = session.query(FiveXFiveUser).filter(FiveXFiveUser.up_id == str(up_id).lower()).first()
+                if five_x_five_user:
+                    logging.info(f"Lead found by UP_ID {up_id}")
+                    await process_user_data(possible_lead, five_x_five_user, session, channel, None)
+                    if root_user:
+                        await process_user_data(possible_lead, five_x_five_user, session, channel, root_user)
+                    break
+                else:
+                    logging.warning(f"Not found by UP_ID {up_id}")
 
 
 async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, session: Session, rmq_connection, root_user=None):
@@ -201,7 +208,7 @@ async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, sess
         
         is_first_request = True
         lead_user = LeadUser(five_x_five_user_id=five_x_five_user.id, user_id=user.id, behavior_type=behavior_type, domain_id=user_domain_id, total_visit=0, avarage_visit_time=0, total_visit_time=0)
-        emails_to_check = five_x_five_user.business_email.split(', ') + five_x_five_user.personal_emails.split(', ') + five_x_five_user.additional_personal_emails.split(', ')
+        emails_to_check = get_list_emails(five_x_five_user)
         integrations_ids = [integration.id for integration in session.query(UserIntegration).filter(UserIntegration.is_with_suppression == True).all()]
         lead_suppression = session.query(LeadsSupperssion).filter(
             LeadsSupperssion.domain_id == user_domain_id,
