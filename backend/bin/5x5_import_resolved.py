@@ -164,7 +164,7 @@ async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, sess
         referer = json_headers.get('referer')[0]
         page = referer
     behavior_type = 'visitor' if not partner_uid_dict.get('action') else partner_uid_dict.get('action')
-    lead_user = session.query(LeadUser).filter_by(five_x_five_user_id=five_x_five_user.id, user_id=user.id).first()
+    lead_user = session.query(LeadUser).filter_by(five_x_five_user_id=five_x_five_user.id, domain_id=user_domain_id).first()
     is_first_request = False
     if not lead_user:
         suppression_rule = session.query(SuppressionRule).filter(SuppressionRule.domain_id == user_domain_id).first()
