@@ -48,7 +48,7 @@ def cancel_user_subscripion(payments_service: PaymentsService = Depends(get_paym
     return payments_service.cancel_user_subscripion(users=users)
 
 @router.get("/upgrade-and-downgrade-user-subscription")
-def upgrade_and_downgrade_user_subscription(price_id: str, payments_service: PaymentsService = Depends(get_payments_service), users: Users = Depends(check_user_authorization_without_pixel)):
+def upgrade_and_downgrade_user_subscription(price_id: str, payments_service: PaymentsService = Depends(get_payments_service), users: Users = Depends(check_user_authentication)):
     if users.get('team_member'):
         team_member = users.get('team_member')
         if team_member.team_access_level != 'admin':

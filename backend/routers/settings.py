@@ -11,7 +11,7 @@ router = APIRouter()
 
 
 @router.get("/account-details")
-def get_account_details(settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authorization_without_pixel)):
+def get_account_details(settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authentication)):
     return settings_service.get_account_details(user=user)
 
 @router.put("/account-details")

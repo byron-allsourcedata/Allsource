@@ -67,7 +67,7 @@ class PlansPersistence:
         ).filter(
             UserSubscriptions.user_id == user_id
         ).order_by(
-            UserSubscriptions.id.desc()
+            UserSubscriptions.plan_end.desc()
         ).first()
         return subscription_plan
 
