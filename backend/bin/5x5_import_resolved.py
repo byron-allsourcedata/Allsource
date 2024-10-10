@@ -100,13 +100,10 @@ async def process_table(table, session, file_key, channel, root_user):
             break
     update_last_processed_file(file_key)
     
-def get_all_five_x_five_emails(business_email, personal_emails, additional_personal_emails):
-    """ 
-    Combine all email lists into a single list and remove duplicates.
-    """
-    emails = {business_email}
-    emails.update(personal_emails)
-    emails.update(additional_personal_emails)
+def get_all_five_x_user_emails(business_email, personal_emails, additional_personal_emails):
+    emails = {business_email.split(', ')}
+    emails.update(personal_emails.split(', '))
+    emails.update(additional_personal_emails.split(', '))
     return list(emails)
 
 
@@ -148,7 +145,7 @@ async def process_user_data(table, index, five_x_five_user: FiveXFiveUser, sessi
             suppressions_emails.append(suppression_rule.suppressions_multiple_emails)
         suppressions_emails = list(set(suppressions_emails))
         if suppression_rule:
-            emails_to_check = get_all_five_x_five_emails(five_x_five_user.business_email, five_x_five_user.personal_emails, five_x_five_user.additional_personal_emails)
+            emails_to_check = get_all_five_x_user_emails(five_x_five_user.business_email, five_x_five_user.personal_emails, five_x_five_user.additional_personal_emails)
             for email in suppressions_emails:
                 if email in emails_to_check:
                     logging.info(f"{email} exists in five_x_five_user.")
@@ -190,7 +187,7 @@ async def process_user_data(table, index, five_x_five_user: FiveXFiveUser, sessi
         
         is_first_request = True
         lead_user = LeadUser(five_x_five_user_id=five_x_five_user.id, user_id=user.id, behavior_type=behavior_type, domain_id=user_domain_id, total_visit=0, avarage_visit_time=0, total_visit_time=0)
-        emails_to_check = get_all_five_x_five_emails(five_x_five_user.business_email, five_x_five_user.personal_emails, five_x_five_user.additional_personal_emails).split(', ')
+        emails_to_check = get_all_five_x_user_emails(five_x_five_user.business_email, five_x_five_user.personal_emails, five_x_five_user.additional_personal_emails)
         integrations_ids = [integration.id for integration in session.query(UserIntegration).filter(UserIntegration.is_with_suppression == True).all()]
         lead_suppression = session.query(LeadsSupperssion).filter(
             LeadsSupperssion.domain_id == user_domain_id,
