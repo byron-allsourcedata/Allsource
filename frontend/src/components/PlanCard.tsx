@@ -4,7 +4,6 @@ import Image from 'next/image';
 import CustomTooltip from './customToolTip';
 
 const PlanCard: React.FC<{ plan: any; onChoose: (stripePriceId: string) => void }> = ({ plan, onChoose }) => {
-    console.log(plan)
     return (
         <Box sx={{ padding: 3, border: '1px solid #e4e4e4', borderRadius: '4px', boxShadow: '0px 1px 4px 0px rgba(0, 0, 0, 0.25)',
             height: '100vh',
