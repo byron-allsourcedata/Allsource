@@ -105,10 +105,15 @@ async def process_file(bucket, file_key, cookie_sync_by_hour):
 
 
 def get_all_five_x_user_emails(business_email, personal_emails, additional_personal_emails):
-    emails = {business_email.split(', ')}
-    emails.update(personal_emails.split(', '))
-    emails.update(additional_personal_emails.split(', '))
+    emails = set()
+    if business_email:
+        emails.update(business_email.split(', '))
+    if personal_emails:
+        emails.update(personal_emails.split(', '))
+    if additional_personal_emails:
+        emails.update(additional_personal_emails.split(', '))
     return list(emails)
+
 
 async def process_table(session, cookie_sync_by_hour, channel, root_user):
     for key, possible_leads in cookie_sync_by_hour.items():
@@ -166,9 +171,9 @@ async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, sess
         suppression_list = session.query(SuppressionList).filter(SuppressionList.domain_id == user_domain_id).first()
         suppressions_emails = []
         if suppression_list and suppression_list.total_emails:
-            suppressions_emails.append(suppression_list.total_emails.split(', '))
+            suppressions_emails.extend(suppression_list.total_emails.split(', '))
         if suppression_rule and suppression_rule.suppressions_multiple_emails:
-            suppressions_emails.append(suppression_rule.suppressions_multiple_emails.split(', '))
+            suppressions_emails.extend(suppression_rule.suppressions_multiple_emails.split(', '))
         suppressions_emails = list(set(suppressions_emails))
         if suppressions_emails:
             emails_to_check = get_all_five_x_user_emails(five_x_five_user.business_email, five_x_five_user.personal_emails, five_x_five_user.additional_personal_emails)
