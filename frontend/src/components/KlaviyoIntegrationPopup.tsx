@@ -13,12 +13,13 @@ interface CreateKlaviyoProps {
     handleClose: () => void
     onSave: (integration: IntegrationsCredentials) => void 
     open: boolean
-    suppression: boolean
+    initApiKey?: string 
 }
 
 interface IntegrationsCredentials {
     id: number
     access_token: string
+    ad_account_id: string
     shop_domain: string
     data_center: string
     service_name: string
@@ -82,7 +83,7 @@ const klaviyoStyles = {
       },
 }
 
-const CreateKlaviyoSync = ({ handleClose, open, suppression, onSave }: CreateKlaviyoProps) => {
+const CreateKlaviyoSync = ({ handleClose, open, onSave, initApiKey}: CreateKlaviyoProps) => {
     const [apiKey, setApiKey] = useState('');
     const [apiKeyError, setApiKeyError] = useState(false);
     const [loading, setLoading] = useState(false)
@@ -93,6 +94,9 @@ const CreateKlaviyoSync = ({ handleClose, open, suppression, onSave }: CreateKla
     const [selectedRadioValue, setSelectedRadioValue] = useState('');
     const [isDropdownValid, setIsDropdownValid] = useState(false);
 
+    useEffect(() => {
+        setApiKey(initApiKey || '')
+    }, [initApiKey])
 
     const handleRadioChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setSelectedRadioValue(event.target.value);
@@ -195,6 +199,7 @@ const CreateKlaviyoSync = ({ handleClose, open, suppression, onSave }: CreateKla
             data_center: '',
             access_token: apiKey,
             is_with_suppression: checked,
+            ad_account_id: '',
             shop_domain: ''
         })
         handleClose()
@@ -320,7 +325,7 @@ const CreateKlaviyoSync = ({ handleClose, open, suppression, onSave }: CreateKla
                             }
                         }}}>
                         <Tab label="API Key" value="1" sx={{...klaviyoStyles.tabHeading, cursor: 'pointer'}} />
-                        {suppression && <Tab label="Suppression Sync" value="2" sx={klaviyoStyles.tabHeading} />}
+                        <Tab label="Suppression Sync" value="2" sx={klaviyoStyles.tabHeading} />
                         </TabList>
                     </Box>
                     <TabPanel value="1" sx={{p: 0}}>

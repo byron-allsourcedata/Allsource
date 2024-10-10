@@ -1,79 +1,114 @@
 import { SxProps, Theme } from '@mui/system';
 
-export const integrationsStyle: { [key: string]: SxProps<Theme> } = { 
+export const integrationsStyle: { [key: string]: SxProps<Theme> } = {
+    mainContent: {
+        display:'flex',
+        flexDirection: 'column',
+        width: '100%',
+        padding: 0,
+        margin: 0,
+        alignItems: 'center',
+        justifyContent: 'center',
+        '@media (max-width: 440px)': {
+            marginTop: '-60px',
+            padding: '0',
+        },
+    },
+    table_column: {
+      fontFamily: 'Nunito Sans', fontSize: '12px', fontWeight: '600',
+      lineHeight: '19.6px',
+      textAlign: 'left',
+      textWrap: 'nowrap',
+      color: '#4a4a4a',
+      '&::after': {
+        content: '""',
+        display: 'block',
+        position: 'absolute',
+        top: '15px', // Space from the top
+        bottom: '15px', // Space from the bottom
+        right: 0, // Position the border at the right edge
+        width: '1px',
+        height: 'calc(100% - 30px)', // Full height minus top and bottom spacing
+        backgroundColor: 'rgba(235, 235, 235, 1)', // Border color
+    }},
+    
     container: {
         display: 'flex',
         flexDirection: 'column',
+        width: '100%',
         alignItems: 'center',
         justifyContent: 'center',
-        minHeight: '50vh',
-        backgroundColor: '#ffffff',
-        width: '100%',
-        maxWidth: '25rem',
         margin: '0 auto',
         position: 'relative',
-        boxShadow: '0rem 0.2em 0.8em 0px #00000033',
+        boxShadow: '0rem 2px 8px 0px #00000033',
         borderRadius: '0.625rem',
-        border: '0.125rem solid transparent',
-        marginTop: '7.5em',
-        '@media (max-width: 440px)': {
-          boxShadow: '0rem 0px 0px 0px #00000033',
-          border: 'none',
-          marginTop: '3.75em',
+        border: '0.0625rem solid transparent',
+        textAlign: 'center',
+        maxWidth: '464px',
+        minHeight: '481px',
+        marginTop: '143px',
+        marginBottom: '143px',
+        '@media (min-width: 1400px)': {
+            marginTop: '130px',
+            marginBottom: '130px',
         },
-      },
-      headers: {
-        display: 'flex',
-        marginTop: '10px',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        width: '100%',
-        color: 'rgba(244, 87, 69, 1)',
-        borderBottom: `1px solid rgba(228, 228, 228, 1)`,
-      },
-      account: {
-        padding: '10px',
-        width: '1em',
-        color: 'rgba(128, 128, 128, 1)',
-        border: '1px solid rgba(184, 184, 184, 1)',
-        borderRadius: '3.27px'
-      },
-      logoContainer: {
-        paddingLeft: '2.5em',
-        paddingRight: '0.5em',
-      },
-      title: {
-        mb: 2,
-        fontWeight: 'bold',
-        fontSize: '16px',
-        whiteSpace: 'nowrap',
-        textAlign: 'start',
-        padding: '1.5rem 0rem 0',
-        fontFamily: 'Nunito',
-      }, 
-      service: {
-        display: 'flex',
-        width: '80%',
-        gap: 4,
-      },
-      imageServiceBox: {
-        backgroundColor: '#f2f2f2',
-        padding: '1em',
-        '&:hover': {
-            filter: 'none',
-            backgroundColor: '#EAF8DD'
+        '@media (max-width: 440px)': {
+            boxShadow: '0rem 0px 0px 0px #00000033',
+            border: 'none',
+            marginTop: '0',
+            marginBottom: '0',
+            maxWidth: '100%',
+        },
+        '@media (max-width: 380px)': {
+            marginTop: '76px',
         }
-      },    
-      modal: {
-        position: 'absolute',
-        top: '50%',
-        left: '50%',
-        transform: 'translate(-50%, -50%)',
-        width: 400,
-        bgcolor: 'background.paper',
-        border: '2px solid #000',
-        boxShadow: 24,
-        p: 4,
+    },
+    table_array: {
+        fontFamily: 'Roboto',
+        fontSize: '12px',
+        fontWeight: '400',
+        lineHeight: '16.8px',
+        textAlign: 'left',
+        whiteSpace: 'nowrap',
+        color: 'rgba(95, 99, 104, 1)',
+        position: 'relative', // Для работы с псевдоэлементом ::after
+        '&::after': {
+          content: '""',
+          display: 'block',
+          position: 'absolute',
+          top: '15px', // Space from the top
+          bottom: '15px', // Space from the bottom
+          right: 0, // Position the border at the right edge
+          width: '1px',
+          height: 'calc(100% - 30px)', // Full height minus top and bottom spacing
+          backgroundColor: 'rgba(235, 235, 235, 1)', // Border color
+        }
+      },
+      table_array_status: {
+        fontFamily: 'Nunito Sans', fontSize: '12px', border: '1px solid rgba(235, 235, 235, 1)', fontWeight: '400',
+        lineHeight: '14.06px',
+        textAlign: 'left',
+        textWrap: 'nowrap',
+        background: 'rgba(235, 243, 254, 1)',
+        color: 'rgba(20, 110, 246, 1)',
+      },
+      table_array_phone: {
+        fontFamily: 'Roboto', fontSize: '12px', fontWeight: '400',
+        lineHeight: '16.8px',
+        textAlign: 'left',
+        textWrap: 'wrap',
+        color: 'rgba(95, 99, 104, 1)',
+        position: 'relative',
+        '&::after': {
+          content: '""',
+          display: 'block',
+          position: 'absolute',
+          top: '15px', // Space from the top
+          bottom: '15px', // Space from the bottom
+          right: 0, // Position the border at the right edge
+          width: '1px',
+          height: 'calc(100% - 30px)', // Full height minus top and bottom spacing
+          backgroundColor: 'rgba(235, 235, 235, 1)', // Border color
       }
-
+      },
 }

@@ -186,6 +186,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
     }
     useEffect(() => {
         getKlaviyoList()
+        setLoading(false)
     }, [open])
 
     const createNewList = async () => {
@@ -703,83 +704,82 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
 
     return (
         <>
-            {loading && <CustomizedProgressBar />}
-            <Drawer
-                anchor="right"
-                open={open}
-                onClose={handlePopupClose}
-                PaperProps={{
-                    sx: {
-                        width: '620px',
-                        position: 'fixed',
-                        zIndex: 1301,
-                        top: 0,
-                        bottom: 0,
-                        msOverflowStyle: 'none',
-                        scrollbarWidth: 'none',
-                        '&::-webkit-scrollbar': {
-                            display: 'none',
-                        },
-                        '@media (max-width: 600px)': {
-                            width: '100%',
-                        }
+        {loading && <CustomizedProgressBar />}
+        <Drawer
+            anchor="right"
+            open={open}
+            onClose={handlePopupClose}
+            PaperProps={{
+                sx: {
+                    width: '620px',
+                    position: 'fixed',
+                    zIndex: 1301,
+                    top: 0,
+                    bottom: 0,
+                    msOverflowStyle: 'none',
+                    scrollbarWidth: 'none',
+                    '&::-webkit-scrollbar': {
+                        display: 'none',
                     },
-                }}
-            >
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 3.5, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
-                    <Typography variant="h6" className="first-sub-title" sx={{ textAlign: 'center' }}>
-                        Connect to Klaviyo
-                    </Typography>
-                    <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
-                        <Link href="#" className="main-text" sx={{
-                            fontSize: '14px',
-                            fontWeight: '600',
-                            lineHeight: '20px',
-                            color: '#5052b2',
-                            textDecorationColor: '#5052b2'
-                        }}>Tutorial</Link>
-                        <IconButton onClick={onClose} sx={{ p: 0 }}>
-                            <CloseIcon sx={{ width: '20px', height: '20px' }} />
-                        </IconButton>
-                    </Box>
+                    '@media (max-width: 600px)': {
+                        width: '100%',
+                    }
+                },
+            }}
+        >
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 3.5, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
+                <Typography variant="h6" className="first-sub-title" sx={{ textAlign: 'center' }}>
+                    Connect to Klaviyo
+                </Typography>
+                <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
+                    <Link href="#" className="main-text" sx={{
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        lineHeight: '20px',
+                        color: '#5052b2',
+                        textDecorationColor: '#5052b2'
+                    }}>Tutorial</Link>
+                    <IconButton onClick={handlePopupClose} sx={{ p: 0 }}>
+                        <CloseIcon sx={{ width: '20px', height: '20px' }} />
+                    </IconButton>
                 </Box>
-                <Divider />
-                <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', height: '100%' }}>
-                    <Box sx={{ width: '100%', padding: '16px 24px 24px 24px', position: 'relative' }}>
-                        <TabContext value={value}>
-                            <Box sx={{ pb: 4 }}>
-                                <TabList centered aria-label="Connect to Klaviyo Tabs"
-                                    TabIndicatorProps={{ sx: { backgroundColor: "#5052b2" } }}
-                                    sx={{
-                                        "& .MuiTabs-scroller": {
-                                            overflowX: 'auto !important',
-                                        },
-                                        "& .MuiTabs-flexContainer": {
-                                            justifyContent: 'center',
-                                            '@media (max-width: 600px)': {
-                                                gap: '16px',
-                                                justifyContent: 'flex-start'
-                                            }
-                                        }
-                                    }} onChange={handleChangeTab}>
-                                    <Tab label="Suppression Sync" value="1" className='tab-heading' sx={klaviyoStyles.tabHeading} />
-                                    <Tab label="Contact Sync" value="2" className='tab-heading' sx={klaviyoStyles.tabHeading} />
-                                    <Tab label="Map data" value="3" className='tab-heading' sx={klaviyoStyles.tabHeading} />
-                                </TabList>
-                            </Box>
-                            <TabPanel value="1" sx={{ p: 0 }}>
-                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                                    <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            <Image src='/klaviyo.svg' alt='klaviyo' height={26} width={32} />
-                                            <Typography variant="h6" className='first-sub-title'>Eliminate Redundancy: Stop Paying for Contacts You Already Own</Typography>
-                                        </Box>
-                                        <Typography variant="subtitle1" className='paragraph' sx={{
-                                            lineHeight: '20px',
-                                            letterSpacing: '0.06px'
-                                        }}>Sync your current list to avoid collecting contacts you already possess.
-                                            Newly added contacts in Klaviyo will be automatically suppressed each day.</Typography>
-
+            </Box>
+            <Divider />
+            <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', height: '100%' }}>
+                <Box sx={{ width: '100%', padding: '16px 24px 24px 24px', position: 'relative' }}>
+                <TabContext value={value}>
+                    <Box sx={{pb: 4}}>
+                        <TabList centered aria-label="Connect to Klaviyo Tabs"
+                        TabIndicatorProps={{sx: {backgroundColor: "#5052b2" } }} 
+                        sx={{
+                            "& .MuiTabs-scroller": {
+                                overflowX: 'auto !important',
+                            },
+                            "& .MuiTabs-flexContainer": {
+                            justifyContent:'center',
+                            '@media (max-width: 600px)': {
+                                gap: '16px',
+                                justifyContent:'flex-start'
+                            }
+                        }}} onChange={handleChangeTab}>
+                        <Tab label="Suppression Sync" value="1" className='tab-heading' sx={klaviyoStyles.tabHeading} />
+                        <Tab label="Contact Sync" value="2" className='tab-heading' sx={klaviyoStyles.tabHeading} />
+                        <Tab label="Map data" value="3" className='tab-heading' sx={klaviyoStyles.tabHeading} />
+                        </TabList>
+                    </Box>
+                    <TabPanel value="1" sx={{ p: 0 }}>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                            <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)', display: 'flex', flexDirection:'column', gap: '16px' }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <Image src='/klaviyo.svg' alt='klaviyo' height={26} width={32} />
+                                    <Typography variant="h6" className='first-sub-title'>Eliminate Redundancy: Stop Paying for Contacts You Already Own</Typography>
+                                </Box>
+                                <Typography variant="subtitle1" className='paragraph' sx={{
+                                        lineHeight: '20px',
+                                        letterSpacing: '0.06px'
+                                    }}>Sync your current list to avoid collecting contacts you already possess.
+                                    Newly added contacts in Klaviyo will be automatically suppressed each day.</Typography>
+                                
 
                                         <Box sx={{ display: 'flex', gap: '32px', alignItems: 'center' }}>
                                             <Typography variant="subtitle1" className='paragraph'>

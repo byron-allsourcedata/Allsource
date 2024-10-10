@@ -248,7 +248,7 @@ class KlaviyoIntegrationsService:
                 leads = self.leads_persistence.get_leads_domain(domain.id, behavior_type=leads_type)
             for data_sync_item in data_syncs_list if not sync else [sync]:
                 if data_sync_item.data_map:
-                    data_map = [json.loads(item) for item in data_sync_item.data_map]
+                    data_map = data_sync_item.data_map
                 else: data_map = None
                 for lead in leads:
                     profile = self.__create_profile(lead.five_x_five_user_id, credentials.access_token, data_map)

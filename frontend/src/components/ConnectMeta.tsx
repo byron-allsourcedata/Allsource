@@ -10,6 +10,7 @@ import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { showErrorToast, showToast } from './ToastNotification';
 import { create } from 'lodash';
 import { cursorTo } from 'readline';
+import CustomizedProgressBar from './CustomizedProgressBar';
 
 
 interface ConnectMetaPopupProps {
@@ -25,9 +26,6 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
     const [listID, setListID] = useState<string>('')
     const [checked, setChecked] = useState(false);
     const [selectedRadioValue, setSelectedRadioValue] = useState('');
-    const [accessToken, setAccessToken] = useState('')
-    const [userID, setUserID] = useState('')
-    const [fullName, setFullName] = useState<string | undefined>(undefined)
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [selectedOption, setSelectedOption] = useState<string>('');
     const [showCreateForm, setShowCreateForm] = useState<boolean>(false);
@@ -38,14 +36,13 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
     const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
     const [openDropdown, setOpenDropdown] = useState<number | null>(null);
     const [isDropdownValid, setIsDropdownValid] = useState(false);
-    const [adId, setAdId] = useState('');
-    const [adIdError, setAdIdError] = useState(false);
     const [listNameError, setListNameError] = useState(false);
     const [deleteAnchorEl, setDeleteAnchorEl] = useState<null | HTMLElement>(null)
     const [selectedRowId, setSelectedRowId] = useState<number | null>(null);
     const [newMapListName, setNewMapListName] = useState<string>('');
     const [showCreateMapForm, setShowCreateMapForm] = useState<boolean>(false);
     const [maplistNameError, setMapListNameError] = useState(false);
+    const [loading, setLoading] = useState(false)
     const [mapListOptions, setMapListOptions] = useState<string[]>([
         'Email',
         'Phone number',
@@ -72,7 +69,6 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
       }
     };
 
-    // Attach event listener for detecting click outside
     document.addEventListener('mousedown', handleClickOutside);
     
     // Clean up event listener on component unmount
@@ -265,12 +261,12 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
     // Define buttons for each tab
     const getButton = (tabValue: string) => {
         switch (tabValue) {
-            case '2':
+            case '1':
                 return (
                     <Button
                         variant="contained"
                         onClick={handleNextTab}
-                        disabled={adIdError || !adId || !isDropdownValid}
+                        disabled={!isDropdownValid}
                         sx={{
                             backgroundColor: '#5052B2',
                             fontFamily: "Nunito Sans",
@@ -291,11 +287,12 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
                         Next
                     </Button>
                 );
-            case '3':
+            case '2':
                 return (
                     <Button
                         variant="contained"
                         onClick={createDataSync}
+                        disabled={!selectedOption}
                         sx={{
                             backgroundColor: '#5052B2',
                             fontFamily: "Nunito Sans",
@@ -339,6 +336,12 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
     const defaultRows: Row[] = [
         { id: 1, type: 'Email', value: '' },
         { id: 2, type: 'Phone number', value: '' },
+        { id: 3, type: 'Gender', value:'Gender'},
+        { id: 4, type: 'Last Name', value: 'Last Name'},
+        { id: 5, type: 'First Name', value: 'First Name'},
+        { id: 6, type: 'Personal State', value: 'Personal State'},
+        { id: 7, type: 'Personal City', value: 'Personal City'},
+        { id: 8, type: 'Personal Zip', value: 'Personal Zip'}
       ];
       const [rows, setRows] = useState<Row[]>(data?.data_map || defaultRows);
 
@@ -387,27 +390,11 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
         setOpenDropdown(null); // Reset when dropdown closes
     };
 
-    const handleAdIdChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setAdId(event.target.value);
-        setAdIdError(event.target.value === ''); // Set error if API Key is empty
-    };
-    
-    const validateAdId = () => {
-        // Your logic to validate the API key
-        if (adId.trim() === '') {
-          setAdIdError(true);
-          return false;
-        }
-        setAdIdError(false);
-        return true;
-    };
 
     const handleNextTab = () => {
-        if (value === '2') {
-            createIntegration()
-            createList()
+        if (value === '1') {
             // Validate Tab 3
-            if (isDropdownValid && validateAdId()) {
+            if (isDropdownValid) {
                 // Proceed to next tab
                 setValue((prevValue) => String(Number(prevValue) + 1));
             }
@@ -417,23 +404,6 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
     const deleteOpen = Boolean(deleteAnchorEl);
     const deleteId = deleteOpen ? 'delete-popover' : undefined;
 
-    const createIntegration = async() => {
-        const response = await axiosInstance.post('/integrations/', {
-            meta: {
-                ad_account_id: adId,
-                access_token: accessToken,
-                platform_user_id: userID,
-                full_name: fullName
-            }
-        }, {
-            params: {
-                service_name: 'meta'
-            }
-        })
-        if(response.status === 200) {
-            showToast('Connect to Meta Successfuly')
-        }
-    }
 
     const createDataSync = async() => {
         const response = await axiosInstance.post('/data-sync/sync/', {
@@ -447,9 +417,12 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
         if (response.status === 201) {
             showToast('Create Sync Meta')
         }
+        setLoading(false)
+        onClose()
     }
 
     const createList = async() => {
+        setLoading(true)
         const response = await axiosInstance.post('/integrations/sync/list/', {
             name: selectedOption
         }, {
@@ -458,19 +431,47 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
             }
         })
         setListID(response.data.id)
+        setLoading(false)
+        return response.data
     }
 
     
-
+    const resetToDefaultValues = () => {
+        setValue('1');
+        setListID('');
+        setChecked(false);
+        setSelectedRadioValue('');
+        setAnchorEl(null);
+        setSelectedOption('');
+        setShowCreateForm(false);
+        setNewListName('');
+        setTagName('');
+        setIsShrunk(false);
+        setIsDropdownOpen(false);
+        setOpenDropdown(null);
+        setIsDropdownValid(false);
+        setListNameError(false);
+        setDeleteAnchorEl(null);
+        setSelectedRowId(null);
+        setNewMapListName('');
+        setShowCreateMapForm(false);
+        setMapListNameError(false);
+        setLoading(false);
+    };
     const handleChangeTab = (event: React.SyntheticEvent, newValue: string) => {
         setValue(newValue);
       };
-
+      const handlePopupClose = () => {
+        resetToDefaultValues()
+        onClose()
+      }
     return (
+        <>
+        {loading && <CustomizedProgressBar />}
         <Drawer
             anchor="right"
             open={open}
-            onClose={onClose}
+            onClose={handlePopupClose}
             PaperProps={{
                 sx: {
                     width: '620px',
@@ -501,7 +502,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
                         color: '#5052b2',
                         textDecorationColor: '#5052b2'
                     }}>Tutorial</Link>
-                    <IconButton onClick={onClose} sx={{ p: 0 }}>
+                    <IconButton onClick={handlePopupClose} sx={{ p: 0 }}>
                         <CloseIcon sx={{ width: '20px', height: '20px' }} />
                     </IconButton>
                 </Box>
@@ -530,70 +531,11 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
                                 gap: '16px'
                             }
                         }}} onChange={handleChangeTab}>
-                        <Tab label="Login" value="1" className='tab-heading' sx={metaStyles.tabHeading} />
-                        <Tab label="Contact Sync" value="2" className='tab-heading' sx={metaStyles.tabHeading} />
-                        <Tab label="Map data" value="3" className='tab-heading' sx={metaStyles.tabHeading} />
+                        <Tab label="Contact Sync" value="1" sx={{...metaStyles.tabHeading}} />
+                        <Tab label="Map data" value="2" sx={{...metaStyles.tabHeading}} />
                         </TabList>
                     </Box>
                     <TabPanel value="1" sx={{ p: 0 }}>
-                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: '12px', p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)' }}>
-                                <FacebookLogin
-                                    appId="470766002467450"
-                                    scope='ads_read,ads_management'
-                                    onSuccess={(response) => {
-                                        setValue('2')
-                                        setAccessToken(response.accessToken)
-                                        setUserID(response.userID)
-                                    }}
-                                    onFail={(error) => {
-                                    console.log('Login Failed!', error);
-                                    }}
-                                    onProfileSuccess={(response) => {
-                                        setFullName(response.name)
-                                    }}
-                                    render={({ onClick, logout }) => (
-                                    <>
-                                        <Image src='/meta-icon.svg' alt='meta-icon' height={24} width={36} />
-                                        <Typography variant="h6" sx={{
-                                        fontFamily: 'Nunito Sans',
-                                        fontSize: '16px',
-                                        fontWeight: '600',
-                                        color: '#202124',
-                                        marginTop: '12px',
-                                        lineHeight: 'normal'
-                                        }}>
-                                        login to your Facebook
-                                        </Typography>
-                                        <Button
-                                        fullWidth
-                                        onClick={onClick}
-                                        variant="contained"
-                                        startIcon={<Image src='/facebook-icon.svg' alt='facebook' height={24} width={24} />}
-                                        sx={{
-                                            backgroundColor: '#0066ff',
-                                            fontFamily: "Nunito Sans",
-                                            fontSize: '14px',
-                                            fontWeight: '600',
-                                            lineHeight: '17px',
-                                            letterSpacing: '0.25px',
-                                            color: "#fff",
-                                            textTransform: 'none',
-                                            padding: '14.5px 24px',
-                                            '&:hover': {
-                                            backgroundColor: '#0066ff'
-                                            },
-                                            borderRadius: '6px',
-                                            border: '1px solid #0066ff',
-                                        }}
-                                        >
-                                        Connect to Facebook
-                                        </Button>
-                                    </>
-                                    )}/>                            
-                            </Box>
-                    </TabPanel>
-                    
-                    <TabPanel value="2" sx={{ p: 0 }}>
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                             <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)' }}>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', mb: 3 }}>
@@ -603,23 +545,8 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
                                         <Image src='/baseline-info-icon.svg' alt='baseline-info-icon' height={16} width={16} />
                                     </Tooltip>
                                 </Box>
-
-                                
                                 <ClickAwayListener onClickAway={handleClose}>
                                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                                    <TextField
-                                    label="AD ID"
-                                    variant="outlined"
-                                    fullWidth
-                                    margin="normal"
-                                    error={adIdError}
-                                    helperText={adIdError ? 'AD ID is required' : ''}
-                                    value={adId}
-                                    onChange={handleAdIdChange}
-                                    InputLabelProps={{ sx: metaStyles.inputLabel }}
-                                    InputProps={{ sx: metaStyles.formInput }}
-                                    sx={{ margin: 0}}
-                                    />
                                     <TextField
                                     ref={textFieldRef}
                                         variant="outlined"
@@ -854,7 +781,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
                             </Box>
                         </Box>
                     </TabPanel>
-                    <TabPanel value="3" sx={{ p: 0 }}>
+                    <TabPanel value="2" sx={{ p: 0 }}>
                         <Box sx={{
                             borderRadius: '4px',
                             border: '1px solid #f0f0f0',
@@ -874,7 +801,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
                                             padding: '2px 4px',
                                             lineHeight: '16px'
                                         }}>
-                                            Test list 2
+                                            {selectedOption}
                                         </Typography>
                             </Box>
 
@@ -910,8 +837,9 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
                                     <TextField
                                         fullWidth
                                         variant="outlined"
-                                        label={row.type}
-                                        value={row.value}
+                                        disabled={true}
+                                        // label={row.type}
+                                        value={row.type}
                                         onChange={(e) => handleMapListChange(row.id, 'value', e.target.value)}
                                         InputLabelProps={{
                                             sx: {
@@ -988,16 +916,12 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
                                         /> // For the first two rows, always show the right arrow
                                     )}
                                     </Grid>
-                                    
-                                    {/* Right Side Input or Dropdown */}
                                     <Grid item xs="auto" sm={5}>
-                                    {index < 2 ? ( // For the first two rows, show input fields
                                         <TextField
                                         fullWidth
                                         variant="outlined"
-                                        label={row.type}
-                                        value={row.value}
-                                        onChange={(e) => handleMapListChange(row.id, 'value', e.target.value)}
+                                        disabled={true}
+                                        value={row.type}
                                         InputLabelProps={{
                                             sx: {
                                             fontFamily: 'Nunito Sans',
@@ -1043,245 +967,8 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
                                             }
                                           }}
                                         />
-                                    ) : (
-                                        <TextField
-                                            fullWidth
-                                            variant="outlined"
-                                            label="Select"
-                                            select
-                                            sx={{minWidth: '194px'}}
-                                            value={row.selectValue || ""}
-                                            onChange={(e: React.ChangeEvent<{ value: unknown }>) =>
-                                                handleMapListChange(row.id, 'selectValue', e.target.value as string)
-                                            }
-                                            
-                                            InputLabelProps={{
-                                                sx: {
-                                                fontFamily: 'Nunito Sans',
-                                                fontSize: '12px',
-                                                lineHeight: '16px',
-                                                color: 'rgba(17, 17, 19, 0.60)',
-                                                top: '-8px',
-                                                '&.Mui-focused': {
-                                                    color: '#0000FF',
-                                                    top: '0'
-                                                },
-                                                '&.MuiInputLabel-shrink': {
-                                                    top: 0
-                                                }
-                                                }
-                                            }}
-                                            SelectProps={{
-                                                open: openDropdown === row.id,
-                                                onOpen: () => handleDropdownOpen(row.id),
-                                                // onClose: handleDropdownClose,
-                                                onClose: () => {
-                                                if (!showCreateMapForm) {
-                                                    handleDropdownClose();
-                                                    }
-                                                },
-                                                IconComponent: () => (
-                                                openDropdown === row.id ? (
-                                                    <Image src='/chevron-drop-up.svg' alt='chevron-drop-up' height={24} width={24} />
-                                                ) : (
-                                                    <Image src='/chevron-drop-down.svg' alt='chevron-drop-down' height={24} width={24} />
-                                                )
-                                                ),
-                                                sx: {
-                                                    '& .MuiOutlinedInput-input': {
-                                                        padding: '6.5px 8px',
-                                                    },
-                                                paddingRight: '16px', // Adds space for the custom icon
-                                                fontFamily: 'Roboto',
-                                                fontSize: '14px',
-                                                lineHeight: '20px',
-                                                color: '#707071',
-                                                },
-                                            }}
-                                            onClick={() => {
-                                                if (openDropdown === row.id) {
-                                                  handleDropdownClose();
-                                                } else {
-                                                  handleDropdownOpen(row.id);
-                                                }
-                                              }}
-                                            >
-                                            {/* <MenuItem value="" sx= {{
-                                                            fontFamily: "Nunito",
-                                                            fontSize: "14px",
-                                                            color: "#7b7b7b",
-                                                            lineHeight: "20px"
-                                                        }}>Select</MenuItem> */}
-                                            <MenuItem 
-                                            
-                                            onClick={(e) => {
-                                                e.stopPropagation(); // Prevent click event from closing the dropdown
-                                                handleSelectMapOption('createNewField',e, row.id);
-                                              }} sx={{
-                                                borderBottom: showCreateMapForm ?  "none" : "1px solid #cdcdcd",
-                                                '&:hover': {
-                                                    background: 'rgba(80, 82, 178, 0.10)'
-                                                }
-                                            }}>
-                                                <ListItemText onClick={(e) => {
-                                                e.stopPropagation(); // Prevent click event from closing the dropdown
-                                                handleSelectMapOption('createNewField',e, row.id);
-                                              }} primary={`+ Add new field`} primaryTypographyProps={{
-                                                        sx: {
-                                                            fontFamily: "Nunito Sans",
-                                                            fontSize: "14px",
-                                                            color: showCreateMapForm ?  "#5052B2" : "#202124",
-                                                            fontWeight: "500",
-                                                            lineHeight: "20px",
-                                                            
-                                                        }
-                                                    }}/>
-                                            </MenuItem>
-
-                                            {/* Show Create New List form if 'showCreateForm' is true */}
-                                            {showCreateMapForm && (
-                                                <Box>
-                                                    <Box onClick={(e) => e.stopPropagation()}  sx={{
-                                                        display: 'flex',
-                                                        flexDirection: 'column',
-                                                        gap: '24px',
-                                                        p: 2,
-                                                        width: '208px',
-                                                        pt: 0
-                                                    }}>
-                                                    <Box
-                                                        sx={{
-                                                            
-                                                            
-                                                            mt: 1, // Margin-top to separate form from menu item
-                                                            display: 'flex',
-                                                            justifyContent: 'space-between',
-                                                            gap: '16px',
-                                                            '@media (max-width: 600px)': {
-                                                                flexDirection: 'column'
-                                                            },
-                                                        }}
-                                                    >
-                                                        <TextField
-                                                            label="List Name"
-                                                            variant="outlined"
-                                                            value={newMapListName}
-                                                            onChange={(e) => setNewMapListName(e.target.value)}
-                                                            size="small"
-                                                            fullWidth
-                                                            onKeyDown={(e) => e.stopPropagation()}
-                                                            error={listNameError}
-                                                            helperText={listNameError ? 'List Name is required' : ''}
-                                                            InputLabelProps={{
-                                                                sx: {
-                                                                fontFamily: 'Nunito Sans',
-                                                                fontSize: '12px',
-                                                                lineHeight: '16px',
-                                                                fontWeight: '400',
-                                                                color: 'rgba(17, 17, 19, 0.60)',
-                                                                '&.Mui-focused': {
-                                                                    color: '#0000FF',
-                                                                },
-                                                                }
-                                                            }}
-                                                            InputProps={{
-                                                                
-                                                                endAdornment: (
-                                                                    newListName && ( // Conditionally render close icon if input is not empty
-                                                                        <InputAdornment position="end">
-                                                                          <IconButton 
-                                                                            edge="end"
-                                                                            onClick={() => setNewMapListName('')} // Clear the text field when clicked
-                                                                          >
-                                                                            <Image 
-                                                                              src='/close-circle.svg' 
-                                                                              alt='close-circle' 
-                                                                              height={18} 
-                                                                              width={18} // Adjust the size as needed
-                                                                            />
-                                                                          </IconButton>
-                                                                        </InputAdornment>
-                                                                      )
-                                                                ),
-                                                                sx: {
-                                                                    '&.MuiOutlinedInput-root': {
-                                                                        height: '32px',
-                                                                        '& .MuiOutlinedInput-input': {
-                                                                            padding: '5px 16px 4px 16px',
-                                                                            fontFamily: 'Roboto',
-                                                                            color: '#202124',
-                                                                            fontSize: '14px',
-                                                                            fontWeight: '400',
-                                                                            lineHeight: '20px'
-                                                                        },
-                                                                        '& .MuiOutlinedInput-notchedOutline': {
-                                                                            borderColor: '#A3B0C2',
-                                                                        },
-                                                                        '&:hover .MuiOutlinedInput-notchedOutline': {
-                                                                            borderColor: '#A3B0C2',
-                                                                        },
-                                                                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                                                            borderColor: '#0000FF',
-                                                                        },
-                                                                        },
-                                                                        '&+.MuiFormHelperText-root': {
-                                                                            marginLeft: '0',
-                                                                        },
-                                                                }
-                                                              }}
-                                                        />
-                                                        
-                                                    </Box>
-                                                        <Box sx={{textAlign: 'right'}}>
-                                                        <Button variant="contained" onClick={() => handleMapSave(row.id)}
-                                                        disabled={maplistNameError || !newMapListName}
-                                                        sx={{
-                                                            borderRadius: '4px',
-                                                            border: '1px solid #5052B2',
-                                                            background: '#fff',
-                                                            boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                                                            fontFamily: 'Nunito Sans',
-                                                            fontSize: '14px',
-                                                            fontWeight: '600',
-                                                            lineHeight: '20px',
-                                                            color: '#5052b2',
-                                                            textTransform: 'none',
-                                                            padding: '4px 22px',
-                                                            '&:hover' : {
-                                                                background: 'transparent'
-                                                            },
-                                                            '&.Mui-disabled' : {
-                                                                background: 'transparent',
-                                                                color: '#5052b2'
-                                                            }
-                                                        }}>
-                                                                Save
-                                                            </Button>
-                                                        </Box>
-
-                                                        </Box>
-                                                    
-
-                                                    {/* Add a Divider to separate form from options */}
-                                                    <Divider sx={{ borderColor: '#cdcdcd' }} />
-                                                </Box>
-                                            )}
-
-                                            {mapListOptions.map(option => (
-                                                    <MenuItem key={option} value={option} sx= {{
-                                                        fontFamily: "Nunito Sans",
-                                                        fontSize: "14px",
-                                                        color: "#202124",
-                                                        lineHeight: "20px",
-                                                        fontWeight: '500'
-                                                    }}>
-                                                        {option}
-                                                    </MenuItem>
-                                                ))}
-                                        </TextField>
-
-                                    )}
                                     </Grid>
+                                    
                                     
                                     {/* Delete Icon */}
                                     <Grid item xs="auto" sm={1} container justifyContent="center">
@@ -1372,7 +1059,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
                                 </Box>
                             ))}
                                 
-                                <Button color="primary" onClick={handleAddRow} sx={{
+                                {/* <Button color="primary" onClick={handleAddRow} sx={{
                                     fontFamily: 'Nunito Sans',
                                     fontSize: '14px',
                                     fontWeight: '600',
@@ -1384,7 +1071,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
                                     }
                                 }}>
                                     Add Row +
-                                    </Button>
+                                    </Button> */}
 
                         </Box>
                     </TabPanel>
@@ -1407,6 +1094,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
             </Box>
              
         </Drawer>
+        </>
     );
 };
 export default ConnectMeta;
