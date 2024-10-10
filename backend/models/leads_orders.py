@@ -4,12 +4,16 @@ from .base import Base
 
 
 class LeadOrders(Base):
-    __tablename__ = 'leads_user'
+    __tablename__ = 'leads_orders'
+    
     id = Column(Integer, primary_key=True, autoincrement=True)
+    platform = Column(VARCHAR)
+    platform_user_id = Column(VARCHAR)
+    platform_order_id = Column(VARCHAR)
     lead_user_id = Column(Integer)
-    order_id = Column(Integer)
-    shopify_user_id = Column(Integer)
     total_price = Column(Float)
-    currency_code = Column(VARCHAR(8))
-    created_at_shopify = Column(TIMESTAMP)
+    currency_code = Column(VARCHAR)
     created_at = Column(TIMESTAMP, default=datetime.now)
+    platform_created_at = Column(TIMESTAMP)
+    platfrom_email = Column(VARCHAR)
+

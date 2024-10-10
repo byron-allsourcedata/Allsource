@@ -52,3 +52,4 @@ class ShopifyOrderAPI(BaseModel):
     total_price: Optional[float] = None
     created_at_shopify: Optional[str] = None
     email: Optional[EmailStr] = None
+    currency_code: Optional[str] = None

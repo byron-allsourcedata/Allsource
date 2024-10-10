@@ -9,7 +9,7 @@ from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
 from httpx import Client
 from fastapi import HTTPException
-from datetime import datetime
+from datetime import datetime, timedelta
 from services.aws import AWSService
 from sqlalchemy.orm import Session
 
@@ -44,10 +44,11 @@ class ShopifyIntegrationService:
 
 
     def __get_orders(self, shop_domain: str, access_token: str):
-        url = f'{shop_domain}/admin/api/2024-07/orders.json?fields=created_at,id,name,total-price,total_price_set,customer&status=closed'
+        date = datetime.now() - timedelta(hours=24)
+        url = f'{shop_domain}/admin/api/2024-07/orders.json'
         params = {
             'status': 'closed',
-            'fields': 'created_at,id,name,total_price'
+            'fields': 'created_at,id,name,total_price,customer'
         }
         
         headers = {
@@ -56,7 +57,6 @@ class ShopifyIntegrationService:
         }
 
         response = self.__handle_request('GET', url, headers=headers, params=params)
-
         return response.json().get('orders')
 
 
@@ -336,15 +336,16 @@ let viewedProductHandler;
                 lead_user = self.lead_persistence.get_leads_user_filter_by_email(domain_id, order.email)
                 if lead_user and len(lead_user) > 0: 
                     self.lead_orders_persistence.create_lead_order({
-                        'shopify_user_id': order.shopify_user_id,
+                        'platform': 'Shopify',
+                        'platform_user_id': order.shopify_user_id,
+                        'platform_order_id': order.order_shopify_id,
                         'lead_user_id': lead_user[0].id,
-                        'shopify_order_id': order.order_shopify_id,
-                        'currency_code': order.currency_code,
+                        'platform_created_at': order.created_at_shopify,
                         'total_price': order.total_price,
-                        'created_at_shopify': order.created_at_shopify
+                        'currency_code': order.currency_code,
+                        'platfrom_email': order.email
                     })
             except: pass
-
 
     def create_sync(self, domain_id: int, 
                     integration_id: int, 
@@ -458,11 +459,11 @@ let viewedProductHandler;
     def __mapped_customer_shopify_order(self, order) -> ShopifyOrderAPI:
         try:
             return ShopifyOrderAPI(
-            order_shopify_id=order.get('id'),
-            shopify_user_id=order.get('customer').get('id'),
-            total_price=float(order.get('total_price')),
-            currency_code=order.get('total_price_set').get('shop_money').get('currency_code'),
-            created_at_shopify=order.get('created_at'),
-            email=order.get('customer').get('email')
+                order_shopify_id=str(order.get('id')),
+                shopify_user_id=str(order.get('customer').get('id')),
+                total_price=float(order.get('total_price')),
+                currency_code=order.get('customer').get('currency'),
+                created_at_shopify=order.get('created_at'),
+                email=order.get('customer').get('email')
         )
         except: return None
