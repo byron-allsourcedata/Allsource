@@ -271,6 +271,17 @@ class SettingsService:
             
     def extract_subscription_details(self, customer_id, prospect_credits, user_id):
         subscription = get_billing_details_by_userid(customer_id)
+        if subscription is None:
+            return {
+            'billing_cycle': None,
+            'plan_name': None,
+            'domains': None,
+            'prospect_credits': prospect_credits,
+            'overage': '0.49/contact',
+            'next_billing_date': None,
+            'monthly_total': None,
+            'active': False
+        }
         plan = subscription['items']['data'][0]['plan']
         start_date, end_date = self.calculate_dates(plan)
         is_active = subscription.get('status') == 'active'
