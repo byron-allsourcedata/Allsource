@@ -213,7 +213,7 @@ def check_user_authentication(Authorization: Annotated[str, Header()],
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail={
-                'NOT_FOUND'
+                'status': 'NOT_FOUND'
             }
         )
     if hasattr(user_data, 'team_member_id') and user_data.team_member_id:
