@@ -144,13 +144,12 @@ async def process_user_data(table, index, five_x_five_user: FiveXFiveUser, sessi
         if suppression_rule and suppression_rule.suppressions_multiple_emails:
             suppressions_emails.append(suppression_rule.suppressions_multiple_emails.split(', '))
         suppressions_emails = list(set(suppressions_emails))
+        emails_to_check = get_all_five_x_user_emails(five_x_five_user.business_email, five_x_five_user.personal_emails, five_x_five_user.additional_personal_emails)
+        for email in suppressions_emails:
+            if email in emails_to_check:
+                logging.info(f"{email} exists in five_x_five_user.")
+                return
         if suppression_rule:
-            emails_to_check = get_all_five_x_user_emails(five_x_five_user.business_email, five_x_five_user.personal_emails, five_x_five_user.additional_personal_emails)
-            for email in suppressions_emails:
-                if email in emails_to_check:
-                    logging.info(f"{email} exists in five_x_five_user.")
-                    return
-
             if suppression_rule.is_url_certain_activation and any(url in page for url in suppression_rule.activate_certain_urls):
                 logging.info(f"activate_certain_urls exists: {suppression_rule.activate_certain_urls}")
                 return
