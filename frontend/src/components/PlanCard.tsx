@@ -4,6 +4,7 @@ import Image from 'next/image';
 import CustomTooltip from './customToolTip';
 
 const PlanCard: React.FC<{ plan: any; onChoose: (stripePriceId: string) => void }> = ({ plan, onChoose }) => {
+    console.log(plan)
     return (
         <Box sx={{ padding: 3, border: '1px solid #e4e4e4', borderRadius: '4px', boxShadow: '0px 1px 4px 0px rgba(0, 0, 0, 0.25)',
             height: '100vh',
@@ -48,7 +49,7 @@ const PlanCard: React.FC<{ plan: any; onChoose: (stripePriceId: string) => void 
                         />
                     )}
                 </Box>
-                {plan.is_crown && (
+                {plan.is_active && (
                 <Box sx={{ display: 'flex', borderRadius: '4px', background: '#eaf8dd', padding: '2px 12px', gap: '3px', height: 'fit-content' }}>
                     <Typography className="main-text" sx={{
                         borderRadius: '4px',
