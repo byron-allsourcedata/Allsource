@@ -22,11 +22,13 @@ sys.path.append(parent_dir)
 from utils import normalize_url
 from models.leads_requests import LeadsRequests
 from models.users_domains import UserDomains
+from models.suppression_rule import SuppressionRule
 from models.leads_users_added_to_cart import LeadsUsersAddedToCart
 from models.leads_users_ordered import LeadsUsersOrdered
 from models.leads_visits import LeadsVisits
 from models.subscriptions import UserSubscriptions
 from models.five_x_five_hems import FiveXFiveHems
+from models.suppressions_list import SuppressionList
 from models.users_payments_transactions import UsersPaymentsTransactions
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
@@ -53,7 +55,7 @@ AMOUNT_CREDITS = 1
 QUEUE_CREDITS_CHARGING = 'credits_charging'
 QUEUE_DATA_SYNC = 'data_sync_leads'
 
-ROOT_BOT_CLIENT_EMAIL = 'onlineinet.ru@gmail.com'
+ROOT_BOT_CLIENT_EMAIL = 'demo@maximiz.ai'
 ROOT_BOT_CLIENT_DOMAIN = 'https://app.maximiz.ai'
 
 EMAIL_LIST = ['business_email', 'personal_emails', 'additional_personal_emails']
@@ -101,6 +103,12 @@ async def process_file(bucket, file_key, cookie_sync_by_hour):
             table = pq.read_table(temp_file.name)
             await save_files_by_hour(table, cookie_sync_by_hour)
 
+
+def get_all_five_x_user_emails(business_email, personal_emails, additional_personal_emails):
+    emails = {business_email.split(', ')}
+    emails.update(personal_emails.split(', '))
+    emails.update(additional_personal_emails.split(', '))
+    return list(emails)
 
 async def process_table(session, cookie_sync_by_hour, channel, root_user):
     for key, possible_leads in cookie_sync_by_hour.items():
@@ -154,6 +162,29 @@ async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, sess
     lead_user = session.query(LeadUser).filter_by(five_x_five_user_id=five_x_five_user.id, user_id=user.id).first()
     is_first_request = False
     if not lead_user:
+        suppression_rule = session.query(SuppressionRule).filter(SuppressionRule.domain_id == user_domain_id).first()
+        suppression_list = session.query(SuppressionList).filter(SuppressionList.domain_id == user_domain_id).first()
+        suppressions_emails = []
+        if suppression_list and suppression_list.total_emails:
+            suppressions_emails.append(suppression_list.total_emails.split(', '))
+        if suppression_rule and suppression_rule.suppressions_multiple_emails:
+            suppressions_emails.append(suppression_rule.suppressions_multiple_emails.split(', '))
+        suppressions_emails = list(set(suppressions_emails))
+        if suppressions_emails:
+            emails_to_check = get_all_five_x_user_emails(five_x_five_user.business_email, five_x_five_user.personal_emails, five_x_five_user.additional_personal_emails)
+            for email in suppressions_emails:
+                if email in emails_to_check:
+                    logging.info(f"{email} exists in five_x_five_user")
+                    return
+        if suppression_rule:
+            if suppression_rule.is_url_certain_activation and any(url in page for url in suppression_rule.activate_certain_urls.split(', ')):
+                logging.info(f"activate_certain_urls exists: {page}")
+                return
+            
+            if suppression_rule.is_based_activation and any(url in page for url in suppression_rule.activate_based_urls.split(', ')):
+                logging.info(f"activate_based_urls exists: {page}")
+                return
+            
         if root_user is None:
             users_payments_transactions = session.query(UsersPaymentsTransactions).filter(
                 UsersPaymentsTransactions.five_x_five_up_id == str(five_x_five_user.up_id),
@@ -183,7 +214,7 @@ async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, sess
         
         is_first_request = True
         lead_user = LeadUser(five_x_five_user_id=five_x_five_user.id, user_id=user.id, behavior_type=behavior_type, domain_id=user_domain_id, total_visit=0, avarage_visit_time=0, total_visit_time=0)
-        emails_to_check = get_list_emails(five_x_five_user)
+        emails_to_check = get_all_five_x_user_emails(five_x_five_user.business_email, five_x_five_user.personal_emails, five_x_five_user.additional_personal_emails)
         integrations_ids = [integration.id for integration in session.query(UserIntegration).filter(UserIntegration.is_with_suppression == True).all()]
         lead_suppression = session.query(LeadsSupperssion).filter(
             LeadsSupperssion.domain_id == user_domain_id,
@@ -289,13 +320,6 @@ async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, sess
     
     session.commit()
     
-
-def get_list_emails(five_x_five_user: FiveXFiveUser):
-    business_emails = five_x_five_user.business_email.split(', ') if five_x_five_user.business_email else []
-    personal_emails = five_x_five_user.personal_emails.split(', ') if five_x_five_user.personal_emails else []
-    additional_personal_emails = five_x_five_user.additional_personal_emails.split(', ') if five_x_five_user.additional_personal_emails else []
-    all_emails = business_emails + personal_emails + additional_personal_emails
-    return list(set(all_emails))
 
 def convert_leads_requests_to_utc(leads_requests):
     utc = pytz.utc

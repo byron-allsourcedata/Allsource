@@ -5,9 +5,8 @@ import math
 from models.suppressions_list import SuppressionList
 from sqlalchemy.orm import Session
 from enums import SuppressionStatus
-from sqlalchemy.dialects.postgresql import insert
+from fastapi import HTTPException,status
 from models.suppression_rule import SuppressionRule
-from models.users_domains import UserDomains
 
 
 class SuppressionPersistence:
@@ -17,6 +16,9 @@ class SuppressionPersistence:
     
     
     def save_suppressions_list(self, email_list, list_name, domain_id):
+        suppression_list = self.db.query(SuppressionList).filter(SuppressionList.list_name == list_name).first()
+        if suppression_list:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={'status': 'LIST_EXISTS'})
         suppression_list = SuppressionList(
             list_name=list_name,
             created_at=datetime.now(),
@@ -67,7 +69,10 @@ class SuppressionPersistence:
     
     def save_rules_multiple_emails(self, domain_id, emails):
         rules = self.get_rules(domain_id=domain_id) or SuppressionRule(created_at=datetime.now(), domain_id=domain_id)
-        rules.suppressions_multiple_emails = ', '.join(emails)
+        if emails:
+            rules.suppressions_multiple_emails = ', '.join(emails)
+        else:
+            rules.suppressions_multiple_emails = None
         self.db.add(rules)
         self.db.commit()
 

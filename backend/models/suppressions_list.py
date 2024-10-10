@@ -1,6 +1,5 @@
-from sqlalchemy import Column, event, Integer, ForeignKey, TEXT
+from sqlalchemy import Column, event, Integer, TEXT
 from sqlalchemy.dialects.postgresql import TIMESTAMP, VARCHAR
-from sqlalchemy.orm import relationship
 from .base import Base, create_timestamps
 
 
