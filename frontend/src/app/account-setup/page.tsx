@@ -130,33 +130,36 @@ const AccountSetup = () => {
     return isSelected
       ? {
         ...styles.employeeButton,
-        backgroundColor: "rgba(249, 189, 182, 1)",
-        color: "black",
+        backgroundColor: "#fde2e3",
+        color: "#202124 !important",
         pointerEvents: 'none',
+        border: '1px solid #f45745'
       }
-      : { ...styles.employeeButton, color: "black" };
+      : { ...styles.employeeButton, color: "#707071" };
   };
 
   const getButtonVisitsStyles = (isSelected: boolean): any => {
     return isSelected
       ? {
         ...styles.visitButton,
-        backgroundColor: "rgba(249, 189, 182, 1)",
-        color: "black",
+        backgroundColor: "#fde2e3",
+        color: "#202124 !important",
         pointerEvents: 'none',
+        border: '1px solid #f45745'
       }
-      : { ...styles.visitButton, color: "black" };
+      : { ...styles.visitButton, color: "#707071" };
   };
 
   const getButtonRolesStyles = (isSelected: boolean): any => {
     return isSelected
       ? {
         ...styles.roleButton,
-        backgroundColor: "rgba(249, 189, 182, 1)",
-        color: "black",
+        backgroundColor: "#fde2e3",
+        color: "#202124 !important",
         pointerEvents: 'none',
+        border: '1px solid #f45745'
       }
-      : { ...styles.roleButton, color: "black" };
+      : { ...styles.roleButton, color: "#707071" };
   };
 
   const handleEmployeeRangeChange = (label: string) => {
@@ -383,6 +386,7 @@ const AccountSetup = () => {
         </Box>
         <Box sx={{ ...styles.nav, position: "relative" }}>
           <Button
+            className="hyperlink-red"
             variant="outlined"
             onClick={handleBackClick}
             sx={{
@@ -391,15 +395,12 @@ const AccountSetup = () => {
               top: 5,
               marginRight: 2,
               visibility: activeTab === 1 ? 'visible' : 'hidden',
-              color: "rgba(50, 50, 50, 1)",
+              color: "#202124 !important",
               border: "none",
-              fontFamily: "Nunito",
               textTransform: "none",
-              fontSize: "16px",
               "&:hover": {
                 border: "1px",
                 backgroundColor: "transparent",
-                fontWeight: 900,
                 "& .MuiSvgIcon-root": {
                   transform: "translateX(-7px)",
                 },
@@ -438,23 +439,22 @@ const AccountSetup = () => {
             }}
           >
             <Tab
+            className="tab-heading"
               label="Create Account"
               sx={{
                 textTransform: "none",
-                fontFamily: "Nunito",
-                fontSize: "16px",
                 fontWeight: "600",
                 pointerEvents: "none",
-                lineHeight: "21.82px",
+                lineHeight: "normal !important",
                 padding: 0,
                 marginRight: 1.5,
                 marginLeft: 2.5,
                 color:
                   activeTab === 0
-                    ? "rgba(50, 50, 50, 1)"
-                    : "rgba(142, 142, 142, 1)",
+                    ? "#F45745"
+                    : "#707071",
                 "&.Mui-selected": {
-                  color: "rgba(244, 87, 69, 1)",
+                  color: "#F45745",
                 },
                 "@media (max-width: 400px)": {
                 marginLeft: 0
@@ -462,21 +462,20 @@ const AccountSetup = () => {
               }}
             />
             <Tab
+              className="tab-heading"
               label="Business Info"
               sx={{
                 textTransform: "none",
-                fontFamily: "Nunito",
-                fontSize: "16px",
                 fontWeight: "600",
                 pointerEvents: "none",
-                lineHeight: "21.82px",
+                lineHeight: "normal !important",
                 padding: 0,
                 color:
                   activeTab === 1
-                    ? "rgba(244, 87, 69, 1)"
-                    : "rgba(142, 142, 142, 1)",
+                    ? "#F45745"
+                    : "#707071",
                 "&.Mui-selected": {
-                  color: "rgba(244, 87, 69, 1)",
+                  color: "#F45745",
                 },
               }}
             />
@@ -533,20 +532,20 @@ const AccountSetup = () => {
               },
             }}
           >
-            <Typography variant="h5" component="h1" sx={styles.title}>
+            <Typography variant="h5" component="h1" className="heading-text" sx={styles.title}>
               Welcome {fullName},
             </Typography>
-            <Typography variant="body1" component="h2" sx={styles.subtitle}>
+            <Typography variant="body1" component="h2" className="first-sub-title" sx={styles.subtitle}>
               Let&apos;s set up your account
             </Typography>
           </Box>
           {activeTab === 0 && (
             <>
-              <Typography variant="body1" component="h3" sx={styles.text}>
+              <Typography variant="body1" component="h3" className="first-sub-title" sx={styles.text}>
                 What is your organization&apos;s name
               </Typography>
               <TextField
-                InputProps={{ sx: styles.formInput }}
+                InputProps={{ className: "form-input" }}
                 fullWidth
                 label="Organization name"
                 variant="outlined"
@@ -556,9 +555,12 @@ const AccountSetup = () => {
                 onChange={(e) => setOrganizationName(e.target.value)}
                 error={!!errors.organizationName}
                 helperText={errors.organizationName}
-                InputLabelProps={{ sx: styles.inputLabel }}
+                InputLabelProps={{ 
+                  sx: styles.inputLabel,
+                  className: "form-input-label"
+                }}
               />
-              <Typography variant="body1" component="h3" sx={styles.text}>
+              <Typography variant="body1" component="h3" className="first-sub-title" sx={styles.text}>
                 Share your company website
               </Typography>
               <TextField
@@ -567,7 +569,10 @@ const AccountSetup = () => {
                 variant="outlined"
                 placeholder={isFocused ? "example.com" : ""}
                 sx={styles.formField}
-                InputLabelProps={{ sx: styles.inputLabel }}
+                InputLabelProps={{ 
+                  sx: styles.inputLabel,
+                  className: "form-input-label"
+                }}
                 value={isFocused ? websiteLink.replace(/^https?:\/\//, "") : `https://${websiteLink.replace(/^https?:\/\//, "")}`}
                 onChange={handleWebsiteLink}
                 onFocus={handleFocus}
@@ -575,13 +580,14 @@ const AccountSetup = () => {
                 error={!!errors.websiteLink}
                 helperText={errors.websiteLink}
                 InputProps={{
+                  className: "form-input",
                   startAdornment: isFocused && (
                     <InputAdornment position="start">https://</InputAdornment>
                   ),
                 }}
               />
 
-              <Typography variant="body1" sx={styles.text}>
+              <Typography variant="body1" className="first-sub-title" sx={styles.text}>
                 How many monthly visits to your website?
               </Typography>
               {errors.selectedEmployees && (
@@ -589,9 +595,10 @@ const AccountSetup = () => {
                   {errors.selectedEmployees}
                 </Typography>
               )}
-              <Box sx={styles.visitsButtons}>
+              <Box className="form-input" sx={styles.visitsButtons}>
                 {ranges_visits.map((range, index) => (
                   <Button
+                    className="form-input"
                     key={index}
                     variant="outlined"
                     onClick={() => handleVisitsRangeChange(range.label)}
@@ -604,6 +611,7 @@ const AccountSetup = () => {
                 ))}
               </Box>
               <Button
+                className='hyperlink-red'
                 fullWidth
                 variant="contained"
                 sx={{
@@ -628,7 +636,7 @@ const AccountSetup = () => {
           {activeTab === 1 && (
             <>
               {/* Business info */}
-              <Typography variant="body1" sx={styles.text}>
+              <Typography variant="body1" className="first-sub-title" sx={styles.text}>
                 How many employees work at your organization
               </Typography>
               {errors.selectedEmployees && (
@@ -639,6 +647,7 @@ const AccountSetup = () => {
               <Box sx={styles.employeeButtons}>
                 {ranges.map((range, index) => (
                   <Button
+                    className="form-input"
                     key={index}
                     variant="outlined"
                     onClick={() => handleEmployeeRangeChange(range.label)}
@@ -646,11 +655,11 @@ const AccountSetup = () => {
                     onMouseDown={() => handleEmployeeRangeChange(range.label)}
                     sx={getButtonStyles(selectedEmployees === range.label)}
                   >
-                    <Typography sx={{ fontFamily: 'Nunito', fontWeight: 400, fontSize: '14px', lineHeight: '19.6px', padding: '3px' }}> {range.label}</Typography>
+                    <Typography className="form-input" sx={{ padding: '3px' }}> {range.label}</Typography>
                   </Button>
                 ))}
               </Box>
-              <Typography variant="body1" sx={styles.text}>
+              <Typography variant="body1" className="first-sub-title" sx={styles.text}>
                 Whats your role?
               </Typography>
               {errors.selectedEmployees && (
@@ -668,11 +677,12 @@ const AccountSetup = () => {
                     onMouseDown={() => handleRolesChange(range.label)}
                     sx={getButtonRolesStyles(selectedRoles === range.label)}
                   >
-                    <Typography sx={{ fontFamily: 'Nunito', fontWeight: 400, fontSize: '14px', lineHeight: '19.6px', padding: '3px' }}> {range.label}</Typography>
+                    <Typography className="form-input" sx={{ padding: '3px' }}> {range.label}</Typography>
                   </Button>
                 ))}
               </Box>
               <Button
+                className='hyperlink-red'
                 fullWidth
                 variant="contained"
                 sx={{

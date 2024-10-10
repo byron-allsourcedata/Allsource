@@ -11,11 +11,14 @@
   "dependencies": {
     "@emotion/react": "^11.13.3",
     "@emotion/styled": "^11.13.0",
+    "@greatsumini/react-facebook-login": "^3.3.3",
     "@mui/icons-material": "^5.15.20",
     "@mui/lab": "^5.0.0-alpha.173",
     "@mui/material": "^5.16.7",
-    "@mui/x-date-pickers": "^7.12.0",
-    "@next/font": "^14.2.4",
+    "@mui/system": "5.16.7",
+    "@mui/x-charts": "^7.19.0",
+    "@mui/x-date-pickers": "7.19.0",
+    "@next/font": "14.2.4",
     "@react-oauth/google": "^0.12.1",
     "@stripe/react-stripe-js": "^2.8.0",
     "@stripe/stripe-js": "^4.6.0",
@@ -26,8 +29,8 @@
     "google-one-tap": "^1.0.6",
     "jwt-decode": "^4.0.0",
     "lodash": "^4.17.21",
-    "next": "14.2.4",
-    "npm": "^10.8.1",
+    "next": "^14.2.14",
+    "npm": "10.8.1",
     "qs": "^6.13.0",
     "react": "^18",
     "react-calendly": "^4.3.1",
@@ -36,12 +39,12 @@
     "react-router-dom": "^6.26.1",
     "react-toastify": "^10.0.5",
     "styled-components": "^6.1.12",
-    "sweetalert2": "^11.12.4"
+    "sweetalert2": "^11.6.13"
   },
   "devDependencies": {
     "@types/axios": "^0.14.0",
     "@types/lodash": "^4.17.7",
-    "@types/node": "^20",
+    "@types/node": "20.14.8",
     "@types/qs": "^6.9.15",
     "@types/react": "^18",
     "@types/react-dom": "^18",
@@ -49,6 +52,6 @@
     "eslint-config-next": "14.2.4",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
-    "typescript": "^5"
+    "typescript": "5.5.2"
   }
 }

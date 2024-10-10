@@ -34,18 +34,10 @@ export const planStyles: { [key: string]: SxProps<Theme> } = {
     marginTop: '2em'
   },
   title: {
-    mb: 2,
-    fontWeight: '600',
-    fontSize: '16px',
     whiteSpace: 'nowrap',
     textAlign: 'start',
-    padding: '1.5rem 0rem 0',
     lineHeight: '22px',
-    color: '#202124',
-    fontFamily: 'Nunito Sans',
-    '@media (max-width: 1199px)': {
-      paddingTop: '1rem'
-    }
+    margin: 0
   },
   formContainer: {
     display: 'flex',
@@ -127,10 +119,6 @@ export const planStyles: { [key: string]: SxProps<Theme> } = {
     },
   },
   buttonHeading: {
-        fontFamily: 'Nunito Sans',
-        fontSize: '14px',
-        color: '#4a4a4a',
-        fontWeight: '600',
         textTransform: 'none',
         padding: '0 0 10px 0',
         minWidth: 'auto',
@@ -138,7 +126,7 @@ export const planStyles: { [key: string]: SxProps<Theme> } = {
         borderRadius: 0,
         border: 'none',
         background: 'none',
-        lineHeight: '20px',
+        lineHeight: 'normal !important',
         '@media (max-width: 600px)': {
             alignItems: 'flex-start',
             p: 0,

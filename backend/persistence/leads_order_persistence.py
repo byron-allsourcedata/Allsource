@@ -6,8 +6,12 @@ class LeadOrdersPersistence:
         self.db = db
 
     def create_lead_order(self, data: dict):
-        if self.db.query(LeadOrders).filter_by(user_id=data.get('user_id'), id=data['shopify_order_id']).first():
+        print('asd')
+        if self.db.query(LeadOrders).filter(LeadOrders.platform_order_id == data.get('order_id'), 
+                                            LeadOrders.lead_user_id == data.get('leads_id'), 
+                                            LeadOrders.platform_user_id == data.get('platform_user_id')).first():
             return
         lead_order = LeadOrders(**data)
-        lead_order = self.db.add(lead_order)
+        self.db.add(lead_order)
+        self.db.commit()
         return lead_order

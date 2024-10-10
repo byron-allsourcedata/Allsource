@@ -9,8 +9,8 @@ class PlansPersistence:
     def __init__(self, db: Session):
         self.db = db
 
-    def get_stripe_plans(self):
-        return self.db.query(SubscriptionPlan).filter(SubscriptionPlan.is_active == True).all()
+    def get_stripe_plans(self, period):
+        return self.db.query(SubscriptionPlan).filter(SubscriptionPlan.is_active == True, SubscriptionPlan.interval == period).all()
 
     def get_trial_status_by_user_id(self, user_id: int):
         subscription = self.db.query(UserSubscriptions).filter(UserSubscriptions.user_id == user_id).first()
@@ -47,6 +47,13 @@ class PlansPersistence:
             UserSubscriptions.id.desc()
         ).limit(1).scalar()
         return price
+
+    def get_user_subscription(self, user_id):
+        return self.db.query(UserSubscriptions).filter(
+            UserSubscriptions.user_id == user_id
+        ).order_by(
+            UserSubscriptions.id.desc()
+        ).first()
     
     def get_plan_price(self, price_id):
         price = self.db.query(SubscriptionPlan.price).filter(

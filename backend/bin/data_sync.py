@@ -53,6 +53,7 @@ async def process_data_sync(message_body, session):
     )
     with integration_service as service:
         service.klaviyo.process_data_sync(message_body)
+        service.meta.process_data_sync(message_body)
 
 async def consume(rmq_connection: RabbitMQConnection, db_session):
     connection = await rmq_connection.connect()

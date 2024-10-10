@@ -3,6 +3,7 @@ import stripe
 from typing import List
 from config.stripe import StripeConfig
 from services.plans import PlansService
+from .stripe_service import purchase_product
 from enums import SubscriptionStatus
 
 stripe.api_key = StripeConfig.api_key
@@ -92,13 +93,18 @@ class PaymentsService:
 
         
     def charge_user_for_extra_credits(self, quantity: int, users):
-        return self.create_stripe_checkout_session(
-        success_url=StripeConfig.success_url,
-        cancel_url=StripeConfig.cancel_url,
-        customer_id=self.plans_service.get_customer_id(users),
-        line_items=[{"price": self.get_additional_credits_price_id(), "quantity": quantity}],
-        mode="payment"
-    )
+        customer_id = self.plans_service.get_customer_id(users)
+        try:
+            purchase_product(customer_id, self.get_additional_credits_price_id(), quantity)
+            return {"status": "PAYMENT_SUCCESS"}
+        except Exception as e:
+            return self.create_stripe_checkout_session(
+                success_url=StripeConfig.success_url,
+                cancel_url=StripeConfig.cancel_url,
+                customer_id=customer_id,
+                line_items=[{"price": self.get_additional_credits_price_id(), "quantity": quantity}],
+                mode="payment"
+            )
 
     def create_stripe_checkout_session(self, success_url: str, cancel_url: str, customer_id: str,
                                         line_items: List[dict],

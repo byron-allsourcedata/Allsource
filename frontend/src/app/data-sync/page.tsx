@@ -14,19 +14,34 @@ import {
   Popover,
   Tooltip,
 } from "@mui/material";
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { datasyncStyle } from "./datasyncStyle";
 import CustomTooltip from "@/components/customToolTip";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import Image from "next/image";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import CustomizedProgressBar from '@/components/CustomizedProgressBar';
+import axiosInstance from '../../axios/axiosInterceptorInstance';
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
+import ConnectKlaviyo from '@/components/ConnectKlaviyo';
+import ConnectMeta from '@/components/ConnectMeta';
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import { leadsStyles } from "../leads/leadsStyles";
+import axiosInterceptorInstance from '@/axios/axiosInterceptorInstance';
+import { showErrorToast, showToast } from "@/components/ToastNotification";
+import axios from "axios";
+import DataSyncList from "@/components/DataSyncList";
 
-const DataSync: React.FC = () => {
+interface DataSyncProps {
+  service_name?: string
+} 
+
+const DataSync = () => {
   const [order, setOrder] = useState<"asc" | "desc" | undefined>(undefined);
   const [orderBy, setOrderBy] = useState<string | undefined>(undefined);
+  const [data, setData] = useState<any[]>([]);
+  const [klaviyoIconPopupOpen, setKlaviyoIconPopupOpen] = useState(false);
+  const [metaIconPopupOpen, setMetaIconPopupOpen] = useState(false);
 
   const handleSortRequest = (property: string) => {
     const isAsc = orderBy === property && order === "asc";
@@ -34,50 +49,22 @@ const DataSync: React.FC = () => {
     setOrderBy(property);
   };
 
-  const data = [
-    {
-      id: 1,
-      name: "List 1",
-      type: "All Contacts",
-      contacts: "1,00,102,100",
-      createdBy: "Nexus AI",
-      createdDate: "Aug 27, 2024",
-      platform: "klaviyo",
-      accountId: "12322233",
-      dataSync: "Enable",
-      lastSync: "Aug 27, 2024 00:15:11 GMT",
-      syncStatus: "success",
-      suppression: "On",
-    },
-    {
-      id: 2,
-      name: "List 2",
-      type: "Visitors",
-      contacts: "1,00,102,100",
-      createdBy: "Nexus AI",
-      createdDate: "Aug 27, 2024",
-      platform: "klaviyo",
-      accountId: "12992622",
-      dataSync: "Disable",
-      lastSync: "Aug 27, 2024 00:15:11 GMT",
-      syncStatus: "error",
-      suppression: "Off",
-    },
-    {
-      id: 3,
-      name: "List 3",
-      type: "Add to Cart",
-      contacts: "2403",
-      createdBy: "Nexus AI",
-      createdDate: "Aug 27, 2024",
-      platform: "meta",
-      accountId: "12322233",
-      dataSync: "Enable",
-      lastSync: "Aug 27, 2024 00:15:11 GMT",
-      syncStatus: "success",
-      suppression: "On",
-    },
-  ];
+  const handleIntegrationsSync = async () => {
+    try {
+
+      let params = null 
+      const response = await axiosInstance.get('/data-sync/sync', {
+        params: params
+      });
+
+      setData(response.data);
+    } catch (error) {
+      console.error('Error fetching leads:', error);
+    }
+    finally {
+
+    }
+  };
 
   const statusIcon = (status: string) => {
     switch (status) {
@@ -149,20 +136,126 @@ const DataSync: React.FC = () => {
 
   const open = Boolean(anchorEl);
   const id = open ? "simple-popover" : undefined;
+  const handleToggleSync = async () => {
+    try {
 
-  const handleToggleSync = () => {
-    console.log(`Toggling sync for id: ${selectedId}`);
-    handleClose();
+      const response = await axiosInterceptorInstance.post(`/data-sync/sync/switch-toggle`, {
+        list_id: String(selectedId)
+      });
+      if (response.status === 200) {
+        switch (response.data.status) {
+          case 'SUCCESS':
+            showToast('successfully');
+            setData(prevData =>
+              prevData.map(item =>
+                item.id === selectedId ? { ...item, dataSync: response.data.data_sync } : item
+              )
+            );
+            break
+          case 'FAILED':
+            showErrorToast('Integrations sync delete failed');
+            break
+          default:
+            showErrorToast('Unknown response received.');
+        }
+      }
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        if (error.response && error.response.status === 403) {
+          showErrorToast('Access denied: You do not have permission to remove this member.');
+        } else {
+          console.error('Error removing team member:', error);
+        }
+      }
+    } finally {
+
+      setSelectedId(null);
+      handleClose();
+    }
   };
 
-  const handleEdit = () => {
-    console.log(`Editing item with id: ${selectedId}`);
-    handleClose();
+  const handleKlaviyoIconPopupClose = async () => {
+    setKlaviyoIconPopupOpen(false);
+    setSelectedId(null);
+    try {
+      const response = await axiosInstance.get(`/data-sync/sync?integrations_users_sync_id=${selectedId}`);
+      if (response){
+        setData(prevData => 
+          prevData.map(item => 
+              item.id === selectedId ? { ...item, ...response.data } : item
+          )
+      );      
+      }
+    } catch (error) {
+      console.error('Error fetching leads:', error);
+    }
   };
 
-  const handleDelete = () => {
-    console.log(`Deleting item with id: ${selectedId}`);
-    handleClose();
+  const handleMetaIconPopupClose = async () => {
+    setMetaIconPopupOpen(false);
+    setSelectedId(null);
+    try {
+      const response = await axiosInstance.get(`/data-sync/sync?integrations_users_sync_id=${selectedId}`);
+      if (response){
+        setData(prevData => 
+          prevData.map(item => 
+              item.id === selectedId ? { ...item, ...response.data } : item
+          )
+      );      
+      }
+    } catch (error) {
+      console.error('Error fetching leads:', error);
+    }
+  };
+
+  const handleEdit = async () => {
+    const foundItem = data.find(item => item.id === selectedId);
+    const dataSyncPlatform = foundItem ? foundItem.platform : null;
+    if (dataSyncPlatform) {
+        if (dataSyncPlatform === 'klaviyo') {
+          setKlaviyoIconPopupOpen(true);
+        } else if (dataSyncPlatform === 'meta') {
+          setMetaIconPopupOpen(true);
+        }
+        setAnchorEl(null);
+      }
+    };
+
+  const handleDelete = async () => {
+    try {
+
+      const response = await axiosInterceptorInstance.delete(`/data-sync/sync`, {
+        params: {
+          list_id: selectedId
+        }
+      });
+
+      if (response.status === 200) {
+        switch (response.data.status) {
+          case 'SUCCESS':
+            showToast('Integrations sync delete successfully');
+            setData(prevData => prevData.filter(item => item.id !== selectedId));
+            break
+          case 'FAILED':
+            showErrorToast('Integrations sync delete failed');
+            break
+          default:
+            showErrorToast('Unknown response received.');
+        }
+      }
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        if (error.response && error.response.status === 403) {
+          showErrorToast('Access denied: You do not have permission to remove this member.');
+        } else {
+          console.error('Error removing team member:', error);
+        }
+      }
+    } finally {
+
+      setSelectedId(null);
+      handleClose();
+    }
   };
 
   const handleRepairSync = () => {
@@ -170,9 +263,19 @@ const DataSync: React.FC = () => {
     handleClose();
   };
 
+
+  const formatFunnelText = (text: boolean) => {
+    if (text === true) {
+      return 'Enable';
+    }
+    if (text === false) {
+      return 'Disable';
+    }
+  };
+
   return (
     <Box sx={datasyncStyle.mainContent}>
-      <Box
+        <Box
         sx={{
           display: "flex",
           flexDirection: "row",
@@ -320,304 +423,10 @@ const DataSync: React.FC = () => {
         </Box>
       </Box>
       <Box sx={{ width: "100%", pl: 0.5, pt: 3, pr: 1 }}>
-        <TableContainer
-          component={Paper}
-          sx={{
-            border: "1px solid rgba(235, 235, 235, 1)",
-            overflowY: "auto",
-          }}
-        >
-          <Table>
-            <TableHead>
-              <TableRow>
-                {[
-                  { key: "list_name", label: "List Name" },
-                  { key: "list_type", label: "List Type" },
-                  { key: "number_of_contacts", label: "No. of Contacts" },
-                  { key: "created_by", label: "Created By" },
-                  {
-                    key: "created_date",
-                    label: "Created Date",
-                    sortable: true,
-                  },
-                  { key: "platform", label: "Platform" },
-                  { key: "account_id", label: "Account ID" },
-                  { key: "data_sync", label: "Data Sync" },
-                  { key: "last_sync", label: "Last Sync" },
-                  { key: "sync_status", label: "Sync Status" },
-                  { key: "suppression", label: "Suppression" },
-                ].map(({ key, label, sortable = false }) => (
-                  <TableCell
-                    key={key}
-                    sx={{
-                      ...datasyncStyle.table_column,
-                      position: "relative",
-                      ...(key === "list_name" && {
-                        position: "sticky",
-                        left: 0,
-                        zIndex: 99,
-                      }),
-                      ...(key === "suppression" && {
-                        "::after": {
-                          content: "none",
-                        },
-                      }),
-                    }}
-                    onClick={
-                      sortable ? () => handleSortRequest(key) : undefined
-                    }
-                    style={{ cursor: sortable ? "pointer" : "default" }}
-                  >
-                    <Box sx={{ display: "flex", alignItems: "center" }}>
-                      <Typography
-                        variant="body2"
-                        sx={{ ...leadsStyles.table_column, borderRight: "0" }}
-                      >
-                        {label}
-                      </Typography>
-                      {sortable && orderBy === key && (
-                        <IconButton size="small" sx={{ ml: 1 }}>
-                          {order === "asc" ? (
-                            <ArrowUpwardIcon fontSize="inherit" />
-                          ) : (
-                            <ArrowDownwardIcon fontSize="inherit" />
-                          )}
-                        </IconButton>
-                      )}
-                    </Box>
-                  </TableCell>
-                ))}
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {data.map((row, index) => (
-                <TableRow
-                  key={row.id}
-                  sx={{
-                    "&:hover": {
-                      backgroundColor: "rgba(247, 247, 247, 1)",
-                      "& .sticky-cell": {
-                        backgroundColor: "rgba(247, 247, 247, 1)",
-                      },
-                    },
-                  }}
-                >
-                  <TableCell
-                    className="sticky-cell"
-                    sx={{
-                      ...datasyncStyle.table_array,
-                      position: "sticky",
-                      left: "0",
-                      zIndex: 9,
-                      backgroundColor: "rgba(255, 255, 255, 1)",
-                    }}
-                  >
-                    {row.name}
-                  </TableCell>
-                  <TableCell sx={datasyncStyle.table_array}>
-                    {row.type}
-                  </TableCell>
-                  <TableCell sx={datasyncStyle.table_array}>
-                    {row.contacts}
-                  </TableCell>
-                  <TableCell sx={datasyncStyle.table_array}>
-                    {row.createdBy}
-                  </TableCell>
-                  <TableCell sx={datasyncStyle.table_array}>
-                    {row.createdDate}
-                  </TableCell>
-                  <TableCell>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        padding: "2px 8px",
-                        borderRadius: "2px",
-                        justifyContent: "center",
-                        textTransform: "capitalize",
-                      }}
-                    >
-                      {platformIcon(row.platform)}
-                    </Box>
-                  </TableCell>
-                  <TableCell sx={datasyncStyle.table_array}>
-                    {row.accountId}
-                  </TableCell>
-                  <TableCell sx={datasyncStyle.table_array}>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        padding: "2px 8px",
-                        borderRadius: "2px",
-                        justifyContent: "center",
-                        textTransform: "capitalize",
-                      }}
-                    >
-                      <Typography
-                        className="paragraph"
-                        sx={{
-                          fontFamily: "Roboto",
-                          fontSize: "12px",
-                          color:
-                            row.dataSync === "Enable"
-                              ? "rgba(43, 91, 0, 1) !important"
-                              : "rgba(74, 74, 74, 1)!important",
-                          backgroundColor:
-                            row.dataSync === "Enable"
-                              ? "rgba(234, 248, 221, 1) !important"
-                              : "rgba(219, 219, 219, 1) !important",
-                          padding: "3px 14.5px",
-                          maxHeigh: "1.25rem",
-                        }}
-                      >
-                        {row.dataSync}
-                      </Typography>
-                    </Box>
-                  </TableCell>
-                  <TableCell sx={datasyncStyle.table_array}>
-                    {row.lastSync}
-                  </TableCell>
-                  <TableCell
-                    sx={{ ...datasyncStyle.table_column, position: "relative" }}
-                  >
-                    <Box
-                      sx={{
-                        display: "flex",
-                        padding: "2px 8px",
-                        borderRadius: "2px",
-                        justifyContent: "center",
-                      }}
-                    >
-                      {statusIcon(row.syncStatus)}
-                    </Box>
-                  </TableCell>
-                  <TableCell sx={{ ...datasyncStyle.table_array }}>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        padding: "2px 8px",
-                        borderRadius: "2px",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        textTransform: "capitalize",
-                      }}
-                    >
-                      {row.suppression}
-                      <IconButton
-                        sx={{ padding: 0, margin: 0, borderRadius: 4 }}
-                        onClick={(e) => handleClick(e, row.id)}
-                      >
-                        <Image
-                          src={"more.svg"}
-                          alt="more"
-                          width={20}
-                          height={20}
-                        />
-                      </IconButton>
-                    </Box>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-        <Popover
-          id={id}
-          open={open}
-          anchorEl={anchorEl}
-          onClose={handleClose}
-          anchorOrigin={{
-            vertical: "bottom",
-            horizontal: "left",
-          }}
-        >
-          <Box
-            sx={{
-              p: 1,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "flex-start",
-              width: "100%",
-              maxWidth: "160px",
-            }}
-          >
-            <Button
-              sx={{
-                justifyContent: "flex-start",
-                width: "100%",
-                textTransform: "none",
-                fontFamily: "Nunito Sans",
-                fontSize: "14px",
-                color: "rgba(32, 33, 36, 1)",
-                fontWeight: 600,
-                ":hover": {
-                  color: "rgba(80, 82, 178, 1)",
-                  backgroundColor: "background: rgba(80, 82, 178, 0.1)",
-                },
-              }}
-              onClick={handleToggleSync}
-            >
-              {data.find((row) => row.id === selectedId)?.dataSync === "Enable"
-                ? "Disable Sync"
-                : "Enable Sync"}
-            </Button>
-            <Button
-              sx={{
-                justifyContent: "flex-start",
-                width: "100%",
-                textTransform: "none",
-                fontFamily: "Nunito Sans",
-                fontSize: "14px",
-                color: "rgba(32, 33, 36, 1)",
-                fontWeight: 600,
-                ":hover": {
-                  color: "rgba(80, 82, 178, 1)",
-                  backgroundColor: "background: rgba(80, 82, 178, 0.1)",
-                },
-              }}
-              onClick={handleEdit}
-            >
-              Edit
-            </Button>
-            <Button
-              sx={{
-                justifyContent: "flex-start",
-                width: "100%",
-                textTransform: "none",
-                fontFamily: "Nunito Sans",
-                fontSize: "14px",
-                color: "rgba(32, 33, 36, 1)",
-                fontWeight: 600,
-                ":hover": {
-                  color: "rgba(80, 82, 178, 1)",
-                  backgroundColor: "background: rgba(80, 82, 178, 0.1)",
-                },
-              }}
-              onClick={handleDelete}
-            >
-              Delete
-            </Button>
-            <Button
-              sx={{
-                justifyContent: "flex-start",
-                width: "100%",
-                color: "rgba(32, 33, 36, 1)",
-                textTransform: "none",
-                fontFamily: "Nunito Sans",
-                fontSize: "14px",
-                fontWeight: 600,
-                ":hover": {
-                  color: "rgba(80, 82, 178, 1)",
-                  backgroundColor: "background: rgba(80, 82, 178, 0.1)",
-                },
-              }}
-              onClick={handleRepairSync}
-            >
-              Repair Sync
-            </Button>
-          </Box>
-        </Popover>
+        <DataSyncList />
       </Box>
     </Box>
+
   );
 };
 

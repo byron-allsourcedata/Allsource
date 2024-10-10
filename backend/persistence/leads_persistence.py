@@ -133,7 +133,6 @@ class LeadsPersistence:
                 LeadsVisits.start_date,
                 LeadsVisits.start_time,
                 LeadsVisits.full_time_sec,
-                LeadUser.is_returning_visitor,
                 recurring_visits_subquery.c.recurring_visits,
                 LeadUser.avarage_visit_time
             )
@@ -593,10 +592,13 @@ class LeadsPersistence:
         return self.db.query(LeadUser).filter(LeadUser.five_x_five_user_id == lead_id,
                                               LeadUser.domain_id == user_id).first()
 
-    def get_leads_user_filter_by_email(self, user_id: int, email: str):
+    def get_leads_user_filter_by_email(self, domain_id: int, email: str):
         return self.db.query(LeadUser).join(FiveXFiveUser, FiveXFiveUser.id == LeadUser.five_x_five_user_id).filter(
-            LeadUser.domain_id == user_id,
-            FiveXFiveUser.business_email == email).all()
+                    LeadUser.domain_id == domain_id,
+                    FiveXFiveUser.business_email == email
+                ).all()
+    
+
 
     def get_leads_domain(self, domain_id: int, **filter_by: dict):
         return self.db.query(LeadUser).filter_by(domain_id=domain_id, **filter_by)

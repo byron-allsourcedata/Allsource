@@ -10,7 +10,11 @@ class UserIntegration(Base):
     service_name = Column(VARCHAR)
     data_center = Column(VARCHAR)
     is_with_suppression = Column(Boolean)
-
+    ad_account_id = Column(VARCHAR)
+    full_name = Column(VARCHAR)
+    platform_user_id = Column(VARCHAR)
+    last_access_token_update = Column(TIMESTAMP)
+    expire_access_token = Column(Integer)
 
 class Integration(Base):
 

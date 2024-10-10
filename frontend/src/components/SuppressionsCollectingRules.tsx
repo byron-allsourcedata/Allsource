@@ -1,10 +1,15 @@
 import axiosInstance from "@/axios/axiosInterceptorInstance";
-import { Box, Typography, FormControlLabel, TextField, Checkbox, Button, Divider } from "@mui/material";
-import { useState } from "react";
+import { Box, Typography, TextField, Button } from "@mui/material";
+import { useCallback, useEffect, useState } from "react";
 import { showToast } from "./ToastNotification";
+import CustomizedProgressBar from "./CustomizedProgressBar";
+
+
 const CollectionRules: React.FC = () => {
     const [pageViews, setPageViews] = useState<string>("");
     const [seconds, setSeconds] = useState<string>("");
+    const [catchPageViews, setCatchPageViews] = useState<string>("");
+    const [catchseconds, setCatchSeconds] = useState<string>("");
 
     const handlePageViewsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setPageViews(e.target.value);
@@ -16,21 +21,52 @@ const CollectionRules: React.FC = () => {
 
     const handleSave = async () => {
         try {
+            setLoading(true)
             const response = await axiosInstance.post('/suppressions/collection-rules', {
                 page_views: parseInt(pageViews, 10),
                 seconds: parseInt(seconds, 10)
             });
-            showToast('Succesfully added rule')
+            showToast('Succesfully updated rule')
         } catch (error) {
+        } finally {
+            setLoading(false);
         }
     };
 
     const handleCancel = () => {
-        setPageViews('');
-        setSeconds('');
+        setPageViews(catchPageViews);
+        setSeconds(catchseconds);
     };
 
-    const isDisabled = !pageViews || !seconds;
+    const isDisabled = (!pageViews || !seconds) || (parseInt(pageViews, 10) === parseInt(catchPageViews, 10) && parseInt(seconds, 10) === parseInt(catchseconds, 10));
+    const isDisabledCancel = (parseInt(pageViews, 10) === parseInt(catchPageViews, 10) && parseInt(seconds, 10) === parseInt(catchseconds, 10))
+
+
+
+    const [loading, setLoading] = useState(false);
+
+    const fetchRules = useCallback(async () => {
+        setLoading(true);
+        try {
+            const response = await axiosInstance.get("/suppressions/rules");
+            const data = response.data
+            setPageViews(data.page_views_limit)
+            setSeconds(data.collection_timeout)
+            setCatchSeconds(data.collection_timeout)
+            setCatchPageViews(data.page_views_limit)
+        } catch (err) {
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchRules();
+    }, [fetchRules]);
+
+    if (loading) {
+        return <CustomizedProgressBar />;
+    }
 
     return (
         <Box sx={{
@@ -98,7 +134,7 @@ const CollectionRules: React.FC = () => {
                                 marginBottom: '40px',
                                 backgroundColor: '#fff',
                                 borderRadius: '4px',
-                                width: '245px',
+                                width: '225px',
                                 "@media (max-width: 900px)": { width: '100%', height: '48px' }
                             }}
                         />
@@ -141,15 +177,16 @@ const CollectionRules: React.FC = () => {
                             variant="outlined"
                             placeholder="--"
                             type="number"
+                            rows={2}
                             value={seconds}
                             onChange={handleSecondsChange}
                             InputProps={{ style: { color: 'rgba(17, 17, 19, 1)', fontFamily: 'Nunito', fontWeight: 400, fontSize: '16px' } }}
-                            InputLabelProps={{ style: { color: 'rgba(17, 17, 19, 0.6)', fontFamily: 'Nunito', fontWeight: 400, fontSize: '16px' } }}
+                            InputLabelProps={{ style: { color: 'rgba(17, 17, 19, 0.6)', fontFamily: 'Nunito', fontWeight: 400, fontSize: '16px', padding:0 } }}
                             sx={{
                                 marginBottom: '32px',
                                 backgroundColor: '#fff',
                                 borderRadius: '4px',
-                                width: '245px',
+                                width: '225px',
                                 "@media (max-width: 900px)": { width: '100%', height: '48px' }
                             }}
                         />
@@ -159,7 +196,7 @@ const CollectionRules: React.FC = () => {
 
 
             <Box sx={{ display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid rgba(228, 228, 228, 1)', pt: 2, padding: '24px', "@media (max-width: 900px)": { padding: '1rem', } }}>
-                <Button variant="outlined" disabled={isDisabled} onClick={handleCancel} sx={{
+                <Button variant="outlined" disabled={isDisabledCancel} onClick={handleCancel} sx={{
                     backgroundColor: '#fff', color: 'rgba(80, 82, 178, 1)', fontFamily: "Nunito Sans", textTransform: 'none', lineHeight: '22.4px',
                     fontWeight: '700', padding: '1em 5em', textWrap: 'nowrap', marginRight: '16px', border: '1px solid rgba(80, 82, 178, 1)', maxWidth: '98px', '&:hover': { backgroundColor: '#fff', boxShadow: '0 2px 2px rgba(0, 0, 0, 0.3)', '&.Mui-disabled': {
                         backgroundColor: 'rgba(80, 82, 178, 0.6)',

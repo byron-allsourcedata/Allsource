@@ -22,9 +22,11 @@ class MailchimpCredentials(BaseModel):
     access_token: str
 
 
-class FacebookCredentials(BaseModel):
-    access_token: str
-    ad_account_id: str
+class MetaCredentials(BaseModel):
+    ad_account_id: str 
+    access_token:str 
+    platform_user_id: str
+    full_name: str
 
 class SupperssionSet(BaseModel):
     suppression: bool
@@ -36,7 +38,7 @@ class IntegrationCredentials(BaseModel):
     bigcommerce: Optional[ShopifyOrBigcommerceCredentials] = None
     klaviyo: Optional[KlaviyoOrSandlaneCredentials] = None
     mailchimp: Optional[MailchimpCredentials] = None
-    facebook: Optional[FacebookCredentials] = None
+    meta: Optional[MetaCredentials] = None
     sendlane: Optional[KlaviyoOrSandlaneCredentials] = None
     pixel_install: bool = False
     supperssion: bool = False
@@ -71,12 +73,14 @@ class SyncCreate(BaseModel):
     list_id: Optional[str] = None
     tags_id: Optional[str] = None
     list_name: Optional[str] = None
-    leads_type: Optional[str] = 'All' 
-    data_map: List[DataMap]
+    integrations_users_sync_id: Optional[int] = None
+    leads_type: Optional[str] = 'allContacts' 
+    data_map: Optional[List[DataMap]] = None
 
 
 class CreateListOrTags(BaseModel):
     name: str
+    description: Optional[str] = None
 
 class ContactSuppression(BaseModel):
     id: str

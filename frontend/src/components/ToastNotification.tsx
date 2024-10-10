@@ -39,7 +39,7 @@ export const CustomErrorToast = ({ message }: { message: string }) => (
 export const showToast = (message: string, options: ToastOptions = {}) => {
   toast.success(<CustomToast message={message} />, {
     position: "top-right",
-    autoClose: 4000,
+    autoClose: 2000,
     hideProgressBar: false,
     closeOnClick: true,
     draggable: true,
@@ -105,7 +105,6 @@ export const showInfoToast = (message: string, options: ToastOptions = {}) => {
 const ToastNotificationContainer = () => (
   <ToastContainer
     position="top-right"
-    autoClose={4000}
     hideProgressBar={false}
     newestOnTop={false}
     closeOnClick

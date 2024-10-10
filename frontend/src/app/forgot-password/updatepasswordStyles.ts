@@ -59,15 +59,12 @@ export const updatepasswordStyles: { [key: string]: SxProps<Theme> } = {
         },
       },
       title: {
-        fontWeight: 'bold',
-        fontSize: '28px',
+        fontWeight: '600',
         whiteSpace: 'nowrap',
         textAlign: 'center',
         paddingBottom: '16px',
-        fontFamily: 'Nunito',
         lineHeight: 'normal',
         '@media (max-width: 440px)': {
-            fontSize: '24px',
             paddingBottom: '0.5rem',
         },
       },
@@ -79,35 +76,31 @@ export const updatepasswordStyles: { [key: string]: SxProps<Theme> } = {
         whiteSpace: 'nowrap',
         textAlign: 'center',
         padding: '0 1rem 2rem',
-        fontFamily: 'Nunito',
     },
     form: {
-        width: '100%',
-        fontFamily: 'Nunito',
+        width: '100%'
     },
     inputLabel: {
-        fontFamily: 'Nunito',
-        fontSize: '16px',
-        lineHeight: 'normal',
-        color: 'rgba(17, 17, 19, 0.60)',
         top: '-3px',
         '&.Mui-focused': {
-            color: '#0000FF',
+          color: 'rgba(17, 17, 19, 0.6)',
+          fontFamily: 'Nunito Sans',
+          fontWeight: 400,
+          fontSize: '12px',
+          lineHeight: '16px'
           },
     },
     submitButton: {
       mt: 2,
       backgroundColor: '#F45745',
-      color: '#FFFFFF',
+      color: '#FFFFFF !important',
       '&:hover': {
           backgroundColor: red[700],
       },
-      fontWeight: 'bold',
       marginTop: '2.5rem',
       padding: '10px 24px',
       textTransform: 'none',
-      fontSize: '16px',
-      fontFamily: 'Nunito',
+      lineHeight: '20px',
       '@media (max-width: 440px)': {
           margin: '0',
           position: 'absolute',
@@ -123,11 +116,7 @@ export const updatepasswordStyles: { [key: string]: SxProps<Theme> } = {
         fontSize: '16px',
     },
     text: {
-        fontSize: '14px',
-        fontFamily: 'Nunito',
-        fontWeight: '500',
         textAlign: 'center',
-        color: '#000',
         paddingBottom: '1.5rem',
     },
     formField: {
@@ -137,40 +126,40 @@ export const updatepasswordStyles: { [key: string]: SxProps<Theme> } = {
         }
     },
     formInput: {
-        '&.MuiOutlinedInput-root': {
-          height: '48px',
-          '& .MuiOutlinedInput-input': {
-            padding: '12px 16px 13px 16px',
-            fontFamily: 'Nunito',
-          },
-          '& .MuiOutlinedInput-notchedOutline': {
-            borderColor: '#A3B0C2',
-          },
-          '&:hover .MuiOutlinedInput-notchedOutline': {
-            borderColor: '#A3B0C2',
-          },
-          '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-            borderColor: '#0000FF',
-          },
+      '&.MuiOutlinedInput-root': {
+        height: '48px',
+        '& .MuiOutlinedInput-input': {
+          padding: '12px 16px 13px 16px',
         },
-        '&+.MuiFormHelperText-root': {
-            marginLeft: '0',
+        '& .MuiOutlinedInput-notchedOutline': {
+          borderColor: 'rgba(208, 213, 221, 1)',
+        },
+        '&:hover .MuiOutlinedInput-notchedOutline': {
+          borderColor: 'rgba(208, 213, 221, 1)',
+        },
+        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+          borderColor: 'rgba(208, 213, 221, 1)',
         },
       },
+      '&+.MuiFormHelperText-root': {
+          marginLeft: '0',
+      },
+    },
       passwordValidationText: {
         '& .MuiTypography-root' : {
-          fontFamily: 'Nunito',
+          fontFamily: 'Nunito Sans',
           fontSize: '12px',
           fontWeight: '400',
-          color: 'rgba(17, 17, 19, 0.60)',
+          color: '#707071',
         }
       },
       passwordValidationTextSuccess: {
         '& .MuiTypography-root' : {
-          fontFamily: 'Nunito',
+          fontFamily: 'Nunito Sans',
           fontSize: '12px',
           fontWeight: '400',
-          color: '#111113',
+          color: '#202124',
+          lineHeight: '22px'
         }
       },
       passwordContentList: {

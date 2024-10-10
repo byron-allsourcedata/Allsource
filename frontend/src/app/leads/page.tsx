@@ -120,6 +120,7 @@ const CustomTablePagination: React.FC<CustomTablePaginationProps> = ({
                                 border: page === pageNumber ? '1px solid rgba(80, 82, 178, 1)' : 'none',
                                 color: page === pageNumber ? 'rgba(80, 82, 178, 1)' : 'rgba(122, 122, 122, 1)',
                                 minWidth: '30px',
+                                ':hover': {backgroundColor: '#fff'},
                                 minHeight: '30px',
                                 padding: 0
                             }}
@@ -456,7 +457,6 @@ const Leads: React.FC = () => {
                 }
             }
 
-
             const response = await axiosInstance.get(url);
             const [leads, count] = response.data;
 
@@ -465,17 +465,18 @@ const Leads: React.FC = () => {
             setStatus(response.data.status);
         } catch (error) {
             if (error instanceof AxiosError && error.response?.status === 403) {
-                if (error.response.data.status === 'NEED_BOOK_CALL') {
+                if (error.response.data.detail.status === 'NEED_BOOK_CALL') {
                     sessionStorage.setItem('is_slider_opened', 'true');
                     setShowSlider(true);
-                } else if (error.response.data.status === 'PIXEL_INSTALLATION_NEEDED') {
-                    setStatus(error.response.data.status || null);
+                } else if (error.response.data.detail.status === 'PIXEL_INSTALLATION_NEEDED') {
+                    setStatus(error.response.data.detail.status);
                 } else {
                     setShowSlider(false);
                 }
             } else {
                 console.error('Error fetching data:', error);
             }
+            setIsLoading(false);
         } finally {
             setIsLoading(false);
         }
@@ -1031,14 +1032,12 @@ const Leads: React.FC = () => {
                         }}>
                         <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1 }}>
                             <Typography className='first-sub-title'>
-                                Resolved Contacts
+                                Resolved Contacts ({count_leads})
                             </Typography>
-                            <CustomToolTip title={(count_leads ?? 0) >= 0
-                                    ? `Number of leads: ${count_leads}`
-                                    : status === 'PIXEL_INSTALLATION_NEEDED'
-                                        ? 'Contacts automatically sync across devices and platforms.'
-                                        : 'Pixel installation is required.'
-                            }  />
+                            <CustomToolTip title={ status === 'PIXEL_INSTALLATION_NEEDED'
+                                    ? 'Pixel installation is required.'
+                                    : 'Contacts automatically sync across devices and platforms.'
+                            } />
                         </Box>
                         <Box sx={{
                             display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '15px',
@@ -1050,7 +1049,7 @@ const Leads: React.FC = () => {
                                 onClick={handleAudiencePopupOpen}
                                 aria-haspopup="true"
                                 disabled={status === 'PIXEL_INSTALLATION_NEEDED'}
-                                
+
                                 sx={{
                                     textTransform: 'none',
                                     color: status === 'PIXEL_INSTALLATION_NEEDED' ? 'rgba(128, 128, 128, 1)' : 'rgba(80, 82, 178, 1)',
@@ -1274,7 +1273,7 @@ const Leads: React.FC = () => {
                                         mt: 3,
                                         color: '#fff !important',
                                         ':hover': {
-                                        backgroundColor: 'rgba(80, 82, 178, 1)'
+                                            backgroundColor: 'rgba(80, 82, 178, 1)'
                                         }
                                     }}
                                 >
@@ -1324,7 +1323,7 @@ const Leads: React.FC = () => {
                                                         { key: 'name', label: 'Name' },
                                                         { key: 'personal_email', label: 'Personal Email' },
                                                         { key: 'business_email', label: 'Business Email' },
-                                                        { key: 'mobile_phone', label: 'Phone number' },
+                                                        { key: 'mobile_phone', label: 'Mobile phone' },
                                                         { key: 'first_visited_date', label: 'Visited date', sortable: true },
                                                         { key: 'funnel', label: 'Lead Status' },
                                                         { key: 'status', label: 'Visitor Type' },
@@ -1416,8 +1415,15 @@ const Leads: React.FC = () => {
                                                                 <span className="truncate-email">--</span>
                                                             )}
                                                         </TableCell>
-                                                        <TableCell
-                                                            sx={leadsStyles.table_array_phone}>{row.mobile_phone?.split(',')[0] || '--'}</TableCell>
+                                                        <TableCell sx={leadsStyles.table_array_phone}>
+                                                            {row.mobile_phone
+                                                                ? row.mobile_phone.split(',')[0]
+                                                                : row.personal_phone
+                                                                    ? row.personal_phone.split(',')[0]
+                                                                    : row.direct_number
+                                                                        ? row.direct_number.split(',')[0]
+                                                                        : '--'}
+                                                        </TableCell>
                                                         <TableCell
                                                             sx={{ ...leadsStyles.table_array, position: 'relative' }}>{row.first_visited_date || '--'}</TableCell>
                                                         <TableCell

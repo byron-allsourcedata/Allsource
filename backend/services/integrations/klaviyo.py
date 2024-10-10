@@ -69,6 +69,8 @@ class KlaviyoIntegrationsService:
     
     def get_list(self, domain_id: int):
         credentials = self.get_credentials(domain_id)
+        if not credentials:
+            return
         return self.__get_list(credentials.access_token)
 
     def __get_list(self, access_token: str):
@@ -91,9 +93,51 @@ class KlaviyoIntegrationsService:
     def create_tags(self, tag_name: str, domain_id: int):
         credentail = self.get_credentials(domain_id)
         response = self.__handle_request(method='POST', url='https://a.klaviyo.com/api/tags/', api_key=credentail.access_token, json=self.__mapped_tags_json_to_klaviyo(tag_name))
-        if response.status_code == 201:
+        if response.status_code == 201 or response.status_code == 200:
             return self.__mapped_tags(response.json().get('data'))
         else: raise HTTPException(status_code=400, detail={'status': IntegrationsStatus.CREATE_IS_FAILED.value})
+        
+    
+    async def edit_sync(self, leads_type: str, list_id: str, list_name: str, integrations_users_sync_id: int,  data_map: List[DataMap], domain_id: int, created_by: str,tags_id: str = None):
+        credentials = self.get_credentials(domain_id)
+        data_syncs = self.sync_persistence.get_filter_by(domain_id=domain_id)
+        for sync in data_syncs:
+            if sync.get('integration_id') == credentials.id and sync.get('leads_type') == leads_type:
+                return
+        sync = self.sync_persistence.edit_sync({
+            'integration_id': credentials.id,
+            'list_id': list_id,
+            'list_name': list_name,
+            'domain_id': domain_id,
+            'leads_type': leads_type,
+            'data_map': data_map,
+            'created_by': created_by,
+        }, integrations_users_sync_id)
+        if tags_id: 
+            self.update_tag_relationships_lists(tags_id=tags_id, list_id=list_id, api_key=credentials.access_token)
+        message = {
+            'sync':  {
+                'id': sync.id,
+                "domain_id": sync.domain_id, 
+                "integration_id": sync.integration_id, 
+                "leads_type": sync.leads_type, 
+                "list_id": sync.list_id, 
+                'data_map': sync.data_map
+                },
+            'leads_type': leads_type,
+            'domain_id': domain_id
+        }
+        rabbitmq_connection = RabbitMQConnection()
+        connection = await rabbitmq_connection.connect()
+        channel = await connection.channel()
+        await channel.declare_queue(
+            name=self.QUEUE_DATA_SYNC,
+            durable=True
+        )
+        await publish_rabbitmq_message(
+            connection=connection,
+            queue_name=self.QUEUE_DATA_SYNC, 
+            message_body=message)
 
 
     def create_list(self, list_name: str, domain_id: int):
@@ -128,8 +172,18 @@ class KlaviyoIntegrationsService:
                 }
             ] 
         }, api_key=api_key)
+        
+    def update_tag_relationships_lists(self, tags_id: str, list_id: str, api_key: str):
+        self.__handle_request(method='PUT', url=f'https://a.klaviyo.com/api/tags/{tags_id}/relationships/lists/', json={
+             "data": [
+                {
+                    "type": "list",
+                    "id": list_id
+                }
+            ] 
+        }, api_key=api_key)
     
-    async def create_sync(self, leads_type: str, list_id: str, list_name: str, tags_id: str, data_map: List[DataMap], domain_id: int):
+    async def create_sync(self, leads_type: str, list_id: str, list_name: str, data_map: List[DataMap], domain_id: int, created_by: str, tags_id: str = None):
         credentials = self.get_credentials(domain_id)
         data_syncs = self.sync_persistence.get_filter_by(domain_id=domain_id)
         for sync in data_syncs:
@@ -141,7 +195,8 @@ class KlaviyoIntegrationsService:
             'list_name': list_name,
             'domain_id': domain_id,
             'leads_type': leads_type,
-            'data_map': [data.model_dump_json() for data in data_map]
+            'data_map': data_map,
+            'created_by': created_by,
         })
         if tags_id: 
             self.create_tag_relationships_lists(tags_id=tags_id, list_id=list_id, api_key=credentials.access_token)
@@ -193,7 +248,7 @@ class KlaviyoIntegrationsService:
                 leads = self.leads_persistence.get_leads_domain(domain.id, behavior_type=leads_type)
             for data_sync_item in data_syncs_list if not sync else [sync]:
                 if data_sync_item.data_map:
-                    data_map = [json.loads(item) for item in data_sync_item.data_map]
+                    data_map = data_sync_item.data_map
                 else: data_map = None
                 for lead in leads:
                     profile = self.__create_profile(lead.five_x_five_user_id, credentials.access_token, data_map)

@@ -177,7 +177,7 @@ const Signup: React.FC = () => {
 
       <Box sx={loginStyles.mainContent}>
         <Box sx={loginStyles.container}>
-          <Typography variant="h4" component="h1" sx={loginStyles.title}>
+          <Typography variant="h4" component="h1" className='heading-text' sx={loginStyles.title}>
             Welcome Back!
           </Typography>
           <GoogleLogin
@@ -232,14 +232,17 @@ const Signup: React.FC = () => {
           />
           <Box sx={loginStyles.orDivider}>
             <Box sx={{ borderBottom: '1px solid #DCE1E8', flexGrow: 1 }} />
-            <Typography variant="body1" sx={loginStyles.orText}>
+            <Typography variant="body1" className='third-sub-title' sx={loginStyles.orText}>
               OR
             </Typography>
             <Box sx={{ borderBottom: '1px solid #DCE1E8', flexGrow: 1 }} />
           </Box>
           <Box component="form" onSubmit={handleSubmit} sx={loginStyles.form}>
             <TextField sx={loginStyles.formField}
-              InputLabelProps={{ sx: loginStyles.inputLabel }}
+              InputLabelProps={{ 
+                className: "form-input-label",
+                sx: loginStyles.inputLabel 
+              }}
               label="Email address"
               name="email"
               type="email"
@@ -250,10 +253,15 @@ const Signup: React.FC = () => {
               onChange={handleChange}
               error={Boolean(errors.email)}
               helperText={errors.email}
-              InputProps={{ sx: loginStyles.formInput }}
+              InputProps={{ 
+                className: "form-input" 
+              }}
             />
             <TextField
-              InputLabelProps={{ sx: loginStyles.inputLabel }}
+              InputLabelProps={{ 
+                className: "form-input-label",
+                sx: loginStyles.inputLabel 
+              }}
               label="Enter password"
               name="password"
               type={showPassword ? 'text' : 'password'}
@@ -265,7 +273,7 @@ const Signup: React.FC = () => {
               error={Boolean(errors.password)}
               helperText={errors.password}
               InputProps={{
-                sx: loginStyles.formInput,
+                className: "form-input",
                 endAdornment: (
                   <InputAdornment position="end">
                     <IconButton onClick={togglePasswordVisibility} edge="end">
@@ -281,12 +289,12 @@ const Signup: React.FC = () => {
                 ),
               }}
             />
-            <Typography variant="body2" sx={loginStyles.resetPassword}>
+            <Typography variant="body2" className='hyperlink-red' sx={loginStyles.resetPassword}>
             <Link href="/reset-password" sx={loginStyles.loginLink}>
               Forgot Password
             </Link>
           </Typography>
-            <Button
+            <Button className='hyperlink-red'
               type="submit"
               variant="contained"
               sx={loginStyles.submitButton}
@@ -296,9 +304,9 @@ const Signup: React.FC = () => {
             </Button>
           </Box>
           
-          <Typography variant="body2" sx={loginStyles.loginText}>
+          <Typography variant="body2" className='second-sub-title' sx={loginStyles.loginText}>
             Don’t have an account?{' '}
-            <Link href="/signup" sx={loginStyles.loginLink}>
+            <Link href="/signup" className='hyperlink-red' sx={loginStyles.loginLink}>
               Signup now
             </Link>
           </Typography>

@@ -15,6 +15,7 @@ import { useSlider } from '@/context/SliderContext';
 import { AxiosError } from 'axios';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 import Slider from "../components/Slider";
+import zIndex from '@mui/material/styles/zIndex';
 
 const sidebarStyles = {
     container: {
@@ -223,12 +224,12 @@ const Sidebar: React.FC = () => {
                     </ListItemIcon>
                     <ListItemText primary="Data Sync" />
                 </ListItem>
-                <ListItem button onClick={() => handleNavigation('/prospect')} sx={isActive('/prospect') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
+                {/* <ListItem button onClick={() => handleNavigation('/prospect')} sx={isActive('/prospect') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
                         <Image src="/profile-circle-filled.svg" alt="profile-circle" height={20} width={20} />
                     </ListItemIcon>
                     <ListItemText primary="Prospect" />
-                </ListItem>
+                </ListItem> */}
                 <ListItem button onClick={() => handleNavigation('/integrations')} sx={isActive('/integrations') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
                         <IntegrationsIcon />
@@ -253,12 +254,12 @@ const Sidebar: React.FC = () => {
                     </ListItemIcon>
                     <ListItemText primary="Rules" />
                 </ListItem> */}
-                <ListItem button onClick={() => handleNavigation('/partners')} sx={isActive('/partners') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
+                {/* <ListItem button onClick={() => handleNavigation('/partners')} sx={isActive('/partners') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
                         <AccountBoxIcon />
                     </ListItemIcon>
                     <ListItemText primary="Partners" />
-                </ListItem>
+                </ListItem> */}
             </List>
             <Box sx={{
                 position: 'absolute',

@@ -1,11 +1,12 @@
 "use client";
 import { Box, Typography, Tabs, Tab } from "@mui/material";
-import { useCallback, useEffect, useState } from "react";
+import { Suspense, useState } from "react";
 import { suppressionsStyle } from './suppressions';
 import CollectionRules from "@/components/SuppressionsCollectingRules";
 import SuppressionRules from "@/components/SuppressionsRules";
 import CustomTooltip from "@/components/customToolTip";
-import axiosInstance from "@/axios/axiosInterceptorInstance";
+import CustomizedProgressBar from "@/components/CustomizedProgressBar";
+
 
 interface TabPanelProps {
     children?: React.ReactNode;
@@ -29,46 +30,19 @@ const TabPanel: React.FC<TabPanelProps> = ({ children, value, index, ...other })
 
 const Suppressions: React.FC = () => {
     const [tabIndex, setTabIndex] = useState(0);
-    const [rules, setRules] = useState<any>(null);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-
-    // Функция для получения данных
-    const fetchRules = useCallback(async () => {
-        setLoading(true);
-        setError(null);
-        try {
-            const response = await axiosInstance.get("/suppressions/rules");
-            setRules(response.data);
-        } catch (err) {
-            setError("Failed to load suppression rules");
-        } finally {
-            setLoading(false);
-        }
-    }, []);
-
-    // useEffect для первоначального запроса данных
-    useEffect(() => {
-        fetchRules();
-    }, [fetchRules]);
-
-    // Функция обновления данных по необходимости
-    const handleUpdateRules = () => {
-        fetchRules(); // Повторный запрос данных
-    };
-
     const handleTabChange = (event: React.SyntheticEvent, newIndex: number) => {
         setTabIndex(newIndex);
     };
 
+
     return (
         <Box sx={suppressionsStyle.mainContent}>
             <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%', mt: 2, ml:2, "@media (max-width: 600px)": {flexDirection: 'column', display: 'flex', alignItems: 'flex-start'}, "@media (max-width: 440px)": {flexDirection: 'column', pt:8, justifyContent: 'flex-start'} }}>
-                <Box sx={{ flexShrink: 0, display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1, "@media (max-width: 600px)": {mb:2 }}}>
+                <Box sx={{ flexShrink: 0, display: 'flex', flexDirection: 'row', alignItems: 'center', width: '10%', gap: 1, "@media (max-width: 600px)": {mb:2 }}}>
                     <Typography className="first-sub-title">Suppressions</Typography>
                     <CustomTooltip title={"Suppressions help manage and filter out contacts or data points that should not receive communications or updates."} linkText="Learn more" linkUrl="https://maximiz.ai"/>
                 </Box>
-                <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%' }}>
+                <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center', width:'90%', pr: '10%', alignItems: 'center', "@media (max-width: 600px)":{ width:'97%', pr: '0',}   }}>
                     <Tabs
                         value={tabIndex}
                         onChange={handleTabChange}
@@ -134,7 +108,7 @@ const Suppressions: React.FC = () => {
             </Box>
             <Box sx={{ width: '100%' }}>
                 <TabPanel value={tabIndex} index={0}>
-                    <SuppressionRules rules={rules} />
+                    <SuppressionRules />
                 </TabPanel>
             </Box>
             <Box sx={{ width: '100%', padding: 0, margin: 0 }}>
@@ -148,7 +122,9 @@ const Suppressions: React.FC = () => {
 
 const SuppressionsPage: React.FC = () => {
     return (
-        <Suppressions />
+        <Suspense fallback={<CustomizedProgressBar />}>
+            <Suppressions />
+        </Suspense>
     );
 };
 

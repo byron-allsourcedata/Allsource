@@ -350,14 +350,14 @@ class UsersAuth:
         check_user_object = self.user_persistence_service.get_user_by_id(data.get('id'))
         if check_user_object:
             if check_user_object.get('is_email_confirmed'):
-                if check_user_object.team_owner_id:
+                if check_user_object.get('team_owner_id'):
                     token_info = {
-                    "id": check_user_object.team_owner_id,
-                    "team_member_id": check_user_object.id
+                    "id": check_user_object.get('team_owner_id'),
+                    "team_member_id": check_user_object.get('id')
                     }
                 else:
                     token_info = {
-                        "id": check_user_object.id,
+                        "id": check_user_object.get('id'),
                     }
                 user_token = create_access_token(token_info)
                 return {
@@ -365,14 +365,14 @@ class UsersAuth:
                     'user_token': user_token
                 }
             self.user_persistence_service.email_confirmed(check_user_object.get('id'))
-            if check_user_object.team_owner_id:
+            if check_user_object.get('team_owner_id'):
                     token_info = {
-                    "id": check_user_object.team_owner_id,
-                    "team_member_id": check_user_object.id
+                    "id": check_user_object.get('team_owner_id'),
+                    "team_member_id": check_user_object.get('id')
                     }
             else:
                 token_info = {
-                    "id": check_user_object.id,
+                    "id": check_user_object.get('id'),
                 }
             user_token = create_access_token(token_info)
             return {

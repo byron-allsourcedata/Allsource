@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 
 from services.subscriptions import SubscriptionService
 from .stripe_service import save_payment_details_in_stripe
@@ -12,7 +12,7 @@ class WebhookService:
 
     def update_subscription_confirmation(self, payload):
         stripe_request_created_timestamp = payload.get("created")
-        stripe_request_created_at = datetime.utcfromtimestamp(stripe_request_created_timestamp).isoformat() + "Z"
+        stripe_request_created_at = datetime.fromtimestamp(stripe_request_created_timestamp, timezone.utc).replace(tzinfo=None)
         customer_id = payload.get("data").get("object").get("customer")
         user_data = self.subscription_service.get_userid_by_customer(customer_id)
         if not user_data:
@@ -54,7 +54,7 @@ class WebhookService:
 
     def cancel_subscription_confirmation(self, payload):
         stripe_request_created_timestamp = payload.get("created")
-        stripe_request_created_at = datetime.utcfromtimestamp(stripe_request_created_timestamp).isoformat() + "Z"
+        stripe_request_created_at = datetime.fromtimestamp(stripe_request_created_timestamp, timezone.utc).replace(tzinfo=None)
         customer_id = payload.get("data").get("object").get("customer")
         user_data = self.subscription_service.get_userid_by_customer(customer_id)
         if not user_data:
@@ -92,7 +92,7 @@ class WebhookService:
 
     def create_payment_confirmation(self, payload):
         stripe_request_created_timestamp = payload.get("created")
-        stripe_request_created_at = datetime.utcfromtimestamp(stripe_request_created_timestamp).isoformat() + "Z"
+        stripe_request_created_at = datetime.fromtimestamp(stripe_request_created_timestamp, timezone.utc).replace(tzinfo=None)
         customer_id = payload.get("data").get("object").get("customer")
         user_data = self.subscription_service.get_userid_by_customer(customer_id)
         if not user_data:
@@ -113,15 +113,9 @@ class WebhookService:
         """
         Logic for existing or new subscription, credits and credit usage
         """
-        transaction_id = payload.get('data').get('object').get('id')
         
-        user_payment_transaction_exist = self.subscription_service.get_user_payment_by_transaction_id(transaction_id)
-        if user_payment_transaction_exist:
-            self.subscription_service.update_payments_transaction(user_id=user_data.id,
-                                                                    stripe_payload=payload, user_payment_transaction_id=user_payment_transaction_exist.id)
-        else:
-            self.subscription_service.create_payments_transaction(user_id=user_data.id,
-                                                                    stripe_payload=payload)
+        self.subscription_service.create_payments_transaction(user_id=user_data.id, stripe_payload=payload)
+        
         user_payment = self.subscription_service.create_payment_from_webhook(user_id=user_data.id, stripe_payload=payload)
         if user_payment:
             logger.info("New payment created")

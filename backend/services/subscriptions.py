@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timezone
 
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
@@ -16,7 +16,7 @@ from .stripe_service import determine_plan_name_from_product_id
 
 ACTIVE_STATUSES = ["active", "trialing", "completed"]
 TRIAL_STUB_PLAN_ID = '1'
-PRICE_CREDIT = 0.2
+PRICE_CREDIT = 0.49
 logger = logging.getLogger(__name__)
 
 
@@ -32,15 +32,10 @@ class SubscriptionService:
     def check_duplicate_send(self, stripe_request_created_at, user_id):
         subscription_data = self.db.query(Subscription).filter(
             Subscription.user_id == user_id
-        ).order_by(Subscription.id.desc()).first()
-
+        ).order_by(Subscription.plan_end.desc()).first()
         if subscription_data:
-            stripe_request_created_at_dt = datetime.fromisoformat(stripe_request_created_at.replace('Z', ''))
             if subscription_data.stripe_request_created_at is not None:
-                subscription_stripe_request_created_at = subscription_data.stripe_request_created_at.replace(
-                    tzinfo=None)
-
-                if stripe_request_created_at_dt < subscription_stripe_request_created_at:
+                if stripe_request_created_at <= subscription_data.stripe_request_created_at:
                     return True
         return False
     
@@ -49,11 +44,8 @@ class SubscriptionService:
                 UsersPaymentsTransactions.user_id == user_id
             ).order_by(UsersPaymentsTransactions.id.desc()).first()
         if user_payment_transaction:
-            stripe_request_created_at_dt = datetime.fromisoformat(stripe_request_created_at.replace('Z', ''))
             if user_payment_transaction.stripe_request_created_at is not None:
-                subscription_stripe_request_created_at = user_payment_transaction.stripe_request_created_at.replace(
-                    tzinfo=None)
-                if stripe_request_created_at_dt < subscription_stripe_request_created_at:
+                if stripe_request_created_at <= user_payment_transaction.stripe_request_created_at:
                     return True
         return False
 
@@ -94,8 +86,7 @@ class SubscriptionService:
                     "stripe_request_created_at": subscription.stripe_request_created_at,
                     "domains_limit": subscription.domains_limit,
                     "users_limit": subscription.users_limit,
-                    "integrations_limit": subscription.integrations_limit,
-                    "audiences_limit": subscription.audiences_limit
+                    "integrations_limit": subscription.integrations_limit
                 }
             }
         }
@@ -103,7 +94,8 @@ class SubscriptionService:
 
     def is_user_has_active_subscription(self, user_id):
         user_plan = self.db.query(UserSubscriptions.plan_end).filter(
-            UserSubscriptions.user_id == user_id
+            UserSubscriptions.user_id == user_id,
+            UserSubscriptions.status.in_(('active', 'canceled'))
         ).order_by(desc(UserSubscriptions.plan_end)).first()
         if user_plan:
             if user_plan.plan_end:
@@ -118,54 +110,29 @@ class SubscriptionService:
         created_timestamp = stripe_payload.get("created")
         payment_intent = stripe_payload.get("data", {}).get("object", {})
         transaction_id = payment_intent.get("id")
-        created_at = datetime.utcfromtimestamp(created_timestamp).isoformat() + "Z" if created_timestamp else None
+        created_at = datetime.fromtimestamp(created_timestamp, timezone.utc).replace(tzinfo=None) if created_timestamp else None
         amount_credits = int(payment_intent.get("amount")) / 100 / PRICE_CREDIT
         status = payment_intent.get("status")
-        payment_transaction_obj = UsersPaymentsTransactions(
-            user_id=user_id,
-            transaction_id=transaction_id,
-            created_at = datetime.now(),
-            stripe_request_created_at = created_at,
-            status=status,
-            amount_credits=amount_credits,
-            type='buy_credits'
-        )
-        self.db.add(payment_transaction_obj)
-        self.db.commit()
-        
-    def update_payments_transaction(self, user_id, stripe_payload, user_payment_transaction_id = None):
-        created_timestamp = stripe_payload.get("created")
-        payment_intent = stripe_payload.get("data", {}).get("object", {})
-        transaction_id = payment_intent.get("id")
-        created_at = datetime.utcfromtimestamp(created_timestamp).isoformat() + "Z" if created_timestamp else None
-        amount_credits = int(payment_intent.get("amount")) / 100 / PRICE_CREDIT
-        if user_payment_transaction_id:
-            self.db.query(UsersPaymentsTransactions).filter(UsersPaymentsTransactions.id == user_payment_transaction_id).update(
-                                                            {
-                                                                UsersPaymentsTransactions.updated_at: datetime.now(),
-                                                                UsersPaymentsTransactions.stripe_request_created_at: created_at
-                                                            },
-                                                              synchronize_session=False)
-        else:
+        if status == 'succeeded':
             payment_transaction_obj = UsersPaymentsTransactions(
                 user_id=user_id,
                 transaction_id=transaction_id,
                 created_at = datetime.now(),
                 stripe_request_created_at = created_at,
-                status='success',
+                status=status,
                 amount_credits=amount_credits,
                 type='buy_credits'
             )
             self.db.add(payment_transaction_obj)
-        self.db.commit()
+            self.db.commit()
         
     def create_subscription_transaction(self, user_id, stripe_payload: dict):
         start_date_timestamp = stripe_payload.get("data").get("object").get("current_period_start")
         stripe_request_created_timestamp = stripe_payload.get("created")
-        stripe_request_created_at = datetime.utcfromtimestamp(stripe_request_created_timestamp).isoformat() + "Z"
+        stripe_request_created_at = datetime.fromtimestamp(stripe_request_created_timestamp, timezone.utc).replace(tzinfo=None)
         end_date_timestamp = stripe_payload.get("data").get("object").get("current_period_end")
-        start_date = datetime.utcfromtimestamp(start_date_timestamp).isoformat() + "Z"
-        end_date = datetime.utcfromtimestamp(end_date_timestamp).isoformat() + "Z"
+        start_date = datetime.fromtimestamp(start_date_timestamp, timezone.utc).replace(tzinfo=None)
+        end_date = datetime.fromtimestamp(end_date_timestamp, timezone.utc).replace(tzinfo=None)
         created_at = get_utc_aware_date_for_postgres()
         currency = stripe_payload.get("data").get("object").get("currency")
         price = int(stripe_payload.get("data").get("object").get("plan").get("amount_decimal")) / 100
@@ -196,12 +163,12 @@ class SubscriptionService:
         return subscription_transaction_obj
 
     def create_subscription_from_webhook(self, user_id, stripe_payload: dict):
-        start_date_timestamp = stripe_payload.get("data").get("object").get("current_period_start")
         stripe_request_created_timestamp = stripe_payload.get("created")
-        stripe_request_created_at = datetime.utcfromtimestamp(stripe_request_created_timestamp).isoformat() + "Z"
+        start_date_timestamp = stripe_payload.get("data").get("object").get("current_period_start")
         end_date_timestamp = stripe_payload.get("data").get("object").get("current_period_end")
-        start_date = datetime.utcfromtimestamp(start_date_timestamp).isoformat() + "Z"
-        end_date = datetime.utcfromtimestamp(end_date_timestamp).isoformat() + "Z"
+        start_date = datetime.fromtimestamp(start_date_timestamp, timezone.utc).replace(tzinfo=None)
+        end_date = datetime.fromtimestamp(end_date_timestamp, timezone.utc).replace(tzinfo=None)
+        stripe_request_created_at = datetime.fromtimestamp(stripe_request_created_timestamp, timezone.utc).replace(tzinfo=None)
         stripe_status = stripe_payload.get("data").get("object").get("status")
         if stripe_status in ["active", "succeeded"]:
             status = "active"
@@ -213,25 +180,28 @@ class SubscriptionService:
             stripe_payload.get("data").get("object").get("plan").get("product"))
         payment_platform_subscription_id = stripe_payload.get("data").get("object").get("id")
         plan_id = self.plans_persistence.get_plan_by_title(plan_type)
-        domains_limit, users_limit, integrations_limit, leads_credits, prospect_credits, members_limit = self.plans_persistence.get_plan_limit_by_id(
-            plan_id=plan_id)
         subscription_obj = Subscription(
             user_id=user_id,
+            status=status,
             plan_start=start_date,
             plan_end=end_date,
-            status=status,
-            users_limit=users_limit,
             platform_subscription_id=payment_platform_subscription_id,
             plan_id=plan_id,
             stripe_request_created_at=stripe_request_created_at,
-            domains_limit=domains_limit,
-            integrations_limit=integrations_limit,
-            members_limit=members_limit-1
         )
+        if status == "active":
+            domains_limit, users_limit, integrations_limit, leads_credits, prospect_credits, members_limit = self.plans_persistence.get_plan_limit_by_id(
+            plan_id=plan_id)
+            subscription_obj.users_limit = users_limit
+            subscription_obj.domains_limit = domains_limit
+            subscription_obj.integrations_limit = integrations_limit
+            subscription_obj.members_limit = members_limit - 1
+            
+            user = self.db.query(User).filter(User.id == user_id).first()
+            user.leads_credits = leads_credits
+            user.prospect_credits = prospect_credits
+            
         self.db.add(subscription_obj)
-        user = self.db.query(User).filter(User.id == user_id).first()
-        user.leads_credits = leads_credits
-        user.prospect_credits = prospect_credits
         self.db.commit()
         return subscription_obj
     
@@ -245,7 +215,7 @@ class SubscriptionService:
                 user.prospect_credits = 0
             user.prospect_credits += amount_credits
             self.db.commit()
-        return status
+        return stripe_payload
     
     def get_user_payment_by_transaction_id(self, transaction_id):
         user_payment_transaction = self.db.query(UsersPaymentsTransactions).filter(
@@ -314,10 +284,10 @@ class SubscriptionService:
     def update_subscription_from_webhook(self, user_subscription :UserSubscriptions, stripe_payload):
         start_date_timestamp = stripe_payload.get("data").get("object").get("current_period_start")
         stripe_request_created_timestamp = stripe_payload.get("created")
-        stripe_request_created_at = datetime.utcfromtimestamp(stripe_request_created_timestamp).isoformat() + "Z"
+        stripe_request_created_at = datetime.fromtimestamp(stripe_request_created_timestamp, timezone.utc).replace(tzinfo=None)
         end_date_timestamp = stripe_payload.get("data").get("object").get("current_period_end")
-        start_date = datetime.utcfromtimestamp(start_date_timestamp).isoformat() + "Z"
-        end_date = datetime.utcfromtimestamp(end_date_timestamp).isoformat() + "Z"
+        start_date = datetime.fromtimestamp(start_date_timestamp, timezone.utc).replace(tzinfo=None)
+        end_date = datetime.fromtimestamp(end_date_timestamp, timezone.utc).replace(tzinfo=None)
         stripe_status = stripe_payload.get("data").get("object").get("status")
 
         if stripe_status in ["active", "succeeded"]:
@@ -346,7 +316,7 @@ class SubscriptionService:
 
         if status == "active":
             user = self.db.query(User).filter(User.id == user_subscription.user_id).first()
-            user.leads_credits = leads_credits
+            user.leads_credits = leads_credits if user.leads_credits >= 0 else  leads_credits - user.leads_credits
             user.prospect_credits = prospect_credits
             self.db.commit()
 

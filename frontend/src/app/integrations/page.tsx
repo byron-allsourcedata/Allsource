@@ -1,353 +1,1460 @@
 'use client';
+
+
 import React, { useState, useEffect } from "react";
 import { integrationsStyle } from "./integrationsStyle";
-import { useRouter } from "next/navigation";
 import axiosInstance from '../../axios/axiosInterceptorInstance';
-import { Box, Button, Grid, Typography, TextField, Backdrop, Drawer, IconButton, Modal } from "@mui/material";
+import { Box, Button, Typography, Tab, TextField, InputAdornment, Popover, IconButton, TableContainer, Table, Paper, TableHead, TableRow, TableCell, TableBody, Tooltip } from "@mui/material";
 import Image from "next/image";
-import PersonIcon from '@mui/icons-material/Person';
-import dynamic from "next/dynamic";
-import { useSlider, SliderProvider } from '../../context/SliderContext';
-import CloseIcon from '@mui/icons-material/Close';
-import { showToast, showErrorToast } from "../../components/ToastNotification";
-// import FacebookLoginForm from "@/components/MetaButton";
-const Sidebar = dynamic(() => import('../../components/Sidebar'), {
-    suspense: true,
-});
-interface IntegrationService {
-    id: number;
+import CustomTooltip from "@/components/customToolTip";
+import TabContext from "@mui/lab/TabContext";
+import TabPanel from "@mui/lab/TabPanel";
+import TabList from "@mui/lab/TabList";
+import { useRouter } from 'next/navigation';
+import axios, { AxiosError } from "axios";
+import Slider from '../../components/Slider';
+import { SliderProvider } from "@/context/SliderContext";
+import MetaConnectButton from "@/components/MetaConnectButton";
+import ConnectKlaviyo from "@/components/ConnectKlaviyo";
+import KlaviyoIntegrationPopup from "@/components/KlaviyoIntegrationPopup";
+import FilterListIcon from "@mui/icons-material/FilterList";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import CustomizedProgressBar from '@/components/CustomizedProgressBar';
+import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
+import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
+import axiosInterceptorInstance from '@/axios/axiosInterceptorInstance';
+import { showErrorToast, showToast } from "@/components/ToastNotification";
+import AlivbleIntagrationsSlider from "@/components/AvalibleIntegrationsSlider";
+import ShopifySettings from "@/components/ShopifySettings";
+import PixelInstallation from "@/components/PixelInstallation";
+import VerifyPixelIntegration from "@/components/VerifyPixelIntegration";
+import DataSyncList from "@/components/DataSyncList";
+
+interface IntegrationBoxProps {
+    image: string;
+    handleClick?: () => void;
     service_name: string;
-    image_url: string;
-    fields?: any[];
+    active?: boolean;
+    is_avalible?: boolean
 }
 
-interface Credential {
-    id: number;
-    shop_domain?: string;
-    access_token?: string;
-    data_center?: string,
+interface IntegrationCredentials {
+    access_token: string;
     service_name: string;
+    shop_domain: string;
+    ad_account_id: string;
+    is_with_suppresions: boolean;
 }
 
-interface SliderIntegrationProps {
-    credential: Credential | null;
-    service: IntegrationService;
-    open: boolean;
-    onClose: () => void;
-    onSave: (updatedCredential: Credential) => void;
-    onDelete: (service_name: string) => void;
-}
-
-const SliderIntegration = ({ credential, service, open, onClose, onSave, onDelete }: SliderIntegrationProps) => {
-    const [formData, setFormData] = useState<Record<string, string>>({});
-    const { setShowSlider } = useSlider();
-    const [openModal, setOpenModal] = useState(false);
-    const fields = service.fields || [];
-
-    useEffect(() => {
-        if (credential) {
-            setFormData({
-                shop_domain: credential.shop_domain || '',
-                access_token: credential.access_token || '',
-                data_center: credential.data_center || ''
-            });
-        } else {
-            setFormData({});
+const integrationStyle = {
+    tabHeading: {
+        fontFamily: 'Nunito Sans',
+        fontSize: '14px',
+        color: '#707071',
+        fontWeight: '500',
+        lineHeight: '20px',
+        textTransform: 'none',
+        cursor: 'pointer',
+        padding: 0,
+        minWidth: 'auto',
+        px: 2,
+        '@media (max-width: 600px)': {
+            alignItems: 'flex-start',
+            p: 0
+        },
+        '&.Mui-selected': {
+            color: '#5052b2',
+            fontWeight: '700'
         }
-    }, [credential]);
+    },
+};
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target;
-        setFormData((prevData) => ({ ...prevData, [name]: value }));
-    };
 
-    const handleSave = async () => {
-        const accessToken = localStorage.getItem('token');
-        if (!accessToken) return;
+const IntegrationBox = ({ image, handleClick, service_name, active, is_avalible }: IntegrationBoxProps) => {
 
-        const body: Record<string, any> = {
-            [service.service_name.toLowerCase()]: {
-                ...formData,
-            },
+    return (
+        <Box sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            cursor: 'pointer'
+        }}>
+            <Box sx={{
+                backgroundColor: active ? 'rgba(80, 82, 178, 0.1)' : 'transparent',
+                border: active ? '1px solid #5052B2' : '1px solid #E4E4E4',
+                position: 'relative',
+                display: 'flex',
+                borderRadius: '4px',
+                width: '7rem',
+                height: '7rem',
+                justifyContent: 'center',
+                alignItems: 'center',
+                transition: '0.2s',
+                '&:hover': {
+                    boxShadow: '0 0 4px #00000040'
+                },
+                '&:hover .edit-icon': {
+                    opacity: 1
+                }
+            }}>
+                {!is_avalible && (
+                    <Box className="edit-icon" onClick={handleClick} sx={{
+                        position: 'absolute',
+                        top: '5%',
+                        right: '5%',
+                        opacity: 0,  
+                        transition: 'opacity 0.2s',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        borderRadius: '50%',
+                        width: '2rem', 
+                        height: '2rem', 
+                        '&:hover': {
+                            backgroundColor: '#EDEEF7' 
+                        }
+                    }}>
+                        <Image
+                            src={'/pen.svg'}
+                            width={12}
+                            height={12}
+                            alt={'edit'}
+                        />
+                    </Box>
+                )}
+                <Image src={image} width={32} height={32} alt={service_name} />
+            </Box>
+            <Typography mt={0.5} fontSize={'0.9rem'} textAlign={'center'} fontFamily={'Nunito Sans'}>
+                {service_name}
+            </Typography>
+        </Box>
+    );
+};
+
+const IntegrationAdd = () => (
+    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer' }}>
+        <Box sx={{
+            border: '1px dashed #5052B2',
+            display: 'flex',
+            borderRadius: '4px',
+            width: '7rem',
+            height: '7rem',
+            justifyContent: 'center',
+            alignItems: 'center',
+            transition: '0.2s',
+            '&:hover': { boxShadow: '0 0 4px #00000040' }
+        }}>
+            <Image src={'/add-square.svg'} width={44} height={44} alt={'add'} />
+        </Box>
+    </Box>
+);
+
+interface IntegrationsListProps {
+    integrationsCredentials: IntegrationCredentials[];
+    integrations: any[]
+    changeTab?: (value: string) => void
+}
+
+interface DataSyncIntegrationsProps {
+    service_name: string | null
+}
+
+const DataSyncIntegration = ({service_name}: DataSyncIntegrationsProps) => {
+    const [data, setData] = useState<any[]>([]);
+    const [order, setOrder] = useState<"asc" | "desc" | undefined>(undefined);
+    const [orderBy, setOrderBy] = useState<string | undefined>(undefined);
+    const [isLoading, setIsLoading] = useState(true);
+    const handleSortRequest = (property: string) => {
+        const isAsc = orderBy === property && order === "asc";
+        setOrder(isAsc ? "desc" : "asc");
+        setOrderBy(property);
         };
-
-        try {
-            const response = await axiosInstance.post(`/integrations/`, body, {
-                params: {
-                    service_name: service.service_name,
-                },
-                headers: {
-                    Authorization: `Bearer ${accessToken}`,
-                    'Content-Type': 'application/json',
-                },
-            });
-
-            if (response.status === 200) {
-                onClose();
-                setShowSlider(false);
-                const newCredential: Credential = {
-                    id: -1,
-                    shop_domain: formData.shop_domain || '',
-                    access_token: formData.access_token || '',
-                    data_center: formData.access_token || '',
-                    service_name: service.service_name,
-                };
-                onSave(newCredential);
-                showToast('Successuly installed')
-                
+    useEffect(() => {
+        const fetchData = async() => {
+            if(service_name) {
+                const response = await axiosInstance.get('/data-sync/sync', {params: {service_name: service_name}})
+                if(response.status === 200) { setData(response.data) }
             }
-        } catch (error) {
-            showErrorToast('You credential not valid')
+            return null
         }
+        fetchData()
+    }, [service_name])
+    
+    const statusIcon = (status: string) => {
+        switch (status) {
+          case "success":
+            return <CheckCircleIcon sx={{ color: "green", fontSize: "16px" }} />;
+          case "error":
+            return (
+              <Tooltip
+                title={"Please choose repair sync in action section."}
+                placement='bottom-end'
+                componentsProps={{
+                  tooltip: {
+                    sx: {
+                      backgroundColor: "rgba(217, 217, 217, 1)",
+                      color: "rgba(128, 128, 128, 1)",
+                      fontFamily: "Roboto",
+                      fontWeight: "400",
+                      fontSize: "10px",
+                      boxShadow: "0px 4px 4px 0px rgba(0, 0, 0, 0.12)",
+                      border: "0.2px solid rgba(240, 240, 240, 1)",
+                      borderRadius: "4px",
+                      maxWidth: "100%",
+                      padding: "8px 10px",
+                    },
+                  },
+                }}
+              >
+                <Image
+                  src={"/danger-icon.svg"}
+                  alt="klaviyo"
+                  width={16}
+                  height={16}
+                />
+              </Tooltip>
+            );
+          default:
+            return null;
+        }
+      };
+    
+    const platformIcon = (platform: string) => {
+    switch (platform) {
+        case "klaviyo":
+        return (
+            <Image src={"/klaviyo.svg"} alt="klaviyo" width={18} height={18} />
+        );
+        case "meta":
+        return (
+            <Image src={"/meta-icon.svg"} alt="klaviyo" width={18} height={18} />
+        );
+        default:
+        return null;
+    } }
+    const formatFunnelText = (text: boolean) => {
+        if (text === true) {
+          return 'Enable';
+        }
+        if (text === false) {
+          return 'Disable';
+        }
+      };
+    const [anchorEl, setAnchorEl] = useState(null);
+    const [selectedId, setSelectedId] = useState<number | null>(null);
+    const handleClick = (event: any, id: number) => {
+    setAnchorEl(event.currentTarget);
+    setSelectedId(id);
     };
 
     const handleClose = () => {
-        setShowSlider(false);
-        onClose();
+    setAnchorEl(null);
+    setSelectedId(null);
     };
 
-    const handleDelete = async () => {
-        const accessToken = localStorage.getItem('token');
-        if (!accessToken) return;
+    const open = Boolean(anchorEl);
+    const id = open ? "simple-popover" : undefined;
 
+    const handleToggleSync = async () => {
         try {
-            const response = await axiosInstance.delete(`/integrations/`, {
-                params: {
-                    service_name: service.service_name,
-                },
-                headers: {
-                    Authorization: `Bearer ${accessToken}`,
-                    'Content-Type': 'application/json',
-                },
-            });
-            if (response.status === 200) {
-                onClose();
-                setShowSlider(false);
-                setOpenModal(false);
-                onDelete(service.service_name);
+          setIsLoading(true);
+          const response = await axiosInterceptorInstance.post(`/data-sync/sync/switch-toggle`, {
+            list_id: String(selectedId)
+          });
+          if (response.status === 200) {
+            switch (response.data.status) {
+              case 'SUCCESS':
+                showToast('successfully');
+                setData(prevData => 
+                  prevData.map(item => 
+                    item.id === selectedId ? { ...item, dataSync: response.data.data_sync } : item
+                  )
+                );
+                break
+              case 'FAILED':
+                showErrorToast('Integrations sync delete failed');
+                break
+              default:
+                showErrorToast('Unknown response received.');
             }
+          }
         } catch (error) {
-            console.error("Error deleting integration", error);
+          if (axios.isAxiosError(error)) {
+            if (error.response && error.response.status === 403) {
+              showErrorToast('Access denied: You do not have permission to remove this member.');
+            } else {
+              console.error('Error removing team member:', error);
+            }
+          }
+        } finally {
+          setIsLoading(false);
+          setSelectedId(null);
+          handleClose();
         }
+      };
+
+    const handleEdit = () => { }
+    const handleDelete = () => { }
+    const handleRepairSync = () => { }
+
+
+    return (
+        <Box sx={{ width: "100%", pl: 0.5, pt: 3, pr: 1 }}>
+        <TableContainer
+          component={Paper}
+          sx={{
+            border: "1px solid rgba(235, 235, 235, 1)",
+            overflowY: "auto",
+          }}
+        >
+          <Table>
+            <TableHead>
+              <TableRow>
+                {[
+                  { key: "list_name", label: "List Name" },
+                  { key: "list_type", label: "List Type" },
+                  { key: "number_of_contacts", label: "No. of Contacts" },
+                  { key: "created_by", label: "Created By" },
+                  {
+                    key: "created_date",
+                    label: "Created Date",
+                    sortable: true,
+                  },
+                  { key: "platform", label: "Platform" },
+                  { key: "account_id", label: "Account ID" },
+                  { key: "data_sync", label: "Data Sync" },
+                  { key: "last_sync", label: "Last Sync" },
+                  { key: "sync_status", label: "Sync Status" },
+                  { key: "suppression", label: "Suppression" },
+                ].map(({ key, label, sortable = false }) => (
+                  <TableCell
+                    key={key}
+                    sx={{
+                      ...integrationsStyle.table_column,
+                      position: "relative",
+                      ...(key === "list_name" && {
+                        position: "sticky",
+                        left: 0,
+                        zIndex: 99,
+                      }),
+                      ...(key === "suppression" && {
+                        "::after": {
+                          content: "none",
+                        },
+                      }),
+                    }}
+                    onClick={
+                      sortable ? () => handleSortRequest(key) : undefined
+                    }
+                    style={{ cursor: sortable ? "pointer" : "default" }}
+                  >
+                    <Box sx={{ display: "flex", alignItems: "center" }}>
+                      <Typography
+                        variant="body2"
+                        sx={{ ...integrationsStyle.table_column, borderRight: "0" }}
+                      >
+                        {label}
+                      </Typography>
+                      {sortable && orderBy === key && (
+                        <IconButton size="small" sx={{ ml: 1 }}>
+                          {order === "asc" ? (
+                            <ArrowUpwardIcon fontSize="inherit" />
+                          ) : (
+                            <ArrowDownwardIcon fontSize="inherit" />
+                          )}
+                        </IconButton>
+                      )}
+                    </Box>
+                  </TableCell>
+                ))}
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {data.map((row, index) => (
+                <TableRow
+                  key={row.id}
+                  sx={{
+                    "&:hover": {
+                      backgroundColor: "rgba(247, 247, 247, 1)",
+                      "& .sticky-cell": {
+                        backgroundColor: "rgba(247, 247, 247, 1)",
+                      },
+                    },
+                  }}
+                >
+                  <TableCell
+                    className="sticky-cell"
+                    sx={{
+                      ...integrationsStyle.table_array,
+                      position: "sticky",
+                      left: "0",
+                      zIndex: 9,
+                      backgroundColor: "rgba(255, 255, 255, 1)",
+                    }}
+                  >
+                    {row.name}
+                  </TableCell>
+                  <TableCell sx={integrationsStyle.table_array}>
+                    {row.type}
+                  </TableCell>
+                  <TableCell sx={integrationsStyle.table_array}>
+                    {row.contacts}
+                  </TableCell>
+                  <TableCell sx={integrationsStyle.table_array}>
+                    {row.createdBy}
+                  </TableCell>
+                  <TableCell sx={integrationsStyle.table_array}>
+                    {row.createdDate}
+                  </TableCell>
+                  <TableCell>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        padding: "2px 8px",
+                        borderRadius: "2px",
+                        justifyContent: "center",
+                        textTransform: "capitalize",
+                      }}
+                    >
+                      {platformIcon(row.platform)}
+                    </Box>
+                  </TableCell>
+                  <TableCell sx={integrationsStyle.table_array}>
+                    {row.accountId}
+                  </TableCell>
+                  <TableCell sx={integrationsStyle.table_array}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        padding: "2px 8px",
+                        borderRadius: "2px",
+                        justifyContent: "center",
+                        textTransform: "capitalize",
+                      }}
+                    >
+                      <Typography
+                        className="paragraph"
+                        sx={{
+                          fontFamily: "Roboto",
+                          fontSize: "12px",
+                          color:
+                            row.dataSync === true
+                              ? "rgba(43, 91, 0, 1) !important"
+                              : "rgba(74, 74, 74, 1)!important",
+                          backgroundColor:
+                            row.dataSync === true
+                              ? "rgba(234, 248, 221, 1) !important"
+                              : "rgba(219, 219, 219, 1) !important",
+                          padding: "3px 14.5px",
+                          maxHeigh: "1.25rem",
+                        }}
+                      >
+                        {formatFunnelText(row.dataSync)}
+                      </Typography>
+                    </Box>
+                  </TableCell>
+                  <TableCell sx={integrationsStyle.table_array}>
+                    {row.lastSync}
+                  </TableCell>
+                  <TableCell
+                    sx={{ ...integrationsStyle.table_column, position: "relative" }}
+                  >
+                    <Box
+                      sx={{
+                        display: "flex",
+                        padding: "2px 8px",
+                        borderRadius: "2px",
+                        justifyContent: "center",
+                      }}
+                    >
+                      {statusIcon(row.syncStatus)}
+                    </Box>
+                  </TableCell>
+                  <TableCell sx={{ ...integrationsStyle.table_array }}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        padding: "2px 8px",
+                        borderRadius: "2px",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        textTransform: "capitalize",
+                      }}
+                    >
+                      {row.suppression}
+                      <IconButton
+                        sx={{ padding: 0, margin: 0, borderRadius: 4 }}
+                        onClick={(e) => handleClick(e, row.id)}
+                      >
+                        <Image
+                          src={"more.svg"}
+                          alt="more"
+                          width={20}
+                          height={20}
+                        />
+                      </IconButton>
+                    </Box>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+        <Popover
+          id={id}
+          open={open}
+          anchorEl={anchorEl}
+          onClose={handleClose}
+          anchorOrigin={{
+            vertical: "bottom",
+            horizontal: "left",
+          }}
+        >
+          <Box
+            sx={{
+              p: 1,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "flex-start",
+              width: "100%",
+              maxWidth: "160px",
+            }}
+          >
+            <Button
+              sx={{
+                justifyContent: "flex-start",
+                width: "100%",
+                textTransform: "none",
+                fontFamily: "Nunito Sans",
+                fontSize: "14px",
+                color: "rgba(32, 33, 36, 1)",
+                fontWeight: 600,
+                ":hover": {
+                  color: "rgba(80, 82, 178, 1)",
+                  backgroundColor: "background: rgba(80, 82, 178, 0.1)",
+                },
+              }}
+              onClick={handleToggleSync}
+            >
+              {data.find((row) => row.id === selectedId)?.dataSync === true
+                ? "Disable Sync"
+                : "Enable Sync"}
+            </Button>
+            <Button
+              sx={{
+                justifyContent: "flex-start",
+                width: "100%",
+                textTransform: "none",
+                fontFamily: "Nunito Sans",
+                fontSize: "14px",
+                color: "rgba(32, 33, 36, 1)",
+                fontWeight: 600,
+                ":hover": {
+                  color: "rgba(80, 82, 178, 1)",
+                  backgroundColor: "background: rgba(80, 82, 178, 0.1)",
+                },
+              }}
+              onClick={handleEdit}
+            >
+              Edit
+            </Button>
+            <Button
+              sx={{
+                justifyContent: "flex-start",
+                width: "100%",
+                textTransform: "none",
+                fontFamily: "Nunito Sans",
+                fontSize: "14px",
+                color: "rgba(32, 33, 36, 1)",
+                fontWeight: 600,
+                ":hover": {
+                  color: "rgba(80, 82, 178, 1)",
+                  backgroundColor: "background: rgba(80, 82, 178, 0.1)",
+                },
+              }}
+              onClick={handleDelete}
+            >
+              Delete
+            </Button>
+            <Button
+              sx={{
+                justifyContent: "flex-start",
+                width: "100%",
+                color: "rgba(32, 33, 36, 1)",
+                textTransform: "none",
+                fontFamily: "Nunito Sans",
+                fontSize: "14px",
+                fontWeight: 600,
+                ":hover": {
+                  color: "rgba(80, 82, 178, 1)",
+                  backgroundColor: "background: rgba(80, 82, 178, 0.1)",
+                },
+              }}
+              onClick={handleRepairSync}
+            >
+              Repair Sync
+            </Button>
+          </Box>
+        </Popover>
+      </Box>
+    )
+}
+
+
+const UserIntegrationsList = ({ integrationsCredentials, changeTab = () => { }, integrations }: IntegrationsListProps) => {
+    const [activeService, setActiveService] = useState<string | null>(null);
+    const [openAvalible, setOpenAvalible] = useState(false)
+    const [openKlaviyoConnect, setOpenKlaviyoConnect] = useState(false)
+    const [openMetaConnect, setOpenMetaConnect] = useState(false)
+    const [openShopifyConnect, setOpenShopifyConnect] = useState(false)
+    const handleActive = (service: string) => {
+        setActiveService(service);
     };
+
+    const handleClose = () => {
+        setOpenKlaviyoConnect(false)
+        setOpenMetaConnect(false)
+        setOpenShopifyConnect(false)
+    }
+
+    const handleOnSave = () => {
+        
+    }
 
     return (
         <>
-            <Backdrop open={open} sx={{ zIndex: 1200, color: '#fff' }} />
-            <Drawer
-                anchor="right"
-                open={open}
-                variant="persistent"
-                PaperProps={{
-                    sx: {
-                        width: '40%',
-                        position: 'fixed',
-                        zIndex: 1301,
-                        top: 0,
-                        bottom: 0,
-                        '@media (max-width: 600px)': {
-                            width: '100%',
-                        },
-                    },
-                }}
-            >
-                <Box sx={{ p: 6, display: 'flex', flexDirection: 'column', textAlign: 'center', alignItems: 'center', justifyContent: 'center' }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-                        <Typography variant="h6" component="p">{service.service_name}</Typography>
-                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }}>
-                            <IconButton onClick={handleClose}>
-                                <CloseIcon />
-                            </IconButton>
-                        </Box>
-                    </Box>
-                    <Box sx={{ mt: 4, width: '100%' }}>
-                        {fields.map((field: any) => (
-                            <TextField
-                                key={field.name}
-                                label={field.label}
-                                name={field.name}
-                                type={field.type}
-                                value={formData[field.name] || ''}
-                                onChange={handleChange}
-                                fullWidth
-                                margin="normal"
-                            />
-                        ))}
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <Button onClick={() => setOpenModal(true)} variant="outlined" color="error" sx={{ mt: 2 }}>Delete</Button>
-                            <Button onClick={handleSave} variant="contained" color="primary" sx={{ mt: 2 }}>
-                                Save
-                            </Button>
-                        </Box>
-                    </Box>
+            <Box sx={{ display: 'flex', gap: 2 }}>
+            {integrationsCredentials.some(integration => integration.service_name === "Shopify") && (
+                <Box onClick={() => handleActive('Shopify')}>
+                    <IntegrationBox
+                        image="/shopify-icon.svg"
+                        service_name="Shopify"
+                        active={activeService === 'Shopify'}
+                        handleClick={() => setOpenShopifyConnect(true)}
+                    />
                 </Box>
-            </Drawer>
-            <Modal
-                sx={{ zIndex: 1302 }}
-                open={openModal}
-                onClose={() => setOpenModal(false)}
-                aria-labelledby="modal-modal-title"
-                aria-describedby="modal-modal-description"
-            >
-                <Box sx={integrationsStyle.modal}>
-                    <Typography textAlign={'center'} id="modal-modal-title" variant="h6" component="h2">
-                        Are you sure you want to delete this integration?
-                    </Typography>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <Button onClick={handleDelete} variant="outlined" color="error" sx={{ mt: 2 }}>Delete</Button>
-                        <Button onClick={() => setOpenModal(false)} variant="contained" color="primary" sx={{ mt: 2 }}>
-                            Discard
-                        </Button>
-                    </Box>
+            )}
+            {integrationsCredentials.some(integration => integration.service_name === "Klaviyo") && (
+                <Box onClick={() => handleActive('Klaviyo')}>
+                    <IntegrationBox
+                        image="/klaviyo.svg"
+                        service_name="Klaviyo"
+                        active={activeService === 'Klaviyo'}
+                        handleClick={() => setOpenKlaviyoConnect(true)}
+                    />
                 </Box>
-            </Modal>
+            )}
+            {integrationsCredentials.some(integration => integration.service_name === "Meta") && (
+                <Box onClick={() => handleActive('Meta')}>
+                    <IntegrationBox
+                        image="/meta-icon.svg"
+                        service_name="Meta"
+                        active={activeService === 'Meta'}
+                        handleClick={() => setOpenMetaConnect(true)}
+                    />
+                </Box>
+            )}
+            <Box onClick={() => setOpenAvalible(true)}>
+                <IntegrationAdd />
+            </Box>
+        </Box>
+        {(activeService && activeService != 'Shopify') && (
+            <Box display={"flex"} sx={{alignItems: 'center', mt: 2, }}>
+            <Box sx={{backgroundColor: '#E4E4E4', padding: '3px', borderRadius: '50%'}} />
+            <Box sx={{backgroundColor: '#E4E4E4', border: '1px dashed #fff', width: '100%'}} />
+            <Box sx={{backgroundColor: '#E4E4E4', padding: '3px', borderRadius: '50%'}} />
+        </Box>)}
+        <KlaviyoIntegrationPopup 
+            open={openKlaviyoConnect} 
+            handleClose={handleClose}
+            onSave={handleOnSave}  
+            initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'Klaviyo')?.access_token}
+        />
+        <MetaConnectButton 
+            open={openMetaConnect} 
+            onClose={handleClose} 
+            initAdId={integrationsCredentials?.find(integration => integration.service_name === 'Meta')?.ad_account_id} 
+        />
+        <AlivbleIntagrationsSlider 
+            isContactSync={false} 
+            open={openAvalible} 
+            onClose={() => setOpenAvalible(false)} 
+            integrations={integrations} 
+            integrationsCredentials={integrationsCredentials} 
+        />
+        <KlaviyoIntegrationPopup 
+            open={openKlaviyoConnect} 
+            handleClose={handleClose}
+            onSave={handleOnSave}  
+            initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'Klaviyo')?.access_token}
+        />
+        <MetaConnectButton 
+            open={openMetaConnect} 
+            onClose={handleClose} 
+            initAdId={integrationsCredentials?.find(integration => integration.service_name === 'Meta')?.ad_account_id} 
+        />
+        <ShopifySettings 
+            open={openShopifyConnect} 
+            handleClose={handleClose}
+            onSave={handleOnSave}  
+            initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'Shopify')?.access_token}
+        />
+        <AlivbleIntagrationsSlider 
+            isContactSync={false} 
+            open={openAvalible} 
+            onClose={() => setOpenAvalible(false)} 
+            integrations={integrations} 
+            integrationsCredentials={integrationsCredentials} 
+        />
+        <Box>
+            {(activeService && activeService != 'Shopify') && (<DataSyncList service_name={activeService} />)}
+        </Box>
         </>
     );
 };
 
-const ServiceIntegrations = ({ service }: { service: IntegrationService[] }) => {
-    const [credentials, setCredentials] = useState<Credential[]>([]);
-    const [selectedService, setSelectedService] = useState<IntegrationService | null>(null);
-    const [selectedCredential, setSelectedCredential] = useState<Credential | null>(null);
-    const [openModal, setOpenModal] = useState<boolean>(false);
+
+const IntegrationsAvailable = ({ integrationsCredentials: integrations }: IntegrationsListProps) => {
+    const [search, setSearch] = useState<string>('');
+    const [openMetaConnect, setOpenMetaConnect] = useState(false)
+    const [openKlaviyoConnect, setOpenKlaviyoConnect] = useState(false)
+    const [openShopifyConnect, setOpenShopifyConnect] = useState(false)
+    const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setSearch(event.target.value);
+    };
+
+    const integrationsAvailable = [
+        { image: 'shopify-icon.svg', service_name: 'Shopify' },
+        { image: 'klaviyo.svg', service_name: 'Klaviyo' },
+        { image: 'meta-icon.svg', service_name: 'Meta' },
+    ];
+
+    const filteredIntegrations = integrationsAvailable.filter(
+        (integrationAvailable) =>
+            integrationAvailable.service_name.toLowerCase().includes(search.toLowerCase()) &&
+            !integrations.some(integration => integration.service_name === integrationAvailable.service_name)
+    );
+
+    const handleClose = () => {
+        setOpenMetaConnect(false)
+        setOpenKlaviyoConnect(false)
+        setOpenShopifyConnect(false)
+    }
+
+    const handleOnSave = () => {}
+    return (
+        <Box>
+            <Box sx={{ width: '40%', }}>
+                <TextField
+                    fullWidth
+                    placeholder="Search integrations"
+                    value={search}
+                    onChange={handleSearch}
+                    id="outlined-start-adornment"
+                    sx={{ mb: 3.75}}
+                    InputProps={{
+                        startAdornment: (
+                            <InputAdornment position="start">
+                                <Image src="/ic_round-search.svg" width={24} height={24} alt="search" />
+                            </InputAdornment>
+                        ),
+                    }}
+                    variant="outlined"
+                />
+            </Box>
+            <Box sx={{ display: 'flex', gap: 2 }}>
+                {filteredIntegrations.map((integrationAvailable) => (
+                    <Box key={integrationAvailable.service_name}
+                    onClick={() => {
+                        if (integrationAvailable.service_name === 'Meta') {
+                          setOpenMetaConnect(true);
+                        } else if (integrationAvailable.service_name === 'Klaviyo') {
+                          setOpenKlaviyoConnect(true);
+                        } else if(integrationAvailable.service_name === 'Shopify') {
+                          setOpenShopifyConnect(true)
+                        }
+                    }}>
+                        <IntegrationBox
+                            image={integrationAvailable.image}
+                            service_name={integrationAvailable.service_name}
+                            is_avalible={true}
+                        />
+                    </Box>
+                ))}
+            </Box>
+            <KlaviyoIntegrationPopup open={openKlaviyoConnect} handleClose={handleClose} onSave={handleOnSave}/>
+            <MetaConnectButton 
+                open={openMetaConnect} 
+                onClose={handleClose} 
+            />
+            <ShopifySettings open={openShopifyConnect} handleClose={handleClose} onSave={handleOnSave}/>
+        </Box>
+    );
+};
+
+
+const PixelManagment = () => {
+  const [value, setValue] = useState('1')
+
+  const handleTabChange = (event: React.SyntheticEvent, newValue: string) => {
+    setValue(newValue);
+  };
+  const [data, setData] = useState<any[]>([]);
+  const [order, setOrder] = useState<"asc" | "desc" | undefined>(undefined);
+  const [orderBy, setOrderBy] = useState<string | undefined>(undefined);
+  const [isLoading, setIsLoading] = useState(true);
+  const handleSortRequest = (property: string) => {
+      const isAsc = orderBy === property && order === "asc";
+      setOrder(isAsc ? "desc" : "asc");
+      setOrderBy(property);
+      };
+  useEffect(() => {
+      const fetchData = async() => {
+              const response = await axiosInstance.get('/data-sync/sync')
+              if(response.status === 200) { setData(response.data) }
+      }
+      fetchData()
+  }, [])
+  
+  const statusIcon = (status: string) => {
+      switch (status) {
+        case "success":
+          return <CheckCircleIcon sx={{ color: "green", fontSize: "16px" }} />;
+        case "error":
+          return (
+            <Tooltip
+              title={"Please choose repair sync in action section."}
+              placement='bottom-end'
+              componentsProps={{
+                tooltip: {
+                  sx: {
+                    backgroundColor: "rgba(217, 217, 217, 1)",
+                    color: "rgba(128, 128, 128, 1)",
+                    fontFamily: "Roboto",
+                    fontWeight: "400",
+                    fontSize: "10px",
+                    boxShadow: "0px 4px 4px 0px rgba(0, 0, 0, 0.12)",
+                    border: "0.2px solid rgba(240, 240, 240, 1)",
+                    borderRadius: "4px",
+                    maxWidth: "100%",
+                    padding: "8px 10px",
+                  },
+                },
+              }}
+            >
+              <Image
+                src={"/danger-icon.svg"}
+                alt="klaviyo"
+                width={16}
+                height={16}
+              />
+            </Tooltip>
+          );
+        default:
+          return null;
+      }
+    };
+  
+  const platformIcon = (platform: string) => {
+  switch (platform) {
+      case "klaviyo":
+      return (
+          <Image src={"/klaviyo.svg"} alt="klaviyo" width={18} height={18} />
+      );
+      case "meta":
+      return (
+          <Image src={"/meta-icon.svg"} alt="klaviyo" width={18} height={18} />
+      );
+      default:
+      return null;
+  } }
+  const formatFunnelText = (text: boolean) => {
+      if (text === true) {
+        return 'Enable';
+      }
+      if (text === false) {
+        return 'Disable';
+      }
+    };
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const handleClick = (event: any, id: number) => {
+  setAnchorEl(event.currentTarget);
+  setSelectedId(id);
+  };
+
+  const handleClose = () => {
+  setAnchorEl(null);
+  setSelectedId(null);
+  };
+
+  const open = Boolean(anchorEl);
+  const id = open ? "simple-popover" : undefined;
+
+  const handleToggleSync = async () => {
+      try {
+        setIsLoading(true);
+        const response = await axiosInterceptorInstance.post(`/data-sync/sync/switch-toggle`, {
+          list_id: String(selectedId)
+        });
+        if (response.status === 200) {
+          switch (response.data.status) {
+            case 'SUCCESS':
+              showToast('successfully');
+              setData(prevData => 
+                prevData.map(item => 
+                  item.id === selectedId ? { ...item, dataSync: response.data.data_sync } : item
+                )
+              );
+              break
+            case 'FAILED':
+              showErrorToast('Integrations sync delete failed');
+              break
+            default:
+              showErrorToast('Unknown response received.');
+          }
+        }
+      } catch (error) {
+        if (axios.isAxiosError(error)) {
+          if (error.response && error.response.status === 403) {
+            showErrorToast('Access denied: You do not have permission to remove this member.');
+          } else {
+            console.error('Error removing team member:', error);
+          }
+        }
+      } finally {
+        setIsLoading(false);
+        setSelectedId(null);
+        handleClose();
+      }
+    };
+
+  const handleEdit = () => { }
+  const handleDelete = () => { }
+  const handleRepairSync = () => { }
+  return (
+    <>
+      <TabContext value={value}>
+        <TabList
+          centered
+          aria-label="Integrations Tabs"
+          TabIndicatorProps={{ sx: { backgroundColor: "#5052b2" } }}
+          sx={{
+              width: 'fit-content',
+              "& .MuiTabs-flexContainer": {
+                  justifyContent: 'center',
+                  "@media (max-width: 600px)": { gap: '16px' }
+              }
+          }}
+          onChange={handleTabChange}
+      >
+        <Tab label="Connections" value="1" sx={{ ...integrationStyle.tabHeading }} />
+        <Tab label="Pixel Setups" value="2" sx={{ ...integrationStyle.tabHeading }} />
+    </TabList>
+        <TabPanel value="1">
+        <Box sx={{
+          mt: '1rem',
+          display: "flex",
+          flexDirection: "row",
+          alignItems: "center",
+          "@media (max-width: 600px)": { mb: 2 },
+      }}>
+          {/* Title and Tooltip */}
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1}}>
+              <Typography
+                  className="first-sub-title"
+                  sx={{
+                      fontFamily: "Nunito Sans",
+                      fontSize: "16px",
+                      lineHeight: "normal",
+                      fontWeight: 600,
+                      color: "#202124",
+                  }}
+              >
+                  Connections Details
+              </Typography>
+              <CustomTooltip
+                  title={"How data synch works and to customise your sync settings"}
+                  linkText="Learn more"
+                  linkUrl="https://maximiz.ai"
+              />
+          </Box>
+          {/* CONTENT */}
+          </Box>
+          <Box mt={4}>
+          <TableContainer
+          component={Paper}
+          sx={{
+            border: "1px solid rgba(235, 235, 235, 1)",
+            boxShadow: 'unset',
+            overflowY: "auto",
+          }}
+        >
+            <Table>
+              <TableHead>
+                <TableRow>
+                  {[
+                    { key: "platform", label: "Destination" },
+                    { key: "account_id", label: "Account ID" },
+                    { key: "list_name", label: "List Name" },
+                    { key: "data_sync", label: "Data Sync" },
+                    { key: "sync_status", label: "Sync Status" },
+                    { key: "action", label: "Action" },
+                  ].map(({ key, label}) => (
+                    <TableCell
+                      key={key}
+                      sx={{
+                        ...integrationsStyle.table_column,
+                        position: "relative",
+                        ...(key === "list_name" && {
+                          position: "sticky",
+                          left: 0,
+                          zIndex: 99,
+                        }),
+                        ...(key === "suppression" && {
+                          "::after": {
+                            content: "none",
+                          },
+                        }),
+                      }}
+                    >
+                      <Box sx={{ display: "flex", alignItems: "center" }}>
+                        <Typography
+                          variant="body2"
+                          sx={{ ...integrationsStyle.table_column, borderRight: "0" }}
+                        >
+                          {label}
+                        </Typography>
+                      </Box>
+                    </TableCell>
+                  ))}
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {data.map((row, index) => (
+                  <TableRow
+                    key={row.id}
+                    sx={{
+                      "&:hover": {
+                        backgroundColor: "rgba(247, 247, 247, 1)",
+                        "& .sticky-cell": {
+                          backgroundColor: "rgba(247, 247, 247, 1)",
+                        },
+                      },
+                    }}
+                  >
+                    <TableCell
+                      className="sticky-cell"
+                      sx={{
+                        ...integrationsStyle.table_array,
+                        position: "sticky",
+                        left: "0",
+                        zIndex: 9,
+                        backgroundColor: "rgba(255, 255, 255, 1)",
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          display: "flex",
+                          padding: "2px 8px",
+                          borderRadius: "2px",
+                          justifyContent: "center",
+                          textTransform: "capitalize",
+                        }}
+                      >
+                        {platformIcon(row.platform)}
+                        <Typography
+                          variant="body2"
+                          sx={{ ...integrationsStyle.table_array, borderRight: "0", fontSize: '0.8rem', marginLeft: '1rem' }}
+                        >
+                          {row.platform}
+                        </Typography>
+                        
+                      </Box>
+                    </TableCell>                    
+                    <TableCell sx={integrationsStyle.table_array}>
+                      {row.accountId}
+                    </TableCell>
+                    <TableCell
+                      className="sticky-cell"
+                      sx={{
+                        ...integrationsStyle.table_array,
+                        position: "sticky",
+                        left: "0",
+                        zIndex: 9,
+                        backgroundColor: "rgba(255, 255, 255, 1)",
+                      }}
+                    >
+                      {row.name}
+                    </TableCell>
+                    <TableCell sx={integrationsStyle.table_array}>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          padding: "2px 8px",
+                          borderRadius: "2px",
+                          justifyContent: "center",
+                          textTransform: "capitalize",
+                        }}
+                      >
+                        <Typography
+                          className="paragraph"
+                          sx={{
+                            fontFamily: "Roboto",
+                            fontSize: "12px",
+                            color:
+                              row.dataSync === true
+                                ? "rgba(43, 91, 0, 1) !important"
+                                : "rgba(74, 74, 74, 1)!important",
+                            backgroundColor:
+                              row.dataSync === true
+                                ? "rgba(234, 248, 221, 1) !important"
+                                : "rgba(219, 219, 219, 1) !important",
+                            padding: "3px 14.5px",
+                            maxHeigh: "1.25rem",
+                          }}
+                        >
+                          {formatFunnelText(row.dataSync)}
+                        </Typography>
+                      </Box>
+                    </TableCell>
+                    <TableCell
+                      sx={{ ...integrationsStyle.table_column, position: "relative" }}
+                    >
+                      <Box
+                        sx={{
+                          display: "flex",
+                          padding: "2px 8px",
+                          borderRadius: "2px",
+                          justifyContent: "center",
+                        }}
+                      >
+                        {statusIcon(row.syncStatus)}
+                      </Box>
+                    </TableCell>
+                    <TableCell sx={{ ...integrationsStyle.table_array }}>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          padding: "2px 8px",
+                          borderRadius: "2px",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          textTransform: "capitalize",
+                        }}
+                      >
+                        {row.suppression}
+                        <IconButton
+                          sx={{ padding: 0, margin: 0, borderRadius: 4 }}
+                          onClick={(e) => handleClick(e, row.id)}
+                        >
+                          <Image
+                            src={"more.svg"}
+                            alt="more"
+                            width={20}
+                            height={20}
+                          />
+                        </IconButton>
+                      </Box>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+          <Popover
+          id={id}
+          open={open}
+          anchorEl={anchorEl}
+          onClose={handleClose}
+          anchorOrigin={{
+            vertical: "bottom",
+            horizontal: "left",
+          }}
+        >
+          <Box
+            sx={{
+              p: 1,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "flex-start",
+              width: "100%",
+              maxWidth: "160px",
+            }}
+          >
+            <Button
+              sx={{
+                justifyContent: "flex-start",
+                width: "100%",
+                textTransform: "none",
+                fontFamily: "Nunito Sans",
+                fontSize: "14px",
+                color: "rgba(32, 33, 36, 1)",
+                fontWeight: 600,
+                ":hover": {
+                  color: "rgba(80, 82, 178, 1)",
+                  backgroundColor: "background: rgba(80, 82, 178, 0.1)",
+                },
+              }}
+              onClick={handleToggleSync}
+            >
+              {data.find((row) => row.id === selectedId)?.dataSync === true
+                ? "Disable Sync"
+                : "Enable Sync"}
+            </Button>
+            <Button
+              sx={{
+                justifyContent: "flex-start",
+                width: "100%",
+                textTransform: "none",
+                fontFamily: "Nunito Sans",
+                fontSize: "14px",
+                color: "rgba(32, 33, 36, 1)",
+                fontWeight: 600,
+                ":hover": {
+                  color: "rgba(80, 82, 178, 1)",
+                  backgroundColor: "background: rgba(80, 82, 178, 0.1)",
+                },
+              }}
+              onClick={handleEdit}
+            >
+              Edit
+            </Button>
+            <Button
+              sx={{
+                justifyContent: "flex-start",
+                width: "100%",
+                textTransform: "none",
+                fontFamily: "Nunito Sans",
+                fontSize: "14px",
+                color: "rgba(32, 33, 36, 1)",
+                fontWeight: 600,
+                ":hover": {
+                  color: "rgba(80, 82, 178, 1)",
+                  backgroundColor: "background: rgba(80, 82, 178, 0.1)",
+                },
+              }}
+              onClick={handleDelete}
+            >
+              Delete
+            </Button>
+            <Button
+              sx={{
+                justifyContent: "flex-start",
+                width: "100%",
+                color: "rgba(32, 33, 36, 1)",
+                textTransform: "none",
+                fontFamily: "Nunito Sans",
+                fontSize: "14px",
+                fontWeight: 600,
+                ":hover": {
+                  color: "rgba(80, 82, 178, 1)",
+                  backgroundColor: "background: rgba(80, 82, 178, 0.1)",
+                },
+              }}
+              onClick={handleRepairSync}
+            >
+              Repair Sync
+            </Button>
+          </Box>
+        </Popover>
+          </Box>
+        </TabPanel>
+        <TabPanel value="2">
+          <PixelInstallation />
+          <VerifyPixelIntegration />
+        </TabPanel>
+      </TabContext>
+      
+    </>
+
+  )
+}
+
+const Integrations = () => {
+    const [value, setValue] = useState('1');
+    const [integrationsCredentials, setIntegrationsCredentials] = useState<IntegrationCredentials[]>([]);
+    const [integrations, setIntegrations] = useState<any[]>([])
+    const [status, setStatus] = useState<string>('');
+    const router = useRouter();
+    const [showSlider, setShowSlider] = useState(false);
+    const [isLoading, setLoading] = useState(true)
+    const handleTabChange = (event: React.SyntheticEvent, newValue: string) => {
+        setValue(newValue);
+    };
+
+    const installPixel = () => {
+        router.push('/dashboard');
+    };
+
+    const centerContainerStyles = {
+        mt: 3,
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center',
+        border: '1px solid rgba(235, 235, 235, 1)',
+        borderRadius: 2,
+        padding: 3,
+        width: '100%',
+        textAlign: 'center',
+        flex: 1,
+        fontFamily: 'Nunito Sans'
+    };
 
     useEffect(() => {
-        const accessToken = localStorage.getItem('token');
-        if (!accessToken) return;
-
         const fetchData = async () => {
             try {
-                const response = await axiosInstance.get('/integrations/credentials/', {
-                    headers: { Authorization: `Bearer ${accessToken}` },
-                });
-                if (response.status === 200) {
-                    setCredentials(response.data);
+                const [credentialsResponse, integrationsResponse] = await Promise.all([
+                    axiosInstance.get('/integrations/credentials/'),
+                    axiosInstance.get('/integrations/')
+                ]);
+                if (credentialsResponse.status === 200) {
+                    setIntegrationsCredentials(credentialsResponse.data);
+                }
+                if (integrationsResponse.status === 200) {
+                    setIntegrations(integrationsResponse.data);
                 }
             } catch (error) {
-                console.error("Error fetching credentials", error);
+                if (error instanceof AxiosError && error.response?.status === 403) {
+                    const status = error.response.data.detail.status;
+                    if (status === 'NEED_BOOK_CALL') {
+                        sessionStorage.setItem('is_slider_opened', 'true');
+                        setShowSlider(true);
+                    } else if (status === 'PIXEL_INSTALLATION_NEEDED') {
+                        setStatus('PIXEL_INSTALLATION_NEEDED');
+                    } else {
+                        setShowSlider(false);
+                    }
+                }
+            } finally {
+                setLoading(false);
             }
         };
         fetchData();
     }, []);
-
-    const handleServiceClick = (service: IntegrationService) => {
-        setSelectedService(service);
-        const matchedCredential = credentials.find(credential => credential.service_name === service.service_name);
-        setSelectedCredential(matchedCredential || null);
-        setOpenModal(true); 
-    };
-
-    const handleCloseModal = () => setOpenModal(false);
-
-    const handleSave = (updatedCredential: Credential) => {
-        setCredentials(prevCredentials => {
-            const existingCredentialIndex = prevCredentials.findIndex(cred => cred.service_name === updatedCredential.service_name);
-            if (existingCredentialIndex > -1) {
-                const updatedCredentials = [...prevCredentials];
-                updatedCredentials[existingCredentialIndex] = updatedCredential;
-                return updatedCredentials;
-            }
-            return [...prevCredentials, updatedCredential];
-        });
-    };
-
-    const handleDelete = (service_name: string) => {
-        setCredentials(prevCredentials => {
-            const indexToDelete = prevCredentials.findIndex(cred => cred.service_name === service_name);
-            
-            if (indexToDelete > -1) {
-                const updatedCredentials = prevCredentials.filter((_, index) => index !== indexToDelete);
-                return updatedCredentials;
-            }
-            return prevCredentials;
-        });
-    };
     
 
+    const changeTab = (value: string) => {
+        setValue(value)
+    }
     return (
         <>
-            <Box sx={integrationsStyle.service}>
-                {service.map(srv => {
-                    const matchedCredential = credentials.find(credential => credential.service_name === srv.service_name);
-                    return (
-                        <Box key={srv.id} onClick={() => handleServiceClick(srv)} sx={{
-                            display: 'flex',
-                            flexDirection: 'column',
-                            alignItems: 'center',
-                            marginBottom: '16px',
-                        }}>
-                            <Box sx={{ ...integrationsStyle.imageServiceBox, filter: matchedCredential ? 'none' : 'grayscale(100%)' }}>
-                                <Image src={srv.image_url} alt={srv.service_name} width={80} height={80} />
-                            </Box>
-                            <Typography component="p" sx={{ fontWeight: 'bold' }}>
-                                {srv.service_name}
-                            </Typography>
+            {isLoading && <CustomizedProgressBar />}
+            <TabContext value={value}>
+                <Box sx={{
+                    mt: '1rem',
+                    display: "flex",
+                    flexDirection: "row",
+                    alignItems: "center",
+                    "@media (max-width: 600px)": { mb: 2 },
+                }}>
+                    {/* Title and Tooltip */}
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1}}>
+                        <Typography
+                            className="first-sub-title"
+                            sx={{
+                                fontFamily: "Nunito Sans",
+                                fontSize: "16px",
+                                lineHeight: "normal",
+                                fontWeight: 600,
+                                color: "#202124",
+                            }}
+                        >
+                            Integrations
+                        </Typography>
+                        <CustomTooltip
+                            title={"Connect your favourite tools to automate tasks and ensure all your data is accessible in one place."}
+                            linkText="Learn more"
+                            linkUrl="https://maximiz.ai"
+                        />
+                    </Box>
+                    {/* Tabs */}
+                    {status !== 'PIXEL_INSTALLATION_NEEDED' && (
+                        <Box sx={{ display: 'flex', alignItems: 'center', margin: '0 auto'}}>
+                            <TabList
+                                centered
+                                aria-label="Integrations Tabs"
+                                TabIndicatorProps={{ sx: { backgroundColor: "#5052b2" } }}
+                                sx={{
+                                    width: 'fit-content',
+                                    "& .MuiTabs-flexContainer": {
+                                        justifyContent: 'center',
+                                        "@media (max-width: 600px)": { gap: '16px' }
+                                    }
+                                }}
+                                onChange={handleTabChange}
+                            >
+                                <Tab label="Your Integration" value="1" sx={{ ...integrationStyle.tabHeading }} />
+                                <Tab label="Available Integrations" value="2" sx={{ ...integrationStyle.tabHeading }} />
+                                <Tab label="Pixel Management" value="3" sx={{ ...integrationStyle.tabHeading }} />
+                            </TabList>
                         </Box>
-                    );
-                })}
-            </Box>
-            {selectedService && (
-                <>
-                    <SliderIntegration
-                        credential={selectedCredential}
-                        service={selectedService}
-                        open={openModal}
-                        onClose={handleCloseModal}
-                        onSave={handleSave}
-                        onDelete={handleDelete}
-                    />
-                </>
-            )}
+                    )}  
+                </Box>
+                <Box sx={{
+                    border: '1px solid #E4E4E4',
+                    mt: 2.5
+                }}></Box>
+                {status === 'PIXEL_INSTALLATION_NEEDED' ? (
+                    <Box sx={centerContainerStyles}>
+                        <Typography variant="h5" sx={{ mb: 2, fontSize: '0.9rem' }}>
+                            Pixel Integration isn&#39t completed yet!
+                        </Typography>
+                        <Image src={'/pixel_installation_needed.svg'} width={300} height={241} alt="pixel installed needed"/>
+                        <Typography sx={{ mb: 3, color: '#808080', fontSize: '0.8rem', mt: 3 }}>
+                            Install the pixel to unlock and gain valuable insights! Start viewing your leads now
+                        </Typography>
+                        <Button onClick={installPixel} variant="contained" sx={{
+                            backgroundColor: '#5052B2',
+                            fontFamily: "Nunito Sans",
+                            fontSize: '14px',
+                            fontWeight: '600',
+                            lineHeight: '20px',
+                            letterSpacing: 'normal',
+                            color: "#fff",
+                            textTransform: 'none',
+                            padding: '10px 24px',
+                            boxShadow:'0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
+                            '&:hover': {
+                                backgroundColor: '#5052B2'
+                            },
+                            borderRadius: '4px',
+                        }}>
+                            Setup Pixel
+                        </Button>
+                    </Box>
+                ) : (
+                    <>
+                        <TabPanel value="1" sx={{ px: 0 }}>
+                            <UserIntegrationsList 
+                                integrationsCredentials={integrationsCredentials} 
+                                changeTab={changeTab} 
+                                integrations={integrations}/>
+                        </TabPanel>
+                        <TabPanel value="2" sx={{ px: 0 }}>
+                            <IntegrationsAvailable 
+                            integrationsCredentials={integrationsCredentials} 
+                            integrations={integrations}/>
+                        </TabPanel>
+                        <TabPanel value="3" sx={{ px: 0 }}>
+                            <PixelManagment />
+                        </TabPanel>
+                    </>
+                )}
+            </TabContext>
+            {showSlider && <Slider/>}
         </>
     );
 };
 
-
-const Integrations: React.FC = () => {
-    const [integrationsService, setIntegrationsService] = useState<IntegrationService[]>([]);
-    const router = useRouter();
-
-    useEffect(() => {
-        const accessToken = localStorage.getItem('token');
-        if (!accessToken) {
-            router.push('/signin');
-            return;
-        }
-
-        const fetchData = async () => {
-            try {
-                const response = await axiosInstance.get('/integrations/', {
-                    headers: { Authorization: `Bearer ${accessToken}` },
-                });
-                if (response.status === 200) {
-                    setIntegrationsService(response.data);
-                }
-            } catch (error) {
-                console.error("Error fetching integrations", error);
-            }
-        };
-
-        fetchData();
-    }, [router]);
-
+const IntegraitonsPage = () => {
     return (
-        <>
-        <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-            <Typography variant="h4" component="h1" sx={integrationsStyle.title}>
-                Integrations
-            </Typography>
-        </Box>
-        <ServiceIntegrations service={integrationsService} />
-        </>
-    );
-};
-
-const IntegrationsPage = () => {
-    return ( 
         <SliderProvider>
             <Integrations />
         </SliderProvider>
-     );
+    )
 }
- 
-export default IntegrationsPage;
+
+export default IntegraitonsPage;

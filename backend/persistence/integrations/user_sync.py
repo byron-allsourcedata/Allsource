@@ -13,36 +13,101 @@ class IntegrationsUserSyncPersistence:
         self.db.commit()
         return sync
     
+    def edit_sync(self, data: dict, integrations_users_sync_id: int) -> IntegrationUserSync:
+        sync = self.db.query(IntegrationUserSync).filter_by(id=integrations_users_sync_id).first()
+        if sync:
+            for key, value in data.items():
+                setattr(sync, key, value)
+            self.db.commit()
+        return sync
+    
+    def delete_sync(self, domain_id, list_id):
+        sync = self.db.query(IntegrationUserSync).filter(IntegrationUserSync.id == list_id, IntegrationUserSync.domain_id == domain_id).first()
+        if sync:
+            self.db.delete(sync)
+            self.db.commit()
+            return True
+        return False
+
+
+    def switch_sync_toggle(self, domain_id, list_id):
+        active = False
+        sync = self.db.query(IntegrationUserSync).filter(IntegrationUserSync.id == list_id, IntegrationUserSync.domain_id == domain_id).first()
+        if sync:
+            if sync.is_active == False:
+                active = True
+                sync.is_active = active
+            else:
+                sync.is_active = active
+            self.db.commit()
+            return active
+    
     def get_all(self):
         return self.db.query(IntegrationUserSync).all()
     
-    def get_filter_by(self, domain_id, service_name: str = None):
+    def get_filter_by(self, domain_id, service_name: str = None, integrations_users_sync_id: str = None):
         query = self.db.query(
             IntegrationUserSync.id, 
             IntegrationUserSync.created_at, 
             IntegrationUserSync.is_active, 
             IntegrationUserSync.last_sync_date,
-            IntegrationUserSync.leads_type, 
+            IntegrationUserSync.leads_type,
+            IntegrationUserSync.list_name,
             IntegrationUserSync.integration_id,
+            IntegrationUserSync.sync_status,
+            IntegrationUserSync.no_of_contacts,
+            IntegrationUserSync.created_by,
+            IntegrationUserSync.data_map,
             UserIntegration.service_name,
-        ) \
-        .join(UserIntegration, UserIntegration.id == IntegrationUserSync.integration_id) \
+            UserIntegration.is_with_suppression,
+            UserIntegration.platform_user_id
+        ).join(UserIntegration, UserIntegration.id == IntegrationUserSync.integration_id) \
         .filter(IntegrationUserSync.domain_id == domain_id)
+
         if service_name:
             query = query.filter(UserIntegration.service_name == service_name)
+        if integrations_users_sync_id:
+            sync = query.filter(IntegrationUserSync.id == integrations_users_sync_id).first()
+            if sync:
+                return {
+                    'id': sync.id,
+                    'createdDate': sync.created_at.strftime('%b %d, %Y') if sync.created_at else None,
+                    'name': sync.list_name,
+                    'lastSync': sync.last_sync_date.strftime('%b %d, %Y') if sync.last_sync_date else None,
+                    'type': sync.leads_type,
+                    'platform': sync.service_name.lower(),
+                    'integration_id': sync.integration_id,
+                    'dataSync': sync.is_active,
+                    'suppression': sync.is_with_suppression,
+                    'contacts': sync.no_of_contacts,
+                    'createdBy': sync.created_by,
+                    'accountId': sync.platform_user_id,
+                    'data_map': sync.data_map,
+                    'syncStatus': sync.sync_status
+                }
+        
         syncs = query.all()
         return [{
             'id': sync.id,
-            'created_at': sync.created_at,
+            'createdDate': sync.created_at.strftime('%b %d, %Y') if sync.created_at else None,
+            'name': sync.list_name,
+            'lastSync': sync.last_sync_date.strftime('%b %d, %Y') if sync.last_sync_date else None,
+            'type': sync.leads_type,
+            'platform': sync.service_name.lower(),
             'integration_id': sync.integration_id,
-            'is_active': sync.is_active,
-            'last_sync_date': sync.last_sync_date,
-            'leads_type': sync.leads_type,
-            'service_name': sync.service_name
+            'dataSync': sync.is_active,
+            'suppression': sync.is_with_suppression,
+            'contacts': sync.no_of_contacts,
+            'createdBy': sync.created_by,
+            'accountId': sync.platform_user_id,
+            'data_map': sync.data_map,
+            'syncStatus': sync.sync_status,
         } for sync in syncs]
+
 
     def get_data_sync_filter_by(self, **filter_by):
         return self.db.query(IntegrationUserSync).filter_by(**filter_by).all()
     
-    def update_sync(self, update_data: dict, **filter_by, ):
+    def update_sync(self, update_data: dict, **filter_by):
+        update_data['no_of_contacts'] = IntegrationUserSync.no_of_contacts + 1
         return self.db.query(IntegrationUserSync).filter_by(**filter_by).update(update_data)
