@@ -182,11 +182,11 @@ async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, sess
                     logging.info(f"{email} exists in five_x_five_user")
                     return
         if suppression_rule:
-            if suppression_rule.is_url_certain_activation and any(url in page for url in suppression_rule.activate_certain_urls.split(', ')):
+            if suppression_rule.is_url_certain_activation and suppression_rule.activate_certain_urls and any(url in page for url in suppression_rule.activate_certain_urls.split(', ')):
                 logging.info(f"activate_certain_urls exists: {page}")
                 return
             
-            if suppression_rule.is_based_activation and any(url in page for url in suppression_rule.activate_based_urls.split(', ')):
+            if suppression_rule.is_based_activation and suppression_rule.activate_certain_urls and any(url in page for url in suppression_rule.activate_based_urls.split(', ')):
                 logging.info(f"activate_based_urls exists: {page}")
                 return
             
