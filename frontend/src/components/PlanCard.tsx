@@ -3,7 +3,18 @@ import { Box, Typography, Button, Divider } from '@mui/material';
 import Image from 'next/image';
 import CustomTooltip from './customToolTip';
 
-const PlanCard: React.FC<{ plan: any; onChoose: (stripePriceId: string) => void }> = ({ plan, onChoose }) => {
+const PlanCard: React.FC<{ plan: any; activePlanTitle: string; onChoose: (stripePriceId: string) => void }> = ({ plan, activePlanTitle, onChoose }) => {
+    const getButtonLabel = () => {
+        if (plan.is_active) return 'Current Plan';
+        if (activePlanTitle === 'Business') {
+            if (plan.title === 'Basic') return 'Downgrade';
+            if (plan.title === 'Teams') return 'Recommended';
+        } else if (activePlanTitle === 'Teams') {
+            if (plan.title === 'Basic') return 'Downgrade';
+            if (plan.title === 'Business') return 'Upgrade';
+        }
+        return 'Buy Plan';
+    };
     return (
         <Box sx={{ padding: 3, border: '1px solid #e4e4e4', borderRadius: '4px', boxShadow: '0px 1px 4px 0px rgba(0, 0, 0, 0.25)',
             height: '100vh',
@@ -131,10 +142,12 @@ const PlanCard: React.FC<{ plan: any; onChoose: (stripePriceId: string) => void 
                         variant="outlined"
                         fullWidth
                         onClick={() => onChoose(plan.stripe_price_id)}
+                        disabled={plan.is_active}
                         sx={{
-                            color: '#5052B2 !important',
+                            color: plan.is_active ? '#fff !important' : '#5052B2 !important',
+                            backgroundColor: plan.is_active ? '#f8464b' : 'transparent',
                             borderRadius: '4px',
-                            border: '1px solid #5052B2',
+                            border: plan.is_active ? '1px solid #f8464b' : '1px solid #5052B2',
                             boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
                             textTransform: 'none',
                             padding: '9px 24px',
@@ -145,7 +158,7 @@ const PlanCard: React.FC<{ plan: any; onChoose: (stripePriceId: string) => void 
                             }
                         }}
                     >
-                        Buy Plan
+                        {getButtonLabel()}
                     </Button>
                 </Box>
             </Box>

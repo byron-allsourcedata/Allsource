@@ -189,6 +189,8 @@ export const SettingsSubscription: React.FC = () => {
         (tabValue === 1 && plan.interval === 'yearly')
     );
 
+    const activePlan = filteredPlans.find((plan) => plan.is_active);
+
     if (isLoading) {
         return <CustomizedProgressBar />;
     }
@@ -302,7 +304,7 @@ export const SettingsSubscription: React.FC = () => {
                             {filteredPlans.length > 0 ? (
                                 filteredPlans.map((plan, index) => (
                                     <Box key={index} sx={subscriptionStyles.formWrapper}>
-                                        <PlanCard plan={plan} onChoose={handleChoosePlan} />
+                                        <PlanCard plan={plan} activePlanTitle={activePlan?.title || ''} onChoose={handleChoosePlan} />
                                     </Box>
                                 ))
                             ) : (
