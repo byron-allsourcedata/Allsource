@@ -174,7 +174,7 @@ async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, sess
             emails_to_check = get_all_five_x_user_emails(five_x_five_user.business_email, five_x_five_user.personal_emails, five_x_five_user.additional_personal_emails)
             for email in suppressions_emails:
                 if email in emails_to_check:
-                    logging.info(f"{email} exists in five_x_five_user.")
+                    logging.info(f"{email} exists in five_x_five_user")
                     return
         if suppression_rule:
             if suppression_rule.is_url_certain_activation and any(url in page for url in suppression_rule.activate_certain_urls.split(', ')):
