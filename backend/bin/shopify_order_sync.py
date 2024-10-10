@@ -19,6 +19,7 @@ from dependencies import (IntegrationsPresistence, LeadsPersistence, AudiencePer
                           LeadOrdersPersistence, IntegrationsUserSyncPersistence, 
                           AWSService, UserDomainsPersistence, SuppressionPersistence)
 from dotenv import load_dotenv
+import time
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
 
@@ -44,7 +45,9 @@ if __name__ == '__main__':
             domain_persistence=UserDomainsPersistence(session),
             suppression_persistence=SuppressionPersistence(session)
         )
-        with integration_service as service:
-            integrations = service.shopify.integration_persistence.get_all_integrations_filter_by(service_name='Shopify')
-            for integration in integrations:
-                integration_service.shopify.order_sync(integration.domain_id)
+        while True:
+            with integration_service as service:
+                integrations = service.shopify.integration_persistence.get_all_integrations_filter_by(service_name='Shopify')
+                for integration in integrations:
+                    integration_service.shopify.order_sync(integration.domain_id)
+                time.sleep(60*60*2)
