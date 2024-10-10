@@ -8,7 +8,7 @@ const PlanCard: React.FC<{ plan: any; activePlanTitle: string; onChoose: (stripe
         if (plan.is_active) return 'Current Plan';
         if (activePlanTitle === 'Business') {
             if (plan.title === 'Basic') return 'Downgrade';
-            if (plan.title === 'Teams') return 'Recommended';
+            if (plan.title === 'Teams') return 'Downgrade';
         } else if (activePlanTitle === 'Teams') {
             if (plan.title === 'Basic') return 'Downgrade';
             if (plan.title === 'Business') return 'Upgrade';
