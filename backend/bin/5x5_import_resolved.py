@@ -99,6 +99,15 @@ async def process_table(table, session, file_key, channel, root_user):
                 await process_user_data(table, i, five_x_five_user, session, channel, root_user)
             break
     update_last_processed_file(file_key)
+    
+def get_all_five_x_five_emails(business_email, personal_emails, additional_personal_emails):
+    """ 
+    Combine all email lists into a single list and remove duplicates.
+    """
+    emails = {business_email}
+    emails.update(personal_emails)
+    emails.update(additional_personal_emails)
+    return list(emails)
 
 
 async def process_user_data(table, index, five_x_five_user: FiveXFiveUser, session: Session, rmq_connection, root_user=None):
@@ -131,25 +140,20 @@ async def process_user_data(table, index, five_x_five_user: FiveXFiveUser, sessi
     is_first_request = False
     if not lead_user:
         suppression_rule = session.query(SuppressionRule).filter(SuppressionRule.domain_id == user_domain_id).first()
+        suppression_list = session.query(SuppressionList).filter(SuppressionList.domain_id == user_domain_id).first()
+        suppressions_emails = []
+        if suppression_list and suppression_list.total_emails:
+            suppressions_emails.append(suppression_list.total_emails)
+        if suppression_rule and suppression_rule.suppressions_multiple_emails:
+            suppressions_emails.append(suppression_rule.suppressions_multiple_emails)
+        suppressions_emails = list(set(suppressions_emails))
         if suppression_rule:
-            suppression_list = session.query(SuppressionList).filter(SuppressionList.domain_id == user_domain_id).first()
-            emails_to_check = [
-                five_x_five_user.business_email,
-                *five_x_five_user.personal_emails,
-                *five_x_five_user.additional_personal_emails,
-                *five_x_five_user.programmatic_business_emails
-            ]
-            
-            total_emails_list = suppression_list.total_emails.split(', ')
-            if any(email in emails_to_check for email in total_emails_list):
-                logging.info(f"total_emails exists in five_x_five_user: {total_emails_list}")
-                return
-            
-            multiple_emails_list = suppression_rule.suppressions_multiple_emails.split(', ')
-            if any(email in emails_to_check for email in multiple_emails_list):
-                logging.info(f"suppressions_multiple_emails exists in five_x_five_user: {multiple_emails_list}")
-                return
-            
+            emails_to_check = get_all_five_x_five_emails(five_x_five_user.business_email, five_x_five_user.personal_emails, five_x_five_user.additional_personal_emails)
+            for email in suppressions_emails:
+                if email in emails_to_check:
+                    logging.info(f"{email} exists in five_x_five_user.")
+                    return
+
             if suppression_rule.is_url_certain_activation and any(url in page for url in suppression_rule.activate_certain_urls):
                 logging.info(f"activate_certain_urls exists: {suppression_rule.activate_certain_urls}")
                 return
@@ -186,7 +190,7 @@ async def process_user_data(table, index, five_x_five_user: FiveXFiveUser, sessi
         
         is_first_request = True
         lead_user = LeadUser(five_x_five_user_id=five_x_five_user.id, user_id=user.id, behavior_type=behavior_type, domain_id=user_domain_id, total_visit=0, avarage_visit_time=0, total_visit_time=0)
-        emails_to_check = five_x_five_user.business_email.split(', ') + five_x_five_user.personal_emails.split(', ') + five_x_five_user.additional_personal_emails.split(', ')
+        emails_to_check = get_all_five_x_five_emails(five_x_five_user.business_email, five_x_five_user.personal_emails, five_x_five_user.additional_personal_emails).split(', ')
         integrations_ids = [integration.id for integration in session.query(UserIntegration).filter(UserIntegration.is_with_suppression == True).all()]
         lead_suppression = session.query(LeadsSupperssion).filter(
             LeadsSupperssion.domain_id == user_domain_id,
