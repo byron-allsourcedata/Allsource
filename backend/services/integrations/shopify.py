@@ -48,7 +48,8 @@ class ShopifyIntegrationService:
         url = f'{shop_domain}/admin/api/2024-07/orders.json'
         params = {
             'status': 'closed',
-            'fields': 'created_at,id,name,total_price,customer'
+            'fields': 'created_at,id,name,total_price,customer',
+            'created_at_min': date.isoformat()
         }
         
         headers = {
