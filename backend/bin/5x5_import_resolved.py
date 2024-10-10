@@ -178,11 +178,11 @@ async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, sess
                     return
         if suppression_rule:
             if suppression_rule.is_url_certain_activation and any(url in page for url in suppression_rule.activate_certain_urls.split(', ')):
-                logging.info(f"activate_certain_urls exists: {suppression_rule.activate_certain_urls}")
+                logging.info(f"activate_certain_urls exists: {page}")
                 return
             
             if suppression_rule.is_based_activation and any(url in page for url in suppression_rule.activate_based_urls.split(', ')):
-                logging.info(f"activate_based_urls exists: {suppression_rule.activate_based_urls}")
+                logging.info(f"activate_based_urls exists: {page}")
                 return
             
         if root_user is None:
