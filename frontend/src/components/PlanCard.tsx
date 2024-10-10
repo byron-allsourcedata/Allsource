@@ -13,6 +13,10 @@ const PlanCard: React.FC<{ plan: any; activePlanTitle: string; onChoose: (stripe
             if (plan.title === 'Basic') return 'Downgrade';
             if (plan.title === 'Business') return 'Upgrade';
         }
+        else if (activePlanTitle === 'Basic') {
+            if (plan.title === 'Team') return 'Upgrade';
+            if (plan.title === 'Business') return 'Upgrade';
+        }
         return 'Buy Plan';
     };
     return (

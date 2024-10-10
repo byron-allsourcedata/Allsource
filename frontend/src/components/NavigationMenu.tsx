@@ -227,7 +227,7 @@ const NavigationMenu = () => {
               </ListItemIcon>
               <ListItemText primary="Data Sync" />
           </ListItem>
-          <ListItem button onClick={() => handleNavigation('/prospect')}
+          {/* <ListItem button onClick={() => handleNavigation('/prospect')}
           sx={{
             ...(isActive('/prospect') ? navigationmenuStyles.activeItem : {}),
             ...navigationmenuStyles.mobileDrawerList
@@ -236,7 +236,7 @@ const NavigationMenu = () => {
               <Image src="/profile-circle-filled.svg" alt="profile-circle" height={20} width={20} />
               </ListItemIcon>
               <ListItemText primary="Prospect" />
-          </ListItem>
+          </ListItem> */}
           <ListItem button onClick={() => handleNavigation('/integrations')}
           sx={{
             ...(isActive('/integrations') ? navigationmenuStyles.activeItem : {}),
@@ -269,14 +269,14 @@ const NavigationMenu = () => {
             <ListItemIcon><RuleFolderIcon /></ListItemIcon>
             <ListItemText primary="Rules" />
           </ListItem> */}
-          <ListItem button onClick={() => handleNavigation('/partners')}
+          {/* <ListItem button onClick={() => handleNavigation('/partners')}
             sx={{
               ...(isActive('/partners') ? navigationmenuStyles.activeItem : {}),
               ...navigationmenuStyles.mobileDrawerList
               }}>
             <ListItemIcon><AccountBoxIcon /></ListItemIcon>
             <ListItemText primary="Partners" />
-          </ListItem>
+          </ListItem> */}
           <ListItem button onClick={() => handleNavigation('/settings')}
             sx={{
               ...(isActive('/settings') ? navigationmenuStyles.activeItem : {}),
