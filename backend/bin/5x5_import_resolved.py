@@ -140,9 +140,9 @@ async def process_user_data(table, index, five_x_five_user: FiveXFiveUser, sessi
         suppression_list = session.query(SuppressionList).filter(SuppressionList.domain_id == user_domain_id).first()
         suppressions_emails = []
         if suppression_list and suppression_list.total_emails:
-            suppressions_emails.append(suppression_list.total_emails)
+            suppressions_emails.append(suppression_list.total_emails.split(', '))
         if suppression_rule and suppression_rule.suppressions_multiple_emails:
-            suppressions_emails.append(suppression_rule.suppressions_multiple_emails)
+            suppressions_emails.append(suppression_rule.suppressions_multiple_emails.split(', '))
         suppressions_emails = list(set(suppressions_emails))
         if suppression_rule:
             emails_to_check = get_all_five_x_user_emails(five_x_five_user.business_email, five_x_five_user.personal_emails, five_x_five_user.additional_personal_emails)
