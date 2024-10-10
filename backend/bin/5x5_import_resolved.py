@@ -104,30 +104,37 @@ async def process_file(bucket, file_key, cookie_sync_by_hour):
             await save_files_by_hour(table, cookie_sync_by_hour)
 
 
-async def process_table(table, session, file_key, channel, root_user):
-    for i in reversed(range(len(table))):
-        up_id = table['UP_ID'][i]
-        five_x_five_user = 1
-        if not up_id.is_valid:
-            up_ids = session.query(FiveXFiveHems.up_id).filter(
-                FiveXFiveHems.sha256_lc_hem == str(table['SHA256_LOWER_CASE'][i])).all()
-            if len(up_ids) != 1:
-                continue
-            up_id = up_ids[0][0]
-        five_x_five_user = session.query(FiveXFiveUser).filter(FiveXFiveUser.up_id == str(up_id).lower()).first()
-        if five_x_five_user:
-            logging.info(f"UP_ID {up_id} found in table")
-            await process_user_data(table, i, five_x_five_user, session, channel, None)
-            if root_user:
-                await process_user_data(table, i, five_x_five_user, session, channel, root_user)
-            break
-    update_last_processed_file(file_key)
-    
 def get_all_five_x_user_emails(business_email, personal_emails, additional_personal_emails):
     emails = {business_email.split(', ')}
     emails.update(personal_emails.split(', '))
     emails.update(additional_personal_emails.split(', '))
     return list(emails)
+
+async def process_table(session, cookie_sync_by_hour, channel, root_user):
+    for key, possible_leads in cookie_sync_by_hour.items():
+        for possible_lead in reversed(possible_leads):
+            up_id = possible_lead['UP_ID']
+            if up_id is None or up_id == 'None':
+                up_ids = session.query(FiveXFiveHems.up_id).filter(
+                    FiveXFiveHems.sha256_lc_hem == str(possible_lead['SHA256_LOWER_CASE'])).all()
+                if len(up_ids) == 0:
+                    logging.warning(f"Not found SHA256_LOWER_CASE {possible_lead['SHA256_LOWER_CASE']}")
+                    continue
+                elif len(up_ids) > 1:
+                    logging.info(f"Too many SHA256_LOWER_CASEs {possible_lead['SHA256_LOWER_CASE']}")
+                    continue
+                up_id = up_ids[0][0]
+                logging.info(f"Lead found by SHA256_LOWER_CASE {possible_lead['SHA256_LOWER_CASE']}")
+            if up_id is not None and up_id != 'None':
+                five_x_five_user = session.query(FiveXFiveUser).filter(FiveXFiveUser.up_id == str(up_id).lower()).first()
+                if five_x_five_user:
+                    logging.info(f"Lead found by UP_ID {up_id}")
+                    await process_user_data(possible_lead, five_x_five_user, session, channel, None)
+                    if root_user:
+                        await process_user_data(possible_lead, five_x_five_user, session, channel, root_user)
+                    break
+                else:
+                    logging.warning(f"Not found by UP_ID {up_id}")
 
 
 async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, session: Session, rmq_connection, root_user=None):
@@ -313,13 +320,6 @@ async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, sess
     
     session.commit()
     
-
-def get_list_emails(five_x_five_user: FiveXFiveUser):
-    business_emails = five_x_five_user.business_email.split(', ') if five_x_five_user.business_email else []
-    personal_emails = five_x_five_user.personal_emails.split(', ') if five_x_five_user.personal_emails else []
-    additional_personal_emails = five_x_five_user.additional_personal_emails.split(', ') if five_x_five_user.additional_personal_emails else []
-    all_emails = business_emails + personal_emails + additional_personal_emails
-    return list(set(all_emails))
 
 def convert_leads_requests_to_utc(leads_requests):
     utc = pytz.utc
