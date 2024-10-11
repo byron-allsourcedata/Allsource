@@ -13,18 +13,18 @@ import ConfirmDeleteDomain from './DeleteDomain';
 import CustomizedProgressBar from './CustomizedProgressBar';
 
 interface Domain {
-    id: number;
-    user_id: number;
-    domain: string;
-    data_provider_id: number;
-    is_pixel_installed: boolean;
-    enable: boolean;
+  id: number;
+  user_id: number;
+  domain: string;
+  data_provider_id: number;
+  is_pixel_installed: boolean;
+  enable: boolean;
 }
 
 interface AddDomainProps {
   open: boolean;
   handleClose: () => void;
-  handleSave: (domain: Domain) => void; 
+  handleSave: (domain: Domain) => void;
 }
 
 interface HoverImageProps {
@@ -38,19 +38,30 @@ const HoverableImage = ({ srcDefault, srcHover, alt, onClick }: HoverImageProps)
   const [isHovered, setIsHovered] = useState(false);
 
   return (
-    <Image
-      height={20}
-      width={20}
-      alt={alt}
-      src={isHovered ? srcHover : srcDefault}
-      style={{
-        transition: 'opacity 0.3s ease',
-        cursor: 'pointer',
-      }}
+    <Button
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      onClick={onClick}
-    />
+      onClick={(e) => {
+        e.stopPropagation(); // Останавливает всплытие события
+        onClick();
+      }}
+      sx={{
+        padding: 0,
+        minWidth: 'auto',       
+        border: 'none',          
+        background: 'transparent'
+      }}>
+      <Image
+        height={20}
+        width={20}
+        alt={alt}
+        src={isHovered ? srcHover : srcDefault}
+        style={{
+          transition: 'opacity 0.3s ease',
+          cursor: 'pointer',
+        }}
+      />
+    </Button>
   );
 };
 
@@ -66,15 +77,15 @@ const AddDomainPopup = ({ open, handleClose, handleSave }: AddDomainProps) => {
     value: string,
     type: "domain"
   ): string => {
-        const sanitizedValue = value.replace(/^www\./, '');
-        const websiteRe = /^(https?:\/\/)?([\da-z.-]+)\.([a-z]{2,20})([/\w .-]*)*\/?$/i;
-        return websiteRe.test(sanitizedValue) ? "" : "Invalid website URL";
-    }
+    const sanitizedValue = value.replace(/^www\./, '');
+    const websiteRe = /^(https?:\/\/)?([\da-z.-]+)\.([a-z]{2,20})([/\w .-]*)*\/?$/i;
+    return websiteRe.test(sanitizedValue) ? "" : "Invalid website URL";
+  }
   const handleSubmit = async () => {
     const newErrors = { domain: validateField(domain, 'domain') };
     setErrors(newErrors);
     if (newErrors.domain) return;
-  
+
     try {
       const response = await axiosInstance.post("domains/", { domain });
       if (response.status === 201) {
@@ -91,7 +102,7 @@ const AddDomainPopup = ({ open, handleClose, handleSave }: AddDomainProps) => {
             setShowSlider(true);
           } else {
             sessionStorage.setItem('is_slider_opened', 'false');
-            setShowSlider(false); 
+            setShowSlider(false);
           }
         }
       } else {
@@ -127,50 +138,50 @@ const AddDomainPopup = ({ open, handleClose, handleSave }: AddDomainProps) => {
   if (!open) return null;
 
   return (
-    
+
     <Box sx={{ display: 'flex', flexDirection: 'column', padding: '1rem', width: '100%' }}>
-    <TextField
-    onKeyDown={(e) => e.stopPropagation()}
-      fullWidth
-      label="Enter domain link"
-      variant="outlined"
-      sx={{
-        marginBottom: '1.5em',
-        maxHeight: '56px',
-        '& .MuiInputBase-root': {
-          maxHeight: '48px',
-        },
-        '&.Mui-focused': {
-          color: '#0000FF',
-        },
-        '& .MuiOutlinedInput-root': {
-          paddingTop: '13px',
-          paddingBottom: '13px',
-        },
-        '& .MuiInputLabel-root': {
-          top: '-5px',
-        },
-        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-          borderColor: '#0000FF',
-        },
-      }}
-      placeholder={isFocused ? "example.com" : ""}
-      value={isFocused ? domain.replace(/^https?:\/\//, "") : `https://${domain.replace(/^https?:\/\//, "")}`}
-      onChange={handleWebsiteLink}
-      onFocus={handleFocus}
-      onBlur={handleBlur}
-      error={!!errors.domain}
-      helperText={errors.domain}
-      InputProps={{
-        startAdornment: isFocused && (
-          <InputAdornment position="start" disablePointerEvents sx={{ marginRight: 0 }}>https://</InputAdornment>
-        ),
-        endAdornment: (
-          <IconButton aria-label="close" edge="end" sx={{ color: 'text.secondary' }} onClick={handleClose}>
-            <CloseIcon />
-          </IconButton>
-        ),
-      }} />
+      <TextField
+        onKeyDown={(e) => e.stopPropagation()}
+        fullWidth
+        label="Enter domain link"
+        variant="outlined"
+        sx={{
+          marginBottom: '1.5em',
+          maxHeight: '56px',
+          '& .MuiInputBase-root': {
+            maxHeight: '48px',
+          },
+          '&.Mui-focused': {
+            color: '#0000FF',
+          },
+          '& .MuiOutlinedInput-root': {
+            paddingTop: '13px',
+            paddingBottom: '13px',
+          },
+          '& .MuiInputLabel-root': {
+            top: '-5px',
+          },
+          '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+            borderColor: '#0000FF',
+          },
+        }}
+        placeholder={isFocused ? "example.com" : ""}
+        value={isFocused ? domain.replace(/^https?:\/\//, "") : `https://${domain.replace(/^https?:\/\//, "")}`}
+        onChange={handleWebsiteLink}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
+        error={!!errors.domain}
+        helperText={errors.domain}
+        InputProps={{
+          startAdornment: isFocused && (
+            <InputAdornment position="start" disablePointerEvents sx={{ marginRight: 0 }}>https://</InputAdornment>
+          ),
+          endAdornment: (
+            <IconButton aria-label="close" edge="end" sx={{ color: 'text.secondary' }} onClick={handleClose}>
+              <CloseIcon />
+            </IconButton>
+          ),
+        }} />
       <Box sx={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }}>
         <Button color='primary' variant='outlined' onClick={handleSubmit}>Save</Button>
       </Box>
@@ -239,6 +250,7 @@ const DomainButton: React.FC = () => {
   const handleShowDelete = (domain: Domain) => {
     setDeleteDomain(domain);
     setDeleteDomainPopup(true);
+    handleDropdownClose();
   };
 
   const handleDeleteDomain = (domain: Domain) => {
@@ -252,7 +264,7 @@ const DomainButton: React.FC = () => {
   };
 
   if (loading) {
-      return <CustomizedProgressBar />;
+    return <CustomizedProgressBar />;
   }
 
   return (
@@ -295,12 +307,12 @@ const DomainButton: React.FC = () => {
           handleClose={() => setDomainPopup(false)}
           handleSave={handleSave}
         />
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end', width: '100%', marginTop: '1rem' }}>
-          <span style={{ border: '1px solid #CDCDCD', marginBottom: '1rem', width: '100%' }}></span>
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', width: '100%', marginTop: '0.5rem' }}>
+          <span style={{ border: '1px solid #CDCDCD', marginBottom: '0.5rem', width: '100%' }}></span>
         </Box>
         {domains.map((domain) => (
-          <MenuItem key={domain.id}>
-            <Box onClick={() => handleSetDomain(domain.domain)} sx={{
+          <MenuItem key={domain.id} onClick={() => handleSetDomain(domain.domain)}>
+            <Box sx={{
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
@@ -310,28 +322,26 @@ const DomainButton: React.FC = () => {
               <Typography>
                 {domain.domain.replace('https://', '')}
               </Typography>
-              {deleteDomainPopup && deleteDomain  && (
-                <ConfirmDeleteDomain
-                  open={deleteDomainPopup}
-                  domain={deleteDomain}
-                  handleClose={() => setDeleteDomainPopup(false)}
-                  handleDelete={handleDeleteDomain}
+              {domains.length > 1 && (
+                <HoverableImage
+                  srcDefault='/trash-03.svg'
+                  srcHover='/trash-03-active.svg'
+                  alt='Remove'
+                  onClick={() => handleShowDelete(domain)}
                 />
               )}
-              {
-                domains.length > 1 && (
-                  <HoverableImage
-                srcDefault='/trash-03.svg'
-                srcHover='/trash-03-active.svg'
-                alt='Remove'
-                onClick={() => handleShowDelete(domain)}
-              />
-                ) 
-              }
             </Box>
           </MenuItem>
         ))}
       </Menu>
+      {deleteDomainPopup && deleteDomain && (
+        <ConfirmDeleteDomain
+          open={deleteDomainPopup}
+          domain={deleteDomain}
+          handleClose={() => setDeleteDomainPopup(false)}
+          handleDelete={handleDeleteDomain}
+        />
+      )}
     </>
   );
 };
