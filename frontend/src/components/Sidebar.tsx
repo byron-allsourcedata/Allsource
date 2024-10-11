@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import { Box, List, ListItem, ListItemIcon, ListItemText, Divider, LinearProgress, Typography } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import { usePathname } from 'next/navigation';
@@ -14,8 +14,6 @@ import Image from 'next/image';
 import { useSlider } from '@/context/SliderContext';
 import { AxiosError } from 'axios';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
-import Slider from "../components/Slider";
-import zIndex from '@mui/material/styles/zIndex';
 
 const sidebarStyles = {
     container: {
@@ -157,7 +155,11 @@ const SetupSection: React.FC<ProgressSectionProps> = ({ meData }) => {
 };
 
 
-const Sidebar: React.FC = () => {
+interface SidebarProps {
+    setShowSlider: Dispatch<SetStateAction<boolean>>;
+}
+
+const Sidebar: React.FC<SidebarProps> = ({ setShowSlider }) => {
     const [meData, setMeData] = useState({ percent_steps: 0 });
     useEffect(() => {
         if (typeof window !== "undefined") {
@@ -167,7 +169,6 @@ const Sidebar: React.FC = () => {
             }
         }
     }, []);
-    const { setShowSlider } = useSlider();
     const router = useRouter();
     const pathname = usePathname();
     const [showBookSlider, setShowBookSlider] = useState(false);
@@ -178,10 +179,8 @@ const Sidebar: React.FC = () => {
             if (response.data.status === "NEED_BOOK_CALL") {
                 sessionStorage?.setItem("is_slider_opened", "true");
                 setShowSlider(true);
-                setShowBookSlider(true);
             } else {
                 setShowSlider(false);
-                setShowBookSlider(false);
                 router.push(path);
             }
         } catch (error) {
@@ -278,7 +277,6 @@ const Sidebar: React.FC = () => {
                     </ListItem>
                 </Box>
             </Box>
-            {showBookSlider && <Slider />}
         </Box>
     );
 };

@@ -1,11 +1,12 @@
 "use client";
-import React, { ReactNode } from "react";
-import { Grid } from "@mui/material";
+import React, { ReactNode, useEffect, useState } from "react";
+import { Box, Grid } from "@mui/material";
 import Sidebar from "@/components/Sidebar";
 import TrialStatus from "@/components/TrialLabel";
 import { usePathname } from 'next/navigation';
-import { SliderProvider } from './SliderContext';
+import { useSlider, SliderProvider } from './SliderContext';
 import Header from "@/components/Header";
+import Slider from "@/components/Slider";
 
 interface ClientLayoutProps {
   children: ReactNode;
@@ -15,6 +16,12 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
   const pathname = usePathname(); // Get the current path
   const excludedPaths = ['/signin', '/signup', '/email-verificate', '/account-setup', '/reset-password', '/reset-password/confirm-send', '/choose-plan', '/authentication/verify-token', '/admin/users', '/forgot-password', '/admin'];
   const isAuthenticated = !excludedPaths.includes(pathname);
+  const [showSlider, setSlider] = useState(false);
+
+  useEffect(() => {
+      console.log(showSlider)
+  }, [showSlider]);
+
   if (!isAuthenticated) {
     return <>{children}</>;
   }
@@ -44,11 +51,10 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
           flexBasis: '142px',
           flexShrink: 0,
           minWidth: '142px',
-          position: 'absolute',
+          position: 'fixed',
           top: '9vh',
-          height: 'calc(100vh - 8vh)',
         }}>
-          <SliderProvider><Sidebar /></SliderProvider>
+          <SliderProvider><Sidebar setShowSlider={setSlider} /></SliderProvider>
         </Grid>
         <Grid item xs={12} md lg sx={{
           position: 'relative',
@@ -61,6 +67,11 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
             marginLeft: 0,
           }
         }}>
+          {showSlider && (
+              <SliderProvider>
+                <Slider setShowSliders={setSlider} />
+              </SliderProvider>
+          )}
           {children}
         </Grid>
       </Grid>
