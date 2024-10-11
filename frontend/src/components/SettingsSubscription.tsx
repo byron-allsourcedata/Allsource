@@ -188,8 +188,16 @@ export const SettingsSubscription: React.FC = () => {
                         showToast('Subscription purchase error!');
                     }
                 }
-                else if (response.data === 'SUCCESS') {
+                else if (response.data.status === 'SUCCESS') {
                     showToast('Subscription was successful!');
+                    window.location.href = "/settings?section=subscription"
+                }
+                else if (response.data.status === 'INCOMPLETE') {
+                    showErrorToast('Subscription not found!');
+                    window.location.href = "/settings?section=subscription"
+                }
+                else if (response.data.status === 'DOWNGRADING') {
+                    showErrorToast(`Downgrading subscription to ${response.data.title}`);
                     window.location.href = "/settings?section=subscription"
                 }
             }

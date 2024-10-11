@@ -47,49 +47,33 @@ class PaymentsService:
         else:
             return SubscriptionStatus.UNKNOWN
     
-    def upgrade_and_downgrade_user_subscription(self, price_id: str, users) -> str:
-        import time
-        from datetime import datetime, timedelta
-        subscription = self.plans_service.get_subscription(users)
+    def upgrade_and_downgrade_user_subscription(self, price_id: str, user) -> str:
+        subscription = self.plans_service.get_subscription(user)
+        if subscription.downgrade_price_id:
+            return {'status': SubscriptionStatus.DOWNGRADING, 'title': self.plans_service.get_subscription_by_price_id(price_id)}
         if subscription is None:
-            return SubscriptionStatus.INCOMPLETE
+            return {'status': SubscriptionStatus.INCOMPLETE}
         subscription_id = subscription.platform_subscription_id
         subscription = stripe.Subscription.retrieve(subscription_id)
         subscription_item_id = subscription['items']['data'][0]['id']
-        is_downgrade = self.is_downgrade(price_id, users.get('id'))
-        desired_start_date = datetime.utcnow() + timedelta(days=30)
-        billing_cycle_anchor = int(time.mktime(desired_start_date.timetuple()))
+        is_downgrade = self.is_downgrade(price_id, user.get('id'))
         if is_downgrade:
             stripe.Subscription.modify(
                 subscription_id,
                 cancel_at_period_end=True
             )
-            new_subscription_data = stripe.SubscriptionSchedule.create(
-                customer=self.plans_service.get_customer_id(users),
-                phases=[
-                    {
-                        'items': [{
-                            'price': subscription.get('items')['data'][0].get('price'),
-                            'quantity': 1,
-                        }],
-                        'start_date': int(subscription.current_period_end),
-                        'end_date': None,
-                    },
-                    {
-                        'items': [{
-                            'price': price_id,
-                            'quantity': 1,
-                        }],
-                        'start_date': int(subscription.current_period_end) + 30 * 24 * 60 * 60,
-                        'end_date': None,
-                    },
-                ],
+            new_subscription_data = stripe.Subscription.create(
+            customer=self.plans_service.get_customer_id(user),
+            items=[{
+                'price': price_id,
+            }],
+            proration_behavior='none',
+            billing_cycle_anchor=subscription.current_period_end,
+            payment_behavior='allow_incomplete',
+            expand=['latest_invoice.payment_intent']
             )
-            print(subscription.current_period_end)
-            print("Status:", new_subscription_data['status'])
-            print("Current period start:", new_subscription_data['current_period_start'])
-            print("Current period end:", new_subscription_data['current_period_end'])
-            return self.get_subscription_status(new_subscription_data['id'])
+            self.plans_service.save_downgrade_price_id(price_id, subscription.id)
+            return {'status': self.get_subscription_status(new_subscription_data['id'])}
         
         else:
             subscription_data = stripe.Subscription.modify(
@@ -100,7 +84,7 @@ class PaymentsService:
                 }],
                 proration_behavior='create_prorations'
             )
-            return self.get_subscription_status(subscription_data['id'])
+            return {'status': self.get_subscription_status(subscription_data['id'])}
 
     def is_downgrade(self, price_id: str, user_id: int) -> bool:
         current_price = self.plans_service.get_current_price(user_id)

@@ -261,6 +261,16 @@ class SubscriptionService:
         trial_subscription.updated_at = datetime.now()
         trial_subscription.plan_end = datetime.now()
         self.db.commit()
+        
+    def save_downgrade_price_id(self, price_id, subscription_id):
+        user_subscription = self.db.query(UserSubscriptions).filter(UserSubscriptions.id == subscription_id)
+        user_subscription.downgrade_price_id = price_id
+        user_subscription.downgrade_at = datetime.now()
+        self.db.commit()
+    
+    def get_subscription_by_price_id(self, price_id):
+        return self.db.query(UserSubscriptions).filter(UserSubscriptions.platform_subscription_id == price_id)
+        
 
     def get_subscription_by_user_id(self, user_id):
         return self.db.query(UserSubscriptions).filter(

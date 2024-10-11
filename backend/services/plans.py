@@ -65,10 +65,14 @@ class PlansService:
             )
         return response
 
-
+    def get_subscription_by_price_id(self, price_id):
+        return self.subscription_service.get_subscription_by_price_id(price_id)
     
     def get_subscription(self, user):
         return self.subscription_service.get_subscription_by_user_id(user.get('id'))
+    
+    def save_downgrade_price_id(self, price_id, subscription_id):
+        self.subscription_service.save_downgrade_price_id(price_id, subscription_id)
     
     def get_current_price(self, user_id):
         return self.plans_persistence.get_current_price(user_id=user_id)

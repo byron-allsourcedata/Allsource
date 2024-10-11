@@ -257,7 +257,7 @@ class SettingsService:
         
         
     def timestamp_to_date(self, timestamp):
-        return datetime.fromtimestamp(timestamp).strftime('%b %d, %Y')
+        return datetime.fromtimestamp(timestamp)
     
     def calculate_dates(self, plan):
         start_date = datetime.now()
@@ -289,13 +289,14 @@ class SettingsService:
         plan = subscription['items']['data'][0]['plan']
         start_date, end_date = self.calculate_dates(plan)
         is_active = subscription.get('status') == 'active'
+        
         subscription_details = {
             'billing_cycle': f"{start_date.strftime('%b %d, %Y')} to {end_date.strftime('%b %d, %Y')}",
             'plan_name': determine_plan_name_from_product_id(plan['product']),
             'domains': f"{plan_limit_domain - user_limit_domain}/{plan_limit_domain}",
             'prospect_credits': prospect_credits,
             'overage': '0.49/contact',
-            'next_billing_date': self.timestamp_to_date(subscription['current_period_end']),
+            'next_billing_date': self.timestamp_to_date(subscription['current_period_end']).strftime('%b %d, %Y'),
             'monthly_total': f"${plan['amount'] / 100:,.0f}",
             'active': is_active
         }
@@ -328,8 +329,7 @@ class SettingsService:
                 billing_hash['total'] = billing_data.subtotal / 100
                 billing_hash['status'] = self.map_status(billing_data.status)
 
-            elif isinstance(billing_data, stripe.PaymentIntent):
-                if billing_data.invoice is None:
+            elif isinstance(billing_data, stripe.Charge):
                     billing_hash['date'] = self.timestamp_to_date(billing_data.created)
                     billing_hash['invoice_id'] = billing_data.invoice
                     billing_hash['pricing_plan'] = "Overage"
@@ -337,8 +337,13 @@ class SettingsService:
                     billing_hash['status'] = self.map_status(billing_data.status)
 
             result.append(billing_hash)
-
+            
+        result.sort(key=lambda x: x['date'], reverse=True)
+        for item in result:
+            item['date'] = item['date'].strftime('%b %d, %Y')
+                    
         return result, count, max_page
+
 
     def map_status(self, status):
         if status in ["succeeded", "paid"]:

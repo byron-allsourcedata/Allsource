@@ -56,7 +56,7 @@ def upgrade_and_downgrade_user_subscription(price_id: str, payments_service: Pay
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Access denied. Admins and standard only."
             )
-    return payments_service.upgrade_and_downgrade_user_subscription(price_id=price_id, users=users)
+    return payments_service.upgrade_and_downgrade_user_subscription(price_id=price_id, user=users)
 
 @router.get("/buy-credits")
 def buy_credits(credits_used: int, payments_service: PaymentsService = Depends(get_payments_service), users: Users = Depends(check_user_authorization_without_pixel)):

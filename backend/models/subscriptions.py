@@ -25,7 +25,7 @@ class UserSubscriptions(Base):
     members_limit = Column(Integer, nullable=True)
     integrations_limit = Column(Integer, nullable=True)
     downgrade_at = Column(TIMESTAMP(precision=7), nullable=True)
-    downgrade_subscription_id = Column(VARCHAR, nullable=True)
+    downgrade_price_id = Column(VARCHAR, nullable=True)
     cancellation_reason = Column(TEXT, nullable=True)
 
 
