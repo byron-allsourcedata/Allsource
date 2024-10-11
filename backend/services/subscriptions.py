@@ -309,17 +309,17 @@ class SubscriptionService:
             user_subscription.users_limit = users_limit
             user_subscription.integrations_limit = integrations_limit
             user_subscription.plan_id=plan_id,
-            user_subscription.members_limit=members_limit - 1
+            user_subscription.members_limit=members_limit - 1,
+            user_subscription.stripe_request_created_at = stripe_request_created_at
         user_subscription.status = status
-        user_subscription.stripe_request_created_at = stripe_request_created_at
+        user_subscription.updated_at = stripe_request_created_at
         self.db.flush()
 
         if status == "active":
             user = self.db.query(User).filter(User.id == user_subscription.user_id).first()
             user.leads_credits = leads_credits if user.leads_credits >= 0 else  leads_credits - user.leads_credits
             user.prospect_credits = prospect_credits
-            self.db.commit()
-
+        self.db.commit()
         return user_subscription
     
     def get_invitation_limit(self, user_id):

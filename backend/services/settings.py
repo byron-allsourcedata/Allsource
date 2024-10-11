@@ -321,7 +321,7 @@ class SettingsService:
         for billing_data in billing_history:
             billing_hash = {}
             line_item = billing_data['lines']
-            billing_hash['date'] = self.timestamp_to_date(line_item['data'][0]['plan']['created'])
+            billing_hash['date'] = self.timestamp_to_date(line_item['data'][0]['period']['start'])
             billing_hash['invoice_id'] = line_item['data'][0]['invoice']
             billing_hash['pricing_plan'] = determine_plan_name_from_product_id(line_item['data'][0]['plan']['product'])
             billing_hash['total'] = billing_data['subtotal'] / 100
