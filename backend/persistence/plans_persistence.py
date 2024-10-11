@@ -11,6 +11,12 @@ class PlansPersistence:
 
     def get_stripe_plans(self, period):
         return self.db.query(SubscriptionPlan).filter(SubscriptionPlan.is_active == True, SubscriptionPlan.interval == period).all()
+    
+    def save_reason_unsubscribe(self, reason_unsubscribe, user_id):
+        subscription = self.db.query(UserSubscriptions).filter(UserSubscriptions.user_id == user_id).first()
+        subscription.cancellation_reason = reason_unsubscribe
+        self.db.commit()
+        
 
     def get_trial_status_by_user_id(self, user_id: int):
         subscription = self.db.query(UserSubscriptions).filter(UserSubscriptions.user_id == user_id).first()
@@ -65,7 +71,7 @@ class PlansPersistence:
             UserSubscriptions,
             UserSubscriptions.plan_id == SubscriptionPlan.id
         ).filter(
-            UserSubscriptions.user_id == user_id, UserSubscriptions.status == 'active'
+            UserSubscriptions.user_id == user_id, UserSubscriptions.status.in_(('active', 'canceled'))
         ).order_by(
             UserSubscriptions.plan_end.desc()
         ).first()

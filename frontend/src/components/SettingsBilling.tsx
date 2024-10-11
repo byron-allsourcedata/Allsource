@@ -683,7 +683,7 @@ export const SettingsBilling: React.FC = () => {
                             <Typography className="first-sub-title">
                                 Billing Details
                             </Typography>
-                            {billingDetails.active && (
+                            {billingDetails.active ? (
                                 <Box sx={{ display: 'flex', borderRadius: '4px', background: '#eaf8dd', padding: '2px 12px', gap: '3px' }}>
                                     <Typography className="main-text" sx={{
                                         borderRadius: '4px',
@@ -692,18 +692,19 @@ export const SettingsBilling: React.FC = () => {
                                         fontWeight: '600',
                                         lineHeight: '16px'
                                     }}>Active</Typography>
-                                    <Image
-                                        src='/tick-circle-filled.svg'
-                                        alt='tick-circle-filled'
-                                        height={16}
-                                        width={16} // Adjust the size as needed
-                                    />
+                                </Box>
+                            ) : (
+                                <Box sx={{ display: 'flex', borderRadius: '4px', background: '#f8dede', padding: '2px 12px', gap: '3px' }}>
+                                    <Typography className="main-text" sx={{
+                                        borderRadius: '4px',
+                                        color: '#b00000',
+                                        fontSize: '12px',
+                                        fontWeight: '600',
+                                        lineHeight: '16px'
+                                    }}>Canceled</Typography>
                                 </Box>
                             )}
-
                         </Box>
-
-
                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                             {Object.entries(billingDetails).map(([key, value], index) => {
                                 if (key === 'overage') {

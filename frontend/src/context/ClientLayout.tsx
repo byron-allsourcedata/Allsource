@@ -17,11 +17,6 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
   const excludedPaths = ['/signin', '/signup', '/email-verificate', '/account-setup', '/reset-password', '/reset-password/confirm-send', '/choose-plan', '/authentication/verify-token', '/admin/users', '/forgot-password', '/admin'];
   const isAuthenticated = !excludedPaths.includes(pathname);
   const [showSlider, setSlider] = useState(false);
-
-  useEffect(() => {
-      console.log(showSlider)
-  }, [showSlider]);
-
   if (!isAuthenticated) {
     return <>{children}</>;
   }

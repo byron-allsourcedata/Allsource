@@ -15,6 +15,19 @@ def create_customer(user: UserSignUpForm):
     customer_id = customer.get("id")
     return customer_id
 
+def get_default_payment_method(customer_id):
+    customer = stripe.Customer.retrieve(customer_id)
+    default_payment_method_id = customer.invoice_settings.get('default_payment_method')
+    return default_payment_method_id
+
+def renew_subscription(new_price_id, customer_id):
+    new_subscription = stripe.Subscription.create(
+        customer=customer_id,
+        items=[{"price": new_price_id}],
+    )
+
+    return new_subscription
+
 
 def create_customer_google(user: dict):
     customer = stripe.Customer.create(
@@ -107,10 +120,6 @@ def get_billing_by_invoice_id(invoice_id):
             'message': 'An unexpected error occurred: ' + str(e)
         }
 
-
-    
-    
-        
 def detach_card_from_customer(payment_method_id):
     try:
         stripe.PaymentMethod.detach(payment_method_id)
@@ -238,20 +247,23 @@ def fetch_last_id_of_previous_page(customer_id, per_page, page):
         
 def get_billing_history_by_userid(customer_id, page, per_page):
     import math
-    starting_after = fetch_last_id_of_previous_page(customer_id, per_page, page) if page > 1 else None
     
-    billing_history = stripe.Invoice.list(
+    starting_after = fetch_last_id_of_previous_page(customer_id, per_page, page) if page > 1 else None
+    billing_history_invoices = stripe.Invoice.list(
         customer=customer_id,
         limit=per_page,
         starting_after=starting_after
     )
+    billing_history_charges = stripe.PaymentIntent.list(
+        customer=customer_id,
+        limit=per_page,
+        starting_after=starting_after
+    )
+
+    billing_history = billing_history_invoices.data + billing_history_charges.data
+    count = len(billing_history)
+    max_page = math.ceil(count / per_page) if per_page else 1
+    has_more = billing_history_invoices.has_more or billing_history_charges.has_more
     
-    if hasattr(billing_history, 'has_more'):
-        has_more = billing_history.has_more
-        count = billing_history.data and len(billing_history.data) or 0
-        max_page = math.ceil(count / per_page) if per_page else 1
-    else:
-        count = len(billing_history.data)
-        max_page = 1
-    
-    return billing_history.data, count, max_page
+    return billing_history, count, max_page, has_more
+

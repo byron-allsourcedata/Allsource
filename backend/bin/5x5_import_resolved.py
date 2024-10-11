@@ -57,7 +57,7 @@ QUEUE_CREDITS_CHARGING = 'credits_charging'
 QUEUE_DATA_SYNC = 'data_sync_leads'
 
 ROOT_BOT_CLIENT_EMAIL = 'demo@maximiz.ai'
-ROOT_BOT_CLIENT_DOMAIN = 'https://app.maximiz.ai'
+ROOT_BOT_CLIENT_DOMAIN = 'all-leads.com'
 
 EMAIL_LIST = ['business_email', 'personal_emails', 'additional_personal_emails']
 

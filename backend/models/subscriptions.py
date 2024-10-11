@@ -1,4 +1,4 @@
-from sqlalchemy import Column, event, Integer, BOOLEAN
+from sqlalchemy import Column, event, Integer, BOOLEAN, TEXT
 from sqlalchemy.dialects.postgresql import BIGINT, TIMESTAMP, VARCHAR
 from sqlalchemy.orm import sessionmaker
 
@@ -26,6 +26,7 @@ class UserSubscriptions(Base):
     integrations_limit = Column(Integer, nullable=True)
     downgrade_at = Column(TIMESTAMP(precision=7), nullable=True)
     downgrade_subscription_id = Column(VARCHAR, nullable=True)
+    cancellation_reason = Column(TEXT, nullable=True)
 
 
 Subscription = UserSubscriptions

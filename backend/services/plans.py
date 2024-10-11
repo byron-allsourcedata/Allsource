@@ -32,15 +32,20 @@ class PlansService:
     
     def get_additional_credits_price_id(self):
         return self.subscription_service.get_additional_credits_price_id()
+    
+    def save_reason_unsubscribe(self, reason_unsubscribe, user_id):
+        self.plans_persistence.save_reason_unsubscribe(reason_unsubscribe, user_id)
 
     def get_subscription_plans(self, period, user):
         stripe_plans = self.plans_persistence.get_stripe_plans(period)
         current_plan = self.plans_persistence.get_current_plan(user_id=user.get('id'))
+        user_subscription = self.plans_persistence.get_user_subscription(user_id=user.get('id')) if current_plan else None
+        status = user_subscription.status if user_subscription else None
         response = {"stripe_plans": []}
         plan_order = ["Basic", "Teams", "Business"]
         stripe_plans.sort(key=lambda plan: plan_order.index(plan.title) if plan.title in plan_order else len(plan_order))
         for stripe_plan in stripe_plans:
-            is_active = (current_plan.title == stripe_plan.title) if current_plan and current_plan.title else False
+            is_active = (current_plan.title  == stripe_plan.title and status == 'active') if current_plan and current_plan.title else False
             response["stripe_plans"].append(
                 {
                     "interval": stripe_plan.interval,
@@ -62,8 +67,8 @@ class PlansService:
 
 
     
-    def get_subscription_id(self, user):
-        return self.subscription_service.get_subscription_id_by_user_id(user.get('id'))
+    def get_subscription(self, user):
+        return self.subscription_service.get_subscription_by_user_id(user.get('id'))
     
     def get_current_price(self, user_id):
         return self.plans_persistence.get_current_price(user_id=user_id)

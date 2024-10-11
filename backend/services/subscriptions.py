@@ -262,8 +262,8 @@ class SubscriptionService:
         trial_subscription.plan_end = datetime.now()
         self.db.commit()
 
-    def get_subscription_id_by_user_id(self, user_id):
-        return self.db.query(UserSubscriptions.platform_subscription_id).filter(
+    def get_subscription_by_user_id(self, user_id):
+        return self.db.query(UserSubscriptions).filter(
             UserSubscriptions.user_id == user_id
         ).order_by(UserSubscriptions.id.desc()).limit(1).scalar()
     

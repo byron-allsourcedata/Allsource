@@ -271,11 +271,15 @@ class SettingsService:
             
     def extract_subscription_details(self, customer_id, prospect_credits, user_id):
         subscription = get_billing_details_by_userid(customer_id)
+        user_subscription = self.plan_persistence.get_user_subscription(user_id=user_id)
+        user_limit_domain = user_subscription.domains_limit if user_subscription else 0
+        current_plan = self.plan_persistence.get_current_plan(user_id=user_id)
+        plan_limit_domain = current_plan.domains_limit if current_plan else 0
         if subscription is None:
             return {
-            'billing_cycle': None,
-            'plan_name': None,
-            'domains': None,
+            'billing_cycle': f"{user_subscription.plan_start.strftime('%b %d, %Y')} to {user_subscription.plan_end.strftime('%b %d, %Y')}",
+            'plan_name': current_plan.title,
+            'domains': f"{plan_limit_domain - user_limit_domain}/{plan_limit_domain}",
             'prospect_credits': prospect_credits,
             'overage': '0.49/contact',
             'next_billing_date': None,
@@ -285,11 +289,6 @@ class SettingsService:
         plan = subscription['items']['data'][0]['plan']
         start_date, end_date = self.calculate_dates(plan)
         is_active = subscription.get('status') == 'active'
-        current_plan = self.plan_persistence.get_current_plan(user_id=user_id)
-        
-        user_subscription = self.plan_persistence.get_user_subscription(user_id=user_id)
-        user_limit_domain = user_subscription.domains_limit if user_subscription else 0
-        plan_limit_domain = current_plan.domains_limit if current_plan else 0
         subscription_details = {
             'billing_cycle': f"{start_date.strftime('%b %d, %Y')} to {end_date.strftime('%b %d, %Y')}",
             'plan_name': determine_plan_name_from_product_id(plan['product']),
@@ -310,34 +309,46 @@ class SettingsService:
         result['billing_details']['overage'] = user.get('is_leads_auto_charging')
         result['usages_credits'] = {
                         'leads_credits': user.get('leads_credits'),
-                        'plan_leads_credits': self.plan_persistence.get_current_plan(user_id=user.get('id')).leads_credits,
+                        'plan_leads_credits': self.plan_persistence.get_current_plan(user_id=user.get('id')).leads_credits if self.plan_persistence.get_current_plan(user_id=user.get('id')) else 0,
                         'prospect_credits': user.get('prospect_credits')
                         }
         return result
     
     def extract_billing_history(self, customer_id, page, per_page):
         result = []
-        billing_history, count, max_page = get_billing_history_by_userid(customer_id=customer_id, page=page, per_page=per_page)
+        billing_history, count, max_page, has_more = get_billing_history_by_userid(customer_id=customer_id, page=page, per_page=per_page)
+
         for billing_data in billing_history:
             billing_hash = {}
-            line_item = billing_data['lines']
-            billing_hash['date'] = self.timestamp_to_date(line_item['data'][0]['period']['start'])
-            billing_hash['invoice_id'] = line_item['data'][0]['invoice']
-            billing_hash['pricing_plan'] = determine_plan_name_from_product_id(line_item['data'][0]['plan']['product'])
-            billing_hash['total'] = billing_data['subtotal'] / 100
-            billing_hash['status'] = billing_data['status']
-            
-            status = billing_data['status']
-            if status == "paid":
-                billing_hash['status'] = "Successful"
-            elif status == "uncollectible":
-                billing_hash['status'] = "Decline"
-            else:
-                billing_hash['status'] = "Failed"
-            
+            if isinstance(billing_data, stripe.Invoice):
+                line_items = billing_data.lines.data
+                billing_hash['date'] = self.timestamp_to_date(line_items[0].period.start)
+                billing_hash['invoice_id'] = billing_data.id
+                billing_hash['pricing_plan'] = determine_plan_name_from_product_id(line_items[0].plan.product)
+                billing_hash['total'] = billing_data.subtotal / 100
+                billing_hash['status'] = self.map_status(billing_data.status)
+
+            elif isinstance(billing_data, stripe.PaymentIntent):
+                if billing_data.invoice is None:
+                    billing_hash['date'] = self.timestamp_to_date(billing_data.created)
+                    billing_hash['invoice_id'] = billing_data.invoice
+                    billing_hash['pricing_plan'] = "Overage"
+                    billing_hash['total'] = billing_data.amount / 100
+                    billing_hash['status'] = self.map_status(billing_data.status)
+
             result.append(billing_hash)
+
         return result, count, max_page
-           
+
+    def map_status(self, status):
+        if status in ["succeeded", "paid"]:
+            return "Successful"
+        elif status == "uncollectible":
+            return "Decline"
+        else:
+            return "Failed"
+
+
     
     def get_billing_history(self, user: dict, page, per_page):
         result = {}
