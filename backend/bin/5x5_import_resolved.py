@@ -20,13 +20,16 @@ parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 
 from utils import normalize_url
+from urllib.parse import urlparse, parse_qs
 from models.leads_requests import LeadsRequests
 from models.users_domains import UserDomains
+from models.suppression_rule import SuppressionRule
 from models.leads_users_added_to_cart import LeadsUsersAddedToCart
 from models.leads_users_ordered import LeadsUsersOrdered
 from models.leads_visits import LeadsVisits
 from models.subscriptions import UserSubscriptions
 from models.five_x_five_hems import FiveXFiveHems
+from models.suppressions_list import SuppressionList
 from models.users_payments_transactions import UsersPaymentsTransactions
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
@@ -53,7 +56,7 @@ AMOUNT_CREDITS = 1
 QUEUE_CREDITS_CHARGING = 'credits_charging'
 QUEUE_DATA_SYNC = 'data_sync_leads'
 
-ROOT_BOT_CLIENT_EMAIL = 'onlineinet.ru@gmail.com'
+ROOT_BOT_CLIENT_EMAIL = 'demo@maximiz.ai'
 ROOT_BOT_CLIENT_DOMAIN = 'https://app.maximiz.ai'
 
 EMAIL_LIST = ['business_email', 'personal_emails', 'additional_personal_emails']
@@ -102,6 +105,17 @@ async def process_file(bucket, file_key, cookie_sync_by_hour):
             await save_files_by_hour(table, cookie_sync_by_hour)
 
 
+def get_all_five_x_user_emails(business_email, personal_emails, additional_personal_emails):
+    emails = set()
+    if business_email:
+        emails.update(business_email.split(', '))
+    if personal_emails:
+        emails.update(personal_emails.split(', '))
+    if additional_personal_emails:
+        emails.update(additional_personal_emails.split(', '))
+    return list(emails)
+
+
 async def process_table(session, cookie_sync_by_hour, channel, root_user):
     for key, possible_leads in cookie_sync_by_hour.items():
         for possible_lead in reversed(possible_leads):
@@ -127,6 +141,59 @@ async def process_table(session, cookie_sync_by_hour, channel, root_user):
                     break
                 else:
                     logging.warning(f"Not found by UP_ID {up_id}")
+                    
+async def process_payment_transaction(session, five_x_five_user_up_id, user_domain_id, user, rmq_connection):
+    users_payments_transactions = session.query(UsersPaymentsTransactions).filter(
+        UsersPaymentsTransactions.five_x_five_up_id == str(five_x_five_user_up_id),
+        UsersPaymentsTransactions.domain_id == user_domain_id
+    ).first()
+    if users_payments_transactions:
+        logging.info(f"users_payments_transactions is already exists with id = {users_payments_transactions.id}")
+        return
+    user_payment_transactions = UsersPaymentsTransactions(user_id=user.id, status='success', amount_credits=AMOUNT_CREDITS, type='buy_lead', domain_id=user_domain_id, five_x_five_up_id=five_x_five_user_up_id)
+    session.add(user_payment_transactions)
+    if (user.leads_credits - AMOUNT_CREDITS) < 0:
+        if user.is_leads_auto_charging is False:
+            logging.info(f"User leads_auto_charging is False")
+            return
+        user.leads_credits -= AMOUNT_CREDITS
+        if user.leads_credits % 100 == 0:
+            await publish_rabbitmq_message(
+                connection=rmq_connection,
+                queue_name=QUEUE_CREDITS_CHARGING,
+                message_body={'customer_id': user.customer_id, 'credits': user.leads_credits}
+            )
+            customer_data = {'customer_id': user.customer_id, 'credits': user.leads_credits}
+            logging.info(f"Push to rmq {customer_data}")
+    else:
+        user.leads_credits -= AMOUNT_CREDITS
+    session.flush()
+    
+async def check_certain_urls(page, suppression_rule):
+    if suppression_rule.is_url_certain_activation and suppression_rule.activate_certain_urls:
+        page_path = urlparse(page).path.strip('/')
+        urls_to_check = suppression_rule.activate_certain_urls.split(', ')
+
+        for url in urls_to_check:
+            url_path = urlparse(url.strip()).path.strip('/')
+            if (page_path == url_path or 
+                page_path.startswith(url_path + '/') or 
+                url_path in page_path.split('/')):
+                logging.info(f"activate_certain_urls exists: {page}")
+                return True
+
+    return False
+
+async def check_activate_based_urls(page, suppression_rule):
+    if suppression_rule.is_based_activation and suppression_rule.activate_certain_urls:
+        parsed_url = urlparse(page)
+        query_params = parse_qs(parsed_url.query)
+        activate_based_urls = suppression_rule.activate_based_urls.split(', ')
+        if any(url in values for values in query_params.values() for url in activate_based_urls):
+            logging.info(f"activate_based_urls exists: {page}")
+            return True
+
+    return False
 
 
 async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, session: Session, rmq_connection, root_user=None):
@@ -151,57 +218,58 @@ async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, sess
         referer = json_headers.get('referer')[0]
         page = referer
     behavior_type = 'visitor' if not partner_uid_dict.get('action') else partner_uid_dict.get('action')
-    lead_user = session.query(LeadUser).filter_by(five_x_five_user_id=five_x_five_user.id, user_id=user.id).first()
+    lead_user = session.query(LeadUser).filter_by(five_x_five_user_id=five_x_five_user.id, domain_id=user_domain_id).first()
     is_first_request = False
     if not lead_user:
-        if root_user is None:
-            users_payments_transactions = session.query(UsersPaymentsTransactions).filter(
-                UsersPaymentsTransactions.five_x_five_up_id == str(five_x_five_user.up_id),
-                UsersPaymentsTransactions.domain_id == user_domain_id
-            ).first()
-            if users_payments_transactions:
-                logging.info(f"users_payments_transactions is already exists with id = {users_payments_transactions.id}")
-                return
-            user_payment_transactions = UsersPaymentsTransactions(user_id=user.id, status='success', amount_credits=AMOUNT_CREDITS, type='buy_lead', domain_id=user_domain_id, five_x_five_up_id=five_x_five_user.up_id)
-            session.add(user_payment_transactions)
-            if (user.leads_credits - AMOUNT_CREDITS) < 0:
-                if user.is_leads_auto_charging is False:
-                    logging.info(f"User leads_auto_charging is False")
+        suppression_rule = session.query(SuppressionRule).filter(SuppressionRule.domain_id == user_domain_id).first()
+        suppression_list = session.query(SuppressionList).filter(SuppressionList.domain_id == user_domain_id).first()
+        suppressions_emails = []
+        if suppression_list and suppression_list.total_emails:
+            suppressions_emails.extend(suppression_list.total_emails.split(', '))
+        if suppression_rule and suppression_rule.suppressions_multiple_emails:
+            suppressions_emails.extend(suppression_rule.suppressions_multiple_emails.split(', '))
+        suppressions_emails = list(set(suppressions_emails))
+        if suppressions_emails:
+            emails_to_check = get_all_five_x_user_emails(five_x_five_user.business_email, five_x_five_user.personal_emails, five_x_five_user.additional_personal_emails)
+            for email in suppressions_emails:
+                if email in emails_to_check:
+                    logging.info(f"{email} exists in five_x_five_user")
                     return
-                user.leads_credits -= AMOUNT_CREDITS
-                if user.leads_credits % 100 == 0:
-                    await publish_rabbitmq_message(
-                        connection=rmq_connection,
-                        queue_name=QUEUE_CREDITS_CHARGING,
-                        message_body={'customer_id': user.customer_id, 'credits': user.leads_credits}
-                    )
-                    customer_data = {'customer_id': user.customer_id, 'credits': user.leads_credits}
-                    logging.info(f"Push to rmq {customer_data}")
-            else:
-                user.leads_credits -= AMOUNT_CREDITS
-            session.flush()
-        
-        is_first_request = True
-        lead_user = LeadUser(five_x_five_user_id=five_x_five_user.id, user_id=user.id, behavior_type=behavior_type, domain_id=user_domain_id, total_visit=0, avarage_visit_time=0, total_visit_time=0)
-        emails_to_check = get_list_emails(five_x_five_user)
+        if suppression_rule:
+            if suppression_rule.is_url_certain_activation and suppression_rule.activate_certain_urls:
+                if await check_certain_urls(page, suppression_rule):
+                    return
+            
+            if suppression_rule.is_based_activation and suppression_rule.activate_certain_urls:
+                if check_activate_based_urls(page, suppression_rule):
+                    return
+
+        emails_to_check = get_all_five_x_user_emails(five_x_five_user.business_email, five_x_five_user.personal_emails, five_x_five_user.additional_personal_emails)
         integrations_ids = [integration.id for integration in session.query(UserIntegration).filter(UserIntegration.is_with_suppression == True).all()]
         lead_suppression = session.query(LeadsSupperssion).filter(
             LeadsSupperssion.domain_id == user_domain_id,
             LeadsSupperssion.email.in_(emails_to_check),
             LeadsSupperssion.integration_id.in_(integrations_ids)   
         ).first() is not None
-        if not lead_suppression:
-            session.add(lead_user)
-            session.flush()
-            channel = await rmq_connection.channel()
-            await channel.declare_queue(
-                name=QUEUE_DATA_SYNC,
-                durable=True
-            )
-            await publish_rabbitmq_message(rmq_connection, QUEUE_DATA_SYNC, {'domain_id': user_domain_id, 'leads_type': behavior_type, 'lead': {
-                'id': lead_user.id,
-                'five_x_five_user_id': lead_user.five_x_five_user_id
-            }})
+        if lead_suppression:
+            logging.info(f"No charging option supressed, skip lead")
+            return
+        if root_user is None: 
+            await process_payment_transaction(session, five_x_five_user.up_id, user_domain_id, user, rmq_connection)
+        is_first_request = True
+        lead_user = LeadUser(five_x_five_user_id=five_x_five_user.id, user_id=user.id, behavior_type=behavior_type, domain_id=user_domain_id, total_visit=0, avarage_visit_time=0, total_visit_time=0)
+        
+        session.add(lead_user)
+        session.flush()
+        channel = await rmq_connection.channel()
+        await channel.declare_queue(
+            name=QUEUE_DATA_SYNC,
+            durable=True
+        )
+        await publish_rabbitmq_message(rmq_connection, QUEUE_DATA_SYNC, {'domain_id': user_domain_id, 'leads_type': behavior_type, 'lead': {
+            'id': lead_user.id,
+            'five_x_five_user_id': lead_user.five_x_five_user_id
+        }})
     else:
         first_visit_id = lead_user.first_visit_id
     requested_at_str = str(possible_lead['EVENT_DATE'])
@@ -242,7 +310,7 @@ async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, sess
         if is_first_request == True:
             lead_user.first_visit_id = lead_visit_id
             session.flush()
-            lead_users = session.query(LeadUser).filter_by(user_id=user.id).limit(2).all()
+            lead_users = session.query(LeadUser).filter_by(domain_id=user_domain_id).limit(2).all()
             if len(lead_users) == 1:
                 last_subscription = session.query(UserSubscriptions).filter(UserSubscriptions.user_id == user.id).order_by(UserSubscriptions.id.desc()).first()
                 if last_subscription and last_subscription.plan_start is None and last_subscription.plan_end is None:
@@ -289,13 +357,6 @@ async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, sess
     
     session.commit()
     
-
-def get_list_emails(five_x_five_user: FiveXFiveUser):
-    business_emails = five_x_five_user.business_email.split(', ') if five_x_five_user.business_email else []
-    personal_emails = five_x_five_user.personal_emails.split(', ') if five_x_five_user.personal_emails else []
-    additional_personal_emails = five_x_five_user.additional_personal_emails.split(', ') if five_x_five_user.additional_personal_emails else []
-    all_emails = business_emails + personal_emails + additional_personal_emails
-    return list(set(all_emails))
 
 def convert_leads_requests_to_utc(leads_requests):
     utc = pytz.utc

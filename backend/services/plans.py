@@ -40,7 +40,7 @@ class PlansService:
         plan_order = ["Basic", "Teams", "Business"]
         stripe_plans.sort(key=lambda plan: plan_order.index(plan.title) if plan.title in plan_order else len(plan_order))
         for stripe_plan in stripe_plans:
-            is_active = current_plan.title == stripe_plan.title
+            is_active = (current_plan.title == stripe_plan.title) if current_plan and current_plan.title else False
             response["stripe_plans"].append(
                 {
                     "interval": stripe_plan.interval,
@@ -65,8 +65,8 @@ class PlansService:
     def get_subscription_id(self, user):
         return self.subscription_service.get_subscription_id_by_user_id(user.get('id'))
     
-    def get_current_price(self, user):
-        return self.plans_persistence.get_current_price(user_id=user.get('id'))
+    def get_current_price(self, user_id):
+        return self.plans_persistence.get_current_price(user_id=user_id)
     
     def get_plan_price(self, price_id):
         return self.plans_persistence.get_plan_price(price_id=price_id)

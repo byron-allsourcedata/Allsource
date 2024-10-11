@@ -70,7 +70,7 @@ axiosInterceptorInstance.interceptors.response.use(
               navigateTo("/signin");
               break;
             case "NEED_CHOOSE_PLAN":
-              navigateTo("/choose-plan");
+              navigateTo("/settings?section=subscription");
               break;
             case "PAYMENT_NEEDED":
               navigateTo(`${error.response.data.stripe_payment_url}`);

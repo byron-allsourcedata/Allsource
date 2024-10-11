@@ -42,7 +42,7 @@ class PaymentsService:
         subscription_id = self.plans_service.get_subscription_id(users)
         subscription = stripe.Subscription.retrieve(subscription_id)
         subscription_item_id = subscription['items']['data'][0]['id']
-        is_downgrade = self.is_downgrade(price_id)
+        is_downgrade = self.is_downgrade(price_id, users.get('id'))
         if is_downgrade:
             stripe.Subscription.modify(
                 subscription_id,
@@ -68,8 +68,8 @@ class PaymentsService:
             )
             return self.get_subscription_status(subscription_data['id'])
 
-    def is_downgrade(self, price_id: str) -> bool:
-        current_price = self.plans_service.get_current_price()
+    def is_downgrade(self, price_id: str, user_id: int) -> bool:
+        current_price = self.plans_service.get_current_price(user_id)
         new_price = self.plans_service.get_plan_price(price_id)
         return self.compare_prices(new_price, current_price) < 0
 

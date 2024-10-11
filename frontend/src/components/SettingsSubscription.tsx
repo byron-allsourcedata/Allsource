@@ -104,6 +104,8 @@ export const SettingsSubscription: React.FC = () => {
     const [confirmCancellationPopupOpen, setConfirmCancellationPopupOpen] = useState(false);
     const [errors, setErrors] = useState<{ [key: string]: string }>({});
     const [formValues, setFormValues] = useState({ unsubscribe: '', });
+    const [hasActivePlan, setHasActivePlan] = useState<boolean>(false);
+
 
     const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
         setTabValue(newValue);
@@ -148,9 +150,10 @@ export const SettingsSubscription: React.FC = () => {
             try {
                 setIsLoading(true);
                 const period = tabValue === 0 ? 'monthly' : 'yearly';
-                // const response = await axiosInterceptorInstance.get('/subscriptions/stripe-plans?period=monthly');
                 const response = await axiosInterceptorInstance.get(`/subscriptions/stripe-plans?period=${period}`);
                 setPlans(response.data.stripe_plans);
+                const activePlan = response.data.stripe_plans.find((plan: any) => plan.is_active) !== undefined
+                setHasActivePlan(activePlan);
             } catch (error) {
                 console.error('Error fetching data:', error);
             } finally {
@@ -167,10 +170,15 @@ export const SettingsSubscription: React.FC = () => {
     };
 
     const handleChoosePlan = async (stripePriceId: string) => {
+        let path = hasActivePlan
+        ? '/subscriptions/upgrade-and-downgrade-user-subscription'
+        : '/subscriptions/session/new';
         try {
-            const response = await axiosInterceptorInstance.get(`/subscriptions/session/new?price_id=${stripePriceId}`);
+            const response = await axiosInterceptorInstance.get(`${path}?price_id=${stripePriceId}`);
             if (response.status === 200) {
-                window.location.href = response.data.link;
+                if (!hasActivePlan){
+                    window.location.href = response.data.link;
+                }
             }
         } catch (error) {
             console.error('Error choosing plan:', error);

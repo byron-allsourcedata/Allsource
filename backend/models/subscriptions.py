@@ -24,6 +24,8 @@ class UserSubscriptions(Base):
     users_limit = Column(Integer, nullable=True)
     members_limit = Column(Integer, nullable=True)
     integrations_limit = Column(Integer, nullable=True)
+    downgrade_at = Column(TIMESTAMP(precision=7), nullable=True)
+    downgrade_subscription_id = Column(VARCHAR, nullable=True)
 
 
 Subscription = UserSubscriptions
