@@ -20,6 +20,7 @@ parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 
 from utils import normalize_url
+from urllib.parse import urlparse, parse_qs
 from models.leads_requests import LeadsRequests
 from models.users_domains import UserDomains
 from models.suppression_rule import SuppressionRule
@@ -167,6 +168,32 @@ async def process_payment_transaction(session, five_x_five_user_up_id, user_doma
     else:
         user.leads_credits -= AMOUNT_CREDITS
     session.flush()
+    
+async def check_certain_urls(page, suppression_rule):
+    if suppression_rule['is_url_certain_activation'] and suppression_rule['activate_certain_urls']:
+        page_path = urlparse(page).path.strip('/')
+        urls_to_check = suppression_rule['activate_certain_urls'].split(', ')
+
+        for url in urls_to_check:
+            url_path = urlparse(url.strip()).path.strip('/')
+            if (page_path == url_path or 
+                page_path.startswith(url_path + '/') or 
+                url_path in page_path.split('/')):
+                logging.info(f"activate_certain_urls exists: {page}")
+                return True
+
+    return False
+
+async def check_activate_based_urls(page, suppression_rule):
+    if suppression_rule['is_based_activation'] and suppression_rule['activate_certain_urls']:
+        parsed_url = urlparse(page)
+        query_params = parse_qs(parsed_url.query)
+        activate_based_urls = suppression_rule['activate_based_urls'].split(', ')
+        if any(url in values for values in query_params.values() for url in activate_based_urls):
+            logging.info(f"activate_based_urls exists: {page}")
+            return True
+
+    return False
 
 
 async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, session: Session, rmq_connection, root_user=None):
@@ -209,17 +236,14 @@ async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, sess
                     logging.info(f"{email} exists in five_x_five_user")
                     return
         if suppression_rule:
-            if suppression_rule.is_url_certain_activation and suppression_rule.activate_certain_urls and any(url in page for url in suppression_rule.activate_certain_urls.split(', ')):
-                logging.info(f"activate_certain_urls exists: {page}")
-                return
+            if suppression_rule['is_url_certain_activation'] and suppression_rule['activate_certain_urls']:
+                if await check_certain_urls(page, suppression_rule):
+                    return
             
-            if suppression_rule.is_based_activation and suppression_rule.activate_certain_urls and any(url in page for url in suppression_rule.activate_based_urls.split(', ')):
-                logging.info(f"activate_based_urls exists: {page}")
-                return
-        if root_user is None: 
-            process_payment_transaction(session, five_x_five_user.up_id, user_domain_id, user, rmq_connection)
-        is_first_request = True
-        lead_user = LeadUser(five_x_five_user_id=five_x_five_user.id, user_id=user.id, behavior_type=behavior_type, domain_id=user_domain_id, total_visit=0, avarage_visit_time=0, total_visit_time=0)
+            if suppression_rule.is_based_activation and suppression_rule.activate_certain_urls:
+                if check_activate_based_urls(page, suppression_rule):
+                    return
+
         emails_to_check = get_all_five_x_user_emails(five_x_five_user.business_email, five_x_five_user.personal_emails, five_x_five_user.additional_personal_emails)
         integrations_ids = [integration.id for integration in session.query(UserIntegration).filter(UserIntegration.is_with_suppression == True).all()]
         lead_suppression = session.query(LeadsSupperssion).filter(
@@ -227,18 +251,25 @@ async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, sess
             LeadsSupperssion.email.in_(emails_to_check),
             LeadsSupperssion.integration_id.in_(integrations_ids)   
         ).first() is not None
-        if not lead_suppression:
-            session.add(lead_user)
-            session.flush()
-            channel = await rmq_connection.channel()
-            await channel.declare_queue(
-                name=QUEUE_DATA_SYNC,
-                durable=True
-            )
-            await publish_rabbitmq_message(rmq_connection, QUEUE_DATA_SYNC, {'domain_id': user_domain_id, 'leads_type': behavior_type, 'lead': {
-                'id': lead_user.id,
-                'five_x_five_user_id': lead_user.five_x_five_user_id
-            }})
+        if lead_suppression:
+            logging.info(f"No charging option supressed, skip lead")
+            return
+        if root_user is None: 
+            await process_payment_transaction(session, five_x_five_user.up_id, user_domain_id, user, rmq_connection)
+        is_first_request = True
+        lead_user = LeadUser(five_x_five_user_id=five_x_five_user.id, user_id=user.id, behavior_type=behavior_type, domain_id=user_domain_id, total_visit=0, avarage_visit_time=0, total_visit_time=0)
+        
+        session.add(lead_user)
+        session.flush()
+        channel = await rmq_connection.channel()
+        await channel.declare_queue(
+            name=QUEUE_DATA_SYNC,
+            durable=True
+        )
+        await publish_rabbitmq_message(rmq_connection, QUEUE_DATA_SYNC, {'domain_id': user_domain_id, 'leads_type': behavior_type, 'lead': {
+            'id': lead_user.id,
+            'five_x_five_user_id': lead_user.five_x_five_user_id
+        }})
     else:
         first_visit_id = lead_user.first_visit_id
     requested_at_str = str(possible_lead['EVENT_DATE'])

@@ -103,13 +103,9 @@ class SuppressionPersistence:
     
     def process_certain_urls(self, domain_id, url_list):
         rules = self.get_rules(domain_id=domain_id) or SuppressionRule(created_at=datetime.now(), domain_id=domain_id)
-        
-        cleaned_urls = [url.replace("/", "").replace(" ", "") for url in url_list if url]
-        
-        if not cleaned_urls:
+        if not url_list:
             rules.activate_certain_urls = None
-        
-        rules.activate_certain_urls = ', '.join(cleaned_urls)
+        rules.activate_certain_urls = ', '.join(url_list)
         self.db.add(rules)
         self.db.commit()
 
