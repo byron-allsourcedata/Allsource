@@ -170,9 +170,9 @@ async def process_payment_transaction(session, five_x_five_user_up_id, user_doma
     session.flush()
     
 async def check_certain_urls(page, suppression_rule):
-    if suppression_rule['is_url_certain_activation'] and suppression_rule['activate_certain_urls']:
+    if suppression_rule.is_url_certain_activation and suppression_rule.activate_certain_urls:
         page_path = urlparse(page).path.strip('/')
-        urls_to_check = suppression_rule['activate_certain_urls'].split(', ')
+        urls_to_check = suppression_rule.activate_certain_urls.split(', ')
 
         for url in urls_to_check:
             url_path = urlparse(url.strip()).path.strip('/')
@@ -185,10 +185,10 @@ async def check_certain_urls(page, suppression_rule):
     return False
 
 async def check_activate_based_urls(page, suppression_rule):
-    if suppression_rule['is_based_activation'] and suppression_rule['activate_certain_urls']:
+    if suppression_rule.is_based_activation and suppression_rule.activate_certain_urls:
         parsed_url = urlparse(page)
         query_params = parse_qs(parsed_url.query)
-        activate_based_urls = suppression_rule['activate_based_urls'].split(', ')
+        activate_based_urls = suppression_rule.activate_based_urls.split(', ')
         if any(url in values for values in query_params.values() for url in activate_based_urls):
             logging.info(f"activate_based_urls exists: {page}")
             return True
@@ -236,7 +236,7 @@ async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, sess
                     logging.info(f"{email} exists in five_x_five_user")
                     return
         if suppression_rule:
-            if suppression_rule['is_url_certain_activation'] and suppression_rule['activate_certain_urls']:
+            if suppression_rule.is_url_certain_activation and suppression_rule.activate_certain_urls:
                 if await check_certain_urls(page, suppression_rule):
                     return
             
