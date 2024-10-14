@@ -457,10 +457,8 @@ const Dashboard: React.FC = () => {
                   >
                     Dashboard <CustomTooltip title={"Text about dashboard"} />
                   </Typography>
-                   {/* Calendary picker*/}
-                </Box>
 
-                <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'start', width:'100%', alignItems: 'center', mt:1.75, "@media (max-width: 600px)":{ width:'97%', pr: '0',}   }}>
+                  <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center', width:'100%', alignItems: 'center', mt:1, "@media (max-width: 600px)":{ width:'97%', pr: '0',}   }}>
                     <Tabs
                         value={tabIndex}
                         onChange={handleTabChange}
@@ -523,6 +521,10 @@ const Dashboard: React.FC = () => {
                         />
                     </Tabs>
                 </Box>
+                   {/* Calendary picker*/}
+                </Box>
+
+
 
                 <Box sx={{ width: '100%' }}>
                   <TabPanel value={tabIndex} index={0}>
