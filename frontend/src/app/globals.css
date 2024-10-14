@@ -242,3 +242,17 @@ input:-webkit-autofill, textarea:-webkit-autofill {
 }
 
 
+
+/* Для WebKit-браузеров (Chrome, Safari, macOS) */
+*::-webkit-scrollbar {
+  width: 8px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: #888; /* Цвет ползунка скроллбара */
+  border-radius: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background-color: #f1f1f1; /* Цвет фона скроллбара */
+}
