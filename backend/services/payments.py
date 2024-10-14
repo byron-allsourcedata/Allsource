@@ -92,9 +92,11 @@ class PaymentsService:
                     { "id": current_subscription.get("items").get("data")[0].get("id"), "deleted": True },
                     { "price": price_id }
                 ],
-                proration_behavior='none'
+                proration_behavior='none',
+                billing_cycle_anchor='now'
             )
             return {'status': self.get_subscription_status(upgrade_subscription)}
+            
 
     def is_downgrade(self, price_id: str, user_id: int) -> bool:
         current_price = self.plans_service.get_current_price(user_id)

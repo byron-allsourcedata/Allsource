@@ -82,7 +82,7 @@ class LeadsService:
         'personal_zip': lead[53],
         'professional_zip': lead[54],
         'company_zip': lead[55],
-        'behavior_type': lead[56],
+        'behavior_type': 'converted_sales' if lead[65] else lead[56],
         'state': lead[57].title() if lead[57] else None,
         'city': lead[58].title() if lead[58] else None,
         'first_visited_date': lead[59].strftime('%d.%m.%Y'),

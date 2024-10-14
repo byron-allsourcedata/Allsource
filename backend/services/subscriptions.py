@@ -29,10 +29,11 @@ class SubscriptionService:
     def get_userid_by_customer(self, customer_id):
         return self.db.query(User).filter(User.customer_id == customer_id).first()
 
-    def check_duplicate_send(self, stripe_request_created_at, user_id):
-        subscription_data = self.db.query(Subscription).filter(
-            Subscription.user_id == user_id
-        ).order_by(Subscription.plan_end.desc()).first()
+    def check_duplicate_send(self, stripe_request_created_at, platform_subscription_id, price_id):
+        subscription_data = self.db.query(SubscriptionTransactions).filter(
+            SubscriptionTransactions.price_id == price_id,
+            SubscriptionTransactions.platform_subscription_id == platform_subscription_id
+        ).order_by(SubscriptionTransactions.stripe_request_created_at.desc()).first()
         if subscription_data:
             if subscription_data.stripe_request_created_at is not None:
                 if stripe_request_created_at <= subscription_data.stripe_request_created_at:
@@ -170,9 +171,9 @@ class SubscriptionService:
         end_date = datetime.fromtimestamp(end_date_timestamp, timezone.utc).replace(tzinfo=None)
         stripe_request_created_at = datetime.fromtimestamp(stripe_request_created_timestamp, timezone.utc).replace(tzinfo=None)
         stripe_status = stripe_payload.get("data").get("object").get("status")
-        if stripe_status in ["active", "succeeded"]:
+        if stripe_status in ["active", "succeeded", "trialing"]:
             status = "active"
-        elif stripe_status in ["incomplete", "requires_action", "pending"]:
+        elif stripe_status in ["incomplete", "requires_action", "pending", "incomplete_expired", "past_due"]:
             status = "inactive"
         else:
             status = "canceled"
@@ -292,46 +293,58 @@ class SubscriptionService:
         return stripe_price_id
 
     
-    def update_subscription_from_webhook(self, user_subscription :UserSubscriptions, stripe_payload):
-        start_date_timestamp = stripe_payload.get("data").get("object").get("current_period_start")
-        stripe_request_created_timestamp = stripe_payload.get("created")
-        stripe_request_created_at = datetime.fromtimestamp(stripe_request_created_timestamp, timezone.utc).replace(tzinfo=None)
-        end_date_timestamp = stripe_payload.get("data").get("object").get("current_period_end")
+    def process_subscription(self, user_id, stripe_payload):
+        platform_subscription_id = stripe_payload.get("id")
+        price_id = stripe_payload.get("plan").get("id")
+        start_date_timestamp = stripe_payload.get("current_period_start")
+        end_date_timestamp = stripe_payload.get("current_period_end")
         start_date = datetime.fromtimestamp(start_date_timestamp, timezone.utc).replace(tzinfo=None)
         end_date = datetime.fromtimestamp(end_date_timestamp, timezone.utc).replace(tzinfo=None)
-        stripe_status = stripe_payload.get("data").get("object").get("status")
-
+        stripe_status = stripe_payload.get("status")
         if stripe_status in ["active", "succeeded"]:
             status = "active"
-        elif stripe_status in ["incomplete", "requires_action", "pending"]:
+        elif stripe_status in ["incomplete", "requires_action", "pending", "past_due"]:
             status = "inactive"
         else:
             status = "canceled"
-
-        plan_type = determine_plan_name_from_product_id(
-            stripe_payload.get("data").get("object").get("plan").get("product"))
-        plan_id = self.plans_persistence.get_plan_by_title(plan_type)
-        domains_limit, users_limit, integrations_limit, leads_credits, prospect_credits, members_limit = self.plans_persistence.get_plan_limit_by_id(
-            plan_id=plan_id)
-        if status != "canceled":
-            user_subscription.plan_start = start_date
-            user_subscription.plan_end = end_date
-            user_subscription.domains_limit = domains_limit
-            user_subscription.users_limit = users_limit
-            user_subscription.integrations_limit = integrations_limit
-            user_subscription.plan_id=plan_id,
-            user_subscription.members_limit=members_limit - 1,
-            user_subscription.stripe_request_created_at = stripe_request_created_at
-        user_subscription.status = status
-        user_subscription.updated_at = stripe_request_created_at
-        self.db.flush()
-
-        if status == "active":
-            user = self.db.query(User).filter(User.id == user_subscription.user_id).first()
+            
+        if status == 'active':
+            self.db.query(UserSubscriptions).filter(
+                UserSubscriptions.platform_subscription_id == platform_subscription_id
+            ).update({"status": "inactive"})
+            
+            plan_type = determine_plan_name_from_product_id(stripe_payload.get("plan").get("product"))
+            plan_id = self.plans_persistence.get_plan_by_title(plan_type)
+            domains_limit, users_limit, integrations_limit, leads_credits, prospect_credits, members_limit = self.plans_persistence.get_plan_limit_by_id(
+                plan_id=plan_id)
+            
+            new_subscription = UserSubscriptions(
+            plan_start=start_date,
+            plan_end=end_date,
+            domains_limit=domains_limit,
+            users_limit=users_limit,
+            integrations_limit=integrations_limit,
+            plan_id=plan_id,
+            members_limit=members_limit - 1,
+            status=status,
+            updated_at=datetime.now(timezone.utc)
+            )
+            self.db.add(new_subscription)
+            
+            user = self.db.query(User).filter(User.id == user_id).first()
             user.leads_credits = leads_credits if user.leads_credits >= 0 else  leads_credits - user.leads_credits
             user.prospect_credits = prospect_credits
-        self.db.commit()
-        return user_subscription
+            
+            self.db.commit()
+                
+        if status == "canceled" or status == 'inactive':
+            self.db.query(UserSubscriptions).filter(
+                UserSubscriptions.platform_subscription_id == platform_subscription_id,
+                UserSubscriptions.price_id == price_id
+            ).update({"status": "inactive"})
+            
+            self.db.commit()
+        return status
     
     def get_invitation_limit(self, user_id):
         member_limit =self.db.query(UserSubscriptions.members_limit).filter(

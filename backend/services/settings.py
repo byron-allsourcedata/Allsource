@@ -277,14 +277,14 @@ class SettingsService:
         plan_limit_domain = current_plan.domains_limit if current_plan else 0
         if subscription is None:
             return {
-            'billing_cycle': f"{user_subscription.plan_start.strftime('%b %d, %Y')} to {user_subscription.plan_end.strftime('%b %d, %Y')}",
+            'billing_cycle': f"{user_subscription.plan_start.strftime('%b %d, %Y')} to {user_subscription.plan_end.strftime('%b %d, %Y')}" if user_subscription.plan_start else None,
             'plan_name': current_plan.title,
             'domains': f"{plan_limit_domain - user_limit_domain}/{plan_limit_domain}",
             'prospect_credits': prospect_credits,
             'overage': '0.49/contact',
             'next_billing_date': None,
             'monthly_total': None,
-            'active': False,
+            'active': True,
             
         }
         plan = subscription['items']['data'][0]['plan']
