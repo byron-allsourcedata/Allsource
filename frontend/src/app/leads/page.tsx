@@ -1186,7 +1186,7 @@ const Leads: React.FC = () => {
                             </Button>
                         </Box>
                     </Box>
-                    <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, mt: 2, overflowX: 'scroll' }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, mt: 2 }}>
                         {selectedFilters.length > 0 && (
                             <Chip
                                 label="Clear all"

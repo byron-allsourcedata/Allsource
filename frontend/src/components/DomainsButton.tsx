@@ -42,7 +42,7 @@ const HoverableImage = ({ srcDefault, srcHover, alt, onClick }: HoverImageProps)
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={(e) => {
-        e.stopPropagation(); // Останавливает всплытие события
+        e.stopPropagation();
         onClick();
       }}
       sx={{
