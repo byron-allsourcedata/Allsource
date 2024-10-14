@@ -191,15 +191,22 @@ export const SettingsSubscription: React.FC = () => {
                 }
                 else if (response.data.status === 'SUCCESS') {
                     showToast('Subscription was successful!');
-                    window.location.href = "/settings?section=subscription"
+                    try {
+                        setIsLoading(true);
+                        const period = tabValue === 0 ? 'monthly' : 'yearly';
+                        await new Promise(resolve => setTimeout(resolve, 3000));
+                        const response = await axiosInterceptorInstance.get(`/subscriptions/stripe-plans?period=${period}`);
+                        setPlans(response.data.stripe_plans);
+                        const activePlan = response.data.stripe_plans.find((plan: any) => plan.is_active) !== undefined;
+                        setHasActivePlan(activePlan);
+                    } catch (error) {
+                        console.error('Error fetching data:', error);
+                    } finally {
+                        setIsLoading(false);
+                    }                    
                 }
                 else if (response.data.status === 'INCOMPLETE') {
                     showErrorToast('Subscription not found!');
-                    window.location.href = "/settings?section=subscription"
-                }
-                else if (response.data.status === 'DOWNGRADING') {
-                    showErrorToast(`Downgrading subscription to ${response.data.title}`);
-                    window.location.href = "/settings?section=subscription"
                 }
             }
         } catch (error) {
