@@ -263,9 +263,10 @@ class SubscriptionService:
         self.db.commit()
         
     def save_downgrade_price_id(self, price_id, subscription_id):
-        user_subscription = self.db.query(UserSubscriptions).filter(UserSubscriptions.id == subscription_id)
-        user_subscription.downgrade_price_id = price_id
-        user_subscription.downgrade_at = datetime.now()
+        self.db.query(UserSubscriptions).filter(UserSubscriptions.platform_subscription_id == subscription_id).update({
+                                                            UserSubscriptions.downgrade_price_id: price_id,
+                                                            UserSubscriptions.downgrade_at: datetime.now()
+                                                            }, synchronize_session=False)
         self.db.commit()
     
     def get_subscription_by_price_id(self, price_id):

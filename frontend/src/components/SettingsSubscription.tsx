@@ -175,6 +175,7 @@ export const SettingsSubscription: React.FC = () => {
             ? '/subscriptions/upgrade-and-downgrade-user-subscription'
             : '/subscriptions/session/new';
         try {
+            setIsLoading(true)
             const response = await axiosInterceptorInstance.get(`${path}?price_id=${stripePriceId}`);
             if (response.status === 200) {
                 if (!hasActivePlan && response.data.link){
@@ -203,6 +204,8 @@ export const SettingsSubscription: React.FC = () => {
             }
         } catch (error) {
             console.error('Error choosing plan:', error);
+        }finally{
+            setIsLoading(false)
         }
     };
 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { CardNumberElement, CardExpiryElement, CardCvcElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { Button, Box, Typography, CircularProgress, IconButton } from '@mui/material';
 import { Close } from '@mui/icons-material';
 import axiosInterceptorInstance from '@/axios/axiosInterceptorInstance';
@@ -21,20 +21,27 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ handleClose, onSuccess }) =
             console.error('Stripe.js has not loaded yet.');
             return;
         }
-        const cardElement = elements.getElement(CardElement);
-        if (!cardElement) {
-            console.error('CardElement not initialized.');
+        const cardNumberElement = elements.getElement(CardNumberElement);
+        const cardExpiryElement = elements.getElement(CardExpiryElement);
+        const cardCvcElement = elements.getElement(CardCvcElement);
+
+        if (!cardNumberElement || !cardExpiryElement || !cardCvcElement) {
+            console.error('Card elements not initialized.');
             return;
         }
+
         setLoading(true);
         const { paymentMethod, error } = await stripe.createPaymentMethod({
             type: 'card',
-            card: cardElement,
+            card: cardNumberElement,
         });
+
         if (error) {
             showErrorToast(error.message || 'An unexpected error occurred.');
+            setLoading(false);
             return;
         }
+
         try {
             const response = await axiosInterceptorInstance.post('/settings/billing/add-card', { payment_method_id: paymentMethod.id });
             if (response.status === 200) {
@@ -95,32 +102,111 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ handleClose, onSuccess }) =
             <Typography variant="h6" sx={{ marginBottom: '16px', textAlign: 'center', fontWeight: '600', color: '#333' }}>
                 Add Your Card
             </Typography>
-            <CardElement
-                options={{
-                    hidePostalCode: true,
-                    style: {
-                        base: {
-                            color: '#32325d',
-                            fontFamily: 'Nunito Sans, sans-serif',
-                            fontSize: '16px',
-                            fontWeight: '400',
-                            lineHeight: '24px',
-                            padding: '10px',
-                            backgroundColor: '#fff',
-                            '::placeholder': {
-                                color: '#aab7c4',
+
+            <Box sx={{ display: 'flex', flexDirection: 'column', mb: 2 }}>
+                <CardNumberElement
+                    options={{
+                        style: {
+                            base: {
+                                color: '#32325d',
+                                fontFamily: 'Nunito Sans, sans-serif',
+                                fontSize: '16px',
+                                fontWeight: '400',
+                                lineHeight: '24px',
+                                padding: '10px',
+                                backgroundColor: '#fff',
+                                '::placeholder': {
+                                    color: '#aab7c4',
+                                },
+                            },
+                            invalid: {
+                                color: '#fa755a',
+                            },
+                            complete: {
+                                color: '#4CAF50',
                             },
                         },
-                        invalid: {
-                            color: '#fa755a',
+                    }}
+                />
+            </Box>
+
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
+                <Box sx={{ flex: '1', mr: 1 }}>
+                    <CardExpiryElement
+                        options={{
+                            style: {
+                                base: {
+                                    color: '#32325d',
+                                    fontFamily: 'Nunito Sans, sans-serif',
+                                    fontSize: '16px',
+                                    fontWeight: '400',
+                                    lineHeight: '24px',
+                                    padding: '10px',
+                                    backgroundColor: '#fff',
+                                    '::placeholder': {
+                                        color: '#aab7c4',
+                                    },
+                                },
+                                invalid: {
+                                    color: '#fa755a',
+                                },
+                                complete: {
+                                    color: '#4CAF50',
+                                },
+                            },
+                        }}
+                    />
+                </Box>
+                <Box sx={{ flex: '1', ml: 1 }}>
+                    <CardCvcElement
+                        options={{
+                            style: {
+                                base: {
+                                    color: '#32325d',
+                                    fontFamily: 'Nunito Sans, sans-serif',
+                                    fontSize: '16px',
+                                    fontWeight: '400',
+                                    lineHeight: '24px',
+                                    padding: '10px',
+                                    backgroundColor: '#fff',
+                                    '::placeholder': {
+                                        color: '#aab7c4',
+                                    },
+                                },
+                                invalid: {
+                                    color: '#fa755a',
+                                },
+                                complete: {
+                                    color: '#4CAF50',
+                                },
+                            },
+                        }}
+                    />
+                </Box>
+            </Box>
+
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
+                <Button
+                    onClick={handleClose}
+                    variant="outlined"
+                    sx={{
+                        color: '#007BFF',
+                        fontFamily: 'Nunito Sans',
+                        textTransform: 'none',
+                        lineHeight: '22.4px',
+                        fontWeight: '700',
+                        padding: '10px 20px',
+                        borderRadius: '8px',
+                        width: '48%',
+                        transition: 'background-color 0.3s, transform 0.2s',
+                        '&:hover': {
+                            backgroundColor: '#e7f1ff',
                         },
-                        complete: {
-                            color: '#4CAF50',
-                        },
-                    },
-                }}
-            />
-            <Box sx={{ mt: 4 }}>
+                    }}
+                >
+                    Cancel
+                </Button>
+
                 <Button
                     onClick={handleButtonClick}
                     variant="contained"
@@ -134,7 +220,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ handleClose, onSuccess }) =
                         fontWeight: '700',
                         padding: '10px 20px',
                         borderRadius: '8px',
-                        width: '100%',
+                        width: '48%',
                         transition: 'background-color 0.3s, transform 0.2s',
                         '&:hover': {
                             backgroundColor: '#0056b3',

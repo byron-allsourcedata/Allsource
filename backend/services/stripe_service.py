@@ -188,6 +188,12 @@ def get_billing_details_by_userid(customer_id):
     else:
         return None
 
+def get_product_from_price_id(price_id):
+    price = stripe.Price.retrieve(price_id)
+    product = stripe.Product.retrieve(price.product)
+    return product.name
+
+
 def purchase_product(customer_id, price_id, quantity):
     result = {
         'success': False

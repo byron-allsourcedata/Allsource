@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-
+from sqlalchemy import case
 from models.plans import SubscriptionPlan
 from models.subscriptions import UserSubscriptions
 from models.users import User
@@ -68,11 +68,13 @@ class PlansPersistence:
 
     def get_current_plan(self, user_id):
         subscription_plan = self.db.query(SubscriptionPlan).join(
-            UserSubscriptions,
-            UserSubscriptions.plan_id == SubscriptionPlan.id
+        UserSubscriptions,
+        UserSubscriptions.plan_id == SubscriptionPlan.id
         ).filter(
-            UserSubscriptions.user_id == user_id, UserSubscriptions.status.in_(('active', 'canceled'))
+            UserSubscriptions.user_id == user_id,
+            UserSubscriptions.status.in_(('active', 'canceled'))
         ).order_by(
+            UserSubscriptions.status,
             UserSubscriptions.plan_end.desc()
         ).first()
         return subscription_plan

@@ -27,6 +27,10 @@ class UsersService:
         return UpdatePasswordStatus.PASSWORD_UPDATED_SUCCESSFULLY
 
     def get_info_plan(self):
+        if not self.user.get('is_book_call_passed'):
+            return {
+                'is_trial_pending': True
+            }
         return self.user_persistence_service.get_user_plan(self.user.get('id'))
 
     def get_my_info(self):

@@ -1019,7 +1019,7 @@ export const SettingsBilling: React.FC = () => {
                         </Box>
                         <LinearProgress
                             variant="determinate"
-                            value={(contactsCollected / planContactsCollected) * 100} // Adjust this calculation as needed
+                            value={Math.round((contactsCollected / planContactsCollected) * 100)}
                             sx={{
                                 height: '8px',
                                 borderRadius: '4px',

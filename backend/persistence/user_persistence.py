@@ -30,23 +30,25 @@ class UserPersistence:
             synchronize_session=False)
         self.db.commit()
 
-    def get_user_plan(self, user_id: int):        
+    def get_user_plan(self, user_id: int):
         user_plan = self.db.query(
             UserSubscriptions.is_trial,
             UserSubscriptions.plan_end
         ).filter(
             UserSubscriptions.user_id == user_id,
             UserSubscriptions.status.in_(('active', 'canceled'))
-        ).order_by(desc(UserSubscriptions.plan_end)).first()
+        ).order_by(
+            UserSubscriptions.status,
+            UserSubscriptions.plan_end.desc()
+        ).first()
         if user_plan:
             return {
                 "is_trial": user_plan.is_trial,
-                "plan_end": user_plan.plan_end
+                "plan_end": user_plan.plan_end,
             }
         else:
             return {
-                "is_trial": False,
-                "plan_end": None
+                "is_trial_pending": True
             }
 
     def get_user_by_email(self, email):
