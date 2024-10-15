@@ -72,7 +72,6 @@ class PixelInstallationService:
             response = requests.get(url)
         except:
             return False
-        response.raise_for_status()
         if response.status_code != 200:
             return False
         soup = BeautifulSoup(response.text, 'html.parser')
