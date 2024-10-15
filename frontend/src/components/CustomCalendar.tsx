@@ -144,16 +144,16 @@ const CalendarPopup: React.FC<CalendarPopupProps> = ({ anchorEl, open, onClose, 
                             selected={startDate}
                             onChange={(date) => setStartDate(date)}
                             selectsStart
-                            startDate={startDate}
-                            endDate={endDate}
+                            startDate={startDate || undefined}
+                            endDate={endDate || undefined}
                             inline
                         />
                         <DatePicker
                             selected={endDate}
                             onChange={(date) => setEndDate(date)}
                             selectsEnd
-                            startDate={startDate}
-                            endDate={endDate}
+                            startDate={startDate || undefined}
+                            endDate={endDate || undefined}
                             inline
                         />
                     </Box>
