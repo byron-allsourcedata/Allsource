@@ -11,7 +11,7 @@ import urllib.parse
 from datetime import time as dt_time
 import time
 from dateutil.relativedelta import relativedelta
-from sqlalchemy import func, and_, or_
+from sqlalchemy import func, and_, or_, desc
 import boto3
 import pyarrow.parquet as pq
 
@@ -45,6 +45,7 @@ from collections import defaultdict
 from datetime import datetime, timedelta
 from config.rmq_connection import publish_rabbitmq_message, RabbitMQConnection
 from models.integrations.users_domains_integrations import UserIntegration
+from dependencies import (SubscriptionService, UserPersistence, PlansPersistence)
 
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
@@ -116,7 +117,7 @@ def get_all_five_x_user_emails(business_email, personal_emails, additional_perso
     return list(emails)
 
 
-async def process_table(session, cookie_sync_by_hour, channel, root_user):
+async def process_table(session, cookie_sync_by_hour, channel, root_user, subscription_service):
     for key, possible_leads in cookie_sync_by_hour.items():
         for possible_lead in reversed(possible_leads):
             up_id = possible_lead['UP_ID']
@@ -135,9 +136,9 @@ async def process_table(session, cookie_sync_by_hour, channel, root_user):
                 five_x_five_user = session.query(FiveXFiveUser).filter(FiveXFiveUser.up_id == str(up_id).lower()).first()
                 if five_x_five_user:
                     logging.info(f"Lead found by UP_ID {up_id}")
-                    await process_user_data(possible_lead, five_x_five_user, session, channel, None)
+                    await process_user_data(possible_lead, five_x_five_user, session, channel, subscription_service, None)
                     if root_user:
-                        await process_user_data(possible_lead, five_x_five_user, session, channel, root_user)
+                        await process_user_data(possible_lead, five_x_five_user, session, channel, subscription_service, root_user)
                     break
                 else:
                     logging.warning(f"Not found by UP_ID {up_id}")
@@ -196,7 +197,7 @@ async def check_activate_based_urls(page, suppression_rule):
     return False
 
 
-async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, session: Session, rmq_connection, root_user=None):
+async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, session: Session, rmq_connection, subscription_service: SubscriptionService, root_user=None):
     partner_uid_decoded = urllib.parse.unquote(str(possible_lead['PARTNER_UID']).lower())
     partner_uid_dict = json.loads(partner_uid_decoded)
     partner_uid_client_id = partner_uid_dict.get('client_id')
@@ -212,6 +213,9 @@ async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, sess
         logging.info(f"Customer not found {partner_uid_client_id}")
         return
     user, user_domain_id = result
+    if not subscription_service.is_user_has_active_subscription(user.id):
+        logging.info(f"user has not active subscription {partner_uid_client_id}")
+        return
     page = partner_uid_dict.get('current_page')
     if page is None:
         json_headers = json.loads(str(possible_lead['JSON_HEADERS']).lower())
@@ -436,7 +440,6 @@ def update_last_processed_file(file_key):
     with open(LAST_PROCESSED_FILE_PATH, "w") as file:
         file.write(file_key)
 
-
 async def process_files(sts_client, session, channel, root_user):
     credentials = assume_role(os.getenv('S3_ROLE_ARN'), sts_client)
     s3 = boto3.resource('s3', region_name='us-west-2', aws_access_key_id=credentials['AccessKeyId'],
@@ -444,6 +447,13 @@ async def process_files(sts_client, session, channel, root_user):
                         aws_session_token=credentials['SessionToken'])
 
     bucket = s3.Bucket(BUCKET_NAME)
+    
+    subscription_service = SubscriptionService(
+        db=session,
+        user_persistence_service=UserPersistence(session),
+        plans_persistence=PlansPersistence(session),
+    )
+    
     try:
         while True:
             try:
@@ -471,7 +481,7 @@ async def process_files(sts_client, session, channel, root_user):
             for file in files:
                 await process_file(bucket, file.key, cookie_sync_by_hour)
                 last_processed_file_name = file.key
-            await process_table(session, cookie_sync_by_hour, channel, root_user)
+            await process_table(session, cookie_sync_by_hour, channel, root_user, subscription_service)
             update_last_processed_file(last_processed_file_name)
     except StopIteration:
         pass

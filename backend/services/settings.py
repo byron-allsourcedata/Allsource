@@ -300,7 +300,7 @@ class SettingsService:
             'next_billing_date': self.timestamp_to_date(subscription['current_period_end']).strftime('%b %d, %Y'),
             'monthly_total': f"${plan['amount'] / 100:,.0f}",
             'active': is_active,
-            'downgrade_plan': get_product_from_price_id(user_subscription.downgrade_price_id) if user_subscription.downgrade_price_id else None
+            'downgrade_plan': get_product_from_price_id(user_subscription.downgrade_price_id) if user_subscription and user_subscription.downgrade_price_id else None
         }
         
         return subscription_details

@@ -7,7 +7,7 @@ from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token
 from sqlalchemy.orm import Session
 
-from enums import SignUpStatus, StripePaymentStatusEnum, LoginStatus, ResetPasswordEnum, \
+from enums import SignUpStatus, UserPaymentStatusEnum, LoginStatus, ResetPasswordEnum, \
     VerifyToken, UserAuthorizationStatus, SendgridTemplate
 from models.users import User
 from models.users import Users
@@ -35,6 +35,27 @@ class UsersAuth:
 
     def get_utc_aware_date(self):
         return datetime.now(timezone.utc).replace(microsecond=0)
+    
+    def get_user_authorization_status_without_pixel(self, user):
+        if user.get('is_with_card'):
+            if user.get('company_name'):
+                subscription_plan_is_active = self.subscription_service.is_user_has_active_subscription(user.get('id'))
+                if subscription_plan_is_active:
+                    return UserAuthorizationStatus.SUCCESS
+                return UserAuthorizationStatus.NEED_CHOOSE_PLAN
+            return UserAuthorizationStatus.FILL_COMPANY_DETAILS
+        if user.get('is_email_confirmed'):
+            if user.get('company_name'):
+                if user.get('is_book_call_passed'):
+                    subscription_plan_is_active = self.subscription_service.is_user_has_active_subscription(user.get('id'))
+                    if subscription_plan_is_active:
+                        return UserAuthorizationStatus.SUCCESS
+                    if user.get('stripe_payment_url'):
+                        return UserAuthorizationStatus.PAYMENT_NEEDED
+                    return UserAuthorizationStatus.NEED_CHOOSE_PLAN
+                return UserAuthorizationStatus.NEED_BOOK_CALL
+            return UserAuthorizationStatus.FILL_COMPANY_DETAILS
+        return UserAuthorizationStatus.NEED_CONFIRM_EMAIL
 
     def get_utc_aware_date_for_mssql(self, delta: timedelta = timedelta(seconds=0)):
         date = self.get_utc_aware_date()
@@ -51,7 +72,6 @@ class UsersAuth:
             full_name=user_form.get('full_name'),
             created_at=self.get_utc_aware_date_for_mssql(),
             last_login=self.get_utc_aware_date_for_mssql(),
-            payment_status=StripePaymentStatusEnum.PENDING.name,
             customer_id=customer_id,
             last_signed_in = datetime.now(),
             added_on = datetime.now()
