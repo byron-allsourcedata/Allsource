@@ -2,70 +2,149 @@
 import React, { useEffect, useState } from 'react';
 import { Box, Button, Typography } from '@mui/material';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
-import { useTrial } from '../context/TrialProvider';
-import { useUser } from '../context/UserContext';
+import Image from 'next/image';
+import useAxios from 'axios-hooks';
 import PlanSlider from './PlanSlider';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
-
 
 const TrialStatus: React.FC = () => {
-  const { daysDifference } = useUser();
-  const { trial } = useTrial();
+  const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [currentDomain, setCurrentDomain] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem("token");
+      const domain = sessionStorage.getItem("current_domain");
+
+      setAccessToken(token);
+      setCurrentDomain(domain);
+    }
+  }, []);
+
+  const [{ data }, refetch] = useAxios(
+    {
+      url: `${process.env.NEXT_PUBLIC_API_BASE_URL}me`,
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'X-Domain': currentDomain || '',
+      },
+      method: 'GET',
+    },
+    { manual: !accessToken || !currentDomain }
+  );
+
+  useEffect(() => {
+    if (accessToken && currentDomain) {
+      refetch();
+    }
+  }, [accessToken, currentDomain]);
+
   const [statusText, setStatusText] = useState('');
   const [backgroundColor, setBackgroundColor] = useState('');
   const [textColor, setTextColor] = useState('');
   const [iconColor, setIconColor] = useState('');
-  const [isSliderOpen, setIsSliderOpen] = useState(false);
   const router = useRouter();
+  const [isSliderOpen, setIsSliderOpen] = useState(false);
 
   useEffect(() => {
-    if (trial) {
-      if (daysDifference === null || daysDifference === undefined || isNaN(daysDifference)) {
-        setStatusText('Trial Active');
-        setBackgroundColor('#EAF8DD');
-        setTextColor('#6EC125 !important');
-        setIconColor('#6EC125');
-      } else {
-        if (daysDifference > 5) {
-          setStatusText(`${daysDifference} days Free Trial Left.`);
-          setBackgroundColor('#EAF8DD');
-          setTextColor('#6EC125');
-          setIconColor('#6EC125');
-        } else if (daysDifference <= 5 && daysDifference > 0) {
-          setStatusText(`${daysDifference} days Free Trial Left.`);
-          setBackgroundColor('rgba(255, 233, 131, 1)');
-          setTextColor('rgba(0, 0, 0, 1)');
-          setIconColor('rgba(0, 0, 0, 1)');
-        } else {
-          setStatusText('Free Trial Expired');
-          setBackgroundColor('rgba(246, 202, 204, 1)');
-          setTextColor('rgba(78, 1, 16, 1)');
-          setIconColor('rgba(103, 12, 14, 1)');
+    if (data) {
+      const { user_info, user_plan } = data;
+      if (user_info && user_plan) {
+        const { is_trial, plan_end, is_trial_pending } = user_plan;
+
+        if (is_trial_pending !== undefined) {
+          updateStatus(is_trial_pending);
+        } else if (plan_end !== undefined) {
+          const calculatedDaysDifference = calculateDaysDifference(plan_end);
+          if (calculatedDaysDifference !== null) {
+            updateStatus(false);
+          }
         }
       }
     }
-    if (trial === false) {
+  }, [data]);
+
+  const calculateDaysDifference = (endDate: string) => {
+    const currentDate = new Date();
+    const endDateObj = new Date(endDate);
+    if (isNaN(endDateObj.getTime())) {
+      return -1;
+    }
+    const timeDifference = endDateObj.getTime() - currentDate.getTime();
+    const daysDifference = Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
+    return daysDifference;
+  };
+
+  const plan_days = calculateDaysDifference(data?.user_plan?.plan_end)
+  const check_active = data?.user_plan?.plan_end
+  const trialstatus = data?.user_plan?.is_trial
+
+  const updateStatus = (isTrialPending: boolean) => {
+    if (isTrialPending) {
       setStatusText('Trial Pending');
       setBackgroundColor('rgba(231, 231, 231, 1)');
       setTextColor('rgba(95, 99, 104, 1)');
       setIconColor('rgba(95, 99, 104, 1)');
+    } else if (trialstatus) {
+      if (plan_days !== undefined && plan_days <= 5 && plan_days > 0) {
+        setStatusText(`${plan_days} days Free Trial left`);
+        setBackgroundColor('rgba(255, 233, 131, 1)');
+        setTextColor('rgba(0, 0, 0, 1)');
+        setIconColor('rgba(0, 0, 0, 1)');
+      } else if (plan_days < 0 && check_active !==null ) {
+        setStatusText('Free Trial Expired');
+        setBackgroundColor('rgba(246, 202, 204, 1)');
+        setTextColor('rgba(78, 1, 16, 1)');
+        setIconColor('rgba(103, 12, 14, 1)');
+      } else if (plan_days > 0) {
+        setStatusText(`${plan_days} days Free Trial left`);
+        setBackgroundColor('#EAF8DD');
+        setTextColor('#6EC125');
+        setIconColor('#6EC125');
+      } else if (check_active == null) {
+        setStatusText('Free Trial Active');
+        setBackgroundColor('#EAF8DD');
+        setTextColor('#6EC125');
+        setIconColor('#6EC125');
+      }
+    } else {
+      if (plan_days !== undefined && plan_days <= 5 && plan_days > 0) {
+        setStatusText(`${plan_days} days left`);
+        setBackgroundColor('rgba(255, 233, 131, 1)');
+        setTextColor('rgba(0, 0, 0, 1)');
+        setIconColor('rgba(0, 0, 0, 1)');
+      } else if (plan_days < 0 && check_active !==null ) {
+        setStatusText('Subscription Expired');
+        setBackgroundColor('rgba(246, 202, 204, 1)');
+        setTextColor('rgba(78, 1, 16, 1)');
+        setIconColor('rgba(103, 12, 14, 1)');
+      } else if (plan_days) {
+        setStatusText(`${plan_days} days left`);
+        setBackgroundColor('#EAF8DD');
+        setTextColor('#6EC125');
+        setIconColor('#6EC125');
+      } else {
+        setStatusText('Subscription Active');
+        setBackgroundColor('#EAF8DD');
+        setTextColor('#6EC125');
+        setIconColor('#6EC125');
+      }
     }
-  }, [trial, daysDifference]);
-
+  };
 
   const handleOpenSlider = () => {
     setIsSliderOpen(true);
   };
 
   const handleCloseSlider = () => {
-    setIsSliderOpen(false)
+    setIsSliderOpen(false);
   };
 
   const handleChoosePlanSlider = () => {
-    router.push('/settings?section=subscription')
-    setIsSliderOpen(false)
+    router.push('/settings?section=subscription');
+    setIsSliderOpen(false);
   };
+
 
   return (
     <>
@@ -84,37 +163,39 @@ const TrialStatus: React.FC = () => {
             marginRight: '2em'
           }
         }}>
-          {(statusText.includes('Free Trial Expired')) && (
+          {(statusText.includes('Expired')) && (
             <>
-              <Image src={'danger.svg'} width={20} height={20} alt="danger" />
+              <Image src={'danger.svg'} width={18} height={18} alt="danger" />
             </>
           )}
-          {(statusText.includes('Free Trial Left')) && (
-            <AccessTimeIcon sx={{ color: iconColor }} />
+          {(statusText.includes('left') || statusText.includes('Left')) && (
+            <AccessTimeIcon sx={{ color: iconColor, fontSize: '18px' }} />
           )}
           <Typography sx={{
             marginRight: '5px',
             letterSpacing: '-0.02em',
             pt: '1px',
             fontFamily: 'Nunito Sans',
-            fontSize: '16px',
+            fontSize: '13px',
             lineHeight: 'normal',
             textAlign: 'left',
             marginLeft: '3px'
-
           }}>
             {statusText}
           </Typography>
-          {(statusText.includes('Trial Pending') || statusText.includes('Trial Active')) && (
+          {(statusText.includes('Trial Pending') || statusText.includes('Trial Active') || statusText.includes('Subscription Active')) && (
             <AccessTimeIcon sx={{ color: iconColor }} />
           )}
-          {(statusText.includes('Free Trial Expired') || statusText.includes('Free Trial Left')) && (
-            <Button onClick={handleOpenSlider} sx={{ ml: 2, textTransform: 'none', padding: 0, color: 'rgba(80, 82, 178, 1) !important' }}>
+          {(statusText.includes('left') || (statusText.includes('Expired'))) && (
+            <Button onClick={handleOpenSlider} sx={{ ml: 0, textTransform: 'none', padding: 0, color: 'rgba(80, 82, 178, 1) !important' }}>
               <Typography className='first-sub-title' sx={{
-                color: 'rgba(80, 82, 178, 1) !important',
+                color: '#4683F8 !important',
                 marginRight: '5px',
+                pt: '1px',
                 letterSpacing: '-0.02em',
                 textAlign: 'left',
+                fontSize: '13px !important',
+                fontWeight: '500 !important'
               }}>
                 Choose Plan
               </Typography>
@@ -124,7 +205,6 @@ const TrialStatus: React.FC = () => {
       </Box>
       <PlanSlider open={isSliderOpen} handleClose={handleCloseSlider} handleChoosePlan={handleChoosePlanSlider} />
     </>
-
   );
 };
 

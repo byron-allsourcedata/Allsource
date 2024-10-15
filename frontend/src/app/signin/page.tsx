@@ -199,7 +199,7 @@ const Signup: React.FC = () => {
                     router.push('/dashboard');
                     break;
                   case 'NEED_CHOOSE_PLAN':
-                    router.push('/choose-plan');
+                    router.push('/settings?section=subscription');
                     break;
                   case 'FILL_COMPANY_DETAILS':
                     router.push('/account-setup');

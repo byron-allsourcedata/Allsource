@@ -171,7 +171,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
             }
         })
         setKlaviyoList(response.data)
-        const foundItem = response.data.find((item: any) => item.list_name === data?.name);
+        const foundItem = response.data?.find((item: any) => item.list_name === data?.name);
         if (foundItem) {
             setUpdateKlaviuo(data.id)
             setSelectedOption({
