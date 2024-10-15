@@ -6,7 +6,7 @@ class BaseEnum(Enum):
     FAILURE = 'FAILURE'
 
 
-class StripePaymentStatusEnum(Enum):
+class UserPaymentStatusEnum(Enum):
     COMPLETE = 'COMPLETE'
     ONGOING = 'ONGOING'
     PENDING = 'PENDING'

@@ -5,18 +5,20 @@ import {
     Box, Button, Grid, Typography, TableHead, TableRow, TableCell,
     TableBody, TableContainer, Paper, Table,
     Switch, Pagination,
-    SwitchProps, Link
+    SwitchProps, Link,
+    Menu,
+    MenuItem
 } from "@mui/material";
 import Image from "next/image";
-import PersonIcon from '@mui/icons-material/Person'
-import DomainButton from "@/components/DomainsButton";
-import dynamic from "next/dynamic"; 
+import dynamic from "next/dynamic";
+import { useUser } from "@/context/UserContext";
+import { useTrial } from '@/context/TrialProvider';
 import { styled } from '@mui/material/styles';
 import axiosInstance from '../../../axios/axiosInterceptorInstance';
 import { useRouter } from "next/navigation";
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
-import {resellerStyle} from "@/app/admin/reseller/resellerStyle";
+import { resellerStyle } from "@/app/admin/reseller/resellerStyle";
 
 const SidebarAdmin = dynamic(() => import('../../../components/SidebarAdmin'), {
     suspense: true,
@@ -39,56 +41,56 @@ interface TableBodyUserProps {
 
 const IOSSwitch = styled((props: SwitchProps) => (
     <Switch focusVisibleClassName=".Mui-focusVisible" disableRipple {...props} />
-  ))(({ theme }) => ({
+))(({ theme }) => ({
     width: 56,
     height: 26,
     padding: 0,
     '& .MuiSwitch-switchBase': {
-      padding: 0,
-      margin: 2,
-      transitionDuration: '300ms',
-      '&.Mui-checked': {
-        transform: 'translateX(30px)',
-        color: '#fff',
-        '& + .MuiSwitch-track': {
-          backgroundColor: theme.palette.mode === 'dark' ? '#2ECA45' : '#65C466',
-          opacity: 1,
-          border: 0,
+        padding: 0,
+        margin: 2,
+        transitionDuration: '300ms',
+        '&.Mui-checked': {
+            transform: 'translateX(30px)',
+            color: '#fff',
+            '& + .MuiSwitch-track': {
+                backgroundColor: theme.palette.mode === 'dark' ? '#2ECA45' : '#65C466',
+                opacity: 1,
+                border: 0,
+            },
+            '&.Mui-disabled + .MuiSwitch-track': {
+                opacity: 0.5,
+            },
+        },
+        '&.Mui-focusVisible .MuiSwitch-thumb': {
+            color: '#33cf4d',
+            border: '6px solid #fff',
+        },
+        '&.Mui-disabled .MuiSwitch-thumb': {
+            color:
+                theme.palette.mode === 'light'
+                    ? theme.palette.grey[100]
+                    : theme.palette.grey[600],
         },
         '&.Mui-disabled + .MuiSwitch-track': {
-          opacity: 0.5,
+            opacity: theme.palette.mode === 'light' ? 0.7 : 0.3,
         },
-      },
-      '&.Mui-focusVisible .MuiSwitch-thumb': {
-        color: '#33cf4d',
-        border: '6px solid #fff',
-      },
-      '&.Mui-disabled .MuiSwitch-thumb': {
-        color:
-          theme.palette.mode === 'light'
-            ? theme.palette.grey[100]
-            : theme.palette.grey[600],
-      },
-      '&.Mui-disabled + .MuiSwitch-track': {
-        opacity: theme.palette.mode === 'light' ? 0.7 : 0.3,
-      },
     },
     '& .MuiSwitch-thumb': {
-      boxSizing: 'border-box',
-      width: 22,
-      height: 22,
+        boxSizing: 'border-box',
+        width: 22,
+        height: 22,
     },
     '& .MuiSwitch-track': {
-      borderRadius: 26 / 2,
-      backgroundColor: theme.palette.mode === 'light' ? '#E9E9EA' : '#39393D',
-      opacity: 1,
-      transition: theme.transitions.create(['background-color'], {
-        duration: 500,
-      }),
+        borderRadius: 26 / 2,
+        backgroundColor: theme.palette.mode === 'light' ? '#E9E9EA' : '#39393D',
+        opacity: 1,
+        transition: theme.transitions.create(['background-color'], {
+            duration: 500,
+        }),
     },
-  }));
+}));
 
-  const TableHeader: React.FC<{ onSort: (field: string) => void, sortField: string, sortOrder: string }> = ({ onSort, sortField, sortOrder }) => {
+const TableHeader: React.FC<{ onSort: (field: string) => void, sortField: string, sortOrder: string }> = ({ onSort, sortField, sortOrder }) => {
     return (
         <TableHead>
             <TableRow>
@@ -134,8 +136,8 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({ data, onSwitchChange })
                             size="small"
                             sx={{
                                 fontWeight: 500,
-                                backgroundColor: row.payment_status === 'COMPLETE' ? '#EAF8DD' : '#FEF3CD',
-                                color: row.payment_status === 'COMPLETE' ? '#6EC125' : '#FBC70E'
+                                backgroundColor: row.payment_status === 'SUBSCRIPTION_ACTIVE' || row.payment_status === 'TRIAL_ACTIVE' ? '#EAF8DD' : '#FEF3CD',
+                                color: row.payment_status === 'SUBSCRIPTION_ACTIVE' || row.payment_status === 'TRIAL_ACTIVE' ? '#6EC125' : '#FBC70E'
                             }}>
                             {row.payment_status}
                         </Button>
@@ -162,6 +164,27 @@ const Users: React.FC = () => {
     const [sortedData, setSortedData] = useState<UserData[]>([]);
     const [sortField, setSortField] = useState<string>('');
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+    const { full_name: userFullName, email: userEmail, resetUserData, } = useUser();
+    const meItem = typeof window !== "undefined" ? sessionStorage.getItem("me") : null;
+    const meData = meItem ? JSON.parse(meItem) : { full_name: '', email: '' };
+    const full_name = userFullName || meData.full_name;
+    const email = userEmail || meData.email;
+    const { resetTrialData } = useTrial();
+    const handleSignOut = () => {
+        localStorage.clear();
+        sessionStorage.clear();
+        resetUserData();
+        resetTrialData();
+        window.location.href = "/signin";
+    };
+
+    const handleProfileMenuClose = () => {
+        setAnchorEl(null);
+    };
+    const handleSettingsClick = () => {
+        handleProfileMenuClose();
+        router.push("/settings");
+    };
 
     useEffect(() => {
         const accessToken = localStorage.getItem('token');
@@ -181,8 +204,8 @@ const Users: React.FC = () => {
                     setData(response.data);
                     setTotalItems(response.data.length);
                     setSortedData(response.data);
-                }   
-            } 
+                }
+            }
             catch {
             }
             finally {
@@ -240,7 +263,7 @@ const Users: React.FC = () => {
                 free_trial: !user_change.is_trial
             }
         });
-        
+
     };
 
     const totalPages = Math.ceil(totalItems / rowsPerPage);
@@ -258,15 +281,85 @@ const Users: React.FC = () => {
                     </Link>
                 </Box>
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <DomainButton />
                     <Button
-                        aria-controls={open ? 'profile-menu' : undefined}
+                        aria-controls={open ? "profile-menu" : undefined}
                         aria-haspopup="true"
-                        aria-expanded={open ? 'true' : undefined}
+                        aria-expanded={open ? "true" : undefined}
                         onClick={handleProfileMenuClick}
+                        sx={{
+                            minWidth: '32px',
+                            padding: '8px',
+                            color: 'rgba(128, 128, 128, 1)',
+                            border: '1px solid rgba(184, 184, 184, 1)',
+                            borderRadius: '3.27px'
+                        }}
                     >
-                        <PersonIcon sx={usersStyle.account} />
+                        <Image src={'/Person.svg'} alt="Person" width={18} height={18} />
                     </Button>
+                    <Menu
+                        id="profile-menu"
+                        anchorEl={anchorEl}
+                        open={open}
+                        onClose={handleProfileMenuClose}
+                        MenuListProps={{
+                            "aria-labelledby": "profile-menu-button",
+                        }}
+                        sx={{
+                            mt: 0.5,
+                            ml: -1
+                        }}
+                    >
+                        <Box sx={{ paddingTop: 1, paddingLeft: 2, paddingRight: 2, paddingBottom: 1 }}>
+                            <Typography
+                                variant="h6"
+                                sx={{
+                                    fontFamily: 'Nunito',
+                                    fontSize: '14px',
+                                    fontWeight: 600,
+                                    lineHeight: '19.6px',
+                                    color: 'rgba(0, 0, 0, 0.89)',
+                                    mb: 0.25
+                                }}
+                            >
+                                {full_name}
+                            </Typography>
+                            <Typography
+                                variant="body2"
+                                color="textSecondary"
+                                sx={{
+                                    fontFamily: 'Nunito',
+                                    fontSize: '14px',
+                                    fontWeight: 600,
+                                    lineHeight: '19.6px',
+                                    color: 'rgba(0, 0, 0, 0.89)',
+                                }}
+                            >
+                                {email}
+                            </Typography>
+                        </Box>
+                        <MenuItem
+                            sx={{
+                                fontFamily: 'Nunito',
+                                fontSize: '14px',
+                                fontWeight: 500,
+                                lineHeight: '19.6px',
+                            }}
+                            onClick={handleSettingsClick}
+                        >
+                            Settings
+                        </MenuItem>
+                        <MenuItem
+                            sx={{
+                                fontFamily: 'Nunito',
+                                fontSize: '14px',
+                                fontWeight: 500,
+                                lineHeight: '19.6px',
+                            }}
+                            onClick={handleSignOut}
+                        >
+                            Sign Out
+                        </MenuItem>
+                    </Menu>
                 </Box>
             </Box>
             <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>

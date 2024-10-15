@@ -360,7 +360,7 @@ export const SettingsBilling: React.FC = () => {
             if (response.status === 200) {
                 switch (response.data.status) {
                     case 'SUCCESS':
-                        showToast('Delete user card successfully');
+                        showToast('Set default card successfully');
                         setCardDetails(prevCardDetails =>
                             prevCardDetails.map(card => {
                                 if (card.id === selectedCardId) {
