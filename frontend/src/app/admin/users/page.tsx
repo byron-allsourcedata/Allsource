@@ -143,8 +143,13 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({ data, onSwitchChange })
                         </Button>
                     </TableCell>
                     <TableCell sx={{ textAlign: 'center' }}>
-                        <IOSSwitch onChange={() => onSwitchChange(row)} checked={row.is_trial} />
+                        <IOSSwitch
+                            onChange={() => onSwitchChange(row)}
+                            checked={row.is_trial}
+                            disabled={row.payment_status === 'SUBSCRIPTION_ACTIVE' || row.payment_status === 'NEED_CONFIRM_EMAIL' || row.payment_status === 'NEED_CONFIRM_EMAIL' || row.payment_status === 'FILL_COMPANY_DETAILS'}
+                        />
                     </TableCell>
+
                 </TableRow>
             ))}
         </TableBody>
