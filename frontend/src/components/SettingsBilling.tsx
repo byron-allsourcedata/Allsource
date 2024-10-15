@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect, useRef } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
-import { Box, Typography, Button, Table, TableBody, Modal, TableCell, TableContainer, TableHead, TableRow, Grid, IconButton, Switch, Divider, Popover, Drawer, LinearProgress, Tooltip, TextField, TablePagination } from '@mui/material';
+import { Box, Typography, Button, Table, TableBody, Modal, TableCell, TableContainer, TableHead, TableRow, Grid, IconButton, Switch, Divider, Popover, Drawer, LinearProgress, Tooltip, TextField, TablePagination, useMediaQuery } from '@mui/material';
 import Image from 'next/image';
 import { Elements } from '@stripe/react-stripe-js';
 import axiosInterceptorInstance from '@/axios/axiosInterceptorInstance';
@@ -25,7 +25,7 @@ const billingStyles = {
     tableColumn: {
         lineHeight: '16px !important',
         position: 'relative',
-        textAlign: 'center',
+        paddingLeft: '45px',
         '&::after': {
             content: '""',
             display: 'block',
@@ -49,7 +49,7 @@ const billingStyles = {
     tableBodyColumn: {
         lineHeight: '16px !important',
         position: 'relative',
-        textAlign: 'center',
+        paddingLeft: '45px',
         '&::after': {
             content: '""',
             display: 'block',
@@ -118,6 +118,8 @@ export const SettingsBilling: React.FC = () => {
     const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '');
     const [open, setOpen] = useState(false);
     const [email, setEmail] = useState('');
+    const [isHovered, setIsHovered] = useState(false);
+    const isMobile = useMediaQuery('(max-width: 600px)'); 
 
     const handleOpen = () => setOpen(true);
     const handleClose = () => setOpen(false);
@@ -456,22 +458,22 @@ export const SettingsBilling: React.FC = () => {
             case 'successful':
                 return {
                     background: '#eaf8dd',
-                    color: '#2b5b00'
+                    color: '#2b5b00 !important'
                 };
             case 'decline':
                 return {
                     background: '#ececec',
-                    color: '#4a4a4a'
+                    color: '#4a4a4a !important'
                 };
             case 'failed':
                 return {
                     background: '#fcd4cf',
-                    color: '#a61100'
+                    color: '#a61100 !important'
                 };
             default:
                 return {
                     background: '#ececec',
-                    color: '#4a4a4a'
+                    color: '#4a4a4a !important'
                 };
         }
     };
@@ -482,6 +484,13 @@ export const SettingsBilling: React.FC = () => {
     if (isLoading) {
         return <CustomizedProgressBar />;
     }
+
+    const handleClickOrHover = () => {
+        // Toggle the state for mobile or desktop
+        if (isMobile) {
+            setIsHovered((prev) => !prev); // Toggle on tap for mobile
+        }
+    };
 
 
     return (
@@ -1153,6 +1162,9 @@ export const SettingsBilling: React.FC = () => {
                             ) : (
                                 billingHistory.map((history, index) => (
                                     <TableRow key={index}
+                                    onMouseEnter={() => !isMobile && setIsHovered(true)} // Hover only on desktop
+                                    onMouseLeave={() => !isMobile && setIsHovered(false)} // Remove hover only on desktop
+                                    onClick={handleClickOrHover} // Trigger hover-like effect on mobile tap
                                         sx={{
                                             ...billingStyles.tableBodyRow,
                                             '&:hover': {
@@ -1178,17 +1190,18 @@ export const SettingsBilling: React.FC = () => {
                                                 ...getStatusStyles(history.status),
                                                 background: '#eaf8dd',
                                                 padding: '6px 8px',
-                                                borderRadius: '2px',
-                                                color: '#2b5b00 !important',
+                                                borderRadius: '2px'
                                             }}>
                                                 {history.status}
                                             </Typography>
                                         </TableCell>
                                         <TableCell className='table-data' sx={billingStyles.tableBodyColumn}>
-                                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                                <IconButton onClick={() => fetchSaveBillingHistory(history.invoice_id)}>
+                                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                                <IconButton sx={{
+                                                    paddingleft: '0'
+                                                }} onClick={() => fetchSaveBillingHistory(history.invoice_id)}>
                                                     <Image
-                                                        src='/download-icon.svg'
+                                                        src={isHovered ? '/hover-download-icon.svg' : '/download-icon.svg'}
                                                         alt='download-icon'
                                                         height={20}
                                                         width={20}
@@ -1196,7 +1209,7 @@ export const SettingsBilling: React.FC = () => {
                                                 </IconButton>
                                                 <IconButton onClick={() => handleSendInvoicePopupOpen(history.invoice_id)}>
                                                     <Image
-                                                        src='/share-icon.svg'
+                                                        src={isHovered ? '/hover-share-icon.svg' : '/share-icon.svg'}
                                                         alt='share-icon'
                                                         height={20}
                                                         width={20}

@@ -365,7 +365,7 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
                         lineHeight: '22px !important'
                     }}>Name</Typography>
                     <Box sx={{
-                        display: 'flex', gap: 2,
+                        display: 'flex', gap: 2, alignItems: 'center',
                         '@media (max-width: 600px)': {
                             flexDirection: 'column',
                             alignItems: 'flex-start'
@@ -455,7 +455,7 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
                     }}>Email address</Typography>
 
                     <Box sx={{
-                        display: 'flex', gap: 2,
+                        display: 'flex', gap: 2, alignItems: 'center',
                         '@media (max-width: 600px)': {
                             flexDirection: 'column',
                             alignItems: 'flex-start'
