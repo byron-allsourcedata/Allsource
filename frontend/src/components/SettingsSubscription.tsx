@@ -27,7 +27,7 @@ const subscriptionStyles = {
         gap: 3,
         justifyContent: 'center',
         width: '100%',
-        marginTop: '92px',
+        marginTop: '40px',
         '@media (max-width: 900px)': {
             flexDirection: 'column',
             marginTop: '24px'
@@ -35,14 +35,14 @@ const subscriptionStyles = {
     },
     formWrapper: {
         '@media (min-width: 901px)': {
-            width: '337px'
+            width: '344px'
         }
     },
     plantabHeading: {
         padding: '10px 32px',
         textTransform: 'none',
         '&.Mui-selected': {
-            background: '#F8464B',
+            background: '#5052b2',
             color: '#fff',
             border: 'none',
             '& .active-text-color': {
@@ -307,7 +307,7 @@ export const SettingsSubscription: React.FC = () => {
         <Box sx={{ marginBottom: '36px' }}>
 
             {/* Plans Section */}
-            <Box sx={{ marginBottom: 2 }}>
+            <Box sx={{ marginBottom: 4 }}>
                 <Box sx={{
                     display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1, mb: 2
                 }}>
