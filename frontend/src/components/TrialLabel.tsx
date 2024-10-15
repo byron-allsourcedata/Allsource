@@ -9,15 +9,11 @@ import { useRouter } from 'next/navigation';
 
 const TrialStatus: React.FC = () => {
   const [accessToken, setAccessToken] = useState<string | null>(null);
-  const [currentDomain, setCurrentDomain] = useState<string | null>(null);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const token = localStorage.getItem("token");
-      const domain = sessionStorage.getItem("current_domain");
-
       setAccessToken(token);
-      setCurrentDomain(domain);
     }
   }, []);
 
@@ -36,7 +32,7 @@ const TrialStatus: React.FC = () => {
     if (accessToken) {
       refetch();
     }
-  }, [accessToken, currentDomain]);
+  }, [accessToken]);
 
   const [statusText, setStatusText] = useState('');
   const [backgroundColor, setBackgroundColor] = useState('');
@@ -66,13 +62,31 @@ const TrialStatus: React.FC = () => {
   const calculateDaysDifference = (endDate: string) => {
     const currentDate = new Date();
     const endDateObj = new Date(endDate);
+  
     if (isNaN(endDateObj.getTime())) {
       return -1;
     }
+  
     const timeDifference = endDateObj.getTime() - currentDate.getTime();
+
+    if (timeDifference < 0) {
+      return -1;
+    }
+
+    if (
+      currentDate.getFullYear() === endDateObj.getFullYear() &&
+      currentDate.getMonth() === endDateObj.getMonth() &&
+      currentDate.getDate() === endDateObj.getDate()
+    ) {
+      return 0;
+    }
+  
     const daysDifference = Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
+  
     return daysDifference;
   };
+  
+  
 
   const plan_days = calculateDaysDifference(data?.user_plan?.plan_end)
   const check_active = data?.user_plan?.plan_end
@@ -85,7 +99,7 @@ const TrialStatus: React.FC = () => {
       setTextColor('rgba(95, 99, 104, 1)');
       setIconColor('rgba(95, 99, 104, 1)');
     } else if (trialstatus) {
-      if (plan_days !== undefined && plan_days <= 5 && plan_days > 0) {
+      if (plan_days !== undefined && plan_days <= 5 && plan_days >= 0) {
         setStatusText(`${plan_days} days Free Trial left`);
         setBackgroundColor('rgba(255, 233, 131, 1)');
         setTextColor('rgba(0, 0, 0, 1)');
@@ -107,7 +121,7 @@ const TrialStatus: React.FC = () => {
         setIconColor('#6EC125');
       }
     } else {
-      if (plan_days !== undefined && plan_days <= 5 && plan_days > 0) {
+      if (plan_days !== undefined && plan_days <= 5 && plan_days >= 0) {
         setStatusText(`${plan_days} days left`);
         setBackgroundColor('rgba(255, 233, 131, 1)');
         setTextColor('rgba(0, 0, 0, 1)');
@@ -117,7 +131,7 @@ const TrialStatus: React.FC = () => {
         setBackgroundColor('rgba(246, 202, 204, 1)');
         setTextColor('rgba(78, 1, 16, 1)');
         setIconColor('rgba(103, 12, 14, 1)');
-      } else if (plan_days) {
+      } else if (plan_days > 0) {
         setStatusText(`${plan_days} days left`);
         setBackgroundColor('#EAF8DD');
         setTextColor('#6EC125');
@@ -164,7 +178,7 @@ const TrialStatus: React.FC = () => {
         }}>
           {(statusText.includes('Expired')) && (
             <>
-              <Image src={'danger.svg'} width={18} height={18} alt="danger" />
+              <Image src={'danger.svg'} width={17} height={17} alt="danger" />
             </>
           )}
           {(statusText.includes('left') || statusText.includes('Left')) && (

@@ -475,7 +475,6 @@ export const SettingsBilling: React.FC = () => {
             const response = await axiosInterceptorInstance.get(`/settings/billing/download-billing?invoice_id=${invoice_id}`);
             const link = response.data;
             if (link) {
-                console.log(link)
                 const a = document.createElement('a');
                 a.href = link;
                 a.target = '_blank';
