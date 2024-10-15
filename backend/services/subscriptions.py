@@ -132,10 +132,11 @@ class SubscriptionService:
         status = stripe_payload.get("data").get("object").get("status")
         plan_type = determine_plan_name_from_product_id(
             stripe_payload.get("data").get("object").get("plan").get("product"))
+        interval = stripe_payload.get("data").get("object").get("plan").get("interval")
         payment_platform_subscription_id = stripe_payload.get("data").get("object").get("id")
         plan_name = f"{plan_type} at ${price}"
         transaction_id = stripe_payload.get("id")
-        plan_id = self.plans_persistence.get_plan_by_title(plan_type)
+        plan_id = self.plans_persistence.get_plan_by_title(plan_type, interval)
         subscription_transaction_obj = SubscriptionTransactions(
             user_id=user_id,
             start_date=start_date,
@@ -258,12 +259,10 @@ class SubscriptionService:
             status = "canceled"
             
         if status == 'active':
-            self.db.query(UserSubscriptions).filter(
-                UserSubscriptions.platform_subscription_id == platform_subscription_id
-            ).update({"status": "inactive", "updated_at": datetime.now(timezone.utc)})
-            
+            self.db.query(UserSubscriptions).where(UserSubscriptions.platform_subscription_id == platform_subscription_id).update({"status": "inactive", "updated_at": datetime.now(timezone.utc)})
             plan_type = determine_plan_name_from_product_id(stripe_payload.get("plan").get("product"))
-            plan_id = self.plans_persistence.get_plan_by_title(plan_type)
+            interval = stripe_payload.get("data").get("object").get("plan").get("interval")
+            plan_id = self.plans_persistence.get_plan_by_title(plan_type, interval)
             domains_limit, users_limit, integrations_limit, leads_credits, prospect_credits, members_limit = self.plans_persistence.get_plan_limit_by_id(
                 plan_id=plan_id)
             
