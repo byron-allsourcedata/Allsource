@@ -59,20 +59,6 @@ class SubscriptionService:
             ).order_by(UserSubscriptions.id.desc()).limit(1).first()
         return user_subscription
 
-    def update_user_payment_status(self, user_id, status):
-        if status in ["active", "succeeded"]:
-            status = "active"
-        elif status in ["incomplete", "requires_action", "pending"]:
-            status = "inactive"
-        else:
-            status = "canceled"
-
-        self.db.query(Users).filter(Users.id == user_id).update(
-            {Users.payment_status: status},
-            synchronize_session=False
-        )
-        self.db.commit()
-
     def construct_webhook_response(self, subscription):
         response = {
             "success_msg": {
@@ -160,51 +146,8 @@ class SubscriptionService:
             stripe_request_created_at=stripe_request_created_at
         )
         self.db.add(subscription_transaction_obj)
-        self.db.commit()
+        self.db.flush()
         return subscription_transaction_obj
-
-    def create_subscription_from_webhook(self, user_id, stripe_payload: dict):
-        stripe_request_created_timestamp = stripe_payload.get("created")
-        start_date_timestamp = stripe_payload.get("data").get("object").get("current_period_start")
-        end_date_timestamp = stripe_payload.get("data").get("object").get("current_period_end")
-        start_date = datetime.fromtimestamp(start_date_timestamp, timezone.utc).replace(tzinfo=None)
-        end_date = datetime.fromtimestamp(end_date_timestamp, timezone.utc).replace(tzinfo=None)
-        stripe_request_created_at = datetime.fromtimestamp(stripe_request_created_timestamp, timezone.utc).replace(tzinfo=None)
-        stripe_status = stripe_payload.get("data").get("object").get("status")
-        if stripe_status in ["active", "succeeded", "trialing"]:
-            status = "active"
-        elif stripe_status in ["incomplete", "requires_action", "pending", "incomplete_expired", "past_due"]:
-            status = "inactive"
-        else:
-            status = "canceled"
-        plan_type = determine_plan_name_from_product_id(
-            stripe_payload.get("data").get("object").get("plan").get("product"))
-        payment_platform_subscription_id = stripe_payload.get("data").get("object").get("id")
-        plan_id = self.plans_persistence.get_plan_by_title(plan_type)
-        subscription_obj = Subscription(
-            user_id=user_id,
-            status=status,
-            plan_start=start_date,
-            plan_end=end_date,
-            platform_subscription_id=payment_platform_subscription_id,
-            plan_id=plan_id,
-            stripe_request_created_at=stripe_request_created_at,
-        )
-        if status == "active":
-            domains_limit, users_limit, integrations_limit, leads_credits, prospect_credits, members_limit = self.plans_persistence.get_plan_limit_by_id(
-            plan_id=plan_id)
-            subscription_obj.users_limit = users_limit
-            subscription_obj.domains_limit = domains_limit
-            subscription_obj.integrations_limit = integrations_limit
-            subscription_obj.members_limit = members_limit - 1
-            
-            user = self.db.query(User).filter(User.id == user_id).first()
-            user.leads_credits = leads_credits
-            user.prospect_credits = prospect_credits
-            
-        self.db.add(subscription_obj)
-        self.db.commit()
-        return subscription_obj
     
     def create_payment_from_webhook(self, user_id, stripe_payload):
         payment_intent = stripe_payload.get("data", {}).get("object", {})
@@ -311,7 +254,7 @@ class SubscriptionService:
         if status == 'active':
             self.db.query(UserSubscriptions).filter(
                 UserSubscriptions.platform_subscription_id == platform_subscription_id
-            ).update({"status": "inactive"})
+            ).update({"status": "inactive", "updated_at": datetime.now(timezone.utc)})
             
             plan_type = determine_plan_name_from_product_id(stripe_payload.get("plan").get("product"))
             plan_id = self.plans_persistence.get_plan_by_title(plan_type)
@@ -319,15 +262,18 @@ class SubscriptionService:
                 plan_id=plan_id)
             
             new_subscription = UserSubscriptions(
-            plan_start=start_date,
-            plan_end=end_date,
-            domains_limit=domains_limit,
-            users_limit=users_limit,
-            integrations_limit=integrations_limit,
-            plan_id=plan_id,
-            members_limit=members_limit - 1,
-            status=status,
-            updated_at=datetime.now(timezone.utc)
+                plan_start=start_date,
+                plan_end=end_date,
+                domains_limit=domains_limit,
+                users_limit=users_limit,
+                integrations_limit=integrations_limit,
+                plan_id=plan_id,
+                members_limit=members_limit - 1,
+                status=status,
+                created_at=datetime.now(timezone.utc),
+                user_id=user_id,
+                price_id=price_id,
+                platform_subscription_id=platform_subscription_id
             )
             self.db.add(new_subscription)
             
@@ -341,7 +287,7 @@ class SubscriptionService:
             self.db.query(UserSubscriptions).filter(
                 UserSubscriptions.platform_subscription_id == platform_subscription_id,
                 UserSubscriptions.price_id == price_id
-            ).update({"status": "inactive"})
+            ).update({"status": status})
             
             self.db.commit()
         return status

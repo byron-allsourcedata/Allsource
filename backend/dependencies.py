@@ -41,7 +41,6 @@ from services.integrations.base import IntegrationService
 from services.dashboard import DashboardService
 from services.company_info import CompanyInfoService
 from services.audience import AudienceService
-from services.admin_customers import AdminCustomersService
 from services.domains import UserDomainsService
 from schemas.auth_token import Token
 from persistence.user_persistence import UserPersistence
@@ -97,53 +96,41 @@ def get_user_persistence_service(db: Session = Depends(get_db)):
 def get_audience_persistence(db: Session = Depends(get_db)):
     return AudiencePersistence(db=db)
 
-
 def get_subscription_service(db: Session = Depends(get_db),
                              user_persistence_service: UserPersistence = Depends(get_user_persistence_service),
                              plans_persistence: PlansPersistence = Depends(get_plans_persistence)):
     return SubscriptionService(db=db, user_persistence_service=user_persistence_service,
                                plans_persistence=plans_persistence)
 
+def get_payments_plans_service(db: Session = Depends(get_db),
+                               subscription_service: SubscriptionService = Depends(get_subscription_service),
+                               user_persistence_service: UserPersistence = Depends(get_user_persistence_service)):
+    return PaymentsPlans(db=db, subscription_service=subscription_service,
+                         user_persistence_service=user_persistence_service)
+    
+def get_users_auth_service(db: Session = Depends(get_db),
+                           payments_plans: PaymentsPlans = Depends(get_payments_plans_service),
+                           user_persistence_service: UserPersistence = Depends(get_user_persistence_service),
+                           send_grid_persistence_service: SendgridPersistence = Depends(
+                               get_send_grid_persistence_service),
+                           subscription_service: SubscriptionService = Depends(get_subscription_service)):
+    return UsersAuth(db=db, payments_service=payments_plans, user_persistence_service=user_persistence_service,
+                     send_grid_persistence_service=send_grid_persistence_service,
+                     subscription_service=subscription_service)
+
+
 
 def get_admin_customers_service(db: Session = Depends(get_db),
                                 subscription_service: SubscriptionService = Depends(get_subscription_service),
                                 user_persistence: UserPersistence = Depends(get_user_persistence_service),
+                                users_auth_service: UsersAuth = Depends(get_users_auth_service),
                                 plans_presistence: PlansPersistence = Depends(get_plans_persistence)):
     return AdminCustomersService(db=db, subscription_service=subscription_service,
-                                 user_persistence=user_persistence, plans_persistence=plans_presistence)
+                                 user_persistence=user_persistence, plans_persistence=plans_presistence, users_auth_service=users_auth_service)
 
 
-def get_user_authorization_status_without_pixel(user, subscription_service):
-    if user.get('is_with_card'):
-        if user.get('company_name'):
-            subscription_plan_is_active = subscription_service.is_user_has_active_subscription(user.get('id'))
-            if subscription_plan_is_active:
-                return UserAuthorizationStatus.SUCCESS
-            else:
-                return UserAuthorizationStatus.NEED_CHOOSE_PLAN
-        else:
-            return UserAuthorizationStatus.FILL_COMPANY_DETAILS
-    else:
-        if user.get('is_email_confirmed'):
-            if user.get('company_name'):
-                if user.get('is_book_call_passed'):
-                    subscription_plan_is_active = subscription_service.is_user_has_active_subscription(user.get('id'))
-                    if subscription_plan_is_active:
-                        return UserAuthorizationStatus.SUCCESS
-                    else:
-                        if user.get('stripe_payment_url'):
-                            return UserAuthorizationStatus.PAYMENT_NEEDED
-                        else:
-                            return UserAuthorizationStatus.NEED_CHOOSE_PLAN
-                else:
-                    return UserAuthorizationStatus.NEED_BOOK_CALL
-            else:
-                return UserAuthorizationStatus.FILL_COMPANY_DETAILS
-    return UserAuthorizationStatus.NEED_CONFIRM_EMAIL
-
-
-def get_user_authorization_status(user, subscription_service):
-    status = get_user_authorization_status_without_pixel(user, subscription_service)
+def get_user_authorization_status(user, users_auth_service: UsersAuth):
+    status = users_auth_service.get_user_authorization_status_without_pixel(user)
     return status
 
 
@@ -161,14 +148,13 @@ def parse_jwt_data(Authorization: Annotated[str, Header()]) -> Token:
         return Token(**data)
     except JWTError:
         raise InvalidToken
-
-
+    
 def check_user_authorization(Authorization: Annotated[str, Header()],
                              user_persistence_service: UserPersistence = Depends(
-                                 get_user_persistence_service), subscription_service: SubscriptionService = Depends(
-            get_subscription_service)) -> Token:
+                                 get_user_persistence_service), users_auth_service: UsersAuth = Depends(
+            get_users_auth_service)) -> Token:
     user = check_user_authentication(Authorization, user_persistence_service)
-    auth_status = get_user_authorization_status(user, subscription_service)
+    auth_status = get_user_authorization_status(user, users_auth_service)
     if auth_status == UserAuthorizationStatus.PAYMENT_NEEDED:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -186,10 +172,10 @@ def check_user_authorization(Authorization: Annotated[str, Header()],
 def check_user_authorization_without_pixel(Authorization: Annotated[str, Header()],
                                            user_persistence_service: UserPersistence = Depends(
                                                get_user_persistence_service),
-                                           subscription_service: SubscriptionService = Depends(
-                                               get_subscription_service)) -> Token:
+                                           users_auth_service: UsersAuth = Depends(
+                                               get_users_auth_service)) -> Token:
     user = check_user_authentication(Authorization, user_persistence_service)
-    auth_status = get_user_authorization_status(user, subscription_service)
+    auth_status = get_user_authorization_status(user, users_auth_service)
     if auth_status == UserAuthorizationStatus.PAYMENT_NEEDED:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -251,24 +237,6 @@ def check_pixel_install_domain(domain: UserDomains = Depends(check_domain)):
 def get_domain_service(user_domain_persistence: UserDomainsPersistence = Depends(get_user_domain_persistence), 
                        plan_persistence: PlansPersistence = Depends(get_plans_persistence)):
     return UserDomainsService(user_domain_persistence, plan_persistence)
-
-
-def get_payments_plans_service(db: Session = Depends(get_db),
-                               subscription_service: SubscriptionService = Depends(get_subscription_service),
-                               user_persistence_service: UserPersistence = Depends(get_user_persistence_service)):
-    return PaymentsPlans(db=db, subscription_service=subscription_service,
-                         user_persistence_service=user_persistence_service)
-
-
-def get_users_auth_service(db: Session = Depends(get_db),
-                           payments_plans: PaymentsPlans = Depends(get_payments_plans_service),
-                           user_persistence_service: UserPersistence = Depends(get_user_persistence_service),
-                           send_grid_persistence_service: SendgridPersistence = Depends(
-                               get_send_grid_persistence_service),
-                           subscription_service: SubscriptionService = Depends(get_subscription_service)):
-    return UsersAuth(db=db, payments_service=payments_plans, user_persistence_service=user_persistence_service,
-                     send_grid_persistence_service=send_grid_persistence_service,
-                     subscription_service=subscription_service)
 
 
 def get_users_service(user=Depends(check_user_authentication),
@@ -350,26 +318,6 @@ def get_users_email_verification_service(user=Depends(check_user_authentication)
                                              get_send_grid_persistence_service)):
     return UsersEmailVerificationService(user=user, user_persistence_service=user_persistence_service,
                                          send_grid_persistence_service=sendgrid_persistence_service)
-
-
-def check_user_authorization(Authorization: Annotated[str, Header()],
-                             user_persistence_service: UserPersistence = Depends(
-                                 get_user_persistence_service), subscription_service: SubscriptionService = Depends(
-            get_subscription_service)) -> Token:
-    user = check_user_authentication(Authorization, user_persistence_service)
-    auth_status = get_user_authorization_status(user, subscription_service)
-    if auth_status == UserAuthorizationStatus.PAYMENT_NEEDED:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail={'status': auth_status.value,
-                    'stripe_payment_url': user.stripe_payment_url}
-        )
-    if auth_status != UserAuthorizationStatus.SUCCESS:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail={'status': auth_status.value}
-        )
-    return user
 
 
 def check_user_admin(Authorization: Annotated[str, Header()],

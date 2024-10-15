@@ -140,7 +140,7 @@ const VerifyPixelIntegration: React.FC = () => {
         <input
           id="urlInput"
           type="text"
-          value={inputValue}
+          value={`https://${inputValue}`}
           onChange={handleInputChange}
           disabled={true}
           placeholder="https://yourdomain.com"
