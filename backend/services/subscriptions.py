@@ -36,7 +36,12 @@ class SubscriptionService:
         ).order_by(SubscriptionTransactions.stripe_request_created_at.desc()).first()
         if subscription_data:
             if subscription_data.stripe_request_created_at is not None:
-                if stripe_request_created_at <= subscription_data.stripe_request_created_at:
+                if isinstance(subscription_data.stripe_request_created_at, str):
+                    subscription_datetime = datetime.strptime(subscription_data.stripe_request_created_at, "%Y-%m-%d %H:%M:%S")
+                else:
+                    subscription_datetime = subscription_data.stripe_request_created_at
+                    
+                if stripe_request_created_at <= subscription_datetime.replace(tzinfo=None):
                     return True
         return False
     
