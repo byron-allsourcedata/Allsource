@@ -28,7 +28,6 @@ const TrialStatus: React.FC = () => {
         Authorization: `Bearer ${accessToken}`,
         'X-Domain': currentDomain || '',
       },
-      // Параметр для установки метода запроса
       method: 'GET',
     },
     { manual: !accessToken || !currentDomain }
