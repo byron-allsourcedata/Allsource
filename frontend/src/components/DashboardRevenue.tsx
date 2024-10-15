@@ -256,7 +256,7 @@ const DashboardRevenue: React.FC = () => {
                 </Box>
             </Box>
 
-            <Box sx={{ width: '100%' }} >
+            <Box sx={{ width: '100%', mt:1, mb:1, '@media (max-width: 900px)': { mt:0, mb:0,}  }} >
                 <StatsCard />
             </Box>
 
@@ -272,7 +272,7 @@ const DashboardRevenue: React.FC = () => {
                                     gap: 1,
                                 }}
                             >
-                                <Typography variant="h4" component="div" className="second-sub-title" sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', fontWeight: '600 !important', lineHeight: '19.1px !important', textWrap: 'nowrap', textAlign: 'left', gap: 1, '@media (max-width: 900px)': { flexDirection: 'row', width: '100%', textWrap: 'nowrap' } }}>
+                                <Typography component="div" className="second-sub-title" sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', fontWeight: '600 !important', fontFamily: 'Nunito Sans', fontSize: '16px', lineHeight: '19.1px !important', textWrap: 'nowrap', textAlign: 'left', gap: 1, '@media (max-width: 900px)': { flexDirection: 'row', width: '100%', textWrap: 'nowrap' } }}>
                                     Total Revenue -<Typography component="span" sx={{ fontFamily: 'Nunito Sans', color: 'rgba(74, 74, 74, 1)', fontSize: '22px', fontWeight: 600, lineHeight: '30.01px', textAlign: 'left' }}>$22,301</Typography>
                                 </Typography>
                             </Stack>
@@ -302,6 +302,8 @@ const DashboardRevenue: React.FC = () => {
                                                 />
                                                 <Typography className="paragraph"
                                                     sx={{
+                                                        fontFamily: 'Roboto', 
+                                                        fontSize: '12px',
                                                         textTransform: 'none',
                                                         textAlign: 'left',
                                                         color: 'rgba(95, 99, 104, 1)',
@@ -395,9 +397,16 @@ const DashboardRevenue: React.FC = () => {
                         <LineChart
                             colors={series.map(s => colorMapping[s.id as keyof typeof colorMapping])}
                             xAxis={[{ scaleType: 'point', data, tickInterval: (index, i) => (i + 1) % 5 === 0 }]}
+                            yAxis={[
+                                {
+                                  valueFormatter: (value) => {
+                                    return `${new Intl.NumberFormat('en-US').format(value)}$`;
+                                  },
+                                }
+                              ]}
                             series={filteredSeries}
                             height={250}
-                            margin={{ left: 50, right: 20, top: 20, bottom: 20 }}
+                            margin={{ left: 70, right: 20, top: 20, bottom: 20 }}
                             grid={{ horizontal: true }}
                             sx={{
                                 border: 'none',
@@ -474,6 +483,11 @@ const DashboardRevenue: React.FC = () => {
                                 <LineChart
                                     colors={['rgba(255, 230, 180, 1)']}
                                     xAxis={[{ scaleType: 'point', data, tickInterval: (index, i) => (i + 1) % 5 === 0 }]}
+                                    yAxis={[
+                                        {
+                                            valueFormatter: (value) => `${value}$`, // Форматируем значения с добавлением $
+                                        }
+                                    ]}
                                     series={[{
                                         id: 'viewed_product',
                                         label: 'View Products',
@@ -559,6 +573,11 @@ const DashboardRevenue: React.FC = () => {
                                 <LineChart
                                     colors={['rgba(180, 218, 193, 1)']}
                                     xAxis={[{ scaleType: 'point', data, tickInterval: (index, i) => (i + 1) % 5 === 0 }]}
+                                    yAxis={[
+                                        {
+                                            valueFormatter: (value) => `${value}$`, // Форматируем значения с добавлением $
+                                        }
+                                    ]}
                                     series={[{
                                         id: 'viewed_product',
                                         label: 'View Products',
@@ -645,6 +664,11 @@ const DashboardRevenue: React.FC = () => {
                                 <LineChart
                                     colors={['rgba(181, 218, 248, 1)']}
                                     xAxis={[{ scaleType: 'point', data, tickInterval: (index, i) => (i + 1) % 5 === 0 }]}
+                                    yAxis={[
+                                        {
+                                            valueFormatter: (value) => `${value}$`, // Форматируем значения с добавлением $
+                                        }
+                                    ]}
                                     series={[{
                                         id: 'viewed_product',
                                         label: 'View Products',
@@ -813,7 +837,11 @@ const DashboardRevenue: React.FC = () => {
 
                         <LineChart
                             colors={['rgba(5, 104, 225, 1)']}
-                            xAxis={[{ scaleType: 'point', data, tickInterval: (index, i) => (i + 1) % 5 === 0 }]}
+                            xAxis={[{ scaleType: 'point', data, tickInterval: (index, i) => (i + 1) % 5 === 0 }]}yAxis={[
+                                {
+                                    valueFormatter: (value) => `${value}$`,
+                                }
+                            ]}
                             series={[{
                                 id: 'meta',
                                 label: 'Meta Contacts',

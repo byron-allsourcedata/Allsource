@@ -27,8 +27,9 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
         display: 'flex',
         flexWrap: 'nowrap',
         overflowX: 'hidden',
-        paddingRight: '24px',
-        paddingTop: '72px',
+        paddingRight: '16px',
+        border:'none',
+        paddingTop: '10vh',
         '@media (max-width: 899px)': {
           paddingTop: '72px',
           paddingRight: 0,
@@ -54,7 +55,7 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
         <Grid item xs={12} md lg sx={{
           position: 'relative',
           flexGrow: 1,
-          padding: '16px 0px 0px 24px',
+          padding: '0px 0px 0px 24px',
           minWidth: 0,
           marginLeft: '142px',
           '@media (max-width: 899px)': {

@@ -8,6 +8,7 @@ interface UserContextType {
   website: string | null;
   daysDifference: number | null;
   percent_steps: number | 0;
+  isTrialPending: boolean | false;
   resetUserData: () => void;
 }
 
@@ -24,6 +25,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   const [hasFetched, setHasFetched] = useState<boolean>(false);
   const [daysDifference, setDaysDifference] = useState<number | null>(null);
   const [percent_steps, setPercent] = useState<number | 0>(0);
+  const [isTrialPending, setIsTrialPending] = useState<boolean>(false);
 
     const resetUserData = () => {
       setEmail(null);
@@ -44,6 +46,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       setFullName(storedData.full_name);
       setWebsite(storedData.company_website);
       setPercent(storedData.percent_steps)
+      setIsTrialPending(storedData.is_trial_pending);
 
       const endDate = new Date(storedData.plan_end);
       if (storedData.plan_end == null) {
@@ -61,6 +64,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
               setFullName(userData.full_name);
               setWebsite(userData.company_website);
               setPercent(userData.percent_steps)
+              setIsTrialPending(userData.is_trial_pending);
             }
           });
           timeDifference = (new Date(storedData.plan_end).getTime()) - currentDate.getTime();
@@ -68,6 +72,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
         const daysDifference = Math.ceil((timeDifference - 3600000) / (1000 * 60 * 60 * 24));
 
         // Update the state with the calculated days difference
+        console.log('s1')
         setDaysDifference(daysDifference);
       }
 
@@ -79,6 +84,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
           setFullName(userData.full_name);
           setWebsite(userData.company_website);
           setPercent(userData.percent_steps)
+          setIsTrialPending(userData.is_trial_pending);
         }
         setHasFetched(true);
       });
@@ -86,7 +92,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   }, [hasFetched]);
 
   return (
-    <UserContext.Provider value={{ email, full_name, website, daysDifference, percent_steps, resetUserData }}>
+    <UserContext.Provider value={{ email, full_name, website, daysDifference, percent_steps, isTrialPending, resetUserData }}>
       {children}
     </UserContext.Provider>
   );
