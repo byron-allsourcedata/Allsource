@@ -23,6 +23,8 @@ import ManualPopup from "@/components/ManualPopup";
 import DashboardRevenue from "@/components/DashboardRevenue";
 import DashboardContact from "@/components/DashboardContact";
 import CustomTooltip from "@/components/customToolTip";
+import { DateRangeIcon } from "@mui/x-date-pickers/icons";
+import CalendarPopup from "@/components/CalendarPopup";
 
 
 
@@ -34,15 +36,15 @@ interface TabPanelProps {
 
 const TabPanel: React.FC<TabPanelProps> = ({ children, value, index, ...other }) => {
   return (
-      <div
-          role="tabpanel"
-          hidden={value !== index}
-          id={`tabpanel-${index}`}
-          aria-labelledby={`tab-${index}`}
-          {...other}
-      >
-          {value === index && <Box sx={{ pt: 3, margin: 0, }}>{children}</Box>}
-      </div>
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`tabpanel-${index}`}
+      aria-labelledby={`tab-${index}`}
+      {...other}
+    >
+      {value === index && <Box sx={{ pt: 3, margin: 0, }}>{children}</Box>}
+    </div>
   );
 };
 
@@ -68,17 +70,17 @@ const VerifyPixelIntegration: React.FC = () => {
       }
 
       axiosInstance.post("/install-pixel/check-pixel-installed-parse", { url })
-            .then(response => {
-                const status = response.data.status;
-                if (status === "PIXEL_CODE_INSTALLED") {
-                    showToast("Pixel code is installed successfully!");
-                } else if (status === "PIXEL_CODE_PARSE_FAILED") {
-                    showErrorToast("Could not find pixel code on your site");
-                }
-            })
-            .catch(error => {
-                showErrorToast("An error occurred while checking the pixel code.");
-            });
+        .then(response => {
+          const status = response.data.status;
+          if (status === "PIXEL_CODE_INSTALLED") {
+            showToast("Pixel code is installed successfully!");
+          } else if (status === "PIXEL_CODE_PARSE_FAILED") {
+            showErrorToast("Could not find pixel code on your site");
+          }
+        })
+        .catch(error => {
+          showErrorToast("An error occurred while checking the pixel code.");
+        });
 
       const hasQuery = url.includes("?");
       const newUrl = url + (hasQuery ? "&" : "?") + "vge=true" + "&api=https://api-dev.maximiz.ai";
@@ -171,7 +173,7 @@ const VerifyPixelIntegration: React.FC = () => {
               padding: '0.625rem 1.5rem',
               marginLeft: 0,
               fontSize: '16px'
-        }
+            }
           }}
         >
           Test
@@ -210,7 +212,7 @@ const SupportSection: React.FC = () => {
           setShowSlider(true);
         } else {
           sessionStorage.setItem('is_slider_opened', 'false');
-          setShowSlider(false); 
+          setShowSlider(false);
         }
       } else {
         console.error('Error fetching data:', error);
@@ -224,124 +226,124 @@ const SupportSection: React.FC = () => {
 
   const sendEmail = () => {
     installManually()
-    
+
   }
   const handleManualClose = () => setOpen(false);
 
   return (
-  <Box sx={{
-    position: "fixed", 
-    bottom: 20,          
-    width: "86%",     
-    '@media (max-width: 1400px)': {
-      position: 'static', 
-      width: '100%',
-    }
-  }}>
-    <Box
-      sx={{
-        padding: "1em 0em 1em 1em",
-        borderRadius: "8px",
-        backgroundColor: "#fff",
-        boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
-        textAlign: "left",
-        width: "100%",
-        border: "1px solid rgba(228, 228, 228, 1)",
-        '@media (max-width: 1199px)': {
-          width: '100%',
-          position: 'relative',
-          padding: "1em 0em 1.5em 1em",
-          borderRadius: '4px',
-          border: '0.0625rem solid #E4E4E4',
-          background: '#F7F7F7'
-        },
-        '@media (max-width: 900px)': {
-          marginBottom: 0
-        }
-      }}
-    >
-      <Typography
-        variant="body2"
-        mb={2}
-        className="first-sub-title"
+    <Box sx={{
+      position: "fixed",
+      bottom: 20,
+      width: "86%",
+      '@media (max-width: 1400px)': {
+        position: 'static',
+        width: '100%',
+      }
+    }}>
+      <Box
         sx={{
-          padding: "0em 0em 1.5em 0.5em",
-          fontFamily: "Nunito",
-          fontSize: "14px",
-          fontWeight: "700",
-          lineHeight: "19.1px",
+          padding: "1em 0em 1em 1em",
+          borderRadius: "8px",
+          backgroundColor: "#fff",
+          boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
           textAlign: "left",
-          color: "rgba(28, 28, 28, 1)",
+          width: "100%",
+          border: "1px solid rgba(228, 228, 228, 1)",
+          '@media (max-width: 1199px)': {
+            width: '100%',
+            position: 'relative',
+            padding: "1em 0em 1.5em 1em",
+            borderRadius: '4px',
+            border: '0.0625rem solid #E4E4E4',
+            background: '#F7F7F7'
+          },
+          '@media (max-width: 900px)': {
+            marginBottom: 0
+          }
         }}
       >
-        Having trouble?
-      </Typography>
-      <Grid
-        container
-        spacing={3}
-        alignItems="center"
-        justifyContent="flex-start"
-        sx={{ rowGap: "24px", display: "flex" }}
-      >
-        <div id="calendly-popup-wrapper" ref={calendlyPopupRef} />
-      {rootElement && (
-        <PopupButton
-          className="book-call-button"
-          styles={{
-            marginLeft: '1.6em',
-            textWrap: "nowrap",
-            color: "rgba(80, 82, 178, 1)",
-            fontFamily: "Nunito Sans",
-            border: "none",
-            textDecoration: "none",
-            fontWeight: 600,
+        <Typography
+          variant="body2"
+          mb={2}
+          className="first-sub-title"
+          sx={{
+            padding: "0em 0em 1.5em 0.5em",
+            fontFamily: "Nunito",
             fontSize: "14px",
-            lineHeight: "22.4px",
-            backgroundColor: "transparent",
-            textTransform: "none",
-            cursor: "pointer",
+            fontWeight: "700",
+            lineHeight: "19.1px",
+            textAlign: "left",
+            color: "rgba(28, 28, 28, 1)",
           }}
-          url="https://calendly.com/maximiz-support/30min"
-          rootElement={rootElement} 
-          text="Schedule a call with us"
-        />
-      )}
-        <Image
+        >
+          Having trouble?
+        </Typography>
+        <Grid
+          container
+          spacing={3}
+          alignItems="center"
+          justifyContent="flex-start"
+          sx={{ rowGap: "24px", display: "flex" }}
+        >
+          <div id="calendly-popup-wrapper" ref={calendlyPopupRef} />
+          {rootElement && (
+            <PopupButton
+              className="book-call-button"
+              styles={{
+                marginLeft: '1.6em',
+                textWrap: "nowrap",
+                color: "rgba(80, 82, 178, 1)",
+                fontFamily: "Nunito Sans",
+                border: "none",
+                textDecoration: "none",
+                fontWeight: 600,
+                fontSize: "14px",
+                lineHeight: "22.4px",
+                backgroundColor: "transparent",
+                textTransform: "none",
+                cursor: "pointer",
+              }}
+              url="https://calendly.com/maximiz-support/30min"
+              rootElement={rootElement}
+              text="Schedule a call with us"
+            />
+          )}
+          <Image
             src={"/headphones.svg"}
             alt="headphones"
             width={20}
             height={20}
-            
+
           />
-        <Button
-          onClick={sendEmail}
-          sx={{
-            textWrap: "nowrap",
-            pt:'0.5em',
-            color: "rgba(80, 82, 178, 1)",
-            fontFamily: "Nunito Sans",
-            border: "none",
-            fontWeight: 600,
-            fontSize: '14px',
-            textDecoration: "none",
-            lineHeight: "22.4px",
-            backgroundColor: "transparent",
-            textTransform: "none",
-            cursor: "pointer",
-            marginLeft: '1.5em',
-            gap: '8px'
-          }}
-        >
-          Send this to my developer
-          <Image
-            src={"/telegram.svg"}
-            alt="headphones"
-            width={20}
-            height={20}
-          />
-        </Button>
-        <ManualPopup open={openmanually} handleClose={handleManualClose} pixelCode={pixelCode} />
-        {isLoading && (
+          <Button
+            onClick={sendEmail}
+            sx={{
+              textWrap: "nowrap",
+              pt: '0.5em',
+              color: "rgba(80, 82, 178, 1)",
+              fontFamily: "Nunito Sans",
+              border: "none",
+              fontWeight: 600,
+              fontSize: '14px',
+              textDecoration: "none",
+              lineHeight: "22.4px",
+              backgroundColor: "transparent",
+              textTransform: "none",
+              cursor: "pointer",
+              marginLeft: '1.5em',
+              gap: '8px'
+            }}
+          >
+            Send this to my developer
+            <Image
+              src={"/telegram.svg"}
+              alt="headphones"
+              width={20}
+              height={20}
+            />
+          </Button>
+          <ManualPopup open={openmanually} handleClose={handleManualClose} pixelCode={pixelCode} />
+          {isLoading && (
             <Box sx={{
               position: 'absolute',
               top: 0,
@@ -356,10 +358,11 @@ const SupportSection: React.FC = () => {
               <CustomizedProgressBar />
             </Box>
           )}
-      </Grid>
+        </Grid>
+      </Box>
     </Box>
-    </Box>
-)};
+  )
+};
 
 const Dashboard: React.FC = () => {
   const router = useRouter();
@@ -370,6 +373,44 @@ const Dashboard: React.FC = () => {
   const [showSlider, setShowSlider] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [showCharts, setShowCharts] = useState(false);
+  const [calendarAnchorEl, setCalendarAnchorEl] = useState<null | HTMLElement>(null);
+  const isCalendarOpen = Boolean(calendarAnchorEl);
+  const [formattedDates, setFormattedDates] = useState<string>('');
+  const [appliedDates, setAppliedDates] = useState<{ start: Date | null; end: Date | null }>({ start: null, end: null });
+
+
+  const handleCalendarClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setCalendarAnchorEl(event.currentTarget);
+  };
+
+  const handleCalendarClose = () => {
+    setCalendarAnchorEl(null);
+  };
+
+  const handleDateChange = (dates: { start: Date | null; end: Date | null }) => {
+    const { start, end } = dates;
+    if (start && end) {
+      setFormattedDates(`${start.toLocaleDateString()} - ${end.toLocaleDateString()}`);
+    } else if (start) {
+      setFormattedDates(`${start.toLocaleDateString()}`);
+    } else {
+      setFormattedDates('No dates selected');
+    }
+  };
+
+  const handleApply = (dates: { start: Date | null; end: Date | null }) => {
+    if (dates.start && dates.end) {
+      const formattedStart = dates.start.toLocaleDateString();
+      const formattedEnd = dates.end.toLocaleDateString();
+
+      const dateRange = `${formattedStart} - ${formattedEnd}`;
+
+      setAppliedDates(dates);
+      setCalendarAnchorEl(null);
+
+      handleCalendarClose();
+    }
+  };
 
 
   useEffect(() => {
@@ -432,7 +473,7 @@ const Dashboard: React.FC = () => {
 
   const [tabIndex, setTabIndex] = useState(0);
   const handleTabChange = (event: React.SyntheticEvent, newIndex: number) => {
-      setTabIndex(newIndex);
+    setTabIndex(newIndex);
   };
 
   if (isLoading) {
@@ -441,151 +482,201 @@ const Dashboard: React.FC = () => {
 
   return (
     <>
-        {showCharts ? (
-          <>
-              <Grid
+      {showCharts ? (
+        <>
+          <Grid
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+            <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', }}>
+              <Typography
+                variant="h4"
+                component="h1"
+                sx={dashboardStyles.title}
+              >
+                Dashboard <CustomTooltip title={"Text about dashboard"} />
+              </Typography>
+
+              <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center', width: '100%', alignItems: 'center', mt: 2, "@media (max-width: 600px)": { width: '97%', pr: '0', } }}>
+                <Tabs
+                  value={tabIndex}
+                  onChange={handleTabChange}
+                  sx={{
+                    textTransform: 'none',
+                    minHeight: 0,
+                    '& .MuiTabs-indicator': {
+                      backgroundColor: 'rgba(80, 82, 178, 1)',
+                      height: '1.4px',
+                    },
+                    "@media (max-width: 600px)": {
+                      border: '1px solid rgba(228, 228, 228, 1)', borderRadius: '4px', width: '100%', '& .MuiTabs-indicator': {
+                        height: '0',
+                      },
+                    }
+                  }}
+                  aria-label="dashboard tabs"
+                >
+                  <Tab className="main-text"
+                    sx={{
+                      textTransform: 'none',
+                      padding: '4px 10px',
+                      flexGrow: 1,
+                      marginRight: '3em',
+                      minHeight: 'auto',
+                      minWidth: 'auto',
+                      fontSize: '14px',
+                      fontWeight: 700,
+                      lineHeight: '19.1px',
+                      textAlign: 'left',
+                      mr: 2,
+                      '&.Mui-selected': {
+                        color: 'rgba(80, 82, 178, 1)'
+                      },
+                      "@media (max-width: 600px)": {
+                        mr: 0, borderRadius: '4px', '&.Mui-selected': {
+                          backgroundColor: 'rgba(249, 249, 253, 1)',
+                          border: '1px solid rgba(220, 220, 239, 1)'
+                        },
+                      }
+                    }}
+                    label="Revenue"
+                  />
+                  <Tab className="main-text"
+                    sx={{
+                      textTransform: 'none',
+                      padding: '4px 10px',
+                      minHeight: 'auto',
+                      flexGrow: 1,
+                      textAlign: 'center',
+                      fontSize: '14px',
+                      fontWeight: 700,
+                      lineHeight: '19.1px',
+                      minWidth: 'auto',
+                      '&.Mui-selected': {
+                        color: 'rgba(80, 82, 178, 1)'
+                      },
+                      "@media (max-width: 600px)": {
+                        mr: 0, borderRadius: '4px', '&.Mui-selected': {
+                          backgroundColor: 'rgba(249, 249, 253, 1)',
+                          border: '1px solid rgba(220, 220, 239, 1)'
+                        },
+                      }
+                    }}
+                    label="Contacts"
+                  />
+                </Tabs>
+              </Box>
+
+
+            </Box>
+
+            <Box sx={{width: '100%', display: 'flex', justifyContent: 'flex-end'}}>
+            {/* Calendary picker*/}
+            <Button
+                aria-controls={isCalendarOpen ? 'calendar-popup' : undefined}
+                aria-haspopup="true"
+                aria-expanded={isCalendarOpen ? 'true' : undefined}
+                onClick={handleCalendarClick}
                 sx={{
-                  display: "flex",
-                  flexDirection: "column",
+                  textTransform: 'none',
+                  color: 'rgba(128, 128, 128, 1)',
+                  border: '1px solid rgba(184, 184, 184, 1)',
+                  borderRadius: '4px',
+                  padding: '8px',
+                  minWidth: 'auto',
+                  '@media (max-width: 900px)': {
+                    border: 'none',
+                    padding: 0
+                  }
                 }}
               >
-                <Box sx={{display: 'flex', flexDirection: 'row', alignItems: 'center',}}>
-                  <Typography
-                    variant="h4"
-                    component="h1"
-                    sx={dashboardStyles.title}
-                  >
-                    Dashboard <CustomTooltip title={"Text about dashboard"} />
-                  </Typography>
-
-                  <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center', width:'100%', alignItems: 'center', mt:1, "@media (max-width: 600px)":{ width:'97%', pr: '0',}   }}>
-                    <Tabs
-                        value={tabIndex}
-                        onChange={handleTabChange}
-                        sx={{
-                            textTransform: 'none',
-                            minHeight: 0,
-                            '& .MuiTabs-indicator': {
-                                backgroundColor: 'rgba(80, 82, 178, 1)', 
-                                height: '1.4px', 
-                            },
-                            "@media (max-width: 600px)": {border: '1px solid rgba(228, 228, 228, 1)', borderRadius: '4px', width: '100%', '& .MuiTabs-indicator': {
-                                height: '0',
-                            },}
-                        }}
-                        aria-label="dashboard tabs"
-                    >
-                        <Tab className="main-text"
-                            sx={{
-                                textTransform: 'none',
-                                padding: '4px 10px',
-                                flexGrow: 1,
-                                marginRight: '3em',
-                                minHeight: 'auto',
-                                minWidth: 'auto',
-                                fontSize: '14px',
-                                fontWeight: 700,
-                                lineHeight: '19.1px',
-                                textAlign: 'left',
-                                mr: 2,
-                                '&.Mui-selected': {
-                                    color: 'rgba(80, 82, 178, 1)'
-                                },
-                                "@media (max-width: 600px)": {mr: 0, borderRadius: '4px', '&.Mui-selected': {
-                                    backgroundColor: 'rgba(249, 249, 253, 1)',
-                                    border: '1px solid rgba(220, 220, 239, 1)'
-                                },}
-                            }}
-                            label="Revenue"
-                        />
-                        <Tab className="main-text"
-                            sx={{
-                                textTransform: 'none',
-                                padding: '4px 10px',
-                                minHeight: 'auto',
-                                flexGrow: 1,
-                                textAlign: 'center',
-                                fontSize: '14px',
-                                fontWeight: 700,
-                                lineHeight: '19.1px',
-                                minWidth: 'auto',
-                                '&.Mui-selected': {
-                                    color: 'rgba(80, 82, 178, 1)'
-                                },
-                                "@media (max-width: 600px)": {mr: 0, borderRadius: '4px', '&.Mui-selected': {
-                                    backgroundColor: 'rgba(249, 249, 253, 1)',
-                                    border: '1px solid rgba(220, 220, 239, 1)'
-                                },}
-                            }}
-                            label="Contacts"
-                        />
-                    </Tabs>
-                </Box>
-                   {/* Calendary picker*/}
-                </Box>
+                <DateRangeIcon fontSize='medium' />
+                <Typography variant="body1" sx={{
+                  fontFamily: 'Nunito',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  lineHeight: '19.6px',
+                  textAlign: 'left'
+                }}>
+                  {formattedDates}
+                </Typography>
+              </Button>
+            </Box>
 
 
 
-                <Box sx={{ width: '100%' }}>
-                  <TabPanel value={tabIndex} index={0}>
-                    <DashboardRevenue />
-                  </TabPanel>
-                </Box>
-                <Box sx={{ width: '100%', padding: 0, margin: 0 }}>
-                  <TabPanel value={tabIndex} index={1}>
-                      <DashboardContact />
-                  </TabPanel>
-                </Box>
+            <Box sx={{ width: '100%' }}>
+              <TabPanel value={tabIndex} index={0}>
+                <DashboardRevenue />
+              </TabPanel>
+            </Box>
+            <Box sx={{ width: '100%', padding: 0, margin: 0 }}>
+              <TabPanel value={tabIndex} index={1}>
+                <DashboardContact />
+              </TabPanel>
+            </Box>
 
-              </Grid>
-          </>
-        ) : (
-              <Grid container sx={{
-                height: '100%',
-                overflow: 'hidden'
-              }}>
-                <Grid item xs={12} sx={{display: { md: 'none' }, overflow: 'hidden' }}>
-                <Typography
-                    variant="h4"
-                    component="h1"
-                    className="heading-text"
-                    sx={dashboardStyles.title}
-                  >
-                    Let’s Get Started!
-                  </Typography>
-                  <Typography 
-                  className="table-data" sx={dashboardStyles.description}>
-                    Install our pixel on your website to start capturing anonymous
-                    visitor data on your store.
-                  </Typography>
-                  <ProgressSection />
-                  <PixelInstallation />
-                  <VerifyPixelIntegration />
-                </Grid>
-                <Grid item xs={12} lg={8} sx={{display: { xs: 'none', md: 'block' }, overflow: 'hidden'  }}>
-                  <Typography
-                    variant="h4"
-                    component="h1"
-                    className="heading-text"
-                    sx={dashboardStyles.title}
-                  >
-                    Let’s Get Started!
-                  </Typography>
-                  <Typography className="table-data" sx={dashboardStyles.description} mb={4}>
-                    Install our pixel on your website to start capturing anonymous
-                    visitor data on your store.
-                  </Typography>
-                  <PixelInstallation />
-                  <VerifyPixelIntegration />
-                </Grid>
-                <Grid item xs={12} lg={4} sx={{display: { xs: 'none', md: 'block' }  }}>
-                  <ProgressSection />
-                </Grid>
-                <Grid item xs={12}>
-                  <SupportSection />
-                </Grid>
-              </Grid>
-        )}
+            <CalendarPopup
+              anchorEl={calendarAnchorEl}
+              open={isCalendarOpen}
+              onClose={handleCalendarClose}
+              onDateChange={handleDateChange}
+              onApply={handleApply}
+            />
+
+          </Grid>
+        </>
+      ) : (
+        <Grid container sx={{
+          height: '100%',
+          overflow: 'hidden'
+        }}>
+          <Grid item xs={12} sx={{ display: { md: 'none' }, overflow: 'hidden' }}>
+            <Typography
+              variant="h4"
+              component="h1"
+              className="heading-text"
+              sx={dashboardStyles.title}
+            >
+              Let’s Get Started!
+            </Typography>
+            <Typography
+              className="table-data" sx={dashboardStyles.description}>
+              Install our pixel on your website to start capturing anonymous
+              visitor data on your store.
+            </Typography>
+            <ProgressSection />
+            <PixelInstallation />
+            <VerifyPixelIntegration />
+          </Grid>
+          <Grid item xs={12} lg={8} sx={{ display: { xs: 'none', md: 'block' }, overflow: 'hidden' }}>
+            <Typography
+              variant="h4"
+              component="h1"
+              className="heading-text"
+              sx={dashboardStyles.title}
+            >
+              Let’s Get Started!
+            </Typography>
+            <Typography className="table-data" sx={dashboardStyles.description} mb={4}>
+              Install our pixel on your website to start capturing anonymous
+              visitor data on your store.
+            </Typography>
+            <PixelInstallation />
+            <VerifyPixelIntegration />
+          </Grid>
+          <Grid item xs={12} lg={4} sx={{ display: { xs: 'none', md: 'block' } }}>
+            <ProgressSection />
+          </Grid>
+          <Grid item xs={12}>
+            <SupportSection />
+          </Grid>
+
+        </Grid>
+
+      )}
       {showSlider && <Slider />}
     </>
   );
