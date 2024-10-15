@@ -202,6 +202,7 @@ class SubscriptionService:
                 UserSubscriptions.user_id == user_id
             ).order_by(UserSubscriptions.id.desc()).limit(1).scalar()
         trial_subscription.is_trial = False
+        
         trial_subscription.updated_at = datetime.now()
         trial_subscription.plan_end = datetime.now()
         self.db.commit()

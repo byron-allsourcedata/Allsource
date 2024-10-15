@@ -41,7 +41,7 @@ class PlansService:
         current_plan = self.plans_persistence.get_current_plan(user_id=user.get('id'))
         user_subscription = self.plans_persistence.get_user_subscription(user_id=user.get('id'))
         response = {"stripe_plans": []}
-        plan_order = ["Basic", "Teams", "Business"]
+        plan_order = ["Starter", "Pro", "Growth"]
         stripe_plans.sort(key=lambda plan: plan_order.index(plan.title) if plan.title in plan_order else len(plan_order))
         for stripe_plan in stripe_plans:
             is_active = (current_plan.title  == stripe_plan.title and user_subscription.status == 'active' and current_plan.interval == stripe_plan.interval) if current_plan and user_subscription else False
@@ -58,8 +58,7 @@ class PlansService:
                     "leads_credits": stripe_plan.leads_credits,
                     "prospect_credits": stripe_plan.prospect_credits,
                     "features": stripe_plan.features,
-                    "is_active": is_active,
-                    "is_crown": stripe_plan.is_crown
+                    "is_active": is_active
                 }
             )
         return response
