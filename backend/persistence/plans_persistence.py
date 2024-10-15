@@ -12,9 +12,10 @@ class PlansPersistence:
     def get_stripe_plans(self, period):
         return self.db.query(SubscriptionPlan).filter(SubscriptionPlan.is_active == True, SubscriptionPlan.interval == period).all()
     
-    def save_reason_unsubscribe(self, reason_unsubscribe, user_id):
+    def save_reason_unsubscribe(self, reason_unsubscribe, user_id, cancel_scheduled_at):
         subscription = self.db.query(UserSubscriptions).filter(UserSubscriptions.user_id == user_id).first()
         subscription.cancellation_reason = reason_unsubscribe
+        subscription.cancel_scheduled_at = cancel_scheduled_at
         self.db.commit()
         
 

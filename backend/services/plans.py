@@ -33,8 +33,8 @@ class PlansService:
     def get_additional_credits_price_id(self):
         return self.subscription_service.get_additional_credits_price_id()
     
-    def save_reason_unsubscribe(self, reason_unsubscribe, user_id):
-        self.plans_persistence.save_reason_unsubscribe(reason_unsubscribe, user_id)
+    def save_reason_unsubscribe(self, reason_unsubscribe, user_id, cancel_scheduled_at):
+        self.plans_persistence.save_reason_unsubscribe(reason_unsubscribe, user_id, cancel_scheduled_at)
 
     def get_subscription_plans(self, period, user):
         stripe_plans = self.plans_persistence.get_stripe_plans(period)
