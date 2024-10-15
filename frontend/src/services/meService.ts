@@ -5,7 +5,7 @@ export const fetchUserData = async () => {
     const accessToken = localStorage.getItem("token");
     if (accessToken) {
       const response = await axiosInterceptorInstance.get('/me');
-    const responseData = response.data;
+      const responseData = response.data;
 
 
     if (responseData.user_info && responseData.user_plan) {
@@ -18,7 +18,8 @@ export const fetchUserData = async () => {
         company_website: userInfo.company_website,
         trial: userPlan.is_trial,
         plan_end: userPlan.plan_end,
-        percent_steps: userInfo.activate_percent
+        percent_steps: userInfo.activate_percent,
+        is_trial_pending: userPlan.is_trial_pending
       }));
 
       return {
@@ -27,7 +28,8 @@ export const fetchUserData = async () => {
         company_website: userInfo.company_website,
         trial: userPlan.is_trial,
         days_left: userPlan.plan_end,
-        percent_steps: userInfo.percent_steps
+        percent_steps: userInfo.percent_steps,
+        is_trial_pending: userPlan.is_trial_pending
       };
     } else {
       return null;
