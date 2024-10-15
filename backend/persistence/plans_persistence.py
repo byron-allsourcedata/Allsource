@@ -24,8 +24,8 @@ class PlansPersistence:
             return subscription.is_trial
         return None
 
-    def get_plan_by_title(self, title: str):
-        plan = self.db.query(SubscriptionPlan).filter(SubscriptionPlan.title == title).first()
+    def get_plan_by_title(self, title: str, interval:str):
+        plan = self.db.query(SubscriptionPlan).filter(SubscriptionPlan.title == title, SubscriptionPlan.interval == interval).first()
         if plan:
             return plan.id
         else:
