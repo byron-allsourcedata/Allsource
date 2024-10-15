@@ -26,15 +26,14 @@ const TrialStatus: React.FC = () => {
       url: `${process.env.NEXT_PUBLIC_API_BASE_URL}me`,
       headers: {
         Authorization: `Bearer ${accessToken}`,
-        'X-Domain': currentDomain || '',
       },
       method: 'GET',
     },
-    { manual: !accessToken || !currentDomain }
+    { manual: !accessToken}
   );
 
   useEffect(() => {
-    if (accessToken && currentDomain) {
+    if (accessToken) {
       refetch();
     }
   }, [accessToken, currentDomain]);
