@@ -91,37 +91,50 @@ const PlanCard: React.FC<{ plan: any; activePlanTitle: string; onChoose: (stripe
             </Box>
             
             
-            <Divider sx={{ borderColor: '#e4e4e4', marginLeft: '-8px', marginRight: '-8px'}} />                
-            <Typography variant="body1" component="div" className='paragraph' sx={{ marginTop: 3, marginBottom: '30px' }}>
-                {plan.description}
-            </Typography>
+            <Divider sx={{ borderColor: '#e4e4e4', marginLeft: '-8px', marginRight: '-8px'}} />
 
-            <Box sx={{ textAlign: 'center'}}>
-                    <Button
-                        className='hyperlink-red'
-                        variant="outlined"
-                        fullWidth
-                        onClick={() => onChoose(plan.stripe_price_id)}
-                        disabled={plan.is_active}
-                        sx={{
-                            color: plan.is_active ? '#5f6368 !important' : '#5052B2 !important',
-                            backgroundColor: plan.is_active ? '#e7e7e7' : 'transparent',
-                            borderRadius: '4px',
-                            border: plan.is_active ? '1px solid #f8464b' : '1px solid #5052B2',
-                            boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                            textTransform: 'none',
-                            padding: '9px 24px',
-                            marginTop: '16px',
-                            maxWidth: '232px',
-                            '&:hover': {
-                                backgroundColor: '#5052B2',
-                                color: '#fff !important'
-                            }
-                        }}
-                    >
-                        {getButtonLabel()}
-                    </Button>
-                </Box>
+            <Box sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+                gap: '30px',
+                marginTop: '24px'
+            }}>
+                <Typography variant="body1" component="div" className='paragraph' sx={{
+                    fontSize: '14px !important',
+                    color: '#202124 !important',
+                    letterSpacing: '0.07px !important'
+                }}>
+                    {plan.description}
+                </Typography>
+
+                <Box sx={{ textAlign: 'center'}}>
+                        <Button
+                            className='hyperlink-red'
+                            variant="outlined"
+                            fullWidth
+                            onClick={() => onChoose(plan.stripe_price_id)}
+                            disabled={plan.is_active}
+                            sx={{
+                                color: plan.is_active ? '#5f6368 !important' : '#5052B2 !important',
+                                backgroundColor: plan.is_active ? '#e7e7e7' : 'transparent',
+                                borderRadius: '4px',
+                                border: plan.is_active ? '1px solid #f8464b' : '1px solid #5052B2',
+                                boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
+                                textTransform: 'none',
+                                padding: '9px 24px',
+                                // maxWidth: '232px',
+                                '&:hover': {
+                                    backgroundColor: '#5052B2',
+                                    color: '#fff !important'
+                                }
+                            }}
+                        >
+                            {getButtonLabel()}
+                        </Button>
+                    </Box>
+            </Box>              
+            
             
             {/* <Typography variant="h4" component="div" className='heading-text' sx={{ fontSize: '40px !important', fontWeight: '700 !important', textAlign: 'center', marginTop: 2, marginBottom: 2 }}>
                 ${plan.price} <Typography variant="h6" component="span" className='paragraph' sx={{ marginLeft: '-8px' }}>{plan.interval === 'monthly' ? '/month' : '/year'}</Typography>
@@ -159,7 +172,7 @@ const PlanCard: React.FC<{ plan: any; activePlanTitle: string; onChoose: (stripe
                 ))}
             </Box>
 
-            <Box 
+            {/* <Box 
             // sx={{
             //     position: 'absolute',
             //     bottom: '24px',
@@ -183,7 +196,7 @@ const PlanCard: React.FC<{ plan: any; activePlanTitle: string; onChoose: (stripe
             }}>
                 Overage $0.49/contact
                     <CustomTooltip title="" linkText="" linkUrl="" />
-            </Typography>
+            </Typography> */}
                 {/* <Divider sx={{ borderColor: '#e4e4e4'}} /> */}
 
                 {/* <Box sx={{ textAlign: 'center'}}>
@@ -211,7 +224,7 @@ const PlanCard: React.FC<{ plan: any; activePlanTitle: string; onChoose: (stripe
                         {getButtonLabel()}
                     </Button>
                 </Box> */}
-            </Box>
+            {/* </Box> */}
 
             
             

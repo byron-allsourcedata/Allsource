@@ -41,6 +41,7 @@ const subscriptionStyles = {
     plantabHeading: {
         padding: '10px 32px',
         textTransform: 'none',
+        fontWeight: '400 !important',
         '&.Mui-selected': {
             background: '#5052b2',
             color: '#fff',
@@ -62,6 +63,8 @@ const subscriptionStyles = {
         background: '#EDEDF7',
         padding: '5px 12px',
         borderRadius: '4px',
+        fontSize: '14px !important',
+        color: '#202124 !important'
     },
     inputLabel: {
         top: '-3px',
@@ -331,18 +334,19 @@ export const SettingsSubscription: React.FC = () => {
                                 background: 'none'
                             }
                         }}>
-                            <Tab className='heading-text' sx={subscriptionStyles.plantabHeading}
+                            <Tab className='first-sub-title' sx={subscriptionStyles.plantabHeading}
                                 label="Monthly" />
-                            <Tab className='heading-text'
+                            <Tab className='first-sub-title'
                                 sx={subscriptionStyles.plantabHeading}
                                 label={
                                     <Box sx={{ display: 'flex', flexDirection: 'row', gap: '12px', alignItems: 'center' }}>
-                                        <Typography className='heading-text active-text-color' sx={{
+                                        <Typography className='first-sub-title active-text-color' sx={{
+                                            fontWeight: '400 !important',
                                             '@media (max-width: 600px)': {
                                                 fontSize: '18px !important'
                                             }
                                         }}>Yearly</Typography>
-                                        <Typography variant="body2" sx={subscriptionStyles.saveHeading} className='first-sub-title active-save-color' color="primary">
+                                        <Typography variant="body2" sx={subscriptionStyles.saveHeading} className='paragraph active-save-color' color="primary">
                                             Save 20%
                                         </Typography>
                                     </Box>
