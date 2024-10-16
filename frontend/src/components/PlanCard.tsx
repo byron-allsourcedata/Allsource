@@ -50,7 +50,7 @@ const PlanCard: React.FC<{ plan: any; activePlanTitle: string; onChoose: (stripe
                     }}>
                         {plan.title}  
                     </Typography>
-                    {plan.is_crown && (
+                    {plan.title === 'Pro' && (
                                         
                         <Typography variant="h6" component="span" className='second-sub-title' sx={{
                             backgroundColor: '#EDEDF7',
