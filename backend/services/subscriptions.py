@@ -57,12 +57,6 @@ class SubscriptionService:
 
     def is_user_have_subscription(self, user_id):
         return self.db.query(SubscriptionPlan).filter(SubscriptionPlan.user_id == user_id).limit(1).scalar()
-    
-    def get_subscription_by_user_id(self, user_id):
-        user_subscription = self.db.query(UserSubscriptions).filter(
-                UserSubscriptions.user_id == user_id
-            ).order_by(UserSubscriptions.id.desc()).limit(1).first()
-        return user_subscription
 
     def construct_webhook_response(self, subscription):
         response = {
@@ -91,8 +85,12 @@ class SubscriptionService:
             .filter(User.id == user_id)
             .first()
         )
-        if user_subscription and user_subscription.plan_end:
-            return user_subscription.plan_end > datetime.now()
+        if user_subscription:
+            if user_subscription.is_trial and user_subscription.plan_end is None:
+                return True
+            if user_subscription.plan_end.tzinfo is None:
+                user_subscription.plan_end = user_subscription.plan_end.replace(tzinfo=timezone.utc)
+            return user_subscription.plan_end > datetime.now(timezone.utc)
 
         return False
 
@@ -108,7 +106,7 @@ class SubscriptionService:
             payment_transaction_obj = UsersPaymentsTransactions(
                 user_id=user_id,
                 transaction_id=transaction_id,
-                created_at = datetime.now(),
+                created_at = datetime.now(timezone.utc).replace(tzinfo=None),
                 stripe_request_created_at = created_at,
                 status=status,
                 amount_credits=amount_credits,
@@ -209,32 +207,17 @@ class SubscriptionService:
             ).order_by(UserSubscriptions.id.desc()).limit(1).scalar()
         trial_subscription.is_trial = False
         
-        trial_subscription.updated_at = datetime.now()
-        trial_subscription.plan_end = datetime.now()
+        trial_subscription.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
+        trial_subscription.plan_end = datetime.now(timezone.utc).replace(tzinfo=None)
         self.db.commit()
         
-    def save_downgrade_price_id(self, price_id, subscription_id):
-        self.db.query(UserSubscriptions).filter(UserSubscriptions.platform_subscription_id == subscription_id).update({
-                                                            UserSubscriptions.downgrade_price_id: price_id,
-                                                            UserSubscriptions.downgrade_at: datetime.now()
-                                                            }, synchronize_session=False)
+    def save_downgrade_price_id(self, price_id, subscription: UserSubscriptions):
+        subscription.downgrade_price_id = price_id
+        subscription.downgrade_at = datetime.now(timezone.utc).replace(tzinfo=None)
         self.db.commit()
     
     def get_subscription_by_price_id(self, price_id):
         return self.db.query(UserSubscriptions).filter(UserSubscriptions.platform_subscription_id == price_id)
-        
-
-    def get_subscription_by_user_id(self, user_id):
-        return self.db.query(UserSubscriptions).filter(
-            UserSubscriptions.user_id == user_id
-        ).order_by(UserSubscriptions.id.desc()).limit(1).scalar()
-    
-    def get_user_subscription_by_platform_subscription_id(self, platform_subscription_id):
-        user_subscription = self.db.query(UserSubscriptions).filter(
-            UserSubscriptions.platform_subscription_id == platform_subscription_id
-        ).first() 
-
-        return user_subscription
     
     def get_additional_credits_price_id(self):
         stripe_price_id = self.db.query(SubscriptionPlan.stripe_price_id).filter(
@@ -243,9 +226,11 @@ class SubscriptionService:
         return stripe_price_id
 
     
-    def process_subscription(self, user_id, stripe_payload):
+    def process_subscription(self, stripe_payload, user: Users):
+        user_id = user.id
         platform_subscription_id = stripe_payload.get("id")
         price_id = stripe_payload.get("plan").get("id")
+        canceled_at = stripe_payload.get("canceled_at")
         start_date_timestamp = stripe_payload.get("current_period_start")
         end_date_timestamp = stripe_payload.get("current_period_end")
         start_date = datetime.fromtimestamp(start_date_timestamp, timezone.utc).replace(tzinfo=None)
@@ -259,34 +244,42 @@ class SubscriptionService:
             status = "canceled"
             
         if status == 'active':
-            self.db.query(UserSubscriptions).where(UserSubscriptions.status == 'active').update({"status": "inactive", "updated_at": datetime.now(timezone.utc)})
-            plan_type = determine_plan_name_from_product_id(stripe_payload.get("plan").get("product"))
-            interval = stripe_payload.get("plan").get("interval")
-            plan_id = self.plans_persistence.get_plan_by_title(plan_type, interval)
-            domains_limit, users_limit, integrations_limit, leads_credits, prospect_credits, members_limit = self.plans_persistence.get_plan_limit_by_id(
+            user_subscription = self.db.query(UserSubscriptions).where(UserSubscriptions.platform_subscription_id == platform_subscription_id, UserSubscriptions.price_id == price_id).first()          
+            if not user_subscription:
+                plan_type = determine_plan_name_from_product_id(stripe_payload.get("plan").get("product"))
+                interval = stripe_payload.get("plan").get("interval")
+                plan_id = self.plans_persistence.get_plan_by_title(plan_type, interval)
+                domains_limit, users_limit, integrations_limit, leads_credits, prospect_credits, members_limit = self.plans_persistence.get_plan_limit_by_id(
                 plan_id=plan_id)
-            
-            new_subscription = UserSubscriptions(
-                plan_start=start_date,
-                plan_end=end_date,
-                domains_limit=domains_limit,
-                users_limit=users_limit,
-                integrations_limit=integrations_limit,
-                plan_id=plan_id,
-                members_limit=members_limit - 1,
-                status=status,
-                created_at=datetime.now(timezone.utc),
-                user_id=user_id,
-                price_id=price_id,
-                platform_subscription_id=platform_subscription_id
-            )
-            self.db.add(new_subscription)
-            self.db.flush()
-            user = self.db.query(User).filter(User.id == user_id).first()
-            user.leads_credits = leads_credits if user.leads_credits >= 0 else  leads_credits - user.leads_credits
-            user.prospect_credits = prospect_credits
-            user.current_subscription_id = new_subscription.id
-            
+                self.db.query(UserSubscriptions).where(UserSubscriptions.status == 'active').update({"status": "inactive", "updated_at": datetime.now(timezone.utc).replace(tzinfo=None)})
+                new_subscription = UserSubscriptions(
+                    plan_start=start_date,
+                    plan_end=end_date,
+                    domains_limit=domains_limit,
+                    users_limit=users_limit,
+                    integrations_limit=integrations_limit,
+                    plan_id=plan_id,
+                    members_limit=members_limit,
+                    status=status,
+                    created_at=datetime.now(timezone.utc).replace(tzinfo=None),
+                    user_id=user_id,
+                    price_id=price_id,
+                    platform_subscription_id=platform_subscription_id
+                )
+                self.db.add(new_subscription)
+                self.db.flush()
+                user.leads_credits = leads_credits if user.leads_credits >= 0 else  leads_credits - user.leads_credits
+                user.prospect_credits = prospect_credits
+                user.current_subscription_id = new_subscription.id
+            else:
+                user_subscription.plan_start = start_date
+                user_subscription.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
+                user_subscription.plan_end = end_date
+                if canceled_at:
+                    user_subscription.cancel_scheduled_at = datetime.fromtimestamp(canceled_at, timezone.utc).replace(tzinfo=None)
+                if start_date > user_subscription.plan_start:
+                    user.leads_credits = leads_credits if user.leads_credits >= 0 else  leads_credits - user.leads_credits
+                    user.prospect_credits = prospect_credits
             self.db.commit()
                 
         if status == "canceled" or status == 'inactive':

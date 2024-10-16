@@ -155,13 +155,31 @@ def determine_plan_name_from_product_id(product_id):
     product = stripe.Product.retrieve(product_id)
     return product.name
 
-
 def cancel_subscription_at_period_end(subscription_id):
-    return stripe.Subscription.modify(
+    subscription = stripe.Subscription.retrieve(subscription_id)
+    
+    if not subscription['schedule']:
+        return stripe.Subscription.modify(
         subscription_id,
         cancel_at_period_end=True
     )
-
+    
+    subscription_schedule_id = subscription['schedule']
+    subscription_schedule = stripe.SubscriptionSchedule.retrieve(subscription_schedule_id)
+    return stripe.SubscriptionSchedule.modify(
+        subscription_schedule_id,
+        phases=[
+            {
+                'items': [{
+                    'price': subscription_schedule['phases'][0]['items'][0]['price'],
+                    'quantity': subscription_schedule['phases'][0]['items'][0]['quantity'],
+                }],
+                'start_date': subscription_schedule['phases'][0]['start_date'],
+                'end_date': subscription_schedule['phases'][0]['end_date'],
+            }
+        ],
+        end_behavior='cancel'
+    )
 
 def save_payment_details_in_stripe(customer_id):
     try:
