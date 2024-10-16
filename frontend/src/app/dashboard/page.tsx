@@ -490,7 +490,7 @@ const Dashboard: React.FC = () => {
               flexDirection: "column",
             }}
           >
-            <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', }}>
+            <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center',  "@media (max-width: 600px)": { flexDirection: 'column', alignItems: 'start', } }}>
               <Typography
                 variant="h4"
                 component="h1"
@@ -499,7 +499,7 @@ const Dashboard: React.FC = () => {
                 Dashboard <CustomTooltip title={"Text about dashboard"} />
               </Typography>
 
-              <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center', width: '100%', alignItems: 'center', mt: 2, "@media (max-width: 600px)": { width: '97%', pr: '0', } }}>
+              <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center', width: '100%', alignItems: 'center', mt: 2, }}>
                 <Tabs
                   value={tabIndex}
                   onChange={handleTabChange}
@@ -572,7 +572,9 @@ const Dashboard: React.FC = () => {
 
             </Box>
 
-            <Box sx={{width: '100%', display: 'flex', justifyContent: 'flex-end'}}>
+            <Box sx={{width: '100%', display: 'flex', justifyContent: 'flex-end', '@media (max-width: 600px)': {
+                    display: 'none'
+                  }}}>
             {/* Calendary picker*/}
             <Button
                 aria-controls={isCalendarOpen ? 'calendar-popup' : undefined}

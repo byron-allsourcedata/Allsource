@@ -27,6 +27,7 @@ class UserSubscriptions(Base):
     downgrade_price_id = Column(VARCHAR, nullable=True)
     cancellation_reason = Column(TEXT, nullable=True)
     price_id = Column(VARCHAR, nullable=True)
+    cancel_scheduled_at = Column(TIMESTAMP(precision=7), nullable=True)
 
 
 Subscription = UserSubscriptions

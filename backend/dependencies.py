@@ -240,8 +240,10 @@ def get_domain_service(user_domain_persistence: UserDomainsPersistence = Depends
 
 
 def get_users_service(user=Depends(check_user_authentication),
-                      user_persistence_service: UserPersistence = Depends(get_user_persistence_service)):
-    return UsersService(user=user, user_persistence_service=user_persistence_service)
+                      user_persistence: UserPersistence = Depends(get_user_persistence_service),
+                      plan_persistence: PlansPersistence = Depends(get_plans_persistence)
+                      ):
+    return UsersService(user=user, user_persistence_service=user_persistence, plan_persistence=plan_persistence)
 
 
 def get_leads_service(user = Depends(check_user_authorization),
@@ -302,8 +304,9 @@ def get_webhook(subscription_service: SubscriptionService = Depends(get_subscrip
     return WebhookService(subscription_service=subscription_service)
 
 
-def get_payments_service(plans_service: PlansService = Depends(get_plans_service)):
-    return PaymentsService(plans_service=plans_service)
+def get_payments_service(plans_service: PlansService = Depends(get_plans_service),
+                         plan_persistence: PlansPersistence = Depends(get_plans_persistence)):
+    return PaymentsService(plans_service=plans_service, plan_persistence=plan_persistence)
 
 
 def get_company_info_service(db: Session = Depends(get_db), user=Depends(check_user_authentication),

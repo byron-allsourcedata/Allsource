@@ -153,9 +153,9 @@ class SettingsService:
             team_arr.append(team_info)
         result['teams'] = team_arr
         current_plan = self.plan_persistence.get_current_plan(user_id=user.get('id'))
-        current_subscription = self.subscription_service.get_subscription_by_user_id(user_id=user.get('id'))
+        current_subscription = self.plan_persistence.get_user_subscription(user_id=user.get('id'))
         result['member_limit'] = current_plan.members_limit if current_plan else 0
-        result['member_count'] = current_plan.members_limit - current_subscription.members_limit if current_subscription else 0
+        result['member_count'] = current_plan.members_limit - current_subscription.members_limit if current_plan and current_subscription else 0
         return result
             
         
@@ -285,6 +285,7 @@ class SettingsService:
             'next_billing_date': None,
             'monthly_total': None,
             'active': True,
+            'canceled_at': user_subscription.cancel_scheduled_at
             
         }
         plan = subscription['items']['data'][0]['plan']
@@ -300,7 +301,8 @@ class SettingsService:
             'next_billing_date': self.timestamp_to_date(subscription['current_period_end']).strftime('%b %d, %Y'),
             'monthly_total': f"${plan['amount'] / 100:,.0f}",
             'active': is_active,
-            'downgrade_plan': get_product_from_price_id(user_subscription.downgrade_price_id) if user_subscription and user_subscription.downgrade_price_id else None
+            'downgrade_plan': get_product_from_price_id(user_subscription.downgrade_price_id) if user_subscription and user_subscription.downgrade_price_id else None,
+            'canceled_at': user_subscription.cancel_scheduled_at
         }
         
         return subscription_details
@@ -412,8 +414,6 @@ class SettingsService:
         hosted_invoice_url = result['data'].get('hosted_invoice_url', '')
         return hosted_invoice_url
 
-
-        
     
     def default_card(self, user: dict, payment_method_id):
         return set_default_card_for_customer(user.get('customer_id'), payment_method_id)

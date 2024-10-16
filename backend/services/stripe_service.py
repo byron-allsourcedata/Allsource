@@ -155,6 +155,31 @@ def determine_plan_name_from_product_id(product_id):
     product = stripe.Product.retrieve(product_id)
     return product.name
 
+def cancel_subscription_at_period_end(subscription_id):
+    subscription = stripe.Subscription.retrieve(subscription_id)
+    
+    if not subscription['schedule']:
+        return stripe.Subscription.modify(
+        subscription_id,
+        cancel_at_period_end=True
+    )
+    
+    subscription_schedule_id = subscription['schedule']
+    subscription_schedule = stripe.SubscriptionSchedule.retrieve(subscription_schedule_id)
+    return stripe.SubscriptionSchedule.modify(
+        subscription_schedule_id,
+        phases=[
+            {
+                'items': [{
+                    'price': subscription_schedule['phases'][0]['items'][0]['price'],
+                    'quantity': subscription_schedule['phases'][0]['items'][0]['quantity'],
+                }],
+                'start_date': subscription_schedule['phases'][0]['start_date'],
+                'end_date': subscription_schedule['phases'][0]['end_date'],
+            }
+        ],
+        end_behavior='cancel'
+    )
 
 def save_payment_details_in_stripe(customer_id):
     try:
@@ -194,7 +219,7 @@ def get_product_from_price_id(price_id):
     return product.name
 
 
-def purchase_product(customer_id, price_id, quantity):
+def purchase_product(customer_id, price_id, quantity, product_description):
     result = {
         'success': False
     }
@@ -217,11 +242,16 @@ def purchase_product(customer_id, price_id, quantity):
             automatic_payment_methods={
                 'enabled': True,
                 'allow_redirects': 'never'
-            }
+            },
+            metadata={
+                'product_description': product_description,
+                'quantity': quantity
+            },
+            description=f"Purchase of {quantity} x {product_description}"
         )
-
         if payment_intent.status == 'succeeded':
             result['success'] = True
+            result['stripe_payload'] = payment_intent
             return result
         else:
             result['error'] = (f"Unknown payment status: {payment_intent.status}")
