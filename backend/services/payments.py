@@ -22,10 +22,9 @@ class PaymentsService:
         return self.plans_service.get_additional_credits_price_id()
     
     def upgrade_subscription(self, current_subscription, platform_subscription_id, price_id):
-        if not current_subscription['schedule']:
-            return self.upgrade_subscription_immediate(current_subscription, platform_subscription_id, price_id)
-        else:
-            return self.upgrade_subscription_scheduled(current_subscription, price_id)
+        if current_subscription['schedule']:
+            self.upgrade_subscription_scheduled(current_subscription)
+        return {'status': self.get_subscription_status(self.upgrade_subscription_immediate(current_subscription, platform_subscription_id, price_id))}
 
     def upgrade_subscription_immediate(self, current_subscription, platform_subscription_id, price_id):
         upgrade_subscription = stripe.Subscription.modify(
@@ -40,29 +39,10 @@ class PaymentsService:
         )
         return {'status': self.get_subscription_status(upgrade_subscription)}
 
-    def upgrade_subscription_scheduled(self, current_subscription, price_id):
+    def upgrade_subscription_scheduled(self, current_subscription):
         schedule = stripe.SubscriptionSchedule.retrieve(current_subscription.get("schedule"))
-        upgrade_subscription_schedule = stripe.SubscriptionSchedule.modify(
-            schedule.id,
-            phases=[
-                {
-                    'items': [{
-                        'price': price_id,
-                        'quantity': schedule['phases'][0]['items'][0]['quantity'],
-                    }],
-                    'start_date': schedule['phases'][0]['start_date'],
-                    'end_date': schedule['phases'][0]['end_date'],
-                }
-            ],
-            proration_behavior='none'
-        )
-        
-        upgrade_subscription = stripe.Subscription.modify(
-            upgrade_subscription_schedule.subscription,
-            billing_cycle_anchor='now',
-            proration_behavior='none'
-        )   
-        return {'status': self.get_subscription_status(upgrade_subscription)}
+        stripe.SubscriptionSchedule.release(schedule.id)
+
 
 
     def create_customer_session(self, price_id: str, users):
@@ -82,13 +62,15 @@ class PaymentsService:
         return self.plans_service.get_user_subscription_authorization_status()
     
     def manage_subscription_schedule(self, current_subscription, platform_subscription_id, price_id):
-        if current_subscription.get("schedule") is None:
-            schedule = stripe.SubscriptionSchedule.create(
-                from_subscription=platform_subscription_id,
-            )
-        else:
-            schedule = stripe.SubscriptionSchedule.retrieve(current_subscription.get("schedule"))
-
+        if current_subscription.get("schedule"):
+            subscription_schedule_id = current_subscription['schedule']
+            schedule = stripe.SubscriptionSchedule.retrieve(subscription_schedule_id)
+            stripe.SubscriptionSchedule.release(schedule.id)
+        
+        schedule = stripe.SubscriptionSchedule.create(
+            from_subscription=platform_subscription_id,
+        )
+        
         schedule_downgrade_subscription = stripe.SubscriptionSchedule.modify(
             schedule.id,
             phases=[
