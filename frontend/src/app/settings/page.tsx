@@ -46,12 +46,9 @@ const Settings: React.FC = () => {
         router.push(`/settings?section=${section}`);
     };
 
-    if (isLoading) {
-        return <CustomizedProgressBar />;
-    }
-
     return (
         <Box>
+            {isLoading && <CustomizedProgressBar />}
             <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1, mb: 2, padding: '1rem 0rem 0',
                 '@media (max-width: 1199px)': {
                     paddingTop: '1rem'
