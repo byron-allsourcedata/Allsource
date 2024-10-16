@@ -40,10 +40,10 @@ export const TrialProvider: React.FC<TrialProviderProps> = ({ children }) => {
           
           // Calculate the difference in days
           const timeDifference = endDate.getTime() - currentDate.getTime();
-          const daysDifference = Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
+          const daysDifferences = Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
           
           // Update the state with the calculated days difference
-          setDaysDifference(daysDifference);
+          setDaysDifference(daysDifferences);
         }
       } catch (error) {
         console.error('Failed to parse sessionStorage item "me":', error);

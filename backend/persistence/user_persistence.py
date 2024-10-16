@@ -30,25 +30,6 @@ class UserPersistence:
             synchronize_session=False)
         self.db.commit()
 
-    def get_user_plan(self, user_id: int):        
-        user_plan = self.db.query(
-            UserSubscriptions.is_trial,
-            UserSubscriptions.plan_end
-        ).filter(
-            UserSubscriptions.user_id == user_id,
-            UserSubscriptions.status.in_(('active', 'canceled'))
-        ).order_by(desc(UserSubscriptions.plan_end)).first()
-        if user_plan:
-            return {
-                "is_trial": user_plan.is_trial,
-                "plan_end": user_plan.plan_end
-            }
-        else:
-            return {
-                "is_trial": False,
-                "plan_end": None
-            }
-
     def get_user_by_email(self, email):
         user_object = self.db.query(Users).filter(func.lower(Users.email) == func.lower(email)).first()
         return user_object
@@ -92,7 +73,6 @@ class UserPersistence:
                 "employees_workers": user.employees_workers,
                 "created_at": user.created_at,
                 "last_login": user.last_login,
-                "payment_status": user.payment_status,
                 "customer_id": user.customer_id,
                 "reset_password_sent_at": user.reset_password_sent_at,
                 'pixel_code_sent_at': user.pixel_code_sent_at,
@@ -172,4 +152,30 @@ class UserPersistence:
         self.db.commit()
 
     def get_users(self):
-        return self.db.query(Users).all()
+        users = self.db.query(
+            Users.id,
+            Users.email,
+            Users.full_name,
+            Users.created_at,
+            Users.is_with_card,
+            Users.company_name,
+            Users.is_email_confirmed,
+            Users.is_book_call_passed,
+            Users.stripe_payment_url
+        ).all()
+
+        return [
+            {
+                "id": user[0],
+                "email": user[1],
+                "full_name": user[2],
+                "created_at": user[3],
+                "is_with_card": user[4],
+                "company_name": user[5],
+                "is_email_confirmed": user[6],
+                "is_book_call_passed": user[7],
+                "stripe_payment_url": user[8]
+            }
+            for user in users
+        ]
+

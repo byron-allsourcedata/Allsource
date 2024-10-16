@@ -11,6 +11,7 @@ import CheckoutForm from './CheckoutForm';
 import { showErrorToast, showToast } from './ToastNotification';
 import axios from 'axios';
 import CustomTooltip from './customToolTip';
+import { ChevronLeft, ChevronRight } from '@mui/icons-material';
 
 type CardBrand = 'visa' | 'mastercard' | 'americanexpress' | 'discover';
 
@@ -91,8 +92,131 @@ const billingStyles = {
                 lineHeight: '20px'
             }
         }
-    }
+    },
+    page_number: {
+        backgroundColor: 'rgba(255, 255, 255, 1)',
+        color: 'rgba(80, 82, 178, 1)',
+      },
 }
+
+interface CustomTablePaginationProps {
+    count: number;
+    page: number;
+    rowsPerPage: number;
+    onPageChange: (event: React.MouseEvent<HTMLButtonElement>, newPage: number) => void;
+    onRowsPerPageChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
+}
+
+const CustomTablePagination: React.FC<CustomTablePaginationProps> = ({
+    count,
+    page,
+    rowsPerPage,
+    onPageChange,
+    onRowsPerPageChange,
+}) => {
+    const totalPages = Math.ceil(count / rowsPerPage);
+    const maxPagesToShow = 3;
+
+    const handlePageChange = (newPage: number) => {
+        if (newPage >= 0 && newPage < totalPages) {
+            onPageChange(null as any, newPage);
+        }
+    };
+
+    const getPageButtons = () => {
+        const pages = [];
+        let startPage = Math.max(0, page - Math.floor(maxPagesToShow / 2));
+        let endPage = Math.min(totalPages - 1, startPage + maxPagesToShow - 1);
+
+        if (endPage - startPage + 1 < maxPagesToShow) {
+            startPage = Math.max(0, endPage - maxPagesToShow + 1);
+        }
+
+        for (let i = startPage; i <= endPage; i++) {
+            pages.push(i);
+        }
+
+        return pages;
+    };
+
+    return (
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', padding: 1 }}>
+            {page > 0 && (<select
+                value={rowsPerPage}
+                onChange={onRowsPerPageChange}
+                style={{
+                    marginLeft: 8,
+                    border: '1px solid rgba(235, 235, 235, 1)',
+                    backgroundColor: 'rgba(255, 255, 255, 1)'
+                }}
+            >
+                {[5, 10, 15, 25].map((option) => (
+                    <option key={option} value={option}>
+                        {option} rows
+                    </option>
+                ))}
+            </select>
+            )}
+            {page > 0 && (
+                <Button
+                    onClick={(e) => handlePageChange(page - 1)}
+                    disabled={page === 0}
+                    sx={{
+                        minWidth: '30px',
+                        minHeight: '30px',
+                    }}
+                >
+                    <ChevronLeft
+                        sx={{
+                            border: page === 0 ? 'none' : '1px solid rgba(235, 235, 235, 1)',
+                            borderRadius: '4px'
+                        }} />
+                </Button>
+            )}
+            {totalPages > 1 && (
+                <>
+                    {page > 1 && <Button onClick={() => handlePageChange(0)} sx={billingStyles.page_number}>1</Button>}
+                    {page > 2 && <Typography variant="body2" sx={{ mx: 1 }}>...</Typography>}
+                    {getPageButtons().map((pageNumber) => (
+                        <Button
+                            key={pageNumber}
+                            onClick={() => handlePageChange(pageNumber)}
+                            sx={{
+                                mx: 0.5, ...billingStyles.page_number,
+                                border: page === pageNumber ? '1px solid rgba(80, 82, 178, 1)' : 'none',
+                                color: page === pageNumber ? 'rgba(80, 82, 178, 1)' : 'rgba(122, 122, 122, 1)',
+                                minWidth: '30px',
+                                minHeight: '30px',
+                                padding: 0
+                            }}
+                            variant={page === pageNumber ? 'contained' : 'text'}
+                        >
+                            {pageNumber + 1}
+                        </Button>
+                    ))}
+                    {totalPages - page > 3 && <Typography variant="body2" sx={{ mx: 1 }}>...</Typography>}
+                    {page < totalPages - 1 && <Button onClick={() => handlePageChange(totalPages - 1)}
+                        sx={billingStyles.page_number}>{totalPages}</Button>}
+                </>
+            )}
+            {page > 0 && (
+                <Button
+                    onClick={(e) => handlePageChange(page + 1)}
+                    disabled={page >= totalPages - 1}
+                    sx={{
+                        minWidth: '30px',
+                        minHeight: '30px',
+                    }}
+                >
+                    <ChevronRight sx={{
+                        border: page >= totalPages - 1 ? 'none' : '1px solid rgba(235, 235, 235, 1)',
+                        borderRadius: '4px'
+                    }} />
+                </Button>
+            )}
+        </Box>
+    );
+};
 
 
 export const SettingsBilling: React.FC = () => {
@@ -141,31 +265,29 @@ export const SettingsBilling: React.FC = () => {
         }
     };
 
-    const fetchBillingHistoryData = async () => {
+    const fetchBillingHistoryData = async (page: number, rowsPerPage: number) => {
         try {
             setIsLoading(true);
-            const response = await axiosInterceptorInstance.get('/settings/billing-history');
-            const { billing_history, count, max_page } = response.data;
+            const response = await axiosInterceptorInstance.get('/settings/billing-history', {
+                params: {
+                    page: page + 1, // сервер принимает 1 как первую страницу, а пагинация в React считает с 0
+                    per_page: rowsPerPage,
+                },
+            });
+            const { billing_history, count } = response.data;
             setBillingHistory(billing_history);
-            setTotalRows(count);
-            setTotalPages(max_page);
-            const derivedRowsPerPage = Math.ceil(count / max_page);
-            const options = [10, 25, 50].filter(option => option <= count); // Defaulting to 10, 25, 50
-            setRowsPerPageOptions(options);
-
-
+            setTotalRows(count); // Устанавливаем общее количество строк
         } catch (error) {
             console.error('Error fetching data:', error);
         } finally {
             setIsLoading(false);
         }
     };
-
+    
     useEffect(() => {
         fetchCardData();
-        fetchBillingHistoryData();
-
-    }, []);
+        fetchBillingHistoryData(page, rowsPerPage);
+    }, [page, rowsPerPage]);    
 
     const formatKey = (key: string) => {
         return key.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
@@ -240,7 +362,7 @@ export const SettingsBilling: React.FC = () => {
             if (response.status === 200) {
                 switch (response.data.status) {
                     case 'SUCCESS':
-                        showToast('Delete user card successfully');
+                        showToast('Set default card successfully');
                         setCardDetails(prevCardDetails =>
                             prevCardDetails.map(card => {
                                 if (card.id === selectedCardId) {
@@ -355,7 +477,6 @@ export const SettingsBilling: React.FC = () => {
             const response = await axiosInterceptorInstance.get(`/settings/billing/download-billing?invoice_id=${invoice_id}`);
             const link = response.data;
             if (link) {
-                console.log(link)
                 const a = document.createElement('a');
                 a.href = link;
                 a.target = '_blank';
@@ -443,9 +564,9 @@ export const SettingsBilling: React.FC = () => {
 
 
     // Handler for rows per page change
-    const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-        setRowsPerPage(parseInt(event.target.value, 10));
-        setPage(0);
+    const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLSelectElement>) => {
+        const newRowsPerPage = parseInt(event.target.value, 10); // Преобразуем строку в число
+        setRowsPerPage(newRowsPerPage);
     };
 
     const handleCheckoutSuccess = (data: any) => {
@@ -454,7 +575,7 @@ export const SettingsBilling: React.FC = () => {
 
 
     const getStatusStyles = (status: string) => {
-        switch (status.toLowerCase()) {
+        switch (status?.toLowerCase()) {
             case 'successful':
                 return {
                     background: '#eaf8dd',
@@ -692,7 +813,7 @@ export const SettingsBilling: React.FC = () => {
                             <Typography className="first-sub-title">
                                 Billing Details
                             </Typography>
-                            {billingDetails.active && (
+                            {billingDetails.active ? (
                                 <Box sx={{ display: 'flex', borderRadius: '4px', background: '#eaf8dd', padding: '2px 12px', gap: '3px' }}>
                                     <Typography className="main-text" sx={{
                                         borderRadius: '4px',
@@ -701,18 +822,19 @@ export const SettingsBilling: React.FC = () => {
                                         fontWeight: '600',
                                         lineHeight: '16px'
                                     }}>Active</Typography>
-                                    <Image
-                                        src='/tick-circle-filled.svg'
-                                        alt='tick-circle-filled'
-                                        height={16}
-                                        width={16} // Adjust the size as needed
-                                    />
+                                </Box>
+                            ) : (
+                                <Box sx={{ display: 'flex', borderRadius: '4px', background: '#f8dede', padding: '2px 12px', gap: '3px' }}>
+                                    <Typography className="main-text" sx={{
+                                        borderRadius: '4px',
+                                        color: '#b00000',
+                                        fontSize: '12px',
+                                        fontWeight: '600',
+                                        lineHeight: '16px'
+                                    }}>Canceled</Typography>
                                 </Box>
                             )}
-
                         </Box>
-
-
                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                             {Object.entries(billingDetails).map(([key, value], index) => {
                                 if (key === 'overage') {
@@ -1027,7 +1149,7 @@ export const SettingsBilling: React.FC = () => {
                         </Box>
                         <LinearProgress
                             variant="determinate"
-                            value={(contactsCollected / planContactsCollected) * 100} // Adjust this calculation as needed
+                            value={Math.round((contactsCollected / planContactsCollected) * 100)}
                             sx={{
                                 height: '8px',
                                 borderRadius: '4px',
@@ -1137,9 +1259,6 @@ export const SettingsBilling: React.FC = () => {
                                     className='table-heading'
                                     sx={{
                                         ...billingStyles.tableColumn,
-                                        position: 'sticky', // Make the Name column sticky
-                                        left: 0, // Stick it to the left
-                                        zIndex: 9,
                                         background: '#fff'
                                     }}>Date</TableCell>
                                 <TableCell className='table-heading' sx={billingStyles.tableColumn}>Invoice ID</TableCell>
@@ -1176,10 +1295,12 @@ export const SettingsBilling: React.FC = () => {
 
                                         }}
                                     >
-                                        <TableCell className="sticky-cell table-data" sx={{
-                                            ...billingStyles.tableBodyColumn,
-                                            cursor: 'pointer', position: 'sticky', left: '0', zIndex: 9, backgroundColor: '#fff'
-                                        }}>{history.date}</TableCell>
+                                        <TableCell className="table-data" sx={{
+    ...billingStyles.tableBodyColumn,
+    cursor: 'pointer',
+    backgroundColor: '#fff'
+}}>{history.date}</TableCell>
+
                                         <TableCell className='table-data' sx={billingStyles.tableBodyColumn}>{history.invoice_id}</TableCell>
                                         <TableCell className='table-data' sx={billingStyles.tableBodyColumn}>
                                             {history.pricing_plan}
@@ -1225,7 +1346,7 @@ export const SettingsBilling: React.FC = () => {
                 </TableContainer>
                 {/* Pagination Component */}
                 <Box sx={{ display: 'flex', justifyContent: 'flex-end', padding: '16px' }}>
-                    <TablePagination
+                    {/* <TablePagination
                         component="div"
                         count={totalRows}
                         page={page}
@@ -1239,6 +1360,13 @@ export const SettingsBilling: React.FC = () => {
                                 fontSize: '0.875rem',
                             }
                         }}
+                    /> */}
+                    <CustomTablePagination
+                        count={totalRows}
+                        page={page}
+                        rowsPerPage={rowsPerPage}
+                        onPageChange={handleChangePage}
+                        onRowsPerPageChange={handleChangeRowsPerPage}
                     />
                 </Box>
             </Box>

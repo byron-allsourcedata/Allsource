@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Request as fastRequest, HTTPException, s
 
 from dependencies import get_plans_service, get_payments_service, get_webhook, check_user_authentication, check_user_authorization_without_pixel
 from models.users import Users
-from enums import UserAuthorizationStatus
+from schemas.subscriptions import UnsubscribeRequest
 from services.plans import PlansService
 from services.webhook import WebhookService
 from services.payments import PaymentsService
@@ -37,7 +37,7 @@ async def update_payment_confirmation(request: fastRequest, webhook_service: Web
 
 
 @router.post("/cancel-plan")
-def cancel_user_subscripion(payments_service: PaymentsService = Depends(get_payments_service), users: Users = Depends(check_user_authorization_without_pixel)):
+def cancel_user_subscripion(unsubscribe_request: UnsubscribeRequest, payments_service: PaymentsService = Depends(get_payments_service), users: Users = Depends(check_user_authorization_without_pixel)):
     if users.get('team_member'):
         team_member = users.get('team_member')
         if team_member.team_access_level != 'admin':
@@ -45,10 +45,10 @@ def cancel_user_subscripion(payments_service: PaymentsService = Depends(get_paym
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Access denied. Admins and standard only."
             )
-    return payments_service.cancel_user_subscripion(users=users)
+    return payments_service.cancel_user_subscripion(user=users, reason_unsubscribe=unsubscribe_request.reason_unsubscribe)
 
 @router.get("/upgrade-and-downgrade-user-subscription")
-def upgrade_and_downgrade_user_subscription(price_id: str, payments_service: PaymentsService = Depends(get_payments_service), users: Users = Depends(check_user_authorization_without_pixel)):
+def upgrade_and_downgrade_user_subscription(price_id: str, payments_service: PaymentsService = Depends(get_payments_service), users: Users = Depends(check_user_authentication)):
     if users.get('team_member'):
         team_member = users.get('team_member')
         if team_member.team_access_level != 'admin':
@@ -56,7 +56,7 @@ def upgrade_and_downgrade_user_subscription(price_id: str, payments_service: Pay
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Access denied. Admins and standard only."
             )
-    return payments_service.upgrade_and_downgrade_user_subscription(price_id=price_id, users=users)
+    return payments_service.upgrade_and_downgrade_user_subscription(price_id=price_id, user=users)
 
 @router.get("/buy-credits")
 def buy_credits(credits_used: int, payments_service: PaymentsService = Depends(get_payments_service), users: Users = Depends(check_user_authorization_without_pixel)):

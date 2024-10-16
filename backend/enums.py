@@ -6,7 +6,7 @@ class BaseEnum(Enum):
     FAILURE = 'FAILURE'
 
 
-class StripePaymentStatusEnum(Enum):
+class UserPaymentStatusEnum(Enum):
     COMPLETE = 'COMPLETE'
     ONGOING = 'ONGOING'
     PENDING = 'PENDING'
@@ -19,6 +19,9 @@ class SubscriptionStatus(Enum):
     CANCELED = "CANCELED"
     UNKNOWN = "UNKNOWN"
     NEED_UPGRADE_PLAN = 'NEED_UPGRADE_PLAN'
+    SUBSCRIPTION_NOT_FOUND = 'SUBSCRIPTION_NOT_FOUND'
+    SUBSCRIPTION_ALREADY_CANCELED = 'SUBSCRIPTION_ALREADY_CANCELED'
+    DOWNGRADING = 'DOWNGRADING'
     
 class SuppressionStatus(Enum):
     SUCCESS = 'SUCCESS'

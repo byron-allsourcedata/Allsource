@@ -11,7 +11,7 @@ router = APIRouter()
 
 
 @router.get("/account-details")
-def get_account_details(settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authorization_without_pixel)):
+def get_account_details(settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authentication)):
     return settings_service.get_account_details(user=user)
 
 @router.put("/account-details")
@@ -78,18 +78,18 @@ def check_team_invitations_limit(settings_service: SettingsService = Depends(get
 
 @router.get("/billing")
 def get_billing(
-    settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authorization_without_pixel)):
+    settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authentication)):
     return settings_service.get_billing(user=user)
 
 @router.get("/billing-history")
 def get_billing_history(
     page: int = Query(1, alias="page", ge=1, description="Page number"),
     per_page: int = Query(15, alias="per_page", ge=1, le=100, description="Items per page"),
-    settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authorization_without_pixel)):
+    settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authentication)):
     return settings_service.get_billing_history(page=page, per_page=per_page, user=user)
 
 @router.post("/billing/add-card")
-def add_card(payment_card: PaymentCard, settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authorization_without_pixel)):
+def add_card(payment_card: PaymentCard, settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authentication)):
     if user.get('team_member'):
         team_member = user.get('team_member')
         if team_member.get('team_access_level') not in {TeamAccessLevel.ADMIN.value, TeamAccessLevel.OWNER.value}:
@@ -100,7 +100,7 @@ def add_card(payment_card: PaymentCard, settings_service: SettingsService = Depe
     return settings_service.add_card(user=user, payment_method_id=payment_card.payment_method_id)
 
 @router.delete("/billing/delete-card")
-def delete_card(payment_card: PaymentCard, settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authorization_without_pixel)):
+def delete_card(payment_card: PaymentCard, settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authentication)):
     if user.get('team_member'):
         team_member = user.get('team_member')
         if team_member.get('team_access_level') != TeamAccessLevel.ADMIN.value or team_member.get('team_access_level') != TeamAccessLevel.OWNER.value:
@@ -111,7 +111,7 @@ def delete_card(payment_card: PaymentCard, settings_service: SettingsService = D
     return settings_service.delete_card(payment_method_id=payment_card.payment_method_id)
 
 @router.post("/billing/overage")
-def billing_overage(settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authorization_without_pixel)):
+def billing_overage(settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authentication)):
     if user.get('team_member'):
         team_member = user.get('team_member')
         if team_member.get('team_access_level') != TeamAccessLevel.ADMIN.value or team_member.get('team_access_level') != TeamAccessLevel.OWNER.value:
@@ -122,7 +122,7 @@ def billing_overage(settings_service: SettingsService = Depends(get_settings_ser
     return settings_service.billing_overage(user=user)
 
 @router.get("/billing/download-billing")
-def download_billing(invoice_id: str = Query(...), settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authorization_without_pixel)):
+def download_billing(invoice_id: str = Query(...), settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authentication)):
     if user.get('team_member'):
         team_member = user.get('team_member')
         if team_member.get('team_access_level') != TeamAccessLevel.ADMIN.value or team_member.get('team_access_level') != TeamAccessLevel.OWNER.value:
@@ -133,7 +133,7 @@ def download_billing(invoice_id: str = Query(...), settings_service: SettingsSer
     return settings_service.download_billing(invoice_id=invoice_id)
     
 @router.post("/billing/send-billing")
-def send_billing(send_billing: SendBilling, settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authorization_without_pixel)):
+def send_billing(send_billing: SendBilling, settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authentication)):
     if user.get('team_member'):
         team_member = user.get('team_member')
         if team_member.get('team_access_level') != TeamAccessLevel.ADMIN.value or team_member.get('team_access_level') != TeamAccessLevel.OWNER.value:
@@ -145,7 +145,7 @@ def send_billing(send_billing: SendBilling, settings_service: SettingsService = 
 
 
 @router.put("/billing/default-card")
-def default_card(payment_card: PaymentCard, settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authorization_without_pixel)):
+def default_card(payment_card: PaymentCard, settings_service: SettingsService = Depends(get_settings_service), user: User = Depends(check_user_authentication)):
     if user.get('team_member'):
         team_member = user.get('team_member')
         if team_member.get('team_access_level') != TeamAccessLevel.ADMIN.value or team_member.get('team_access_level') != TeamAccessLevel.OWNER.value:

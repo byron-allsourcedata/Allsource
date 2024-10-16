@@ -525,10 +525,10 @@ const SuppressionRules: React.FC = () => {
                 ? data.suppressions_multiple_emails.split(',').map((email: string) => email.trim())
                 : [];
             const ChipData = data.activate_certain_urls
-                ? data.activate_certain_urls.split(',').map((url: string) => `/${url.trim()}`)
+                ? data.activate_certain_urls.split(',').map((url: string) => `${url.trim()}`)
                 : [];
             const ChipDataParam = data.activate_based_urls
-                ? data.activate_based_urls.split(',').map((url: string) => `/${url.trim()}`)
+                ? data.activate_based_urls.split(',').map((url: string) => `${url.trim()}`)
                 : [];
             setChecked(data.is_stop_collecting_contacts)
             setCheckedUrl(data.is_url_certain_activation)

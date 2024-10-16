@@ -41,7 +41,7 @@ async def manual(pixel_installation_request: PixelInstallationRequest,
     return PixelFormResponse(status=status)
 
 @router.get("/google-tag")
-async def google_tag(user: User = Depends(check_user_authorization_without_pixel)):
+async def google_tag(user: User = Depends(check_user_authorization_without_pixel), domain = Depends(check_domain)):
     return BaseEnum.SUCCESS
 
 

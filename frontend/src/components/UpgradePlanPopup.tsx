@@ -115,7 +115,7 @@ export const UpgradePlanPopup: React.FC<Props> = ({ open, handleClose, limitName
                 '&:hover': {
                   backgroundColor: '#5052B2',
                 }
-              }} variant='contained' onClick={() => { router.push('/choose-plan') }}><Typography padding={'0.5rem 2rem'} fontSize={'0.8rem'}>Upgrade</Typography></Button>
+              }} variant='contained' onClick={() => { router.push('/settings?section=subscription') }}><Typography padding={'0.5rem 2rem'} fontSize={'0.8rem'}>Upgrade</Typography></Button>
             </Box>
           </Box>
         </Box>

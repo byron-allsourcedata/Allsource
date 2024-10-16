@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect, Suspense } from 'react';
 import { Box, Typography, Button } from '@mui/material';
-import { useRouter, useSearchParams } from 'next/navigation'; // Импорт для работы с URL
+import { useRouter, useSearchParams } from 'next/navigation';
 import { planStyles } from './settingsStyles';
 import { SettingsAccountDetails } from '@/components/SettingsAccountDetails';
 import { SettingsTeams } from '@/components/SettingsTeams';
@@ -18,9 +18,8 @@ const Settings: React.FC = () => {
     const [isLoading, setIsLoading] = useState<boolean>(true);
 
     const router = useRouter();
-    const searchParams = useSearchParams(); // Получаем query-параметры из URL
+    const searchParams = useSearchParams();
 
-    // Функция для получения данных аккаунта
     const fetchAccountDetails = async () => {
         try {
             setIsLoading(true);
@@ -34,19 +33,17 @@ const Settings: React.FC = () => {
         }
     };
 
-    // useEffect для установки активного раздела из URL-параметра
     useEffect(() => {
-        const sectionFromUrl = searchParams.get('section'); // Извлекаем параметр "section"
+        const sectionFromUrl = searchParams.get('section');
         if (sectionFromUrl) {
             setActiveSection(sectionFromUrl);
         }
         fetchAccountDetails();
     }, [searchParams]);
 
-    // Функция для изменения активного раздела и обновления URL
     const handleTabChange = (section: string) => {
         setActiveSection(section);
-        router.push(`/settings?section=${section}`); // Обновляем URL при смене таба
+        router.push(`/settings?section=${section}`);
     };
 
     if (isLoading) {
@@ -55,7 +52,7 @@ const Settings: React.FC = () => {
 
     return (
         <Box>
-            <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1, mb: 2, padding: '1.5rem 0rem 0',
+            <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1, mb: 2, padding: '1rem 0rem 0',
                 '@media (max-width: 1199px)': {
                     paddingTop: '1rem'
                 }
@@ -64,9 +61,7 @@ const Settings: React.FC = () => {
                     Settings
                 </Typography>
                 <CustomTooltip title={"The Settings menu allows you to customise your user experience, manage your account preferences, and adjust notifications."} linkText="Learn more" linkUrl="https://maximiz.ai"/>
-            </Box>
-            
-            <Box sx={{ display: 'flex', gap: 4.25, marginBottom: 3, overflowX: 'auto' }}>
+                <Box sx={{ display: 'flex', gap: 4.25, overflowX: 'auto', justifyContent: 'center', width:'86%', alignItems: 'center', }}>
                 <Button
                     className='tab-heading'
                     sx={planStyles.buttonHeading}
@@ -107,6 +102,9 @@ const Settings: React.FC = () => {
                     API Details
                 </Button> */}
             </Box>
+            </Box>
+            
+
 
             {activeSection === 'accountDetails' && (
                 <SettingsAccountDetails accountDetails={accountDetails} />

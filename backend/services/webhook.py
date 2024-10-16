@@ -13,111 +13,68 @@ class WebhookService:
     def update_subscription_confirmation(self, payload):
         stripe_request_created_timestamp = payload.get("created")
         stripe_request_created_at = datetime.fromtimestamp(stripe_request_created_timestamp, timezone.utc).replace(tzinfo=None)
-        customer_id = payload.get("data").get("object").get("customer")
+        data_object = payload.get("data").get("object")
+        customer_id = data_object.get("customer")
         user_data = self.subscription_service.get_userid_by_customer(customer_id)
         if not user_data:
             return payload
         
-        if self.subscription_service.check_duplicate_send(stripe_request_created_at, user_data.id):
+        platform_subscription_id = payload.get("data").get("object").get("id")
+        price_id = payload.get("data").get("object").get("plan").get("id")
+        
+        if self.subscription_service.check_duplicate_send(stripe_request_created_at, platform_subscription_id, price_id):
             return payload
         
         self.subscription_service.create_subscription_transaction(user_id=user_data.id,
                                                                     stripe_payload=payload)
         
-
-        status = payload.get("data").get("object").get("status")
-
-        """
-        Saving the details of payment mode
-        """
-
-        saved_details_of_payment = save_payment_details_in_stripe(customer_id=customer_id)
-        if saved_details_of_payment:
-            logger.info("saved details of payment for success")
-
-        """
-        Logic for existing or new subscription, credits and credit usage
-        """
-        self.subscription_service.update_user_payment_status(user_id=user_data.id, status=status)
-        logger.info(f"updated the payment status of user to completed {user_data.email}")
-        platform_subscription_id = payload.get("data").get("object").get("id")
-        user_subscription = self.subscription_service.get_user_subscription_by_platform_subscription_id(platform_subscription_id)
-        if user_subscription:
-            user_subscription = self.subscription_service.update_subscription_from_webhook(user_subscription=user_subscription, stripe_payload=payload)
-            return user_subscription
-        else:
-            user_subscription = self.subscription_service.create_subscription_from_webhook(user_id=user_data.id, stripe_payload=payload)
-            if user_subscription:
-                logger.info("New subscription created")
-                return self.subscription_service.construct_webhook_response(user_subscription)
+        result_status = self.subscription_service.process_subscription(user=user_data, stripe_payload=data_object)
+        if result_status == 'active':
+            saved_details_of_payment = save_payment_details_in_stripe(customer_id=customer_id)
+            if not saved_details_of_payment:
+                logger.warning("set default card false")
+        return result_status
                 
 
     def cancel_subscription_confirmation(self, payload):
         stripe_request_created_timestamp = payload.get("created")
         stripe_request_created_at = datetime.fromtimestamp(stripe_request_created_timestamp, timezone.utc).replace(tzinfo=None)
-        customer_id = payload.get("data").get("object").get("customer")
+        data_object = payload.get("data").get("object")
+        customer_id = data_object.get("customer")
         user_data = self.subscription_service.get_userid_by_customer(customer_id)
         if not user_data:
             return payload
         
-        if self.subscription_service.check_duplicate_send(stripe_request_created_at, user_data.id):
+        platform_subscription_id = payload.get("data").get("object").get("id")
+        price_id = payload.get("data").get("object").get("plan").get("id")
+        
+        if self.subscription_service.check_duplicate_send(stripe_request_created_at, platform_subscription_id, price_id):
             return payload
         
         self.subscription_service.create_subscription_transaction(user_id=user_data.id,
                                                                     stripe_payload=payload)
+    
         
-
-        status = payload.get("data").get("object").get("status")
-
-        """
-        Saving the details of payment mode
-        """
-
-        saved_details_of_payment = save_payment_details_in_stripe(customer_id=customer_id)
-        if saved_details_of_payment:
-            logger.info("saved details of payment for success")
-
-        """
-        Logic for existing or new subscription, credits and credit usage
-        """
-        self.subscription_service.update_user_payment_status(user_id=user_data.id, status=status)
-        logger.info(f"updated the payment status of user to completed {user_data.email}")
         platform_subscription_id = payload.get("data").get("object").get("id")
-        user_subscription = self.subscription_service.get_user_subscription_by_platform_subscription_id(platform_subscription_id)
-        if user_subscription:
-            user_subscription = self.subscription_service.update_subscription_from_webhook(user_subscription, stripe_payload=payload)
-            return self.subscription_service.construct_webhook_response(user_subscription)
-        else:
-            return payload
+        result_status = self.subscription_service.process_subscription(user=user_data, stripe_payload=data_object)
+        return result_status
 
     def create_payment_confirmation(self, payload):
-        stripe_request_created_timestamp = payload.get("created")
-        stripe_request_created_at = datetime.fromtimestamp(stripe_request_created_timestamp, timezone.utc).replace(tzinfo=None)
-        customer_id = payload.get("data").get("object").get("customer")
+        data_object = payload.get("data").get("object")
+        product_description = data_object.get('metadata').get('product_description')
+        if product_description != 'leads_credits' or product_description != 'prospect_credits':
+            return payload
+        customer_id = data_object.get("customer")
         user_data = self.subscription_service.get_userid_by_customer(customer_id)
         if not user_data:
             return payload
         
-        if self.subscription_service.check_duplicate_payments_send(stripe_request_created_at, user_data.id):
+        quantity = data_object.get('metadata').get('quantity')
+        
+        result_transaction = self.subscription_service.create_payments_transaction(user_id=user_data.id, stripe_payload=payload, product_description=product_description, quantity=quantity)
+        if result_transaction == False:
             return payload
         
-        
-        """
-        Saving the details of payment mode
-        """
-
-        saved_details_of_payment = save_payment_details_in_stripe(customer_id=customer_id)
-        if saved_details_of_payment:
-            logger.info("saved details of payment for success")
-
-        """
-        Logic for existing or new subscription, credits and credit usage
-        """
-        
-        self.subscription_service.create_payments_transaction(user_id=user_data.id, stripe_payload=payload)
-        
-        user_payment = self.subscription_service.create_payment_from_webhook(user_id=user_data.id, stripe_payload=payload)
-        if user_payment:
-            logger.info("New payment created")
-            return user_payment
+        user_payment = self.subscription_service.create_payment_from_webhook(user_id=user_data.id, stripe_payload=payload, product_description=product_description, quantity=quantity)
+        return user_payment
             

@@ -32,15 +32,19 @@ class PlansService:
     
     def get_additional_credits_price_id(self):
         return self.subscription_service.get_additional_credits_price_id()
+    
+    def save_reason_unsubscribe(self, reason_unsubscribe, user_id, cancel_scheduled_at):
+        self.plans_persistence.save_reason_unsubscribe(reason_unsubscribe, user_id, cancel_scheduled_at)
 
     def get_subscription_plans(self, period, user):
         stripe_plans = self.plans_persistence.get_stripe_plans(period)
         current_plan = self.plans_persistence.get_current_plan(user_id=user.get('id'))
+        user_subscription = self.plans_persistence.get_user_subscription(user_id=user.get('id'))
         response = {"stripe_plans": []}
-        plan_order = ["Basic", "Teams", "Business"]
+        plan_order = ["Starter", "Pro", "Growth"]
         stripe_plans.sort(key=lambda plan: plan_order.index(plan.title) if plan.title in plan_order else len(plan_order))
         for stripe_plan in stripe_plans:
-            is_active = current_plan.title == stripe_plan.title
+            is_active = (current_plan.title  == stripe_plan.title and user_subscription.status == 'active' and current_plan.interval == stripe_plan.interval) if current_plan and user_subscription else False
             response["stripe_plans"].append(
                 {
                     "interval": stripe_plan.interval,
@@ -54,19 +58,19 @@ class PlansService:
                     "leads_credits": stripe_plan.leads_credits,
                     "prospect_credits": stripe_plan.prospect_credits,
                     "features": stripe_plan.features,
-                    "is_active": is_active,
-                    "is_crown": stripe_plan.is_crown
+                    "is_active": is_active
                 }
             )
         return response
 
-
+    def get_subscription_by_price_id(self, price_id):
+        return self.subscription_service.get_subscription_by_price_id(price_id)
     
-    def get_subscription_id(self, user):
-        return self.subscription_service.get_subscription_id_by_user_id(user.get('id'))
+    def save_downgrade_price_id(self, price_id, subscription):
+        self.subscription_service.save_downgrade_price_id(price_id, subscription)
     
-    def get_current_price(self, user):
-        return self.plans_persistence.get_current_price(user_id=user.get('id'))
+    def get_current_price(self, user_id):
+        return self.plans_persistence.get_current_price(user_id=user_id)
     
     def get_plan_price(self, price_id):
         return self.plans_persistence.get_plan_price(price_id=price_id)

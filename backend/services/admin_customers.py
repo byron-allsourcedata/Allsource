@@ -8,10 +8,12 @@ from sqlalchemy.orm import Session
 from config.stripe import StripeConfig
 from models.plans import SubscriptionPlan
 from models.subscriptions import UserSubscriptions
-from models.users import Users, User
+from models.users import Users
 from persistence.plans_persistence import PlansPersistence
+from services.users_auth import UsersAuth
 from persistence.user_persistence import UserPersistence
 from services.subscriptions import SubscriptionService
+from enums import UserAuthorizationStatus
 
 logger = logging.getLogger(__name__)
 
@@ -19,23 +21,42 @@ logger = logging.getLogger(__name__)
 class AdminCustomersService:
 
     def __init__(self, db: Session, subscription_service: SubscriptionService, user_persistence: UserPersistence,
-                 plans_persistence: PlansPersistence):
+                 plans_persistence: PlansPersistence, users_auth_service: UsersAuth):
         self.db = db
         self.subscription_service = subscription_service
         self.user_persistence = user_persistence
         self.plans_presistence = plans_persistence
+        self.users_auth_service = users_auth_service
 
     def get_users(self):
         users_object = self.user_persistence.get_users()
         result = []
         for user in users_object:
+            payment_status = self.users_auth_service.get_user_authorization_status_without_pixel(user)
+            if payment_status == UserAuthorizationStatus.SUCCESS:
+                user_plan = self.db.query(
+                    UserSubscriptions.is_trial,
+                    UserSubscriptions.plan_end
+                ).filter(
+                    UserSubscriptions.user_id == user.get('id'),
+                    UserSubscriptions.status.in_(('active', 'canceled'))
+                ).order_by(
+                    UserSubscriptions.status,
+                    UserSubscriptions.plan_end.desc()
+                ).first()
+                if user_plan:
+                    if user_plan.is_trial:
+                        payment_status = 'TRIAL_ACTIVE'
+                    else:
+                        payment_status = 'SUBSCRIPTION_ACTIVE'
+                
             result.append({
-                "id": user.id,
-                "email": user.email,
-                "full_name": user.full_name,
-                "created_at": user.created_at,
-                'payment_status': user.payment_status,
-                "is_trial": self.plans_presistence.get_trial_status_by_user_id(user.id)
+                "id": user.get('id'),
+                "email": user.get('email'),
+                "full_name": user.get('full_name'),
+                "created_at": user.get('created_at'),
+                'payment_status': payment_status,
+                "is_trial": self.plans_presistence.get_trial_status_by_user_id(user.get('id'))
             })
         return result
 
@@ -95,7 +116,6 @@ class AdminCustomersService:
     def confirmation_customer(self, email, free_trial=None):
         user_data = self.get_user_by_email(email)
         if free_trial:
-            self.subscription_service.update_user_payment_status(user_id=user_data.id, status='active')
             self.subscription_service.create_subscription_from_free_trial(user_id=user_data.id)
         else:
             self.subscription_service.remove_trial(user_data.id)
@@ -113,7 +133,7 @@ class AdminCustomersService:
                 synchronize_session=False,
             )
         )
-        self.db.query(User).filter(User.id == user_id).update({User.activate_steps_percent: 90},
+        self.db.query(Users).filter(Users.id == user_id).update({Users.activate_steps_percent: 90},
                                                               synchronize_session=False)
         self.db.commit()
 

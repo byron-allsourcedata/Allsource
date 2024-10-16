@@ -10,7 +10,11 @@ import { showToast } from './ToastNotification';
 import CustomizedProgressBar from './CustomizedProgressBar';
 
 
-const Slider: React.FC = () => {
+interface SliderProps {
+  setShowSliders?: (value: boolean) => void;
+}
+
+const Slider: React.FC<SliderProps> = ({ setShowSliders }) => {
   const [prefillData, setPrefillData] = useState<{ email: '', name: '' } | null>(null);
   const [isPrefillLoaded, setIsPrefillLoaded] = useState(false);
   const [fullName, setFullName] = useState<string | null>(null);
@@ -95,6 +99,9 @@ const Slider: React.FC = () => {
   const handleClose = () => {
     sessionStorage.setItem('is_slider_opened', 'false');
     setShowSlider(false);
+    if (setShowSliders) {
+      setShowSliders(false);
+    }
   };
 
   useEffect(() => {

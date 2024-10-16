@@ -120,7 +120,7 @@ const CustomTablePagination: React.FC<CustomTablePaginationProps> = ({
                                 border: page === pageNumber ? '1px solid rgba(80, 82, 178, 1)' : 'none',
                                 color: page === pageNumber ? 'rgba(80, 82, 178, 1)' : 'rgba(122, 122, 122, 1)',
                                 minWidth: '30px',
-                                ':hover': {backgroundColor: '#fff'},
+                                ':hover': { backgroundColor: '#fff' },
                                 minHeight: '30px',
                                 padding: 0
                             }}
@@ -801,7 +801,7 @@ const Leads: React.FC = () => {
         if (text === 'viewed_product') {
             return "View Product"
         }
-        if (text === 'abandoned_cart') {
+        if (text === 'product_added_to_cart') {
             return "Abandoned cart"
         }
         if (text === 'converted_sales') {
@@ -1034,9 +1034,9 @@ const Leads: React.FC = () => {
                             <Typography className='first-sub-title'>
                                 Resolved Contacts ({count_leads})
                             </Typography>
-                            <CustomToolTip title={ status === 'PIXEL_INSTALLATION_NEEDED'
-                                    ? 'Pixel installation is required.'
-                                    : 'Contacts automatically sync across devices and platforms.'
+                            <CustomToolTip title={status === 'PIXEL_INSTALLATION_NEEDED'
+                                ? 'Pixel installation is required.'
+                                : 'Contacts automatically sync across devices and platforms.'
                             } />
                         </Box>
                         <Box sx={{
@@ -1186,7 +1186,7 @@ const Leads: React.FC = () => {
                             </Button>
                         </Box>
                     </Box>
-                    <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, mt: 2, overflowX: 'scroll' }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, mt: 2 }}>
                         {selectedFilters.length > 0 && (
                             <Chip
                                 label="Clear all"

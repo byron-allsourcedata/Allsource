@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-
+from sqlalchemy import case
 from models.plans import SubscriptionPlan
 from models.subscriptions import UserSubscriptions
 from models.users import User
@@ -11,6 +11,13 @@ class PlansPersistence:
 
     def get_stripe_plans(self, period):
         return self.db.query(SubscriptionPlan).filter(SubscriptionPlan.is_active == True, SubscriptionPlan.interval == period).all()
+    
+    def save_reason_unsubscribe(self, reason_unsubscribe, user_id, cancel_scheduled_at):
+        subscription = self.get_user_subscription(user_id)
+        subscription.cancellation_reason = reason_unsubscribe
+        subscription.cancel_scheduled_at = cancel_scheduled_at
+        self.db.commit()
+        
 
     def get_trial_status_by_user_id(self, user_id: int):
         subscription = self.db.query(UserSubscriptions).filter(UserSubscriptions.user_id == user_id).first()
@@ -18,8 +25,8 @@ class PlansPersistence:
             return subscription.is_trial
         return None
 
-    def get_plan_by_title(self, title: str):
-        plan = self.db.query(SubscriptionPlan).filter(SubscriptionPlan.title == title).first()
+    def get_plan_by_title(self, title: str, interval:str):
+        plan = self.db.query(SubscriptionPlan).filter(SubscriptionPlan.title == title, SubscriptionPlan.interval == interval).first()
         if plan:
             return plan.id
         else:
@@ -49,10 +56,10 @@ class PlansPersistence:
         return price
 
     def get_user_subscription(self, user_id):
-        return self.db.query(UserSubscriptions).filter(
-            UserSubscriptions.user_id == user_id
-        ).order_by(
-            UserSubscriptions.id.desc()
+        return self.db.query(
+            UserSubscriptions
+        ).join(User, User.current_subscription_id == UserSubscriptions.id).filter(
+            User.id == user_id
         ).first()
     
     def get_plan_price(self, price_id):
@@ -62,12 +69,14 @@ class PlansPersistence:
 
     def get_current_plan(self, user_id):
         subscription_plan = self.db.query(SubscriptionPlan).join(
-            UserSubscriptions,
-            UserSubscriptions.plan_id == SubscriptionPlan.id
+        UserSubscriptions,
+        UserSubscriptions.plan_id == SubscriptionPlan.id
         ).filter(
-            UserSubscriptions.user_id == user_id
+            UserSubscriptions.user_id == user_id,
+            UserSubscriptions.status.in_(('active', 'canceled'))
         ).order_by(
-            UserSubscriptions.id.desc()
+            UserSubscriptions.status,
+            UserSubscriptions.plan_end.desc()
         ).first()
         return subscription_plan
 

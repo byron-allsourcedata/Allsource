@@ -1,4 +1,4 @@
-from sqlalchemy import Column, event, Integer, BOOLEAN, ForeignKey, TIMESTAMP, VARCHAR, TEXT
+from sqlalchemy import Column, event, Integer, BOOLEAN, TIMESTAMP, TEXT
 from .base import Base, create_timestamps
 
 

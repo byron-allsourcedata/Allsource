@@ -15,6 +15,19 @@ def create_customer(user: UserSignUpForm):
     customer_id = customer.get("id")
     return customer_id
 
+def get_default_payment_method(customer_id):
+    customer = stripe.Customer.retrieve(customer_id)
+    default_payment_method_id = customer.invoice_settings.get('default_payment_method')
+    return default_payment_method_id
+
+def renew_subscription(new_price_id, customer_id):
+    new_subscription = stripe.Subscription.create(
+        customer=customer_id,
+        items=[{"price": new_price_id}],
+    )
+
+    return new_subscription
+
 
 def create_customer_google(user: dict):
     customer = stripe.Customer.create(
@@ -107,10 +120,6 @@ def get_billing_by_invoice_id(invoice_id):
             'message': 'An unexpected error occurred: ' + str(e)
         }
 
-
-    
-    
-        
 def detach_card_from_customer(payment_method_id):
     try:
         stripe.PaymentMethod.detach(payment_method_id)
@@ -146,6 +155,31 @@ def determine_plan_name_from_product_id(product_id):
     product = stripe.Product.retrieve(product_id)
     return product.name
 
+def cancel_subscription_at_period_end(subscription_id):
+    subscription = stripe.Subscription.retrieve(subscription_id)
+    
+    if not subscription['schedule']:
+        return stripe.Subscription.modify(
+        subscription_id,
+        cancel_at_period_end=True
+    )
+    
+    subscription_schedule_id = subscription['schedule']
+    subscription_schedule = stripe.SubscriptionSchedule.retrieve(subscription_schedule_id)
+    return stripe.SubscriptionSchedule.modify(
+        subscription_schedule_id,
+        phases=[
+            {
+                'items': [{
+                    'price': subscription_schedule['phases'][0]['items'][0]['price'],
+                    'quantity': subscription_schedule['phases'][0]['items'][0]['quantity'],
+                }],
+                'start_date': subscription_schedule['phases'][0]['start_date'],
+                'end_date': subscription_schedule['phases'][0]['end_date'],
+            }
+        ],
+        end_behavior='cancel'
+    )
 
 def save_payment_details_in_stripe(customer_id):
     try:
@@ -179,7 +213,13 @@ def get_billing_details_by_userid(customer_id):
     else:
         return None
 
-def purchase_product(customer_id, price_id, quantity):
+def get_product_from_price_id(price_id):
+    price = stripe.Price.retrieve(price_id)
+    product = stripe.Product.retrieve(price.product)
+    return product.name
+
+
+def purchase_product(customer_id, price_id, quantity, product_description):
     result = {
         'success': False
     }
@@ -202,11 +242,16 @@ def purchase_product(customer_id, price_id, quantity):
             automatic_payment_methods={
                 'enabled': True,
                 'allow_redirects': 'never'
-            }
+            },
+            metadata={
+                'product_description': product_description,
+                'quantity': quantity
+            },
+            description=f"Purchase of {quantity} x {product_description}"
         )
-
         if payment_intent.status == 'succeeded':
             result['success'] = True
+            result['stripe_payload'] = payment_intent
             return result
         else:
             result['error'] = (f"Unknown payment status: {payment_intent.status}")
@@ -240,18 +285,26 @@ def get_billing_history_by_userid(customer_id, page, per_page):
     import math
     starting_after = fetch_last_id_of_previous_page(customer_id, per_page, page) if page > 1 else None
     
-    billing_history = stripe.Invoice.list(
+    billing_history_invoices = stripe.Invoice.list(
         customer=customer_id,
         limit=per_page,
         starting_after=starting_after
     )
     
-    if hasattr(billing_history, 'has_more'):
-        has_more = billing_history.has_more
-        count = billing_history.data and len(billing_history.data) or 0
-        max_page = math.ceil(count / per_page) if per_page else 1
-    else:
-        count = len(billing_history.data)
-        max_page = 1
+    billing_history_charges = stripe.Charge.list(
+        customer=customer_id,
+        limit=per_page,
+        starting_after=starting_after
+    )
     
-    return billing_history.data, count, max_page
+    non_subscription_charges = [
+        charge for charge in billing_history_charges.data if charge.invoice is None
+    ]
+
+    billing_history = billing_history_invoices.data + non_subscription_charges
+
+    count = len(billing_history)
+    max_page = math.ceil(count / per_page) if per_page else 1
+    has_more = billing_history_invoices.has_more or (billing_history_charges.has_more and len(non_subscription_charges) < per_page)
+    
+    return billing_history, count, max_page, has_more

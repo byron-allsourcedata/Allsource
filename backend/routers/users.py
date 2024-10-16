@@ -17,13 +17,9 @@ router = APIRouter()
 @router.get("/me")
 def get_me(user_service: UsersService = Depends(get_users_service)):
     plan = user_service.get_info_plan()
-
-    if user_service.user.get('is_book_call_passed'):
-        plan["is_trial"] = True
-
     return {
         "user_info": user_service.get_my_info(),
-        "user_plan": plan,
+        "user_plan": plan
     }
 
 

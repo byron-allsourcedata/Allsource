@@ -120,7 +120,7 @@ export const planStyles: { [key: string]: SxProps<Theme> } = {
   },
   buttonHeading: {
         textTransform: 'none',
-        padding: '0 0 10px 0',
+        padding: '0 0 4px 0',
         minWidth: 'auto',
         boxShadow: 'none',
         borderRadius: 0,
@@ -139,7 +139,7 @@ export const planStyles: { [key: string]: SxProps<Theme> } = {
         '&.MuiButton-contained': {
             color: '#5052b2',
             background: 'transparent',
-            borderBottom: '2px solid #5052b2',
+            borderBottom: '1.4px solid #5052b2',
             fontWeight: '700',
             '&:hover': {
               boxShadow: 'none'
