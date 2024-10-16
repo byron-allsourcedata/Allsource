@@ -192,7 +192,7 @@ class SubscriptionService:
             is_trial=True
         )
         self.db.add(add_subscription_obj)
-
+        self.db.flush()
         self.db.query(User).filter(User.id == user_id).update({User.activate_steps_percent: 50,
                                                                User.leads_credits: leads_credits,
                                                                User.prospect_credits: prospect_credits,
