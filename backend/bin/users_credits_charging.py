@@ -83,39 +83,38 @@ async def main():
     logging.info("Started")
     db_session = None
     rabbitmq_connection = None
-    purchase_product('cus_QsA7qlEfPA5BE8', 'price_1Q0ixsFEBCN0ZvcKDNZBkdCZ', 52, 'leads_credits')
-    # try:
-    #     rabbitmq_connection = RabbitMQConnection()
-    #     connection = await rabbitmq_connection.connect()
-    #     channel = await connection.channel()
-    #     await channel.set_qos(prefetch_count=1)
-    #     queue = await channel.declare_queue(
-    #         name=QUEUE_CREDITS_CHARGING,
-    #         durable=True,
-    #         arguments={
-    #             'x-consumer-timeout': 3600000,
-    #         }
-    #     )
+    try:
+        rabbitmq_connection = RabbitMQConnection()
+        connection = await rabbitmq_connection.connect()
+        channel = await connection.channel()
+        await channel.set_qos(prefetch_count=1)
+        queue = await channel.declare_queue(
+            name=QUEUE_CREDITS_CHARGING,
+            durable=True,
+            arguments={
+                'x-consumer-timeout': 3600000,
+            }
+        )
 
-    #     engine = create_engine(
-    #         f"postgresql://{os.getenv('DB_USERNAME')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}"
-    #     )
-    #     Session = sessionmaker(bind=engine)
-    #     db_session = Session()
-    #     await queue.consume(
-    #         functools.partial(on_message_received, session=db_session)
-    #     )
-    #     await asyncio.Future()
-    # except Exception as err:
-    #     logging.error('Unhandled Exception:', exc_info=True)
-    # finally:
-    #     if db_session:
-    #         logging.info("Closing the database session...")
-    #         db_session.close()
-    #     if rabbitmq_connection:
-    #         logging.info("Closing RabbitMQ connection...")
-    #         await rabbitmq_connection.close()
-    #     logging.info("Shutting down...")
+        engine = create_engine(
+            f"postgresql://{os.getenv('DB_USERNAME')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}"
+        )
+        Session = sessionmaker(bind=engine)
+        db_session = Session()
+        await queue.consume(
+            functools.partial(on_message_received, session=db_session)
+        )
+        await asyncio.Future()
+    except Exception as err:
+        logging.error('Unhandled Exception:', exc_info=True)
+    finally:
+        if db_session:
+            logging.info("Closing the database session...")
+            db_session.close()
+        if rabbitmq_connection:
+            logging.info("Closing RabbitMQ connection...")
+            await rabbitmq_connection.close()
+        logging.info("Shutting down...")
 
 
 if __name__ == "__main__":
