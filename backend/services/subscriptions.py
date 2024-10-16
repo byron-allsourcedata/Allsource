@@ -245,7 +245,16 @@ class SubscriptionService:
             
         if status == 'active':
             user_subscription = self.db.query(UserSubscriptions).where(UserSubscriptions.platform_subscription_id == platform_subscription_id, UserSubscriptions.price_id == price_id).first()          
-            if not user_subscription:
+            if user_subscription is not None and user_subscription.status == 'active':
+                user_subscription.plan_start = start_date
+                user_subscription.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
+                user_subscription.plan_end = end_date
+                if canceled_at:
+                    user_subscription.cancel_scheduled_at = datetime.fromtimestamp(canceled_at, timezone.utc).replace(tzinfo=None)
+                if start_date > user_subscription.plan_start:
+                    user.leads_credits = leads_credits if user.leads_credits >= 0 else  leads_credits - user.leads_credits
+                    user.prospect_credits = prospect_credits
+            else:
                 plan_type = determine_plan_name_from_product_id(stripe_payload.get("plan").get("product"))
                 interval = stripe_payload.get("plan").get("interval")
                 plan_id = self.plans_persistence.get_plan_by_title(plan_type, interval)
@@ -271,15 +280,6 @@ class SubscriptionService:
                 user.leads_credits = leads_credits if user.leads_credits >= 0 else  leads_credits - user.leads_credits
                 user.prospect_credits = prospect_credits
                 user.current_subscription_id = new_subscription.id
-            else:
-                user_subscription.plan_start = start_date
-                user_subscription.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
-                user_subscription.plan_end = end_date
-                if canceled_at:
-                    user_subscription.cancel_scheduled_at = datetime.fromtimestamp(canceled_at, timezone.utc).replace(tzinfo=None)
-                if start_date > user_subscription.plan_start:
-                    user.leads_credits = leads_credits if user.leads_credits >= 0 else  leads_credits - user.leads_credits
-                    user.prospect_credits = prospect_credits
             self.db.commit()
                 
         if status == "canceled" or status == 'inactive':
