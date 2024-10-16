@@ -44,16 +44,6 @@ class SubscriptionService:
                 if stripe_request_created_at <= subscription_datetime.replace(tzinfo=None):
                     return True
         return False
-    
-    def check_duplicate_payments_send(self, stripe_request_created_at, user_id):
-        user_payment_transaction = self.db.query(UsersPaymentsTransactions).filter(
-                UsersPaymentsTransactions.user_id == user_id
-            ).order_by(UsersPaymentsTransactions.id.desc()).first()
-        if user_payment_transaction:
-            if user_payment_transaction.stripe_request_created_at is not None:
-                if stripe_request_created_at <= user_payment_transaction.stripe_request_created_at:
-                    return True
-        return False
 
     def is_user_have_subscription(self, user_id):
         return self.db.query(SubscriptionPlan).filter(SubscriptionPlan.user_id == user_id).limit(1).scalar()
@@ -95,25 +85,28 @@ class SubscriptionService:
         return False
 
     
-    def create_payments_transaction(self, user_id, stripe_payload):
-        created_timestamp = stripe_payload.get("created")
+    def create_payments_transaction(self, user_id, stripe_payload, product_description, quantity):
         payment_intent = stripe_payload.get("data", {}).get("object", {})
         transaction_id = payment_intent.get("id")
-        created_at = datetime.fromtimestamp(created_timestamp, timezone.utc).replace(tzinfo=None) if created_timestamp else None
-        amount_credits = int(payment_intent.get("amount")) / 100 / PRICE_CREDIT
-        status = payment_intent.get("status")
-        if status == 'succeeded':
-            payment_transaction_obj = UsersPaymentsTransactions(
-                user_id=user_id,
-                transaction_id=transaction_id,
-                created_at = datetime.now(timezone.utc).replace(tzinfo=None),
-                stripe_request_created_at = created_at,
-                status=status,
-                amount_credits=amount_credits,
-                type='buy_credits'
-            )
-            self.db.add(payment_transaction_obj)
-            self.db.commit()
+        users_payments_transactions = self.db.query(UsersPaymentsTransactions).filter(UsersPaymentsTransactions.transaction_id == transaction_id).first()
+        if not users_payments_transactions:
+            created_timestamp = stripe_payload.get("created")
+            created_at = datetime.fromtimestamp(created_timestamp, timezone.utc).replace(tzinfo=None) if created_timestamp else None
+            status = payment_intent.get("status")
+            if status == 'succeeded':
+                payment_transaction_obj = UsersPaymentsTransactions(
+                    user_id=user_id,
+                    transaction_id=transaction_id,
+                    created_at = datetime.now(timezone.utc).replace(tzinfo=None),
+                    stripe_request_created_at = created_at,
+                    status=status,
+                    amount_credits=quantity,
+                    type=product_description
+                )
+                self.db.add(payment_transaction_obj)
+                self.db.commit()
+            return True
+        return False
         
     def create_subscription_transaction(self, user_id, stripe_payload: dict):
         start_date_timestamp = stripe_payload.get("data").get("object").get("current_period_start")
@@ -152,16 +145,23 @@ class SubscriptionService:
         self.db.flush()
         return subscription_transaction_obj
     
-    def create_payment_from_webhook(self, user_id, stripe_payload):
+    def create_payment_from_webhook(self, user_id, stripe_payload, product_description, quantity):
         payment_intent = stripe_payload.get("data", {}).get("object", {})
-        amount_credits = int(payment_intent.get("amount")) / 100 / PRICE_CREDIT
+        amount_credits = quantity
         status = payment_intent.get("status")
         if status == "succeeded":
-            user = self.db.query(User).filter(User.id == user_id).first()
-            if user.prospect_credits is None:
-                user.prospect_credits = 0
-            user.prospect_credits += amount_credits
-            self.db.commit()
+            if product_description == 'leads_credits':
+                user = self.db.query(User).filter(User.id == user_id).first()
+                if user.leads_credits is None:
+                    user.leads_credits = 0
+                user.leads_credits += int(amount_credits)
+                self.db.commit()
+            elif product_description == 'prospect_credits':
+                user = self.db.query(User).filter(User.id == user_id).first()
+                if user.prospect_credits is None:
+                    user.prospect_credits = 0
+                user.prospect_credits += int(amount_credits)
+                self.db.commit()
         return stripe_payload
     
     def get_user_payment_by_transaction_id(self, transaction_id):

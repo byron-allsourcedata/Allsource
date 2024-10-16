@@ -25,7 +25,9 @@ from config.rmq_connection import RabbitMQConnection
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import sessionmaker
 from models.users import Users
+from datetime import datetime, timezone
 from models.five_x_five_users import FiveXFiveUser
+from models.users_payments_transactions import UsersPaymentsTransactions
 from services.stripe_service import purchase_product
 from dotenv import load_dotenv
 
@@ -34,6 +36,7 @@ logging.basicConfig(level=logging.INFO)
 
 QUEUE_CREDITS_CHARGING = 'credits_charging'
 CREDITS = 'Additional_prospect_credits'
+PRICE_CREDIT = 0.49
 
 async def on_message_received(message, session):
     try:
@@ -41,13 +44,31 @@ async def on_message_received(message, session):
         customer_id = message_json['customer_id']
         credits = abs(message_json['credits'])
         stripe_price_id = session.query(SubscriptionPlan.stripe_price_id).filter(SubscriptionPlan.title == CREDITS).scalar()
-        result = purchase_product(customer_id, stripe_price_id, credits)
+        result = purchase_product(customer_id, stripe_price_id, credits, 'leads_credits')
         if result['success']:
-            session.query(Users).filter(Users.customer_id == customer_id).update(
-                {Users.leads_credits: Users.leads_credits + credits},
-                synchronize_session=False
-            )
-            session.commit()
+            stripe_payload = result['stripe_payload']
+            transaction_id = stripe_payload.get("id")
+            users_payments_transactions = session.query(UsersPaymentsTransactions).filter(UsersPaymentsTransactions.transaction_id == transaction_id)
+            if not users_payments_transactions:
+                created_timestamp = stripe_payload.get("created")
+                created_at = datetime.fromtimestamp(created_timestamp, timezone.utc).replace(tzinfo=None) if created_timestamp else None
+                amount_credits = int(stripe_payload.get("amount")) / 100 / PRICE_CREDIT
+                status = stripe_payload.get("status")
+                if status == 'succeeded':
+                    user = session.query(Users).filter(Users.customer_id == customer_id).first()
+                    payment_transaction_obj = UsersPaymentsTransactions(
+                        user_id=user.id,
+                        transaction_id=transaction_id,
+                        created_at = datetime.now(timezone.utc).replace(tzinfo=None),
+                        stripe_request_created_at = created_at,
+                        status=status,
+                        amount_credits=amount_credits,
+                        type='leads_credits'
+                    )
+                    session.add(payment_transaction_obj)
+                    session.flush()
+                    user.leads_credits += credits
+                    session.commit()
         else:
             logging.error(f"excepted message. {result['error']}", exc_info=True)
         await message.ack()
