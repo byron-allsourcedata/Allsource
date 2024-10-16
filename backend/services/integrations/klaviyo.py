@@ -250,7 +250,7 @@ class KlaviyoIntegrationsService:
             else:
                 leads = self.leads_persistence.get_leads_domain(domain.id, behavior_type=leads_type)
             for data_sync_item in data_syncs_list if not sync else [sync]:
-                if lead.behavior_type != data_sync_item.leads_type or data_sync_item.leads_type in ('allContacts', None):
+                if lead and lead.behavior_type != data_sync_item.leads_type or data_sync_item.leads_type in ('allContacts', None):
                     return
                 if data_sync_item.data_map:
                     data_map = data_sync_item.data_map
@@ -310,19 +310,18 @@ class KlaviyoIntegrationsService:
             }
         }
         json_data['data']['attributes'] = {k: v for k, v in json_data['data']['attributes'].items() if v is not None}
-        logging.debug("JSON data to send: %s", json.dumps(json_data, indent=2))
-        logging.info(json_data)
-        response = self.__handle_request(
-            method='POST',
-            url='https://a.klaviyo.com/api/profiles/',
-            api_key=api_key,
-            json=json_data
-        )
+        try:
+            response = self.__handle_request(
+                method='POST',
+                url='https://a.klaviyo.com/api/profiles/',
+                api_key=api_key,
+                json=json_data
+            )
 
-        if response.status_code != 201:
-            logging.error("Error response: %s", response.text)
-            return None 
-
+            if response.status_code != 201:
+                logging.error("Error response: %s", response.text)
+                return None 
+        except: return None
         return response.json().get('data')
 
     def __add_profile_to_list(self, list_id: str, profile_id: str, api_key: str):

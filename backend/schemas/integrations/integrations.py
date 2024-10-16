@@ -13,7 +13,7 @@ class WoocommerceCredentials(BaseModel):
     consumer_secret: str
 
 
-class KlaviyoOrSandlaneCredentials(BaseModel):
+class ApiKeyCredentials(BaseModel):
     api_key: str 
 
 
@@ -36,10 +36,11 @@ class IntegrationCredentials(BaseModel):
     shopify: Optional[ShopifyOrBigcommerceCredentials] = None
     woocommerce: Optional[WoocommerceCredentials] = None
     bigcommerce: Optional[ShopifyOrBigcommerceCredentials] = None
-    klaviyo: Optional[KlaviyoOrSandlaneCredentials] = None
+    klaviyo: Optional[ApiKeyCredentials] = None
     mailchimp: Optional[MailchimpCredentials] = None
     meta: Optional[MetaCredentials] = None
-    sendlane: Optional[KlaviyoOrSandlaneCredentials] = None
+    sendlane: Optional[ApiKeyCredentials] = None
+    omnisend: Optional[ApiKeyCredentials] = None
     pixel_install: bool = False
     supperssion: bool = False
 

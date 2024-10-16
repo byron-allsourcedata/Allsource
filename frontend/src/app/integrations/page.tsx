@@ -30,6 +30,7 @@ import PixelInstallation from "@/components/PixelInstallation";
 import VerifyPixelIntegration from "@/components/VerifyPixelIntegration";
 import DataSyncList from "@/components/DataSyncList";
 import BCommerceConnect from "@/components/Bcommerce";
+import OmnisendConnect from "@/components/Omnisend";
 
 interface IntegrationBoxProps {
     image: string;
@@ -626,7 +627,9 @@ const UserIntegrationsList = ({ integrationsCredentials, changeTab = () => { }, 
     const [openMetaConnect, setOpenMetaConnect] = useState(false)
     const [openShopifyConnect, setOpenShopifyConnect] = useState(false)
     const [openBigcommrceConnect, setOpenBigcommerceConnect] = useState(false)
-    
+    const [openOmnisendConnect, setOpenOmnisendConnect] = useState(false)
+
+
     const handleActive = (service: string) => {
         setActiveService(service);
     };
@@ -636,6 +639,7 @@ const UserIntegrationsList = ({ integrationsCredentials, changeTab = () => { }, 
         setOpenMetaConnect(false)
         setOpenShopifyConnect(false)
         setOpenBigcommerceConnect(false)
+        setOpenOmnisendConnect(false)
     }
 
     const handleOnSave = () => {
@@ -682,6 +686,16 @@ const UserIntegrationsList = ({ integrationsCredentials, changeTab = () => { }, 
                         service_name="Bigcommerce"
                         active={activeService === 'Bigcommerce'}
                         handleClick={() => setOpenBigcommerceConnect(true)}
+                    />
+                </Box>
+            )}
+            {integrationsCredentials.some(integration => integration.service_name === "Omnisend") && (
+                <Box onClick={() => handleActive('Omnisend')}>
+                    <IntegrationBox
+                        image="/omnisend_icon_black.svg"
+                        service_name="Omnisend"
+                        active={activeService === 'Omnisend'}
+                        handleClick={() => setOpenOmnisendConnect(true)}
                     />
                 </Box>
             )}
@@ -736,6 +750,7 @@ const UserIntegrationsList = ({ integrationsCredentials, changeTab = () => { }, 
             initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'BigCommerce')?.access_token}
             initHashDomain={integrationsCredentials?.find(integration => integration.service_name === 'BigCommerce')?.shop_domain}
         />
+        <OmnisendConnect open={openOmnisendConnect} handleClose={handleClose} onSave={handleOnSave} />
         <AlivbleIntagrationsSlider 
             isContactSync={false} 
             open={openAvalible} 
@@ -757,6 +772,7 @@ const IntegrationsAvailable = ({ integrationsCredentials: integrations }: Integr
     const [openKlaviyoConnect, setOpenKlaviyoConnect] = useState(false)
     const [openShopifyConnect, setOpenShopifyConnect] = useState(false)
     const [openBigcommrceConnect, setOpenBigcommerceConnect] = useState(false)
+    const [openOmnisendConnect, setOpenOmnisendConnect] = useState(false)
 
     const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
         setSearch(event.target.value);
@@ -766,7 +782,8 @@ const IntegrationsAvailable = ({ integrationsCredentials: integrations }: Integr
         { image: 'shopify-icon.svg', service_name: 'Shopify' },
         { image: 'klaviyo.svg', service_name: 'Klaviyo' },
         { image: 'meta-icon.svg', service_name: 'Meta' },
-        { image: 'bigcommerce-icon.svg', service_name: 'BigCommerce' }
+        { image: 'bigcommerce-icon.svg', service_name: 'BigCommerce' },
+        { image: 'omnisend_icon_black.svg', service_name: 'Omnisend'}
     ];
 
     const filteredIntegrations = integrationsAvailable.filter(
@@ -780,6 +797,7 @@ const IntegrationsAvailable = ({ integrationsCredentials: integrations }: Integr
         setOpenKlaviyoConnect(false)
         setOpenShopifyConnect(false)
         setOpenBigcommerceConnect(false)
+        setOpenOmnisendConnect(false)
     }
 
     const handleOnSave = () => {}
@@ -815,6 +833,8 @@ const IntegrationsAvailable = ({ integrationsCredentials: integrations }: Integr
                           setOpenShopifyConnect(true)
                         } else if(integrationAvailable.service_name === 'BigCommerce') {
                           setOpenBigcommerceConnect(true)
+                        } else if(integrationAvailable.service_name === 'Omnisend') {
+                          setOpenOmnisendConnect(true)
                         }
                     }}>
                         <IntegrationBox
@@ -832,7 +852,7 @@ const IntegrationsAvailable = ({ integrationsCredentials: integrations }: Integr
             />
             <ShopifySettings open={openShopifyConnect} handleClose={handleClose} onSave={handleOnSave}/>
             <BCommerceConnect open={openBigcommrceConnect} handleClose={handleClose} />
-             
+            <OmnisendConnect open={openOmnisendConnect} handleClose={handleClose} onSave={handleOnSave} />
         </Box>
     );
 };

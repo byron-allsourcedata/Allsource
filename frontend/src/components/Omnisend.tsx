@@ -9,9 +9,9 @@ import CustomizedProgressBar from "./CustomizedProgressBar";
 import CloseIcon from '@mui/icons-material/Close';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 
-interface CreateKlaviyoProps {
+interface CreateOmnisendProps {
     handleClose: () => void
-    onSave: (integration: IntegrationsCredentials) => void 
+    onSave: (new_integration: any) => void
     open: boolean
     initApiKey?: string 
 }
@@ -83,7 +83,7 @@ const klaviyoStyles = {
       },
 }
 
-const KlaviyoIntegrationPopup = ({ handleClose, open, onSave, initApiKey}: CreateKlaviyoProps) => {
+const OmnisendConnect = ({ handleClose, open, onSave, initApiKey}: CreateOmnisendProps) => {
     const [apiKey, setApiKey] = useState('');
     const [apiKeyError, setApiKeyError] = useState(false);
     const [loading, setLoading] = useState(false)
@@ -158,10 +158,10 @@ const KlaviyoIntegrationPopup = ({ handleClose, open, onSave, initApiKey}: Creat
 
     const handleApiKeySave = async() => {
         const response = await axiosInstance.post('/integrations/', {
-            klaviyo: {
+            omnisend: {
                 api_key: apiKey
             }
-        }, {params: {service_name: 'klaviyo'}})
+        }, {params: {service_name: 'omnisend'}})
         if(response.status === 200) {
             handleNextTab()
         }
@@ -193,15 +193,7 @@ const KlaviyoIntegrationPopup = ({ handleClose, open, onSave, initApiKey}: Creat
     };
 
     const handleSave = async() => {
-        onSave({
-            id: -1,
-            service_name: 'Klaviyo',
-            data_center: '',
-            access_token: apiKey,
-            is_with_suppression: checked,
-            ad_account_id: '',
-            shop_domain: ''
-        })
+        onSave({id: '123'})
         handleClose()
     }
 
@@ -290,7 +282,7 @@ const KlaviyoIntegrationPopup = ({ handleClose, open, onSave, initApiKey}: Creat
         >
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 3.5, px: 2, borderBottom: '1px solid #e4e4e4' }}>
                 <Typography variant="h6" sx={{ textAlign: 'center', color: '#202124', fontFamily: 'Nunito Sans', fontWeight: '600', fontSize: '16px', lineHeight: 'normal' }}>
-                    Connect to Klaviyo
+                    Connect to Omnisend
                 </Typography>
                 <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
                     <Link href="#" sx={{
@@ -331,7 +323,7 @@ const KlaviyoIntegrationPopup = ({ handleClose, open, onSave, initApiKey}: Creat
                     <TabPanel value="1" sx={{p: 0}}>
                         <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)' }}>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <Image src='/klaviyo.svg' alt='klaviyo' height={26} width={32} />
+                                <Image src='/omnisend_icon_black.svg' alt='klaviyo' height={26} width={32} />
                                 <Typography variant="h6" sx={{
                                     fontFamily: 'Nunito Sans',
                                     fontSize: '16px',
@@ -557,4 +549,4 @@ const KlaviyoIntegrationPopup = ({ handleClose, open, onSave, initApiKey}: Creat
     );
 }
 
-export default KlaviyoIntegrationPopup;
+export default OmnisendConnect;

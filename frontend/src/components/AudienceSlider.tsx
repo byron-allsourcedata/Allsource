@@ -10,9 +10,12 @@ import SearchIcon from '@mui/icons-material/Search';
 import ConnectKlaviyo from './ConnectKlaviyo';
 import ConnectMeta from './ConnectMeta';
 import { fetchUserData } from '@/services/meService';
-import CreateKlaviyoSync from './KlaviyoIntegrationPopup';
+import KlaviyoIntegrationPopup from './KlaviyoIntegrationPopup';
 import MetaConnectButton from './MetaConnectButton';
 import AlivbleIntagrationsSlider from './AvalibleIntegrationsSlider';
+import BCommerceConnect from './Bcommerce';
+import OmnisendConnect from './Omnisend';
+import OnmisendDataSync from './OmnisendDataSync';
 
 interface AudiencePopupProps {
     open: boolean;
@@ -58,6 +61,10 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
     const [createKlaviyo, setCreateKlaviyo] = useState<boolean>(false)
     const [integrations, setIntegrations] = useState<Integrations[]>([])
     const [metaConnectApp, setMetaConnectApp] = useState(false)
+    const [openBigcommrceConnect, setOpenBigcommerceConnect] = useState(false)
+    const [openOmnisendConnect, setOpenOmnisendConnect] = useState(false)
+    const [omnisendIconPopupOpen, setOpenOmnisendIconPopupOpen] = useState(false)
+
 
     const fetchListItems = async () => {
         try {
@@ -105,6 +112,12 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
             setIsFormOpen(false);
         }
     };
+
+    const handleOmnisendIconPopupOpenClose = () => {
+        setOpenOmnisendConnect(false)
+        setOpenOmnisendIconPopupOpen(false)
+        onClose()
+    }
 
     const toggleFormVisibility = () => {
         setIsFormOpen(!isFormOpen);
@@ -182,8 +195,13 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
         setKlaviyoIconPopupOpen(true);
     };
 
+    const handleOmnisendIconPopupOpen = () => {
+        setOpenOmnisendIconPopupOpen(true);
+    };
+
     const handleKlaviyoIconPopupClose = () => {
         setKlaviyoIconPopupOpen(false);
+        setOpenOmnisendConnect(false)
         setPlusIconPopupOpen(false)
         onClose()
     };
@@ -203,7 +221,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
         setIsExportDisabled(false); // Enable export button when an integration is selected
       };
 
-      const handleSaveSettingsKlaviyo = (newIntegrations: IntegrationsCredentials) => {
+      const handleSaveSettings = (newIntegrations: IntegrationsCredentials) => {
         setIntegrationsCredentials(prevIntegrations => [
             ...prevIntegrations, 
             newIntegrations
@@ -375,6 +393,41 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                         </ListItemButton>
                                     </ListItem>
                                 )}
+                                {integrationsCredentials.some(integration => integration.service_name === 'Omnisend') && (
+                                    <ListItem sx={{
+                                        p: 0,
+                                        borderRadius: '4px',
+                                        border: selectedIntegration === 'Omnisend' ? '1px solid #5052B2' : '1px solid #e4e4e4',
+                                        width: 'auto',
+                                        '@media (max-width:600px)': {
+                                            flexBasis: 'calc(50% - 8px)',
+                                        },
+                                    }}>
+                                        <ListItemButton onClick={handleOmnisendIconPopupOpen} sx={{
+                                            p: 0,
+                                            flexDirection: 'column',
+                                            px: 3,
+                                            py: 1.5,
+                                            width: '102px',
+                                            height: '72px',
+                                            justifyContent: 'center',
+                                            backgroundColor: selectedIntegration === 'Omnisend' ? 'rgba(80, 82, 178, 0.10)' : 'transparent',
+                                        }}>
+                                            <ListItemIcon sx={{ minWidth: 'auto' }}>
+                                                <Image src="/omnisend_icon_black.svg" alt="Omnisend" height={26} width={32} />
+                                            </ListItemIcon>
+                                            <ListItemText primary="Omnisend" primaryTypographyProps={{
+                                                sx: {
+                                                    fontFamily: "Nunito Sans",
+                                                    fontSize: "14px",
+                                                    color: "#4a4a4a",
+                                                    fontWeight: "500",
+                                                    lineHeight: "20px",
+                                                },
+                                            }} />
+                                        </ListItemButton>
+                                    </ListItem>
+                                )}
                                 
                                 <ListItem sx={{
                                     p: 0,
@@ -439,9 +492,16 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
             
             <ConnectKlaviyo data = {null} open={klaviyoIconPopupOpen} onClose={handleKlaviyoIconPopupClose}/>
             <ConnectMeta data = {null} open={metaIconPopupOpen} onClose={handleMetaIconPopupClose} />
-            <CreateKlaviyoSync open={createKlaviyo} handleClose={() => setCreateKlaviyo(false)} onSave={handleSaveSettingsKlaviyo} />
+            <OnmisendDataSync open={omnisendIconPopupOpen} onClose={handleOmnisendIconPopupOpenClose} />
+            <KlaviyoIntegrationPopup open={createKlaviyo} handleClose={() => setCreateKlaviyo(false)} onSave={handleSaveSettings} />
             <MetaConnectButton open={metaConnectApp} onClose={handleCloseMetaConnectApp}/>
-        
+            <BCommerceConnect 
+                    open={openBigcommrceConnect} 
+                    handleClose={() => setOpenBigcommerceConnect(false)}
+                    initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'BigCommerce')?.access_token}
+                    initHashDomain={integrationsCredentials?.find(integration => integration.service_name === 'BigCommerce')?.shop_domain}
+                />
+            <OmnisendConnect open={openOmnisendConnect} handleClose={() => setOpenOmnisendConnect(false)} onSave={handleSaveSettings} />
         </>
     );
 };

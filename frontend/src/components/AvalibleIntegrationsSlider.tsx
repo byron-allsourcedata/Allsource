@@ -6,6 +6,8 @@ import { useState } from "react"
 import SearchIcon from '@mui/icons-material/Search';
 import CloseIcon from '@mui/icons-material/Close';
 import ShopifySettings from "./ShopifySettings"
+import BCommerceConnect from "./Bcommerce"
+import OmnisendConnect from "./Omnisend"
 
 
 interface AvailableIntegrationsSliderProps {
@@ -20,10 +22,15 @@ const AlivbleIntagrationsSlider = ({open, isContactSync = false, integrations, i
     const [openMetaConnect, setOpenMetaConnect] = useState(false)
     const [openKlaviyoConnect, setOpenKlaviyoConnect] = useState(false)
     const [openShopifuConnect, setOpenShopifyConnect] = useState(false)
+    const [openBigcommrceConnect, setOpenBigcommerceConnect] = useState(false)
+    const [openOmnisendConnect, setOpenOmnisendConnect] = useState(false)
+
     const handleClose = () => {
         setOpenMetaConnect(false)
         setOpenKlaviyoConnect(false)
         setOpenShopifyConnect(false)
+        setOpenBigcommerceConnect(false)
+        setOpenOmnisendConnect(false)
     }
 
     const handleSave = () => {}
@@ -262,6 +269,56 @@ const AlivbleIntagrationsSlider = ({open, isContactSync = false, integrations, i
                                         }}  />
                                     </ListItemButton>
                                 </ListItem> )}
+                                {integrations.some(integration => integration.service_name === 'Omnisend') && (
+                                    !integrationsCredentials.some(integration => integration.service_name === 'Omnisend') )&&(
+                                <ListItem sx={{p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',
+                                    '@media (max-width:600px)': {
+                                        flexBasis: 'calc(50% - 8px)'
+                                    }
+                                }}>
+                                    <ListItemButton onClick={() => setOpenOmnisendConnect(true)} sx={{p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center'}}>
+                                        <ListItemIcon sx={{minWidth: 'auto'}}>
+                                            <Image src="/omnisend_icon_black.svg" alt="Omnisend" height={26} width={32} />
+                                        </ListItemIcon>
+                                        <ListItemText primary="Omnisend" primaryTypographyProps={{
+                                            sx: {
+                                                fontFamily: "Nunito Sans",
+                                                fontSize: "14px",
+                                                color: "#4a4a4a",
+                                                fontWeight: "500",
+                                                lineHeight: "20px"
+                                            }
+                                        }}  />
+                                    </ListItemButton>
+                                </ListItem> )}
+                                {integrations.some(integration => integration.service_name === 'BigCommerce') &&
+                                    !integrationsCredentials.some(integration =>  
+                                        integration.service_name === 'Shopify' || 
+                                        integration.service_name === 'BigCommerce' ||
+                                        integration.service_name === 'WordPress'
+                                    ) && 
+                                    !isContactSync && (
+                                    <ListItem sx={{p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',
+                                        '@media (max-width:600px)': {
+                                            flexBasis: 'calc(50% - 8px)'
+                                        }
+                                    }}>
+                                        <ListItemButton sx={{p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center'}}>
+                                        <ListItemIcon sx={{minWidth: 'auto'}}>    
+                                            <Image src="/bigcommerce-icon.svg" alt="BigCommerce" height={24} width={24} />
+                                        </ListItemIcon>
+                                        <ListItemText primary="BCommerce" primaryTypographyProps={{
+                                                sx: {
+                                                    fontFamily: "Nunito Sans",
+                                                    fontSize: "14px",
+                                                    color: "#4a4a4a",
+                                                    fontWeight: "500",
+                                                    lineHeight: "20px"
+                                                }
+                                            }} />
+                                        </ListItemButton>
+                                    </ListItem>
+                                )}
                             </List>
                         </Box>
                     </Box>
@@ -270,6 +327,11 @@ const AlivbleIntagrationsSlider = ({open, isContactSync = false, integrations, i
         <MetaConnectButton open={openMetaConnect} onClose={handleClose}/>
         <KlaviyoIntegrationPopup open={openKlaviyoConnect} handleClose={handleClose} onSave={handleSave}/>
         <ShopifySettings open={openShopifuConnect} handleClose={handleClose} onSave={handleSave} />
+        <BCommerceConnect 
+                    open={openBigcommrceConnect} 
+                    handleClose={() => setOpenBigcommerceConnect(false)}
+                />
+        <OmnisendConnect open={openOmnisendConnect} handleClose={() => setOpenOmnisendConnect(false)} onSave={() => { }} />
         </>
     )
 }

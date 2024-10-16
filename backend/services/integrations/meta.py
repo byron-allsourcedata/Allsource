@@ -38,8 +38,6 @@ class MetaIntegrationsService:
     def __handle_request(self, method: str, url: str, headers: dict = None, json: dict = None, data: dict = None, params: dict = None, api_key: str = None):
         if not headers:
             headers = {
-                'Authorization': f'Klaviyo-API-Key {api_key}',
-                'revision': '2024-07-15',
                 'accept': 'application/json', 
                 'content-type': 'application/json'
             }
