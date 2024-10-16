@@ -18,7 +18,6 @@ class UserSubscriptions(Base):
     status = Column(VARCHAR(32), default="inactive", nullable=True)
     platform_subscription_id = Column(VARCHAR, nullable=True)
     plan_id = Column(BIGINT, nullable=True)
-    stripe_request_created_at = Column(TIMESTAMP, nullable=True)
     is_trial = Column(BOOLEAN, nullable=True, default=False)
     domains_limit = Column(Integer, nullable=True)
     users_limit = Column(Integer, nullable=True)
@@ -28,6 +27,7 @@ class UserSubscriptions(Base):
     downgrade_price_id = Column(VARCHAR, nullable=True)
     cancellation_reason = Column(TEXT, nullable=True)
     price_id = Column(VARCHAR, nullable=True)
+    cancel_scheduled_at = Column(TIMESTAMP(precision=7), nullable=True)
 
 
 Subscription = UserSubscriptions

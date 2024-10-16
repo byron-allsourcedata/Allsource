@@ -66,7 +66,7 @@ async def create_integration(creditional: IntegrationCredentials, service_name: 
         service = getattr(service, service_name.lower())
         if not service:
             raise HTTPException(status_code=404, detail=f'Service {service_name} not found') 
-        service.add_integration(creditional, domain.id)
+        service.add_integration(user=user, credentials=creditional, domain=domain)
         return {'message': 'Successfuly'}
     
 

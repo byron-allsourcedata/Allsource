@@ -71,8 +71,6 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
         }
         const daysDifference = Math.ceil((timeDifference - 3600000) / (1000 * 60 * 60 * 24));
 
-        // Update the state with the calculated days difference
-        console.log('s1')
         setDaysDifference(daysDifference);
       }
 

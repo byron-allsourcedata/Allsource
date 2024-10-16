@@ -360,7 +360,7 @@ export const SettingsBilling: React.FC = () => {
             if (response.status === 200) {
                 switch (response.data.status) {
                     case 'SUCCESS':
-                        showToast('Delete user card successfully');
+                        showToast('Set default card successfully');
                         setCardDetails(prevCardDetails =>
                             prevCardDetails.map(card => {
                                 if (card.id === selectedCardId) {
@@ -475,7 +475,6 @@ export const SettingsBilling: React.FC = () => {
             const response = await axiosInterceptorInstance.get(`/settings/billing/download-billing?invoice_id=${invoice_id}`);
             const link = response.data;
             if (link) {
-                console.log(link)
                 const a = document.createElement('a');
                 a.href = link;
                 a.target = '_blank';
