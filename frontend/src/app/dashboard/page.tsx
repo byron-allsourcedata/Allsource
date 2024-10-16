@@ -24,7 +24,7 @@ import DashboardRevenue from "@/components/DashboardRevenue";
 import DashboardContact from "@/components/DashboardContact";
 import CustomTooltip from "@/components/customToolTip";
 import { DateRangeIcon } from "@mui/x-date-pickers/icons";
-import CalendarPopup from "@/components/CalendarPopup";
+import CalendarPopup from "@/components/CustomCalendar";
 
 
 

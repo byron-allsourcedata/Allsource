@@ -150,7 +150,7 @@ const Signup: React.FC = () => {
           switch (responseData.status) {
             case "NEED_CHOOSE_PLAN":
               get_me()
-              router.push('/choose-plan');
+              router.push('/settings?section=subscription');
               break;
             case "EMAIL_ALREADY_EXISTS":
               showErrorToast('Email is associated with an account. Please login');
@@ -268,7 +268,7 @@ const Signup: React.FC = () => {
                     break;
                   case 'NEED_CHOOSE_PLAN':
                     get_me()
-                    router.push('/choose-plan');
+                    router.push('/settings?section=subscription');
                     break;
                   case 'FILL_COMPANY_DETAILS':
                     get_me()

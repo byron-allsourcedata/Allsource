@@ -11,7 +11,6 @@ import FeaturedPlayListIcon from '@mui/icons-material/FeaturedPlayList';
 import AccountBoxIcon from '@mui/icons-material/AccountBox';
 import SettingsIcon from '@mui/icons-material/Settings';
 import Image from 'next/image';
-import { useSlider } from '@/context/SliderContext';
 import { AxiosError } from 'axios';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 
@@ -25,6 +24,7 @@ const sidebarStyles = {
         backgroundColor: 'rgba(255, 255, 255, 1)',
         borderRight: '1px solid rgba(228, 228, 228, 1)',
         height: '92vh',
+        maxWidth: '146px',
         display: 'flex',
         overflow: 'hidden',
         flexDirection: 'column',
