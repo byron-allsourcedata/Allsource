@@ -4,7 +4,8 @@ import os
 from enums import UpdatePasswordStatus
 from persistence.user_persistence import UserPersistence
 from models.users import Users
-from schemas.users import UpdatePassword, CalendlyUUID
+from persistence.plans_persistence import PlansPersistence
+from schemas.users import UpdatePassword
 from services.jwt_service import get_password_hash
 import requests
 from dotenv import load_dotenv
@@ -14,9 +15,10 @@ load_dotenv()
 
 
 class UsersService:
-    def __init__(self, user, user_persistence_service: UserPersistence):
+    def __init__(self, user, user_persistence_service: UserPersistence, plan_persistence: PlansPersistence):
         self.user = user
         self.user_persistence_service = user_persistence_service
+        self.plan_persistence = plan_persistence
 
     def update_password(self, update_data: UpdatePassword):
         if update_data.password != update_data.confirm_password:
@@ -31,7 +33,15 @@ class UsersService:
             return {
                 'is_trial_pending': True
             }
-        return self.user_persistence_service.get_user_plan(self.user.get('id'))
+        user_plan = self.plan_persistence.get_user_subscription(self.user.get('id'))
+        if user_plan:
+            return {
+                "is_trial": user_plan.is_trial,
+                "plan_end": user_plan.plan_end,
+            }
+        return {
+            "is_trial_pending": True
+        }
 
     def get_my_info(self):
         if self.user.get('team_member'):

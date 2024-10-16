@@ -3,6 +3,7 @@ import stripe
 from typing import List
 from config.stripe import StripeConfig
 from services.plans import PlansService
+from persistence.plans_persistence import PlansPersistence
 from .stripe_service import renew_subscription, get_default_payment_method, purchase_product, cancel_subscription_at_period_end
 from enums import SubscriptionStatus
 from datetime import datetime
@@ -13,8 +14,9 @@ logger = logging.getLogger(__name__)
 
 class PaymentsService:
 
-    def __init__(self, plans_service: PlansService):
+    def __init__(self, plans_service: PlansService, plan_persistence: PlansPersistence):
         self.plans_service = plans_service
+        self.plan_persistence = plan_persistence
 
     def get_additional_credits_price_id(self):
         return self.plans_service.get_additional_credits_price_id()
@@ -36,21 +38,22 @@ class PaymentsService:
         return self.plans_service.get_user_subscription_authorization_status()
     
     def cancel_user_subscripion(self, user, reason_unsubscribe):
-        subscription = self.plans_service.get_subscription(user)
+        subscription = self.plan_persistence.get_user_subscription(user_id=user.get('id'))
         if not subscription:
             return SubscriptionStatus.SUBSCRIPTION_NOT_FOUND
         if subscription.status == 'canceled':
             return SubscriptionStatus.SUBSCRIPTION_ALREADY_CANCELED
         subscription_data = cancel_subscription_at_period_end(subscription.platform_subscription_id)
         if subscription_data['status'] == 'active':
-            cancel_scheduled_at = datetime.fromtimestamp(subscription_data.get('cancel_at'))
+            cancel_at = subscription_data.get('canceled_at')
+            cancel_scheduled_at = datetime.fromtimestamp(cancel_at)
             self.plans_service.save_reason_unsubscribe(reason_unsubscribe, user.get('id'), cancel_scheduled_at)
             return SubscriptionStatus.SUCCESS
         else:
             return SubscriptionStatus.UNKNOWN
     
     def upgrade_and_downgrade_user_subscription(self, price_id: str, user) -> str:
-        subscription = self.plans_service.get_subscription(user)
+        subscription = self.plan_persistence.get_user_subscription(user_id=user.get('id'))
         if subscription is None:
             return {'status': SubscriptionStatus.INCOMPLETE}
         platform_subscription_id = subscription.platform_subscription_id
@@ -84,7 +87,7 @@ class PaymentsService:
                     },
                 ],
             )
-            self.plans_service.save_downgrade_price_id(price_id, platform_subscription_id)
+            self.plans_service.save_downgrade_price_id(price_id, subscription)
             return {'status': self.get_subscription_status(schedule_downgrade_subscription)}
         else:
             upgrade_subscription = stripe.Subscription.modify(
@@ -109,7 +112,6 @@ class PaymentsService:
         return price_id1 - price_id2
 
     def get_subscription_status(self, subscription) -> str:
-        #subscription = stripe.Subscription.retrieve(subscription_id)
         status = subscription['status']
         if status == 'active':
             return SubscriptionStatus.SUCCESS

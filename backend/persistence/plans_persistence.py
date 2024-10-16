@@ -13,7 +13,7 @@ class PlansPersistence:
         return self.db.query(SubscriptionPlan).filter(SubscriptionPlan.is_active == True, SubscriptionPlan.interval == period).all()
     
     def save_reason_unsubscribe(self, reason_unsubscribe, user_id, cancel_scheduled_at):
-        subscription = self.db.query(UserSubscriptions).filter(UserSubscriptions.user_id == user_id).first()
+        subscription = self.get_user_subscription(user_id)
         subscription.cancellation_reason = reason_unsubscribe
         subscription.cancel_scheduled_at = cancel_scheduled_at
         self.db.commit()
@@ -56,10 +56,10 @@ class PlansPersistence:
         return price
 
     def get_user_subscription(self, user_id):
-        return self.db.query(UserSubscriptions).filter(
-            UserSubscriptions.user_id == user_id
-        ).order_by(
-            UserSubscriptions.id.desc()
+        return self.db.query(
+            UserSubscriptions
+        ).join(User, User.current_subscription_id == UserSubscriptions.id).filter(
+            User.id == user_id
         ).first()
     
     def get_plan_price(self, price_id):
