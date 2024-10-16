@@ -29,6 +29,7 @@ import ShopifySettings from "@/components/ShopifySettings";
 import PixelInstallation from "@/components/PixelInstallation";
 import VerifyPixelIntegration from "@/components/VerifyPixelIntegration";
 import DataSyncList from "@/components/DataSyncList";
+import BCommerceConnect from "@/components/Bcommerce";
 
 interface IntegrationBoxProps {
     image: string;
@@ -85,8 +86,8 @@ const IntegrationBox = ({ image, handleClick, service_name, active, is_avalible 
                 position: 'relative',
                 display: 'flex',
                 borderRadius: '4px',
-                width: '7rem',
-                height: '7rem',
+                width: '8rem',
+                height: '8rem',
                 justifyContent: 'center',
                 alignItems: 'center',
                 transition: '0.2s',
@@ -95,9 +96,24 @@ const IntegrationBox = ({ image, handleClick, service_name, active, is_avalible 
                 },
                 '&:hover .edit-icon': {
                     opacity: 1
-                }
+                },
             }}>
+              
                 {!is_avalible && (
+                  <>
+                  <Box onClick={handleClick} sx={{
+                position: 'absolute',
+                top: '5%',
+                left: '5%',  
+                transition: 'opacity 0.2s',
+                cursor: 'pointer',
+                display: 'flex',
+                background: '#EAF8DD',
+                height: '2rem',
+                p: 1,
+                borderRadius: '0.5rem'
+              }}><Typography fontSize={'0.8rem'} fontFamily={'Nunito Sans'} color={'#2B5B00'} fontWeight={600}>Integrated</Typography></Box>
+                  
                     <Box className="edit-icon" onClick={handleClick} sx={{
                         position: 'absolute',
                         top: '5%',
@@ -122,6 +138,7 @@ const IntegrationBox = ({ image, handleClick, service_name, active, is_avalible 
                             alt={'edit'}
                         />
                     </Box>
+                    </>
                 )}
                 <Image src={image} width={32} height={32} alt={service_name} />
             </Box>
@@ -138,8 +155,8 @@ const IntegrationAdd = () => (
             border: '1px dashed #5052B2',
             display: 'flex',
             borderRadius: '4px',
-            width: '7rem',
-            height: '7rem',
+            width: '8rem',
+            height: '8rem',
             justifyContent: 'center',
             alignItems: 'center',
             transition: '0.2s',
@@ -608,6 +625,8 @@ const UserIntegrationsList = ({ integrationsCredentials, changeTab = () => { }, 
     const [openKlaviyoConnect, setOpenKlaviyoConnect] = useState(false)
     const [openMetaConnect, setOpenMetaConnect] = useState(false)
     const [openShopifyConnect, setOpenShopifyConnect] = useState(false)
+    const [openBigcommrceConnect, setOpenBigcommerceConnect] = useState(false)
+    
     const handleActive = (service: string) => {
         setActiveService(service);
     };
@@ -616,6 +635,7 @@ const UserIntegrationsList = ({ integrationsCredentials, changeTab = () => { }, 
         setOpenKlaviyoConnect(false)
         setOpenMetaConnect(false)
         setOpenShopifyConnect(false)
+        setOpenBigcommerceConnect(false)
     }
 
     const handleOnSave = () => {
@@ -652,6 +672,16 @@ const UserIntegrationsList = ({ integrationsCredentials, changeTab = () => { }, 
                         service_name="Meta"
                         active={activeService === 'Meta'}
                         handleClick={() => setOpenMetaConnect(true)}
+                    />
+                </Box>
+            )}
+            {integrationsCredentials.some(integration => integration.service_name === "BigCommerce") && (
+                <Box onClick={() => handleActive('Bigcommerce')}>
+                    <IntegrationBox
+                        image="/bigcommerce-icon.svg"
+                        service_name="Bigcommerce"
+                        active={activeService === 'Bigcommerce'}
+                        handleClick={() => setOpenBigcommerceConnect(true)}
                     />
                 </Box>
             )}
@@ -700,6 +730,12 @@ const UserIntegrationsList = ({ integrationsCredentials, changeTab = () => { }, 
             onSave={handleOnSave}  
             initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'Shopify')?.access_token}
         />
+        <BCommerceConnect 
+            open={openBigcommrceConnect} 
+            handleClose={handleClose}
+            initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'BigCommerce')?.access_token}
+            initHashDomain={integrationsCredentials?.find(integration => integration.service_name === 'BigCommerce')?.shop_domain}
+        />
         <AlivbleIntagrationsSlider 
             isContactSync={false} 
             open={openAvalible} 
@@ -720,6 +756,8 @@ const IntegrationsAvailable = ({ integrationsCredentials: integrations }: Integr
     const [openMetaConnect, setOpenMetaConnect] = useState(false)
     const [openKlaviyoConnect, setOpenKlaviyoConnect] = useState(false)
     const [openShopifyConnect, setOpenShopifyConnect] = useState(false)
+    const [openBigcommrceConnect, setOpenBigcommerceConnect] = useState(false)
+
     const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
         setSearch(event.target.value);
     };
@@ -728,6 +766,7 @@ const IntegrationsAvailable = ({ integrationsCredentials: integrations }: Integr
         { image: 'shopify-icon.svg', service_name: 'Shopify' },
         { image: 'klaviyo.svg', service_name: 'Klaviyo' },
         { image: 'meta-icon.svg', service_name: 'Meta' },
+        { image: 'bigcommerce-icon.svg', service_name: 'BigCommerce' }
     ];
 
     const filteredIntegrations = integrationsAvailable.filter(
@@ -740,6 +779,7 @@ const IntegrationsAvailable = ({ integrationsCredentials: integrations }: Integr
         setOpenMetaConnect(false)
         setOpenKlaviyoConnect(false)
         setOpenShopifyConnect(false)
+        setOpenBigcommerceConnect(false)
     }
 
     const handleOnSave = () => {}
@@ -773,6 +813,8 @@ const IntegrationsAvailable = ({ integrationsCredentials: integrations }: Integr
                           setOpenKlaviyoConnect(true);
                         } else if(integrationAvailable.service_name === 'Shopify') {
                           setOpenShopifyConnect(true)
+                        } else if(integrationAvailable.service_name === 'BigCommerce') {
+                          setOpenBigcommerceConnect(true)
                         }
                     }}>
                         <IntegrationBox
@@ -789,6 +831,8 @@ const IntegrationsAvailable = ({ integrationsCredentials: integrations }: Integr
                 onClose={handleClose} 
             />
             <ShopifySettings open={openShopifyConnect} handleClose={handleClose} onSave={handleOnSave}/>
+            <BCommerceConnect open={openBigcommrceConnect} handleClose={handleClose} />
+             
         </Box>
     );
 };
@@ -1318,7 +1362,7 @@ const Integrations = () => {
                 }
             } catch (error) {
                 if (error instanceof AxiosError && error.response?.status === 403) {
-                    const status = error.response.data.detail.status;
+                    const status = error.response.data.status;
                     if (status === 'NEED_BOOK_CALL') {
                         sessionStorage.setItem('is_slider_opened', 'true');
                         setShowSlider(true);
@@ -1333,7 +1377,7 @@ const Integrations = () => {
             }
         };
         fetchData();
-    }, []);
+    }, [value]);
     
 
     const changeTab = (value: string) => {

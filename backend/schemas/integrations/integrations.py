@@ -92,3 +92,10 @@ class ContactFiled(Enum):
     email = 'email'
     phone_number = 'phone_number'
 
+class OrderAPI(BaseModel):
+    platform_order_id: Optional[int] = None
+    platform_user_id: Optional[str] = None
+    platform_created_at: Optional[str] = None
+    total_price: Optional[float] = None
+    email: Optional[EmailStr] = None
+    currency_code: Optional[str] = None

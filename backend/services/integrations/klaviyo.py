@@ -26,7 +26,7 @@ class KlaviyoIntegrationsService:
         self.client = httpx.Client()
 
     def __handle_request(self, method: str, url: str, headers: dict = None, json: dict = None, data: dict = None, params: dict = None, api_key: str = None):
-        
+         
         if not headers:
             headers = {
                 'Authorization': f'Klaviyo-API-Key {api_key}',
@@ -153,12 +153,12 @@ class KlaviyoIntegrationsService:
         return self.__mapped_list(response.json().get('data'))
 
 
-    def add_integration(self, credentials: IntegrationCredentials, domain_id: int):
+    def add_integration(self, credentials: IntegrationCredentials, domain, user):
         try:
             self.__get_list(credentials.klaviyo.api_key)
         except:
             raise HTTPException(status_code=400, detail=IntegrationsStatus.CREDENTAILS_INVALID.value)
-        self.__save_integrations(credentials.klaviyo.api_key, domain_id)
+        self.__save_integrations(credentials.klaviyo.api_key, domain.id)
         return {
             'status': IntegrationsStatus.SUCCESS.value
         }
@@ -226,7 +226,10 @@ class KlaviyoIntegrationsService:
     
 
     def process_data_sync(self, message):
-        sync = IntegrationUserSync(**message.get('sync'))
+        sync = None
+        try:
+            sync = IntegrationUserSync(**message.get('sync'))
+        except: pass
         leads_type = message.get('leads_type')
         domain_id = message.get('domain_id')
         lead = LeadUser(**message.get('lead')) if message.get('lead') else None
@@ -247,10 +250,13 @@ class KlaviyoIntegrationsService:
             else:
                 leads = self.leads_persistence.get_leads_domain(domain.id, behavior_type=leads_type)
             for data_sync_item in data_syncs_list if not sync else [sync]:
+                if lead.behavior_type != data_sync_item.leads_type or data_sync_item.leads_type in ('allContacts', None):
+                    return
                 if data_sync_item.data_map:
                     data_map = data_sync_item.data_map
                 else: data_map = None
                 for lead in leads:
+                    
                     profile = self.__create_profile(lead.five_x_five_user_id, credentials.access_token, data_map)
                     if profile:
                         self.__add_profile_to_list(data_sync_item.list_id, profile.get('id'), credentials.access_token)
@@ -281,7 +287,9 @@ class KlaviyoIntegrationsService:
 
     def __create_profile(self, lead_id: int, api_key: str, data_map):
         lead_data = self.leads_persistence.get_lead_data(lead_id)
-        profile = self.__mapped_klaviyo_profile(lead_data)
+        try:
+            profile = self.__mapped_klaviyo_profile(lead_data)
+        except: return
         if data_map:
             properties = self.__map_properties(lead_data, data_map)
         else:
@@ -370,7 +378,6 @@ class KlaviyoIntegrationsService:
             "region": getattr(lead, 'personal_state') or getattr(lead, 'company_state', None),
             "zip": getattr(lead, 'personal_zip') or getattr(lead, 'company_zip', None),
         }
-
         return KlaviyoProfile(
             email=first_email,
             phone_number=first_phone,

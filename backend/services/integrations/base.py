@@ -65,9 +65,11 @@ class IntegrationService:
                                                  self.lead_orders_persistence,
                                                  self.integrations_user_sync_persistence,
                                                  self.client, self.aws_service, self.db)
-        # self.bigcommerce = BigcommerceIntegrationsService(self.integration_persistence, 
-        #                                                   self.lead_persistence, 
-        #                                                   self.client)
+        self.bigcommerce = BigcommerceIntegrationsService(self.integration_persistence, 
+                                                          self.lead_persistence, 
+                                                          self.lead_orders_persistence,
+                                                          self.aws_service
+                                                          )
         self.klaviyo = KlaviyoIntegrationsService(self.domain_persistence, 
                                                 self.integration_persistence,  
                                                 self.lead_persistence,
