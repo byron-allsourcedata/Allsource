@@ -156,6 +156,13 @@ def determine_plan_name_from_product_id(product_id):
     return product.name
 
 
+def cancel_subscription_at_period_end(subscription_id):
+    return stripe.Subscription.modify(
+        subscription_id,
+        cancel_at_period_end=True
+    )
+
+
 def save_payment_details_in_stripe(customer_id):
     try:
         payment_method_id = (

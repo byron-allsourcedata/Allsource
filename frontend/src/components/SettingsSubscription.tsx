@@ -150,7 +150,7 @@ export const SettingsSubscription: React.FC = () => {
         const fetchData = async () => {
             try {
                 setIsLoading(true);
-                const period = tabValue === 0 ? 'monthly' : 'yearly';
+                const period = tabValue === 0 ? 'month' : 'year';
                 const response = await axiosInterceptorInstance.get(`/subscriptions/stripe-plans?period=${period}`);
                 setPlans(response.data.stripe_plans);
                 const activePlan = response.data.stripe_plans.find((plan: any) => plan.is_active) !== undefined
@@ -193,7 +193,7 @@ export const SettingsSubscription: React.FC = () => {
                     showToast('Subscription was successful!');
                     try {
                         setIsLoading(true);
-                        const period = tabValue === 0 ? 'monthly' : 'yearly';
+                        const period = tabValue === 0 ? 'month' : 'year';
                         await new Promise(resolve => setTimeout(resolve, 3000));
                         const response = await axiosInterceptorInstance.get(`/subscriptions/stripe-plans?period=${period}`);
                         setPlans(response.data.stripe_plans);
@@ -224,8 +224,8 @@ export const SettingsSubscription: React.FC = () => {
 
     // Filter plans based on the selected tab
     const filteredPlans = plans.filter(plan =>
-        (tabValue === 0 && plan.interval === 'monthly') ||
-        (tabValue === 1 && plan.interval === 'yearly')
+        (tabValue === 0 && plan.interval === 'month') ||
+        (tabValue === 1 && plan.interval === 'year')
     );
 
     const activePlan = filteredPlans.find((plan) => plan.is_active);

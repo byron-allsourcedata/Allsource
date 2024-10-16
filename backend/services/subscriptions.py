@@ -85,18 +85,17 @@ class SubscriptionService:
         return response
 
     def is_user_has_active_subscription(self, user_id):
-        user_plan = self.db.query(UserSubscriptions.plan_end).filter(
-            UserSubscriptions.user_id == user_id,
-            UserSubscriptions.status.in_(('active', 'canceled'))
-        ).order_by(desc(UserSubscriptions.plan_end)).first()
-        if user_plan:
-            if user_plan.plan_end:
-                current_date = datetime.now()
-                if user_plan.plan_end > current_date:
-                    return True
-            else:
-                return True
+        user_subscription = (
+            self.db.query(UserSubscriptions)
+            .join(User, User.current_subscription_id == UserSubscriptions.id)
+            .filter(User.id == user_id)
+            .first()
+        )
+        if user_subscription and user_subscription.plan_end:
+            return user_subscription.plan_end > datetime.now()
+
         return False
+
     
     def create_payments_transaction(self, user_id, stripe_payload):
         created_timestamp = stripe_payload.get("created")
@@ -198,7 +197,8 @@ class SubscriptionService:
 
         self.db.query(User).filter(User.id == user_id).update({User.activate_steps_percent: 50,
                                                                User.leads_credits: leads_credits,
-                                                               User.prospect_credits: prospect_credits
+                                                               User.prospect_credits: prospect_credits,
+                                                               User.current_subscription_id: add_subscription_obj.id
                                                                },
                                                               synchronize_session=False)
         self.db.commit()
@@ -259,9 +259,9 @@ class SubscriptionService:
             status = "canceled"
             
         if status == 'active':
-            self.db.query(UserSubscriptions).where(UserSubscriptions.platform_subscription_id == platform_subscription_id).update({"status": "inactive", "updated_at": datetime.now(timezone.utc)})
+            self.db.query(UserSubscriptions).where(UserSubscriptions.status == 'active').update({"status": "inactive", "updated_at": datetime.now(timezone.utc)})
             plan_type = determine_plan_name_from_product_id(stripe_payload.get("plan").get("product"))
-            interval = stripe_payload.get("data").get("object").get("plan").get("interval")
+            interval = stripe_payload.get("plan").get("interval")
             plan_id = self.plans_persistence.get_plan_by_title(plan_type, interval)
             domains_limit, users_limit, integrations_limit, leads_credits, prospect_credits, members_limit = self.plans_persistence.get_plan_limit_by_id(
                 plan_id=plan_id)
@@ -281,10 +281,11 @@ class SubscriptionService:
                 platform_subscription_id=platform_subscription_id
             )
             self.db.add(new_subscription)
-            
+            self.db.flush()
             user = self.db.query(User).filter(User.id == user_id).first()
             user.leads_credits = leads_credits if user.leads_credits >= 0 else  leads_credits - user.leads_credits
             user.prospect_credits = prospect_credits
+            user.current_subscription_id = new_subscription.id
             
             self.db.commit()
                 

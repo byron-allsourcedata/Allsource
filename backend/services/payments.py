@@ -3,8 +3,9 @@ import stripe
 from typing import List
 from config.stripe import StripeConfig
 from services.plans import PlansService
-from .stripe_service import renew_subscription, get_default_payment_method, purchase_product
+from .stripe_service import renew_subscription, get_default_payment_method, purchase_product, cancel_subscription_at_period_end
 from enums import SubscriptionStatus
+from datetime import datetime
 
 stripe.api_key = StripeConfig.api_key
 logger = logging.getLogger(__name__)
@@ -40,9 +41,10 @@ class PaymentsService:
             return SubscriptionStatus.SUBSCRIPTION_NOT_FOUND
         if subscription.status == 'canceled':
             return SubscriptionStatus.SUBSCRIPTION_ALREADY_CANCELED
-        subscription_data = stripe.Subscription.cancel(subscription.platform_subscription_id)
-        if subscription_data['status'] == 'canceled':
-            self.plans_service.save_reason_unsubscribe(reason_unsubscribe, user.get('id'))
+        subscription_data = cancel_subscription_at_period_end(subscription.platform_subscription_id)
+        if subscription_data['status'] == 'active':
+            cancel_scheduled_at = datetime.fromtimestamp(subscription_data.get('cancel_at'))
+            self.plans_service.save_reason_unsubscribe(reason_unsubscribe, user.get('id'), cancel_scheduled_at)
             return SubscriptionStatus.SUCCESS
         else:
             return SubscriptionStatus.UNKNOWN
