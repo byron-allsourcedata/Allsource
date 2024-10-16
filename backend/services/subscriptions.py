@@ -85,14 +85,13 @@ class SubscriptionService:
         return False
 
     
-    def create_payments_transaction(self, user_id, stripe_payload, product_description):
+    def create_payments_transaction(self, user_id, stripe_payload, product_description, quantity):
         payment_intent = stripe_payload.get("data", {}).get("object", {})
         transaction_id = payment_intent.get("id")
         users_payments_transactions = self.db.query(UsersPaymentsTransactions).filter(UsersPaymentsTransactions.transaction_id == transaction_id).first()
         if not users_payments_transactions:
             created_timestamp = stripe_payload.get("created")
             created_at = datetime.fromtimestamp(created_timestamp, timezone.utc).replace(tzinfo=None) if created_timestamp else None
-            amount_credits = int(payment_intent.get("amount")) / 100 / PRICE_CREDIT
             status = payment_intent.get("status")
             if status == 'succeeded':
                 payment_transaction_obj = UsersPaymentsTransactions(
@@ -101,7 +100,7 @@ class SubscriptionService:
                     created_at = datetime.now(timezone.utc).replace(tzinfo=None),
                     stripe_request_created_at = created_at,
                     status=status,
-                    amount_credits=amount_credits,
+                    amount_credits=quantity,
                     type=product_description
                 )
                 self.db.add(payment_transaction_obj)

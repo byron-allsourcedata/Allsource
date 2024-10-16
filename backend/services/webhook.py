@@ -71,7 +71,7 @@ class WebhookService:
         
         quantity = data_object.get('metadata').get('quantity')
         
-        result_transaction = self.subscription_service.create_payments_transaction(user_id=user_data.id, stripe_payload=payload, product_description=product_description)
+        result_transaction = self.subscription_service.create_payments_transaction(user_id=user_data.id, stripe_payload=payload, product_description=product_description, quantity=quantity)
         if result_transaction == False:
             return payload
         
