@@ -47,8 +47,9 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
           flexBasis: '142px',
           flexShrink: 0,
           minWidth: '142px',
+          maxWidth: '142px',
           position: 'fixed',
-          top: '9vh',
+          top: '8vh',
         }}>
           <SliderProvider><Sidebar setShowSlider={setSlider} /></SliderProvider>
         </Grid>

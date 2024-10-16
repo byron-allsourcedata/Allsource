@@ -14,25 +14,11 @@ const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
 
 const PageWithLoader: React.FC = () => {
   return (
-    <>
-      <Backdrop
-        open={true}
-        sx={{
-          zIndex: (theme) => theme.zIndex.drawer + 1,
-          color: '#fff',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <Box sx={{ width: '100%', position: 'absolute', top: 0 }}>
+        <Box sx={{ width: '100%', position: 'fixed', top: '9vh', left:'146px','@media (min-height: 900px)': { top:'8vh'} , '@media (max-width: 899px)': { left: 0, top:'8vh'}, }}>
           <BorderLinearProgress
             variant="indeterminate"
           />
         </Box>
-      </Backdrop>
-    </>
   );
 };
 
