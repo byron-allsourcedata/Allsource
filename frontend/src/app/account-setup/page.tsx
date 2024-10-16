@@ -87,7 +87,7 @@ const AccountSetup = () => {
             router.push("/email-verificate");
             break;
           case "NEED_CHOOSE_PLAN":
-            router.push("/choose-plan");
+            router.push("/settings?section=subscription");
             break;
           case "DASHBOARD_ALLOWED":
             router.push("/dashboard");
@@ -232,7 +232,7 @@ const AccountSetup = () => {
           router.push("/email-verificate");
           break;
         case "NEED_CHOOSE_PLAN":
-          router.push("/choose-plan");
+          router.push("/settings?section=subscription");
           break;
         default:
           break;

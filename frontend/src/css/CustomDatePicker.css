@@ -1,0 +1,26 @@
+.start-date {
+    background-color: rgba(80, 82, 178, 1) !important;
+    color: white !important;
+}
+
+.end-date {
+    background-color: rgba(80, 82, 178, 1) !important;
+    color: white !important;
+}
+
+.in-range {
+    background-color: rgba(80, 82, 178, 0.24) !important;
+    color: rgba(80, 82, 178, 1) !important;
+}
+
+.react-datepicker__day:hover {
+    background-color: rgba(80, 82, 178, 0.6) !important;
+    color: white !important;
+}
+
+.react-datepicker__day--keyboard-selected, .react-datepicker__month-text--keyboard-selected, .react-datepicker__quarter-text--keyboard-selected, .react-datepicker__year-text--keyboard-selected {
+    border-radius: 0.3rem;
+    background-color: transparent;
+    color: rgb(0, 0, 0);}
+
+
