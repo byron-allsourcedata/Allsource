@@ -219,7 +219,7 @@ def get_product_from_price_id(price_id):
     return product.name
 
 
-def purchase_product(customer_id, price_id, quantity):
+def purchase_product(customer_id, price_id, quantity, product_description):
     result = {
         'success': False
     }
@@ -242,11 +242,16 @@ def purchase_product(customer_id, price_id, quantity):
             automatic_payment_methods={
                 'enabled': True,
                 'allow_redirects': 'never'
-            }
+            },
+            metadata={
+                'product_description': product_description,
+                'quantity': quantity
+            },
+            description=f"Purchase of {quantity} x {product_description}"
         )
-
         if payment_intent.status == 'succeeded':
             result['success'] = True
+            result['stripe_payload'] = payment_intent
             return result
         else:
             result['error'] = (f"Unknown payment status: {payment_intent.status}")
