@@ -60,33 +60,21 @@ class WebhookService:
         return result_status
 
     def create_payment_confirmation(self, payload):
-        stripe_request_created_timestamp = payload.get("created")
-        stripe_request_created_at = datetime.fromtimestamp(stripe_request_created_timestamp, timezone.utc).replace(tzinfo=None)
-        customer_id = payload.get("data").get("object").get("customer")
+        data_object = payload.get("data").get("object")
+        product_description = data_object.get('metadata').get('product_description')
+        if product_description != 'leads_credits' or product_description != 'prospect_credits':
+            return payload
+        customer_id = data_object.get("customer")
         user_data = self.subscription_service.get_userid_by_customer(customer_id)
         if not user_data:
             return payload
         
-        if self.subscription_service.check_duplicate_payments_send(stripe_request_created_at, user_data.id):
+        quantity = data_object.get('metadata').get('quantity')
+        
+        result_transaction = self.subscription_service.create_payments_transaction(user_id=user_data.id, stripe_payload=payload, product_description=product_description, quantity=quantity)
+        if result_transaction == False:
             return payload
         
-        
-        """
-        Saving the details of payment mode
-        """
-
-        saved_details_of_payment = save_payment_details_in_stripe(customer_id=customer_id)
-        if saved_details_of_payment:
-            logger.info("saved details of payment for success")
-
-        """
-        Logic for existing or new subscription, credits and credit usage
-        """
-        
-        self.subscription_service.create_payments_transaction(user_id=user_data.id, stripe_payload=payload)
-        
-        user_payment = self.subscription_service.create_payment_from_webhook(user_id=user_data.id, stripe_payload=payload)
-        if user_payment:
-            logger.info("New payment created")
-            return user_payment
+        user_payment = self.subscription_service.create_payment_from_webhook(user_id=user_data.id, stripe_payload=payload, product_description=product_description, quantity=quantity)
+        return user_payment
             

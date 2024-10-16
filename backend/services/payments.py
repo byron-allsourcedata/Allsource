@@ -129,7 +129,7 @@ class PaymentsService:
     def charge_user_for_extra_credits(self, quantity: int, users):
         customer_id = self.plans_service.get_customer_id(users)
         try:
-            purchase_product(customer_id, self.get_additional_credits_price_id(), quantity)
+            purchase_product(customer_id, self.get_additional_credits_price_id(), quantity, 'prospect_credits')
             return {"status": "PAYMENT_SUCCESS"}
         except Exception as e:
             return self.create_stripe_checkout_session(
