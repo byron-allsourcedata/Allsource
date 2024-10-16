@@ -155,7 +155,7 @@ class SettingsService:
         current_plan = self.plan_persistence.get_current_plan(user_id=user.get('id'))
         current_subscription = self.plan_persistence.get_user_subscription(user_id=user.get('id'))
         result['member_limit'] = current_plan.members_limit if current_plan else 0
-        result['member_count'] = current_plan.members_limit - current_subscription.members_limit if current_subscription else 0
+        result['member_count'] = current_plan.members_limit - current_subscription.members_limit if current_plan and current_subscription else 0
         return result
             
         
