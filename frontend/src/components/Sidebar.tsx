@@ -13,6 +13,8 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import Image from 'next/image';
 import { AxiosError } from 'axios';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
+import PageWithLoader from './FirstLevelLoader';
+import CustomizedProgressBar from '@/components/FirstLevelLoader'
 
 const sidebarStyles = {
     container: {
@@ -157,9 +159,10 @@ const SetupSection: React.FC<ProgressSectionProps> = ({ meData }) => {
 
 interface SidebarProps {
     setShowSlider: Dispatch<SetStateAction<boolean>>;
+    setLoading: Dispatch<SetStateAction<boolean>>;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ setShowSlider }) => {
+const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading }) => {
     const [meData, setMeData] = useState({ percent_steps: 0 });
     useEffect(() => {
         if (typeof window !== "undefined") {
@@ -175,6 +178,7 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider }) => {
 
     const handleNavigation = async (path: string) => {
         try {
+            setLoading(true)
             const response = await axiosInstance.get("dashboard");
             if (response.data.status === "NEED_BOOK_CALL") {
                 sessionStorage?.setItem("is_slider_opened", "true");
@@ -197,6 +201,9 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider }) => {
             } else {
                 console.error("Error fetching data:", error);
             }
+        }
+        finally {
+            setLoading(false)
         }
     };
 
