@@ -815,15 +815,28 @@ export const SettingsBilling: React.FC = () => {
                             </Typography>
                             {billingDetails.active ? (
                                 canceled_at ? (
-                                    <Box sx={{ display: 'flex', borderRadius: '4px', background: '#eaf8dd', padding: '2px 12px', gap: '3px' }}>
+                                    <Box sx={{ display: 'flex', borderRadius: '4px', background: '#FCDBDC', padding: '2px 12px', gap: '3px', alignItems: 'center' }}>
                                         <Typography className="main-text" sx={{
                                             borderRadius: '4px',
-                                            color: '#2b5b00',
+                                            color: '#4E0110',
                                             fontSize: '12px',
                                             fontWeight: '600',
-                                            lineHeight: '16px'
+                                            lineHeight: '16px',
                                         }}>
-                                            Active, canceled on {formatDate(canceled_at)}
+                                            Subscription Cancelled
+                                        </Typography>
+                                        <Image src={'danger.svg'} alt='danger' width={14} height={13.5} />
+                                    </Box>
+                                ) : downgrade_plan ? (
+                                    <Box sx={{ display: 'flex', borderRadius: '4px', background: '#FDF2CA', padding: '2px 12px', gap: '3px', alignItems: 'center' }}>
+                                        <Typography className="main-text" sx={{
+                                            borderRadius: '4px',
+                                            color: '#795E00',
+                                            fontSize: '12px',
+                                            fontWeight: '600',
+                                            lineHeight: '16px',
+                                        }}>
+                                            Downgraded to {downgrade_plan}
                                         </Typography>
                                     </Box>
                                 ) : (
@@ -834,7 +847,9 @@ export const SettingsBilling: React.FC = () => {
                                             fontSize: '12px',
                                             fontWeight: '600',
                                             lineHeight: '16px'
-                                        }}>Active</Typography>
+                                        }}>
+                                            Active
+                                        </Typography>
                                     </Box>
                                 )
                             ) : (
@@ -845,7 +860,9 @@ export const SettingsBilling: React.FC = () => {
                                         fontSize: '12px',
                                         fontWeight: '600',
                                         lineHeight: '16px'
-                                    }}>Canceled</Typography>
+                                    }}>
+                                        Canceled
+                                    </Typography>
                                 </Box>
                             )}
                         </Box>
@@ -1061,7 +1078,9 @@ export const SettingsBilling: React.FC = () => {
                                                         fontWeight: '600',
                                                         lineHeight: '16px',
                                                         color: '#4a4a4a'
-                                                    }}>Next Billing Date</Typography>
+                                                    }}>
+                                                        {canceled_at ? `Cancellation Date` : 'Next Billing Date'}
+                                                    </Typography>
                                                     <Typography className='first-sub-title' sx={{
                                                         fontWeight: '700 !important',
                                                         '@media (max-width: 600px)': {
@@ -1126,7 +1145,6 @@ export const SettingsBilling: React.FC = () => {
                                             color: '#5f6368 !important'
                                         }}>
                                             {renderValue(value)}
-                                            {key === 'plan_name' && downgrade_plan ? ` (Downgraded to ${downgrade_plan})` : ''}
                                         </Typography>
                                     </Box>
                                 );

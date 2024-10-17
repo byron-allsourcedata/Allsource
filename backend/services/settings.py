@@ -243,25 +243,15 @@ class SettingsService:
         
     def timestamp_to_date(self, timestamp):
         return datetime.fromtimestamp(timestamp)
-    
-    def calculate_dates(self, plan):
-        start_date = datetime.now()
-        interval = plan['interval']
-        interval_count = plan['interval_count']
-
-        if interval == 'month':
-            end_date = start_date.replace(month=start_date.month + interval_count)
-
-        return start_date, end_date
             
     def extract_subscription_details(self, customer_id, prospect_credits, user_id):
         subscription = get_billing_details_by_userid(customer_id)
-        user_subscription = self.plan_persistence.get_user_subscription(user_id=user_id)
+        user_subscription = self.subscription_service.get_user_subscription(user_id=user_id)
+        current_plan = self.plan_persistence.get_current_plan(user_id=user_id) 
         plan_limit_domain = user_subscription.domains_limit if user_subscription else 0
         user_limit_domain = len(self.user_domains_service.get_domains(user_id))
-        current_plan = self.subscription_service.get_user_subscription(user_id=user_id)
         if subscription is None:
-            return {
+            subscription_details = {
             'billing_cycle': f"{user_subscription.plan_start.strftime('%b %d, %Y')} to {user_subscription.plan_end.strftime('%b %d, %Y')}" if user_subscription.plan_start else None,
             'plan_name': current_plan.title,
             'domains': f"{user_limit_domain}/{plan_limit_domain}",
@@ -271,21 +261,21 @@ class SettingsService:
             'monthly_total': None,
             'active': True
         }
-        plan = subscription['items']['data'][0]['plan']
-        start_date, end_date = self.calculate_dates(plan)
-        is_active = subscription.get('status') == 'active'
-        plan_name = determine_plan_name_from_product_id(plan['product'])
-        
-        subscription_details = {
-            'billing_cycle': f"{start_date.strftime('%b %d, %Y')} to {end_date.strftime('%b %d, %Y')}",
-            'plan_name': plan_name,
-            'domains': f"{user_limit_domain}/{plan_limit_domain}",
-            'prospect_credits': prospect_credits,
-            'overage': '0.49/contact',
-            'next_billing_date': self.timestamp_to_date(subscription['current_period_end']).strftime('%b %d, %Y'),
-            'monthly_total': f"${plan['amount'] / 100:,.0f}",
-            'active': is_active,
-        }
+        else:
+            plan = subscription['items']['data'][0]['plan']
+            is_active = subscription.get('status') == 'active'
+            plan_name = determine_plan_name_from_product_id(plan['product'])
+            subscription_details = {
+                'billing_cycle': f"{user_subscription.plan_start.strftime('%b %d, %Y')} to {user_subscription.plan_end.strftime('%b %d, %Y')}" if user_subscription.plan_start else None,
+                'plan_name': plan_name,
+                'domains': f"{user_limit_domain}/{plan_limit_domain}",
+                'prospect_credits': prospect_credits,
+                'overage': '0.49/contact',
+                'next_billing_date': self.timestamp_to_date(subscription['current_period_end']).strftime('%b %d, %Y'),
+                'monthly_total': f"${plan['amount'] / 100:,.0f}",
+                'active': is_active,
+            }
+            
         billig_detail = {'subscription_details': subscription_details,
                          'downgrade_plan': get_product_from_price_id(user_subscription.downgrade_price_id) if user_subscription and user_subscription.downgrade_price_id else None,
                          'canceled_at': user_subscription.cancel_scheduled_at
