@@ -96,7 +96,7 @@ const billingStyles = {
     page_number: {
         backgroundColor: 'rgba(255, 255, 255, 1)',
         color: 'rgba(80, 82, 178, 1)',
-      },
+    },
 }
 
 interface CustomTablePaginationProps {
@@ -281,11 +281,11 @@ export const SettingsBilling: React.FC = () => {
             setIsLoading(false);
         }
     };
-    
+
     useEffect(() => {
         fetchCardData();
         fetchBillingHistoryData(page, rowsPerPage);
-    }, [page, rowsPerPage]);    
+    }, [page, rowsPerPage]);
 
     const formatKey = (key: string) => {
         return key.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
@@ -805,15 +805,29 @@ export const SettingsBilling: React.FC = () => {
                                 Billing Details
                             </Typography>
                             {billingDetails.active ? (
-                                <Box sx={{ display: 'flex', borderRadius: '4px', background: '#eaf8dd', padding: '2px 12px', gap: '3px' }}>
-                                    <Typography className="main-text" sx={{
-                                        borderRadius: '4px',
-                                        color: '#2b5b00',
-                                        fontSize: '12px',
-                                        fontWeight: '600',
-                                        lineHeight: '16px'
-                                    }}>Active</Typography>
-                                </Box>
+                                billingDetails.canceled_at ? (
+                                    <Box sx={{ display: 'flex', borderRadius: '4px', background: '#f8dede', padding: '2px 12px', gap: '3px' }}>
+                                        <Typography className="main-text" sx={{
+                                            borderRadius: '4px',
+                                            color: '#b00000',
+                                            fontSize: '12px',
+                                            fontWeight: '600',
+                                            lineHeight: '16px'
+                                        }}>
+                                            Active, but will end on {new Date(billingDetails.canceled_at).toLocaleDateString()}
+                                        </Typography>
+                                    </Box>
+                                ) : (
+                                    <Box sx={{ display: 'flex', borderRadius: '4px', background: '#eaf8dd', padding: '2px 12px', gap: '3px' }}>
+                                        <Typography className="main-text" sx={{
+                                            borderRadius: '4px',
+                                            color: '#2b5b00',
+                                            fontSize: '12px',
+                                            fontWeight: '600',
+                                            lineHeight: '16px'
+                                        }}>Active</Typography>
+                                    </Box>
+                                )
                             ) : (
                                 <Box sx={{ display: 'flex', borderRadius: '4px', background: '#f8dede', padding: '2px 12px', gap: '3px' }}>
                                     <Typography className="main-text" sx={{
@@ -1076,12 +1090,9 @@ export const SettingsBilling: React.FC = () => {
                                 }
 
                                 // Skip rendering 'Monthly Total' in its own row, since it's already handled
-                                if (key === 'monthly_total' || key === 'active') {
+                                if (key === 'monthly_total' || key === 'active' || key === 'downgrade_plan' || key === 'canceled_at') {
                                     return null;
                                 }
-
-
-
 
                                 // Default layout for other billing details
                                 return (
@@ -1104,7 +1115,8 @@ export const SettingsBilling: React.FC = () => {
                                         <Typography className="paragraph" sx={{
                                             lineHeight: '16px !important',
                                             color: '#5f6368 !important'
-                                        }}>{renderValue(value)}</Typography>
+                                        }}>
+                                            {renderValue(value)}</Typography>
                                     </Box>
                                 );
                             })}
@@ -1284,10 +1296,10 @@ export const SettingsBilling: React.FC = () => {
                                         }}
                                     >
                                         <TableCell className="table-data" sx={{
-    ...billingStyles.tableBodyColumn,
-    cursor: 'pointer',
-    backgroundColor: '#fff'
-}}>{history.date}</TableCell>
+                                            ...billingStyles.tableBodyColumn,
+                                            cursor: 'pointer',
+                                            backgroundColor: '#fff'
+                                        }}>{history.date}</TableCell>
 
                                         <TableCell className='table-data' sx={billingStyles.tableBodyColumn}>{history.invoice_id}</TableCell>
                                         <TableCell className='table-data' sx={billingStyles.tableBodyColumn}>

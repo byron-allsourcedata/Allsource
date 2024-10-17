@@ -63,27 +63,6 @@ const PlanCard: React.FC<{ plan: any; activePlanTitle: string; onChoose: (stripe
                             Popular
                         </Typography>
                     )}
-
-                    {plan.is_active && (
-                        <Box sx={{ display: 'flex', borderRadius: '4px', background: '#eaf8dd', padding: '2px 12px', gap: '3px', height: 'fit-content' }}>
-                            <Typography className="main-text" sx={{
-                                borderRadius: '4px',
-                                color: '#2b5b00',
-                                fontSize: '12px',
-                                fontWeight: '600',
-                                lineHeight: '16px'
-                            }}>Active</Typography>
-                            <Image
-                                src='/tick-circle-filled.svg'
-                                alt='tick-circle-filled'
-                                height={16}
-                                width={16} // Adjust the size as needed
-                            />
-                        </Box>
-                    )}
-
-
-
                 </Box>
 
                 <Typography variant="h4" component="div" className='heading-text' sx={{ fontSize: '24px !important', fontWeight: '600 !important', textAlign: 'center' }}>

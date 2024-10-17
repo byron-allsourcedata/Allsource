@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Button, Tabs, Tab, TextField, Dialog, DialogActions, Tooltip, Slider, DialogContent, DialogTitle, IconButton, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, TableSortLabel, InputAdornment, Drawer, Divider, List, ListItem, ListItemIcon, ListItemText } from '@mui/material';
+import { Box, Typography, Button, Tabs, Tab, TextField, Dialog, DialogActions, Tooltip, Slider, DialogContent, DialogTitle, IconButton, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, TableSortLabel, InputAdornment, Drawer, Divider, List, ListItem, ListItemIcon, ListItemText, Chip } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import PlanCard from '@/components/PlanCard';
 import axios from 'axios';
@@ -437,23 +437,35 @@ export const SettingsSubscription: React.FC = () => {
 
             {/* Prospect Credits Section */}
             <Box sx={{
-                marginTop: 4, marginBottom: '24px', borderRadius: '10px',
+                marginTop: 2, marginBottom: '24px', borderRadius: '10px',
                 boxShadow: '0px 2px 10px 0px rgba(0, 0, 0, 0.10)',
                 border: '1px solid #e4e4e4',
-                padding: 3
+                padding: 3,
+                opacity:0.6
             }}>
+                <Box sx={{display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}}>
                 <Typography variant="h6" className='first-sub-title' sx={{
-                    marginBottom: '8px'
+                    marginBottom: '8px',
+                    opacity:0.6
                 }}>
                     Prospect Credits
                 </Typography>
+                <Chip
+            label='Coming soon...'
+            className='second-sub-title'
+            sx={{backgroundColor: 'rgba(255, 233, 131, 0.8)', borderRadius:'4px', mt:2, justifyContent: 'center', color: '#707071 !important' }}>
+                
+                </Chip>
+                </Box>
                 <Typography variant="body1" className='paragraph' sx={{
-                    marginBottom: 3
+                    marginBottom: 3,
+                    opacity:0.6
                 }}>
                     Choose the number of contacts credits for your team
                 </Typography>
-                <Box sx={{ marginBottom: 3 }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
+                
+                <Box sx={{ marginBottom: 3, opacity: 0.6 }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3, opacity:0.6 }}>
                         <Typography variant="body1" className='third-sub-title' sx={{
                             fontSize: '20px !important',
                             color: '#4a4a4a !important'
@@ -484,7 +496,7 @@ export const SettingsSubscription: React.FC = () => {
                                 aria-labelledby="credits-slider"
                             /> */}
 
-                    <Box sx={{ position: 'relative', width: '100%', marginBottom: '20px' }}>
+                    <Box sx={{ position: 'relative', width: '100%', marginBottom: '20px',  }}>
                         {/* Custom labels above the slider */}
                         <Box
                             sx={{
@@ -495,6 +507,7 @@ export const SettingsSubscription: React.FC = () => {
                                 bottom: '-16px',
                                 left: 0,
                                 right: 0,
+
                             }}
                         >
                             {marks.map((mark) => (
@@ -516,6 +529,7 @@ export const SettingsSubscription: React.FC = () => {
                             value={credits}
                             onChange={handleChangeCredits}
                             min={0}
+                            disabled={true}
                             max={50000000}
                             step={1000}
                             valueLabelDisplay="off" // Remove the default label
@@ -555,18 +569,21 @@ export const SettingsSubscription: React.FC = () => {
                         border: '1px solid #bdbdbd',
                         borderRadius: '4px',
                         padding: '18px 24px',
-                        width: '100%'
+                        width: '100%',
+                        opacity:0.6
                     }}>
                         <Box>
                             <Typography variant="h6" className='third-sub-title' sx={{
                                 fontWeight: '600 !important',
                                 lineHeight: '16px !important',
-                                color: '#4a4a4a !important'
+                                color: '#4a4a4a !important',
+                                opacity:0.6
                             }}>
                                 Summary
                             </Typography>
                             <Typography variant="body1" className='first-sub-title' sx={{
-                                fontWeight: '700 !important'
+                                fontWeight: '700 !important',
+                                opacity:0.6
                             }}>
                                 {selectedPlan?.name || 'None'} plan+
                                 {' '}{credits} prospect contacts credits.
@@ -577,7 +594,8 @@ export const SettingsSubscription: React.FC = () => {
                         <Box>
                             <Typography variant="h6" className='heading-text' sx={{
                                 fontSize: '40px !important',
-                                fontWeight: '700 !important'
+                                fontWeight: '700 !important',
+                                opacity:0.6
                             }}>
                                 ${selectedPlan?.price || '0'}
                                 <Typography component='span' className='paragraph' sx={{
@@ -587,7 +605,7 @@ export const SettingsSubscription: React.FC = () => {
                         </Box>
                     </Box>
                     <Box>
-                        <Button variant="contained" className='hyperlink-red' color="primary" onClick={handleBuyCredits}
+                        <Button variant="contained" className='hyperlink-red' color="primary" disabled={true} onClick={handleBuyCredits}
                             sx={{
                                 background: '#5052b2 !important',
                                 borderRadius: '4px',
@@ -595,7 +613,8 @@ export const SettingsSubscription: React.FC = () => {
                                 padding: '9px 24px',
                                 color: '#fff !important',
                                 textTransform: 'none',
-                                whiteSpace: 'nowrap'
+                                whiteSpace: 'nowrap',
+                                opacity: 0.6
 
                             }}
                         >

@@ -14,6 +14,8 @@ class PlansPersistence:
     
     def save_reason_unsubscribe(self, reason_unsubscribe, user_id, cancel_scheduled_at):
         subscription = self.get_user_subscription(user_id)
+        subscription.downgrade_price_id = None
+        subscription.downgrade_at = None
         subscription.cancellation_reason = reason_unsubscribe
         subscription.cancel_scheduled_at = cancel_scheduled_at
         self.db.commit()
