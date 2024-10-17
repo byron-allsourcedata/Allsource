@@ -199,14 +199,15 @@ async def check_activate_based_urls(page, suppression_rule):
 
 def generate_random_order_detail():
     return {
-        'order_id': random.randint(1000, 9999), 
+        'platform_order_id': random.randint(1000, 9999), 
         'total_price': round(random.uniform(10.0, 500.0), 2),
         'currency': random.choice(['USD', 'EUR', 'GBP']),
-        'created_at_shopify': datetime.now(timezone.utc).isoformat()
+        'platform_created_at': datetime.now(timezone.utc).isoformat()
     }
 
 
 async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, session: Session, rmq_connection, subscription_service: SubscriptionService, root_user=None):
+    global count 
     partner_uid_decoded = urllib.parse.unquote(str(possible_lead['PARTNER_UID']).lower())
     partner_uid_dict = json.loads(partner_uid_decoded)
     partner_uid_client_id = partner_uid_dict.get('client_id')
@@ -262,7 +263,7 @@ async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, sess
                     return
             
             if suppression_rule.is_based_activation and suppression_rule.activate_certain_urls:
-                if check_activate_based_urls(page, suppression_rule):
+                if await check_activate_based_urls(page, suppression_rule):
                     return
 
         emails_to_check = get_all_five_x_user_emails(five_x_five_user.business_email, five_x_five_user.personal_emails, five_x_five_user.additional_personal_emails)
@@ -351,10 +352,10 @@ async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, sess
                 session.flush()
         order_detail = generate_random_order_detail()
         session.add(LeadOrders(lead_user_id=lead_user.id, 
-                               shopify_order_id=order_detail.get('order_id'),
+                               platform_order_id=order_detail.get('platform_order_id'),
                                total_price=order_detail.get('total_price'), 
                                currency_code=order_detail.get('currency'),
-                               created_at_shopify=order_detail['created_at_shopify'], created_at=datetime.now()))
+                               platform_created_at=order_detail['platform_created_at'], created_at=datetime.now()))
         existing_record = session.query(LeadsUsersOrdered).filter_by(lead_user_id=lead_user.id).first()
         if existing_record:
             existing_record.ordered_at = requested_at
