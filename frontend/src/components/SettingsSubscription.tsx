@@ -97,6 +97,7 @@ const marks = [
 
 export const SettingsSubscription: React.FC = () => {
     const [plans, setPlans] = useState<any[]>([]);
+    const [allPlans, setAllPlans] = useState<any[]>([]);
     const [credits, setCredits] = useState<number>(50000);
     const [selectedPlan, setSelectedPlan] = useState<any>(null);
 
@@ -113,6 +114,11 @@ export const SettingsSubscription: React.FC = () => {
 
     const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
         setTabValue(newValue);
+        const period = newValue === 0 ? 'month' : 'year';
+        const period_plans = allPlans.filter((plan: any) => plan.interval === period);
+        setPlans(period_plans);
+        const activePlan = allPlans.find((plan: any) => plan.is_active) !== undefined;
+        setHasActivePlan(activePlan);
     };
 
     const handleCustomPlanPopupOpen = () => {
@@ -147,17 +153,30 @@ export const SettingsSubscription: React.FC = () => {
         setConfirmCancellationPopupOpen(false);
     };
 
-
+    interface StripePlan {
+        id: string;
+        interval: string;
+        is_active: boolean;
+    }
 
     useEffect(() => {
         const fetchData = async () => {
             try {
                 setIsLoading(true);
-                const period = tabValue === 0 ? 'month' : 'year';
-                const response = await axiosInterceptorInstance.get(`/subscriptions/stripe-plans?period=${period}`);
-                setPlans(response.data.stripe_plans);
-                const activePlan = response.data.stripe_plans.find((plan: any) => plan.is_active) !== undefined
-                setHasActivePlan(activePlan);
+                const response = await axiosInterceptorInstance.get(`/subscriptions/stripe-plans`);
+                setAllPlans(response.data.stripe_plans)
+                const stripePlans: StripePlan[] = response.data.stripe_plans;
+                const activePlan = stripePlans.find(plan => plan.is_active);
+                setHasActivePlan(!!activePlan);
+                let interval = 'month'
+                if (activePlan){
+                    interval = activePlan.interval
+                }
+                if (interval === 'year'){
+                    setTabValue(1)
+                }
+                const period_plans = response.data.stripe_plans.filter((plan: any) => plan.interval === interval);
+                setPlans(period_plans);
             } catch (error) {
                 console.error('Error fetching data:', error);
             } finally {
@@ -166,7 +185,7 @@ export const SettingsSubscription: React.FC = () => {
         };
 
         fetchData();
-    }, [tabValue]);
+    }, []);
 
     const handleBuyCredits = () => {
         // Логика для покупки кредитов
@@ -197,9 +216,8 @@ export const SettingsSubscription: React.FC = () => {
                     try {
                         setIsLoading(true);
                         const period = tabValue === 0 ? 'month' : 'year';
-                        await new Promise(resolve => setTimeout(resolve, 3000));
-                        const response = await axiosInterceptorInstance.get(`/subscriptions/stripe-plans?period=${period}`);
-                        setPlans(response.data.stripe_plans);
+                        const period_plans = response.data.stripe_plans.filter((plan: any) => plan.interval === period);
+                        setPlans(period_plans);
                         const activePlan = response.data.stripe_plans.find((plan: any) => plan.is_active) !== undefined;
                         setHasActivePlan(activePlan);
                     } catch (error) {

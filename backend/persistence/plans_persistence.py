@@ -9,8 +9,8 @@ class PlansPersistence:
     def __init__(self, db: Session):
         self.db = db
 
-    def get_stripe_plans(self, period):
-        return self.db.query(SubscriptionPlan).filter(SubscriptionPlan.is_active == True, SubscriptionPlan.interval == period).all()
+    def get_stripe_plans(self):
+        return self.db.query(SubscriptionPlan).filter(SubscriptionPlan.is_active == True).all()
     
     def save_reason_unsubscribe(self, reason_unsubscribe, user_id, cancel_scheduled_at):
         subscription = self.get_user_subscription(user_id)
