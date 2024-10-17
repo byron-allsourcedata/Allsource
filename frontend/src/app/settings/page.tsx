@@ -48,7 +48,6 @@ const Settings: React.FC = () => {
 
     return (
         <Box>
-            {isLoading && <CustomizedProgressBar />}
             <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1, mb: 2, padding: '1rem 0rem 0',
                 '@media (max-width: 1199px)': {
                     paddingTop: '1rem'
@@ -103,24 +102,22 @@ const Settings: React.FC = () => {
             
 
 
-            {activeSection === 'accountDetails' && (
-                <SettingsAccountDetails accountDetails={accountDetails} />
-            )}
+                        {isLoading ? (
+                <CustomizedProgressBar />
+            ) : (
+                <>
+                    {activeSection === 'accountDetails' && accountDetails && (
+                        <SettingsAccountDetails accountDetails={accountDetails} />
+                    )}
 
-            {activeSection === 'teams' && (
-                <SettingsTeams />
-            )}
+                    {activeSection === 'teams' && <SettingsTeams />}
 
-            {activeSection === 'billing' && (
-                <SettingsBilling />
-            )}
+                    {activeSection === 'billing' && <SettingsBilling />}
 
-            {activeSection === 'subscription' && (
-                <SettingsSubscription />
-            )}
+                    {activeSection === 'subscription' && <SettingsSubscription />}
 
-            {activeSection === 'apiDetails' && (
-                <SettingsApiDetails />
+                    {activeSection === 'apiDetails' && <SettingsApiDetails />}
+                </>
             )}
         </Box>
     );
