@@ -41,7 +41,7 @@ from models.integrations.suppresions import LeadsSupperssion
 from dotenv import load_dotenv
 from sqlalchemy.dialects.postgresql import insert
 from collections import defaultdict
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from config.rmq_connection import publish_rabbitmq_message, RabbitMQConnection
 from models.integrations.users_domains_integrations import UserIntegration
 from dependencies import (SubscriptionService, UserPersistence, PlansPersistence)
@@ -197,6 +197,14 @@ async def check_activate_based_urls(page, suppression_rule):
 
     return False
 
+def generate_random_order_detail():
+    return {
+        'order_id': random.randint(1000, 9999), 
+        'total_price': round(random.uniform(10.0, 500.0), 2),
+        'currency': random.choice(['USD', 'EUR', 'GBP']),
+        'created_at_shopify': datetime.now(timezone.utc).isoformat()
+    }
+
 
 async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, session: Session, rmq_connection, subscription_service: SubscriptionService, root_user=None):
     partner_uid_decoded = urllib.parse.unquote(str(possible_lead['PARTNER_UID']).lower())
@@ -341,7 +349,7 @@ async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, sess
         if lead_user.is_converted_sales == False:
                 lead_user.is_converted_sales = True
                 session.flush()
-        order_detail = partner_uid_dict.get('order_detail')
+        order_detail = generate_random_order_detail()
         session.add(LeadOrders(lead_user_id=lead_user.id, 
                                shopify_order_id=order_detail.get('order_id'),
                                total_price=order_detail.get('total_price'), 
