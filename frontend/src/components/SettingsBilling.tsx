@@ -12,6 +12,8 @@ import { showErrorToast, showToast } from './ToastNotification';
 import axios from 'axios';
 import CustomTooltip from './customToolTip';
 import { ChevronLeft, ChevronRight } from '@mui/icons-material';
+import DownloadIcon from '@mui/icons-material/Download';
+import TelegramIcon from '@mui/icons-material/Telegram';
 
 type CardBrand = 'visa' | 'mastercard' | 'americanexpress' | 'discover';
 
@@ -628,7 +630,7 @@ export const SettingsBilling: React.FC = () => {
                                 sx={{
                                     textTransform: 'none',
                                     borderRadius: '4px',
-                                    padding: '0',
+                                    padding: '0px',
                                     border: 'none',
                                     minWidth: 'auto',
                                     '@media (min-width: 601px)': {
@@ -638,6 +640,23 @@ export const SettingsBilling: React.FC = () => {
                             >
                                 <Image src='/add.svg' alt='logo' height={24} width={24} />
                             </Button>
+
+                            <Box sx={{
+                            border: '1px dashed #5052B2',
+                            borderRadius: '4px',
+                            width: '62px',
+                            height: '62px',
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            '@media (max-width: 600px)': {
+                                display: 'none'
+                            }
+                        }}>
+                            <Button onClick={handleOpen} sx={{padding:2}}>
+                                <Image src="/add-square.svg" alt="add-square" height={32} width={32} />
+                            </Button>
+                        </Box>
                         </Box>
                         {cardDetails.length > 0 && cardDetails.map((card) => (
                             <Box key={card.id} sx={{
@@ -772,22 +791,7 @@ export const SettingsBilling: React.FC = () => {
                             </Box>
                         ))}
 
-                        <Box sx={{
-                            border: '1px dashed #5052B2',
-                            borderRadius: '4px',
-                            width: '62px',
-                            height: '62px',
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            '@media (max-width: 600px)': {
-                                display: 'none'
-                            }
-                        }}>
-                            <Button onClick={handleOpen}>
-                                <Image src="/add-square.svg" alt="add-square" height={32} width={32} />
-                            </Button>
-                        </Box>
+                        
 
                         <Modal open={open} onClose={handleClose}>
                             <Box sx={{
@@ -1359,22 +1363,12 @@ export const SettingsBilling: React.FC = () => {
                                             </Typography>
                                         </TableCell>
                                         <TableCell className='table-data' sx={billingStyles.tableBodyColumn}>
-                                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                                <IconButton onClick={() => fetchSaveBillingHistory(history.invoice_id)}>
-                                                    <Image
-                                                        src='/download-icon.svg'
-                                                        alt='download-icon'
-                                                        height={20}
-                                                        width={20}
-                                                    />
+                                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap:2 }}>
+                                                <IconButton onClick={() => fetchSaveBillingHistory(history.invoice_id)} sx={{':hover': {backgroundColor: 'transparent', }, padding:0}}>
+                                                    <DownloadIcon sx={{width: '24px', height: '24px', color: 'rgba(188, 188, 188, 1)', ':hover': {color: 'rgba(80, 82, 178, 1)'}}} />
                                                 </IconButton>
-                                                <IconButton onClick={() => handleSendInvoicePopupOpen(history.invoice_id)}>
-                                                    <Image
-                                                        src='/share-icon.svg'
-                                                        alt='share-icon'
-                                                        height={20}
-                                                        width={20}
-                                                    />
+                                                <IconButton onClick={() => handleSendInvoicePopupOpen(history.invoice_id)} sx={{':hover': {backgroundColor: 'transparent', }, padding:0}}>
+                                                    <TelegramIcon sx={{width: '24px', height: '24px', color: 'rgba(188, 188, 188, 1)', ':hover': {color: 'rgba(80, 82, 178, 1)'}}} />
                                                 </IconButton>
                                             </Box>
                                         </TableCell>
