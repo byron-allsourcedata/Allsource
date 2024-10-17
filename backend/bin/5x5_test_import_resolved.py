@@ -346,7 +346,7 @@ async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, sess
                 session.flush()
     events = [1, 2 , 3, 4, 5, 6, 7, 8, 9, 10]
     random_event = random.choice(events)
-    if behavior_type == 'checkout_completed' or random_event % 2 == 0:
+    if behavior_type == 'checkout_completed' or random_event % 3 == 0:
         if lead_user.is_converted_sales == False:
                 lead_user.is_converted_sales = True
                 session.flush()
