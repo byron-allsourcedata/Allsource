@@ -12,11 +12,19 @@ const CollectionRules: React.FC = () => {
     const [catchseconds, setCatchSeconds] = useState<string>("");
 
     const handlePageViewsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setPageViews(e.target.value);
+        const value = parseInt(e.target.value, 10);
+
+        if (value >= 0 || e.target.value === '') {
+            setPageViews(e.target.value);
+        }
     };
 
     const handleSecondsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setSeconds(e.target.value);
+        const value = parseInt(e.target.value, 10);
+
+        if (value >= 0 || e.target.value === '') {
+            setSeconds(e.target.value);
+        }
     };
 
     const handleSave = async () => {
@@ -64,9 +72,6 @@ const CollectionRules: React.FC = () => {
         fetchRules();
     }, [fetchRules]);
 
-    if (loading) {
-        return <CustomizedProgressBar />;
-    }
 
     return (
         <Box sx={{
@@ -75,6 +80,7 @@ const CollectionRules: React.FC = () => {
             width: '100%',
             padding: 0,
             margin: '0 auto',
+            mb: 2,
             color: 'rgba(32, 33, 36, 1)',
             border: '1px solid rgba(240, 240, 240, 1)',
             boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.2)',
@@ -128,8 +134,8 @@ const CollectionRules: React.FC = () => {
                             type="number"
                             value={pageViews}
                             onChange={handlePageViewsChange}
-                            InputProps={{ style: { color: 'rgba(17, 17, 19, 1)', fontFamily: 'Nunito', fontWeight: 400, fontSize: '16px' } }}
-                            InputLabelProps={{ style: { color: 'rgba(17, 17, 19, 0.6)', fontFamily: 'Nunito', fontWeight: 400, fontSize: '16px' } }}
+                            InputProps={{ style: { color: 'rgba(17, 17, 19, 1)', fontFamily: 'Nunito', fontWeight: 400, fontSize: '14px' } }}
+                            InputLabelProps={{ style: { color: 'rgba(17, 17, 19, 0.6)', fontFamily: 'Nunito', fontWeight: 400, fontSize: '14px'}}}
                             sx={{
                                 marginBottom: '40px',
                                 backgroundColor: '#fff',
@@ -180,8 +186,8 @@ const CollectionRules: React.FC = () => {
                             rows={2}
                             value={seconds}
                             onChange={handleSecondsChange}
-                            InputProps={{ style: { color: 'rgba(17, 17, 19, 1)', fontFamily: 'Nunito', fontWeight: 400, fontSize: '16px' } }}
-                            InputLabelProps={{ style: { color: 'rgba(17, 17, 19, 0.6)', fontFamily: 'Nunito', fontWeight: 400, fontSize: '16px', padding:0 } }}
+                            InputProps={{ style: { color: 'rgba(17, 17, 19, 1)', fontFamily: 'Nunito', fontWeight: 400, fontSize: '14px' } }}
+                            InputLabelProps={{ style: { color: 'rgba(17, 17, 19, 0.6)', fontFamily: 'Nunito', fontWeight: 400, fontSize: '14px', padding: 0 } }}
                             sx={{
                                 marginBottom: '32px',
                                 backgroundColor: '#fff',
@@ -198,11 +204,13 @@ const CollectionRules: React.FC = () => {
             <Box sx={{ display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid rgba(228, 228, 228, 1)', pt: 2, padding: '24px', "@media (max-width: 900px)": { padding: '1rem', } }}>
                 <Button variant="outlined" disabled={isDisabledCancel} onClick={handleCancel} sx={{
                     backgroundColor: '#fff', color: 'rgba(80, 82, 178, 1)', fontFamily: "Nunito Sans", textTransform: 'none', lineHeight: '22.4px',
-                    fontWeight: '700', padding: '1em 5em', textWrap: 'nowrap', marginRight: '16px', border: '1px solid rgba(80, 82, 178, 1)', maxWidth: '98px', '&:hover': { backgroundColor: '#fff', boxShadow: '0 2px 2px rgba(0, 0, 0, 0.3)', '&.Mui-disabled': {
-                        backgroundColor: 'rgba(80, 82, 178, 0.6)',
-                        color: 'rgba(80, 82, 178, 1)',
-                        cursor: 'not-allowed',
-                    } }
+                    fontWeight: '700', padding: '1em 5em', textWrap: 'nowrap', marginRight: '16px', border: '1px solid rgba(80, 82, 178, 1)', maxWidth: '98px', '&:hover': {
+                        backgroundColor: '#fff', boxShadow: '0 2px 2px rgba(0, 0, 0, 0.3)', '&.Mui-disabled': {
+                            backgroundColor: 'rgba(80, 82, 178, 0.6)',
+                            color: 'rgba(80, 82, 178, 1)',
+                            cursor: 'not-allowed',
+                        }
+                    }
                 }}>
                     Cancel
                 </Button>
@@ -219,6 +227,9 @@ const CollectionRules: React.FC = () => {
                     Save
                 </Button>
             </Box>
+            {loading &&
+                <CustomizedProgressBar />
+            }
         </Box>
     );
 };

@@ -17,7 +17,7 @@ const TrialStatus: React.FC = () => {
     }
   }, []);
 
-  const [{ data }, refetch] = useAxios(
+  const [{ data, loading }, refetch] = useAxios(
     {
       url: `${process.env.NEXT_PUBLIC_API_BASE_URL}me`,
       headers: {
@@ -25,7 +25,7 @@ const TrialStatus: React.FC = () => {
       },
       method: 'GET',
     },
-    { manual: !accessToken}
+    { manual: !accessToken }
   );
 
   useEffect(() => {
@@ -62,11 +62,11 @@ const TrialStatus: React.FC = () => {
   const calculateDaysDifference = (endDate: string) => {
     const currentDate = new Date();
     const endDateObj = new Date(endDate);
-  
+
     if (isNaN(endDateObj.getTime())) {
       return -1;
     }
-  
+
     const timeDifference = endDateObj.getTime() - currentDate.getTime();
 
     if (timeDifference < 0) {
@@ -80,13 +80,13 @@ const TrialStatus: React.FC = () => {
     ) {
       return 0;
     }
-  
+
     const daysDifference = Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
-  
+
     return daysDifference;
   };
-  
-  
+
+
 
   const plan_days = calculateDaysDifference(data?.user_plan?.plan_end)
   const check_active = data?.user_plan?.plan_end
@@ -104,7 +104,7 @@ const TrialStatus: React.FC = () => {
         setBackgroundColor('rgba(255, 233, 131, 1)');
         setTextColor('rgba(0, 0, 0, 1)');
         setIconColor('rgba(0, 0, 0, 1)');
-      } else if (plan_days < 0 && check_active !==null ) {
+      } else if (plan_days < 0 && check_active !== null) {
         setStatusText('Free Trial Expired');
         setBackgroundColor('rgba(246, 202, 204, 1)');
         setTextColor('rgba(78, 1, 16, 1)');
@@ -115,10 +115,10 @@ const TrialStatus: React.FC = () => {
         setTextColor('#6EC125');
         setIconColor('#6EC125');
       } else if (check_active == null) {
-        setStatusText('Free Trial Active');
-        setBackgroundColor('#EAF8DD');
-        setTextColor('#6EC125');
-        setIconColor('#6EC125');
+        setStatusText('Trial Activated');
+        setBackgroundColor('rgba(253, 242, 202, 1)');
+        setTextColor('rgba(148, 120, 21, 1)');
+        setIconColor('rgba(148, 120, 21, 1)');
       }
     } else {
       if (plan_days !== undefined && plan_days <= 5 && plan_days >= 0) {
@@ -126,7 +126,7 @@ const TrialStatus: React.FC = () => {
         setBackgroundColor('rgba(255, 233, 131, 1)');
         setTextColor('rgba(0, 0, 0, 1)');
         setIconColor('rgba(0, 0, 0, 1)');
-      } else if (plan_days < 0 && check_active !==null ) {
+      } else if (plan_days < 0 && check_active !== null) {
         setStatusText('Subscription Expired');
         setBackgroundColor('rgba(246, 202, 204, 1)');
         setTextColor('rgba(78, 1, 16, 1)');
@@ -158,6 +158,7 @@ const TrialStatus: React.FC = () => {
     setIsSliderOpen(false);
   };
 
+  const shouldShowAccessTimeIcon = !loading && statusText && !statusText.includes('Expired');
 
   return (
     <>
@@ -176,12 +177,11 @@ const TrialStatus: React.FC = () => {
             marginRight: '2em'
           }
         }}>
-          {(statusText.includes('Expired')) && (
-            <>
-              <Image src={'danger.svg'} width={17} height={17} alt="danger" />
-            </>
+          {!loading && statusText.includes('Expired') && (
+            <Image src={'danger.svg'} width={17} height={17} alt="danger" />
           )}
-          {(statusText.includes('left') || statusText.includes('Left')) && (
+
+          {shouldShowAccessTimeIcon && (
             <AccessTimeIcon sx={{ color: iconColor, fontSize: '18px' }} />
           )}
           <Typography sx={{
@@ -196,13 +196,11 @@ const TrialStatus: React.FC = () => {
           }}>
             {statusText}
           </Typography>
-          {(statusText.includes('Trial Pending') || statusText.includes('Trial Active') || statusText.includes('Subscription Active')) && (
-            <AccessTimeIcon sx={{ color: iconColor }} />
-          )}
-          {(statusText.includes('left') || (statusText.includes('Expired'))) && (
+
+          {(statusText.includes('Trial') && !(statusText.includes('Pending'))) && (
             <Button onClick={handleOpenSlider} sx={{ ml: 0, textTransform: 'none', padding: 0, color: 'rgba(80, 82, 178, 1) !important' }}>
               <Typography className='first-sub-title' sx={{
-                color: '#4683F8 !important',
+                color: 'rgba(20, 110, 246, 1) !important',
                 marginRight: '5px',
                 pt: '1px',
                 letterSpacing: '-0.02em',

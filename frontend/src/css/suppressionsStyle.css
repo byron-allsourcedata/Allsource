@@ -1,0 +1,42 @@
+.rti--container {
+    --rti-main: #0000FF!important;
+    display: flex;
+    flex-wrap: wrap;
+    width: 100%;
+    min-width: 50%;
+    max-width: 69%;
+    min-height: 50px;
+    max-height: 150px;
+    overflow-y: auto;
+    padding: 0px !important;
+    padding-left: 10px !important;
+    box-sizing: border-box;
+}
+
+.rti--tag {
+    color: rgba(95, 99, 104, 1);
+    font-size: 12px;
+    font-family: "Roboto";
+    background-color: rgba(237, 237, 247, 1) !important;
+    margin-top: 2px;
+    max-height: 25px !important;
+    display: flex;
+    align-items: center;
+}
+
+.rti--input {
+    flex-grow: 1;
+    outline: 0;
+    font-size: 13px !important;
+    padding: 0px !important;
+    margin: 0px !important;
+    font-family: "Nunito Sans" !important;
+    line-height: inherit;
+    min-height: 50px !important;
+    max-width: 100%;
+}
+
+.rti--container:focus-within {
+    border-color: #ccc !important ;
+    box-shadow: var(--rti-main) 0 0 0 1px;
+}

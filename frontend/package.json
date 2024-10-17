@@ -38,6 +38,7 @@
     "react-datepicker": "^7.3.0",
     "react-dom": "^18",
     "react-router-dom": "^6.26.1",
+    "react-tag-input-component": "^2.0.2",
     "react-toastify": "^10.0.5",
     "styled-components": "^6.1.12",
     "sweetalert2": "^11.6.13"

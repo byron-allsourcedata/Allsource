@@ -10,7 +10,7 @@ import { SliderProvider } from '@/context/SliderContext';
 import Slider from '../components/Slider';
 import Image from 'next/image';
 import ConfirmDeleteDomain from './DeleteDomain';
-import CustomizedProgressBar from './CustomizedProgressBar';
+import CustomizedProgressBar from './FirstLevelLoader';
 
 interface Domain {
   id: number;
@@ -263,9 +263,6 @@ const DomainButton: React.FC = () => {
     setDeleteDomainPopup(false);
   };
 
-  if (loading) {
-    return <CustomizedProgressBar />;
-  }
 
   return (
     <>
@@ -298,6 +295,7 @@ const DomainButton: React.FC = () => {
         anchorEl={dropdownEl}
         open={dropdownOpen}
         onClose={handleDropdownClose}
+        sx={{'& .MuiMenu-list': {padding:'2px'}}}
       >
         <MenuItem onClick={() => setDomainPopup(true)} style={{ color: '#5052B2' }}>
           + Add Domain
@@ -319,7 +317,7 @@ const DomainButton: React.FC = () => {
               cursor: 'pointer',
               width: '20rem'
             }}>
-              <Typography>
+              <Typography className='second-sub-title'>
                 {domain.domain.replace('https://', '')}
               </Typography>
               {domains.length > 1 && (
@@ -342,6 +340,24 @@ const DomainButton: React.FC = () => {
           handleDelete={handleDeleteDomain}
         />
       )}
+          {loading && (
+                <Box
+                    sx={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        zIndex: 1000,
+                        overflow: 'hidden'
+                    }}
+                >
+                  <CustomizedProgressBar />
+                </Box>
+            )}
     </>
   );
 };

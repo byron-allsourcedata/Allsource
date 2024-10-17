@@ -13,10 +13,10 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({ title, linkText, linkUrl 
     <Tooltip
       title={
         <Box sx={{ backgroundColor: '#fff', margin:0, padding: 0, maxWidth: '400px', display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
-          <Typography className='table-data' component='div'  sx={{ fontSize: '10px !important',  }}>
+          <Typography className='table-data' component='div'  sx={{ fontSize: '12px !important',  }}>
             {title}
             {linkText && linkUrl && (
-            <Typography className='table-heading' component='span' sx={{ pl:1, color: 'rgba(80, 82, 178, 1) !important', whiteSpace: 'nowrap', fontSize: '11px !important', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            <Typography className='table-heading' component='span' sx={{ pl:1, color: 'rgba(80, 82, 178, 1) !important', whiteSpace: 'nowrap', fontSize: '13px !important', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               <Link href={linkUrl} target="_blank" rel="noopener" underline="none" color="inherit">
                 {linkText}
               </Link>
