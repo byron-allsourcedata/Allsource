@@ -62,6 +62,8 @@ ROOT_BOT_CLIENT_DOMAIN = 'all-leads.com'
 EMAIL_LIST = ['business_email', 'personal_emails', 'additional_personal_emails']
 
 
+count = 0
+
 def create_sts_client(key_id, key_secret):
     return boto3.client('sts', aws_access_key_id=key_id, aws_secret_access_key=key_secret, region_name='us-west-2')
 
@@ -195,7 +197,7 @@ async def check_activate_based_urls(page, suppression_rule):
 
     return False
 
-count = 0
+
 async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, session: Session, rmq_connection, subscription_service: SubscriptionService, root_user=None):
     partner_uid_decoded = urllib.parse.unquote(str(possible_lead['PARTNER_UID']).lower())
     partner_uid_dict = json.loads(partner_uid_decoded)
@@ -222,11 +224,11 @@ async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, sess
         page = referer
     behavior_type = 'visitor' if not partner_uid_dict.get('action') else partner_uid_dict.get('action')
     if root_user:
-        if count % 4 == 0:
+        if count % 12 == 0:
             behavior_type = 'visitor'
         elif count % 8 ==  0:
             behavior_type = 'viewed_product'
-        elif count % 12 == 0:
+        elif count % 4 == 0:
             behavior_type = 'product_added_to_cart'
 
     lead_user = session.query(LeadUser).filter_by(five_x_five_user_id=five_x_five_user.id, domain_id=user_domain_id).first()
@@ -366,6 +368,7 @@ async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, sess
     session.flush()
     
     session.commit()
+    count += 1
     
 
 def convert_leads_requests_to_utc(leads_requests):
