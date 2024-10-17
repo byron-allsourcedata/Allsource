@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect, useRef } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
-import { Box, Typography, Button, Table, TableBody, Modal, TableCell, TableContainer, TableHead, TableRow, Grid, IconButton, Switch, Divider, Popover, Drawer, LinearProgress, Tooltip, TextField, TablePagination } from '@mui/material';
+import { Box, Typography, Button, Table, TableBody, Modal, TableCell, TableContainer, TableHead, TableRow, Grid, IconButton, Switch, Divider, Popover, Drawer, LinearProgress, Tooltip, TextField, TablePagination, Chip } from '@mui/material';
 import Image from 'next/image';
 import { Elements } from '@stripe/react-stripe-js';
 import axiosInterceptorInstance from '@/axios/axiosInterceptorInstance';
@@ -1157,9 +1157,19 @@ export const SettingsBilling: React.FC = () => {
             </Grid>
 
             <Box sx={{ borderRadius: '4px', border: '1px solid #f0f0f0', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)', p: 3, marginBottom: 2 }}>
-                <Typography className='first-sub-title' sx={{ mb: 2 }}>
-                    Usages
-                </Typography>
+
+                <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'start' }}>
+                    <Typography className='first-sub-title' sx={{ mb: 2 }}>
+                        Usages
+                    </Typography>
+                    <Chip
+                        label='Coming soon'
+                        className='second-sub-title'
+                        sx={{
+                            backgroundColor: '#FDF2CA', borderRadius: '4px', justifyContent: 'center', color: '#795E00 !important',
+                        }}>
+                    </Chip>
+                </Box>
                 <Box sx={{
                     display: 'flex', justifyContent: 'space-between', gap: '55px',
                     '@media (max-width: 600px)': {
@@ -1211,7 +1221,7 @@ export const SettingsBilling: React.FC = () => {
 
 
                     <Box sx={{ width: '100%', marginBottom: 2 }}>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', opacity: 0.6 }}>
                             <Typography className='second-sub-title' sx={{ lineHeight: '20px !important', mb: '12px' }}>
                                 Prospect Data
                             </Typography>
@@ -1227,17 +1237,19 @@ export const SettingsBilling: React.FC = () => {
                                 height: '8px',
                                 borderRadius: '4px',
                                 backgroundColor: '#dbdbdb',
-                                mb: 1
+                                mb: 1,
+                                opacity: 0.6
                             }}
                         />
-                        <Typography className='paragraph' sx={{ color: '#787878 !important' }}>
+                        <Typography className='paragraph' sx={{ color: '#787878 !important', opacity: 0.6 }}>
                             {0}
                         </Typography>
+
                     </Box>
 
 
 
-                    <Box sx={{ flexShrink: 0 }}>
+                    <Box sx={{ flexShrink: 0, opacity: 0.6 }}>
                         <Button
                             className='hyperlink-red'
                             disabled={true}

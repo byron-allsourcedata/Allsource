@@ -169,10 +169,10 @@ export const SettingsSubscription: React.FC = () => {
                 const activePlan = stripePlans.find(plan => plan.is_active);
                 setHasActivePlan(!!activePlan);
                 let interval = 'month'
-                if (activePlan){
+                if (activePlan) {
                     interval = activePlan.interval
                 }
-                if (interval === 'year'){
+                if (interval === 'year') {
                     setTabValue(1)
                 }
                 const period_plans = response.data.stripe_plans.filter((plan: any) => plan.interval === interval);
@@ -200,7 +200,7 @@ export const SettingsSubscription: React.FC = () => {
             setIsLoading(true)
             const response = await axiosInterceptorInstance.get(`${path}?price_id=${stripePriceId}`);
             if (response.status === 200) {
-                if (!hasActivePlan && response.data.link){
+                if (!hasActivePlan && response.data.link) {
                     window.location.href = response.data.link;
                 }
                 if (response.data.status_subscription) {
@@ -224,7 +224,7 @@ export const SettingsSubscription: React.FC = () => {
                         console.error('Error fetching data:', error);
                     } finally {
                         setIsLoading(false);
-                    }                    
+                    }
                 }
                 else if (response.data.status === 'INCOMPLETE') {
                     showErrorToast('Subscription not found!');
@@ -232,7 +232,7 @@ export const SettingsSubscription: React.FC = () => {
             }
         } catch (error) {
             console.error('Error choosing plan:', error);
-        }finally{
+        } finally {
             setIsLoading(false)
         }
     };
@@ -441,31 +441,29 @@ export const SettingsSubscription: React.FC = () => {
                 boxShadow: '0px 2px 10px 0px rgba(0, 0, 0, 0.10)',
                 border: '1px solid #e4e4e4',
                 padding: 3,
-                opacity:0.6
             }}>
-                <Box sx={{display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}}>
-                <Typography variant="h6" className='first-sub-title' sx={{
-                    marginBottom: '8px',
-                    opacity:0.6
-                }}>
-                    Prospect Credits
-                </Typography>
-                <Chip
-            label='Coming soon...'
-            className='second-sub-title'
-            sx={{backgroundColor: 'rgba(255, 233, 131, 0.8)', borderRadius:'4px', mt:2, justifyContent: 'center', color: '#707071 !important' }}>
-                
-                </Chip>
+                <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Typography variant="h6" className='first-sub-title' sx={{
+                        marginBottom: '8px',
+                        opacity: 0.6
+                    }}>
+                        Prospect Credits
+                    </Typography>
+                    <Chip
+                        label='Coming soon'
+                        className='second-sub-title'
+                        sx={{ backgroundColor: 'rgba(255, 233, 100, 1)', borderRadius: '4px', justifyContent: 'center', color: '#795E00 !important', }}>
+                    </Chip>
                 </Box>
                 <Typography variant="body1" className='paragraph' sx={{
                     marginBottom: 3,
-                    opacity:0.6
+                    opacity: 0.6
                 }}>
                     Choose the number of contacts credits for your team
                 </Typography>
-                
+
                 <Box sx={{ marginBottom: 3, opacity: 0.6 }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3, opacity:0.6 }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3, opacity: 0.6 }}>
                         <Typography variant="body1" className='third-sub-title' sx={{
                             fontSize: '20px !important',
                             color: '#4a4a4a !important'
@@ -496,7 +494,7 @@ export const SettingsSubscription: React.FC = () => {
                                 aria-labelledby="credits-slider"
                             /> */}
 
-                    <Box sx={{ position: 'relative', width: '100%', marginBottom: '20px',  }}>
+                    <Box sx={{ position: 'relative', width: '100%', marginBottom: '20px', }}>
                         {/* Custom labels above the slider */}
                         <Box
                             sx={{
@@ -570,20 +568,20 @@ export const SettingsSubscription: React.FC = () => {
                         borderRadius: '4px',
                         padding: '18px 24px',
                         width: '100%',
-                        opacity:0.6
+                        opacity: 0.6
                     }}>
                         <Box>
                             <Typography variant="h6" className='third-sub-title' sx={{
                                 fontWeight: '600 !important',
                                 lineHeight: '16px !important',
                                 color: '#4a4a4a !important',
-                                opacity:0.6
+                                opacity: 0.6
                             }}>
                                 Summary
                             </Typography>
                             <Typography variant="body1" className='first-sub-title' sx={{
                                 fontWeight: '700 !important',
-                                opacity:0.6
+                                opacity: 0.6
                             }}>
                                 {selectedPlan?.name || 'None'} plan+
                                 {' '}{credits} prospect contacts credits.
@@ -595,7 +593,7 @@ export const SettingsSubscription: React.FC = () => {
                             <Typography variant="h6" className='heading-text' sx={{
                                 fontSize: '40px !important',
                                 fontWeight: '700 !important',
-                                opacity:0.6
+                                opacity: 0.6
                             }}>
                                 ${selectedPlan?.price || '0'}
                                 <Typography component='span' className='paragraph' sx={{
