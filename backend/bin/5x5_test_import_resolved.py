@@ -344,9 +344,9 @@ async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, sess
             if lead_user.is_returning_visitor == False:
                 lead_user.is_returning_visitor = True
                 session.flush()
-    events = [1, 2 , 3, 4, 5, 6, 7, 8, 9, 10]
+    events = [1, 2 , 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
     random_event = random.choice(events)
-    if behavior_type == 'checkout_completed' or random_event % 3 == 0:
+    if behavior_type == 'checkout_completed' or random_event % 4 == 0:
         if lead_user.is_converted_sales == False:
                 lead_user.is_converted_sales = True
                 session.flush()
@@ -362,7 +362,7 @@ async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, sess
         else:
             new_record = LeadsUsersOrdered(lead_user_id=lead_user.id, ordered_at=requested_at)
             session.add(new_record)
-    if  behavior_type == 'product_added_to_cart' or random_event % 2 != 0:
+    if  behavior_type == 'product_added_to_cart' or random_event % 3 == 0:
         existing_record = session.query(LeadsUsersAddedToCart).filter_by(lead_user_id=lead_user.id).first()
         if existing_record:
             existing_record.added_at = requested_at
