@@ -447,7 +447,7 @@ const Dashboard: React.FC = () => {
       }
       const fetchData = async () => {
         try {
-          const response = await axiosInstance.get("dashboard");
+          const response = await axiosInstance.get("/dashboard/contact");
           setData(response.data);
           if (response.status === 200) {
             setShowCharts(true);

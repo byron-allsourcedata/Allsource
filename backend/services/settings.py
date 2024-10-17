@@ -269,8 +269,7 @@ class SettingsService:
             'overage': '0.49/contact',
             'next_billing_date': None,
             'monthly_total': None,
-            'active': True,
-            'canceled_at': user_subscription.cancel_scheduled_at
+            'active': True
         }
         plan = subscription['items']['data'][0]['plan']
         start_date, end_date = self.calculate_dates(plan)
@@ -286,11 +285,12 @@ class SettingsService:
             'next_billing_date': self.timestamp_to_date(subscription['current_period_end']).strftime('%b %d, %Y'),
             'monthly_total': f"${plan['amount'] / 100:,.0f}",
             'active': is_active,
-            'downgrade_plan': get_product_from_price_id(user_subscription.downgrade_price_id) if user_subscription and user_subscription.downgrade_price_id else None,
-            'canceled_at': user_subscription.cancel_scheduled_at
         }
-        
-        return subscription_details
+        billig_detail = {'subscription_details': subscription_details,
+                         'downgrade_plan': get_product_from_price_id(user_subscription.downgrade_price_id) if user_subscription and user_subscription.downgrade_price_id else None,
+                         'canceled_at': user_subscription.cancel_scheduled_at
+                         } 
+        return billig_detail
             
     def get_billing(self, user: dict):
         result = {}

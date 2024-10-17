@@ -38,7 +38,6 @@ from services.payments_plans import PaymentsPlans
 from services.payments import PaymentsService
 from services.leads import LeadsService
 from services.integrations.base import IntegrationService
-from services.dashboard import DashboardService
 from services.company_info import CompanyInfoService
 from services.audience import AudienceService
 from services.domains import UserDomainsService
@@ -261,8 +260,9 @@ def get_sse_events_service(user_persistence_service: UserPersistence = Depends(g
     return SseEventsService(user_persistence_service=user_persistence_service)
 
 
-def get_dashboard_service(user= Depends(check_user_authorization), data = Depends(check_pixel_install_domain)):
-    return DashboardService(user=user)
+def get_dashboard_service(domain: UserDomains = Depends(check_pixel_install_domain),
+                          leads_persistence_service: LeadsPersistence = Depends(get_leads_persistence)):
+    return DashboardService(domain=domain, leads_persistence_service=leads_persistence_service)
 
 
 def get_pixel_installation_service(db: Session = Depends(get_db),

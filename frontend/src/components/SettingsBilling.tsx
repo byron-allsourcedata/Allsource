@@ -232,6 +232,8 @@ export const SettingsBilling: React.FC = () => {
     const [selectedCardId, setSelectedCardId] = useState<string | null>();
     const [selectedInvoiceId, setselectedInvoiceId] = useState<string | null>();
     const [removePopupOpen, setRemovePopupOpen] = useState(false);
+    const [downgrade_plan, setDowngrade_plan] = useState<string | null>();
+    const [canceled_at, setCanceled_at] = useState<string | null>();
     const [sendInvoicePopupOpen, setSendInvoicePopupOpen] = useState(false);
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [page, setPage] = useState(0);
@@ -251,11 +253,13 @@ export const SettingsBilling: React.FC = () => {
             setIsLoading(true);
             const response = await axiosInterceptorInstance.get('/settings/billing');
             setCardDetails(response.data.card_details);
-            setChecked(response.data.billing_details.overage)
-            setBillingDetails(response.data.billing_details);
+            setChecked(response.data.billing_details.overage);
+            setBillingDetails(response.data.billing_details.subscription_details);
+            setDowngrade_plan(response.data.billing_details.downgrade_plan);
+            setCanceled_at(response.data.billing_details.canceled_at);
             setContactsCollected(response.data.usages_credits.leads_credits);
             setPlanContactsCollected(response.data.usages_credits.plan_leads_credits)
-            setProspectData(response.data.usages_credits.prospect_credits)
+            setProspectData(response.data.usages_credits.prospect_credits);
         } catch (error) {
             console.error('Error fetching data:', error);
         } finally {
@@ -571,6 +575,11 @@ export const SettingsBilling: React.FC = () => {
         setCardDetails(prevDetails => [...prevDetails, data]);
     };
 
+    const formatDate = (dateString: string): string => {
+        const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'short', day: 'numeric' };
+        return new Date(dateString).toLocaleDateString('en-US', options);
+    };
+
 
     const getStatusStyles = (status: string) => {
         switch (status?.toLowerCase()) {
@@ -805,16 +814,16 @@ export const SettingsBilling: React.FC = () => {
                                 Billing Details
                             </Typography>
                             {billingDetails.active ? (
-                                billingDetails.canceled_at ? (
-                                    <Box sx={{ display: 'flex', borderRadius: '4px', background: '#f8dede', padding: '2px 12px', gap: '3px' }}>
+                                canceled_at ? (
+                                    <Box sx={{ display: 'flex', borderRadius: '4px', background: '#eaf8dd', padding: '2px 12px', gap: '3px' }}>
                                         <Typography className="main-text" sx={{
                                             borderRadius: '4px',
-                                            color: '#b00000',
+                                            color: '#2b5b00',
                                             fontSize: '12px',
                                             fontWeight: '600',
                                             lineHeight: '16px'
                                         }}>
-                                            Active, but will end on {new Date(billingDetails.canceled_at).toLocaleDateString()}
+                                            Active, canceled on {formatDate(canceled_at)}
                                         </Typography>
                                     </Box>
                                 ) : (
@@ -1090,7 +1099,7 @@ export const SettingsBilling: React.FC = () => {
                                 }
 
                                 // Skip rendering 'Monthly Total' in its own row, since it's already handled
-                                if (key === 'monthly_total' || key === 'active' || key === 'downgrade_plan' || key === 'canceled_at') {
+                                if (key === 'monthly_total' || key === 'active') {
                                     return null;
                                 }
 
@@ -1116,7 +1125,9 @@ export const SettingsBilling: React.FC = () => {
                                             lineHeight: '16px !important',
                                             color: '#5f6368 !important'
                                         }}>
-                                            {renderValue(value)}</Typography>
+                                            {renderValue(value)}
+                                            {key === 'plan_name' && downgrade_plan ? ` (Downgraded to ${downgrade_plan})` : ''}
+                                        </Typography>
                                     </Box>
                                 );
                             })}
