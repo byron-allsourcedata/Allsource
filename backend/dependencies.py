@@ -38,7 +38,6 @@ from services.payments_plans import PaymentsPlans
 from services.payments import PaymentsService
 from services.leads import LeadsService
 from services.integrations.base import IntegrationService
-from services.dashboard import DashboardService
 from services.company_info import CompanyInfoService
 from services.audience import AudienceService
 from services.domains import UserDomainsService
@@ -261,8 +260,9 @@ def get_sse_events_service(user_persistence_service: UserPersistence = Depends(g
     return SseEventsService(user_persistence_service=user_persistence_service)
 
 
-def get_dashboard_service(user= Depends(check_user_authorization), data = Depends(check_pixel_install_domain)):
-    return DashboardService(user=user)
+def get_dashboard_service(domain: UserDomains = Depends(check_pixel_install_domain),
+                          leads_persistence_service: LeadsPersistence = Depends(get_leads_persistence)):
+    return DashboardService(domain=domain, leads_persistence_service=leads_persistence_service)
 
 
 def get_pixel_installation_service(db: Session = Depends(get_db),
@@ -287,9 +287,12 @@ def get_settings_service(settings_persistence: SettingsPersistence = Depends(
                                     ,
                                     subscription_service: SubscriptionService = Depends(
                                        get_subscription_service
-                                       )
+                                       ),
+                                    user_domains_service: UserDomainsService = Depends(get_domain_service)
                                    ):
-    return SettingsService(settings_persistence=settings_persistence, plan_persistence=plan_persistence, user_persistence=user_persistence, send_grid_persistence=send_grid_persistence, subscription_service=subscription_service)
+    return SettingsService(settings_persistence=settings_persistence, plan_persistence=plan_persistence, user_persistence=user_persistence, 
+                           send_grid_persistence=send_grid_persistence, subscription_service=subscription_service, 
+                           user_domains_service=user_domains_service)
 
 
 def get_suppression_service(suppression_persistence: SuppressionPersistence = Depends(get_suppression_persistence)):

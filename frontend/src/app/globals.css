@@ -101,7 +101,7 @@ body::-webkit-scrollbar {
   font-family: 'Nunito Sans';
   font-size: 14px;
   line-height: normal;
-  font-weight: 500;
+  font-weight: 600;
   color: #202124;
 }
 
@@ -254,3 +254,4 @@ input:-webkit-autofill, textarea:-webkit-autofill {
 *::-webkit-scrollbar-track {
   background-color: #f1f1f1;
 }
+

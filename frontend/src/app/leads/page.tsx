@@ -1339,10 +1339,7 @@ const Leads: React.FC = () => {
                                                                     zIndex: 99
                                                                 }),
                                                                 ...(key === 'average_time_sec' && {
-                                                                    '&::after': {
-                                                                        content: 'none',
-                                                                        borderColor: '#fff'
-                                                                    }
+                                                                    "::after": { content: 'none'}
                                                                 })
                                                             }}
                                                             onClick={sortable ? () => handleSortRequest(key) : undefined}
@@ -1434,9 +1431,9 @@ const Leads: React.FC = () => {
                                                                     display: 'flex',
                                                                     padding: '2px 8px',
                                                                     borderRadius: '2px',
-                                                                    fontFamily: 'Nunito',
+                                                                    fontFamily: 'Roboto',
                                                                     fontSize: '12px',
-                                                                    fontWeight: '700',
+                                                                    fontWeight: '400',
                                                                     lineHeight: 'normal',
                                                                     backgroundColor: getStatusStyle(row.behavior_type).background,
                                                                     color: getStatusStyle(row.behavior_type).color,
@@ -1456,9 +1453,9 @@ const Leads: React.FC = () => {
                                                                     display: 'flex',
                                                                     padding: '2px 8px',
                                                                     borderRadius: '2px',
-                                                                    fontFamily: 'Nunito',
+                                                                    fontFamily: 'Roboto',
                                                                     fontSize: '12px',
-                                                                    fontWeight: '700',
+                                                                    fontWeight: '400',
                                                                     lineHeight: 'normal',
                                                                     backgroundColor: getStatusStyle(row.visitor_type).background,
                                                                     color: getStatusStyle(row.visitor_type).color,
@@ -1471,7 +1468,7 @@ const Leads: React.FC = () => {
                                                             </Box>
                                                         </TableCell>
 
-                                                        <TableCell sx={leadsStyles.table_array}>
+                                                        <TableCell sx={{...leadsStyles.table_array, "::after": { content: 'none'}}}>
                                                             {row.average_time_sec ? formatTimeSpent(row.average_time_sec) : '--'}
                                                         </TableCell>
 

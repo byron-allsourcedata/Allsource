@@ -67,14 +67,18 @@ class SubscriptionService:
             }
         }
         return response
-
-    def is_user_has_active_subscription(self, user_id):
+    
+    def get_user_subscription(self, user_id):
         user_subscription = (
             self.db.query(UserSubscriptions)
             .join(User, User.current_subscription_id == UserSubscriptions.id)
             .filter(User.id == user_id)
             .first()
         )
+        return user_subscription
+
+    def is_user_has_active_subscription(self, user_id):
+        user_subscription = self.get_user_subscription(user_id=user_id)
         if user_subscription:
             if user_subscription.is_trial and user_subscription.plan_end is None:
                 return True
@@ -213,6 +217,8 @@ class SubscriptionService:
         
     def save_downgrade_price_id(self, price_id, subscription: UserSubscriptions):
         subscription.downgrade_price_id = price_id
+        subscription.cancel_scheduled_at = None
+        subscription.cancellation_reason = None
         subscription.downgrade_at = datetime.now(timezone.utc).replace(tzinfo=None)
         self.db.commit()
     
@@ -245,7 +251,16 @@ class SubscriptionService:
             
         if status == 'active':
             user_subscription = self.db.query(UserSubscriptions).where(UserSubscriptions.platform_subscription_id == platform_subscription_id, UserSubscriptions.price_id == price_id).first()          
-            if not user_subscription:
+            if user_subscription is not None and user_subscription.status == 'active':
+                user_subscription.plan_start = start_date
+                user_subscription.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
+                user_subscription.plan_end = end_date
+                if canceled_at:
+                    user_subscription.cancel_scheduled_at = datetime.fromtimestamp(canceled_at, timezone.utc).replace(tzinfo=None)
+                if start_date > user_subscription.plan_start:
+                    user.leads_credits = leads_credits if user.leads_credits >= 0 else  leads_credits - user.leads_credits
+                    user.prospect_credits = prospect_credits
+            else:
                 plan_type = determine_plan_name_from_product_id(stripe_payload.get("plan").get("product"))
                 interval = stripe_payload.get("plan").get("interval")
                 plan_id = self.plans_persistence.get_plan_by_title(plan_type, interval)
@@ -271,15 +286,6 @@ class SubscriptionService:
                 user.leads_credits = leads_credits if user.leads_credits >= 0 else  leads_credits - user.leads_credits
                 user.prospect_credits = prospect_credits
                 user.current_subscription_id = new_subscription.id
-            else:
-                user_subscription.plan_start = start_date
-                user_subscription.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
-                user_subscription.plan_end = end_date
-                if canceled_at:
-                    user_subscription.cancel_scheduled_at = datetime.fromtimestamp(canceled_at, timezone.utc).replace(tzinfo=None)
-                if start_date > user_subscription.plan_start:
-                    user.leads_credits = leads_credits if user.leads_credits >= 0 else  leads_credits - user.leads_credits
-                    user.prospect_credits = prospect_credits
             self.db.commit()
                 
         if status == "canceled" or status == 'inactive':
@@ -292,23 +298,16 @@ class SubscriptionService:
         return status
     
     def get_invitation_limit(self, user_id):
-        member_limit =self.db.query(UserSubscriptions.members_limit).filter(
-            UserSubscriptions.user_id == user_id
-        ).order_by(UserSubscriptions.id.desc()).limit(1).scalar()
-        return member_limit
+        return len(self.user_persistence_service.get_combined_team_info(user_id=user_id)) + 1
     
     
     def check_invitation_limit(self, user_id):
-        member_limit =self.db.query(UserSubscriptions.members_limit).filter(
-            UserSubscriptions.user_id == user_id
-        ).order_by(UserSubscriptions.id.desc()).limit(1).scalar()
-        if member_limit <= 0:
-            return False
-        return True
+        user_subscription = self.get_user_subscription(user_id)
+        if user_subscription:
+            subscription_member_limit = user_subscription.members_limit
+            user_member_limit = len(self.user_persistence_service.get_combined_team_info(user_id=user_id)) + 1
+            if user_member_limit < subscription_member_limit:
+                return True
+            
+        return False
     
-    def update_invitation_limit(self, user_id, invitation_limit):
-        member_limit = self.db.query(UserSubscriptions).filter(
-            UserSubscriptions.user_id == user_id
-        ).order_by(UserSubscriptions.id.desc()).limit(1).first()
-        member_limit.members_limit = member_limit.members_limit + invitation_limit
-        self.db.commit()

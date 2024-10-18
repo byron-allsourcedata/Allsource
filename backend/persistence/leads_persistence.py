@@ -301,6 +301,35 @@ class LeadsPersistence:
         count = query.count()
         max_page = math.ceil(count / per_page)
         return leads, count, max_page
+    
+    
+    def get_contact_data(self, domain_id, from_date, to_date):
+        query = (
+            self.db.query(
+                LeadsVisits.start_date,
+                LeadUser.behavior_type,
+                func.count(LeadUser.id).label('lead_count')
+            )
+            .join(LeadsVisits, LeadsVisits.lead_id == LeadUser.id)
+            .filter(LeadUser.domain_id == domain_id)
+        )
+
+        if from_date and to_date:
+            start_date = datetime.fromtimestamp(from_date, tz=pytz.UTC)
+            end_date = datetime.fromtimestamp(to_date, tz=pytz.UTC)
+            query = query.filter(
+                and_(
+                    LeadsVisits.start_date >= start_date,
+                    LeadsVisits.start_date <= end_date
+                )
+            )
+            
+        query = query.group_by(LeadsVisits.start_date, LeadUser.behavior_type)
+        results = query.all()
+        return results
+
+
+
 
     def get_lead_data(self, lead_id):
         return self.db.query(FiveXFiveUser).filter(FiveXFiveUser.id == lead_id).first()

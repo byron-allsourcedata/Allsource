@@ -24,7 +24,7 @@ import DashboardRevenue from "@/components/DashboardRevenue";
 import DashboardContact from "@/components/DashboardContact";
 import CustomTooltip from "@/components/customToolTip";
 import { DateRangeIcon } from "@mui/x-date-pickers/icons";
-import CalendarPopup from "@/components/CalendarPopup";
+import CalendarPopup from "@/components/CustomCalendar";
 
 
 
@@ -188,7 +188,6 @@ const SupportSection: React.FC = () => {
   const [rootElement, setRootElement] = useState<HTMLElement | null>(null);
 
   useEffect(() => {
-    // Устанавливаем корневой элемент для модального окна после рендера
     if (calendlyPopupRef.current) {
       setRootElement(calendlyPopupRef.current);
     }
@@ -377,6 +376,11 @@ const Dashboard: React.FC = () => {
   const isCalendarOpen = Boolean(calendarAnchorEl);
   const [formattedDates, setFormattedDates] = useState<string>('');
   const [appliedDates, setAppliedDates] = useState<{ start: Date | null; end: Date | null }>({ start: null, end: null });
+  const [selectedDateLabel, setSelectedDateLabel] = useState<string>('');
+
+  const handleDateLabelChange = (label: string) => {
+    setSelectedDateLabel(label);
+  };
 
 
   const handleCalendarClick = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -393,8 +397,11 @@ const Dashboard: React.FC = () => {
       setFormattedDates(`${start.toLocaleDateString()} - ${end.toLocaleDateString()}`);
     } else if (start) {
       setFormattedDates(`${start.toLocaleDateString()}`);
-    } else {
-      setFormattedDates('No dates selected');
+    } else if (end) {
+      setFormattedDates(`${end.toLocaleDateString()}`);
+    }
+    else {
+      setFormattedDates('');
     }
   };
 
@@ -440,10 +447,10 @@ const Dashboard: React.FC = () => {
       }
       const fetchData = async () => {
         try {
-          const response = await axiosInstance.get("dashboard");
+          const response = await axiosInstance.get("/dashboard/contact");
           setData(response.data);
           if (response.status === 200) {
-            setShowCharts(true); // Set to true if response is 200
+            setShowCharts(true);
           }
           if (response.data.status === "NEED_BOOK_CALL") {
             setShowSlider(true);
@@ -490,14 +497,49 @@ const Dashboard: React.FC = () => {
               flexDirection: "column",
             }}
           >
-            <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center',  "@media (max-width: 600px)": { flexDirection: 'column', alignItems: 'start', } }}>
+            <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', "@media (max-width: 600px)": { flexDirection: 'column', alignItems: 'start', } }}>
+            <Typography
+                variant="h4"
+                component="h1"
+                sx={{...dashboardStyles.title, '@media (max-width: 600px)': {
+                  display: 'none'} }}
+              >
+                Dashboard <CustomTooltip title={"Text about dashboard"} />
+              </Typography>
+              <Box sx={{display: 'none', width: '100%', justifyContent: 'space-between', '@media (max-width: 600px)': {
+                  display: 'flex'}}}>
               <Typography
                 variant="h4"
                 component="h1"
                 sx={dashboardStyles.title}
               >
-                Dashboard <CustomTooltip title={"Text about dashboard"} />
+                Dashboard
               </Typography>
+
+              <Box sx={{ display: 'none', justifyContent: 'flex-end', alignItems: 'center', pt:0.5, gap: 1, '@media (max-width: 600px)': {
+                  display: 'flex',
+                }
+              }}>
+                {/* Calendary picker*/}
+                <Typography className="second-sub-title">{selectedDateLabel}</Typography>
+                <Button
+                  aria-controls={isCalendarOpen ? 'calendar-popup' : undefined}
+                  aria-haspopup="true"
+                  aria-expanded={isCalendarOpen ? 'true' : undefined}
+                  onClick={handleCalendarClick}
+                  sx={{
+                    textTransform: 'none',
+                    color: 'rgba(128, 128, 128, 1)',
+                    border: '1px solid rgba(184, 184, 184, 1)',
+                    borderRadius: '4px',
+                    padding: '8px',
+                    minWidth: 'auto',
+                  }}
+                >
+                  <DateRangeIcon fontSize='small' />
+                </Button>
+              </Box>
+              </Box>
 
               <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center', width: '100%', alignItems: 'center', mt: 2, }}>
                 <Tabs
@@ -572,11 +614,14 @@ const Dashboard: React.FC = () => {
 
             </Box>
 
-            <Box sx={{width: '100%', display: 'flex', justifyContent: 'flex-end', '@media (max-width: 600px)': {
-                    display: 'none'
-                  }}}>
-            {/* Calendary picker*/}
-            <Button
+            <Box sx={{
+              width: '100%', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 2, '@media (max-width: 600px)': {
+                display: 'none',
+              }
+            }}>
+              {/* Calendary picker*/}
+              <Typography className="second-sub-title">{selectedDateLabel}</Typography>
+              <Button
                 aria-controls={isCalendarOpen ? 'calendar-popup' : undefined}
                 aria-haspopup="true"
                 aria-expanded={isCalendarOpen ? 'true' : undefined}
@@ -625,6 +670,7 @@ const Dashboard: React.FC = () => {
               open={isCalendarOpen}
               onClose={handleCalendarClose}
               onDateChange={handleDateChange}
+              onDateLabelChange={handleDateLabelChange}
               onApply={handleApply}
             />
 

@@ -27,7 +27,8 @@ class SuppressionRule(Base):
                 "activate_based_urls": self.activate_based_urls,
                 "page_views_limit": self.page_views_limit,
                 "collection_timeout": self.collection_timeout,
-                "suppressions_multiple_emails": self.suppressions_multiple_emails
+                "suppressions_multiple_emails": self.suppressions_multiple_emails,
+                "actual_contect_days": self.actual_contect_days
             }
 
 event.listen(SuppressionRule, "before_insert", create_timestamps)

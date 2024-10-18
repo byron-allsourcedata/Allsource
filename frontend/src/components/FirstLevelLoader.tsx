@@ -1,9 +1,9 @@
 import React from 'react';
-import { Box, Backdrop, LinearProgress } from '@mui/material';
+import { Box, LinearProgress } from '@mui/material';
 import { styled } from '@mui/material/styles';
 
 const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
-  height: 4,
+  height: 5,
   borderRadius: 0,
   backgroundColor: '#c6dafc',
   '& .MuiLinearProgress-bar': {
@@ -14,11 +14,13 @@ const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
 
 const PageWithLoader: React.FC = () => {
   return (
-        <Box sx={{ width: '100%', position: 'fixed', top: '9vh', left:'146px','@media (min-height: 900px)': { top:'8vh'} , '@media (max-width: 899px)': { left: 0, top:'8vh'}, }}>
+    <>
+        <Box sx={{ width: '120%', position: 'absolute', top: 0, zIndex: (theme) => theme.zIndex.drawer + 1, pr:20 }}>
           <BorderLinearProgress
             variant="indeterminate"
           />
         </Box>
+    </>
   );
 };
 
