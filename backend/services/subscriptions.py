@@ -128,7 +128,6 @@ class SubscriptionService:
             stripe_payload.get("data").get("object").get("plan").get("product"))
         interval = stripe_payload.get("data").get("object").get("plan").get("interval")
         payment_platform_subscription_id = stripe_payload.get("data").get("object").get("id")
-        plan_name = f"{plan_type} at ${price}"
         transaction_id = stripe_payload.get("id")
         plan_id = self.plans_persistence.get_plan_by_title(plan_type, interval)
         subscription_transaction_obj = SubscriptionTransactions(
@@ -140,10 +139,11 @@ class SubscriptionService:
             plan_id=plan_id,
             transaction_id=transaction_id,
             platform_subscription_id=payment_platform_subscription_id,
-            plan_name=plan_name,
+            plan_name=plan_type,
             created_at=created_at,
             status=status,
-            stripe_request_created_at=stripe_request_created_at
+            stripe_request_created_at=stripe_request_created_at,
+            pricing = price
         )
         self.db.add(subscription_transaction_obj)
         self.db.flush()

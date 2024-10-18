@@ -1,7 +1,8 @@
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { Box, Checkbox, Divider, ListItemText, MenuItem, Select, SelectChangeEvent, Typography } from "@mui/material";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import CustomizedProgressBar from "./CustomizedProgressBar";
+import axiosInterceptorInstance from "@/axios/axiosInterceptorInstance";
 import StatsCard from "./StatsCard";
 import Image from "next/image";
 import * as React from 'react';
@@ -33,9 +34,7 @@ function getDaysInMonth(month: number, year: number) {
     return days;
 }
 
-
 const DashboardRevenue: React.FC = () => {
-
     //first chart
     const data = getDaysInMonth(10, 2024);
 
@@ -73,6 +72,20 @@ const DashboardRevenue: React.FC = () => {
             [seriesId]: !prev[seriesId],
         }));
     };
+
+    const fetchRevenueData = async () => {
+        try {
+            const response = await axiosInterceptorInstance.get('/dashboard/revenue');
+            
+        } catch (error) {
+            console.error('Error fetching data:', error);
+        } finally {
+        }
+    };
+    
+    useEffect(() => {
+        fetchRevenueData();
+    }, []);
 
     const options = [
         { id: 'revenue', label: 'Total Revenue', color: 'rgba(180, 218, 193, 1)' },
