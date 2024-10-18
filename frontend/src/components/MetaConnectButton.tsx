@@ -75,6 +75,8 @@ const MetaConnectButton = ({open, onClose, initAdId}: MetaConnectPopupProps) => 
     const [adId, setAdId] = useState('');
     const [adIdError, setAdIdError] = useState(false);
     const [loading, setLoading] = useState(false)
+    const [userID, setUserID] = useState(undefined)
+    const [fullName, setFullName] = useState(undefined)
     const handleAdIdChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setAdId(event.target.value);
         setAdIdError(event.target.value === ''); // Set error if API Key is empty
@@ -82,6 +84,21 @@ const MetaConnectButton = ({open, onClose, initAdId}: MetaConnectPopupProps) => 
     useEffect(() => {
         setAdId(initAdId || '')
     }, [initAdId])
+
+    const handleChangeAccessToken = (response: any) => {
+        setAccessToken(response.accessToken)
+    }
+
+    const handleProfileSuccess = (response: any) => {
+        setUserID(response.id);
+        setFullName(response.name);
+    };
+
+    useEffect(() => {
+        if (accessToken && userID) {
+            handleCreateIntegration(userID, fullName);
+        }
+    }, [accessToken, userID, fullName]);
 
     const handleCreateIntegration = async(userID?: string, fullName?: string) => {
         setLoading(true)
@@ -184,13 +201,13 @@ const MetaConnectButton = ({open, onClose, initAdId}: MetaConnectPopupProps) => 
                 appId="470766002467450"
                 scope='ads_read,ads_management'
                 onSuccess={(response) => {
-                    setAccessToken(response.accessToken)
+                    handleChangeAccessToken(response)
                 }}
                 onFail={(error) => {
                 console.log('Login Failed!', error);
                 }}
                 onProfileSuccess={(response) => {
-                    handleCreateIntegration(response.id, response.name)
+                    handleProfileSuccess(response)
                 }}
                 render={({ onClick, logout }) => (
                 <Box>
@@ -230,3 +247,7 @@ const MetaConnectButton = ({open, onClose, initAdId}: MetaConnectPopupProps) => 
 }
  
 export default MetaConnectButton;
+
+function setUserID(id: any) {
+    throw new Error("Function not implemented.");
+}

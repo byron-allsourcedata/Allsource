@@ -13,7 +13,7 @@ class WoocommerceCredentials(BaseModel):
     consumer_secret: str
 
 
-class KlaviyoOrSandlaneCredentials(BaseModel):
+class ApiKeyCredentials(BaseModel):
     api_key: str 
 
 
@@ -36,10 +36,11 @@ class IntegrationCredentials(BaseModel):
     shopify: Optional[ShopifyOrBigcommerceCredentials] = None
     woocommerce: Optional[WoocommerceCredentials] = None
     bigcommerce: Optional[ShopifyOrBigcommerceCredentials] = None
-    klaviyo: Optional[KlaviyoOrSandlaneCredentials] = None
+    klaviyo: Optional[ApiKeyCredentials] = None
     mailchimp: Optional[MailchimpCredentials] = None
     meta: Optional[MetaCredentials] = None
-    sendlane: Optional[KlaviyoOrSandlaneCredentials] = None
+    sendlane: Optional[ApiKeyCredentials] = None
+    omnisend: Optional[ApiKeyCredentials] = None
     pixel_install: bool = False
     supperssion: bool = False
 
@@ -92,3 +93,10 @@ class ContactFiled(Enum):
     email = 'email'
     phone_number = 'phone_number'
 
+class OrderAPI(BaseModel):
+    platform_order_id: Optional[int] = None
+    platform_user_id: Optional[str] = None
+    platform_created_at: Optional[str] = None
+    total_price: Optional[float] = None
+    email: Optional[EmailStr] = None
+    currency_code: Optional[str] = None

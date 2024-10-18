@@ -5,15 +5,16 @@ from persistence.leads_persistence import LeadsPersistence
 from persistence.leads_persistence import LeadsPersistence
 from persistence.leads_order_persistence import LeadOrdersPersistence
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
+from persistence.integrations.suppression import IntegrationsSuppressionPersistence
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
 from persistence.audience_persistence import AudiencePersistence
-from persistence.integrations.suppression import IntegrationsSuppressionPersistence
 from .woocommerce import WoocommerceIntegrationService
 from .shopify import ShopifyIntegrationService
+from .onimesend import OmnisendIntegrationService
+from .meta import MetaIntegrationsService
 from .mailchimp import MailchimpIntegrationsService
 from .klaviyo import KlaviyoIntegrationsService
 from .bigcommerce import BigcommerceIntegrationsService
-from .meta import MetaIntegrationsService
 
 class IntegrationService:
 
@@ -65,9 +66,11 @@ class IntegrationService:
                                                  self.lead_orders_persistence,
                                                  self.integrations_user_sync_persistence,
                                                  self.client, self.aws_service, self.db)
-        # self.bigcommerce = BigcommerceIntegrationsService(self.integration_persistence, 
-        #                                                   self.lead_persistence, 
-        #                                                   self.client)
+        self.bigcommerce = BigcommerceIntegrationsService(self.integration_persistence, 
+                                                          self.lead_persistence, 
+                                                          self.lead_orders_persistence,
+                                                          self.aws_service
+                                                          )
         self.klaviyo = KlaviyoIntegrationsService(self.domain_persistence, 
                                                 self.integration_persistence,  
                                                 self.lead_persistence,
@@ -76,6 +79,11 @@ class IntegrationService:
                                                 self.integration_persistence,  
                                                 self.lead_persistence,
                                                 self.integrations_user_sync_persistence,)
+        self.omnisend = OmnisendIntegrationService(leads_persistence=self.lead_persistence,
+                                                   sync_persistence=self.integrations_user_sync_persistence,
+                                                   integration_persistence=self.integration_persistence,
+                                                   domain_persistence=self.domain_persistence
+                                                   )
         # self.mailchimp = MailchimpIntegrationsService(self.integration_persistence)
         return self
 

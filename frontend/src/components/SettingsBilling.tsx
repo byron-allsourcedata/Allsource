@@ -651,21 +651,21 @@ export const SettingsBilling: React.FC = () => {
                             </Button>
 
                             <Box sx={{
-                            border: '1px dashed #5052B2',
-                            borderRadius: '4px',
-                            width: '62px',
-                            height: '62px',
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            '@media (max-width: 600px)': {
-                                display: 'none'
-                            }
-                        }}>
-                            <Button onClick={handleOpen} sx={{padding:2}}>
-                                <Image src="/add-square.svg" alt="add-square" height={32} width={32} />
-                            </Button>
-                        </Box>
+                                border: '1px dashed #5052B2',
+                                borderRadius: '4px',
+                                width: '62px',
+                                height: '62px',
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                '@media (max-width: 600px)': {
+                                    display: 'none'
+                                }
+                            }}>
+                                <Button onClick={handleOpen} sx={{ padding: 2 }}>
+                                    <Image src="/add-square.svg" alt="add-square" height={32} width={32} />
+                                </Button>
+                            </Box>
                         </Box>
                         {cardDetails.length > 0 && cardDetails.map((card) => (
                             <Box key={card.id} sx={{
@@ -800,7 +800,7 @@ export const SettingsBilling: React.FC = () => {
                             </Box>
                         ))}
 
-                        
+
 
                         <Modal open={open} onClose={handleClose}>
                             <Box sx={{
@@ -826,7 +826,7 @@ export const SettingsBilling: React.FC = () => {
                             <Typography className="first-sub-title">
                                 Billing Details
                             </Typography>
-                            {billingDetails.active ? (
+                            {billingDetails?.active ? (
                                 canceled_at ? (
                                     <Box sx={{ display: 'flex', borderRadius: '4px', background: '#FCDBDC', padding: '2px 12px', gap: '3px', alignItems: 'center' }}>
                                         <Typography className="main-text" sx={{
@@ -880,7 +880,7 @@ export const SettingsBilling: React.FC = () => {
                             )}
                         </Box>
                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                            {Object.entries(billingDetails).map(([key, value], index) => {
+                            {billingDetails && Object.entries(billingDetails).map(([key, value], index) => {
                                 if (key === 'overage') {
                                     // Custom flex layout for "Overage"
                                     return (
@@ -1108,7 +1108,7 @@ export const SettingsBilling: React.FC = () => {
                                             <Divider orientation="vertical" flexItem sx={{ height: '32px', alignSelf: 'center' }} />
 
                                             {/* Monthly Total - find it in the next iteration */}
-                                            {Object.entries(billingDetails).map(([nextKey, nextValue], nextIndex) => {
+                                            {billingDetails && typeof billingDetails === 'object' && Object.entries(billingDetails).map(([nextKey, nextValue], nextIndex) => {
                                                 if (nextKey === 'monthly_total') {
                                                     return (
                                                         <Box key={nextIndex} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
@@ -1124,7 +1124,7 @@ export const SettingsBilling: React.FC = () => {
                                                         </Box>
                                                     );
                                                 }
-                                                return null; // Skip other keys
+                                                return null;
                                             })}
                                         </Box>
                                     );
@@ -1198,9 +1198,10 @@ export const SettingsBilling: React.FC = () => {
                                 Contacts collected
                             </Typography>
                             <Typography className='second-sub-title' sx={{ lineHeight: '20px !important', mb: '12px' }}>
-                                {((contactsCollected / planContactsCollected) * 100).toFixed(2)}% Used
+                                {planContactsCollected
+                                    ? `${((contactsCollected / planContactsCollected) * 100).toFixed(2)}% Used`
+                                    : 0}
                             </Typography>
-
                         </Box>
                         <LinearProgress
                             variant="determinate"

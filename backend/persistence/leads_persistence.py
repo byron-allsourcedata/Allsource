@@ -26,6 +26,8 @@ from models.leads_users import LeadUser
 from models.five_x_five_locations import FiveXFiveLocations
 from models.leads_users_added_to_cart import LeadsUsersAddedToCart
 from models.leads_users_ordered import LeadsUsersOrdered
+from models.leads_orders import LeadOrders
+from models.subscription_transactions import SubscriptionTransactions
 
 logger = logging.getLogger(__name__)
 
@@ -311,6 +313,7 @@ class LeadsPersistence:
                 func.count(LeadUser.id).label('lead_count')
             )
             .join(LeadsVisits, LeadsVisits.lead_id == LeadUser.id)
+            .group_by(LeadsVisits.start_date, LeadUser.behavior_type)
             .filter(LeadUser.domain_id == domain_id)
         )
 
@@ -324,9 +327,52 @@ class LeadsPersistence:
                 )
             )
             
-        query = query.group_by(LeadsVisits.start_date, LeadUser.behavior_type)
         results = query.all()
         return results
+    
+    def get_lifetime_revenue(self, domain_id):
+        total_revenue = (
+            self.db.query(func.sum(LeadOrders.total_price))
+            .join(LeadUser, LeadOrders.lead_user_id == LeadUser.id)
+            .filter(LeadUser.domain_id == domain_id)
+        ).scalar() or 0
+        return total_revenue
+    
+    def get_investment(self, user_id):
+        return self.db.query(func.sum(SubscriptionTransactions.pricing)).filter(
+            SubscriptionTransactions.user_id == user_id
+        ).scalar() or 0
+
+    def get_revenue_data(self, domain_id, from_date, to_date, user_id):
+        query = (
+            self.db.query(
+                LeadsVisits.start_date,
+                LeadUser.behavior_type,
+                func.sum(LeadOrders.total_price).label('total_price'),
+                func.count(LeadOrders.id).label('total_orders')
+            )
+            .join(LeadsVisits, LeadsVisits.lead_id == LeadUser.id)
+            .join(LeadOrders, LeadOrders.lead_user_id == LeadUser.id)
+            .filter(LeadUser.domain_id == domain_id)
+        )
+
+        if from_date and to_date:
+            start_date = datetime.fromtimestamp(from_date, tz=pytz.UTC)
+            end_date = datetime.fromtimestamp(to_date, tz=pytz.UTC)
+            query = query.filter(
+                and_(
+                    LeadsVisits.start_date >= start_date,
+                    LeadsVisits.start_date <= end_date
+                )
+            )
+            
+        query = query.group_by(func.date(LeadsVisits.start_date), LeadUser.behavior_type)
+            
+        lifetime_revenue = self.get_lifetime_revenue(domain_id)
+        investment = self.get_investment(user_id)
+        
+        results = query.all()
+        return results, lifetime_revenue, investment
 
 
 
@@ -632,7 +678,7 @@ class LeadsPersistence:
 
 
     def get_leads_domain(self, domain_id: int, **filter_by: dict):
-        return self.db.query(LeadUser).filter_by(domain_id=domain_id, **filter_by)
+        return self.db.query(LeadUser).filter_by(domain_id=domain_id, **filter_by).all()
 
     def search_contact(self, start_letter, domain_id):
         letters = start_letter.split()

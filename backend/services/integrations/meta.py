@@ -38,8 +38,6 @@ class MetaIntegrationsService:
     def __handle_request(self, method: str, url: str, headers: dict = None, json: dict = None, data: dict = None, params: dict = None, api_key: str = None):
         if not headers:
             headers = {
-                'Authorization': f'Klaviyo-API-Key {api_key}',
-                'revision': '2024-07-15',
                 'accept': 'application/json', 
                 'content-type': 'application/json'
             }
@@ -57,13 +55,13 @@ class MetaIntegrationsService:
         return self.integrations_persisntece.get_credentials_for_service(domain_id, 'Meta')
 
 
-    def add_integration(self, credentials: IntegrationCredentials, domain_id: int):
-        credential = self.get_credentials(domain_id)
+    def add_integration(self, credentials: IntegrationCredentials, domain, user):
+        credential = self.get_credentials(domain.id)
         if credential:
             raise HTTPException(status_code=409, detail={'status': IntegrationsStatus.INTEGRATIONS_ALREADY_EXIST.value})
         credential = self.get_long_lived_token(credentials.meta.access_token)
         new_integration = self.integrations_persisntece.create_integration({
-            'domain_id': domain_id,
+            'domain_id': domain.id,
             'ad_account_id': credentials.meta.ad_account_id.replace('act_', ''),
             'access_token': credential.get('access_token'),
             'expire_access_token': credential.get('expires_in'),
@@ -84,7 +82,7 @@ class MetaIntegrationsService:
     
 
     def get_long_lived_token(self, fb_exchange_token):
-        url = 'https://graph.facebook.com/v13.0/oauth/access_token'
+        url = 'https://graph.facebook.com/v20.0/oauth/access_token'
         params = {
             'grant_type': 'fb_exchange_token',
             'client_id': self.APP_ID,
@@ -92,6 +90,7 @@ class MetaIntegrationsService:
             'fb_exchange_token': fb_exchange_token
         }
         response = self.__handle_request('GET', url=url, params=params)
+        print(response.json())
         if response.status_code != 200:
              raise HTTPException(status_code=400, detail={'status': 'Long-lived token unavailable'})
         data = response.json()
@@ -160,13 +159,18 @@ class MetaIntegrationsService:
             message_body=message)
         
     def process_data_sync(self, message):
-        sync = IntegrationUserSync(**message.get('sync'))
+        sync = None
+        try:
+            sync = IntegrationUserSync(**message.get('sync'))
+        except: pass
         leads_type = message.get('leads_type')
         domain_id = message.get('domain_id')
         lead = LeadUser(**message.get('lead')) if message.get('lead') else None
         domains = self.domain_persistence.get_domain_by_filter(**{'id': domain_id} if domain_id else {})
         for domain in domains:
             credentials = self.get_credentials(domain.id)
+            if not credentials:
+                return 
             credentials.access_token = self.get_long_lived_token(credentials.access_token).get('access_token')
             self.integrations_persisntece.db.commit()
             if not credentials:
@@ -183,12 +187,9 @@ class MetaIntegrationsService:
             else:
                 leads = self.leads_persistence.get_leads_domain(domain.id, behavior_type=leads_type)
             for data_sync_item in data_syncs_list if not sync else [sync]:
-                # if data_sync_item.data_map:
-                #     data_map = [json.loads(item) for item in data_sync_item.data_map]
-                # else: data_map = None
                 session_id = random.getrandbits(64)
                 for lead in leads:
-                    profile = self.__create_user(session_id, lead.five_x_five_user_id, sync.list_id, credentials.access_token)
+                    profile = self.__create_user(session_id, lead.five_x_five_user_id, data_sync_item.list_id, credentials.access_token)
                 self.sync_persistence.update_sync({
                     'last_sync_date': datetime.now()
                 }, id=data_sync_item.id)
@@ -209,14 +210,10 @@ class MetaIntegrationsService:
             ],
             "data": [profile]
         }
-        url = f'https://graph.facebook.com/v20.0/act_{custom_audience_id}/users'
+        url = f'https://graph.facebook.com/v20.0/{custom_audience_id}/users'
         response = self.__handle_request('POST', url=url, data={
             'access_token': access_token,
             'payload': payload,
-            'session': {
-                'session_id': session_id,
-                'batch_seq': 1,
-            },
             'app_id': self.APP_ID
             })
         print(response.json())

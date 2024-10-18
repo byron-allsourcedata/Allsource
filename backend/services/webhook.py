@@ -19,8 +19,18 @@ class WebhookService:
         if not user_data:
             return payload
         
-        platform_subscription_id = payload.get("data").get("object").get("id")
-        price_id = payload.get("data").get("object").get("plan").get("id")
+        platform_subscription_id = data_object.get("id")
+        price_id = data_object.get("plan").get("id")
+        
+        schedule = data_object.get("plan").get("schedule")
+        if schedule is not None:
+            return payload
+        
+        previous_attributes = data_object.get("plan").get("previous_attributes")
+        if previous_attributes:
+            schedule = data_object.get("plan").get("previous_attributes").get('schedule')
+            if schedule is not None:
+                return payload
         
         if self.subscription_service.check_duplicate_send(stripe_request_created_at, platform_subscription_id, price_id):
             return payload

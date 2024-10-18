@@ -82,9 +82,9 @@ class SubscriptionService:
         if user_subscription:
             if user_subscription.is_trial and user_subscription.plan_end is None:
                 return True
-            if user_subscription.plan_end.tzinfo is None:
+            if user_subscription.status in ('active','canceled'):
                 user_subscription.plan_end = user_subscription.plan_end.replace(tzinfo=timezone.utc)
-            return user_subscription.plan_end > datetime.now(timezone.utc)
+                return user_subscription.plan_end > datetime.now(timezone.utc)
 
         return False
 
@@ -128,7 +128,6 @@ class SubscriptionService:
             stripe_payload.get("data").get("object").get("plan").get("product"))
         interval = stripe_payload.get("data").get("object").get("plan").get("interval")
         payment_platform_subscription_id = stripe_payload.get("data").get("object").get("id")
-        plan_name = f"{plan_type} at ${price}"
         transaction_id = stripe_payload.get("id")
         plan_id = self.plans_persistence.get_plan_by_title(plan_type, interval)
         subscription_transaction_obj = SubscriptionTransactions(
@@ -140,10 +139,11 @@ class SubscriptionService:
             plan_id=plan_id,
             transaction_id=transaction_id,
             platform_subscription_id=payment_platform_subscription_id,
-            plan_name=plan_name,
+            plan_name=plan_type,
             created_at=created_at,
             status=status,
-            stripe_request_created_at=stripe_request_created_at
+            stripe_request_created_at=stripe_request_created_at,
+            pricing = price
         )
         self.db.add(subscription_transaction_obj)
         self.db.flush()
@@ -267,6 +267,7 @@ class SubscriptionService:
                 domains_limit, users_limit, integrations_limit, leads_credits, prospect_credits, members_limit = self.plans_persistence.get_plan_limit_by_id(
                 plan_id=plan_id)
                 self.db.query(UserSubscriptions).where(UserSubscriptions.status == 'active').update({"status": "inactive", "updated_at": datetime.now(timezone.utc).replace(tzinfo=None)})
+                self.db.flush()
                 new_subscription = UserSubscriptions(
                     plan_start=start_date,
                     plan_end=end_date,

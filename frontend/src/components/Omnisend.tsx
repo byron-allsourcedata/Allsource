@@ -9,9 +9,9 @@ import CustomizedProgressBar from "./CustomizedProgressBar";
 import CloseIcon from '@mui/icons-material/Close';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 
-interface CreateKlaviyoProps {
+interface CreateOmnisendProps {
     handleClose: () => void
-    onSave: (integration: IntegrationsCredentials) => void 
+    onSave: (new_integration: any) => void
     open: boolean
     initApiKey?: string 
 }
@@ -83,7 +83,7 @@ const klaviyoStyles = {
       },
 }
 
-const KlaviyoIntegrationPopup = ({ handleClose, open, onSave, initApiKey}: CreateKlaviyoProps) => {
+const OmnisendConnect = ({ handleClose, open, onSave, initApiKey}: CreateOmnisendProps) => {
     const [apiKey, setApiKey] = useState('');
     const [apiKeyError, setApiKeyError] = useState(false);
     const [loading, setLoading] = useState(false)
@@ -112,14 +112,14 @@ const KlaviyoIntegrationPopup = ({ handleClose, open, onSave, initApiKey}: Creat
         setApiKeyError(!value); 
     };
 
-    const instructions = [
-        { id: 'unique-id-1', text: 'Go to the Klaviyo website and log into your account.' },
-        { id: 'unique-id-2', text: 'Click on the Settings option located in your Klaviyo account options.' },
-        { id: 'unique-id-3', text: 'Click Create Private API Key Name to Maximiz.' },
-        { id: 'unique-id-4', text: 'Assign full access permissions to Lists and Profiles, and read access permissions to Metrics, Events, and Templates for your Klaviyo key.' },
-        { id: 'unique-id-5', text: 'Click Create.' },
-        { id: 'unique-id-6', text: 'Copy the API key in the next screen and paste to API Key field located in Maximiz Klaviyo section.' },
-        { id: 'unique-id-7', text: 'Click Connect.' },
+    const instructions: any[] = [
+        // { id: 'unique-id-1', text: 'Go to the Klaviyo website and log into your account.' },
+        // { id: 'unique-id-2', text: 'Click on the Settings option located in your Klaviyo account options.' },
+        // { id: 'unique-id-3', text: 'Click Create Private API Key Name to Maximiz.' },
+        // { id: 'unique-id-4', text: 'Assign full access permissions to Lists and Profiles, and read access permissions to Metrics, Events, and Templates for your Klaviyo key.' },
+        // { id: 'unique-id-5', text: 'Click Create.' },
+        // { id: 'unique-id-6', text: 'Copy the API key in the next screen and paste to API Key field located in Maximiz Klaviyo section.' },
+        // { id: 'unique-id-7', text: 'Click Connect.' },
     ];
 
     type HighlightConfig = {
@@ -158,10 +158,10 @@ const KlaviyoIntegrationPopup = ({ handleClose, open, onSave, initApiKey}: Creat
 
     const handleApiKeySave = async() => {
         const response = await axiosInstance.post('/integrations/', {
-            klaviyo: {
+            omnisend: {
                 api_key: apiKey
             }
-        }, {params: {service_name: 'klaviyo'}})
+        }, {params: {service_name: 'omnisend'}})
         if(response.status === 200) {
             handleNextTab()
         }
@@ -193,15 +193,7 @@ const KlaviyoIntegrationPopup = ({ handleClose, open, onSave, initApiKey}: Creat
     };
 
     const handleSave = async() => {
-        onSave({
-            id: -1,
-            service_name: 'Klaviyo',
-            data_center: '',
-            access_token: apiKey,
-            is_with_suppression: checked,
-            ad_account_id: '',
-            shop_domain: ''
-        })
+        onSave({id: '123'})
         handleClose()
     }
 
@@ -290,7 +282,7 @@ const KlaviyoIntegrationPopup = ({ handleClose, open, onSave, initApiKey}: Creat
         >
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 3.5, px: 2, borderBottom: '1px solid #e4e4e4' }}>
                 <Typography variant="h6" sx={{ textAlign: 'center', color: '#202124', fontFamily: 'Nunito Sans', fontWeight: '600', fontSize: '16px', lineHeight: 'normal' }}>
-                    Connect to Klaviyo
+                    Connect to Omnisend
                 </Typography>
                 <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
                     <Link href="#" sx={{
@@ -331,14 +323,14 @@ const KlaviyoIntegrationPopup = ({ handleClose, open, onSave, initApiKey}: Creat
                     <TabPanel value="1" sx={{p: 0}}>
                         <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)' }}>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <Image src='/klaviyo.svg' alt='klaviyo' height={26} width={32} />
+                                <Image src='/omnisend_icon_black.svg' alt='klaviyo' height={26} width={32} />
                                 <Typography variant="h6" sx={{
                                     fontFamily: 'Nunito Sans',
                                     fontSize: '16px',
                                     fontWeight: '600',
                                     color: '#202124'
                                 }}>API Key</Typography>
-                                <Tooltip title="Enter the API key provided by Klaviyo" placement="right">
+                                <Tooltip title="Enter the API key provided by Omnisend" placement="right">
                                     <Image src='/baseline-info-icon.svg' alt='baseline-info-icon' height={16} width={16} />
                                 </Tooltip>
                             </Box>
@@ -355,8 +347,9 @@ const KlaviyoIntegrationPopup = ({ handleClose, open, onSave, initApiKey}: Creat
                                 InputProps={{ sx: klaviyoStyles.formInput }}
                             />
                         </Box>
-                        <Box sx={{ background: '#f0f0f0', border: '1px solid #efefef', borderRadius: '4px', p: 2 }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', mb: 2 }}>
+                        {instructions.length > 0 && ( <Box sx={{ background: '#f0f0f0', border: '1px solid #efefef', borderRadius: '4px', p: 2 }}>
+                            
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', mb: 2 }}>
                                 <Image src='/info-circle.svg' alt='info-circle' height={20} width={20} />
                                 <Typography variant="subtitle1" sx={{
                                     fontFamily: 'Nunito Sans',
@@ -399,7 +392,8 @@ const KlaviyoIntegrationPopup = ({ handleClose, open, onSave, initApiKey}: Creat
                                     </ListItem>
                                 ))}
                             </List>
-                        </Box>
+                        </Box>)
+                            }
                     </TabPanel>
                     <TabPanel value="2" sx={{ p: 0 }}>
                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -557,4 +551,4 @@ const KlaviyoIntegrationPopup = ({ handleClose, open, onSave, initApiKey}: Creat
     );
 }
 
-export default KlaviyoIntegrationPopup;
+export default OmnisendConnect;

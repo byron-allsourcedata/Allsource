@@ -20,6 +20,7 @@ class SubscriptionTransactions(Base):
     end_date = Column(TIMESTAMP, nullable=True)
     currency = Column(VARCHAR, nullable=True)
     price_id = Column(VARCHAR, nullable=True)
+    pricing = Column(Integer, nullable=True)
 
 
 event.listen(SubscriptionTransactions, "before_insert", create_timestamps)

@@ -1,19 +1,21 @@
 from pydantic import BaseModel, EmailStr
-from typing import Optional
+from typing import Optional, Any
 from datetime import datetime
 
-class BigCommerceUserScheme(BaseModel):
-    authentication_force_password_reset: bool
-    company: Optional[str] = None
-    customer_group_id: int
-    email: EmailStr
-    first_name: Optional[str] = None
-    last_name: Optional[str] = None
-    notes: Optional[str] = None
-    phone: Optional[str] = None
-    registration_ip_address: Optional[str] = None
-    tax_exempt_category: Optional[str] = None
-    date_modified: datetime
-    accepts_product_review_abandoned_cart_emails: bool
-    origin_channel_id: Optional[int] = None
-    channel_ids: Optional[str] = None
+class BigCommerceInfo(BaseModel):
+    id: str
+    account_uuid: str
+    domain: str
+    secure_url: str
+    control_panel_base_url: str
+    admin_email: str
+    order_email: str
+
+class BigCommerceOrderAPI(BaseModel):
+    bigceoid: Optional[int] = None
+    bigcommerce_user_id: Optional[str] = None
+    bigcommerce_created_at: Optional[str] = None
+    total_price: Optional[float] = None
+    email: Optional[EmailStr] = None
+    currency_code: Optional[str] = None
+

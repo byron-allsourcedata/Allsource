@@ -153,3 +153,5 @@ class IntegrationsStatus(Enum):
     CREATE_IS_FAILED = 'CREATED_IS_FAILED'
     CREDENTIALS_NOT_FOUND = 'CREDENTIALS_NOT_FOUND'
     SUCCESS = "SUCCESS"
+    NOT_MATCHED_EARLIER = "Store Domain does not match the one you specified earlier"
+    ALREADY_EXIST = 'ALREADY_EXIST'

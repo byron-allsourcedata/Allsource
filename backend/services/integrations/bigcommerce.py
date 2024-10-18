@@ -1,87 +1,180 @@
+import hashlib
+import os
 from typing import List
 from sqlalchemy.orm import Session
-from schemas.integrations.integrations import IntegrationCredentials
-from schemas.integrations.bigcommerce import BigCommerceUserScheme
+from models.users_domains import UserDomains
+from enums import IntegrationsStatus
+from schemas.integrations.integrations import IntegrationCredentials, OrderAPI
+from schemas.integrations.bigcommerce import BigCommerceInfo
 from persistence.leads_persistence import LeadsPersistence
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
+from services.aws import AWSService
 from httpx import Client
 from fastapi import HTTPException
-from datetime import datetime
+from datetime import datetime, timedelta
+from persistence.leads_order_persistence import LeadOrdersPersistence
+
 
 class BigcommerceIntegrationsService:
 
-    def __init__(self, integrations_persistence: IntegrationsPresistence, leads_persistence: LeadsPersistence, client: Client):
+    def __init__(self, integrations_persistence: IntegrationsPresistence, 
+                 leads_persistence: LeadsPersistence, 
+                 leads_order_persistence: LeadOrdersPersistence,
+                 aws_service: AWSService):
         self.integrations_persistence = integrations_persistence
-        self.leads_persistence = leads_persistence
-        self.client = client
+        self.lead_persistence = leads_persistence
+        self.AWS = aws_service
+        self.lead_orders_persistence = leads_order_persistence
+        self.client = Client()
 
-    def __get_credentials(self, user_id: int):
-        with self.integrations_persistence as service:
-            return service.get_credentials_for_service(user_id, 'BigCommerce')
+    def get_credentials(self, domain_id: int):
+        integration = self.integrations_persistence.get_credentials_for_service(domain_id, 'BigCommerce')
+        return integration
 
-    def __get_customers(self, shop_hash: str, access_token: str) -> List[dict]:
-        response = self.client.get(f'https://api.bigcommerce.com/stores/{shop_hash}/v3/customers', headers={'X-Auth-Token': access_token})
-        if response.status_code != 200:
-            raise HTTPException(status_code=response.status_code, detail=response.json().get('errors')[0].get('detail'))
-        return response.json().get('data')
+    def __handle_request(self, url: str, method: str = 'GET', headers: dict = None, json: dict = None, data: dict = None, params: dict = None, access_token: str = None):
+        if not headers:
+            headers = {
+                'X-Auth-Token': access_token,
+                'accept': 'application/json', 
+                'content-type': 'application/json'
+            }
+        url = f'https://api.bigcommerce.com/stores/{url}'
+        response = self.client.request(method, url, headers=headers, json=json, data=data, params=params)
+        if response.is_redirect:
+            redirect_url = response.headers.get('Location')
+            if redirect_url:
+                response = self.client.request(method, redirect_url, headers=headers, json=json, data=data, params=params)
 
-    def __save_integration(self, shop_hash: str, access_token: str, user_id: int):
-        credentials = {'user_id': user_id, 'shop_domain': shop_hash, 'access_token': access_token, 'service_name': 'BigCommerce'}
-        with self.integrations_persistence as service:
-            integration = service.create_integration(credentials)
-            if not integration:
-                raise HTTPException(status_code=409, detail='Integration already exists')
-            return integration
+        return response
 
-    def __save_customer(self, customer: BigCommerceUserScheme, user_id: int):
-        with self.integrations_persistence as service:
-            service.bigcommerce.save_customer(customer.model_dump(), user_id)
-
-    def __get_shop_info(self, shop_hash, api_key: str):
-        response = self.client.get(f'https://api.bigcommerce.com/stores/{shop_hash}/v2/store',
-                                   headers={
-                                       'X-Auth-Token': api_key
-                                   })
-        if response.status_code != 200:
-            raise HTTPException(status_code=400, detail={'status': 'error', 'detail': {'message': 'Credentials invalid'}})
-        return response.json()
+    def __get_store_info(self, store_hash: str, access_token: str):
+        url = f'{store_hash}/v2/store'
+        info = self.__handle_request(url, access_token=access_token)
+        return self.__mapped_info(info.json())
     
 
-    def add_integration(self, user, domain, credentials: IntegrationCredentials):
-        shop_info = self.__get_shop_info()
-        if user['company_website '] != shop_info['domain']:
-            raise HTTPException(status_code=400, detail={'status': 'error', 'detail': {
-                'message': 'This Store does not match the one you specified earlier'
-            }})
-        customers = [self.__mapped_customer(customer) for customer in self.__get_customers(credentials.bigcommerce.shop_domain, credentials.bigcommerce.access_token)]
-        integration = self.__save_integration(credentials.bigcommerce.shop_domain, credentials.bigcommerce.access_token, domain.id)
-        # for customer in customers:
-        #     self.__save_customer(customer, user['id'])
-        return {
-            'status': 'Successfully added',
-            'detail': {
-                'id': integration.id,
-                'service_name': 'BigCommerce'
-            }
+    def __save_integrations(self, store_hash: str, access_token: str, domain_id):
+        credential = self.get_credentials(domain_id)
+        if credential:
+            credential.access_token = access_token
+            credential.shop_domain = store_hash
+            self.integrations_persistence.db.commit()
+            return credential
+        integration = self.integrations_persistence.create_integration({
+            'domain_id': domain_id,
+            'shop_domain': store_hash,
+            'access_token': access_token,
+            'service_name': 'BigCommerce'
+        })
+        if not integration:
+            raise HTTPException(status_code=409, detail={'status': IntegrationsStatus.CREATE_IS_FAILED.value})
+        return integration
+    
+
+    def add_integration(self, new_credentials: IntegrationCredentials, domain, user):
+        credentials = self.get_credentials(domain_id=domain.id)
+        info = self.__get_store_info(store_hash=new_credentials.bigcommerce.shop_domain, 
+                                     access_token=new_credentials.bigcommerce.access_token)
+        if info.domain.startswith('https://'):
+            info.domain = f'{new_credentials.bigcommerce.shop_domain}'
+        if not credentials and info.domain != domain.domain:
+            raise HTTPException(status_code=400, detail=IntegrationsStatus.NOT_MATCHED_EARLIER.value)
+        integration = self.__save_integrations(store_hash=new_credentials.bigcommerce.shop_domain, 
+                                 access_token=new_credentials.bigcommerce.access_token, domain_id=domain.id)
+        self.__set_pixel(user, domain, shop_domain=integration.shop_domain, access_token=integration.access_token)
+        if not integration:
+            raise HTTPException(status_code=409, detail=IntegrationsStatus.CREATE_IS_FAILED.value)
+        return integration
+    
+
+    def __set_pixel(self, user, domain, shop_domain: str, access_token: str):
+        client_id = domain.data_provider_id
+        if client_id is None:
+            client_id = hashlib.sha256((str(domain.id) + os.getenv('SECRET_SALT')).encode()).hexdigest()
+            self.integrations_persistence.db.query(UserDomains).filter(UserDomains.user_id == user.get('id'), UserDomains.domain == domain.domain).update(
+                {UserDomains.data_provider_id: client_id},
+                synchronize_session=False
+            )
+            self.integrations_persistence.db.commit() 
+        with open('../backend/data/js_pixels/bigcommerce.js', 'r') as file:
+            existing_script_code = file.read()
+
+        pixel_bigcommerce = f"window.pixelClientId = '{client_id}';\n" + existing_script_code
+        self.AWS.upload_string(pixel_bigcommerce, f'bigcommrce-pixel-code/{client_id}.js')
+
+        script_event_url = f'https://maximiz-data.s3.us-east-2.amazonaws.com/bigcommrce-pixel-code/{client_id}.js'
+        url = f"{shop_domain}/v3/content/scripts"
+        headers = {
+            'X-Auth-Token': access_token,
+            'Content-Type': 'application/json'
         }
 
-# -------------------------------MAPPED-BIGCOMMERCE-DATA------------------------------------ #
+        script_event_data = {
+            "name": "BigCommerce Pixel Script",
+            "description": "Script for BigCommerce pixel tracking",
+            "src": script_event_url, 
+            "auto_uninstall": True,
+            "load_method": "default",
+            "location": "footer",
+            "visibility": "all_pages",
+            "kind": "src",
+            "consent_category": "essential"
+        }
+
+        response_event = self.__handle_request(url, method='POST', access_token=access_token, headers=headers, json=script_event_data)
+        if response_event.status_code == 200:
+            return {'message': 'Successfully'}
 
 
-    def __mapped_customer(self, customer: dict) -> BigCommerceUserScheme:
-        return BigCommerceUserScheme(
-            authentication_force_password_reset=customer.get("authentication", {}).get("force_password_reset", False),
-            company=customer.get("company"),
-            customer_group_id=customer.get("customer_group_id", 0),
-            email=customer.get("email"),
-            first_name=customer.get("first_name"),
-            last_name=customer.get("last_name"),
-            notes=customer.get("notes"),
-            phone=customer.get("phone"),
-            registration_ip_address=customer.get("registration_ip_address"),
-            tax_exempt_category=customer.get("tax_exempt_category"),
-            date_modified=datetime.now(),
-            accepts_product_review_abandoned_cart_emails=customer.get("accepts_product_review_abandoned_cart_emails", False),
-            origin_channel_id=customer.get("origin_channel_id"),
-            channel_ids=customer.get("channel_ids")
+    def __get_orders(self, store_hash: str, access_token: str):
+        date = datetime.now() - timedelta(hours=24)
+        url = f'{store_hash}/v2/orders'
+        params = {
+            'status_id': 10
+        }
+        response = self.__handle_request(url, method='GET', access_token=access_token, params=params)
+        return response.json()
+
+
+    def order_sync(self, domain_id: int):
+        credential = self.get_credentials(domain_id)
+        orders = [self.__mapped_order(order) for order in self.__get_orders(credential.shop_domain, credential.access_token) if order]
+        for order in orders:
+            try:
+                lead_user = self.lead_persistence.get_leads_user_filter_by_email(domain_id, order.email)
+                if lead_user and len(lead_user) > 0: 
+                    self.lead_orders_persistence.create_lead_order({
+                        'platform': 'Bigcommerce',
+                        'platform_user_id': order.platform_user_id,
+                        'platform_order_id': order.platform_order_id,
+                        'lead_user_id': lead_user[0].id,
+                        'platform_created_at': order.platform_created_at,
+                        'total_price': order.total_price,
+                        'currency_code': order.currency_code,
+                        'platfrom_email': order.email
+                    })
+            except: pass
+        
+
+
+    def __mapped_info(self, json):
+        return BigCommerceInfo(
+            id=json.get('id'),
+            account_uuid=json.get('account_uuid'),
+            domain=json.get('domain'),
+            secure_url=json.get('secure_url'),
+            control_panel_base_url=json.get('control_panel_base_url'),
+            admin_email=json.get('admin_email'),
+            order_email=json.get('order_email')
+        )
+    
+
+    def __mapped_order(self, json):
+        return OrderAPI(
+            platform_order_id=json.get('id'),
+            platform_user_id=json.get('cutomer_id'),
+            email=json.get('billing_address').get('email'),
+            total_price=json.get('total_inc_tax'),
+            platform_created_at=json.get('date_created'),
+            currency_code=json.get('currency_code')
         )

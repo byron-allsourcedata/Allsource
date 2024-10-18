@@ -3,12 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { Box, Typography, Button, Tabs, Tab, TextField, Dialog, DialogActions, Tooltip, Slider, DialogContent, DialogTitle, IconButton, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, TableSortLabel, InputAdornment, Drawer, Divider, List, ListItem, ListItemIcon, ListItemText, Chip } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import PlanCard from '@/components/PlanCard';
-import axios from 'axios';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
 import axiosInterceptorInstance from '@/axios/axiosInterceptorInstance';
 import CustomTooltip from './customToolTip';
-import { Padding } from '@mui/icons-material';
 import CustomizedProgressBar from '@/components/CustomizedProgressBar';
 import Image from 'next/image';
 import { showErrorToast, showToast } from './ToastNotification';
@@ -215,11 +211,21 @@ export const SettingsSubscription: React.FC = () => {
                     showToast('Subscription was successful!');
                     try {
                         setIsLoading(true);
-                        const period = tabValue === 0 ? 'month' : 'year';
-                        const period_plans = response.data.stripe_plans.filter((plan: any) => plan.interval === period);
+                        await new Promise(resolve => setTimeout(resolve, 3000));
+                        const response = await axiosInterceptorInstance.get(`/subscriptions/stripe-plans`);
+                        setAllPlans(response.data.stripe_plans)
+                        const stripePlans: StripePlan[] = response.data.stripe_plans;
+                        const activePlan = stripePlans.find(plan => plan.is_active);
+                        setHasActivePlan(!!activePlan);
+                        let interval = 'month'
+                        if (activePlan) {
+                            interval = activePlan.interval
+                        }
+                        if (interval === 'year') {
+                            setTabValue(1)
+                        }
+                        const period_plans = response.data.stripe_plans.filter((plan: any) => plan.interval === interval);
                         setPlans(period_plans);
-                        const activePlan = response.data.stripe_plans.find((plan: any) => plan.is_active) !== undefined;
-                        setHasActivePlan(activePlan);
                     } catch (error) {
                         console.error('Error fetching data:', error);
                     } finally {
@@ -316,7 +322,6 @@ export const SettingsSubscription: React.FC = () => {
             }
             finally {
                 setIsLoading(false);
-                window.location.href = "/settings?section=subscription";
                 handleConfirmCancellationPopupClose()
                 handleExcitingOfferPopupClose()
                 handleCancelSubscriptionPlanPopupClose()

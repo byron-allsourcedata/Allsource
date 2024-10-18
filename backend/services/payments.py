@@ -24,7 +24,7 @@ class PaymentsService:
     def upgrade_subscription(self, current_subscription, platform_subscription_id, price_id):
         if current_subscription['schedule']:
             self.upgrade_subscription_scheduled(current_subscription)
-        return {'status': self.get_subscription_status(self.upgrade_subscription_immediate(current_subscription, platform_subscription_id, price_id))}
+        return {'status': self.upgrade_subscription_immediate(current_subscription, platform_subscription_id, price_id)}
 
     def upgrade_subscription_immediate(self, current_subscription, platform_subscription_id, price_id):
         upgrade_subscription = stripe.Subscription.modify(
@@ -37,7 +37,7 @@ class PaymentsService:
             proration_behavior='none',
             billing_cycle_anchor='now'
         )
-        return {'status': self.get_subscription_status(upgrade_subscription)}
+        return self.get_subscription_status(upgrade_subscription)
 
     def upgrade_subscription_scheduled(self, current_subscription):
         schedule = stripe.SubscriptionSchedule.retrieve(current_subscription.get("schedule"))
@@ -140,15 +140,15 @@ class PaymentsService:
     def get_subscription_status(self, subscription) -> str:
         status = subscription['status']
         if status == 'active':
-            return SubscriptionStatus.SUCCESS
+            return SubscriptionStatus.SUCCESS.value
         elif status == 'incomplete':
-            return SubscriptionStatus.INCOMPLETE
+            return SubscriptionStatus.INCOMPLETE.value
         elif status == 'past_due':
-            return SubscriptionStatus.PAST_DUE
+            return SubscriptionStatus.PAST_DUE.value
         elif status == 'canceled':
-            return SubscriptionStatus.CANCELED
+            return SubscriptionStatus.CANCELED.value
         else:
-            return SubscriptionStatus.UNKNOWN
+            return SubscriptionStatus.UNKNOWN.value
 
 
         
