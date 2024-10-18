@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Box, Typography, Button, TextField, Dialog, DialogActions, Tooltip, Slider, DialogContent, DialogTitle, IconButton, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, TableSortLabel, InputAdornment, Drawer, Divider, List, ListItem, ListItemIcon, ListItemText } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import axiosInterceptorInstance from '@/axios/axiosInterceptorInstance';
@@ -115,27 +115,37 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
     const [isFocused, setIsFocused] = useState(false);
     const [isTyping, setIsTyping] = useState(false);
     const [isModified, setIsModified] = useState(false);
-    const [initialValue, setInitialValue] = useState('');
+    const [initialValue, setInitialValue] = useState(accountDetails.full_name);
+    const [isFullNameEditable, setIsFullNameEditable] = useState(false);
+    const fullNameRef = useRef<HTMLInputElement>(null);
 
-    const [initialEmail, setInitialEmail] = useState('');
+    const [initialEmail, setInitialEmail] = useState(accountDetails.email_address);
     const [isEmailFocused, setIsEmailFocused] = useState(false);
     const [isEmailTyping, setIsEmailTyping] = useState(false);
     const [isEmailModified, setIsEmailModified] = useState(false);
+    const [isEmailEditable, setIsEmailEditable] = useState(false);
+    const emailRef = useRef<HTMLInputElement>(null);
 
-    const [initialOrganizationName, setInitialOrganizationName] = useState('');
+    const [initialOrganizationName, setInitialOrganizationName] = useState(accountDetails.company_name);
     const [isOrganizationNameFocused, setIsOrganizationNameFocused] = useState(false);
     const [isOrganizationNameTyping, setIsOrganizationNameTyping] = useState(false);
     const [isOrganizationNameModified, setIsOrganizationNameModified] = useState(false);
+    const [isOrganizationNameEditable, setIsOrganizationNameEditable] = useState(false);
+    const organizationNameRef = useRef<HTMLInputElement>(null);
 
-    const [initialCompanyWebsite, setInitialCompanyWebsite] = useState('');
+    const [initialCompanyWebsite, setInitialCompanyWebsite] = useState(accountDetails.company_website);
     const [isCompanyWebsiteFocused, setIsCompanyWebsiteFocused] = useState(false);
     const [isCompanyWebsiteTyping, setIsCompanyWebsiteTyping] = useState(false);
     const [isCompanyWebsiteModified, setIsCompanyWebsiteModified] = useState(false);
+    const [isCompanyWebsiteEditable, setIsCompanyWebsiteEditable] = useState(false);
+    const companyWebsiteRef = useRef<HTMLInputElement>(null);
 
-    const [initialMonthlyVisits, setInitialMonthlyVisits] = useState('');
+    const [initialMonthlyVisits, setInitialMonthlyVisits] = useState(accountDetails.company_website_visits);
     const [isMonthlyVisitsFocused, setIsMonthlyVisitsFocused] = useState(false);
     const [isMonthlyVisitsTyping, setIsMonthlyVisitsTyping] = useState(false);
     const [isMonthlyVisitsModified, setIsMonthlyVisitsModified] = useState(false);
+    const [isMonthlyVisitsEditable, setIsMonthlyVisitsEditable] = useState(false);
+    const monthlyVisitsRef = useRef<HTMLInputElement>(null);
 
     const [changePasswordPopupOpen, setChangePasswordPopupOpen] = useState(false);
 
@@ -176,6 +186,14 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
         axiosInterceptorInstance.put('/settings/account-details', accountData)
             .then(() => {
                 showToast('Account details updated successfully');
+                if (field === 'full_name') {
+                    setIsFullNameEditable(false);
+                    setInitialValue(fullName);
+                }
+                if (field === 'email_address') {
+                    setIsEmailEditable(false);
+                    setInitialEmail(fullName);
+                }
             })
             .catch(error => {
                 if (error.response && error.response.status === 403) {
@@ -243,6 +261,18 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
         axiosInterceptorInstance.put('/settings/account-details', businessInfoData)
             .then(() => {
                 showToast('Business info updated successfully');
+                if (field === 'organizationName') {
+                    setIsOrganizationNameEditable(false);
+                    setInitialOrganizationName(organizationName);
+                }
+                if (field === 'companyWebsite') {
+                    setIsCompanyWebsiteEditable(false);
+                    setInitialCompanyWebsite(companyWebsite);
+                }
+                if (field === 'monthlyVisits') {
+                    setIsMonthlyVisitsEditable(false);
+                    setInitialMonthlyVisits(monthlyVisits);
+                }
             })
             .catch(error => {
                 if (error.response && error.response.status === 403) {
@@ -254,26 +284,38 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
     };
 
 
-    // Generic function to handle input changes
     const handleChange = (
         setValue: React.Dispatch<React.SetStateAction<string>>,
         setIsTyping: React.Dispatch<React.SetStateAction<boolean>>,
-        setIsModified: React.Dispatch<React.SetStateAction<boolean>>) =>
-        (e: React.ChangeEvent<HTMLInputElement>) => {
-            setValue(e.target.value);
-            setIsTyping(true);
-            setIsModified(true);
-        };
-
-    // Generic function to handle input reset
-    const handleReset = (
+        setIsModified: React.Dispatch<React.SetStateAction<boolean>>
+      ) => (e: React.ChangeEvent<HTMLInputElement>) => {
+        setValue(e.target.value);
+        setIsTyping(true); // Show the close icon when typing
+        setIsModified(true);
+      };
+      
+      const handleReset = (
         setValue: React.Dispatch<React.SetStateAction<string>>,
         setIsTyping: React.Dispatch<React.SetStateAction<boolean>>,
-        setIsModified: React.Dispatch<React.SetStateAction<boolean>>) => () => {
-            setValue('');
-            setIsTyping(false);
-            setIsModified(false);
-        };
+        setIsModified: React.Dispatch<React.SetStateAction<boolean>>,
+        setIsEditable: React.Dispatch<React.SetStateAction<boolean>>,
+        initialValue: string
+      ) => () => {
+        setValue(initialValue); // Reset the input to its initial value
+        setIsTyping(false);     // Hide the close icon when reset
+        setIsModified(false);
+        setIsEditable(false);
+      };
+
+      const handleEnableEdit = (
+        setIsEditable: React.Dispatch<React.SetStateAction<boolean>>,
+        inputRef: React.RefObject<HTMLInputElement>
+      ) => () => {
+        setIsEditable(true); // Enable field editing
+        if (inputRef.current) {
+          inputRef.current.focus(); // Focus the input
+        }
+      };
 
     // Generic function to handle focus
     const handleFocus = (value: string, setIsFocused: React.Dispatch<React.SetStateAction<boolean>>, setIsTyping: React.Dispatch<React.SetStateAction<boolean>>) => () => {
@@ -284,10 +326,18 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
     };
 
     // Generic function to handle blur
-    const handleBlur = (value: string, setIsFocused: React.Dispatch<React.SetStateAction<boolean>>, setIsTyping: React.Dispatch<React.SetStateAction<boolean>>) => () => {
-        setIsFocused(false);
-        if (value === '') {
-            setIsTyping(false);
+    const handleBlur = (
+        value: string,
+        initialValue: string,
+        setIsEditable: React.Dispatch<React.SetStateAction<boolean>>,
+        setIsTyping: React.Dispatch<React.SetStateAction<boolean>>,
+        setIsModified: React.Dispatch<React.SetStateAction<boolean>>
+    ) => () => {
+        // If value wasn't modified, hide close icon and disable editing
+        if (value === initialValue) {
+            setIsTyping(false); // Hide close icon
+            setIsEditable(false); // Disable editing when no changes were made
+            setIsModified(false);
         }
     };
 
@@ -371,9 +421,19 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
                             alignItems: 'flex-start'
                         },
                     }}>
-                        <TextField sx={accontDetailsStyles.formField}
+                        <TextField 
+                         sx={{
+                            ...accontDetailsStyles.formField,
+                            '& .MuiInputBase-root:hover .MuiIconButton-root': {
+                                display: 'flex', // Show the write icon on hover
+                            },
+                            '& .MuiIconButton-root': {
+                                display: isFullNameEditable || showCloseIcon(isTyping, fullName, initialValue) ? 'none' : 'none', // Always hidden
+                            },
+                        }}
                             label="Full Name"
                             value={fullName}
+                            inputRef={fullNameRef}
                             onChange={handleChange(setFullName, setIsTyping, setIsModified)}
                             fullWidth
                             margin="normal"
@@ -381,35 +441,44 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
                                 className: "form-input-label",
                                 sx: accontDetailsStyles.inputLabel }}
                             InputProps={{
+                                readOnly: !isFullNameEditable,
                                 className: "form-input" ,
                                 sx: accontDetailsStyles.formInput,
                                 endAdornment: (
-                                    <InputAdornment position="end">
-                                        {/* Write Icon */}
-                                        <IconButton
+                                    <>
+                                      {/* Show write icon when not editable, hidden by default */}
+                                      {!isFullNameEditable && (
+                                        <InputAdornment position="end">
+                                          <IconButton
+                                            onClick={handleEnableEdit(setIsFullNameEditable, fullNameRef)}
                                             sx={{
-                                                display: (isFocused && !isTyping) ? 'flex' : 'none',
-                                                visibility: (isFocused && !isTyping) ? 'visible' : 'hidden',
+                                              display: 'none', // Hidden when input is editable
+                                              '&:hover': {
+                                                    display: 'flex', // Show on hover
+                                                },
                                             }}
-                                        >
-                                            <Image src='/write-icon.svg' alt='write-icon' height={24} width={24} />
-                                        </IconButton>
-                                        {/* Close Icon */}
-                                        <IconButton
-                                            onClick={handleReset(setFullName, setIsTyping, setIsModified)}
-                                            sx={{
-                                                display: showCloseIcon(isTyping, fullName, initialValue) ? 'flex' : 'none',
-                                                visibility: showCloseIcon(isTyping, fullName, initialValue) ? 'visible' : 'hidden',
-                                            }}
+                                          >
+                                            <Image src="/write-icon.svg" alt="write-icon" height={24} width={24} />
+                                          </IconButton>
+                                        </InputAdornment>
+                                      )}
+                          
+                                      {/* Show close icon if user starts typing */}
+                                      {showCloseIcon(isTyping, fullName, initialValue) && (
+                                        <InputAdornment position="end">
+                                          <IconButton
+                                            onClick={handleReset(setFullName, setIsTyping, setIsModified, setIsFullNameEditable, initialValue)}
                                             size="small"
-                                        >
+                                          >
                                             <Image src='/close-circle-purple.svg' alt='close-icon-purple' height={18} width={18} />
-                                        </IconButton>
-                                    </InputAdornment>
-                                ),
+                                          </IconButton>
+                                        </InputAdornment>
+                                      )}
+                                    </>
+                                  ),
                             }}
-                            onFocus={handleFocus(fullName, setIsFocused, setIsTyping)}
-                            onBlur={handleBlur(fullName, setIsFocused, setIsTyping)}
+                            onBlur={handleBlur(fullName, initialValue, setIsFullNameEditable, setIsTyping, setIsModified)}
+                          
                         />
                         <Button className='hyperlink-red' variant="contained" color="primary" onClick={() => handleSaveAccountDetails('full_name')}
                             sx={{
@@ -461,9 +530,18 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
                             alignItems: 'flex-start'
                         }
                     }}>
-                        <TextField sx={accontDetailsStyles.formField}
+                        <TextField sx={{
+                            ...accontDetailsStyles.formField,
+                            '& .MuiInputBase-root:hover .MuiIconButton-root': {
+                                display: 'flex', // Show the write icon on hover
+                            },
+                            '& .MuiIconButton-root': {
+                                display: isEmailEditable || showCloseIcon(isTyping, emailAddress, initialEmail) ? 'none' : 'none', // Always hidden
+                            },
+                        }}
                             label="Email Address"
                             value={emailAddress}
+                            inputRef={emailRef}
                             onChange={handleChange(setEmailAddress, setIsEmailTyping, setIsEmailModified)}
                             fullWidth
                             margin="normal"
@@ -471,59 +549,69 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
                                 className: "form-input-label",
                                 sx: accontDetailsStyles.inputLabel }}
                             InputProps={{
+                                readOnly: !isEmailEditable,
                                 className: "form-input",
                                 sx: accontDetailsStyles.formInput,
                                 endAdornment: (
                                     <InputAdornment position="end">
-                                        {accountDetails.is_email_confirmed ? (
+                                        {/* Conditionally render the verification status */}
+                                        {!isEmailEditable && !isEmailTyping && (
                                             <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                                <Image src="/green-tick-circle.svg" alt='green-tick-circle' height={16} width={16} />
-                                                <Typography variant="caption" sx={{
-                                                    fontFamily: 'Roboto',
-                                                    fontSize: '12px',
-                                                    fontWeight: '400',
-                                                    lineHeight: '16px',
-                                                    color: '#2b5b00'
-                                                }}>
-                                                    Verified
-                                                </Typography>
+                                                {emailAddress === initialEmail && accountDetails.is_email_confirmed ? (
+                                                    <>
+                                                        <Image src="/green-tick-circle.svg" alt='green-tick-circle' height={16} width={16} />
+                                                        <Typography variant="caption" sx={{
+                                                            fontFamily: 'Roboto',
+                                                            fontSize: '12px',
+                                                            fontWeight: '400',
+                                                            lineHeight: '16px',
+                                                            color: '#2b5b00'
+                                                        }}>
+                                                            Verified
+                                                        </Typography>
+                                                    </>
+                                                ) : (
+                                                    <Typography variant="caption" sx={{
+                                                        fontFamily: 'Roboto',
+                                                        fontSize: '12px',
+                                                        fontWeight: '400',
+                                                        lineHeight: '16px',
+                                                        color: '#f8464b'
+                                                    }}>
+                                                        Not Verified
+                                                    </Typography>
+                                                )}
                                             </Box>
-                                        ) : (
-                                            <Typography variant="caption" sx={{
-                                                fontFamily: 'Roboto',
-                                                fontSize: '12px',
-                                                fontWeight: '400',
-                                                lineHeight: '16px',
-                                                color: '#f8464b'
-                                            }}>
-                                                Not Verified
-                                            </Typography>
                                         )}
-                                        {/* Write Icon */}
-                                        <IconButton
-                                            sx={{
-                                                display: (isEmailFocused && !isEmailTyping) ? 'flex' : 'none',
-                                                visibility: (isEmailFocused && !isEmailTyping) ? 'visible' : 'hidden',
-                                            }}
-                                        >
-                                            <Image src='/write-icon.svg' alt='write-icon' height={24} width={24} />
-                                        </IconButton>
-                                        {/* Close Icon */}
-                                        <IconButton
-                                            onClick={handleReset(setEmailAddress, setIsEmailTyping, setIsEmailModified)}
-                                            sx={{
-                                                display: showCloseIcon(isEmailTyping, emailAddress, initialEmail) ? 'flex' : 'none',
-                                                visibility: showCloseIcon(isEmailTyping, emailAddress, initialEmail) ? 'visible' : 'hidden',
-                                            }}
-                                            size="small"
-                                        >
-                                            <Image src='/close-circle-purple.svg' alt='close-icon-purple' height={18} width={18} />
-                                        </IconButton>
+                        
+                                        {/* Show write icon only when hovering over the input */}
+                                        {!isEmailEditable && (
+                                            <IconButton
+                                                onClick={handleEnableEdit(setIsEmailEditable, emailRef)}
+                                                sx={{
+                                                    display: 'none', // Hidden when input is editable
+                                                    '&:hover': {
+                                                        display: 'flex', // Show on hover
+                                                    },
+                                                }}
+                                            >
+                                                <Image src="/write-icon.svg" alt="write-icon" height={24} width={24} />
+                                            </IconButton>
+                                        )}
+                        
+                                        {/* Show close icon if user starts typing */}
+                                        {showCloseIcon(isEmailTyping, emailAddress, initialEmail) && (
+                                            <IconButton
+                                                onClick={handleReset(setEmailAddress, setIsEmailTyping, setIsEmailModified, setIsEmailEditable, initialEmail)}
+                                                size="small"
+                                            >
+                                                <Image src='/close-circle-purple.svg' alt='close-icon-purple' height={18} width={18} />
+                                            </IconButton>
+                                        )}
                                     </InputAdornment>
                                 ),
                             }}
-                            onFocus={handleFocus(emailAddress, setIsEmailFocused, setIsEmailTyping)}
-                            onBlur={handleBlur(emailAddress, setIsEmailFocused, setIsEmailTyping)}
+                            onBlur={handleBlur(emailAddress, initialEmail, setIsEmailEditable, setIsTyping, setIsModified)}
                         />
                         <Button className='hyperlink-red' variant="contained" color="primary" onClick={() => handleSaveAccountDetails('email_address')}
                             sx={{
@@ -833,9 +921,18 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
                                 alignItems: 'flex-start'
                             },
                         }}>
-                            <TextField sx={accontDetailsStyles.formField}
+                            <TextField sx={{
+                                ...accontDetailsStyles.formField,
+                                '& .MuiInputBase-root:hover .MuiIconButton-root': {
+                                    display: 'flex', // Show the write icon on hover
+                                },
+                                '& .MuiIconButton-root': {
+                                    display: isOrganizationNameEditable || showCloseIcon(isOrganizationNameTyping, organizationName, initialOrganizationName) ? 'none' : 'none', // Always hidden
+                                },
+                            }}
                                 label="Organization Name"
                                 value={organizationName}
+                                inputRef={organizationNameRef}
                                 onChange={handleChange(setOrganizationName, setIsOrganizationNameTyping, setIsOrganizationNameModified)}
                                 fullWidth
                                 margin="normal"
@@ -843,35 +940,43 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
                                     className: "form-input-label",
                                     sx: accontDetailsStyles.inputLabel }}
                                 InputProps={{
+                                    readOnly: !isOrganizationNameEditable,
                                     className: "form-input",
                                     sx: accontDetailsStyles.formInput,
                                     endAdornment: (
-                                        <InputAdornment position="end">
-                                            {/* Write Icon */}
-                                            <IconButton
-                                                sx={{
-                                                    display: (isOrganizationNameFocused && !isOrganizationNameTyping) ? 'flex' : 'none',
-                                                    visibility: (isOrganizationNameFocused && !isOrganizationNameTyping) ? 'visible' : 'hidden',
-                                                }}
-                                            >
-                                                <Image src='/write-icon.svg' alt='write-icon' height={24} width={24} />
-                                            </IconButton>
-                                            {/* Close Icon */}
-                                            <IconButton
-                                                onClick={handleReset(setOrganizationName, setIsOrganizationNameTyping, setIsOrganizationNameModified)}
-                                                sx={{
-                                                    display: showCloseIcon(isOrganizationNameTyping, organizationName, initialOrganizationName) ? 'flex' : 'none',
-                                                    visibility: showCloseIcon(isOrganizationNameTyping, organizationName, initialOrganizationName) ? 'visible' : 'hidden',
-                                                }}
-                                                size="small"
-                                            >
-                                                <Image src='/close-circle-purple.svg' alt='close-icon-purple' height={18} width={18} />
-                                            </IconButton>
-                                        </InputAdornment>
-                                    ),
+                                            <>
+                                              {/* Show write icon when not editable, hidden by default */}
+                                              {!isOrganizationNameEditable && (
+                                                <InputAdornment position="end">
+                                                  <IconButton
+                                                    onClick={handleEnableEdit(setIsOrganizationNameEditable, organizationNameRef)}
+                                                    sx={{
+                                                      display: 'none', // Hidden when input is editable
+                                                      '&:hover': {
+                                                            display: 'flex', // Show on hover
+                                                        },
+                                                    }}
+                                                  >
+                                                    <Image src="/write-icon.svg" alt="write-icon" height={24} width={24} />
+                                                  </IconButton>
+                                                </InputAdornment>
+                                              )}
+                                  
+                                              {/* Show close icon if user starts typing */}
+                                              {showCloseIcon(isOrganizationNameTyping, organizationName, initialOrganizationName) && (
+                                                <InputAdornment position="end">
+                                                  <IconButton
+                                                    onClick={handleReset(setOrganizationName, setIsOrganizationNameTyping, setIsOrganizationNameModified, setIsOrganizationNameEditable, initialOrganizationName)}
+                                                    size="small"
+                                                  >
+                                                    <Image src='/close-circle-purple.svg' alt='close-icon-purple' height={18} width={18} />
+                                                  </IconButton>
+                                                </InputAdornment>
+                                              )}
+                                            </>
+                                          ),
                                 }}
-                                onFocus={handleFocus(organizationName, setIsOrganizationNameFocused, setIsOrganizationNameTyping)}
-                                onBlur={handleBlur(organizationName, setIsOrganizationNameFocused, setIsOrganizationNameTyping)}
+                                onBlur={handleBlur(organizationName, initialOrganizationName, setIsOrganizationNameEditable, setIsOrganizationNameTyping, setIsOrganizationNameModified)}
                             />
                             <Button className='hyperlink-red' variant="contained" color="primary" onClick={() => handleSaveBusinessInfo('organizationName')}
                                 sx={{
@@ -903,9 +1008,18 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
                                 alignItems: 'flex-start'
                             }
                         }}>
-                            <TextField sx={accontDetailsStyles.formField}
+                            <TextField sx={{
+                                ...accontDetailsStyles.formField,
+                                '& .MuiInputBase-root:hover .MuiIconButton-root': {
+                                    display: 'flex', // Show the write icon on hover
+                                },
+                                '& .MuiIconButton-root': {
+                                    display: isCompanyWebsiteEditable || showCloseIcon(isCompanyWebsiteTyping, companyWebsite, initialCompanyWebsite) ? 'none' : 'none', // Always hidden
+                                },
+                            }}
                                 label="Company Website"
                                 value={companyWebsite}
+                                inputRef={companyWebsiteRef}
                                 onChange={handleChange(setCompanyWebsite, setIsCompanyWebsiteTyping, setIsCompanyWebsiteModified)}
                                 fullWidth
                                 margin="normal"
@@ -913,35 +1027,43 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
                                     className: "form-input-label",
                                     sx: accontDetailsStyles.inputLabel }}
                                 InputProps={{
+                                    readOnly: !isCompanyWebsiteEditable,
                                     className: "form-input",
                                     sx: accontDetailsStyles.formInput,
                                     endAdornment: (
-                                        <InputAdornment position="end">
-                                            {/* Write Icon */}
-                                            <IconButton
+                                        <>
+                                          {/* Show write icon when not editable, hidden by default */}
+                                          {!isCompanyWebsiteEditable && (
+                                            <InputAdornment position="end">
+                                              <IconButton
+                                                onClick={handleEnableEdit(setIsCompanyWebsiteEditable, companyWebsiteRef)}
                                                 sx={{
-                                                    display: (isCompanyWebsiteFocused && !isCompanyWebsiteTyping) ? 'flex' : 'none',
-                                                    visibility: (isCompanyWebsiteFocused && !isCompanyWebsiteTyping) ? 'visible' : 'hidden',
+                                                  display: 'none', // Hidden when input is editable
+                                                  '&:hover': {
+                                                        display: 'flex', // Show on hover
+                                                    },
                                                 }}
-                                            >
-                                                <Image src='/write-icon.svg' alt='write-icon' height={24} width={24} />
-                                            </IconButton>
-                                            {/* Close Icon */}
-                                            <IconButton
-                                                onClick={handleReset(setCompanyWebsite, setIsCompanyWebsiteTyping, setIsCompanyWebsiteModified)}
-                                                sx={{
-                                                    display: showCloseIcon(isCompanyWebsiteTyping, companyWebsite, initialCompanyWebsite) ? 'flex' : 'none',
-                                                    visibility: showCloseIcon(isCompanyWebsiteTyping, companyWebsite, initialCompanyWebsite) ? 'visible' : 'hidden',
-                                                }}
+                                              >
+                                                <Image src="/write-icon.svg" alt="write-icon" height={24} width={24} />
+                                              </IconButton>
+                                            </InputAdornment>
+                                          )}
+                              
+                                          {/* Show close icon if user starts typing */}
+                                          {showCloseIcon(isCompanyWebsiteTyping, companyWebsite, initialCompanyWebsite) && (
+                                            <InputAdornment position="end">
+                                              <IconButton
+                                                onClick={handleReset(setCompanyWebsite, setIsCompanyWebsiteTyping, setIsCompanyWebsiteModified, setIsCompanyWebsiteEditable, initialCompanyWebsite)}
                                                 size="small"
-                                            >
+                                              >
                                                 <Image src='/close-circle-purple.svg' alt='close-icon-purple' height={18} width={18} />
-                                            </IconButton>
-                                        </InputAdornment>
-                                    ),
+                                              </IconButton>
+                                            </InputAdornment>
+                                          )}
+                                        </>
+                                      ),
                                 }}
-                                onFocus={handleFocus(companyWebsite, setIsCompanyWebsiteFocused, setIsCompanyWebsiteTyping)}
-                                onBlur={handleBlur(companyWebsite, setIsCompanyWebsiteFocused, setIsCompanyWebsiteTyping)}
+                                onBlur={handleBlur(companyWebsite, initialCompanyWebsite, setIsCompanyWebsiteEditable, setIsCompanyWebsiteTyping, setIsCompanyWebsiteModified)}
                             />
                             <Button className='hyperlink-red' variant="contained" color="primary" onClick={() => handleSaveBusinessInfo('companyWebsite')}
                                 sx={{
@@ -973,9 +1095,18 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
                                 alignItems: 'flex-start'
                             }
                         }}>
-                            <TextField sx={accontDetailsStyles.formField}
+                            <TextField sx={{
+                                ...accontDetailsStyles.formField,
+                                '& .MuiInputBase-root:hover .MuiIconButton-root': {
+                                    display: 'flex', // Show the write icon on hover
+                                },
+                                '& .MuiIconButton-root': {
+                                    display: isMonthlyVisitsEditable || showCloseIcon(isMonthlyVisitsTyping, monthlyVisits, initialMonthlyVisits) ? 'none' : 'none', // Always hidden
+                                },
+                            }}
                                 label="Monthly Visits to Website"
                                 value={monthlyVisits}
+                                inputRef={monthlyVisitsRef}
                                 onChange={handleChange(setMonthlyVisits, setIsMonthlyVisitsTyping, setIsMonthlyVisitsModified)}
                                 fullWidth
                                 margin="normal"
@@ -983,35 +1114,43 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
                                     className: "form-input-label"
                                  }}
                                 InputProps={{
+                                    readOnly: !isMonthlyVisitsEditable,
                                     className: "form-input",
                                     sx: accontDetailsStyles.formInput,
                                     endAdornment: (
-                                        <InputAdornment position="end">
-                                            {/* Write Icon */}
-                                            <IconButton
+                                        <>
+                                          {/* Show write icon when not editable, hidden by default */}
+                                          {!isMonthlyVisitsEditable && (
+                                            <InputAdornment position="end">
+                                              <IconButton
+                                                onClick={handleEnableEdit(setIsMonthlyVisitsEditable, monthlyVisitsRef)}
                                                 sx={{
-                                                    display: (isMonthlyVisitsFocused && !isMonthlyVisitsTyping) ? 'flex' : 'none',
-                                                    visibility: (isMonthlyVisitsFocused && !isMonthlyVisitsTyping) ? 'visible' : 'hidden',
+                                                  display: 'none', // Hidden when input is editable
+                                                  '&:hover': {
+                                                        display: 'flex', // Show on hover
+                                                    },
                                                 }}
-                                            >
-                                                <Image src='/write-icon.svg' alt='write-icon' height={24} width={24} />
-                                            </IconButton>
-                                            {/* Close Icon */}
-                                            <IconButton
-                                                onClick={handleReset(setMonthlyVisits, setIsMonthlyVisitsTyping, setIsMonthlyVisitsModified)}
-                                                sx={{
-                                                    display: showCloseIcon(isMonthlyVisitsTyping, monthlyVisits, initialMonthlyVisits) ? 'flex' : 'none',
-                                                    visibility: showCloseIcon(isMonthlyVisitsTyping, monthlyVisits, initialMonthlyVisits) ? 'visible' : 'hidden',
-                                                }}
+                                              >
+                                                <Image src="/write-icon.svg" alt="write-icon" height={24} width={24} />
+                                              </IconButton>
+                                            </InputAdornment>
+                                          )}
+                              
+                                          {/* Show close icon if user starts typing */}
+                                          {showCloseIcon(isMonthlyVisitsTyping, monthlyVisits, initialMonthlyVisits) && (
+                                            <InputAdornment position="end">
+                                              <IconButton
+                                                onClick={handleReset(setMonthlyVisits, setIsMonthlyVisitsTyping, setIsMonthlyVisitsModified, setIsMonthlyVisitsEditable, initialMonthlyVisits)}
                                                 size="small"
-                                            >
+                                              >
                                                 <Image src='/close-circle-purple.svg' alt='close-icon-purple' height={18} width={18} />
-                                            </IconButton>
-                                        </InputAdornment>
-                                    ),
+                                              </IconButton>
+                                            </InputAdornment>
+                                          )}
+                                        </>
+                                      ),
                                 }}
-                                onFocus={handleFocus(monthlyVisits, setIsMonthlyVisitsFocused, setIsMonthlyVisitsTyping)}
-                                onBlur={handleBlur(monthlyVisits, setIsMonthlyVisitsFocused, setIsMonthlyVisitsTyping)}
+                                onBlur={handleBlur(monthlyVisits, initialMonthlyVisits, setIsMonthlyVisitsEditable, setIsMonthlyVisitsTyping, setIsMonthlyVisitsModified)}
                             />
                             <Button className='hyperlink-red' variant="contained" color="primary" onClick={() => handleSaveBusinessInfo('monthlyVisits')}
                                 sx={{
@@ -1032,6 +1171,7 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
                                     }
                                 }}
                                 disabled={!isSaveEnabled(monthlyVisits, initialMonthlyVisits, isMonthlyVisitsModified)}
+                                // disabled={isSaveDisabled}
                             >
                                 Save
                             </Button>

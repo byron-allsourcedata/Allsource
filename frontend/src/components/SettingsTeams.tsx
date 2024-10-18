@@ -791,7 +791,7 @@ export const SettingsTeams: React.FC = () => {
 
                 <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', gap: 5, height: '100%' }}>
                     <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Image src='/delete-card-icon.svg' alt='delete-card-icon' width={403} height={403} />
+                        <Image src='/revoke-icon.svg' alt='delete-card-icon' width={403} height={403} />
                         <Typography className='second-sub-title' sx={{
                             fontWeight: '600 !important',
                             lineHeight: '20px !important',
@@ -883,7 +883,7 @@ export const SettingsTeams: React.FC = () => {
 
                 <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', gap: 5, height: '100%' }}>
                     <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Image src='/delete-card-icon.svg' alt='delete-card-icon' width={403} height={403} />
+                        <Image src='/remove-team-member-icon.svg' alt='delete-card-icon' width={403} height={403} />
                         <Typography className='second-sub-title' sx={{
                             fontWeight: '600 !important',
                             lineHeight: '20px !important',
