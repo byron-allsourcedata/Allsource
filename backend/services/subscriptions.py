@@ -82,9 +82,9 @@ class SubscriptionService:
         if user_subscription:
             if user_subscription.is_trial and user_subscription.plan_end is None:
                 return True
-            if user_subscription.plan_end.tzinfo is None:
+            if user_subscription.status in ('active','canceled'):
                 user_subscription.plan_end = user_subscription.plan_end.replace(tzinfo=timezone.utc)
-            return user_subscription.plan_end > datetime.now(timezone.utc)
+                return user_subscription.plan_end > datetime.now(timezone.utc)
 
         return False
 

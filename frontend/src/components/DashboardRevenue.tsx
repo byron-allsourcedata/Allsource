@@ -35,6 +35,12 @@ function getDaysInMonth(month: number, year: number) {
 }
 
 const DashboardRevenue: React.FC = () => {
+    const [lifetimeRevenue, setLifetimeRevenue] = useState(0);
+    const [ROI, setROI] = useState(0);
+    const [totalCounts, setTotalCounts] = useState<any>(null);
+    const [totalOrder, setTotalOrder] = useState<any[]>([]);
+    const [averageOrder, setAverageOrder] = useState<any[]>([]);
+    const [dailyData, setDailyData] = useState<any[]>([]);
     //first chart
     const data = getDaysInMonth(10, 2024);
 
@@ -76,7 +82,12 @@ const DashboardRevenue: React.FC = () => {
     const fetchRevenueData = async () => {
         try {
             const response = await axiosInterceptorInstance.get('/dashboard/revenue');
-            
+            setLifetimeRevenue(response.data.lifetime_revenue)
+            setROI(response.data.ROI)
+            setTotalCounts(response.data.total_counts)
+            setTotalOrder(response.data.total_order)
+            setAverageOrder(response.data.avarage_order)
+            setDailyData(response.data.daily_data)
         } catch (error) {
             console.error('Error fetching data:', error);
         } finally {
@@ -258,10 +269,10 @@ const DashboardRevenue: React.FC = () => {
                 </Box>
                 <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
                     <Typography variant="h5" component='div' sx={{ display: 'flex', flexDirection: 'row', alignItems: 'end', fontWeight: '700', fontSize: '22px', fontFamily: 'Nunito Sans', lineHeight: '30.01px', color: 'rgba(32, 33, 36, 1)', gap: 1, '@media (max-width: 600px)': { flexDirection: 'column', alignItems: 'start' } }}>
-                        $213,210 <Typography component='span' sx={{ fontFamily: 'Nunito Sans', fontSize: '14px', pb: 0.5, fontWeight: 500, lineHeight: '19.6px', textAlign: 'left' }}>(Lifetime revenue)</Typography>
+                        ${lifetimeRevenue.toLocaleString('en-US')} <Typography component='span' sx={{ fontFamily: 'Nunito Sans', fontSize: '14px', pb: 0.5, fontWeight: 500, lineHeight: '19.6px', textAlign: 'left' }}>(Lifetime revenue)</Typography>
                     </Typography>
                     <Typography variant="h5" component='div' sx={{ display: 'flex', flexDirection: 'row', fontWeight: '700', alignItems: 'end', fontSize: '27px', fontFamily: 'Nunito Sans', lineHeight: '36.83px', color: 'rgba(0, 0, 0, 1)', gap: 1, '@media (max-width: 600px)': { flexDirection: 'column', alignItems: 'start' } }}>
-                        11.1x <Typography component='span' sx={{ fontFamily: 'Nunito Sans', color: 'rgba(32, 33, 36, 1)', fontSize: '14px', pb: 0.5, fontWeight: 500, lineHeight: '19.6px', textAlign: 'left' }}>ROI</Typography>
+                        {ROI.toLocaleString('en-US')}x <Typography component='span' sx={{ fontFamily: 'Nunito Sans', color: 'rgba(32, 33, 36, 1)', fontSize: '14px', pb: 0.5, fontWeight: 500, lineHeight: '19.6px', textAlign: 'left' }}>ROI</Typography>
                     </Typography>
                 </Box>
                 <Box sx={{ position: 'absolute', bottom: -4, right: 0, paddingRight: '4px' }}>
