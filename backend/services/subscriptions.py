@@ -260,6 +260,7 @@ class SubscriptionService:
                 if start_date > user_subscription.plan_start:
                     user.leads_credits = leads_credits if user.leads_credits >= 0 else  leads_credits - user.leads_credits
                     user.prospect_credits = prospect_credits
+                self.db.flush()
             else:
                 plan_type = determine_plan_name_from_product_id(stripe_payload.get("plan").get("product"))
                 interval = stripe_payload.get("plan").get("interval")
