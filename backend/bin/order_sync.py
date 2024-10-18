@@ -23,6 +23,7 @@ import time
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
 
+PLATFORMS = ['BigCommerce', 'Shopify']
 
 
 if __name__ == '__main__':
@@ -47,7 +48,9 @@ if __name__ == '__main__':
         )
         while True:
             with integration_service as service:
-                integrations = service.shopify.integration_persistence.get_all_integrations_filter_by(service_name='Shopify')
-                for integration in integrations:
-                    integration_service.shopify.order_sync(integration.domain_id)
-                time.sleep(60*60*2)
+                for platforn in PLATFORMS:
+                    integrations = service.shopify.integration_persistence.get_all_integrations_filter_by(service_name=platforn)
+                    for integration in integrations:
+                        integration_platform = getattr(integration_service, platforn.lower())
+                        integration_platform.order_sync(integration.domain_id)
+            time.sleep(60*60*2)

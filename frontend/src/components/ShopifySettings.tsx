@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import CustomizedProgressBar from "./CustomizedProgressBar";
 import CloseIcon from '@mui/icons-material/Close';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
+import { showToast } from "./ToastNotification";
 
 interface ShopifyProps {
     handleClose: () => void
@@ -93,7 +94,7 @@ const ShopifySettings = ({ handleClose, open, onSave, initApiKey}: ShopifyProps)
     const label = { inputProps: { 'aria-label': 'Switch demo' } };
     const [selectedRadioValue, setSelectedRadioValue] = useState('');
     const [isDropdownValid, setIsDropdownValid] = useState(false);
-
+   
     useEffect(() => {
         setApiKey(initApiKey || '')
     }, [initApiKey])
@@ -103,8 +104,7 @@ const ShopifySettings = ({ handleClose, open, onSave, initApiKey}: ShopifyProps)
     };
 
     const handleSwitchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setChecked(event.target.checked);
-      };
+        setChecked(event.target.checked);};
 
     const handleApiKeyChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const value = event.target.value;
@@ -164,7 +164,7 @@ const ShopifySettings = ({ handleClose, open, onSave, initApiKey}: ShopifyProps)
             }
         }, {params: {service_name: 'shopify'}})
         if(response.status === 200) {
-            handleNextTab()
+           showToast('Shopify Integrated')
         }
     }
 
@@ -194,47 +194,13 @@ const ShopifySettings = ({ handleClose, open, onSave, initApiKey}: ShopifyProps)
     };
 
     const handleSave = async() => {
-        onSave({
-            id: -1,
-            service_name: 'Klaviyo',
-            data_center: '',
-            access_token: apiKey,
-            is_with_suppression: checked,
-            ad_account_id: '',
-            shop_domain: ''
-        })
+        handleApiKeySave()
         handleClose()
     }
 
     const getButton = (tabValue: string) => {
         switch (tabValue) {
             case '1':
-                return (
-                    <Button
-                        variant="contained"
-                        onClick={handleApiKeySave}
-                        disabled={!apiKey}
-                        sx={{
-                            backgroundColor: '#5052B2',
-                            fontFamily: "Nunito Sans",
-                            fontSize: '14px',
-                            fontWeight: '600',
-                            lineHeight: '20px',
-                            letterSpacing: 'normal',
-                            color: "#fff",
-                            textTransform: 'none',
-                            padding: '10px 24px',
-                            boxShadow:'0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                            '&:hover': {
-                                backgroundColor: '#5052B2'
-                            },
-                            borderRadius: '4px',
-                        }}
-                    >
-                        Connect
-                    </Button>
-                );
-            case '2':
                 return (
                     <Button
                         variant="contained"

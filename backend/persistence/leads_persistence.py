@@ -632,7 +632,7 @@ class LeadsPersistence:
 
 
     def get_leads_domain(self, domain_id: int, **filter_by: dict):
-        return self.db.query(LeadUser).filter_by(domain_id=domain_id, **filter_by)
+        return self.db.query(LeadUser).filter_by(domain_id=domain_id, **filter_by).all()
 
     def search_contact(self, start_letter, domain_id):
         letters = start_letter.split()
