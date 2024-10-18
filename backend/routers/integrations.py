@@ -8,6 +8,7 @@ from enums import TeamAccessLevel
 router = APIRouter()
 
 @router.get('')
+@router.get('/')
 async def get_integrations_service(type: str | None = Query(None), data_sync: bool | None = Query(None),persistence: IntegrationsPresistence = Depends(get_user_integrations_presistence)):
     filter = {}
     if type:
