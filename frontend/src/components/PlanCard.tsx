@@ -66,7 +66,7 @@ const PlanCard: React.FC<{ plan: any; activePlanTitle: string; onChoose: (stripe
                 </Box>
 
                 <Typography variant="h4" component="div" className='heading-text' sx={{ fontSize: '24px !important', fontWeight: '600 !important', textAlign: 'center' }}>
-                    <Typography variant="h6" component="sup" className='third-sub-title' sx={{ letterSpacing: '0.06px' }}>$</Typography>{plan.price.toLocaleString('en-US')} <Typography variant="h6" component="span" className='paragraph' sx={{ marginLeft: '-4px' }}>{plan.interval === 'month' ? '/month' : '/year'}</Typography>
+                    <Typography variant="h6" component="sup" className='third-sub-title' sx={{ letterSpacing: '0.06px' }}>$</Typography>{plan.price.toLocaleString('en-US')} <Typography variant="h6" component="span" className='paragraph' sx={{ marginLeft: '-4px' }}>/month</Typography>
                 </Typography>
             </Box>
 

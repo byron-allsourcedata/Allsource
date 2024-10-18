@@ -22,13 +22,10 @@ class WebhookService:
         platform_subscription_id = data_object.get("id")
         price_id = data_object.get("plan").get("id")
         
-        schedule = data_object.get("plan").get("schedule")
-        if schedule is not None:
-            return payload
-        
-        previous_attributes = data_object.get("plan").get("previous_attributes")
-        if previous_attributes:
-            schedule = data_object.get("plan").get("previous_attributes").get('schedule')
+        schedule = data_object.get("schedule")
+        previous_attributes = data_object.get("previous_attributes")
+        if previous_attributes and schedule is None:
+            schedule = previous_attributes.get('schedule')
             if schedule is not None:
                 return payload
         
