@@ -20,4 +20,4 @@ def get_revenue(
         to_date: int = Query(None, description="End date in integer format"),
         dashboard_service: DashboardService = Depends(get_dashboard_service), 
         user= Depends(check_user_authorization)):
-    return dashboard_service.get_revenue(from_date=from_date, to_date=to_date)
+    return dashboard_service.get_revenue(from_date=from_date, to_date=to_date, user=user)

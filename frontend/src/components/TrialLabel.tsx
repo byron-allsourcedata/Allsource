@@ -121,26 +121,11 @@ const TrialStatus: React.FC = () => {
         setIconColor('rgba(148, 120, 21, 1)');
       }
     } else {
-      if (plan_days !== undefined && plan_days <= 5 && plan_days >= 0) {
-        setStatusText(`${plan_days} days left`);
-        setBackgroundColor('rgba(255, 233, 131, 1)');
-        setTextColor('rgba(0, 0, 0, 1)');
-        setIconColor('rgba(0, 0, 0, 1)');
-      } else if (plan_days < 0 && check_active !== null) {
+      if (plan_days < 0 && check_active !== null) {
         setStatusText('Subscription Expired');
         setBackgroundColor('rgba(246, 202, 204, 1)');
         setTextColor('rgba(78, 1, 16, 1)');
         setIconColor('rgba(103, 12, 14, 1)');
-      } else if (plan_days > 0) {
-        setStatusText(`${plan_days} days left`);
-        setBackgroundColor('#EAF8DD');
-        setTextColor('#6EC125');
-        setIconColor('#6EC125');
-      } else {
-        setStatusText('Subscription Active');
-        setBackgroundColor('#EAF8DD');
-        setTextColor('#6EC125');
-        setIconColor('#6EC125');
       }
     }
   };
