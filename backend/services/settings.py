@@ -250,7 +250,8 @@ class SettingsService:
         current_plan = self.plan_persistence.get_current_plan(user_id=user_id) 
         plan_limit_domain = user_subscription.domains_limit if user_subscription else 0
         user_limit_domain = len(self.user_domains_service.get_domains(user_id))
-        if subscription is None:
+        subscription_details = None
+        if subscription is None and user_subscription:
             subscription_details = {
             'billing_cycle': f"{user_subscription.plan_start.strftime('%b %d, %Y')} to {user_subscription.plan_end.strftime('%b %d, %Y')}" if user_subscription.plan_start else None,
             'plan_name': current_plan.title,
@@ -261,10 +262,18 @@ class SettingsService:
             'monthly_total': None,
             'active': True
         }
-        else:
+        elif subscription and user_subscription:
             plan = subscription['items']['data'][0]['plan']
             is_active = subscription.get('status') == 'active'
             plan_name = determine_plan_name_from_product_id(plan['product'])
+            if user_subscription.downgrade_price_id:
+                downgrade_plan = get_price_from_price_id(user_subscription.downgrade_price_id)
+                downgrade_amount = downgrade_plan['unit_amount'] if downgrade_plan else 0
+                monthly_total = f"${downgrade_amount / 100:,.0f}"
+            elif user_subscription.cancel_scheduled_at:
+                monthly_total = None
+            else:
+                monthly_total = f"${plan['amount'] / 100:,.0f}"
             subscription_details = {
                 'billing_cycle': f"{user_subscription.plan_start.strftime('%b %d, %Y')} to {user_subscription.plan_end.strftime('%b %d, %Y')}" if user_subscription.plan_start else None,
                 'plan_name': plan_name,
@@ -272,13 +281,13 @@ class SettingsService:
                 'prospect_credits': prospect_credits,
                 'overage': '0.49/contact',
                 'next_billing_date': self.timestamp_to_date(subscription['current_period_end']).strftime('%b %d, %Y'),
-                'monthly_total': f"${plan['amount'] / 100:,.0f}",
+                'monthly_total': monthly_total,
                 'active': is_active,
             }
             
         billig_detail = {'subscription_details': subscription_details,
-                         'downgrade_plan': get_product_from_price_id(user_subscription.downgrade_price_id) if user_subscription and user_subscription.downgrade_price_id else None,
-                         'canceled_at': user_subscription.cancel_scheduled_at
+                         'downgrade_plan': get_product_from_price_id(user_subscription.downgrade_price_id).name if user_subscription and user_subscription.downgrade_price_id else None,
+                         'canceled_at': user_subscription.cancel_scheduled_at if user_subscription else None
                          } 
         return billig_detail
             

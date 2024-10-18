@@ -211,8 +211,8 @@ export const SettingsSubscription: React.FC = () => {
                     showToast('Subscription was successful!');
                     try {
                         setIsLoading(true);
-                        const response = await axiosInterceptorInstance.get(`/subscriptions/stripe-plans`);
                         await new Promise(resolve => setTimeout(resolve, 3000));
+                        const response = await axiosInterceptorInstance.get(`/subscriptions/stripe-plans`);
                         setAllPlans(response.data.stripe_plans)
                         const stripePlans: StripePlan[] = response.data.stripe_plans;
                         const activePlan = stripePlans.find(plan => plan.is_active);
@@ -322,7 +322,6 @@ export const SettingsSubscription: React.FC = () => {
             }
             finally {
                 setIsLoading(false);
-                window.location.href = "/settings?section=subscription";
                 handleConfirmCancellationPopupClose()
                 handleExcitingOfferPopupClose()
                 handleCancelSubscriptionPlanPopupClose()
