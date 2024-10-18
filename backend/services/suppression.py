@@ -16,6 +16,12 @@ class SuppressionService:
     def get_sample_suppression_list(self):
         return os.path.join(os.getcwd(), "data/sample-suppression-list.csv")
     
+    def process_actual_contect_days(self, domain_id, days):
+        is_url_certain_activation = self.suppression_persistence.process_actual_contect_days(domain_id=domain_id, days=days)
+        return {'status': SuppressionStatus.SUCCESS,
+                'is_url_certain_activation': is_url_certain_activation
+                }
+    
     def process_suppression_list(self, file: UploadFile, domain_id):
         file_name = file.filename
         if not file_name.lower().endswith('.csv'):

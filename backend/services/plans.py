@@ -36,15 +36,14 @@ class PlansService:
     def save_reason_unsubscribe(self, reason_unsubscribe, user_id, cancel_scheduled_at):
         self.plans_persistence.save_reason_unsubscribe(reason_unsubscribe, user_id, cancel_scheduled_at)
 
-    def get_subscription_plans(self, period, user):
-        stripe_plans = self.plans_persistence.get_stripe_plans(period)
-        current_plan = self.plans_persistence.get_current_plan(user_id=user.get('id'))
+    def get_subscription_plans(self, user):
+        stripe_plans = self.plans_persistence.get_stripe_plans()
         user_subscription = self.plans_persistence.get_user_subscription(user_id=user.get('id'))
         response = {"stripe_plans": []}
         plan_order = ["Starter", "Pro", "Growth"]
         stripe_plans.sort(key=lambda plan: plan_order.index(plan.title) if plan.title in plan_order else len(plan_order))
         for stripe_plan in stripe_plans:
-            is_active = (current_plan.title  == stripe_plan.title and user_subscription.status == 'active' and current_plan.interval == stripe_plan.interval) if current_plan and user_subscription else False
+            is_active = (user_subscription.plan_id  == stripe_plan.id and user_subscription.status == 'active') if user_subscription else False
             response["stripe_plans"].append(
                 {
                     "interval": stripe_plan.interval,

@@ -1,7 +1,6 @@
 import logging
 import os
-import csv
-import io
+
 
 from persistence.settings_persistence import SettingsPersistence
 from models.users import User
@@ -9,7 +8,7 @@ from persistence.sendgrid_persistence import SendgridPersistence
 from persistence.user_persistence import UserPersistence
 from persistence.plans_persistence import PlansPersistence
 from services.subscriptions import SubscriptionService
-from sqlalchemy.orm import Session
+from services.domains import UserDomainsService
 from fastapi import HTTPException, status
 from .jwt_service import get_password_hash, create_access_token, decode_jwt_data, verify_password
 from schemas.settings import AccountDetailsRequest
@@ -22,17 +21,16 @@ import hashlib
 import json
 from services.stripe_service import *
 
-OVERAGE_CONTACT = 1
-
 class SettingsService:
 
     def __init__(self, settings_persistence: SettingsPersistence, plan_persistence: PlansPersistence, user_persistence: UserPersistence, send_grid_persistence: SendgridPersistence,
-                 subscription_service: SubscriptionService):
+                 subscription_service: SubscriptionService, user_domains_service: UserDomainsService):
         self.settings_persistence = settings_persistence
         self.plan_persistence = plan_persistence
         self.subscription_service = subscription_service
         self.user_persistence = user_persistence
         self.send_grid_persistence = send_grid_persistence
+        self.user_domains_service = user_domains_service
 
 
     def get_account_details(self, user):
@@ -152,10 +150,11 @@ class SettingsService:
             }
             team_arr.append(team_info)
         result['teams'] = team_arr
-        current_plan = self.plan_persistence.get_current_plan(user_id=user.get('id'))
         current_subscription = self.plan_persistence.get_user_subscription(user_id=user.get('id'))
-        result['member_limit'] = current_plan.members_limit if current_plan else 0
-        result['member_count'] = current_plan.members_limit - current_subscription.members_limit if current_plan and current_subscription else 0
+        member_limit = current_subscription.members_limit
+        member_count = len(self.user_persistence.get_team_members(user_id=user.get('id')))
+        result['member_limit'] = member_limit if current_subscription else 0
+        result['member_count'] = member_count + 1 if current_subscription else 0
         return result
             
         
@@ -178,10 +177,6 @@ class SettingsService:
             return SettingStatus.INVITATION_LIMIT_REACHED
         return SettingStatus.INVITATION_LIMIT_NOT_REACHED
     
-    def get_team_invitations_count(self, user):
-        user_limit = self.subscription_service.get_invitation_limit(user_id=user.get('id'))
-        return user_limit
-    
     def change_user_role(self, user: dict, email, access_level=TeamAccessLevel.READ_ONLY):
         self.settings_persistence.change_user_role(email, access_level)
         return {
@@ -192,24 +187,21 @@ class SettingsService:
         user_limit = self.subscription_service.check_invitation_limit(user_id=user.get('id'))
         if user_limit is False:
             return {
-                'status': SettingStatus.INVITATION_LIMIT_REACHED,
-                'invitation_count': self.get_team_invitations_count(user)
+                'status': SettingStatus.INVITATION_LIMIT_REACHED
             }
         if access_level not in {TeamAccessLevel.ADMIN.value, TeamAccessLevel.OWNER.value, TeamAccessLevel.STANDARD.value, TeamAccessLevel.READ_ONLY.value}:
             raise HTTPException(status_code=500, detail={'error': SettingStatus.INVALID_ACCESS_LEVEL.value})
         exists_team_member = self.settings_persistence.exists_team_member(user_id=user.get('id'), user_mail=invite_user)
         if exists_team_member:
             return {
-                    'status': SettingStatus.ALREADY_INVITED,
-                    'invitation_count': self.get_team_invitations_count(user)
+                    'status': SettingStatus.ALREADY_INVITED
                 }
         template_id = self.send_grid_persistence.get_template_by_alias(
                 SendgridTemplate.TEAM_MEMBERS_TEMPLATE.value)
         if not template_id:
             logger.info("template_id is None")
             return {
-                    'status': SettingStatus.FAILED,
-                    'invitation_count': self.get_team_invitations_count(user)
+                    'status': SettingStatus.FAILED
                 }
         
         md5_token_info = {
@@ -228,12 +220,8 @@ class SettingsService:
         )
         invited_by_id = user.get('team_member').get('id') if user.get('team_member') else user.get('id')
         self.settings_persistence.save_pending_invations_by_userid(team_owner_id=user.get('id'), user_mail=invite_user, invited_by_id=invited_by_id, access_level=access_level, md5_hash=md5_hash)
-        invitation_limit = -1
-        self.subscription_service.update_invitation_limit(user_id=user.get('id'), invitation_limit=invitation_limit)
-        current_plan = self.plan_persistence.get_current_plan(user_id=user.get('id')).members_limit
         return {
-                    'status': SettingStatus.SUCCESS,
-                    'invitation_count': current_plan - self.get_team_invitations_count(user)
+                    'status': SettingStatus.SUCCESS
                 }
     
     def change_teams(self, user: dict, teams_details):
@@ -247,74 +235,62 @@ class SettingsService:
             if result['success'] == False:
                 return {'status': result['error']}
                 
-        invitation_limit = 1
-        self.subscription_service.update_invitation_limit(user_id=user.get('id'), invitation_limit=invitation_limit)
-        current_plan = self.plan_persistence.get_current_plan(user_id=user.get('id')).members_limit
         return {
                     'status': SettingStatus.SUCCESS,
-                    'invitation_count': current_plan - self.get_team_invitations_count(user)
+                    'invitation_count': self.user_persistence.get_team_members(user_id=user.get('id'))
                 }
         
         
     def timestamp_to_date(self, timestamp):
         return datetime.fromtimestamp(timestamp)
-    
-    def calculate_dates(self, plan):
-        start_date = datetime.now()
-        interval = plan['interval']
-        interval_count = plan['interval_count']
-
-        if interval == 'month':
-            end_date = start_date.replace(month=start_date.month + interval_count)
-
-        return start_date, end_date
             
     def extract_subscription_details(self, customer_id, prospect_credits, user_id):
         subscription = get_billing_details_by_userid(customer_id)
-        user_subscription = self.plan_persistence.get_user_subscription(user_id=user_id)
-        user_limit_domain = user_subscription.domains_limit if user_subscription else 0
-        current_plan = self.plan_persistence.get_current_plan(user_id=user_id)
-        plan_limit_domain = current_plan.domains_limit if current_plan else 0
+        user_subscription = self.subscription_service.get_user_subscription(user_id=user_id)
+        current_plan = self.plan_persistence.get_current_plan(user_id=user_id) 
+        plan_limit_domain = user_subscription.domains_limit if user_subscription else 0
+        user_limit_domain = len(self.user_domains_service.get_domains(user_id))
         if subscription is None:
-            return {
+            subscription_details = {
             'billing_cycle': f"{user_subscription.plan_start.strftime('%b %d, %Y')} to {user_subscription.plan_end.strftime('%b %d, %Y')}" if user_subscription.plan_start else None,
             'plan_name': current_plan.title,
-            'domains': f"{plan_limit_domain - user_limit_domain}/{plan_limit_domain}",
+            'domains': f"{user_limit_domain}/{plan_limit_domain}",
             'prospect_credits': prospect_credits,
             'overage': '0.49/contact',
             'next_billing_date': None,
             'monthly_total': None,
-            'active': True,
-            'canceled_at': user_subscription.cancel_scheduled_at
+            'active': True
+        }
+        else:
+            plan = subscription['items']['data'][0]['plan']
+            is_active = subscription.get('status') == 'active'
+            plan_name = determine_plan_name_from_product_id(plan['product'])
+            subscription_details = {
+                'billing_cycle': f"{user_subscription.plan_start.strftime('%b %d, %Y')} to {user_subscription.plan_end.strftime('%b %d, %Y')}" if user_subscription.plan_start else None,
+                'plan_name': plan_name,
+                'domains': f"{user_limit_domain}/{plan_limit_domain}",
+                'prospect_credits': prospect_credits,
+                'overage': '0.49/contact',
+                'next_billing_date': self.timestamp_to_date(subscription['current_period_end']).strftime('%b %d, %Y'),
+                'monthly_total': f"${plan['amount'] / 100:,.0f}",
+                'active': is_active,
+            }
             
-        }
-        plan = subscription['items']['data'][0]['plan']
-        start_date, end_date = self.calculate_dates(plan)
-        is_active = subscription.get('status') == 'active'
-        
-        subscription_details = {
-            'billing_cycle': f"{start_date.strftime('%b %d, %Y')} to {end_date.strftime('%b %d, %Y')}",
-            'plan_name': determine_plan_name_from_product_id(plan['product']),
-            'domains': f"{plan_limit_domain - user_limit_domain}/{plan_limit_domain}",
-            'prospect_credits': prospect_credits,
-            'overage': '0.49/contact',
-            'next_billing_date': self.timestamp_to_date(subscription['current_period_end']).strftime('%b %d, %Y'),
-            'monthly_total': f"${plan['amount'] / 100:,.0f}",
-            'active': is_active,
-            'downgrade_plan': get_product_from_price_id(user_subscription.downgrade_price_id) if user_subscription and user_subscription.downgrade_price_id else None,
-            'canceled_at': user_subscription.cancel_scheduled_at
-        }
-        
-        return subscription_details
+        billig_detail = {'subscription_details': subscription_details,
+                         'downgrade_plan': get_product_from_price_id(user_subscription.downgrade_price_id) if user_subscription and user_subscription.downgrade_price_id else None,
+                         'canceled_at': user_subscription.cancel_scheduled_at
+                         } 
+        return billig_detail
             
     def get_billing(self, user: dict):
         result = {}
+        current_plan = self.plan_persistence.get_current_plan(user_id=user.get('id'))
         result['card_details'] = get_card_details_by_customer_id(user.get('customer_id'))
         result['billing_details'] = self.extract_subscription_details(user.get('customer_id'), user.get('prospect_credits'), user.get('id'))
         result['billing_details']['overage'] = user.get('is_leads_auto_charging')
         result['usages_credits'] = {
                         'leads_credits': user.get('leads_credits'),
-                        'plan_leads_credits': self.plan_persistence.get_current_plan(user_id=user.get('id')).leads_credits if self.plan_persistence.get_current_plan(user_id=user.get('id')) else 0,
+                        'plan_leads_credits': current_plan.leads_credits if current_plan else 0,
                         'prospect_credits': user.get('prospect_credits')
                         }
         return result

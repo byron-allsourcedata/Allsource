@@ -239,22 +239,18 @@ export const SettingsTeams: React.FC = () => {
                     switch (response.data.status) {
                         case 'SUCCESS':
                             showToast('Invitation sent successfully');
-                            setMemberCount(response.data.invitation_count);
                             results.push(true);
                             break;
                         case 'INVITATION_LIMIT_REACHED':
                             showErrorToast('Invitation limit reached.');
-                            setMemberCount(response.data.invitation_count);
                             results.push(false);
                             break;
                         case 'ALREADY_INVITED':
                             showErrorToast('User has already been invited.');
-                            setMemberCount(response.data.invitation_count);
                             results.push(false);
                             break;
                         case 'FAILED':
                             showErrorToast('Failed to send invitation.');
-                            setMemberCount(response.data.invitation_count);
                             results.push(false);
                             break;
                         default:
@@ -292,11 +288,9 @@ export const SettingsTeams: React.FC = () => {
                 switch (response.data.status) {
                     case 'SUCCESS':
                         showToast('Invitation removed successfully');
-                        setMemberCount(response.data.invitation_count)
                         return true;
                     default:
                         showErrorToast('Unknown response received.');
-                        setMemberCount(response.data.invitation_count)
                         return false;
                 }
             }

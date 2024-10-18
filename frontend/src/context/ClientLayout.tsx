@@ -7,6 +7,7 @@ import { usePathname } from 'next/navigation';
 import { useSlider, SliderProvider } from './SliderContext';
 import Header from "@/components/Header";
 import Slider from "@/components/Slider";
+import CustomizedProgressBar from '@/components/FirstLevelLoader'
 
 interface ClientLayoutProps {
   children: ReactNode;
@@ -17,6 +18,7 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
   const excludedPaths = ['/signin', '/signup', '/email-verificate', '/account-setup', '/reset-password', '/reset-password/confirm-send', '/choose-plan', '/authentication/verify-token', '/admin/users', '/forgot-password', '/admin'];
   const isAuthenticated = !excludedPaths.includes(pathname);
   const [showSlider, setSlider] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   if (!isAuthenticated) {
     return <>{children}</>;
   }
@@ -41,6 +43,7 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
         }}>
           <TrialStatus />
         </Grid>
+        {isLoading && <CustomizedProgressBar />}
         <Grid item xs={12} md="auto" lg="auto" sx={{
           padding: "0px",
           display: { xs: 'none', md: 'block' },
@@ -51,7 +54,7 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
           position: 'fixed',
           top: '8vh',
         }}>
-          <SliderProvider><Sidebar setShowSlider={setSlider} /></SliderProvider>
+          <SliderProvider><Sidebar setShowSlider={setSlider} setLoading={setIsLoading} /></SliderProvider>
         </Grid>
         <Grid item xs={12} md lg sx={{
           position: 'relative',

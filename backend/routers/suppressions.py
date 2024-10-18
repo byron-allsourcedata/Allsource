@@ -22,6 +22,14 @@ async def process_suppression_list(
     file: UploadFile = File(...)):
     return suppression_service.process_suppression_list(file, domain.id)
 
+@router.post("/actual-contect-days")
+async def actual_contect_days(
+    days: int,
+    suppression_service: SuppressionService = Depends(get_suppression_service),
+    user: User = Depends(check_user_authorization),
+    domain = Depends(check_domain)):
+    return suppression_service.process_actual_contect_days(domain_id=domain.id, days=days)
+
 @router.get("/suppression-list")
 async def get_suppression_list(
     page: int = Query(1, alias="page", ge=1, description="Page number"),

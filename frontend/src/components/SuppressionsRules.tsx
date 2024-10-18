@@ -9,7 +9,20 @@ import dayjs from 'dayjs';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CustomizedProgressBar from "./CustomizedProgressBar";
 import CancelIcon from '@mui/icons-material/Cancel'
+import { TagsInput } from "react-tag-input-component";
+import "../css/suppressionsStyle.css";
 
+const isValidUrlOrPath = (input: string): boolean => {
+    const fullUrlRegex = /^(https?:\/\/)?([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(:\d{1,5})?(\/.*)?$/;
+    const pathRegex = /^\/[a-zA-Z0-9-_/]*$/;
+
+    return fullUrlRegex.test(input) || pathRegex.test(input);
+};
+
+const isValidEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+};
 
 interface CustomTablePaginationProps {
     count: number;
@@ -140,6 +153,16 @@ const SuppressionRules: React.FC = () => {
     const [checkedUrl, setCheckedUrl] = useState(false);
     const [checkedUrlParameters, setCheckedUrlParameters] = useState(false);
 
+    /// Days
+    const [days, setDays] = useState<string>("");
+    const handleDaysChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const value = event.target.value;
+
+        if (parseInt(value, 10) >= 0 || value === '') {
+            setDays(value); // Сохраняем строковое значение
+        }
+    };
+
     const label = { inputProps: { 'aria-label': 'Switch demo' } };
 
     // First switch
@@ -160,22 +183,7 @@ const SuppressionRules: React.FC = () => {
 
 
     /// URL suppressions
-    const [inputValue, setInputValue] = useState('');
     const [chipData, setChipData] = useState<string[]>([]);
-
-    const handleKeyDownUrl = (event: React.KeyboardEvent<HTMLDivElement>) => {
-        if (event.key === 'Enter' && inputValue.trim()) {
-            event.preventDefault(); // Prevent newline in contentEditable
-            if (!chipData.includes(inputValue.trim())) {
-                setChipData((prevChips) => [...prevChips, inputValue.trim()]);
-                setInputValue(''); // Clear input after adding chip
-            }
-        }
-    };
-
-    const handleDelete = (chipToDelete: string) => {
-        setChipData((prevChips) => prevChips.filter((chip) => chip !== chipToDelete));
-    };
 
     const handleSubmitUrl = async () => {
         try {
@@ -587,6 +595,62 @@ const SuppressionRules: React.FC = () => {
                                 <Typography className="main-text"
                                     sx={suppressionsStyles.dote_text}
                                 >
+                                    Choose how long to suppress contacts.
+                                </Typography>
+                                <Typography className="second-text"
+                                    sx={{...suppressionsStyles.dote_subtext, width: '70%'}}
+                                >
+                                    Once X days have passed, the contact will no longer be suppressed and will be treated as a
+                                    new contact, ready for fresh engagement.
+                                </Typography>
+                            </Box>
+                        </Box>
+                        <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', gap: 2, width: '100%', alignItems: 'center', '@media (max-width: 700px)': { flexDirection: 'column', justifyContent: 'flex-end' } }}>
+                            <TextField
+                                label="№.of days"
+                                variant="outlined"
+                                placeholder=""
+                                type="number"
+                                rows={1}
+                                value={days}
+                                onChange={handleDaysChange}
+                                InputProps={{inputProps: { min: 0 }, style: { color: 'rgba(17, 17, 19, 1)', fontFamily: 'Nunito', fontWeight: 400, fontSize: '14px' } }}
+                                InputLabelProps={{ style: { color: 'rgba(17, 17, 19, 0.6)', fontFamily: 'Nunito', fontWeight: 400, fontSize: '14px', padding: 0 } }}
+                                sx={{
+                                    marginBottom: '32px',
+                                    backgroundColor: '#fff',
+                                    borderRadius: '4px',
+                                    width: '69%',
+                                    height: '48px',
+                                    "@media (max-width: 900px)": { width: '100%', height: '48px' }
+                                }}
+                            />
+                            <Box sx={{ padding: 0 }}>
+                                <Button variant="outlined" onClick={handleSubmitUrlParam} sx={{
+                                    backgroundColor: '#fff',
+                                    color: 'rgba(80, 82, 178, 1)',
+                                    fontFamily: "Nunito Sans",
+                                    textTransform: 'none',
+                                    lineHeight: '22.4px',
+                                    fontWeight: '700',
+                                    padding: '1em 1em',
+                                    marginBottom: 1,
+                                    textWrap: 'nowrap',
+                                    border: '1px solid rgba(80, 82, 178, 1)',
+                                    maxWidth: '79px',
+                                    maxHeight: '40px',
+                                    '&:hover': { backgroundColor: '#fff', boxShadow: '0 2px 2px rgba(0, 0, 0, 0.3)' },
+                                }}>
+                                    Save
+                                </Button>
+                            </Box>
+                        </Box>
+
+                        <Box sx={{ display: 'flex', flexDirection: 'row', width: '100%', justifyContent: 'space-between', "@media (max-width: 700px)": { flexDirection: 'column' } }}>
+                            <Box>
+                                <Typography className="main-text"
+                                    sx={suppressionsStyles.dote_text}
+                                >
                                     Stop collecting contacts if you&apos;re using popup forms to gather emails.
                                 </Typography>
                                 <Typography className="second-text"
@@ -800,72 +864,31 @@ const SuppressionRules: React.FC = () => {
                         </Box>
 
                         <Box sx={{
-                            display: 'flex',
+                            display: checkedUrl ? 'flex' : 'none',
                             flexDirection: 'row',
                             justifyContent: 'space-between',
-
                             gap: 2,
                             width: '100%',
                             alignItems: 'flex-end',
                             '@media (max-width: 700px)': { flexDirection: 'column', justifyContent: 'flex-end' }
                         }}>
-                            <TextField
-                                label="URL"
-                                multiline
-                                rows={3}
-                                disabled={!checkedUrl}
-                                variant="outlined"
-                                fullWidth
-                                sx={{
-                                    display: checkedUrl ? 'block' : 'none',
-                                    width: '70%' // Увеличиваем ширину текстового поля на 100%
+                            <TagsInput
+                                value={chipData}
+                                onChange={(newTags) => {
+                                    const validTags = newTags.filter(isValidUrlOrPath);
+                                    setChipData(validTags);
                                 }}
-                                margin="normal"
-                                value={inputValue}
-                                onKeyDown={handleKeyDownUrl}
-                                onChange={(e) => setInputValue(e.target.value)}
-                                InputProps={{
-                                    sx: {
-                                        alignItems: 'flex-start', // Выровняем текстовое поле по верху
-                                        fontSize: 'Roboto',
-                                        fontFamily: 'Roboto',
-                                        fontWeight: 400,
-                                    },
-                                    startAdornment: (
-                                        <InputAdornment position="start" sx={{
-                                            display: 'flex',
-                                            gap: 1,
-                                            flexDirection: 'row',
-                                            alignItems: 'flex-start', // Выровняем чипы по верху
-                                            flexWrap: 'wrap',
-                                            width: '10000px'
-                                        }}>
-                                            {chipData.map((chip, index) => (
-                                                <Chip
-                                                    key={index}
-                                                    label={chip}
-                                                    size="small"
-                                                    onDelete={() => handleDelete(chip)}
-                                                    sx={{
-                                                        backgroundColor: 'rgba(237, 237, 247, 1)',
-                                                        fontSize: '13px',
-                                                        borderRadius: '4px',
-                                                        fontFamily: 'Roboto',
-                                                        fontWeight: 400,
-                                                        textAlign: '16.8px',
-                                                        maxWidth: '100%', // Ограничиваем ширину чипов
-                                                        '& .MuiChip-label': {
-                                                            padding: 1,
-                                                        },
-                                                    }}
-                                                />
-                                            ))}
-                                        </InputAdornment>
-                                    ),
+                                name="urlTags"
+                                placeHolder="Enter URL"
+                                disabled={!checkedUrl}
+                                beforeAddValidate={(input: string, existingTags: string[]) => {
+                                    if (!isValidUrlOrPath(input)) {
+                                        showErrorToast("Invalid URL or part of URL. Please enter a valid value.");
+                                        return false;
+                                    }
+                                    return true;
                                 }}
                             />
-
-
                             <Box sx={{ padding: 0 }}>
                                 <Button variant="outlined" onClick={handleSubmitUrl} sx={{
                                     backgroundColor: '#fff',
@@ -998,52 +1021,13 @@ const SuppressionRules: React.FC = () => {
                             </Box>
                         </Box>
 
-                        <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2, width: '100%', alignItems: 'end', '@media (max-width: 700px)': { flexDirection: 'column', justifyContent: 'flex-end' } }}>
-                            <TextField
-                                label="URL"
-                                multiline
-                                rows={3}
-                                variant="outlined"
-                                fullWidth
-                                sx={{
-                                    display: checkedUrlParameters ? '' : 'none',
-                                }}
-                                margin="normal"
-                                value={inputValueParam}
-                                onKeyDown={handleKeyDownUrlParameters}
-                                onChange={(e) => setInputValueParam(e.target.value)}
-                                InputProps={{
-                                    sx: {
-                                        alignItems: 'flex-start',
-                                        fontSize: 'Roboto',
-                                        fontFamily: 'Roboto',
-                                        fontWeight: 400,
-                                        textAlign: '16.8px',
-                                    },
-                                    startAdornment: (
-                                        <InputAdornment position="start" sx={{ display: 'flex', gap: 1, flexDirection: 'row', alignItems: 'start', }}>
-                                            {chipDataParam.map((chip, index) => (
-                                                <Chip
-                                                    key={index}
-                                                    label={chip}
-                                                    size="small"
-                                                    onDelete={() => handleDeleteParam(chip)}
-                                                    sx={{
-                                                        backgroundColor: 'rgba(237, 237, 247, 1)',
-                                                        fontSize: '13px',
-                                                        borderRadius: '4px',
-                                                        fontFamily: 'Roboto',
-                                                        fontWeight: 400,
-                                                        textAlign: '16.8px',
-                                                        '&.MuiChip-label': {
-                                                            padding: 0
-                                                        }
-                                                    }}
-                                                />
-                                            ))}
-                                        </InputAdornment>
-                                    ),
-                                }}
+                        <Box sx={{ display: checkedUrlParameters ? 'flex' : 'none', flexDirection: 'row', justifyContent: 'space-between', gap: 2, width: '100%', alignItems: 'end', '@media (max-width: 700px)': { flexDirection: 'column', justifyContent: 'flex-end' } }}>
+                            <TagsInput
+                                value={chipDataParam}
+                                onChange={setChipDataParam}
+                                name="urlTags"
+                                placeHolder="Enter URL"
+                                disabled={!checkedUrlParameters}
                             />
                             <Box sx={{ padding: 0 }}>
                                 <Button variant="outlined" onClick={handleSubmitUrlParam} sx={{
@@ -1081,49 +1065,22 @@ const SuppressionRules: React.FC = () => {
                         You can add multiple emails.
                     </Typography>
 
-                    <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2, width: '100%', alignItems: 'end', '@media (max-width: 700px)': { flexDirection: 'column', justifyContent: 'flex-end' } }}>
-                        <TextField
-                            label="Email address"
-                            multiline
-                            rows={3}
-                            variant="outlined"
-                            fullWidth
-                            margin="normal"
-                            value={inputValueEmail}
-                            onKeyDown={handleKeyDownEmail}
-                            onChange={(e) => setInputValueEmail(e.target.value)}
-                            InputProps={{
-                                sx: {
-                                    alignItems: 'flex-start',
-                                    fontSize: 'Roboto',
-                                    fontFamily: 'Roboto',
-                                    fontWeight: 400,
-                                    textAlign: '16.8px',
-                                },
-                                startAdornment: (
-                                    <InputAdornment position="start" sx={{ display: 'flex', gap: 1, flexDirection: 'row', alignItems: 'start', }}>
-                                        {chipDataEmail.map((chip, index) => (
-                                            <Chip
-                                                key={index}
-                                                label={chip}
-                                                size="small"
-                                                onDelete={() => handleDeleteEmail(chip)}
-                                                sx={{
-                                                    backgroundColor: 'rgba(237, 237, 247, 1)',
-                                                    fontSize: '13px',
-                                                    borderRadius: '4px',
-                                                    fontFamily: 'Roboto',
-                                                    fontWeight: 400,
-                                                    textAlign: '16.8px',
-                                                    '&.MuiChip-label': {
-                                                        padding: 0
-                                                    }
-                                                }}
-                                            />
-                                        ))}
-                                    </InputAdornment>
-                                ),
+                    <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2, width: '100%', justifyContent: 'space-between', alignItems: 'end', '@media (max-width: 700px)': { flexDirection: 'column', justifyContent: 'flex-end' } }}>
+                        <TagsInput
+                            value={chipDataEmail}
+                            onChange={(newTags) => {
+                                const validEmails = newTags.filter(isValidEmail);
+                                setChipDataEmail(validEmails);
                             }}
+                            beforeAddValidate={(input: string, existingTags: string[]) => {
+                                if (!isValidEmail(input)) {
+                                    showErrorToast("Incorrect email. Please enter a correct email.");
+                                    return false;
+                                }
+                                return true;
+                            }}
+                            name="emailTags"
+                            placeHolder="Enter email"
                         />
                         <Box sx={{ padding: 0 }}>
                             <Button variant="outlined" onClick={handleSubmitEmail} sx={{

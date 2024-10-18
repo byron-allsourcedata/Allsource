@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect, useRef } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
-import { Box, Typography, Button, Table, TableBody, Modal, TableCell, TableContainer, TableHead, TableRow, Grid, IconButton, Switch, Divider, Popover, Drawer, LinearProgress, Tooltip, TextField, TablePagination, useMediaQuery } from '@mui/material';
+import { Box, Typography, Button, Table, TableBody, Modal, TableCell, TableContainer, TableHead, TableRow, Grid, IconButton, Switch, Divider, Popover, Drawer, LinearProgress, Tooltip, TextField, TablePagination, Chip, useMediaQuery } from '@mui/material';
 import Image from 'next/image';
 import { Elements } from '@stripe/react-stripe-js';
 import axiosInterceptorInstance from '@/axios/axiosInterceptorInstance';
@@ -12,6 +12,8 @@ import { showErrorToast, showToast } from './ToastNotification';
 import axios from 'axios';
 import CustomTooltip from './customToolTip';
 import { ChevronLeft, ChevronRight } from '@mui/icons-material';
+import DownloadIcon from '@mui/icons-material/Download';
+import TelegramIcon from '@mui/icons-material/Telegram';
 
 type CardBrand = 'visa' | 'mastercard' | 'americanexpress' | 'discover';
 
@@ -96,7 +98,7 @@ const billingStyles = {
     page_number: {
         backgroundColor: 'rgba(255, 255, 255, 1)',
         color: 'rgba(80, 82, 178, 1)',
-      },
+    },
 }
 
 interface CustomTablePaginationProps {
@@ -232,6 +234,8 @@ export const SettingsBilling: React.FC = () => {
     const [selectedCardId, setSelectedCardId] = useState<string | null>();
     const [selectedInvoiceId, setselectedInvoiceId] = useState<string | null>();
     const [removePopupOpen, setRemovePopupOpen] = useState(false);
+    const [downgrade_plan, setDowngrade_plan] = useState<string | null>();
+    const [canceled_at, setCanceled_at] = useState<string | null>();
     const [sendInvoicePopupOpen, setSendInvoicePopupOpen] = useState(false);
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [page, setPage] = useState(0);
@@ -253,11 +257,13 @@ export const SettingsBilling: React.FC = () => {
             setIsLoading(true);
             const response = await axiosInterceptorInstance.get('/settings/billing');
             setCardDetails(response.data.card_details);
-            setChecked(response.data.billing_details.overage)
-            setBillingDetails(response.data.billing_details);
+            setChecked(response.data.billing_details.overage);
+            setBillingDetails(response.data.billing_details.subscription_details);
+            setDowngrade_plan(response.data.billing_details.downgrade_plan);
+            setCanceled_at(response.data.billing_details.canceled_at);
             setContactsCollected(response.data.usages_credits.leads_credits);
             setPlanContactsCollected(response.data.usages_credits.plan_leads_credits)
-            setProspectData(response.data.usages_credits.prospect_credits)
+            setProspectData(response.data.usages_credits.prospect_credits);
         } catch (error) {
             console.error('Error fetching data:', error);
         } finally {
@@ -283,11 +289,11 @@ export const SettingsBilling: React.FC = () => {
             setIsLoading(false);
         }
     };
-    
+
     useEffect(() => {
         fetchCardData();
         fetchBillingHistoryData(page, rowsPerPage);
-    }, [page, rowsPerPage]);    
+    }, [page, rowsPerPage]);
 
     const formatKey = (key: string) => {
         return key.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
@@ -573,6 +579,11 @@ export const SettingsBilling: React.FC = () => {
         setCardDetails(prevDetails => [...prevDetails, data]);
     };
 
+    const formatDate = (dateString: string): string => {
+        const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'short', day: 'numeric' };
+        return new Date(dateString).toLocaleDateString('en-US', options);
+    };
+
 
     const getStatusStyles = (status: string) => {
         switch (status?.toLowerCase()) {
@@ -628,7 +639,7 @@ export const SettingsBilling: React.FC = () => {
                                 sx={{
                                     textTransform: 'none',
                                     borderRadius: '4px',
-                                    padding: '0',
+                                    padding: '0px',
                                     border: 'none',
                                     minWidth: 'auto',
                                     '@media (min-width: 601px)': {
@@ -638,6 +649,23 @@ export const SettingsBilling: React.FC = () => {
                             >
                                 <Image src='/add.svg' alt='logo' height={24} width={24} />
                             </Button>
+
+                            <Box sx={{
+                            border: '1px dashed #5052B2',
+                            borderRadius: '4px',
+                            width: '62px',
+                            height: '62px',
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            '@media (max-width: 600px)': {
+                                display: 'none'
+                            }
+                        }}>
+                            <Button onClick={handleOpen} sx={{padding:2}}>
+                                <Image src="/add-square.svg" alt="add-square" height={32} width={32} />
+                            </Button>
+                        </Box>
                         </Box>
                         {cardDetails.length > 0 && cardDetails.map((card) => (
                             <Box key={card.id} sx={{
@@ -772,22 +800,7 @@ export const SettingsBilling: React.FC = () => {
                             </Box>
                         ))}
 
-                        <Box sx={{
-                            border: '1px dashed #5052B2',
-                            borderRadius: '4px',
-                            width: '62px',
-                            height: '62px',
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            '@media (max-width: 600px)': {
-                                display: 'none'
-                            }
-                        }}>
-                            <Button onClick={handleOpen}>
-                                <Image src="/add-square.svg" alt="add-square" height={32} width={32} />
-                            </Button>
-                        </Box>
+                        
 
                         <Modal open={open} onClose={handleClose}>
                             <Box sx={{
@@ -814,15 +827,44 @@ export const SettingsBilling: React.FC = () => {
                                 Billing Details
                             </Typography>
                             {billingDetails.active ? (
-                                <Box sx={{ display: 'flex', borderRadius: '4px', background: '#eaf8dd', padding: '2px 12px', gap: '3px' }}>
-                                    <Typography className="main-text" sx={{
-                                        borderRadius: '4px',
-                                        color: '#2b5b00',
-                                        fontSize: '12px',
-                                        fontWeight: '600',
-                                        lineHeight: '16px'
-                                    }}>Active</Typography>
-                                </Box>
+                                canceled_at ? (
+                                    <Box sx={{ display: 'flex', borderRadius: '4px', background: '#FCDBDC', padding: '2px 12px', gap: '3px', alignItems: 'center' }}>
+                                        <Typography className="main-text" sx={{
+                                            borderRadius: '4px',
+                                            color: '#4E0110',
+                                            fontSize: '12px',
+                                            fontWeight: '600',
+                                            lineHeight: '16px',
+                                        }}>
+                                            Subscription Cancelled
+                                        </Typography>
+                                        <Image src={'danger.svg'} alt='danger' width={14} height={13.5} />
+                                    </Box>
+                                ) : downgrade_plan ? (
+                                    <Box sx={{ display: 'flex', borderRadius: '4px', background: '#FDF2CA', padding: '2px 12px', gap: '3px', alignItems: 'center' }}>
+                                        <Typography className="main-text" sx={{
+                                            borderRadius: '4px',
+                                            color: '#795E00',
+                                            fontSize: '12px',
+                                            fontWeight: '600',
+                                            lineHeight: '16px',
+                                        }}>
+                                            Downgraded to {downgrade_plan}
+                                        </Typography>
+                                    </Box>
+                                ) : (
+                                    <Box sx={{ display: 'flex', borderRadius: '4px', background: '#eaf8dd', padding: '2px 12px', gap: '3px' }}>
+                                        <Typography className="main-text" sx={{
+                                            borderRadius: '4px',
+                                            color: '#2b5b00',
+                                            fontSize: '12px',
+                                            fontWeight: '600',
+                                            lineHeight: '16px'
+                                        }}>
+                                            Active
+                                        </Typography>
+                                    </Box>
+                                )
                             ) : (
                                 <Box sx={{ display: 'flex', borderRadius: '4px', background: '#f8dede', padding: '2px 12px', gap: '3px' }}>
                                     <Typography className="main-text" sx={{
@@ -831,7 +873,9 @@ export const SettingsBilling: React.FC = () => {
                                         fontSize: '12px',
                                         fontWeight: '600',
                                         lineHeight: '16px'
-                                    }}>Canceled</Typography>
+                                    }}>
+                                        Canceled
+                                    </Typography>
                                 </Box>
                             )}
                         </Box>
@@ -1047,7 +1091,9 @@ export const SettingsBilling: React.FC = () => {
                                                         fontWeight: '600',
                                                         lineHeight: '16px',
                                                         color: '#4a4a4a'
-                                                    }}>Next Billing Date</Typography>
+                                                    }}>
+                                                        {canceled_at ? `Cancellation Date` : 'Next Billing Date'}
+                                                    </Typography>
                                                     <Typography className='first-sub-title' sx={{
                                                         fontWeight: '700 !important',
                                                         '@media (max-width: 600px)': {
@@ -1089,9 +1135,6 @@ export const SettingsBilling: React.FC = () => {
                                     return null;
                                 }
 
-
-
-
                                 // Default layout for other billing details
                                 return (
                                     <Box key={index} sx={{
@@ -1113,7 +1156,9 @@ export const SettingsBilling: React.FC = () => {
                                         <Typography className="paragraph" sx={{
                                             lineHeight: '16px !important',
                                             color: '#5f6368 !important'
-                                        }}>{renderValue(value)}</Typography>
+                                        }}>
+                                            {renderValue(value)}
+                                        </Typography>
                                     </Box>
                                 );
                             })}
@@ -1125,9 +1170,19 @@ export const SettingsBilling: React.FC = () => {
             </Grid>
 
             <Box sx={{ borderRadius: '4px', border: '1px solid #f0f0f0', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)', p: 3, marginBottom: 2 }}>
-                <Typography className='first-sub-title' sx={{ mb: 2 }}>
-                    Usages
-                </Typography>
+
+                <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'start' }}>
+                    <Typography className='first-sub-title' sx={{ mb: 2 }}>
+                        Usages
+                    </Typography>
+                    <Chip
+                        label='Coming soon'
+                        className='second-sub-title'
+                        sx={{
+                            backgroundColor: '#FDF2CA', borderRadius: '4px', justifyContent: 'center', color: '#795E00 !important',
+                        }}>
+                    </Chip>
+                </Box>
                 <Box sx={{
                     display: 'flex', justifyContent: 'space-between', gap: '55px',
                     '@media (max-width: 600px)': {
@@ -1179,7 +1234,7 @@ export const SettingsBilling: React.FC = () => {
 
 
                     <Box sx={{ width: '100%', marginBottom: 2 }}>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', opacity: 0.6 }}>
                             <Typography className='second-sub-title' sx={{ lineHeight: '20px !important', mb: '12px' }}>
                                 Prospect Data
                             </Typography>
@@ -1195,17 +1250,19 @@ export const SettingsBilling: React.FC = () => {
                                 height: '8px',
                                 borderRadius: '4px',
                                 backgroundColor: '#dbdbdb',
-                                mb: 1
+                                mb: 1,
+                                opacity: 0.6
                             }}
                         />
-                        <Typography className='paragraph' sx={{ color: '#787878 !important' }}>
+                        <Typography className='paragraph' sx={{ color: '#787878 !important', opacity: 0.6 }}>
                             {0}
                         </Typography>
+
                     </Box>
 
 
 
-                    <Box sx={{ flexShrink: 0 }}>
+                    <Box sx={{ flexShrink: 0, opacity: 0.6 }}>
                         <Button
                             className='hyperlink-red'
                             disabled={true}
@@ -1296,10 +1353,10 @@ export const SettingsBilling: React.FC = () => {
                                         }}
                                     >
                                         <TableCell className="table-data" sx={{
-    ...billingStyles.tableBodyColumn,
-    cursor: 'pointer',
-    backgroundColor: '#fff'
-}}>{history.date}</TableCell>
+                                            ...billingStyles.tableBodyColumn,
+                                            cursor: 'pointer',
+                                            backgroundColor: '#fff'
+                                        }}>{history.date}</TableCell>
 
                                         <TableCell className='table-data' sx={billingStyles.tableBodyColumn}>{history.invoice_id}</TableCell>
                                         <TableCell className='table-data' sx={billingStyles.tableBodyColumn}>

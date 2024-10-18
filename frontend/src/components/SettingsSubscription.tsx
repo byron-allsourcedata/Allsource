@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Button, Tabs, Tab, TextField, Dialog, DialogActions, Tooltip, Slider, DialogContent, DialogTitle, IconButton, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, TableSortLabel, InputAdornment, Drawer, Divider, List, ListItem, ListItemIcon, ListItemText } from '@mui/material';
+import { Box, Typography, Button, Tabs, Tab, TextField, Dialog, DialogActions, Tooltip, Slider, DialogContent, DialogTitle, IconButton, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, TableSortLabel, InputAdornment, Drawer, Divider, List, ListItem, ListItemIcon, ListItemText, Chip } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import PlanCard from '@/components/PlanCard';
 import axios from 'axios';
@@ -97,6 +97,7 @@ const marks = [
 
 export const SettingsSubscription: React.FC = () => {
     const [plans, setPlans] = useState<any[]>([]);
+    const [allPlans, setAllPlans] = useState<any[]>([]);
     const [credits, setCredits] = useState<number>(50000);
     const [selectedPlan, setSelectedPlan] = useState<any>(null);
 
@@ -113,6 +114,11 @@ export const SettingsSubscription: React.FC = () => {
 
     const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
         setTabValue(newValue);
+        const period = newValue === 0 ? 'month' : 'year';
+        const period_plans = allPlans.filter((plan: any) => plan.interval === period);
+        setPlans(period_plans);
+        const activePlan = allPlans.find((plan: any) => plan.is_active) !== undefined;
+        setHasActivePlan(activePlan);
     };
 
     const handleCustomPlanPopupOpen = () => {
@@ -147,17 +153,30 @@ export const SettingsSubscription: React.FC = () => {
         setConfirmCancellationPopupOpen(false);
     };
 
-
+    interface StripePlan {
+        id: string;
+        interval: string;
+        is_active: boolean;
+    }
 
     useEffect(() => {
         const fetchData = async () => {
             try {
                 setIsLoading(true);
-                const period = tabValue === 0 ? 'month' : 'year';
-                const response = await axiosInterceptorInstance.get(`/subscriptions/stripe-plans?period=${period}`);
-                setPlans(response.data.stripe_plans);
-                const activePlan = response.data.stripe_plans.find((plan: any) => plan.is_active) !== undefined
-                setHasActivePlan(activePlan);
+                const response = await axiosInterceptorInstance.get(`/subscriptions/stripe-plans`);
+                setAllPlans(response.data.stripe_plans)
+                const stripePlans: StripePlan[] = response.data.stripe_plans;
+                const activePlan = stripePlans.find(plan => plan.is_active);
+                setHasActivePlan(!!activePlan);
+                let interval = 'month'
+                if (activePlan) {
+                    interval = activePlan.interval
+                }
+                if (interval === 'year') {
+                    setTabValue(1)
+                }
+                const period_plans = response.data.stripe_plans.filter((plan: any) => plan.interval === interval);
+                setPlans(period_plans);
             } catch (error) {
                 console.error('Error fetching data:', error);
             } finally {
@@ -166,7 +185,7 @@ export const SettingsSubscription: React.FC = () => {
         };
 
         fetchData();
-    }, [tabValue]);
+    }, []);
 
     const handleBuyCredits = () => {
         // Логика для покупки кредитов
@@ -181,7 +200,7 @@ export const SettingsSubscription: React.FC = () => {
             setIsLoading(true)
             const response = await axiosInterceptorInstance.get(`${path}?price_id=${stripePriceId}`);
             if (response.status === 200) {
-                if (!hasActivePlan && response.data.link){
+                if (!hasActivePlan && response.data.link) {
                     window.location.href = response.data.link;
                 }
                 if (response.data.status_subscription) {
@@ -197,16 +216,15 @@ export const SettingsSubscription: React.FC = () => {
                     try {
                         setIsLoading(true);
                         const period = tabValue === 0 ? 'month' : 'year';
-                        await new Promise(resolve => setTimeout(resolve, 3000));
-                        const response = await axiosInterceptorInstance.get(`/subscriptions/stripe-plans?period=${period}`);
-                        setPlans(response.data.stripe_plans);
+                        const period_plans = response.data.stripe_plans.filter((plan: any) => plan.interval === period);
+                        setPlans(period_plans);
                         const activePlan = response.data.stripe_plans.find((plan: any) => plan.is_active) !== undefined;
                         setHasActivePlan(activePlan);
                     } catch (error) {
                         console.error('Error fetching data:', error);
                     } finally {
                         setIsLoading(false);
-                    }                    
+                    }
                 }
                 else if (response.data.status === 'INCOMPLETE') {
                     showErrorToast('Subscription not found!');
@@ -214,7 +232,7 @@ export const SettingsSubscription: React.FC = () => {
             }
         } catch (error) {
             console.error('Error choosing plan:', error);
-        }finally{
+        } finally {
             setIsLoading(false)
         }
     };
@@ -419,23 +437,33 @@ export const SettingsSubscription: React.FC = () => {
 
             {/* Prospect Credits Section */}
             <Box sx={{
-                marginTop: 4, marginBottom: '24px', borderRadius: '10px',
+                marginTop: 2, marginBottom: '24px', borderRadius: '10px',
                 boxShadow: '0px 2px 10px 0px rgba(0, 0, 0, 0.10)',
                 border: '1px solid #e4e4e4',
-                padding: 3
+                padding: 3,
             }}>
-                <Typography variant="h6" className='first-sub-title' sx={{
-                    marginBottom: '8px'
-                }}>
-                    Prospect Credits
-                </Typography>
+                <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Typography variant="h6" className='first-sub-title' sx={{
+                        marginBottom: '8px',
+                        opacity: 0.6
+                    }}>
+                        Prospect Credits
+                    </Typography>
+                    <Chip
+                        label='Coming soon'
+                        className='second-sub-title'
+                        sx={{ backgroundColor: 'rgba(255, 233, 100, 1)', borderRadius: '4px', justifyContent: 'center', color: '#795E00 !important', }}>
+                    </Chip>
+                </Box>
                 <Typography variant="body1" className='paragraph' sx={{
-                    marginBottom: 3
+                    marginBottom: 3,
+                    opacity: 0.6
                 }}>
                     Choose the number of contacts credits for your team
                 </Typography>
-                <Box sx={{ marginBottom: 3 }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
+
+                <Box sx={{ marginBottom: 3, opacity: 0.6 }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3, opacity: 0.6 }}>
                         <Typography variant="body1" className='third-sub-title' sx={{
                             fontSize: '20px !important',
                             color: '#4a4a4a !important'
@@ -466,7 +494,7 @@ export const SettingsSubscription: React.FC = () => {
                                 aria-labelledby="credits-slider"
                             /> */}
 
-                    <Box sx={{ position: 'relative', width: '100%', marginBottom: '20px' }}>
+                    <Box sx={{ position: 'relative', width: '100%', marginBottom: '20px', }}>
                         {/* Custom labels above the slider */}
                         <Box
                             sx={{
@@ -477,6 +505,7 @@ export const SettingsSubscription: React.FC = () => {
                                 bottom: '-16px',
                                 left: 0,
                                 right: 0,
+
                             }}
                         >
                             {marks.map((mark) => (
@@ -498,6 +527,7 @@ export const SettingsSubscription: React.FC = () => {
                             value={credits}
                             onChange={handleChangeCredits}
                             min={0}
+                            disabled={true}
                             max={50000000}
                             step={1000}
                             valueLabelDisplay="off" // Remove the default label
@@ -537,18 +567,21 @@ export const SettingsSubscription: React.FC = () => {
                         border: '1px solid #bdbdbd',
                         borderRadius: '4px',
                         padding: '18px 24px',
-                        width: '100%'
+                        width: '100%',
+                        opacity: 0.6
                     }}>
                         <Box>
                             <Typography variant="h6" className='third-sub-title' sx={{
                                 fontWeight: '600 !important',
                                 lineHeight: '16px !important',
-                                color: '#4a4a4a !important'
+                                color: '#4a4a4a !important',
+                                opacity: 0.6
                             }}>
                                 Summary
                             </Typography>
                             <Typography variant="body1" className='first-sub-title' sx={{
-                                fontWeight: '700 !important'
+                                fontWeight: '700 !important',
+                                opacity: 0.6
                             }}>
                                 {selectedPlan?.name || 'None'} plan+
                                 {' '}{credits} prospect contacts credits.
@@ -559,7 +592,8 @@ export const SettingsSubscription: React.FC = () => {
                         <Box>
                             <Typography variant="h6" className='heading-text' sx={{
                                 fontSize: '40px !important',
-                                fontWeight: '700 !important'
+                                fontWeight: '700 !important',
+                                opacity: 0.6
                             }}>
                                 ${selectedPlan?.price || '0'}
                                 <Typography component='span' className='paragraph' sx={{
@@ -569,7 +603,7 @@ export const SettingsSubscription: React.FC = () => {
                         </Box>
                     </Box>
                     <Box>
-                        <Button variant="contained" className='hyperlink-red' color="primary" onClick={handleBuyCredits}
+                        <Button variant="contained" className='hyperlink-red' color="primary" disabled={true} onClick={handleBuyCredits}
                             sx={{
                                 background: '#5052b2 !important',
                                 borderRadius: '4px',
@@ -577,7 +611,8 @@ export const SettingsSubscription: React.FC = () => {
                                 padding: '9px 24px',
                                 color: '#fff !important',
                                 textTransform: 'none',
-                                whiteSpace: 'nowrap'
+                                whiteSpace: 'nowrap',
+                                opacity: 0.6
 
                             }}
                         >

@@ -22,6 +22,17 @@ class UserPersistence:
             {Users.reset_password_sent_at: send_message_expiration_time},
             synchronize_session=False)
         self.db.commit()
+    
+    def get_team_members(self, user_id: int):
+        users = self.db.query(Users).filter(Users.team_owner_id == user_id).all()
+        return users
+    
+    def get_combined_team_info(self, user_id: int):
+        users = self.db.query(Users).filter(Users.team_owner_id == user_id).all()
+        invitations = self.db.query(TeamInvitation).filter(TeamInvitation.team_owner_id == user_id).all()
+        combined_info = users + invitations
+        return combined_info
+
 
     def set_verified_email_sent_now(self, user_id: int):
         send_message_expiration_time = datetime.now()
@@ -86,7 +97,8 @@ class UserPersistence:
                 'leads_credits': user.leads_credits,
                 'prospect_credits': user.prospect_credits,
                 'is_leads_auto_charging': user.is_leads_auto_charging,
-                'team_access_level':user.team_access_level
+                'team_access_level':user.team_access_level,
+                'current_subscription_id': user.current_subscription_id
             }
         self.db.rollback()
         if result_as_object:
