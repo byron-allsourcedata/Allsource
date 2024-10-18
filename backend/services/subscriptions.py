@@ -267,6 +267,7 @@ class SubscriptionService:
                 domains_limit, users_limit, integrations_limit, leads_credits, prospect_credits, members_limit = self.plans_persistence.get_plan_limit_by_id(
                 plan_id=plan_id)
                 self.db.query(UserSubscriptions).where(UserSubscriptions.status == 'active').update({"status": "inactive", "updated_at": datetime.now(timezone.utc).replace(tzinfo=None)})
+                self.db.flush()
                 new_subscription = UserSubscriptions(
                     plan_start=start_date,
                     plan_end=end_date,
