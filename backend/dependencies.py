@@ -1,64 +1,50 @@
 import logging
-
 from datetime import datetime
 
+from fastapi import Depends, Header, HTTPException, status
 from jose import jwt, JWTError
-
-from config.auth import AuthConfig
-from config.database import SessionLocal
 from sqlalchemy.orm import Session
 from typing_extensions import Annotated
-from fastapi import Depends, Header, HTTPException, status, Request
+
+from config.auth import AuthConfig
+from config.aws import get_s3_client
+from config.database import SessionLocal
 from enums import UserAuthorizationStatus
 from exceptions import InvalidToken
+from models.users import Users as User
 from persistence.audience_persistence import AudiencePersistence
-from persistence.settings_persistence import SettingsPersistence
+from persistence.domains import UserDomainsPersistence, UserDomains
+from persistence.integrations.integrations_persistence import IntegrationsPresistence
+from persistence.integrations.suppression import IntegrationsSuppressionPersistence
+from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
+from persistence.leads_order_persistence import LeadOrdersPersistence
 from persistence.leads_persistence import LeadsPersistence
 from persistence.plans_persistence import PlansPersistence
+from persistence.sendgrid_persistence import SendgridPersistence
+from persistence.settings_persistence import SettingsPersistence
+from persistence.suppression_persistence import SuppressionPersistence
+from persistence.user_persistence import UserPersistence
 from schemas.auth_token import Token
 from services.admin_customers import AdminCustomersService
 from services.audience import AudienceService
+from services.aws import AWSService
 from services.company_info import CompanyInfoService
 from services.dashboard import DashboardService
-from services.leads import LeadsService
-from services.payments import PaymentsService
-from services.payments_plans import PaymentsPlans
-from persistence.sendgrid_persistence import SendgridPersistence
-from services.plans import PlansService
-from services.subscriptions import SubscriptionService
-from services.webhook import WebhookService
-from services.users_email_verification import UsersEmailVerificationService
-from services.users_auth import UsersAuth
-from services.users import UsersService
-from services.subscriptions import SubscriptionService
-from services.sse_events import SseEventsService
-from services.settings import SettingsService
-from services.pixel_installation import PixelInstallationService
-from services.payments_plans import PaymentsPlans
-from services.payments import PaymentsService
-from services.leads import LeadsService
-from services.integrations.base import IntegrationService
-from services.company_info import CompanyInfoService
-from services.audience import AudienceService
 from services.domains import UserDomainsService
-from schemas.auth_token import Token
-from persistence.user_persistence import UserPersistence
-from persistence.sendgrid_persistence import SendgridPersistence
-from persistence.plans_persistence import PlansPersistence
-from persistence.leads_persistence import LeadsPersistence
-from persistence.integrations.integrations_persistence import IntegrationsPresistence
-from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
-from persistence.audience_persistence import AudiencePersistence
-from persistence.leads_order_persistence import LeadOrdersPersistence
-from persistence.domains import UserDomainsPersistence, UserDomains
-from persistence.suppression_persistence import SuppressionPersistence
-from persistence.integrations.suppression import IntegrationsSuppressionPersistence
-from models.users import Users as User
+from services.integrations.base import IntegrationService
+from services.leads import LeadsService
+from services.payments import PaymentsService
+from services.payments_plans import PaymentsPlans
+from services.pixel_installation import PixelInstallationService
+from services.plans import PlansService
+from services.settings import SettingsService
+from services.sse_events import SseEventsService
+from services.subscriptions import SubscriptionService
 from services.suppression import SuppressionService
-from exceptions import InvalidToken
-from enums import UserAuthorizationStatus
-from config.aws import get_s3_client
-from services.aws import AWSService
+from services.users import UsersService
+from services.users_auth import UsersAuth
+from services.users_email_verification import UsersEmailVerificationService
+from services.webhook import WebhookService
 
 logger = logging.getLogger(__name__)
 
@@ -78,11 +64,14 @@ def get_plans_persistence(db: Session = Depends(get_db)):
 def get_leads_persistence(db: Session = Depends(get_db)):
     return LeadsPersistence(db=db)
 
+
 def get_suppression_persistence(db: Session = Depends(get_db)) -> SuppressionPersistence:
     return SuppressionPersistence(db)
 
+
 def get_send_grid_persistence_service(db: Session = Depends(get_db)):
     return SendgridPersistence(db=db)
+
 
 def get_settings_persistence(db: Session = Depends(get_db)):
     return SettingsPersistence(db=db)
@@ -95,18 +84,21 @@ def get_user_persistence_service(db: Session = Depends(get_db)):
 def get_audience_persistence(db: Session = Depends(get_db)):
     return AudiencePersistence(db=db)
 
+
 def get_subscription_service(db: Session = Depends(get_db),
                              user_persistence_service: UserPersistence = Depends(get_user_persistence_service),
                              plans_persistence: PlansPersistence = Depends(get_plans_persistence)):
     return SubscriptionService(db=db, user_persistence_service=user_persistence_service,
                                plans_persistence=plans_persistence)
 
+
 def get_payments_plans_service(db: Session = Depends(get_db),
                                subscription_service: SubscriptionService = Depends(get_subscription_service),
                                user_persistence_service: UserPersistence = Depends(get_user_persistence_service)):
     return PaymentsPlans(db=db, subscription_service=subscription_service,
                          user_persistence_service=user_persistence_service)
-    
+
+
 def get_users_auth_service(db: Session = Depends(get_db),
                            payments_plans: PaymentsPlans = Depends(get_payments_plans_service),
                            user_persistence_service: UserPersistence = Depends(get_user_persistence_service),
@@ -118,14 +110,14 @@ def get_users_auth_service(db: Session = Depends(get_db),
                      subscription_service=subscription_service)
 
 
-
 def get_admin_customers_service(db: Session = Depends(get_db),
                                 subscription_service: SubscriptionService = Depends(get_subscription_service),
                                 user_persistence: UserPersistence = Depends(get_user_persistence_service),
                                 users_auth_service: UsersAuth = Depends(get_users_auth_service),
                                 plans_presistence: PlansPersistence = Depends(get_plans_persistence)):
     return AdminCustomersService(db=db, subscription_service=subscription_service,
-                                 user_persistence=user_persistence, plans_persistence=plans_presistence, users_auth_service=users_auth_service)
+                                 user_persistence=user_persistence, plans_persistence=plans_presistence,
+                                 users_auth_service=users_auth_service)
 
 
 def get_user_authorization_status(user, users_auth_service: UsersAuth):
@@ -147,7 +139,8 @@ def parse_jwt_data(Authorization: Annotated[str, Header()]) -> Token:
         return Token(**data)
     except JWTError:
         raise InvalidToken
-    
+
+
 def check_user_authorization(Authorization: Annotated[str, Header()],
                              user_persistence_service: UserPersistence = Depends(
                                  get_user_persistence_service), users_auth_service: UsersAuth = Depends(
@@ -217,23 +210,24 @@ def get_user_domain_persistence(db: Session = Depends(get_db)) -> UserDomainsPer
 
 
 def check_domain(
-    CurrentDomain: Annotated[str, Header()],
-    user=Depends(check_user_authentication), 
-    domain_persistence: UserDomainsPersistence = Depends(get_user_domain_persistence)
+        CurrentDomain: Annotated[str, Header()],
+        user=Depends(check_user_authentication),
+        domain_persistence: UserDomainsPersistence = Depends(get_user_domain_persistence)
 ) -> UserDomains:
     current_domain = domain_persistence.get_domain_by_user(user.get('id'), domain_substr=CurrentDomain)
-    if not current_domain or len(current_domain) == 0 :
+    if not current_domain or len(current_domain) == 0:
         raise HTTPException(status_code=404, detail={'status': "DOMAIN_NOT_FOUND"})
     return current_domain[0]
 
 
 def check_pixel_install_domain(domain: UserDomains = Depends(check_domain)):
     if not domain.is_pixel_installed:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail={'status': UserAuthorizationStatus.PIXEL_INSTALLATION_NEEDED.value})
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail={'status': UserAuthorizationStatus.PIXEL_INSTALLATION_NEEDED.value})
     return domain
 
 
-def get_domain_service(user_domain_persistence: UserDomainsPersistence = Depends(get_user_domain_persistence), 
+def get_domain_service(user_domain_persistence: UserDomainsPersistence = Depends(get_user_domain_persistence),
                        plan_persistence: PlansPersistence = Depends(get_plans_persistence)):
     return UserDomainsService(user_domain_persistence, plan_persistence)
 
@@ -245,7 +239,7 @@ def get_users_service(user=Depends(check_user_authentication),
     return UsersService(user=user, user_persistence_service=user_persistence, plan_persistence=plan_persistence)
 
 
-def get_leads_service(user = Depends(check_user_authorization),
+def get_leads_service(user=Depends(check_user_authorization),
                       domain: UserDomains = Depends(check_pixel_install_domain),
                       leads_persistence_service: LeadsPersistence = Depends(get_leads_persistence)):
     return LeadsService(domain=domain, leads_persistence_service=leads_persistence_service)
@@ -272,31 +266,32 @@ def get_pixel_installation_service(db: Session = Depends(get_db),
     return PixelInstallationService(db=db, send_grid_persistence_service=send_grid_persistence_service)
 
 
-
 def get_settings_service(settings_persistence: SettingsPersistence = Depends(
-                                       get_settings_persistence),
-                                    plan_persistence: PlansPersistence = Depends(
-                                       get_plans_persistence
-                                       ),
-                                    user_persistence: UserPersistence = Depends(
-                                       get_user_persistence_service
-                                       ),
-                                    send_grid_persistence: SendgridPersistence = Depends(
-                                       get_send_grid_persistence_service
-                                       )
-                                    ,
-                                    subscription_service: SubscriptionService = Depends(
-                                       get_subscription_service
-                                       ),
-                                    user_domains_service: UserDomainsService = Depends(get_domain_service)
-                                   ):
-    return SettingsService(settings_persistence=settings_persistence, plan_persistence=plan_persistence, user_persistence=user_persistence, 
-                           send_grid_persistence=send_grid_persistence, subscription_service=subscription_service, 
+    get_settings_persistence),
+        plan_persistence: PlansPersistence = Depends(
+            get_plans_persistence
+        ),
+        user_persistence: UserPersistence = Depends(
+            get_user_persistence_service
+        ),
+        send_grid_persistence: SendgridPersistence = Depends(
+            get_send_grid_persistence_service
+        )
+        ,
+        subscription_service: SubscriptionService = Depends(
+            get_subscription_service
+        ),
+        user_domains_service: UserDomainsService = Depends(get_domain_service)
+):
+    return SettingsService(settings_persistence=settings_persistence, plan_persistence=plan_persistence,
+                           user_persistence=user_persistence,
+                           send_grid_persistence=send_grid_persistence, subscription_service=subscription_service,
                            user_domains_service=user_domains_service)
 
 
 def get_suppression_service(suppression_persistence: SuppressionPersistence = Depends(get_suppression_persistence)):
     return SuppressionService(suppression_persistence=suppression_persistence)
+
 
 def get_plans_service(plans_persistence: PlansPersistence = Depends(get_plans_persistence),
                       subscription_service: SubscriptionService = Depends(get_subscription_service)):
@@ -334,36 +329,42 @@ def check_user_admin(Authorization: Annotated[str, Header()],
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail={'status': 'FORBIDDEN'})
     return user
 
+
 def get_user_integrations_presistence(db: Session = Depends(get_db)) -> IntegrationsPresistence:
     return IntegrationsPresistence(db)
+
 
 def get_lead_orders_persistence(db: Session = Depends(get_db)) -> LeadsPersistence:
     return LeadsPersistence(db)
 
+
 def get_integrations_user_sync_persistence(db: Session = Depends(get_db)) -> IntegrationsUserSyncPersistence:
     return IntegrationsUserSyncPersistence(db)
 
-def get_aws_service(s3_client = Depends(get_s3_client)) -> AWSService:
+
+def get_aws_service(s3_client=Depends(get_s3_client)) -> AWSService:
     return AWSService(s3_client)
 
 
-def get_integration_service(db: Session = Depends(get_db), 
-                            audience_persistence = Depends(get_audience_persistence),
-                            integration_presistence: IntegrationsPresistence = Depends(get_user_integrations_presistence),
+def get_integration_service(db: Session = Depends(get_db),
+                            audience_persistence=Depends(get_audience_persistence),
+                            integration_presistence: IntegrationsPresistence = Depends(
+                                get_user_integrations_presistence),
                             lead_presistence: LeadsPersistence = Depends(get_leads_persistence),
                             lead_orders_persistence: LeadOrdersPersistence = Depends(get_lead_orders_persistence),
-                            integrations_user_sync_persistence: IntegrationsUserSyncPersistence = Depends(get_integrations_user_sync_persistence),
-                            aws_service: AWSService = Depends(get_aws_service), domain_persistence = Depends(get_user_domain_persistence),
-                            suppression_persitence: IntegrationsSuppressionPersistence = Depends(get_suppression_persistence)
+                            integrations_user_sync_persistence: IntegrationsUserSyncPersistence = Depends(
+                                get_integrations_user_sync_persistence),
+                            aws_service: AWSService = Depends(get_aws_service),
+                            domain_persistence=Depends(get_user_domain_persistence),
+                            suppression_persitence: IntegrationsSuppressionPersistence = Depends(
+                                get_suppression_persistence)
                             ):
-    return IntegrationService(db,    
-                              integration_presistence, 
-                              lead_presistence, 
-                              audience_persistence, 
+    return IntegrationService(db,
+                              integration_presistence,
+                              lead_presistence,
+                              audience_persistence,
                               lead_orders_persistence,
                               integrations_user_sync_persistence,
                               aws_service,
-                              domain_persistence, 
+                              domain_persistence,
                               suppression_persitence)
-
-

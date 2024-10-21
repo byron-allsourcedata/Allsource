@@ -9,15 +9,11 @@ current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 
-from models.five_x_five_locations import FiveXFiveLocations
-from models.five_x_five_users_locations import FiveXFiveUsersLocations
 from models.users_payments_transactions import UsersPaymentsTransactions
-from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import sessionmaker
 from models.users import Users
-from models.five_x_five_users import FiveXFiveUser
 from dotenv import load_dotenv
-from sqlalchemy import func, extract
+from sqlalchemy import extract
 from datetime import datetime
 
 load_dotenv()
@@ -45,10 +41,9 @@ async def process_users(session, batch_size=100):
                 .all()
             )
             leads_credits = 0
-                
+
         session.commit()
         offset += batch_size
-        
 
 
 async def main():

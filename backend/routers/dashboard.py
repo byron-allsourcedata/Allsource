@@ -5,12 +5,13 @@ from services.dashboard import DashboardService
 
 router = APIRouter()
 
+
 @router.get("/contact")
 def get_contact(
         from_date: int = Query(None, description="Start date in integer format"),
         to_date: int = Query(None, description="End date in integer format"),
-        dashboard_service: DashboardService = Depends(get_dashboard_service), 
-        user= Depends(check_user_authorization)):
+        dashboard_service: DashboardService = Depends(get_dashboard_service),
+        user=Depends(check_user_authorization)):
     return dashboard_service.get_contact(from_date=from_date, to_date=to_date)
 
 
@@ -18,6 +19,6 @@ def get_contact(
 def get_revenue(
         from_date: int = Query(None, description="Start date in integer format"),
         to_date: int = Query(None, description="End date in integer format"),
-        dashboard_service: DashboardService = Depends(get_dashboard_service), 
-        user= Depends(check_user_authorization)):
+        dashboard_service: DashboardService = Depends(get_dashboard_service),
+        user=Depends(check_user_authorization)):
     return dashboard_service.get_revenue(from_date=from_date, to_date=to_date, user=user)

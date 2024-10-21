@@ -339,9 +339,20 @@ class LeadsPersistence:
         return total_revenue
     
     def get_investment(self, user_id):
-        return self.db.query(func.sum(SubscriptionTransactions.pricing)).filter(
+        transactions = self.db.query(SubscriptionTransactions).filter(
             SubscriptionTransactions.user_id == user_id
-        ).scalar() or 0
+        ).all()
+        unique_combinations = set()
+        total_investment = 0
+
+        for transaction in transactions:
+            key = (transaction.price_id, transaction.start_date, transaction.end_date)
+            if key not in unique_combinations:
+                unique_combinations.add(key)
+                total_investment += transaction.pricing if transaction.pricing else 0
+
+        return total_investment
+
 
     def get_revenue_data(self, domain_id, from_date, to_date, user_id):
         query = (
