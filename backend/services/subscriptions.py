@@ -89,6 +89,14 @@ class SubscriptionService:
 
         return False
 
+    def is_trial_subscription(self, user_id):
+        user_subscription = self.get_user_subscription(user_id=user_id)
+        if user_subscription:
+            if user_subscription.is_trial:
+                return True
+
+        return False
+
     def create_payments_transaction(self, user_id, stripe_payload, product_description, quantity):
         payment_intent = stripe_payload.get("data", {}).get("object", {})
         transaction_id = payment_intent.get("id")
