@@ -25,6 +25,7 @@ import DashboardContact from "@/components/DashboardContact";
 import CustomTooltip from "@/components/customToolTip";
 import { DateRangeIcon } from "@mui/x-date-pickers/icons";
 import CalendarPopup from "@/components/CustomCalendar";
+import dayjs from "dayjs";
 
 
 
@@ -377,6 +378,10 @@ const Dashboard: React.FC = () => {
   const [formattedDates, setFormattedDates] = useState<string>('');
   const [appliedDates, setAppliedDates] = useState<{ start: Date | null; end: Date | null }>({ start: null, end: null });
   const [selectedDateLabel, setSelectedDateLabel] = useState<string>('');
+  const [dateRangeUnix, setDateRangeUnix] = useState<{ from_date: number | null; to_date: number | null }>({
+    from_date: null,
+    to_date: null,
+  });
 
   const handleDateLabelChange = (label: string) => {
     setSelectedDateLabel(label);
@@ -394,30 +399,38 @@ const Dashboard: React.FC = () => {
   const handleDateChange = (dates: { start: Date | null; end: Date | null }) => {
     const { start, end } = dates;
     if (start && end) {
-      setFormattedDates(`${start.toLocaleDateString()} - ${end.toLocaleDateString()}`);
+      const formattedStart = dayjs(start).format('MMM D');
+      const formattedEnd = dayjs(end).format('D, YYYY');
+  
+      setFormattedDates(`${formattedStart} - ${formattedEnd}`);
     } else if (start) {
-      setFormattedDates(`${start.toLocaleDateString()}`);
+      const formattedStart = dayjs(start).format('MMM D, YYYY');
+      setFormattedDates(formattedStart);
     } else if (end) {
-      setFormattedDates(`${end.toLocaleDateString()}`);
-    }
-    else {
+      const formattedEnd = dayjs(end).format('MMM D, YYYY');
+      setFormattedDates(formattedEnd);
+    } else {
       setFormattedDates('');
     }
   };
+  
+  
 
   const handleApply = (dates: { start: Date | null; end: Date | null }) => {
     if (dates.start && dates.end) {
-      const formattedStart = dates.start.toLocaleDateString();
-      const formattedEnd = dates.end.toLocaleDateString();
-
-      const dateRange = `${formattedStart} - ${formattedEnd}`;
-
+      const from_date_unix = Math.floor(dates.start.getTime() / 1000);
+      const to_date_unix = Math.floor(dates.end.getTime() / 1000);
+  
       setAppliedDates(dates);
       setCalendarAnchorEl(null);
-
+  
       handleCalendarClose();
+      
+      // Передача дат в Unix формате как пропсы
+      setDateRangeUnix({ from_date: from_date_unix, to_date: to_date_unix });
     }
   };
+  
 
 
   useEffect(() => {
@@ -629,7 +642,7 @@ const Dashboard: React.FC = () => {
                 sx={{
                   textTransform: 'none',
                   color: 'rgba(128, 128, 128, 1)',
-                  border: '1px solid rgba(184, 184, 184, 1)',
+                  border: '1.5px solid rgba(80, 82, 178, 1)',
                   borderRadius: '4px',
                   padding: '8px',
                   minWidth: 'auto',
@@ -639,16 +652,22 @@ const Dashboard: React.FC = () => {
                   }
                 }}
               >
-                <DateRangeIcon fontSize='medium' />
+                <DateRangeIcon fontSize='medium' sx={{color: 'rgba(80, 82, 178, 1)' }} />
                 <Typography variant="body1" sx={{
-                  fontFamily: 'Nunito',
+                  fontFamily: 'Roboto',
                   fontSize: '14px',
                   fontWeight: '600',
+                  color: 'rgba(32, 33, 36, 1)',
                   lineHeight: '19.6px',
                   textAlign: 'left'
                 }}>
                   {formattedDates}
                 </Typography>
+                {formattedDates && 
+                <Box sx={{pl:2, display: 'flex', alignItems: 'center'}}> 
+                  <Image src="/arrow_down.svg" alt="arrow down" width={16} height={16} />
+                </Box>
+                }
               </Button>
             </Box>
 
@@ -656,7 +675,7 @@ const Dashboard: React.FC = () => {
 
             <Box sx={{ width: '100%' }}>
               <TabPanel value={tabIndex} index={0}>
-                <DashboardRevenue />
+              <DashboardRevenue fromDate={dateRangeUnix.from_date} toDate={dateRangeUnix.to_date} />
               </TabPanel>
             </Box>
             <Box sx={{ width: '100%', padding: 0, margin: 0 }}>

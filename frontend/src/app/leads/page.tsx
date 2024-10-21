@@ -1088,7 +1088,15 @@ const Leads: React.FC = () => {
                                     '@media (max-width: 900px)': {
                                         border: 'none',
                                         padding: 0
-                                    }
+                                    },
+                                    '&:hover': {
+                                        backgroundColor: 'transparent',
+                                        border: '1px solid rgba(80, 82, 178, 1)',
+                                        color: 'rgba(80, 82, 178, 1)',
+                                        '& .MuiSvgIcon-root': {
+                                          color: 'rgba(80, 82, 178, 1)'
+                                        }
+                                      }
                                 }}
                                 onClick={handleDownload}
                             >
@@ -1112,7 +1120,15 @@ const Leads: React.FC = () => {
                                     '@media (max-width: 900px)': {
                                         border: 'none',
                                         padding: 0
-                                    }
+                                    },
+                                    '&:hover': {
+                                        backgroundColor: 'transparent',
+                                        border: '1px solid rgba(80, 82, 178, 1)',
+                                        color: 'rgba(80, 82, 178, 1)',
+                                        '& .MuiSvgIcon-root': {
+                                          color: 'rgba(80, 82, 178, 1)'
+                                        }
+                                      }
                                 }}
                             >
                                 <FilterListIcon fontSize='medium' sx={{ color: selectedFilters.length > 0 ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)' }} />
@@ -1153,7 +1169,15 @@ const Leads: React.FC = () => {
                                     '@media (max-width: 900px)': {
                                         border: 'none',
                                         padding: 0
-                                    }
+                                    },
+                                    '&:hover': {
+                                        backgroundColor: 'transparent',
+                                        border: '1px solid rgba(80, 82, 178, 1)',
+                                        color: 'rgba(80, 82, 178, 1)',
+                                        '& .MuiSvgIcon-root': {
+                                          color: 'rgba(80, 82, 178, 1)'
+                                        }
+                                      }
                                 }}
                             >
                                 <DateRangeIcon fontSize='medium' />

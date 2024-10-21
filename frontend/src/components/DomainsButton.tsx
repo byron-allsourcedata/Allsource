@@ -297,8 +297,8 @@ const DomainButton: React.FC = () => {
         onClose={handleDropdownClose}
         sx={{'& .MuiMenu-list': {padding:'2px'}}}
       >
-        <MenuItem onClick={() => setDomainPopup(true)} style={{ color: '#5052B2' }}>
-          + Add Domain
+        <MenuItem onClick={() => setDomainPopup(true)}>
+        <Typography className='second-sub-title' sx={{color: '#5052B2 !important'}}> + Add Domain</Typography>
         </MenuItem>
         <AddDomainPopup
           open={showDomainPopup}
