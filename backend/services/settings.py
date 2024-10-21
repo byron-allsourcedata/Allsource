@@ -48,10 +48,10 @@ class SettingsService:
                 'company_website_visits': user_info.company_website_visits,
                 'is_email_confirmed': user_info.is_email_confirmed
             }
-            
+
     def change_account_details(self, user: dict, account_details: AccountDetailsRequest):
         changes = {}
-        
+
         if account_details.business_info:
             if user.get('team_member'):
                 raise HTTPException(
@@ -64,12 +64,12 @@ class SettingsService:
                 changes['company_website'] = account_details.business_info.company_website
             if account_details.business_info.visits_to_website:
                 changes['company_website_visits'] = account_details.business_info.visits_to_website
-        
+
         if account_details.account:
             if user.get('team_member'):
                 user_id = user.get('team_member').get('id')
                 user = self.user_persistence.get_user_by_id(user_id)
-            
+
             if account_details.account.full_name:
                 changes['full_name'] = account_details.account.full_name
             if account_details.account.email_address:
@@ -88,7 +88,7 @@ class SettingsService:
                 token_info = {
                     "id": user.get('id'),
                 }
-                token = create_access_token(token_info)           
+                token = create_access_token(token_info)
                 confirm_email_url = f"{os.getenv('SITE_HOST_URL')}/authentication/verify-token?token={token}&mail={account_details.account.email_address}"
                 mail_object = SendgridHandler()
                 mail_object.send_sign_up_mail(
@@ -99,7 +99,7 @@ class SettingsService:
                 )
                 self.settings_persistence.set_reset_email_sent_now(user.get('id'))
                 logger.info("Confirmation Email Sent")
-            
+
         if account_details.change_password:
             if account_details.change_password.current_password and account_details.change_password.new_password:
                 if not verify_password(account_details.change_password.current_password, user.get('password')):
@@ -111,7 +111,7 @@ class SettingsService:
             self.settings_persistence.change_columns_data_by_userid(changes, user.get('id'))
 
         return SettingStatus.SUCCESS
-    
+
     def change_email_account_details(self, token, email: str):
         if email is None:
             SettingStatus.INCORRECT_MAIL
@@ -119,7 +119,7 @@ class SettingsService:
             data = decode_jwt_data(token)
         except:
             return {'status': VerifyToken.INCORRECT_TOKEN}
-        
+
         check_user_object = self.user_persistence.get_user_by_id(data.get('id'))
         if check_user_object:
             changes = {}
@@ -134,7 +134,7 @@ class SettingsService:
                 'user_token': user_token
             }
         return {'status': VerifyToken.INCORRECT_TOKEN}
-    
+
     def get_team_members(self, user: dict):
         result = {}
         team_arr = []
@@ -156,8 +156,8 @@ class SettingsService:
         result['member_limit'] = member_limit if current_subscription else 0
         result['member_count'] = member_count + 1 if current_subscription else 0
         return result
-            
-        
+
+
     def get_pending_invations(self, user: dict):
         result = []
         invations_data = self.settings_persistence.get_pending_invations_by_userid(user_id=user.get('id'))
@@ -170,19 +170,19 @@ class SettingsService:
             }
             result.append(team_info)
         return result
-    
+
     def check_team_invitations_limit(self, user):
         user_limit = self.subscription_service.check_invitation_limit(user_id=user.get('id'))
         if user_limit is False:
             return SettingStatus.INVITATION_LIMIT_REACHED
         return SettingStatus.INVITATION_LIMIT_NOT_REACHED
-    
+
     def change_user_role(self, user: dict, email, access_level=TeamAccessLevel.READ_ONLY):
         self.settings_persistence.change_user_role(email, access_level)
         return {
                 'status': SettingStatus.SUCCESS,
             }
-    
+
     def invite_user(self, user: dict, invite_user, access_level=TeamAccessLevel.READ_ONLY):
         user_limit = self.subscription_service.check_invitation_limit(user_id=user.get('id'))
         if user_limit is False:
@@ -203,7 +203,7 @@ class SettingsService:
             return {
                     'status': SettingStatus.FAILED
                 }
-        
+
         md5_token_info = {
                     'id': user.get('id'),
                     'user_teams_mail': invite_user,
@@ -223,7 +223,7 @@ class SettingsService:
         return {
                     'status': SettingStatus.SUCCESS
                 }
-    
+
     def change_teams(self, user: dict, teams_details):
         pending_invitation_revoke = teams_details.pending_invitation_revoke
         remove_user = teams_details.remove_user
@@ -234,20 +234,20 @@ class SettingsService:
             result = self.settings_persistence.team_members_remove(user_id=user.get('id'), mail_remove_user=remove_user, mail = mail)
             if result['success'] == False:
                 return {'status': result['error']}
-                
+
         return {
                     'status': SettingStatus.SUCCESS,
                     'invitation_count': self.user_persistence.get_team_members(user_id=user.get('id'))
                 }
-        
-        
+
+
     def timestamp_to_date(self, timestamp):
         return datetime.fromtimestamp(timestamp)
-            
+
     def extract_subscription_details(self, customer_id, prospect_credits, user_id):
         subscription = get_billing_details_by_userid(customer_id)
         user_subscription = self.subscription_service.get_user_subscription(user_id=user_id)
-        current_plan = self.plan_persistence.get_current_plan(user_id=user_id) 
+        current_plan = self.plan_persistence.get_current_plan(user_id=user_id)
         plan_limit_domain = user_subscription.domains_limit if user_subscription else 0
         user_limit_domain = len(self.user_domains_service.get_domains(user_id))
         subscription_details = None
@@ -257,7 +257,7 @@ class SettingsService:
             'plan_name': current_plan.title,
             'domains': f"{user_limit_domain}/{plan_limit_domain}",
             'prospect_credits': prospect_credits,
-            'overage': '0.49/contact',
+            'overage': user_subscription.overage,
             'next_billing_date': None,
             'monthly_total': None,
             'active': True
@@ -279,18 +279,18 @@ class SettingsService:
                 'plan_name': plan_name,
                 'domains': f"{user_limit_domain}/{plan_limit_domain}",
                 'prospect_credits': prospect_credits,
-                'overage': '0.49/contact',
+                'overage': user_subscription.overage,
                 'next_billing_date': self.timestamp_to_date(subscription['current_period_end']).strftime('%b %d, %Y'),
                 'monthly_total': monthly_total,
                 'active': is_active,
             }
-            
-        billig_detail = {'subscription_details': subscription_details,
+
+        billing_detail = {'subscription_details': subscription_details,
                          'downgrade_plan': get_product_from_price_id(user_subscription.downgrade_price_id).name if user_subscription and user_subscription.downgrade_price_id else None,
                          'canceled_at': user_subscription.cancel_scheduled_at if user_subscription else None
-                         } 
-        return billig_detail
-            
+                         }
+        return billing_detail
+
     def get_billing(self, user: dict):
         result = {}
         current_plan = self.plan_persistence.get_current_plan(user_id=user.get('id'))
@@ -303,7 +303,7 @@ class SettingsService:
                         'prospect_credits': user.get('prospect_credits')
                         }
         return result
-    
+
     def extract_billing_history(self, customer_id, page, per_page):
         result = []
         billing_history, count, max_page, has_more = get_billing_history_by_userid(customer_id=customer_id, page=page, per_page=per_page)
@@ -326,11 +326,11 @@ class SettingsService:
                     billing_hash['status'] = self.map_status(billing_data.status)
 
             result.append(billing_hash)
-            
+
         result.sort(key=lambda x: x['date'], reverse=True)
         for item in result:
             item['date'] = item['date'].strftime('%b %d, %Y')
-                    
+
         return result, count, max_page
 
 
@@ -343,25 +343,25 @@ class SettingsService:
             return "Failed"
 
 
-    
+
     def get_billing_history(self, user: dict, page, per_page):
         result = {}
         result['billing_history'], result['count'], result['max_page'] = self.extract_billing_history(user.get('customer_id'), page, per_page)
         return result
-    
+
     def add_card(self, user: dict, payment_method_id):
         return add_card_to_customer(user.get('customer_id'), payment_method_id)
-    
+
     def delete_card(self, payment_method_id):
         return detach_card_from_customer(payment_method_id)
-    
+
     def billing_overage(self, user):
         is_leads_auto_charging = self.settings_persistence.billing_overage(user_id=user.get('id'))
         return {
             'status': SettingStatus.SUCCESS,
             'is_leads_auto_charging': is_leads_auto_charging
             }
-        
+
     def send_billing(self, invoice_id, email, user):
         result = get_billing_by_invoice_id(invoice_id)
         if result['status'] != 'SUCCESS':
@@ -390,20 +390,20 @@ class SettingsService:
         return SettingStatus.SUCCESS
 
 
-    
+
     def download_billing(self, invoice_id):
         result = get_billing_by_invoice_id(invoice_id)
         if result['status'] != 'SUCCESS':
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Billing information not found.")
-        
+
         hosted_invoice_url = result['data'].get('hosted_invoice_url', '')
         return hosted_invoice_url
 
-    
+
     def default_card(self, user: dict, payment_method_id):
         return set_default_card_for_customer(user.get('customer_id'), payment_method_id)
-        
-        
+
+
     def get_api_details(self, user):
         get_api_details = self.settings_persistence.get_api_details(user.get('id'))
         return [
@@ -418,25 +418,25 @@ class SettingsService:
             }
             for result in get_api_details
         ]
-    
+
     def delete_api_details(self, user, api_keys_request):
         self.settings_persistence.delete_data_api_details(user_id=user.get('id'), api_keys_id=api_keys_request.id)
         return SettingStatus.SUCCESS
-    
+
     def insert_api_details(self, user, api_keys_request):
         self.settings_persistence.insert_data_api_details(user_id=user.get('id'), api_keys_request=api_keys_request)
         return SettingStatus.SUCCESS
-    
-    
+
+
     def change_api_details(self, user, api_keys_request):
         changes = {}
 
         if api_keys_request.api_key:
             changes['api_key'] = api_keys_request.api_key
-            
+
         if api_keys_request.api_id:
             changes['api_id'] = api_keys_request.api_id
-        
+
         if api_keys_request.name:
             changes['name'] = api_keys_request.name
         if api_keys_request.description:

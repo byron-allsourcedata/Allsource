@@ -4,37 +4,49 @@ from enums import SubscriptionStatus
 from persistence.domains import UserDomainsPersistence, UserDomains
 from persistence.plans_persistence import PlansPersistence
 from schemas.domains import DomainResponse
-from services.users import UsersService
+from services.subscriptions import SubscriptionService
 from utils import normalize_url
 
 
 class UserDomainsService:
 
-    def __init__(self, domain_persistece: UserDomainsPersistence, plan_persistence: PlansPersistence):
-        self.domain_persistence = domain_persistece
+    def __init__(self, user_domain_persistence: UserDomainsPersistence, plan_persistence: PlansPersistence,
+                 subscription_service: SubscriptionService):
+        self.domain_persistence = user_domain_persistence
         self.plan_persistence = plan_persistence
-        self.user_service = UsersService
+        self.subscription_service = subscription_service
+        self.UNLIMITED = -1
 
     def create(self, user, domain: str):
-        plan_info = self.plan_persistence.get_plan_info(user.get('id'))
-        if self.domain_persistence.count_domain(user.get('id')) >= plan_info.domains_limit:
+        plan_info = self.subscription_service.get_user_subscription((user.get('id')))
+        if self.domain_persistence.count_domain(
+                user.get('id')) >= plan_info.domains_limit or plan_info == self.UNLIMITED:
             raise HTTPException(status_code=403, detail={'status': SubscriptionStatus.NEED_UPGRADE_PLAN.value})
         new_domain = self.domain_persistence.create_domain(user.get('id'), {'domain': normalize_url(domain)})
         return self.domain_mapped(new_domain)
 
     def get_domains(self, user_id: int, **filter_by):
         domains = self.domain_persistence.get_domain_by_user(user_id)
-        return [self.domain_mapped(domain) for domain in domains]
-    
-    def domain_mapped(self, domain: UserDomains):
+        sorted_domains = sorted(domains, key=lambda x: x.created_at)
+        user_subscription = self.subscription_service.get_user_subscription(user_id=user_id)
+
+        return [
+            self.domain_mapped(domain, user_subscription.domains_limit == self.UNLIMITED)
+            for i, domain in enumerate(sorted_domains)
+        ]
+
+    def domain_mapped(self, domain: UserDomains, enable=False):
+        domain_enable = domain.enable
+        if enable:
+            domain_enable = enable
         return DomainResponse(
             id=domain.id,
             domain=domain.domain,
             data_provider_id=domain.data_provider_id,
             is_pixel_installed=domain.is_pixel_installed,
-            enable=domain.enable
+            enable=domain_enable
         ).model_dump()
-    
+
     def delete_domain(self, user_id: int, domain_id: int):
         if self.domain_persistence.count_domain(user_id) == 1:
             raise HTTPException(status_code=409, detail={'status': 'LAST_DOMAIN'})

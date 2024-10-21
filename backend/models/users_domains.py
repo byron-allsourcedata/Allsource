@@ -12,4 +12,4 @@ class UserDomains(Base):
     data_provider_id = Column(VARCHAR(64))
     is_pixel_installed = Column(BOOLEAN, default=False)
     enable = Column(BOOLEAN, default=True)
-    created_at = Column(TIMESTAMP, nullable=True)
+    created_at = Column(TIMESTAMP, nullable=False)
