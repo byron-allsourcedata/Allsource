@@ -43,8 +43,8 @@ async def update_payment_confirmation(request: fastRequest, webhook_service: Web
 
 @router.post("/cancel-plan")
 def cancel_user_subscription(unsubscribe_request: UnsubscribeRequest,
-                            payments_service: PaymentsService = Depends(get_payments_service),
-                            users: dict = Depends(check_user_authorization_without_pixel)):
+                             payments_service: PaymentsService = Depends(get_payments_service),
+                             users: dict = Depends(check_user_authorization_without_pixel)):
     if users.get('team_member'):
         team_member = users.get('team_member')
         if team_member.team_access_level != 'admin':
@@ -52,8 +52,8 @@ def cancel_user_subscription(unsubscribe_request: UnsubscribeRequest,
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Access denied. Admins and standard only."
             )
-    return payments_service.cancel_user_subscripion(user=users,
-                                                    reason_unsubscribe=unsubscribe_request.reason_unsubscribe)
+    return payments_service.cancel_user_subscription(user=users,
+                                                     reason_unsubscribe=unsubscribe_request.reason_unsubscribe)
 
 
 @router.get("/upgrade-and-downgrade-user-subscription")

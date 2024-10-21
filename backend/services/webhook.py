@@ -31,19 +31,18 @@ class WebhookService:
             if schedule is not None:
                 return payload
 
-        # if self.subscription_service.check_duplicate_send(stripe_request_created_at, platform_subscription_id,
-        #                                                   price_id):
-        #     return payload
+        if self.subscription_service.check_duplicate_send(stripe_request_created_at, platform_subscription_id,
+                                                          price_id):
+            return payload
 
-        # self.subscription_service.create_subscription_transaction(user_id=user_data.id,
-        #                                                           stripe_payload=payload)
+        self.subscription_service.create_subscription_transaction(user_id=user_data.id,
+                                                                  stripe_payload=payload)
 
         result_status = self.subscription_service.process_subscription(user=user_data, stripe_payload=data_object)
         if result_status == 'active':
-            pass
-            # saved_details_of_payment = save_payment_details_in_stripe(customer_id=customer_id)
-            # if not saved_details_of_payment:
-            #     logger.warning("set default card false")
+            saved_details_of_payment = save_payment_details_in_stripe(customer_id=customer_id)
+            if not saved_details_of_payment:
+                logger.warning("set default card false")
         return result_status
 
     def cancel_subscription_confirmation(self, payload):

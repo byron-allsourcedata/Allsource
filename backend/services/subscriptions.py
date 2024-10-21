@@ -270,7 +270,9 @@ class SubscriptionService:
                     user.prospect_credits = prospect_credits
                 self.db.flush()
             else:
-                self.db.query(UserSubscriptions).where(UserSubscriptions.status == 'active').update(
+                self.db.query(UserSubscriptions).where(
+                    UserSubscriptions.platform_subscription_id == platform_subscription_id,
+                    UserSubscriptions.price_id == price_id).update(
                     {"status": "inactive", "updated_at": datetime.now(timezone.utc).replace(tzinfo=None)})
                 self.db.flush()
                 new_subscription = UserSubscriptions(
