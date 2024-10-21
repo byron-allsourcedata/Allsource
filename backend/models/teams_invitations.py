@@ -1,9 +1,7 @@
-from sqlalchemy import Column, event, Integer, BOOLEAN
+from sqlalchemy import Column, event, Integer
 from sqlalchemy.dialects.postgresql import BIGINT, TIMESTAMP, VARCHAR
-from sqlalchemy.orm import sessionmaker
 
-from .base import Base, create_timestamps, update_timestamps
-from .plans import SubscriptionPlan
+from .base import Base, create_timestamps
 
 
 class TeamInvitation(Base):

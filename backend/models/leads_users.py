@@ -1,13 +1,13 @@
 from sqlalchemy import Column, Integer, VARCHAR, event, TIMESTAMP, ForeignKey, Boolean
 from .base import Base, create_timestamps
 
+
 class LeadUser(Base):
     __tablename__ = 'leads_users'
     id = Column(Integer, primary_key=True, nullable=False)
     domain_id = Column(Integer, nullable=False)
     user_id = Column(Integer, nullable=False)
     five_x_five_user_id = Column(Integer, nullable=False)
-    five_x_five_user_id = Column(Integer, nullable=True)
     klaviyo_user_id = Column(Integer, nullable=True)
     shopify_user_id = Column(Integer, nullable=True)
     bigcommerce_user_id = Column(Integer, nullable=True)
@@ -20,5 +20,6 @@ class LeadUser(Base):
     total_visit = Column(Integer, nullable=True)
     avarage_visit_time = Column(Integer, nullable=True)
     total_visit_time = Column(Integer, nullable=True)
+
 
 event.listen(LeadUser, "before_insert", create_timestamps)

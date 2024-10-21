@@ -259,18 +259,20 @@ class SubscriptionService:
             domains_limit, users_limit, integrations_limit, leads_credits, prospect_credits, members_limit = self.plans_persistence.get_plan_limit_by_id(
                 plan_id=plan_id)
             if user_subscription is not None and user_subscription.status == 'active':
-                user_subscription.plan_start = start_date
-                user_subscription.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
-                user_subscription.plan_end = end_date
                 if canceled_at:
                     user_subscription.cancel_scheduled_at = datetime.fromtimestamp(canceled_at, timezone.utc).replace(
                         tzinfo=None)
                 if start_date > user_subscription.plan_start:
+                    user_subscription.plan_start = start_date
+                    user_subscription.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
+                    user_subscription.plan_end = end_date
                     user.leads_credits = leads_credits if user.leads_credits >= 0 else leads_credits - user.leads_credits
                     user.prospect_credits = prospect_credits
                 self.db.flush()
             else:
-                self.db.query(UserSubscriptions).where(UserSubscriptions.status == 'active').update(
+                self.db.query(UserSubscriptions).where(
+                    UserSubscriptions.platform_subscription_id == platform_subscription_id,
+                    UserSubscriptions.price_id == price_id).update(
                     {"status": "inactive", "updated_at": datetime.now(timezone.utc).replace(tzinfo=None)})
                 self.db.flush()
                 new_subscription = UserSubscriptions(

@@ -1,7 +1,7 @@
-from sqlalchemy import Column, event, Integer
-from sqlalchemy.dialects.postgresql import BOOLEAN, INTEGER, NUMERIC, TIMESTAMP, VARCHAR
+from sqlalchemy import Column, Integer
+from sqlalchemy.dialects.postgresql import VARCHAR
 
-from .base import Base, create_timestamps, update_timestamps
+from .base import Base
 
 
 class States(Base):
