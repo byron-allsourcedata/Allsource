@@ -190,8 +190,8 @@ const handleHashDomain = (event: React.ChangeEvent<HTMLInputElement>) => {
   };
 
   const handleApiKeySave = async() => {
-    setLoading(true)
     try {
+        setLoading(true)
         const response = await axiosInstance.post('/integrations/', {
             bigcommerce: {
                 shop_domain: hashDomain,
@@ -208,7 +208,7 @@ const handleHashDomain = (event: React.ChangeEvent<HTMLInputElement>) => {
 }
 
 const handleSave = async() => {
-    handleApiKeySave()
+    await handleApiKeySave()
     handleClose()
 }
     

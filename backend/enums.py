@@ -1,4 +1,4 @@
-from enum import Enum, auto
+from enum import Enum
 
 
 class BaseEnum(Enum):
@@ -12,6 +12,7 @@ class UserPaymentStatusEnum(Enum):
     PENDING = 'PENDING'
     FAILED = 'FAILED'
 
+
 class SubscriptionStatus(Enum):
     SUCCESS = "SUCCESS"
     INCOMPLETE = "INCOMPLETE"
@@ -22,13 +23,15 @@ class SubscriptionStatus(Enum):
     SUBSCRIPTION_NOT_FOUND = 'SUBSCRIPTION_NOT_FOUND'
     SUBSCRIPTION_ALREADY_CANCELED = 'SUBSCRIPTION_ALREADY_CANCELED'
     DOWNGRADING = 'DOWNGRADING'
-    
+
+
 class SuppressionStatus(Enum):
     SUCCESS = 'SUCCESS'
     INCOMPLETE = 'INCOMPLETE'
     COMPLETED = 'COMPLETED'
     NO_EMAILS_FOUND = 'NO_EMAILS_FOUND'
-    
+
+
 class SettingStatus(Enum):
     INCORRECT_MAIL = 'INCORRECT_MAIL'
     SUCCESS = "SUCCESS"
@@ -76,15 +79,18 @@ class SignUpStatus(Enum):
     TEAM_INVITATION_INVALID = 'TEAM_INVITATION_INVALID'
     INCORRECT_STATUS = 'INCORRECT_STATUS'
     SUCCESS = 'SUCCESS'
-    
+
+
 class TeamsInvitationStatus(Enum):
     PENDING = 'pending'
-    
+
+
 class TeamAccessLevel(Enum):
     ADMIN = 'admin'
     STANDARD = 'standard'
     READ_ONLY = 'read_only'
     OWNER = 'owner'
+
 
 class LoginStatus(Enum):
     INCORRECT_PASSWORD_OR_EMAIL = 'INCORRECT_PASSWORD_OR_EMAIL'

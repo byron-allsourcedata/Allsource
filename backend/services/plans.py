@@ -40,7 +40,7 @@ class PlansService:
         stripe_plans = self.plans_persistence.get_stripe_plans()
         user_subscription = self.plans_persistence.get_user_subscription(user_id=user.get('id'))
         response = {"stripe_plans": []}
-        plan_order = ["Starter", "Pro", "Growth"]
+        plan_order = ["Launch", "Pro", "Growth"]
         stripe_plans.sort(key=lambda plan: plan_order.index(plan.title) if plan.title in plan_order else len(plan_order))
         for stripe_plan in stripe_plans:
             is_active = (user_subscription.plan_id  == stripe_plan.id and user_subscription.status == 'active') if user_subscription else False

@@ -1,18 +1,19 @@
+import asyncio
 import json
 import logging
 import os
+import random
+import re
 import sys
 import tempfile
-import asyncio
-import traceback
-import pytz
-import re
-import urllib.parse
 import time
-from dateutil.relativedelta import relativedelta
+import traceback
+import urllib.parse
+
 import boto3
 import pyarrow.parquet as pq
-import random
+import pytz
+from dateutil.relativedelta import relativedelta
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
@@ -40,7 +41,6 @@ from models.leads_orders import LeadOrders
 from models.integrations.suppresions import LeadsSupperssion
 from dotenv import load_dotenv
 from sqlalchemy.dialects.postgresql import insert
-from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 from config.rmq_connection import publish_rabbitmq_message, RabbitMQConnection
 from models.integrations.users_domains_integrations import UserIntegration
@@ -61,8 +61,8 @@ ROOT_BOT_CLIENT_DOMAIN = 'all-leads.com'
 
 EMAIL_LIST = ['business_email', 'personal_emails', 'additional_personal_emails']
 
-
 count = 0
+
 
 def create_sts_client(key_id, key_secret):
     return boto3.client('sts', aws_access_key_id=key_id, aws_secret_access_key=key_secret, region_name='us-west-2')
@@ -73,6 +73,7 @@ def assume_role(role_arn, sts_client):
         'Credentials']
     logging.info(f"Assumed role '{role_arn}', got temporary credentials.")
     return credentials
+
 
 async def save_files_by_hour(table, cookie_sync_by_hour):
     for i in (range(len(table))):
@@ -93,7 +94,6 @@ async def save_files_by_hour(table, cookie_sync_by_hour):
             'UP_ID': str(table['UP_ID'][i])
         }
         cookie_sync_by_hour[key].append(lead_info)
-        
 
 
 async def process_file(bucket, file_key, cookie_sync_by_hour):
@@ -134,16 +134,20 @@ async def process_table(session, cookie_sync_by_hour, channel, root_user, subscr
                 up_id = up_ids[0][0]
                 logging.info(f"Lead found by SHA256_LOWER_CASE {possible_lead['SHA256_LOWER_CASE']}")
             if up_id is not None and up_id != 'None':
-                five_x_five_user = session.query(FiveXFiveUser).filter(FiveXFiveUser.up_id == str(up_id).lower()).first()
+                five_x_five_user = session.query(FiveXFiveUser).filter(
+                    FiveXFiveUser.up_id == str(up_id).lower()).first()
                 if five_x_five_user:
                     logging.info(f"Lead found by UP_ID {up_id}")
-                    await process_user_data(possible_lead, five_x_five_user, session, channel, subscription_service, None)
+                    await process_user_data(possible_lead, five_x_five_user, session, channel, subscription_service,
+                                            None)
                     if root_user:
-                        await process_user_data(possible_lead, five_x_five_user, session, channel, subscription_service, root_user)
+                        await process_user_data(possible_lead, five_x_five_user, session, channel, subscription_service,
+                                                root_user)
                     break
                 else:
                     logging.warning(f"Not found by UP_ID {up_id}")
-                    
+
+
 async def process_payment_transaction(session, five_x_five_user_up_id, user_domain_id, user, rmq_connection):
     users_payments_transactions = session.query(UsersPaymentsTransactions).filter(
         UsersPaymentsTransactions.five_x_five_up_id == str(five_x_five_user_up_id),
@@ -152,7 +156,10 @@ async def process_payment_transaction(session, five_x_five_user_up_id, user_doma
     if users_payments_transactions:
         logging.info(f"users_payments_transactions is already exists with id = {users_payments_transactions.id}")
         return
-    user_payment_transactions = UsersPaymentsTransactions(user_id=user.id, status='success', amount_credits=AMOUNT_CREDITS, type='buy_lead', domain_id=user_domain_id, five_x_five_up_id=five_x_five_user_up_id)
+    user_payment_transactions = UsersPaymentsTransactions(user_id=user.id, status='success',
+                                                          amount_credits=AMOUNT_CREDITS, type='buy_lead',
+                                                          domain_id=user_domain_id,
+                                                          five_x_five_up_id=five_x_five_user_up_id)
     session.add(user_payment_transactions)
     if (user.leads_credits - AMOUNT_CREDITS) < 0:
         if user.is_leads_auto_charging is False:
@@ -170,7 +177,8 @@ async def process_payment_transaction(session, five_x_five_user_up_id, user_doma
     else:
         user.leads_credits -= AMOUNT_CREDITS
     session.flush()
-    
+
+
 async def check_certain_urls(page, suppression_rule):
     if suppression_rule.is_url_certain_activation and suppression_rule.activate_certain_urls:
         page_path = urlparse(page).path.strip('/')
@@ -178,13 +186,14 @@ async def check_certain_urls(page, suppression_rule):
 
         for url in urls_to_check:
             url_path = urlparse(url.strip()).path.strip('/')
-            if (page_path == url_path or 
-                page_path.startswith(url_path + '/') or 
-                url_path in page_path.split('/')):
+            if (page_path == url_path or
+                    page_path.startswith(url_path + '/') or
+                    url_path in page_path.split('/')):
                 logging.info(f"activate_certain_urls exists: {page}")
                 return True
 
     return False
+
 
 async def check_activate_based_urls(page, suppression_rule):
     if suppression_rule.is_based_activation and suppression_rule.activate_certain_urls:
@@ -197,17 +206,19 @@ async def check_activate_based_urls(page, suppression_rule):
 
     return False
 
+
 def generate_random_order_detail():
     return {
-        'platform_order_id': random.randint(1000, 9999), 
+        'platform_order_id': random.randint(1000, 9999),
         'total_price': round(random.uniform(10.0, 500.0), 2),
         'currency': random.choice(['USD', 'EUR', 'GBP']),
         'platform_created_at': datetime.now(timezone.utc).isoformat()
     }
 
 
-async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, session: Session, rmq_connection, subscription_service: SubscriptionService, root_user=None):
-    global count 
+async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, session: Session, rmq_connection,
+                            subscription_service: SubscriptionService, root_user=None):
+    global count
     partner_uid_decoded = urllib.parse.unquote(str(possible_lead['PARTNER_UID']).lower())
     partner_uid_dict = json.loads(partner_uid_decoded)
     partner_uid_client_id = partner_uid_dict.get('client_id')
@@ -216,9 +227,9 @@ async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, sess
         result = root_user
     else:
         result = session.query(Users, UserDomains.id) \
-                    .join(UserDomains, UserDomains.user_id == Users.id) \
-                    .filter(UserDomains.data_provider_id == str(partner_uid_client_id)) \
-                    .first()
+            .join(UserDomains, UserDomains.user_id == Users.id) \
+            .filter(UserDomains.data_provider_id == str(partner_uid_client_id)) \
+            .first()
     if not result:
         logging.info(f"Customer not found {partner_uid_client_id}")
         return
@@ -235,12 +246,13 @@ async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, sess
     if root_user:
         if count % 12 == 0:
             behavior_type = 'visitor'
-        elif count % 8 ==  0:
+        elif count % 8 == 0:
             behavior_type = 'viewed_product'
         elif count % 4 == 0:
             behavior_type = 'product_added_to_cart'
 
-    lead_user = session.query(LeadUser).filter_by(five_x_five_user_id=five_x_five_user.id, domain_id=user_domain_id).first()
+    lead_user = session.query(LeadUser).filter_by(five_x_five_user_id=five_x_five_user.id,
+                                                  domain_id=user_domain_id).first()
     is_first_request = False
     if not lead_user:
         suppression_rule = session.query(SuppressionRule).filter(SuppressionRule.domain_id == user_domain_id).first()
@@ -252,7 +264,9 @@ async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, sess
             suppressions_emails.extend(suppression_rule.suppressions_multiple_emails.split(', '))
         suppressions_emails = list(set(suppressions_emails))
         if suppressions_emails:
-            emails_to_check = get_all_five_x_user_emails(five_x_five_user.business_email, five_x_five_user.personal_emails, five_x_five_user.additional_personal_emails)
+            emails_to_check = get_all_five_x_user_emails(five_x_five_user.business_email,
+                                                         five_x_five_user.personal_emails,
+                                                         five_x_five_user.additional_personal_emails)
             for email in suppressions_emails:
                 if email in emails_to_check:
                     logging.info(f"{email} exists in five_x_five_user")
@@ -261,26 +275,29 @@ async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, sess
             if suppression_rule.is_url_certain_activation and suppression_rule.activate_certain_urls:
                 if await check_certain_urls(page, suppression_rule):
                     return
-            
+
             if suppression_rule.is_based_activation and suppression_rule.activate_certain_urls:
                 if await check_activate_based_urls(page, suppression_rule):
                     return
 
-        emails_to_check = get_all_five_x_user_emails(five_x_five_user.business_email, five_x_five_user.personal_emails, five_x_five_user.additional_personal_emails)
-        integrations_ids = [integration.id for integration in session.query(UserIntegration).filter(UserIntegration.is_with_suppression == True).all()]
+        emails_to_check = get_all_five_x_user_emails(five_x_five_user.business_email, five_x_five_user.personal_emails,
+                                                     five_x_five_user.additional_personal_emails)
+        integrations_ids = [integration.id for integration in
+                            session.query(UserIntegration).filter(UserIntegration.is_with_suppression == True).all()]
         lead_suppression = session.query(LeadsSupperssion).filter(
             LeadsSupperssion.domain_id == user_domain_id,
             LeadsSupperssion.email.in_(emails_to_check),
-            LeadsSupperssion.integration_id.in_(integrations_ids)   
+            LeadsSupperssion.integration_id.in_(integrations_ids)
         ).first() is not None
         if lead_suppression:
             logging.info(f"No charging option supressed, skip lead")
             return
-        if root_user is None: 
+        if root_user is None and not subscription_service.is_trial_subscription(user.id):
             await process_payment_transaction(session, five_x_five_user.up_id, user_domain_id, user, rmq_connection)
         is_first_request = True
-        lead_user = LeadUser(five_x_five_user_id=five_x_five_user.id, user_id=user.id, behavior_type=behavior_type, domain_id=user_domain_id, total_visit=0, avarage_visit_time=0, total_visit_time=0)
-        
+        lead_user = LeadUser(five_x_five_user_id=five_x_five_user.id, user_id=user.id, behavior_type=behavior_type,
+                             domain_id=user_domain_id, total_visit=0, avarage_visit_time=0, total_visit_time=0)
+
         session.add(lead_user)
         session.flush()
         channel = await rmq_connection.channel()
@@ -288,21 +305,23 @@ async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, sess
             name=QUEUE_DATA_SYNC,
             durable=True
         )
-        await publish_rabbitmq_message(rmq_connection, QUEUE_DATA_SYNC, {'domain_id': user_domain_id, 'leads_type': behavior_type, 'lead': {
-            'id': lead_user.id,
-            'five_x_five_user_id': lead_user.five_x_five_user_id
-        }})
+        await publish_rabbitmq_message(rmq_connection, QUEUE_DATA_SYNC,
+                                       {'domain_id': user_domain_id, 'leads_type': behavior_type, 'lead': {
+                                           'id': lead_user.id,
+                                           'five_x_five_user_id': lead_user.five_x_five_user_id
+                                       }})
     requested_at_str = str(possible_lead['EVENT_DATE'])
     requested_at = datetime.fromisoformat(requested_at_str).replace(tzinfo=None)
     thirty_minutes_ago = requested_at - timedelta(minutes=30)
     current_visit_request = session.query(LeadsRequests.visit_id).filter(
         LeadsRequests.lead_id == lead_user.id,
         LeadsRequests.requested_at >= thirty_minutes_ago
-        ).first()
+    ).first()
     leads_requests = None
     if current_visit_request:
         visit_id = current_visit_request[0]
-        leads_result = session.query(LeadsRequests, LeadsVisits.id, LeadsVisits.behavior_type, LeadsVisits.full_time_sec) \
+        leads_result = session.query(LeadsRequests, LeadsVisits.id, LeadsVisits.behavior_type,
+                                     LeadsVisits.full_time_sec) \
             .join(LeadsVisits, LeadsRequests.visit_id == LeadsVisits.id) \
             .filter(LeadsRequests.visit_id == visit_id) \
             .all()
@@ -311,7 +330,7 @@ async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, sess
         lead_behavior_type = leads_result[0][2]
         lead_visit_full_time_sec = leads_result[0][3]
         if lead_user.behavior_type in ('visitor', 'viewed_product') and behavior_type in (
-        'viewed_product', 'product_added_to_cart') and lead_user.behavior_type != behavior_type:
+                'viewed_product', 'product_added_to_cart') and lead_user.behavior_type != behavior_type:
             session.query(LeadUser).filter(LeadUser.id == lead_user.id).update({
                 LeadUser.behavior_type: behavior_type
             })
@@ -324,17 +343,22 @@ async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, sess
         elif lead_behavior_type == 'viewed_product':
             if behavior_type == 'product_added_to_cart':
                 lead_behavior_type = behavior_type
-        process_leads_requests(requested_at=requested_at, page=page, leads_requests=leads_requests, visit_id=visit_id, lead_visit_full_time_sec=lead_visit_full_time_sec, session=session, behavior_type=lead_behavior_type, lead_user=lead_user)
+        process_leads_requests(requested_at=requested_at, page=page, leads_requests=leads_requests, visit_id=visit_id,
+                               lead_visit_full_time_sec=lead_visit_full_time_sec, session=session,
+                               behavior_type=lead_behavior_type, lead_user=lead_user)
     else:
-        lead_visit_id = add_new_leads_visits(visited_datetime=requested_at, lead_id=lead_user.id, session=session, behavior_type=behavior_type, lead_user=lead_user).id
+        lead_visit_id = add_new_leads_visits(visited_datetime=requested_at, lead_id=lead_user.id, session=session,
+                                             behavior_type=behavior_type, lead_user=lead_user).id
         if is_first_request == True:
             lead_user.first_visit_id = lead_visit_id
             session.flush()
             lead_users = session.query(LeadUser).filter_by(domain_id=user_domain_id).limit(2).all()
             if len(lead_users) == 1:
-                last_subscription = session.query(UserSubscriptions).filter(UserSubscriptions.user_id == user.id).order_by(UserSubscriptions.id.desc()).first()
+                last_subscription = session.query(UserSubscriptions).filter(
+                    UserSubscriptions.user_id == user.id).order_by(UserSubscriptions.id.desc()).first()
                 if last_subscription and last_subscription.plan_start is None and last_subscription.plan_end is None:
-                    trial_days = session.query(SubscriptionPlan.trial_days).filter(SubscriptionPlan.is_free_trial == True).scalar()
+                    trial_days = session.query(SubscriptionPlan.trial_days).filter(
+                        SubscriptionPlan.is_free_trial == True).scalar()
                     if trial_days:
                         date_now = datetime.now()
                         last_subscription.plan_start = date_now
@@ -344,16 +368,16 @@ async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, sess
             if lead_user.is_returning_visitor == False:
                 lead_user.is_returning_visitor = True
                 session.flush()
-    events = [1, 2 , 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+    events = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
     random_event = random.choice(events)
     if behavior_type == 'checkout_completed' or random_event % 4 == 0:
         if lead_user.is_converted_sales == False:
-                lead_user.is_converted_sales = True
-                session.flush()
+            lead_user.is_converted_sales = True
+            session.flush()
         order_detail = generate_random_order_detail()
-        session.add(LeadOrders(lead_user_id=lead_user.id, 
+        session.add(LeadOrders(lead_user_id=lead_user.id,
                                platform_order_id=order_detail.get('platform_order_id'),
-                               total_price=order_detail.get('total_price'), 
+                               total_price=order_detail.get('total_price'),
                                currency_code=order_detail.get('currency'),
                                platform_created_at=order_detail['platform_created_at'], created_at=datetime.now()))
         existing_record = session.query(LeadsUsersOrdered).filter_by(lead_user_id=lead_user.id).first()
@@ -362,7 +386,7 @@ async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, sess
         else:
             new_record = LeadsUsersOrdered(lead_user_id=lead_user.id, ordered_at=requested_at)
             session.add(new_record)
-    if  behavior_type == 'product_added_to_cart' or random_event % 3 == 0:
+    if behavior_type == 'product_added_to_cart' or random_event % 3 == 0:
         existing_record = session.query(LeadsUsersAddedToCart).filter_by(lead_user_id=lead_user.id).first()
         if existing_record:
             existing_record.added_at = requested_at
@@ -375,10 +399,10 @@ async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, sess
     ).on_conflict_do_nothing()
     session.execute(lead_request)
     session.flush()
-    
+
     session.commit()
     count += 1
-    
+
 
 def convert_leads_requests_to_utc(leads_requests):
     utc = pytz.utc
@@ -388,14 +412,16 @@ def convert_leads_requests_to_utc(leads_requests):
         else:
             request.requested_at = request.requested_at.astimezone(utc)
 
-def process_leads_requests(requested_at, page, leads_requests, visit_id, lead_visit_full_time_sec, session: Session, behavior_type, lead_user):
+
+def process_leads_requests(requested_at, page, leads_requests, visit_id, lead_visit_full_time_sec, session: Session,
+                           behavior_type, lead_user):
     lead_id = lead_user.id
     new_request = LeadsRequests(
         page=normalize_url(page),
         requested_at=requested_at,
     )
     leads_requests.append(new_request)
-    
+
     leads_requests_sorted = sorted(leads_requests, key=lambda r: r.requested_at)
 
     start_date_time = leads_requests_sorted[0].requested_at
@@ -443,20 +469,20 @@ def add_new_leads_visits(visited_datetime, lead_id, session, behavior_type, lead
     )
     session.add(leads_visits)
     session.flush()
-    
+
     lead_user.total_visit += 1
     lead_user.total_visit_time += 10
     lead_user.avarage_visit_time = int(lead_user.total_visit_time / lead_user.total_visit)
-        
+
     session.flush()
     return leads_visits
-
 
 
 def update_last_processed_file(file_key):
     logging.info(f"Writing last processed file {file_key}")
     with open(LAST_PROCESSED_FILE_PATH, "w") as file:
         file.write(file_key)
+
 
 async def process_files(sts_client, session, channel, root_user):
     credentials = assume_role(os.getenv('S3_ROLE_ARN'), sts_client)
@@ -465,13 +491,13 @@ async def process_files(sts_client, session, channel, root_user):
                         aws_session_token=credentials['SessionToken'])
 
     bucket = s3.Bucket(BUCKET_NAME)
-    
+
     subscription_service = SubscriptionService(
         db=session,
         user_persistence_service=UserPersistence(session),
         plans_persistence=PlansPersistence(session),
     )
-    
+
     try:
         while True:
             try:
@@ -479,12 +505,12 @@ async def process_files(sts_client, session, channel, root_user):
                     last_processed_file = file.read().strip()
             except FileNotFoundError:
                 last_processed_file = None
-                
+
             if last_processed_file:
                 files = bucket.objects.filter(Prefix=FILES_PATH, Marker=last_processed_file)
             else:
                 files = bucket.objects.filter(Prefix=FILES_PATH)
-            
+
             file_iterator = iter(files)
             first_file = next(file_iterator)
             match_file_by_hours = re.search(r'y=(\d{4})/m=(\d{2})/d=(\d{2})/h=(\d{2})/', first_file.key)
@@ -504,13 +530,14 @@ async def process_files(sts_client, session, channel, root_user):
     except StopIteration:
         pass
 
+
 async def main():
     sts_client = create_sts_client(os.getenv('S3_KEY_ID'), os.getenv('S3_KEY_SECRET'))
     engine = create_engine(
         f"postgresql://{os.getenv('DB_USERNAME')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}")
     Session = sessionmaker(bind=engine)
     session = Session()
-    
+
     rabbitmq_connection = RabbitMQConnection()
     connection = await rabbitmq_connection.connect()
     channel = await connection.channel()
@@ -521,7 +548,7 @@ async def main():
             'x-consumer-timeout': 3600000,
         }
     )
-    
+
     logging.info("Started")
     try:
         result = session.query(Users, UserDomains.id) \

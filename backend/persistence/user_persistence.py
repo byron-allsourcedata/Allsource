@@ -1,13 +1,12 @@
-from datetime import datetime
-from sqlalchemy import func, desc
-from sqlalchemy.orm import Session
-from models.users_domains import UserDomains
-from models.plans import SubscriptionPlan
-from models.users import Users
-from models.subscriptions import UserSubscriptions
-from models.teams_invitations import TeamInvitation
-from enums import TeamsInvitationStatus, SignUpStatus
 import logging
+from datetime import datetime
+
+from sqlalchemy import func
+from sqlalchemy.orm import Session
+
+from enums import TeamsInvitationStatus, SignUpStatus
+from models.teams_invitations import TeamInvitation
+from models.users import Users
 
 logger = logging.getLogger(__name__)
 
@@ -22,17 +21,16 @@ class UserPersistence:
             {Users.reset_password_sent_at: send_message_expiration_time},
             synchronize_session=False)
         self.db.commit()
-    
+
     def get_team_members(self, user_id: int):
         users = self.db.query(Users).filter(Users.team_owner_id == user_id).all()
         return users
-    
+
     def get_combined_team_info(self, user_id: int):
         users = self.db.query(Users).filter(Users.team_owner_id == user_id).all()
         invitations = self.db.query(TeamInvitation).filter(TeamInvitation.team_owner_id == user_id).all()
         combined_info = users + invitations
         return combined_info
-
 
     def set_verified_email_sent_now(self, user_id: int):
         send_message_expiration_time = datetime.now()
@@ -44,7 +42,7 @@ class UserPersistence:
     def get_user_by_email(self, email):
         user_object = self.db.query(Users).filter(func.lower(Users.email) == func.lower(email)).first()
         return user_object
-    
+
     def check_status_invitations(self, teams_token, user_mail):
         result = {
             'success': False
@@ -61,10 +59,8 @@ class UserPersistence:
         else:
             result['error'] = SignUpStatus.TEAM_INVITATION_INVALID
         return result
-        
-            
 
-    def get_user_by_id(self, user_id, result_as_object = False):
+    def get_user_by_id(self, user_id, result_as_object=False):
         user = self.db.query(Users).filter(Users.id == user_id).first()
         result_user = None
         if user:
@@ -97,19 +93,19 @@ class UserPersistence:
                 'leads_credits': user.leads_credits,
                 'prospect_credits': user.prospect_credits,
                 'is_leads_auto_charging': user.is_leads_auto_charging,
-                'team_access_level':user.team_access_level,
+                'team_access_level': user.team_access_level,
                 'current_subscription_id': user.current_subscription_id
             }
         self.db.rollback()
         if result_as_object:
             return user
         return result_user
-    
+
     def set_last_signed_in(self, user_id):
         user = self.db.query(Users).filter(Users.id == user_id).first()
         user.last_signed_in = datetime.now()
         self.db.commit()
-    
+
     def get_user_team_member_by_id(self, user_id):
         user = self.db.query(Users).filter(Users.id == user_id).first()
         result_user = None
@@ -118,11 +114,11 @@ class UserPersistence:
                 "id": user.id,
                 "email": user.email,
                 "full_name": user.full_name,
-               'team_access_level': user.team_access_level,
-               'is_email_confirmed': user.is_email_confirmed,
-               'change_email_sent_at': user.change_email_sent_at,
-               'team_owner_id': user.team_owner_id,
-               'password': user.password
+                'team_access_level': user.team_access_level,
+                'is_email_confirmed': user.is_email_confirmed,
+                'change_email_sent_at': user.change_email_sent_at,
+                'team_owner_id': user.team_owner_id,
+                'password': user.password
             }
         self.db.rollback()
         return result_user
@@ -140,7 +136,6 @@ class UserPersistence:
         self.db.flush()
         self.db.delete(teams_invitation)
         self.db.commit()
-
 
     def email_confirmed(self, user_id: int):
         query = self.db.query(Users).filter(Users.id == user_id)
@@ -190,4 +185,3 @@ class UserPersistence:
             }
             for user in users
         ]
-

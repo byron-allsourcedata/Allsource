@@ -201,7 +201,10 @@ def get_billing_details_by_userid(customer_id):
 def get_product_from_price_id(price_id):
     price = stripe.Price.retrieve(price_id)
     product = stripe.Product.retrieve(price.product)
-    return product.name
+    return product
+
+def get_price_from_price_id(price_id):
+    return stripe.Price.retrieve(price_id)
 
 
 def purchase_product(customer_id, price_id, quantity, product_description):

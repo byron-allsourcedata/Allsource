@@ -303,7 +303,7 @@ const AlivbleIntagrationsSlider = ({open, isContactSync = false, integrations, i
                                             flexBasis: 'calc(50% - 8px)'
                                         }
                                     }}>
-                                        <ListItemButton sx={{p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center'}}>
+                                        <ListItemButton onClick={() => setOpenBigcommerceConnect(true)} sx={{p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center'}}>
                                         <ListItemIcon sx={{minWidth: 'auto'}}>    
                                             <Image src="/bigcommerce-icon.svg" alt="BigCommerce" height={24} width={24} />
                                         </ListItemIcon>

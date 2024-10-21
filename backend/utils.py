@@ -1,7 +1,9 @@
 from datetime import datetime, timedelta, timezone
 
+
 def get_utc_aware_date():
     return datetime.now(timezone.utc).replace(microsecond=0)
+
 
 def get_utc_aware_date_for_postgres():
     return get_utc_aware_date().isoformat()[:-6] + "Z"
@@ -35,4 +37,3 @@ def normalize_url(url):
     path = path.rstrip('/')
     normalized_url = scheme + path
     return normalized_url
-

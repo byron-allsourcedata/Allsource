@@ -2,6 +2,7 @@ from sqlalchemy import Column, Integer, BOOLEAN, VARCHAR
 
 from .base import Base
 
+
 class UserDomains(Base):
     __tablename__ = 'users_domains'
 
