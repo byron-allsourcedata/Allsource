@@ -120,7 +120,7 @@ export const planStyles: { [key: string]: SxProps<Theme> } = {
   },
   buttonHeading: {
         textTransform: 'none',
-        padding: '0 0 4px 0',
+        padding: '0 0 10px 0',
         minWidth: 'auto',
         boxShadow: 'none',
         borderRadius: 0,

@@ -21,7 +21,7 @@ const subscriptionStyles = {
     formContainer: {
         display: 'flex',
         gap: 3,
-        justifyContent: 'center',
+        justifyContent: 'space-between',
         width: '100%',
         marginTop: '40px',
         '@media (max-width: 900px)': {
@@ -31,7 +31,8 @@ const subscriptionStyles = {
     },
     formWrapper: {
         '@media (min-width: 901px)': {
-            width: '344px'
+            // width: '344px'
+            width: '100%'
         }
     },
     plantabHeading: {
@@ -334,16 +335,16 @@ export const SettingsSubscription: React.FC = () => {
 
             {/* Plans Section */}
             <Box sx={{ marginBottom: 4 }}>
-                <Box sx={{
+                {/* <Box sx={{
                     display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1, mb: 2
                 }}>
                     <Typography variant="h4" gutterBottom className='first-sub-title' sx={subscriptionStyles.title}>
                         Plans
                     </Typography>
                     <CustomTooltip title={"Plan info"} linkText="Learn more" linkUrl="https://maximiz.ai" />
-                </Box>
+                </Box> */}
                 <Box sx={{
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2, marginBottom: 2, position: 'relative',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2, marginTop: 4, marginBottom: 2, position: 'relative',
                     '@media (max-width: 600px)': {
                         justifyContent: 'start'
                     }
