@@ -1,6 +1,3 @@
-<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-<g id="Group 427318042">
-<rect id="Rectangle 27484" width="20" height="20" fill="white"/>
-<path id="Vector" d="M3 19H17V17H3V19ZM17 8H13V2H7V8H3L10 15L17 8Z" fill="#5052B2"/>
-</g>
+<svg width="14" height="17" viewBox="0 0 14 17" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M0 17H14V15H0V17ZM14 6H10V0H4V6H0L7 13L14 6Z" fill="#5052B2"/>
 </svg>

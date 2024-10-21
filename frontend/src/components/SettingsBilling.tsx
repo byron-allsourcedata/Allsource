@@ -29,6 +29,8 @@ const billingStyles = {
         lineHeight: '16px !important',
         position: 'relative',
         paddingLeft: '45px',
+        paddingTop: '18px',
+        paddingBottom: '18px',
         '&::after': {
             content: '""',
             display: 'block',
@@ -53,6 +55,8 @@ const billingStyles = {
         lineHeight: '16px !important',
         position: 'relative',
         paddingLeft: '45px',
+        paddingTop: '8px',
+        paddingBottom: '8px',
         '&::after': {
             content: '""',
             display: 'block',
@@ -246,8 +250,9 @@ export const SettingsBilling: React.FC = () => {
     const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '');
     const [open, setOpen] = useState(false);
     const [email, setEmail] = useState('');
-    const [isHovered, setIsHovered] = useState(false);
     const isMobile = useMediaQuery('(max-width: 600px)'); 
+    const [hoveredRowIndex, setHoveredRowIndex] = useState<number | null>(null);
+
 
     const handleOpen = () => setOpen(true);
     const handleClose = () => setOpen(false);
@@ -617,10 +622,17 @@ export const SettingsBilling: React.FC = () => {
         return <CustomizedProgressBar />;
     }
 
-    const handleClickOrHover = () => {
-        // Toggle the state for mobile or desktop
+    const handleMouseEnter = (index: number) => {
+        if (!isMobile) setHoveredRowIndex(index);
+    };
+    
+    const handleMouseLeave = () => {
+        if (!isMobile) setHoveredRowIndex(null);
+    };
+    
+    const handleClickOrHover = (index: number) => {
         if (isMobile) {
-            setIsHovered((prev) => !prev); // Toggle on tap for mobile
+            setHoveredRowIndex(prevIndex => (prevIndex === index ? null : index));
         }
     };
 
@@ -1331,7 +1343,9 @@ export const SettingsBilling: React.FC = () => {
                                 <TableRow sx={billingStyles.tableBodyRow}>
                                     <TableCell className='table-data' colSpan={5} sx={{
                                         ...billingStyles.tableBodyColumn,
-                                        textAlign: 'center'
+                                        textAlign: 'center',
+                                        paddingTop: '18px',
+                                        paddingBottom: '18px'
                                     }}>
                                         No history found
                                     </TableCell>
@@ -1339,9 +1353,9 @@ export const SettingsBilling: React.FC = () => {
                             ) : (
                                 billingHistory.map((history, index) => (
                                     <TableRow key={index}
-                                    onMouseEnter={() => !isMobile && setIsHovered(true)} // Hover only on desktop
-                                    onMouseLeave={() => !isMobile && setIsHovered(false)} // Remove hover only on desktop
-                                    onClick={handleClickOrHover} // Trigger hover-like effect on mobile tap
+                                    onMouseEnter={() => handleMouseEnter(index)}  // Hover for the specific row
+                                    onMouseLeave={handleMouseLeave}  // Reset hover
+                                    onClick={() => handleClickOrHover(index)}  // Mobile tap toggle
                                         sx={{
                                             ...billingStyles.tableBodyRow,
                                             '&:hover': {
@@ -1353,7 +1367,7 @@ export const SettingsBilling: React.FC = () => {
 
                                         }}
                                     >
-                                        <TableCell className="table-data" sx={{
+                                        <TableCell className="table-data sticky-cell" sx={{
                                             ...billingStyles.tableBodyColumn,
                                             cursor: 'pointer',
                                             backgroundColor: '#fff'
@@ -1367,7 +1381,7 @@ export const SettingsBilling: React.FC = () => {
                                         <TableCell className='table-data' sx={billingStyles.tableBodyColumn}>
                                             <Typography component="span" className='table-data' sx={{
                                                 ...getStatusStyles(history.status),
-                                                background: '#eaf8dd',
+                                                // background: '#eaf8dd',
                                                 padding: '6px 8px',
                                                 borderRadius: '2px'
                                             }}>
@@ -1380,7 +1394,7 @@ export const SettingsBilling: React.FC = () => {
                                                     paddingleft: '0'
                                                 }} onClick={() => fetchSaveBillingHistory(history.invoice_id)}>
                                                     <Image
-                                                        src={isHovered ? '/hover-download-icon.svg' : '/download-icon.svg'}
+                                                        src={hoveredRowIndex === index ? '/hover-download-icon.svg' : '/download-icon.svg'}
                                                         alt='download-icon'
                                                         height={20}
                                                         width={20}
@@ -1388,7 +1402,7 @@ export const SettingsBilling: React.FC = () => {
                                                 </IconButton>
                                                 <IconButton onClick={() => handleSendInvoicePopupOpen(history.invoice_id)}>
                                                     <Image
-                                                        src={isHovered ? '/hover-share-icon.svg' : '/share-icon.svg'}
+                                                        src={hoveredRowIndex === index ? '/hover-share-icon.svg' : '/share-icon.svg'}
                                                         alt='share-icon'
                                                         height={20}
                                                         width={20}

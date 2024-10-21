@@ -17,6 +17,8 @@ const teamsStyles = {
         lineHeight: '16px !important',
         position: 'relative',
         paddingLeft: '45px',
+        paddingTop: '18px',
+        paddingBottom: '18px',
         '&::after': {
             content: '""',
             display: 'block',
@@ -41,6 +43,8 @@ const teamsStyles = {
         lineHeight: '16px !important',
         position: 'relative',
         paddingLeft: '45px',
+        paddingTop: 0,
+        paddingBottom: 0,
         '&::after': {
             content: '""',
             display: 'block',
@@ -463,7 +467,9 @@ export const SettingsTeams: React.FC = () => {
                                     <TableRow>
                                         <TableCell className='table-data' colSpan={5} sx={{
                                             ...teamsStyles.tableBodyColumn,
-                                            textAlign: 'center'
+                                            textAlign: 'center',
+                                            paddingTop: '18px',
+                                            paddingBottom: '18px'
                                         }}>
                                             No pending invitations
                                         </TableCell>
@@ -594,7 +600,9 @@ export const SettingsTeams: React.FC = () => {
                                 <TableRow sx={teamsStyles.tableBodyRow}>
                                     <TableCell className='table-data' colSpan={5} sx={{
                                         ...teamsStyles.tableBodyColumn,
-                                        textAlign: 'center'
+                                        textAlign: 'center',
+                                        paddingTop: '18px',
+                                        paddingBottom: '18px',
                                     }}>
                                         No team members found
                                     </TableCell>
