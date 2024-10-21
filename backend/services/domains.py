@@ -1,10 +1,12 @@
+from fastapi import HTTPException
+
+from enums import SubscriptionStatus
 from persistence.domains import UserDomainsPersistence, UserDomains
+from persistence.plans_persistence import PlansPersistence
 from schemas.domains import DomainResponse
 from services.users import UsersService
-from persistence.plans_persistence import PlansPersistence
-from enums import  SubscriptionStatus, UserAuthorizationStatus
-from fastapi import HTTPException
 from utils import normalize_url
+
 
 class UserDomainsService:
 
@@ -33,7 +35,7 @@ class UserDomainsService:
             enable=domain.enable
         ).model_dump()
     
-    def delete_domain(self,user_id: int, domain_id: str):
+    def delete_domain(self, user_id: int, domain_id: int):
         if self.domain_persistence.count_domain(user_id) == 1:
             raise HTTPException(status_code=409, detail={'status': 'LAST_DOMAIN'})
         return self.domain_persistence.delete_domain(user_id, domain_id)
