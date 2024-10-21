@@ -3,7 +3,8 @@ import logging
 import os
 import sys
 
-from sqlalchemy import create_engine,and_,func
+from sqlalchemy import create_engine, and_, func
+
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
@@ -37,7 +38,7 @@ def save_city_and_state_to_user(session, personal_city, personal_state, five_x_f
         state_id = states_dict[state]
         if state_id is None:
             state_data = States(
-            state_code=state
+                state_code=state
             )
             session.add(state_data)
             session.flush()
@@ -68,16 +69,16 @@ async def process_users(session):
     states = session.query(States).all()
     states_dict = {state.state_code: state.id for state in states}
     min_id = session.query(func.min(FiveXFiveUser.id)).scalar()
-    max_id = session.query(func.max(FiveXFiveUser.id)).scalar()   
+    max_id = session.query(func.max(FiveXFiveUser.id)).scalar()
     current_id = min_id - 1
-    
+
     while current_id < max_id:
         five_x_five_users = session.query(FiveXFiveUser).filter(
             and_(
                 FiveXFiveUser.id > current_id,
                 FiveXFiveUser.id <= current_id + 1000
             )
-        ).all()        
+        ).all()
         for five_x_five_user in five_x_five_users:
             if five_x_five_user.personal_city and five_x_five_user.personal_state:
                 save_city_and_state_to_user(
@@ -88,9 +89,8 @@ async def process_users(session):
                     states_dict=states_dict
                 )
                 session.commit()
-        
-        current_id += 1000
 
+        current_id += 1000
 
 
 async def main():

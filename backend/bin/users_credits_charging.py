@@ -5,28 +5,17 @@ import logging
 import os
 import sys
 
-import pandas as pd
 from sqlalchemy import create_engine
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 
-from models.five_x_five_locations import FiveXFiveLocations
-from models.five_x_five_users_locations import FiveXFiveUsersLocations
-from models.five_x_five_phones import FiveXFivePhones
-from models.five_x_five_users_phones import FiveXFiveUsersPhones
-from models.five_x_five_emails import FiveXFiveEmails
-from models.five_x_five_names import FiveXFiveNames
-from models.state import States
 from models.subscriptions import SubscriptionPlan
-from models.five_x_five_users_emails import FiveXFiveUsersEmails
 from config.rmq_connection import RabbitMQConnection
-from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import sessionmaker
 from models.users import Users
 from datetime import datetime, timezone
-from models.five_x_five_users import FiveXFiveUser
 from models.users_payments_transactions import UsersPaymentsTransactions
 from services.stripe_service import purchase_product
 from dotenv import load_dotenv
@@ -38,20 +27,24 @@ QUEUE_CREDITS_CHARGING = 'credits_charging'
 CREDITS = 'Additional_prospect_credits'
 PRICE_CREDIT = 0.49
 
+
 async def on_message_received(message, session):
     try:
         message_json = json.loads(message.body)
         customer_id = message_json['customer_id']
         credits = abs(message_json['credits'])
-        stripe_price_id = session.query(SubscriptionPlan.stripe_price_id).filter(SubscriptionPlan.title == CREDITS).scalar()
+        stripe_price_id = session.query(SubscriptionPlan.stripe_price_id).filter(
+            SubscriptionPlan.title == CREDITS).scalar()
         result = purchase_product(customer_id, stripe_price_id, credits, 'leads_credits')
         if result['success']:
             stripe_payload = result['stripe_payload']
             transaction_id = stripe_payload.get("id")
-            users_payments_transactions = session.query(UsersPaymentsTransactions).filter(UsersPaymentsTransactions.transaction_id == transaction_id)
+            users_payments_transactions = session.query(UsersPaymentsTransactions).filter(
+                UsersPaymentsTransactions.transaction_id == transaction_id)
             if not users_payments_transactions:
                 created_timestamp = stripe_payload.get("created")
-                created_at = datetime.fromtimestamp(created_timestamp, timezone.utc).replace(tzinfo=None) if created_timestamp else None
+                created_at = datetime.fromtimestamp(created_timestamp, timezone.utc).replace(
+                    tzinfo=None) if created_timestamp else None
                 amount_credits = int(stripe_payload.get("amount")) / 100 / PRICE_CREDIT
                 status = stripe_payload.get("status")
                 if status == 'succeeded':
@@ -59,8 +52,8 @@ async def on_message_received(message, session):
                     payment_transaction_obj = UsersPaymentsTransactions(
                         user_id=user.id,
                         transaction_id=transaction_id,
-                        created_at = datetime.now(timezone.utc).replace(tzinfo=None),
-                        stripe_request_created_at = created_at,
+                        created_at=datetime.now(timezone.utc).replace(tzinfo=None),
+                        stripe_request_created_at=created_at,
                         status=status,
                         amount_credits=amount_credits,
                         type='leads_credits'
