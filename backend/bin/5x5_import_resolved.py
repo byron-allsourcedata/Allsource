@@ -35,7 +35,7 @@ from sqlalchemy.orm import sessionmaker, Session
 from models.five_x_five_users import FiveXFiveUser
 from models.leads_users import LeadUser
 from models.users import Users
-from models.subscriptions import SubscriptionPlan
+from models.plans import SubscriptionPlan
 from models.leads_orders import LeadOrders
 from models.integrations.suppresions import LeadsSupperssion
 from dotenv import load_dotenv
@@ -271,7 +271,7 @@ async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, sess
         if lead_suppression:
             logging.info(f"No charging option supressed, skip lead")
             return
-        if root_user is None:
+        if root_user is None and not subscription_service.is_trial_subscription(user.id):
             await process_payment_transaction(session, five_x_five_user.up_id, user_domain_id, user, rmq_connection)
         is_first_request = True
         lead_user = LeadUser(five_x_five_user_id=five_x_five_user.id, user_id=user.id, behavior_type=behavior_type,
