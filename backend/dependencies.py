@@ -227,16 +227,18 @@ def check_pixel_install_domain(domain: UserDomains = Depends(check_domain)):
     return domain
 
 
-def get_domain_service(user_domain_persistence: UserDomainsPersistence = Depends(get_user_domain_persistence),
-                       plan_persistence: PlansPersistence = Depends(get_plans_persistence)):
-    return UserDomainsService(user_domain_persistence, plan_persistence)
-
-
 def get_users_service(user=Depends(check_user_authentication),
                       user_persistence: UserPersistence = Depends(get_user_persistence_service),
                       plan_persistence: PlansPersistence = Depends(get_plans_persistence)
                       ):
     return UsersService(user=user, user_persistence_service=user_persistence, plan_persistence=plan_persistence)
+
+
+def get_domain_service(user_domain_persistence: UserDomainsPersistence = Depends(get_user_domain_persistence),
+                       plan_persistence: PlansPersistence = Depends(get_plans_persistence),
+                       subscription_service: SubscriptionService = Depends(get_subscription_service)):
+    return UserDomainsService(user_domain_persistence=user_domain_persistence, plan_persistence=plan_persistence,
+                              subscription_service=subscription_service)
 
 
 def get_leads_service(user=Depends(check_user_authorization),

@@ -47,8 +47,8 @@ const HoverableImage = ({ srcDefault, srcHover, alt, onClick }: HoverImageProps)
       }}
       sx={{
         padding: 0,
-        minWidth: 'auto',       
-        border: 'none',          
+        minWidth: 'auto',
+        border: 'none',
         background: 'transparent'
       }}>
       <Image
@@ -200,6 +200,7 @@ const DomainButton: React.FC = () => {
   const [deleteDomainPopup, setDeleteDomainPopup] = useState(false);
   const [deleteDomain, setDeleteDomain] = useState<Domain | null>(null);
   const [loading, setLoading] = useState(false);
+  const [upgradePlanPopup, setUpgradePlanPopup] = useState(false);
 
   const handleDropdownClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     setDropdownEl(event.currentTarget);
@@ -266,6 +267,7 @@ const DomainButton: React.FC = () => {
 
   return (
     <>
+      <UpgradePlanPopup open={upgradePlanPopup} limitName={'domain'} handleClose={() => setUpgradePlanPopup(false)} />
       <Button
         aria-controls={dropdownOpen ? 'account-dropdown' : undefined}
         aria-haspopup="true"
@@ -295,7 +297,7 @@ const DomainButton: React.FC = () => {
         anchorEl={dropdownEl}
         open={dropdownOpen}
         onClose={handleDropdownClose}
-        sx={{'& .MuiMenu-list': {padding:'2px'}}}
+        sx={{ '& .MuiMenu-list': { padding: '2px' } }}
       >
         <MenuItem onClick={() => setDomainPopup(true)}>
         <Typography className='second-sub-title' sx={{color: '#5052B2 !important'}}> + Add Domain</Typography>
@@ -309,13 +311,20 @@ const DomainButton: React.FC = () => {
           <span style={{ border: '1px solid #CDCDCD', marginBottom: '0.5rem', width: '100%' }}></span>
         </Box>
         {domains.map((domain) => (
-          <MenuItem key={domain.id} onClick={() => handleSetDomain(domain.domain)}>
+          <MenuItem key={domain.id} onClick={() => {
+            if (domain.enable) {
+              handleSetDomain(domain.domain);
+            } else {
+              setUpgradePlanPopup(true);
+            }
+          }}>
             <Box sx={{
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
-              cursor: 'pointer',
-              width: '20rem'
+              cursor: domain.enable ? 'pointer' : 'not-allowed',
+              width: '20rem',
+              color: domain.enable ? 'inherit' : 'gray'
             }}>
               <Typography className='second-sub-title'>
                 {domain.domain.replace('https://', '')}
@@ -340,24 +349,24 @@ const DomainButton: React.FC = () => {
           handleDelete={handleDeleteDomain}
         />
       )}
-          {loading && (
-                <Box
-                    sx={{
-                        position: 'fixed',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        display: 'flex',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        zIndex: 1000,
-                        overflow: 'hidden'
-                    }}
-                >
-                  <CustomizedProgressBar />
-                </Box>
-            )}
+      {loading && (
+        <Box
+          sx={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 1000,
+            overflow: 'hidden'
+          }}
+        >
+          <CustomizedProgressBar />
+        </Box>
+      )}
     </>
   );
 };
