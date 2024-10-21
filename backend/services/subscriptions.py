@@ -1,14 +1,13 @@
 import logging
 from datetime import datetime, timezone
 
-from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from models.plans import SubscriptionPlan
 from models.subscription_transactions import SubscriptionTransactions
 from models.subscriptions import Subscription, UserSubscriptions
-from models.users_payments_transactions import UsersPaymentsTransactions
 from models.users import Users, User
+from models.users_payments_transactions import UsersPaymentsTransactions
 from persistence.plans_persistence import PlansPersistence
 from persistence.user_persistence import UserPersistence
 from utils import get_utc_aware_date_for_postgres
@@ -279,8 +278,7 @@ class SubscriptionService:
                 self.db.flush()
             else:
                 self.db.query(UserSubscriptions).where(
-                    UserSubscriptions.platform_subscription_id == platform_subscription_id,
-                    UserSubscriptions.price_id == price_id).update(
+                    UserSubscriptions.user_id == user_id).update(
                     {"status": "inactive", "updated_at": datetime.now(timezone.utc).replace(tzinfo=None)})
                 self.db.flush()
                 new_subscription = UserSubscriptions(
