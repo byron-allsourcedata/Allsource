@@ -59,7 +59,6 @@ class SubscriptionService:
                     "plan_id": subscription.plan_id,
                     "stripe_request_created_at": subscription.stripe_request_created_at,
                     "domains_limit": subscription.domains_limit,
-                    "users_limit": subscription.users_limit,
                     "integrations_limit": subscription.integrations_limit
                 }
             }
@@ -187,13 +186,12 @@ class SubscriptionService:
         plan = self.plans_persistence.get_free_trail_plan()
         status = 'active'
         created_at = datetime.strptime(get_utc_aware_date_for_postgres(), '%Y-%m-%dT%H:%M:%SZ')
-        domains_limit, users_limit, integrations_limit, leads_credits, prospect_credits, members_limit = self.plans_persistence.get_plan_limit_by_id(
+        domains_limit, integrations_limit, leads_credits, prospect_credits, members_limit = self.plans_persistence.get_plan_limit_by_id(
             plan_id=plan.id)
         add_subscription_obj = Subscription(
             domains_limit=domains_limit,
             integrations_limit=integrations_limit,
             user_id=user_id,
-            users_limit=users_limit,
             updated_at=created_at.isoformat() + "Z",
             created_at=created_at.isoformat() + "Z",
             members_limit=members_limit - 1,
@@ -241,8 +239,8 @@ class SubscriptionService:
         domains = self.db.query(UserDomains).filter(UserDomains.user_id == user_id).all()
         if domains:
             sorted_domains = sorted(domains, key=lambda x: x.created_at)
-            for i, domain in enumerate(sorted_domains):
-                domain.enable = i >= domains_limit
+            for i, domain in enumerate(sorted_domains, start=1):
+                domain.enable = i <= domains_limit
         self.db.commit()
 
     def update_team_members(self, team_owner_id, members_limit):
@@ -251,7 +249,7 @@ class SubscriptionService:
             if users:
                 sorted_users = sorted(users,
                                       key=lambda x: x.added_on or datetime.min)
-                for i, user in enumerate(sorted_users):
+                for i, user in enumerate(sorted_users, start=1):
                     if i >= members_limit:
                         self.db.delete(user)
 
@@ -281,7 +279,7 @@ class SubscriptionService:
             plan_type = determine_plan_name_from_product_id(stripe_payload.get("plan").get("product"))
             interval = stripe_payload.get("plan").get("interval")
             plan_id = self.plans_persistence.get_plan_by_title(plan_type, interval)
-            domains_limit, users_limit, integrations_limit, leads_credits, prospect_credits, members_limit, overage = self.plans_persistence.get_plan_limit_by_id(
+            domains_limit, integrations_limit, leads_credits, prospect_credits, members_limit, overage = self.plans_persistence.get_plan_limit_by_id(
                 plan_id=plan_id)
             if user_subscription is not None and user_subscription.status == 'active':
                 if canceled_at:
@@ -302,7 +300,6 @@ class SubscriptionService:
                     plan_start=start_date,
                     plan_end=end_date,
                     domains_limit=domains_limit,
-                    users_limit=users_limit,
                     integrations_limit=integrations_limit,
                     plan_id=plan_id,
                     members_limit=members_limit,
@@ -316,7 +313,7 @@ class SubscriptionService:
                 self.db.add(new_subscription)
                 self.db.flush()
                 self.update_users_domains(user_id, domains_limit)
-                self.update_team_members(user.team_owner_id, members_limit)
+                self.update_team_members(user.id, members_limit)
                 user.leads_credits = leads_credits if user.leads_credits >= 0 else leads_credits - user.leads_credits
                 user.prospect_credits = prospect_credits
                 user.current_subscription_id = new_subscription.id

@@ -226,14 +226,18 @@ async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, sess
     if root_user:
         result = root_user
     else:
-        result = session.query(Users, UserDomains.id) \
+        result = session.query(Users, UserDomains) \
             .join(UserDomains, UserDomains.user_id == Users.id) \
             .filter(UserDomains.data_provider_id == str(partner_uid_client_id)) \
             .first()
     if not result:
         logging.info(f"Customer not found {partner_uid_client_id}")
         return
-    user, user_domain_id = result
+    user, user_domain = result
+    if not user_domain.enable:
+        logging.info(f"domain has not enable {user_domain.id}")
+        return
+    user_domain_id = user_domain.id
     if not subscription_service.is_user_has_active_subscription(user.id):
         logging.info(f"user has not active subscription {partner_uid_client_id}")
         return
