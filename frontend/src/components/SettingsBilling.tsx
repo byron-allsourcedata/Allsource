@@ -255,7 +255,7 @@ export const SettingsBilling: React.FC = () => {
             setIsLoading(true);
             const response = await axiosInterceptorInstance.get('/settings/billing');
             setCardDetails(response.data.card_details);
-            setChecked(response.data.billing_details.overage);
+            setChecked(response.data.billing_details.is_leads_auto_charging);
             setBillingDetails(response.data.billing_details.subscription_details);
             setDowngrade_plan(response.data.billing_details.downgrade_plan);
             setCanceled_at(response.data.billing_details.canceled_at);
