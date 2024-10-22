@@ -50,7 +50,7 @@ class DashboardService:
         view_products = sum(data['viewed_product'] for data in daily_data.values())
         abandoned_cart = sum(data['abandoned_cart'] for data in daily_data.values())
 
-        roi = (lifetime_revenue - investment) / investment if lifetime_revenue > 0 else 0
+        roi = (lifetime_revenue - investment) / investment if lifetime_revenue > 0 and investment > 0 else 0
 
         response = {
             'daily_data': daily_data,
