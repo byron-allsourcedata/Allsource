@@ -13,7 +13,7 @@ from persistence.plans_persistence import PlansPersistence
 from persistence.user_persistence import UserPersistence
 from utils import get_utc_aware_date_for_postgres
 from decimal import *
-from .stripe_service import determine_plan_name_from_product_id
+from services.stripe_service import determine_plan_name_from_product_id
 
 logger = logging.getLogger(__name__)
 
