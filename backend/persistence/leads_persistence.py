@@ -384,7 +384,7 @@ class LeadsPersistence:
             key = (transaction.price_id, transaction.start_date, transaction.end_date)
             if key not in unique_combinations:
                 unique_combinations.add(key)
-                total_investment += transaction.pricing if transaction.pricing else 0
+                total_investment += transaction.amount if transaction.amount else 0
 
         return total_investment
 
