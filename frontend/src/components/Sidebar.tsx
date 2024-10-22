@@ -25,7 +25,7 @@ const sidebarStyles = {
         fontWeight: '400',
         backgroundColor: 'rgba(255, 255, 255, 1)',
         borderRight: '1px solid rgba(228, 228, 228, 1)',
-        height: '92vh',
+        height: 'calc(100vh - 4.25rem)',
         maxWidth: '146px',
         display: 'flex',
         overflow: 'hidden',
@@ -220,19 +220,19 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading }) => {
     return (
         <Box sx={sidebarStyles.container} >
             <List sx={sidebarStyles.menu}>
-                <ListItem button onClick={() => handleNavigation('/dashboard/contact', '/dashboard')} sx={isActive('/dashboard') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
+                <ListItem button onClick={() => handleNavigation('/check-user-authorization', '/dashboard')} sx={isActive('/dashboard') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
                         <SpaceDashboardIcon />
                     </ListItemIcon>
                     <ListItemText primary="Dashboard" />
                 </ListItem>
-                <ListItem button onClick={() => handleNavigation('/leads')} sx={isActive('/leads') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
+                <ListItem button onClick={() => handleNavigation('/check-user-authorization', '/leads')} sx={isActive('/leads') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
                         <LeadsIcon />
                     </ListItemIcon>
                     <ListItemText primary="Contacts" />
                 </ListItem>
-                <ListItem button onClick={() => handleNavigation('/data-sync/sync', '/data-sync')} sx={isActive('/data-sync') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
+                <ListItem button onClick={() => handleNavigation('/check-user-authorization', '/data-sync')} sx={isActive('/data-sync') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
                         <CategoryIcon />
                     </ListItemIcon>
@@ -244,7 +244,7 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading }) => {
                     </ListItemIcon>
                     <ListItemText primary="Prospect" />
                 </ListItem> */}
-                <ListItem button onClick={() => handleNavigation('/integrations')} sx={isActive('/integrations') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
+                <ListItem button onClick={() => handleNavigation('/check-user-authorization','/integrations')} sx={isActive('/integrations') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
                         <IntegrationsIcon />
                     </ListItemIcon>
@@ -256,7 +256,7 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading }) => {
                     </ListItemIcon>
                     <ListItemText primary="Analytics" />
                 </ListItem> */}
-                <ListItem button onClick={() => handleNavigation('/suppressions/suppression-list?page=1&per_page=5','/suppressions')} sx={isActive('/suppressions') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
+                <ListItem button onClick={() => handleNavigation('/check-user-authorization', '/suppressions')} sx={isActive('/suppressions') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
                         <FeaturedPlayListIcon />
                     </ListItemIcon>
@@ -284,7 +284,7 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading }) => {
             }}>
                 <SetupSection meData={meData ? meData : { percent_steps: 0 }} />
                 <Box sx={sidebarStyles.settings}>
-                    <ListItem button onClick={() => handleNavigation('/settings/account-details', 'settings?section=accountDetails')} sx={isActive('/settings') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
+                    <ListItem button onClick={() => handleNavigation('/check-user-authorization', 'settings?section=accountDetails')} sx={isActive('/settings') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
                         <ListItemIcon sx={sidebarStyles.listItemIcon}>
                             <SettingsIcon />
                         </ListItemIcon>

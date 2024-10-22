@@ -34,13 +34,14 @@ function getDaysInMonth(month: number, year: number) {
     return days;
 }
 
-const DashboardRevenue: React.FC = () => {
+const DashboardRevenue = ({ fromDate, toDate }: { fromDate: number | null; toDate: number | null }) => {
     const [lifetimeRevenue, setLifetimeRevenue] = useState(0);
     const [ROI, setROI] = useState(0);
     const [totalCounts, setTotalCounts] = useState<any>(null);
     const [totalOrder, setTotalOrder] = useState<any[]>([]);
     const [averageOrder, setAverageOrder] = useState<any[]>([]);
     const [dailyData, setDailyData] = useState<any[]>([]);
+    
     //first chart
     const data = getDaysInMonth(10, 2024);
 
