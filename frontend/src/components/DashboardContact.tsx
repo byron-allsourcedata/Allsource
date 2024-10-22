@@ -1,13 +1,13 @@
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { Box, Typography, TextField, Button, Card, CardContent, IconButton, Stack, SelectChangeEvent, Chip, MenuItem, Select } from "@mui/material";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { showToast } from "./ToastNotification";
 import Image from "next/image";
 import CustomizedProgressBar from "./CustomizedProgressBar";
 import { ShowChart, BarChart as IconBarChart } from "@mui/icons-material";
 import { LineChart } from '@mui/x-charts/LineChart';
 import { BarChart } from '@mui/x-charts/BarChart';
-import StatsCard from "./StatsCard";
+import StatsCard from "./StatCardContact";
 
 function getDaysInMonth(month: number, year: number) {
     const date = new Date(year, month, 0);
@@ -32,7 +32,7 @@ const CustomIcon = () => (
 interface AppliedDates {
     start: Date | null;
     end: Date | null;
-  }
+}
 
 interface DashboardContactProps {
     appliedDates: AppliedDates;
@@ -40,6 +40,14 @@ interface DashboardContactProps {
 
 const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates }) => {
     const [chartType, setChartType] = useState<'line' | 'bar'>('line');
+    const [values, setValues] = useState({
+        totalContact: 0,
+        totalVisitors: 0,
+        viewProducts: 0,
+        totalAbandonedCart: 0,
+      });
+
+    const previousDates = useRef<AppliedDates>({ start: null, end: null });
 
     useEffect(() => {
         const fetchData = async () => {
@@ -52,13 +60,26 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates }) => 
                         params: { from_date: fromUnix, to_date: toUnix },
                     });
                     console.log(response.data);
+                    const { total_contacts_collected, total_visitors, total_view_products, total_abandoned_cart } = response.data.total_counts;
+                    setValues({
+                        totalContact: total_contacts_collected,
+                        totalVisitors: total_visitors,
+                        viewProducts: total_view_products,
+                        totalAbandonedCart: total_abandoned_cart,
+                      });
                 } catch (error) {
                     console.error("Error fetching contact data:", error);
                 }
             }
         };
 
-        fetchData();
+        if (
+            appliedDates.start?.getTime() !== previousDates.current.start?.getTime() ||
+            appliedDates.end?.getTime() !== previousDates.current.end?.getTime()
+        ) {
+            fetchData();
+            previousDates.current = appliedDates;
+        }
     }, [appliedDates]);
 
     const toggleChartType = (type: 'line' | 'bar') => {
@@ -192,10 +213,11 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates }) => 
     const filteredSeries = series.filter((s) => visibleSeries[s.id as keyof VisibleSeries]) as [];
 
     return (
-
-        <><Box sx={{ width: '100%', mt: 1, mb: 1, '@media (max-width: 900px)': { mt: 0, mb: 0, } }}>
-            <StatsCard />
-        </Box><Card variant="outlined" sx={{ width: '100%' }}>
+        <>
+            <Box sx={{ width: '100%', mt: 1, mb: 1, '@media (max-width: 900px)': { mt: 0, mb: 0, } }}>
+                <StatsCard values={values}/>
+            </Box>
+            <Card variant="outlined" sx={{ width: '100%' }}>
                 <CardContent>
                     <Stack sx={{ justifyContent: 'space-between', flexDirection: 'row', '@media (max-width: 900px)': { flexDirection: 'column', justifyContent: 'center', alignItems: 'start' } }}>
                         <Stack
@@ -294,7 +316,7 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates }) => 
                                         return isAllSelected
                                             ? 'All contacts type'
                                             : selected.map((id) => options.find((option) => option.id === id)?.label).join(', ');
-                                    } }
+                                    }}
                                     IconComponent={CustomIcon}
                                     sx={{
                                         width: '100%',

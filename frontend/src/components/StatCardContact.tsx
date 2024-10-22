@@ -49,7 +49,7 @@ const StatCard: React.FC<StatCardProps> = ({ value, title, icon, imageUrl, bgCol
       </Box>
       <Box sx={{display: 'flex', flexDirection: 'column', alignItems: 'start', justifyContent: 'start'}}>
         <Typography variant="h5" sx={{ fontWeight: '700', fontSize: '22px', fontFamily: 'Nunito Sans', lineHeight: '30.01px', color: 'rgba(32, 33, 36, 1)'}}>
-          ${value.toLocaleString()} {/* Formats the number with commas */}
+          {value.toLocaleString()} {/* Formats the number with commas */}
         </Typography>
         <Typography variant="body1" sx={{ fontFamily: 'Nunito Sans', fontSize: '14px', fontWeight: '500', lineHeight: '19.6px', textAlign: 'left', color: 'rgba(74, 74, 74, 1)' }}>
           {title}
@@ -63,7 +63,7 @@ const StatCard: React.FC<StatCardProps> = ({ value, title, icon, imageUrl, bgCol
 const TotalLeadsCard: React.FC<{ value: number }> = ({ value }) => (
   <StatCard
     value={value}
-    title="Total Revenue"
+    title="Total Contacts Collected"
     icon={<MarkEmailReadOutlinedIcon sx={{ color: 'rgba(244, 87, 69, 1)', fontSize: '36px' }} />}
     textColor="rgba(74, 74, 74, 1)"
     borderColor="rgba(244, 87, 69, 0.2)"
@@ -93,30 +93,30 @@ const DemographicsCard: React.FC<{ value: number }> = ({ value }) => (
 const SalesOverTimeCard: React.FC<{ value: number }> = ({ value }) => (
   <StatCard
     value={value}
-    title="Add to cart"
+    title="Abandoned Cart"
     imageUrl='/cart.svg'
     textColor="rgba(74, 74, 74, 1)"
     borderColor="rgba(202, 239, 169, 0.2)"
   />
 );
 
-const Cards = ({ values }: { values: { totalRevenue: number, totalVisitors: number, viewProducts: number, totalAbandonedCart: number } }) => {
-  return (
-    <Grid container spacing={3}>
-      <Grid item xs={12} md={3}>
-        <TotalLeadsCard value={values.totalRevenue} />
-      </Grid>
-      <Grid item xs={12} md={3}>
-        <NewCustomersCard value={values.totalVisitors} />
-      </Grid>
-      <Grid item xs={12} md={3}>
-        <DemographicsCard value={values.viewProducts} />
-      </Grid>
-      <Grid item xs={12} md={3}>
-        <SalesOverTimeCard value={values.totalAbandonedCart} />
-      </Grid>
-    </Grid>
-  );
-};
+const Cards = ({ values }: { values: { totalContact: number, totalVisitors: number, viewProducts: number, totalAbandonedCart: number } }) => {
+    return (
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={3}>
+            <TotalLeadsCard value={values.totalContact} />
+          </Grid>
+          <Grid item xs={12} md={3}>
+            <NewCustomersCard value={values.totalVisitors} />
+          </Grid>
+          <Grid item xs={12} md={3}>
+            <DemographicsCard value={values.viewProducts} />
+          </Grid>
+          <Grid item xs={12} md={3}>
+            <SalesOverTimeCard value={values.totalAbandonedCart} />
+          </Grid>
+        </Grid>
+      );
+    };
 
 export default Cards;

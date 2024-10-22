@@ -46,22 +46,28 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
     const [totalOrder, setTotalOrder] = useState<any[]>([]);
     const [averageOrder, setAverageOrder] = useState<any[]>([]);
     const [dailyData, setDailyData] = useState<any[]>([]);
+    const [values, setValues] = useState({
+        totalRevenue: 0,
+        totalVisitors: 0,
+        viewProducts: 0,
+        totalAbandonedCart: 0,
+      });
     
     //first chart
     const data = getDaysInMonth(10, 2024);
 
     const colorPalette = [
-        'rgba(180, 218, 193, 1)',
-        'rgba(252, 229, 204, 1)',
-        'rgba(201, 218, 248, 1)',
-        'rgba(254, 238, 236, 1)'
+        'rgba(244, 87, 69, 1)',
+        'rgba(80, 82, 178, 1)',
+        'rgba(224, 176, 5, 1)',
+        'rgba(144, 190, 109, 1)'
     ];
 
     const colorMapping = {
-        revenue: 'rgba(180, 218, 193, 1)',
-        visitors: 'rgba(252, 229, 204, 1)',
-        viewed_product: 'rgba(201, 218, 248, 1)',
-        abondoned_cart: 'rgba(254, 238, 236, 1)',
+        revenue: 'rgba(244, 87, 69, 1)',
+        visitors: 'rgba(80, 82, 178, 1)',
+        viewed_product: 'rgba(224, 176, 5, 1)',
+        abondoned_cart: 'rgba(144, 190, 109, 1)'
     };
 
     type VisibleSeries = {
@@ -95,10 +101,15 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
               const response = await axiosInstance.get("/dashboard/revenue", {
                 params: { from_date: fromUnix, to_date: toUnix },
               });
-              // Обработка полученных данных
+              const { total_revenue, total_visitors, total_view_products, total_abandoned_cart } = response.data.total_counts;
+              setValues({
+                totalRevenue: total_revenue,
+                totalVisitors: total_visitors,
+                viewProducts: total_view_products,
+                totalAbandonedCart: total_abandoned_cart,
+              });
               setLifetimeRevenue(response.data.lifetimeRevenue);
-              console.log(response.data);
-              // Добавьте другие состояния для графиков
+              setROI(response.data.ROI)
             } catch (error) {
               console.error("Error fetching revenue data:", error);
             }
@@ -279,7 +290,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                 </Box>
                 <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
                     <Typography variant="h5" component='div' sx={{ display: 'flex', flexDirection: 'row', alignItems: 'end', fontWeight: '700', fontSize: '22px', fontFamily: 'Nunito Sans', lineHeight: '30.01px', color: 'rgba(32, 33, 36, 1)', gap: 1, '@media (max-width: 600px)': { flexDirection: 'column', alignItems: 'start' } }}>
-                        ${lifetimeRevenue?.toLocaleString('en-US')} <Typography component='span' sx={{ fontFamily: 'Nunito Sans', fontSize: '14px', pb: 0.5, fontWeight: 500, lineHeight: '19.6px', textAlign: 'left' }}>(Lifetime revenue)</Typography>
+                        ${lifetimeRevenue ? lifetimeRevenue.toLocaleString('en-US') : 0} <Typography component='span' sx={{ fontFamily: 'Nunito Sans', fontSize: '14px', pb: 0.5, fontWeight: 500, lineHeight: '19.6px', textAlign: 'left' }}>(Lifetime revenue)</Typography>
                     </Typography>
                     <Typography variant="h5" component='div' sx={{ display: 'flex', flexDirection: 'row', fontWeight: '700', alignItems: 'end', fontSize: '27px', fontFamily: 'Nunito Sans', lineHeight: '36.83px', color: 'rgba(0, 0, 0, 1)', gap: 1, '@media (max-width: 600px)': { flexDirection: 'column', alignItems: 'start' } }}>
                         {ROI.toLocaleString('en-US')}x <Typography component='span' sx={{ fontFamily: 'Nunito Sans', color: 'rgba(32, 33, 36, 1)', fontSize: '14px', pb: 0.5, fontWeight: 500, lineHeight: '19.6px', textAlign: 'left' }}>ROI</Typography>
@@ -290,8 +301,8 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                 </Box>
             </Box>
 
-            <Box sx={{ width: '100%', mt:1, mb:1, '@media (max-width: 900px)': { mt:0, mb:0,}  }} >
-                <StatsCard />
+            <Box sx={{ width: '100%', mt:1, mb:1, '@media (max-width: 900px)': { mt:0, mb:0,}  }}>
+                <StatsCard values={values} />
             </Box>
 
             <Box sx={{ mb: 3, boxShadow: '0px 2px 10px 0px rgba(0, 0, 0, 0.1)' }}>
