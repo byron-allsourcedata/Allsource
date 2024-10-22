@@ -16,6 +16,8 @@ import AlivbleIntagrationsSlider from './AvalibleIntegrationsSlider';
 import BCommerceConnect from './Bcommerce';
 import OmnisendConnect from './Omnisend';
 import OnmisendDataSync from './OmnisendDataSync';
+import MailchimpConnect from './MailchimpConnect';
+import MailchimpDatasync from './MailchimpDatasync';
 
 interface AudiencePopupProps {
     open: boolean;
@@ -64,7 +66,8 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
     const [openBigcommrceConnect, setOpenBigcommerceConnect] = useState(false)
     const [openOmnisendConnect, setOpenOmnisendConnect] = useState(false)
     const [omnisendIconPopupOpen, setOpenOmnisendIconPopupOpen] = useState(false)
-
+    const [mailchimpIconPopupOpen, setOpenMailchimpIconPopup] = useState(false)
+    const [openMailchimpConnect, setOpenmailchimpConnect] = useState(false)
 
     const fetchListItems = async () => {
         try {
@@ -205,6 +208,16 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
         setPlusIconPopupOpen(false)
         onClose()
     };
+
+    const handleMailchimpIconPopupIconOpen = () => {
+        setOpenMailchimpIconPopup(true)
+    }
+
+    const handleMailchimpIconPopupIconClose = () => {
+        setOpenMailchimpIconPopup(false)
+        setPlusIconPopupOpen(false)
+        onClose()
+    }
 
     const handleMetaIconPopupOpen = () => {
         setMetaIconPopupOpen(true);
@@ -427,7 +440,41 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                         </ListItemButton>
                                     </ListItem>
                                 )}
-                                
+                                {integrationsCredentials.some(integration => integration.service_name === 'Mailchimp') && (
+                                    <ListItem sx={{
+                                        p: 0,
+                                        borderRadius: '4px',
+                                        border: selectedIntegration === 'Omnisend' ? '1px solid #5052B2' : '1px solid #e4e4e4',
+                                        width: 'auto',
+                                        '@media (max-width:600px)': {
+                                            flexBasis: 'calc(50% - 8px)',
+                                        },
+                                    }}>
+                                        <ListItemButton onClick={handleMailchimpIconPopupIconOpen} sx={{
+                                            p: 0,
+                                            flexDirection: 'column',
+                                            px: 3,
+                                            py: 1.5,
+                                            width: '102px',
+                                            height: '72px',
+                                            justifyContent: 'center',
+                                            backgroundColor: selectedIntegration === 'Mailchimp' ? 'rgba(80, 82, 178, 0.10)' : 'transparent',
+                                        }}>
+                                            <ListItemIcon sx={{ minWidth: 'auto' }}>
+                                                <Image src="/mailchimp-icon.svg" alt="Mailchimp" height={26} width={32} />
+                                            </ListItemIcon>
+                                            <ListItemText primary="Mailchimp" primaryTypographyProps={{
+                                                sx: {
+                                                    fontFamily: "Nunito Sans",
+                                                    fontSize: "14px",
+                                                    color: "#4a4a4a",
+                                                    fontWeight: "500",
+                                                    lineHeight: "20px",
+                                                },
+                                            }} />
+                                        </ListItemButton>
+                                    </ListItem>
+                                )}
                                 <ListItem sx={{
                                     p: 0,
                                     borderRadius: '4px',
@@ -488,7 +535,6 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                 </Box>
             </Drawer>
             <AlivbleIntagrationsSlider open={plusIconPopupOpen} onClose={handlePlusIconPopupClose} isContactSync={true} integrations={integrations} integrationsCredentials={integrationsCredentials} />
-            
             <ConnectKlaviyo data = {null} open={klaviyoIconPopupOpen} onClose={handleKlaviyoIconPopupClose}/>
             <ConnectMeta data = {null} open={metaIconPopupOpen} onClose={handleMetaIconPopupClose} />
             <OnmisendDataSync open={omnisendIconPopupOpen} onClose={handleOmnisendIconPopupOpenClose} />
@@ -501,6 +547,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                     initHashDomain={integrationsCredentials?.find(integration => integration.service_name === 'BigCommerce')?.shop_domain}
                 />
             <OmnisendConnect open={openOmnisendConnect} handleClose={() => setOpenOmnisendConnect(false)} onSave={handleSaveSettings} />
+            <MailchimpDatasync data={null} open={mailchimpIconPopupOpen} onClose={handleMailchimpIconPopupIconClose} />
         </>
     );
 };

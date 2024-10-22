@@ -126,6 +126,7 @@ class MetaIntegrationsService:
         for sync in data_syncs:
             if sync.id == credentials.id and sync.leads_type == leads_type:
                 return
+        self.create_list(list_name, domain_id)
         sync = self.sync_persistence.create_sync({
             'integration_id': credentials.id,
             'list_id': list_id,

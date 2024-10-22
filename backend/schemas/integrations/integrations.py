@@ -37,7 +37,7 @@ class IntegrationCredentials(BaseModel):
     woocommerce: Optional[WoocommerceCredentials] = None
     bigcommerce: Optional[ShopifyOrBigcommerceCredentials] = None
     klaviyo: Optional[ApiKeyCredentials] = None
-    mailchimp: Optional[MailchimpCredentials] = None
+    mailchimp: Optional[ApiKeyCredentials] = None
     meta: Optional[MetaCredentials] = None
     sendlane: Optional[ApiKeyCredentials] = None
     omnisend: Optional[ApiKeyCredentials] = None
@@ -100,3 +100,7 @@ class OrderAPI(BaseModel):
     total_price: Optional[float] = None
     email: Optional[EmailStr] = None
     currency_code: Optional[str] = None
+
+class ListFromIntegration(BaseModel):
+    id: str
+    list_name: str

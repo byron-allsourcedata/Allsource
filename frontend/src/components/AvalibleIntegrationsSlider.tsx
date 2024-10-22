@@ -8,6 +8,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import ShopifySettings from "./ShopifySettings"
 import BCommerceConnect from "./Bcommerce"
 import OmnisendConnect from "./Omnisend"
+import MailchimpConnect from "./MailchimpConnect"
 
 
 interface AvailableIntegrationsSliderProps {
@@ -24,7 +25,7 @@ const AlivbleIntagrationsSlider = ({open, isContactSync = false, integrations, i
     const [openShopifuConnect, setOpenShopifyConnect] = useState(false)
     const [openBigcommrceConnect, setOpenBigcommerceConnect] = useState(false)
     const [openOmnisendConnect, setOpenOmnisendConnect] = useState(false)
-
+    const [openMailchimpConnect, setOpenMailchimpConnect] = useState(false)
     const handleClose = () => {
         setOpenMetaConnect(false)
         setOpenKlaviyoConnect(false)
@@ -297,6 +298,28 @@ const AlivbleIntagrationsSlider = ({open, isContactSync = false, integrations, i
                                         }}  />
                                     </ListItemButton>
                                 </ListItem> )}
+                                {integrations.some(integration => integration.service_name === 'Mailchimp') && (
+                                    !integrationsCredentials.some(integration => integration.service_name === 'Mailchimp') )&&(
+                                <ListItem sx={{p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',
+                                    '@media (max-width:600px)': {
+                                        flexBasis: 'calc(50% - 8px)'
+                                    }
+                                }}>
+                                    <ListItemButton onClick={() => setOpenMailchimpConnect(true)} sx={{p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center'}}>
+                                        <ListItemIcon sx={{minWidth: 'auto'}}>
+                                            <Image src="/mailchimp-icon.svg" alt="Mailchimp" height={26} width={32} />
+                                        </ListItemIcon>
+                                        <ListItemText primary="Mailchimp" primaryTypographyProps={{
+                                            sx: {
+                                                fontFamily: "Nunito Sans",
+                                                fontSize: "14px",
+                                                color: "#4a4a4a",
+                                                fontWeight: "500",
+                                                lineHeight: "20px"
+                                            }
+                                        }}  />
+                                    </ListItemButton>
+                                </ListItem> )}
                                 {integrations.some(integration => integration.service_name === 'BigCommerce') &&
                                     !integrationsCredentials.some(integration =>  
                                         integration.service_name === 'Shopify' || 
@@ -338,6 +361,7 @@ const AlivbleIntagrationsSlider = ({open, isContactSync = false, integrations, i
                     handleClose={() => setOpenBigcommerceConnect(false)}
                 />
         <OmnisendConnect open={openOmnisendConnect} handleClose={() => setOpenOmnisendConnect(false)} onSave={() => { }} />
+        <MailchimpConnect open={openMailchimpConnect} handleClose={() => setOpenMailchimpConnect(false)} onSave={() => { }} />
         </>
     )
 }
