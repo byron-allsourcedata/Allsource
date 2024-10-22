@@ -591,12 +591,13 @@ async def main():
 
     logging.info("Started")
     try:
-        result = session.query(Users, UserDomains.id) \
+        result = session.query(Users, UserDomains) \
             .join(UserDomains, UserDomains.user_id == Users.id) \
             .filter((UserDomains.domain == ROOT_BOT_CLIENT_DOMAIN) & (Users.email == ROOT_BOT_CLIENT_EMAIL)) \
             .first()
 
         while True:
+            await process_files(sts_client=sts_client, session=session, channel=connection, root_user=None)
             await process_files(sts_client=sts_client, session=session, channel=connection, root_user=result)
             logging.info('Sleeping for 10 minutes...')
             time.sleep(60 * 10)
