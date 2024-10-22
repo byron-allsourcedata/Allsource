@@ -1,4 +1,4 @@
-from sqlalchemy import Column, event, Integer
+from sqlalchemy import Column, event, Integer, DECIMAL
 from sqlalchemy.dialects.postgresql import BOOLEAN, INTEGER, NUMERIC, VARCHAR, JSONB
 
 from .base import Base, create_timestamps, update_timestamps
@@ -25,7 +25,7 @@ class SubscriptionPlan(Base):
     prospect_credits = Column(INTEGER, nullable=True)
     members_limit = Column(Integer, nullable=True)
     features = Column(JSONB, nullable=True)
-    overage = Column(VARCHAR, nullable=False)
+    lead_credit_price = Column(DECIMAL(10, 2), nullable=False)
 
 
 event.listen(SubscriptionPlan, "before_insert", create_timestamps)
