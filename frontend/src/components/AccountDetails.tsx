@@ -176,9 +176,11 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                         textTransform: 'none',
                                         color: 'rgba(80, 82, 178, 1)',
                                         borderRadius: '4px',
-                                        padding: '4px',
+                                        padding: '1px',
+                                        margin: '4px',
                                         mb: 2,
                                         minWidth: 'auto',
+                                        '& :hover': {color: 'rgba(80, 82, 178, 1)'},
                                         '@media (max-width: 900px)': {
                                             border: 'none',
                                             padding: 0
@@ -186,7 +188,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                     }}
                                     onClick={handleDownload}
                                 >
-                                    <DownloadIcon fontSize='medium' />
+                                    <DownloadIcon fontSize='medium' sx={{color: 'rgba(128, 128, 128, 1)', '& :hover': {color: 'rgba(80, 82, 178, 1)'}}} />
                                 </Button>
                             </Box>
                             <Box sx={{ display: 'flex', flexDirection: 'row', gap: 5, '@media (max-width: 600px)': { flexDirection: 'column', gap: 1 }, }}>

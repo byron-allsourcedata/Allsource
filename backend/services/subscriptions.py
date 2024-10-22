@@ -7,15 +7,13 @@ from models.plans import SubscriptionPlan
 from models.subscription_transactions import SubscriptionTransactions
 from models.subscriptions import Subscription, UserSubscriptions
 from models.users import Users, User
+from models.users_domains import UserDomains
 from models.users_payments_transactions import UsersPaymentsTransactions
 from persistence.plans_persistence import PlansPersistence
 from persistence.user_persistence import UserPersistence
 from utils import get_utc_aware_date_for_postgres
 from .stripe_service import determine_plan_name_from_product_id
 
-ACTIVE_STATUSES = ["active", "trialing", "completed"]
-TRIAL_STUB_PLAN_ID = '1'
-PRICE_CREDIT = 0.49
 logger = logging.getLogger(__name__)
 
 
@@ -239,6 +237,26 @@ class SubscriptionService:
         ).scalar()
         return stripe_price_id
 
+    def update_users_domains(self, user_id, domains_limit):
+        domains = self.db.query(UserDomains).filter(UserDomains.user_id == user_id).all()
+        if domains:
+            sorted_domains = sorted(domains, key=lambda x: x.created_at)
+            for i, domain in enumerate(sorted_domains):
+                domain.enable = i >= domains_limit
+        self.db.commit()
+
+    def update_team_members(self, team_owner_id, members_limit):
+        if team_owner_id:
+            users = self.db.query(Users).filter(Users.team_owner_id == team_owner_id).all()
+            if users:
+                sorted_users = sorted(users,
+                                      key=lambda x: x.added_on or datetime.min)
+                for i, user in enumerate(sorted_users):
+                    if i >= members_limit:
+                        self.db.delete(user)
+
+                self.db.commit()
+
     def process_subscription(self, stripe_payload, user: Users):
         user_id = user.id
         platform_subscription_id = stripe_payload.get("id")
@@ -263,7 +281,7 @@ class SubscriptionService:
             plan_type = determine_plan_name_from_product_id(stripe_payload.get("plan").get("product"))
             interval = stripe_payload.get("plan").get("interval")
             plan_id = self.plans_persistence.get_plan_by_title(plan_type, interval)
-            domains_limit, users_limit, integrations_limit, leads_credits, prospect_credits, members_limit = self.plans_persistence.get_plan_limit_by_id(
+            domains_limit, users_limit, integrations_limit, leads_credits, prospect_credits, members_limit, overage = self.plans_persistence.get_plan_limit_by_id(
                 plan_id=plan_id)
             if user_subscription is not None and user_subscription.status == 'active':
                 if canceled_at:
@@ -277,8 +295,7 @@ class SubscriptionService:
                     user.prospect_credits = prospect_credits
                 self.db.flush()
             else:
-                self.db.query(UserSubscriptions).where(
-                    UserSubscriptions.user_id == user_id).update(
+                self.db.query(UserSubscriptions).where(UserSubscriptions.user_id == user_id).update(
                     {"status": "inactive", "updated_at": datetime.now(timezone.utc).replace(tzinfo=None)})
                 self.db.flush()
                 new_subscription = UserSubscriptions(
@@ -293,10 +310,13 @@ class SubscriptionService:
                     created_at=datetime.now(timezone.utc).replace(tzinfo=None),
                     user_id=user_id,
                     price_id=price_id,
-                    platform_subscription_id=platform_subscription_id
+                    platform_subscription_id=platform_subscription_id,
+                    overage=overage
                 )
                 self.db.add(new_subscription)
                 self.db.flush()
+                self.update_users_domains(user_id, domains_limit)
+                self.update_team_members(user.team_owner_id, members_limit)
                 user.leads_credits = leads_credits if user.leads_credits >= 0 else leads_credits - user.leads_credits
                 user.prospect_credits = prospect_credits
                 user.current_subscription_id = new_subscription.id

@@ -31,9 +31,9 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
         overflowX: 'hidden',
         paddingRight: '16px',
         border:'none',
-        paddingTop: '10vh',
+        paddingTop: '4.25rem',
         '@media (max-width: 899px)': {
-          paddingTop: '72px',
+          paddingTop: '68px',
           paddingRight: 0,
           flexWrap: 'wrap'
         },
@@ -52,7 +52,7 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
           minWidth: '142px',
           maxWidth: '142px',
           position: 'fixed',
-          top: '8vh',
+          top: '4.25rem',
         }}>
           <SliderProvider><Sidebar setShowSlider={setSlider} setLoading={setIsLoading} /></SliderProvider>
         </Grid>

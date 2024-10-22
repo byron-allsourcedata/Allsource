@@ -26,6 +26,7 @@ class SubscriptionPlan(Base):
     users_limit = Column(Integer, nullable=True)
     members_limit = Column(Integer, nullable=True)
     features = Column(JSONB, nullable=True)
+    overage = Column(VARCHAR, nullable=False)
 
 
 event.listen(SubscriptionPlan, "before_insert", create_timestamps)
