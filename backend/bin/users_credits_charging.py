@@ -11,7 +11,7 @@ current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 
-from models.subscriptions import SubscriptionPlan
+from models.plans import SubscriptionPlan
 from config.rmq_connection import RabbitMQConnection
 from sqlalchemy.orm import sessionmaker
 from models.users import Users
@@ -45,7 +45,7 @@ async def on_message_received(message, session):
                 created_timestamp = stripe_payload.get("created")
                 created_at = datetime.fromtimestamp(created_timestamp, timezone.utc).replace(
                     tzinfo=None) if created_timestamp else None
-                amount_credits = int(stripe_payload.get("amount")) / 100 / PRICE_CREDIT
+                amount_credits = int(stripe_payload.get("amount") / 100 / PRICE_CREDIT)
                 status = stripe_payload.get("status")
                 if status == 'succeeded':
                     user = session.query(Users).filter(Users.customer_id == customer_id).first()

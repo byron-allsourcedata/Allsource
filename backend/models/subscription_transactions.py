@@ -1,4 +1,4 @@
-from sqlalchemy import Column, ForeignKey, event, Integer, VARCHAR
+from sqlalchemy import Column, ForeignKey, event, Integer, VARCHAR, DECIMAL
 from sqlalchemy.dialects.postgresql import BIGINT, TIMESTAMP
 
 from .base import Base, create_timestamps, update_timestamps
@@ -20,7 +20,7 @@ class SubscriptionTransactions(Base):
     end_date = Column(TIMESTAMP, nullable=True)
     currency = Column(VARCHAR, nullable=True)
     price_id = Column(VARCHAR, nullable=True)
-    pricing = Column(Integer, nullable=True)
+    amount = Column(DECIMAL(10, 2), nullable=False)
 
 
 event.listen(SubscriptionTransactions, "before_insert", create_timestamps)

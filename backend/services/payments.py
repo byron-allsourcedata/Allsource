@@ -64,14 +64,29 @@ def manage_subscription_schedule(current_subscription, platform_subscription_id,
     return schedule_downgrade_subscription
 
 
+def get_subscription_status(subscription) -> str:
+    status = subscription['status']
+    if status == 'active':
+        return SubscriptionStatus.SUCCESS.value
+    elif status == 'incomplete':
+        return SubscriptionStatus.INCOMPLETE.value
+    elif status == 'past_due':
+        return SubscriptionStatus.PAST_DUE.value
+    elif status == 'canceled':
+        return SubscriptionStatus.CANCELED.value
+    else:
+        return SubscriptionStatus.UNKNOWN.value
+
+
+def compare_prices(price_id1: int, price_id2: int) -> int:
+    return price_id1 - price_id2
+
+
 class PaymentsService:
 
     def __init__(self, plans_service: PlansService, plan_persistence: PlansPersistence):
         self.plans_service = plans_service
         self.plan_persistence = plan_persistence
-
-    def get_additional_credits_price_id(self):
-        return self.plans_service.get_additional_credits_price_id()
 
     def upgrade_subscription(self, current_subscription, platform_subscription_id, price_id):
         if current_subscription['schedule']:
@@ -89,7 +104,7 @@ class PaymentsService:
             proration_behavior='none',
             billing_cycle_anchor='now'
         )
-        return self.get_subscription_status(upgrade_subscription)
+        return get_subscription_status(upgrade_subscription)
 
     def upgrade_subscription_scheduled(self, current_subscription):
         schedule = stripe.SubscriptionSchedule.retrieve(current_subscription.get("schedule"))
@@ -113,9 +128,9 @@ class PaymentsService:
 
     def downgrade_subscription(self, current_subscription, platform_subscription_id, price_id, subscription):
         schedule_downgrade_subscription = manage_subscription_schedule(current_subscription,
-                                                                            platform_subscription_id, price_id)
+                                                                       platform_subscription_id, price_id)
         self.plans_service.save_downgrade_price_id(price_id, subscription)
-        return {'status': self.get_subscription_status(schedule_downgrade_subscription)}
+        return {'status': get_subscription_status(schedule_downgrade_subscription)}
 
     def cancel_user_subscription(self, user, reason_unsubscribe):
         subscription = self.plan_persistence.get_user_subscription(user_id=user.get('id'))
@@ -148,34 +163,18 @@ class PaymentsService:
     def is_downgrade(self, price_id: str, user_id: int) -> bool:
         current_price = self.plans_service.get_current_price(user_id)
         new_price = self.plans_service.get_plan_price(price_id)
-        return self.compare_prices(new_price, current_price) < 0
-
-    def compare_prices(self, price_id1: int, price_id2: int) -> int:
-        return price_id1 - price_id2
-
-    def get_subscription_status(self, subscription) -> str:
-        status = subscription['status']
-        if status == 'active':
-            return SubscriptionStatus.SUCCESS.value
-        elif status == 'incomplete':
-            return SubscriptionStatus.INCOMPLETE.value
-        elif status == 'past_due':
-            return SubscriptionStatus.PAST_DUE.value
-        elif status == 'canceled':
-            return SubscriptionStatus.CANCELED.value
-        else:
-            return SubscriptionStatus.UNKNOWN.value
+        return compare_prices(new_price, current_price) < 0
 
     def charge_user_for_extra_credits(self, quantity: int, users):
         customer_id = self.plans_service.get_customer_id(users)
         try:
-            purchase_product(customer_id, self.get_additional_credits_price_id(), quantity, 'prospect_credits')
+            purchase_product(customer_id, self.plans_service.get_additional_credits_price_id(), quantity, 'prospect_credits')
             return {"status": "PAYMENT_SUCCESS"}
         except Exception as e:
             return create_stripe_checkout_session(
                 success_url=StripeConfig.success_url,
                 cancel_url=StripeConfig.cancel_url,
                 customer_id=customer_id,
-                line_items=[{"price": self.get_additional_credits_price_id(), "quantity": quantity}],
+                line_items=[{"price": self.plans_service.get_additional_credits_price_id(), "quantity": quantity}],
                 mode="payment"
             )

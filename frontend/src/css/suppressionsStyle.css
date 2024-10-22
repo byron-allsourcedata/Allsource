@@ -11,6 +11,11 @@
     padding: 0px !important;
     padding-left: 10px !important;
     box-sizing: border-box;
+    @media (max-width: 800px) {
+        max-width: 100%;
+        min-width: 100%;
+
+    }
 }
 
 .rti--tag {

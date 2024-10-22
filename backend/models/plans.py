@@ -1,4 +1,4 @@
-from sqlalchemy import Column, event, Integer
+from sqlalchemy import Column, event, Integer, DECIMAL
 from sqlalchemy.dialects.postgresql import BOOLEAN, INTEGER, NUMERIC, VARCHAR, JSONB
 
 from .base import Base, create_timestamps, update_timestamps
@@ -23,9 +23,9 @@ class SubscriptionPlan(Base):
     integrations_limit = Column(Integer, nullable=True)
     leads_credits = Column(INTEGER, nullable=True)
     prospect_credits = Column(INTEGER, nullable=True)
-    users_limit = Column(Integer, nullable=True)
     members_limit = Column(Integer, nullable=True)
     features = Column(JSONB, nullable=True)
+    lead_credit_price = Column(DECIMAL(10, 2), nullable=False)
 
 
 event.listen(SubscriptionPlan, "before_insert", create_timestamps)

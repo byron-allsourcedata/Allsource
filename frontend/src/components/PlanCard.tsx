@@ -6,15 +6,15 @@ import CustomTooltip from './customToolTip';
 const PlanCard: React.FC<{ plan: any; activePlanTitle: string; onChoose: (stripePriceId: string) => void }> = ({ plan, activePlanTitle, onChoose }) => {
     const getButtonLabel = () => {
         if (plan.is_active) return 'Current Plan';
-        if (activePlanTitle === 'Starter') {
+        if (activePlanTitle === 'Launch') {
             if (plan.title === 'Pro') return 'Upgrade';
             if (plan.title === 'Growth') return 'Upgrade';
         } else if (activePlanTitle === 'Pro') {
-            if (plan.title === 'Starter') return 'Downgrade';
+            if (plan.title === 'Launch') return 'Downgrade';
             if (plan.title === 'Growth') return 'Upgrade';
         }
         else if (activePlanTitle === 'Growth') {
-            if (plan.title === 'Starter') return 'Downgrade';
+            if (plan.title === 'Launch') return 'Downgrade';
             if (plan.title === 'Pro') return 'Downgrade';
         }
         return 'Choose Plan';

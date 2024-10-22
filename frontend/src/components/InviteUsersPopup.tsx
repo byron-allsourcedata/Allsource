@@ -111,7 +111,7 @@ export const InviteUsersPopup: React.FC<InviteUsersPopupProps> = ({ open, onClos
                     Invite your team to review or collaborate on this Maximiz project.
                 </Typography>
 
-                <Autocomplete
+                {/* <Autocomplete
                     multiple
                     freeSolo
                     options={availableEmails}
@@ -178,6 +178,7 @@ export const InviteUsersPopup: React.FC<InviteUsersPopupProps> = ({ open, onClos
                             label="Emails"
                             value={inputValue}
                             onChange={(e) => setInputValue(e.target.value)}
+                            autoComplete='off'
                             onKeyDown={(e) => {
                                 if (e.key === 'Enter' && inputValue && inputValue !== lastAddedEmail) {
                                     handleAddEmail(inputValue);
@@ -205,6 +206,7 @@ export const InviteUsersPopup: React.FC<InviteUsersPopupProps> = ({ open, onClos
                                 }
                             }}
                             sx={{
+                                maxWidth: '454px',
                                 '& .MuiOutlinedInput-root': {
                                     minHeight: '48px',
                                     padding: '5px 16px 4px 16px',
@@ -229,10 +231,149 @@ export const InviteUsersPopup: React.FC<InviteUsersPopupProps> = ({ open, onClos
                             {option}
                         </MenuItem>
                     )}
+                /> */}
+
+
+<Autocomplete
+    multiple
+    freeSolo
+    options={[]} // Keep options empty to prevent predefined emails from showing up
+    value={emails}
+    inputValue={inputValue} // Bind the input value to the state
+    onInputChange={(event, newInputValue) => {
+        setInputValue(newInputValue); // Keep track of changes to the input value
+    }}
+    onChange={(event, newValue) => {
+        setEmails(newValue);
+    }}
+    renderTags={(value: readonly string[], getTagProps) =>
+        value.map((option: string, index: number) => {
+            const { key, ...tagProps } = getTagProps({ index });
+            return (
+                <Chip
+                    variant="outlined"
+                    label={option}
+                    {...tagProps}
+                    key={key}
+                    deleteIcon={
+                        <IconButton size="small" sx={{ padding: '4px' }}>
+                            <Image
+                                src="/close-clear.svg"
+                                alt="close"
+                                height={14}
+                                width={14}
+                            />
+                        </IconButton>
+                    }
+                    className="second-text"
+                    sx={{
+                        marginRight: 0.5,
+                        backgroundColor: '#ededf7',
+                        border: 'none',
+                        borderRadius: '3px',
+                        fontSize: '12px',
+                        color: '#5F6368',
+                        fontWeight: '400',
+                        lineHeight: '16px',
+                        height: 'auto',
+                        padding: '4px 6px',
+                        gap: '4px',
+                        '.MuiChip-label': {
+                            fontFamily: 'Roboto',
+                            fontSize: '12px',
+                            color: '#5F6368',
+                            fontWeight: '400',
+                            lineHeight: '16px',
+                            padding: 0,
+                        },
+                        '.MuiChip-deleteIcon': {
+                            color: '#828282',
+                            backgroundColor: 'transparent',
+                            margin: 0,
+                            width: '14px',
+                            height: '14px',
+                        },
+                    }}
                 />
+            );
+        })
+    }
+    renderInput={(params) => (
+        <TextField
+            {...params}
+            variant="outlined"
+            label="Emails"
+            autoComplete="off"
+            onKeyDown={(e) => {
+                if (e.key === 'Enter' && inputValue.trim()) {
+                    const emailExists = emails.some(
+                        (email) => email.toLowerCase() === inputValue.trim().toLowerCase()
+                    );
+
+                    if (!emailExists) {
+                        handleAddEmail(inputValue.trim());
+                    }
+                    setInputValue(''); // Clear the input after adding the email
+                    e.preventDefault(); // Prevent the form from submitting on Enter
+                }
+            }}
+            onBlur={() => {
+                if (inputValue.trim()) {
+                    const emailExists = emails.some(
+                        (email) => email.toLowerCase() === inputValue.trim().toLowerCase()
+                    );
+
+                    if (!emailExists) {
+                        handleAddEmail(inputValue.trim());
+                    }
+                    setInputValue(''); // Clear the input after adding the email
+                }
+            }}
+            error={!!emailError}
+            helperText={emailError}
+            InputLabelProps={{
+                className: "third-sub-title",
+                sx: {
+                    lineHeight: "16px !important",
+                    color: "rgba(17, 17, 19, 0.60) !important",
+                    "&.Mui-focused": {
+                        color: "#0000FF",
+                    },
+                },
+            }}
+            sx={{
+                maxWidth: "454px",
+                "& .MuiOutlinedInput-root": {
+                    height: 'auto !important',
+                    minHeight: "48px !important",
+                    padding: "5px 16px 4px 16px",
+                },
+                "& .MuiInputBase-input": {
+                    fontFamily: "Roboto",
+                    color: "#202124",
+                    fontSize: "14px",
+                    fontWeight: "400",
+                    lineHeight: "20px",
+                },
+            }}
+        />
+    )}
+    renderOption={(props, option: string) => (
+        <MenuItem className="second-text" {...props} key={option} sx={{
+            color: '#202124',
+            fontSize: '14px',
+            lineHeight: '20px'
+        }}>
+            {option}
+        </MenuItem>
+    )}
+/>
 
 
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: '16px' }}>
+
+
+
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px' }}>
                     <FormControl variant="outlined" sx={{ width: '100%', minHeight: '48px', lineHeight: 'normal' }}>
                         <InputLabel className='main-text' sx={{ fontSize: '12px', lineHeight: '16px' }}>Access level</InputLabel>
                         <Select
@@ -241,6 +382,7 @@ export const InviteUsersPopup: React.FC<InviteUsersPopupProps> = ({ open, onClos
                             onOpen={handleSelectOpen}
                             onClose={handleSelectClose}
                             sx={{
+                                maxWidth: '454px',
                                 '& .MuiSelect-icon': {
                                     display: 'none', // Hide the default dropdown icon
                                 },

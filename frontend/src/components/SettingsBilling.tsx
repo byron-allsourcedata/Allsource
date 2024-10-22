@@ -28,7 +28,9 @@ const billingStyles = {
     tableColumn: {
         lineHeight: '16px !important',
         position: 'relative',
-        textAlign: 'center',
+        paddingLeft: '45px',
+        paddingTop: '18px',
+        paddingBottom: '18px',
         '&::after': {
             content: '""',
             display: 'block',
@@ -52,7 +54,9 @@ const billingStyles = {
     tableBodyColumn: {
         lineHeight: '16px !important',
         position: 'relative',
-        textAlign: 'center',
+        paddingLeft: '45px',
+        paddingTop: '13.5px',
+        paddingBottom: '13.5px',
         '&::after': {
             content: '""',
             display: 'block',
@@ -247,6 +251,7 @@ export const SettingsBilling: React.FC = () => {
     const [open, setOpen] = useState(false);
     const [email, setEmail] = useState('');
 
+
     const handleOpen = () => setOpen(true);
     const handleClose = () => setOpen(false);
 
@@ -255,7 +260,7 @@ export const SettingsBilling: React.FC = () => {
             setIsLoading(true);
             const response = await axiosInterceptorInstance.get('/settings/billing');
             setCardDetails(response.data.card_details);
-            setChecked(response.data.billing_details.overage);
+            setChecked(response.data.billing_details.is_leads_auto_charging);
             setBillingDetails(response.data.billing_details.subscription_details);
             setDowngrade_plan(response.data.billing_details.downgrade_plan);
             setCanceled_at(response.data.billing_details.canceled_at);
@@ -588,22 +593,22 @@ export const SettingsBilling: React.FC = () => {
             case 'successful':
                 return {
                     background: '#eaf8dd',
-                    color: '#2b5b00'
+                    color: '#2b5b00 !important'
                 };
             case 'decline':
                 return {
                     background: '#ececec',
-                    color: '#4a4a4a'
+                    color: '#4a4a4a !important'
                 };
             case 'failed':
                 return {
                     background: '#fcd4cf',
-                    color: '#a61100'
+                    color: '#a61100 !important'
                 };
             default:
                 return {
                     background: '#ececec',
-                    color: '#4a4a4a'
+                    color: '#4a4a4a !important'
                 };
         }
     };
@@ -1322,7 +1327,9 @@ export const SettingsBilling: React.FC = () => {
                                 <TableRow sx={billingStyles.tableBodyRow}>
                                     <TableCell className='table-data' colSpan={5} sx={{
                                         ...billingStyles.tableBodyColumn,
-                                        textAlign: 'center'
+                                        textAlign: 'center',
+                                        paddingTop: '18px',
+                                        paddingBottom: '18px'
                                     }}>
                                         No history found
                                     </TableCell>
@@ -1341,7 +1348,7 @@ export const SettingsBilling: React.FC = () => {
 
                                         }}
                                     >
-                                        <TableCell className="table-data" sx={{
+                                        <TableCell className="table-data sticky-cell" sx={{
                                             ...billingStyles.tableBodyColumn,
                                             cursor: 'pointer',
                                             backgroundColor: '#fff'
@@ -1355,16 +1362,15 @@ export const SettingsBilling: React.FC = () => {
                                         <TableCell className='table-data' sx={billingStyles.tableBodyColumn}>
                                             <Typography component="span" className='table-data' sx={{
                                                 ...getStatusStyles(history.status),
-                                                background: '#eaf8dd',
+                                                // background: '#eaf8dd',
                                                 padding: '6px 8px',
-                                                borderRadius: '2px',
-                                                color: '#2b5b00 !important',
+                                                borderRadius: '2px'
                                             }}>
                                                 {history.status}
                                             </Typography>
                                         </TableCell>
                                         <TableCell className='table-data' sx={billingStyles.tableBodyColumn}>
-                                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2 }}>
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                                                 <IconButton onClick={() => fetchSaveBillingHistory(history.invoice_id)} sx={{ ':hover': { backgroundColor: 'transparent', }, padding: 0 }}>
                                                     <DownloadIcon sx={{ width: '24px', height: '24px', color: 'rgba(188, 188, 188, 1)', ':hover': { color: 'rgba(80, 82, 178, 1)' } }} />
                                                 </IconButton>

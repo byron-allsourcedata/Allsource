@@ -279,6 +279,13 @@ const OmnisendConnect = ({ handleClose, open, onSave, initApiKey}: CreateOmnisen
                     }
                 },
             }}
+            slotProps={{
+                backdrop: {
+                  sx: {
+                    backgroundColor: 'rgba(0, 0, 0, 0)'
+                  }
+                }
+              }}
         >
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 3.5, px: 2, borderBottom: '1px solid #e4e4e4' }}>
                 <Typography variant="h6" sx={{ textAlign: 'center', color: '#202124', fontFamily: 'Nunito Sans', fontWeight: '600', fontSize: '16px', lineHeight: 'normal' }}>

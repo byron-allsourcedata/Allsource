@@ -870,7 +870,7 @@ const SuppressionRules: React.FC = () => {
                             gap: 2,
                             width: '100%',
                             alignItems: 'flex-end',
-                            '@media (max-width: 700px)': { flexDirection: 'column', justifyContent: 'flex-end' }
+                            '@media (max-width: 700px)': { flexDirection: 'column', justifyContent: 'start', alignItems: 'start' }
                         }}>
                             <TagsInput
                                 value={chipData}
@@ -889,7 +889,7 @@ const SuppressionRules: React.FC = () => {
                                     return true;
                                 }}
                             />
-                            <Box sx={{ padding: 0 }}>
+                            <Box sx={{ padding: 0, }}>
                                 <Button variant="outlined" onClick={handleSubmitUrl} sx={{
                                     backgroundColor: '#fff',
                                     color: 'rgba(80, 82, 178, 1)',
@@ -1021,7 +1021,7 @@ const SuppressionRules: React.FC = () => {
                             </Box>
                         </Box>
 
-                        <Box sx={{ display: checkedUrlParameters ? 'flex' : 'none', flexDirection: 'row', justifyContent: 'space-between', gap: 2, width: '100%', alignItems: 'end', '@media (max-width: 700px)': { flexDirection: 'column', justifyContent: 'flex-end' } }}>
+                        <Box sx={{ display: checkedUrlParameters ? 'flex' : 'none', flexDirection: 'row', justifyContent: 'space-between', gap: 2, width: '100%', alignItems: 'end', '@media (max-width: 700px)': { flexDirection: 'column', justifyContent: 'start', alignItems: 'start' } }}>
                             <TagsInput
                                 value={chipDataParam}
                                 onChange={setChipDataParam}
