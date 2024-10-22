@@ -17,7 +17,6 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.dialects.postgresql import insert
 from dotenv import load_dotenv
-import pandas as pd
 from datetime import datetime
 from models.five_x_five_cookie_sync_file import FiveXFiveCookieSyncFile
 
@@ -26,8 +25,7 @@ logging.basicConfig(level=logging.INFO)
 
 BUCKET_NAME = 'trovo-coop-shakespeare'
 FILES_PATH = 'outgoing/cookie_sync/resolved'
-LAST_PROCESSED_FILE_PATH = 'tmp/last_processed_file_resolved.txt'
-
+LAST_PROCESSED_FILE_PATH = 'tmp/last_processed_cookie_sync_file.txt'
 
 
 def create_sts_client(key_id, key_secret):
