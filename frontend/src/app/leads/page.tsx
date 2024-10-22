@@ -12,7 +12,6 @@ import { ChevronLeft, ChevronRight } from '@mui/icons-material';
 import DownloadIcon from '@mui/icons-material/Download';
 import DateRangeIcon from '@mui/icons-material/DateRange';
 import FilterListIcon from '@mui/icons-material/FilterList';
-import CalendarPopup from '../../components/CalendarPopup';
 import FilterPopup from '@/components/FiltersSlider';
 import AudiencePopup from '@/components/AudienceSlider';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
@@ -23,6 +22,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import CustomizedProgressBar from '@/components/CustomizedProgressBar';
 import Tooltip from '@mui/material/Tooltip';
 import CustomToolTip from '@/components/customToolTip';
+import CalendarPopup from '@/components/CustomCalendar'
 
 
 
@@ -723,6 +723,11 @@ const Leads: React.FC = () => {
             }
         });
     }, [appliedDates, orderBy, order, page, rowsPerPage, activeFilter, filterParams]);
+
+    const handleDateLabelChange = (label: string) => {
+        console.log('Date label changed to:', label);
+        // Update label state or perform any action
+      };
 
 
     if (isLoading) {
@@ -1519,12 +1524,14 @@ const Leads: React.FC = () => {
                     <FilterPopup open={filterPopupOpen} onClose={handleFilterPopupClose} onApply={handleApplyFilters} />
                     <AudiencePopup open={audiencePopupOpen} onClose={handleAudiencePopupClose}
                         selectedLeads={Array.from(selectedRows)} />
+                        
                     <CalendarPopup
                         anchorEl={calendarAnchorEl}
                         open={isCalendarOpen}
                         onClose={handleCalendarClose}
                         onDateChange={handleDateChange}
                         onApply={handleApply}
+                        onDateLabelChange={handleDateLabelChange}
                     />
                 </Box>
             </Box>
