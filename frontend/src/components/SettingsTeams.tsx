@@ -9,12 +9,16 @@ import { InviteUsersPopup } from './InviteUsersPopup';
 import { showErrorToast, showToast } from './ToastNotification';
 import CustomizedProgressBar from '@/components/CustomizedProgressBar';
 import CustomTooltip from './customToolTip';
+import CloseIcon from '@mui/icons-material/Close';
+import SortIcon from '@mui/icons-material/Sort'; // Import the sort icon
 
 const teamsStyles = {
     tableColumn: {
         lineHeight: '16px !important',
         position: 'relative',
-        textAlign: 'center',
+        paddingLeft: '45px',
+        paddingTop: '18px',
+        paddingBottom: '18px',
         '&::after': {
             content: '""',
             display: 'block',
@@ -38,7 +42,9 @@ const teamsStyles = {
     tableBodyColumn: {
         lineHeight: '16px !important',
         position: 'relative',
-        textAlign: 'center',
+        paddingLeft: '45px',
+        paddingTop: 0,
+        paddingBottom: 0,
         '&::after': {
             content: '""',
             display: 'block',
@@ -82,6 +88,12 @@ export const SettingsTeams: React.FC = () => {
     const [teamSelectOpen, setTeamSelectOpen] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [upgradePlanPopup, setUpgradePlanPopup] = useState(false);
+    const [revokePopupOpen, setRevokePopupOpen] = useState(false);
+    const [removePopupOpen, setRemovePopupOpen] = useState(false);
+    const [selectedEmail, setSelectedEmail] = useState<string | null>(null);
+    const [selectedMemberEmail, setSelectedMemberEmail] = useState<string | null>(null);
+    const [sortField, setSortField] = useState<string>('email');
+    const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
 
     const fetchTeamsData = async () => {
@@ -374,6 +386,44 @@ export const SettingsTeams: React.FC = () => {
         // Toggle dropdown on column click
         setTeamSelectOpen(prev => (prev === memberMail ? null : memberMail));
     };
+    const handleRevokePopupOpen = (email: string) => {
+        setSelectedEmail(email); // Set the selected email
+        setRevokePopupOpen(true); // Open the drawer
+    };
+    const handleRevokePopupClose = () => {
+        setRevokePopupOpen(false);
+    };
+    const handleRemovePopupOpen = (email: string) => {
+        setSelectedMemberEmail(email);
+        setRemovePopupOpen(true);
+    };
+
+    const handleRemovePopupClose = () => {
+        setRemovePopupOpen(false);
+    };
+
+    const handleSort = (field: string) => {
+        // Determine if we should sort in ascending or descending order
+        const isAsc = sortField === field && sortDirection === 'asc';
+        const newDirection = isAsc ? 'desc' : 'asc';
+    
+        // Update sort direction and field state
+        setSortDirection(newDirection);
+        setSortField(field);
+    
+        // Sort team members based on the captured newDirection
+        setTeamMembers((prevMembers) => {
+            const sortedMembers = [...prevMembers].sort((a, b) => {
+                if (field === 'email') {
+                    return newDirection === 'asc' ? a.email.localeCompare(b.email) : b.email.localeCompare(a.email);
+                }
+                return 0;
+            });
+            return sortedMembers;
+        });
+    };
+
+   
 
     if (isLoading) {
         return <CustomizedProgressBar />;
@@ -417,7 +467,9 @@ export const SettingsTeams: React.FC = () => {
                                     <TableRow>
                                         <TableCell className='table-data' colSpan={5} sx={{
                                             ...teamsStyles.tableBodyColumn,
-                                            textAlign: 'center'
+                                            textAlign: 'center',
+                                            paddingTop: '18px',
+                                            paddingBottom: '18px'
                                         }}>
                                             No pending invitations
                                         </TableCell>
@@ -452,12 +504,13 @@ export const SettingsTeams: React.FC = () => {
                                             </TableCell>
                                             <TableCell className='table-data' sx={teamsStyles.tableBodyColumn}>
                                                 <Button className='table-data'
-                                                    onClick={() => {
-                                                        const confirmed = window.confirm('Are you sure you want to revoke this invitation?');
-                                                        if (confirmed) {
-                                                            handleRevoke(invitation.email);
-                                                        }
-                                                    }}
+                                                    onClick={() => handleRevokePopupOpen(invitation.email)}
+                                                    // onClick={() => {
+                                                    //     const confirmed = window.confirm('Are you sure you want to revoke this invitation?');
+                                                    //     if (confirmed) {
+                                                    //         handleRevoke(invitation.email);
+                                                    //     }
+                                                    // }}
                                                     sx={{
                                                         lineHeight: '16px !important',
                                                         position: 'relative',
@@ -518,7 +571,22 @@ export const SettingsTeams: React.FC = () => {
                                     zIndex: 9,
                                     background: '#fff',
                                     textAlign: 'left'
-                                }}>User</TableCell>
+                                }}
+                                onClick={() => handleSort('email')}
+                                >User
+                                    <IconButton sx={{ padding: 0, background: 'none', marginLeft: '90px' }}>
+                                        <Image
+                                            src={
+                                                sortField === 'email' && sortDirection === 'asc'
+                                                    ? '/user-sort-icon.svg'
+                                                    : '/user-sort-icon.svg'
+                                            }
+                                            alt='sort icon'
+                                            height={12} 
+                                            width={12}
+                                        />
+                                    </IconButton>
+                                </TableCell>
 
                                 <TableCell className='table-heading' sx={teamsStyles.tableColumn}>Last signed-in</TableCell>
                                 <TableCell className='table-heading' sx={teamsStyles.tableColumn}>Access level</TableCell>
@@ -532,7 +600,9 @@ export const SettingsTeams: React.FC = () => {
                                 <TableRow sx={teamsStyles.tableBodyRow}>
                                     <TableCell className='table-data' colSpan={5} sx={{
                                         ...teamsStyles.tableBodyColumn,
-                                        textAlign: 'center'
+                                        textAlign: 'center',
+                                        paddingTop: '18px',
+                                        paddingBottom: '18px',
                                     }}>
                                         No team members found
                                     </TableCell>
@@ -593,7 +663,6 @@ export const SettingsTeams: React.FC = () => {
                                                             borderRadius: '0',
                                                             width: 'auto',
                                                             padding: '0 !important',
-                                                            margin: '0 auto',
                                                             cursor: member.access_level === "owner" ? 'not-allowed' : 'pointer',
                                                             ...(member.access_level !== "owner" && {
                                                                 '&:after': {
@@ -613,15 +682,14 @@ export const SettingsTeams: React.FC = () => {
                                                     MenuProps={{
                                                         PaperProps: {
                                                             sx: {
+                                                                minWidth: '100px !important',
+                                                                border: '1px solid #e4e4e4',
                                                                 '& .MuiMenuItem-root': {
                                                                     fontFamily: 'Nunito Sans',
                                                                     fontSize: '12px',
                                                                     lineHeight: '16px',
                                                                     color: '#202124',
-                                                                    fontWeight: '600',
-                                                                    '&:not(:last-child)': {
-                                                                        borderBottom: '1px dotted #ccc',
-                                                                    },
+                                                                    fontWeight: '600'
                                                                 },
                                                             },
                                                         },
@@ -673,12 +741,14 @@ export const SettingsTeams: React.FC = () => {
                                         <TableCell className='table-data' sx={teamsStyles.tableBodyColumn}>
                                             {member.access_level !== 'owner' && (
                                                 <Button className='table-data'
-                                                    onClick={() => {
-                                                        const confirmed = window.confirm('Are you sure you want to remove this member?');
-                                                        if (confirmed) {
-                                                            handleRemoveMember(member.email);
-                                                        }
-                                                    }}
+                                                    onClick={() => handleRemovePopupOpen(member.email)}
+                                                    // onClick={() => {
+                                                    //     const confirmed = window.confirm('Are you sure you want to remove this member?');
+                                                    //     if (confirmed) {
+                                                    //         handleRemoveMember(member.email);
+                                                    //     }
+                                                    // }}
+                                                    
                                                     sx={{
                                                         lineHeight: '16px !important',
                                                         position: 'relative',
@@ -699,6 +769,191 @@ export const SettingsTeams: React.FC = () => {
                     </Table>
                 </TableContainer>
             </Box>
+
+            <Drawer
+                anchor="right"
+                open={revokePopupOpen}
+                onClose={handleRevokePopupClose}
+                PaperProps={{
+                    sx: {
+                        width: '620px',
+                        position: 'fixed',
+                        zIndex: 1301,
+                        top: 0,
+                        bottom: 0,
+                        '@media (max-width: 600px)': {
+                            width: '100%',
+                        }
+                    },
+                }}
+            >
+
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 3.5, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
+                    <Typography variant="h6" className='first-sub-title' sx={{ textAlign: 'center' }}>
+                        Confirm Revoke
+                    </Typography>
+                    <IconButton onClick={handleRevokePopupClose} sx={{ p: 0 }}>
+                        <CloseIcon sx={{ width: '20px', height: '20px' }} />
+                    </IconButton>
+                </Box>
+
+                <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', gap: 5, height: '100%' }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Image src='/revoke-icon.svg' alt='delete-card-icon' width={403} height={403} />
+                        <Typography className='second-sub-title' sx={{
+                            fontWeight: '600 !important',
+                            lineHeight: '20px !important',
+                            color: '#4a4a4a !important',
+                            marginBottom: '20px'
+                        }}>
+                            Revoke detail
+                        </Typography>
+                        <Typography className='paragraph' sx={{
+                            lineHeight: '16px !important',
+                            color: '#5f6368 !important'
+                        }}>
+                            Are you sure you want to revoke this invitation?
+                        </Typography>
+                    </Box>
+
+                    <Box sx={{ position: 'relative' }}>
+                        <Box sx={{
+                            px: 2, py: 3.5, border: '1px solid #e4e4e4', position: 'fixed', bottom: 0, right: 0, background: '#fff',
+                            width: '620px',
+                            '@media (max-width: 600px)': {
+                                width: '100%',
+                            }
+                        }}>
+                            <Box display="flex" justifyContent="flex-end" mt={2}>
+                                <Button className="hyperlink-red" onClick={handleRevokePopupClose} sx={{
+                                    borderRadius: '4px',
+                                    border: '1px solid #5052b2',
+                                    boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
+                                    color: '#5052b2 !important',
+                                    marginRight: '16px',
+                                    textTransform: 'none',
+                                    padding: '10px 24px'
+                                }}>
+                                    Cancel
+                                </Button>
+                                <Button className="hyperlink-red" onClick={() => {
+                                        if (selectedEmail) {
+                                            handleRevoke(selectedEmail); // Use the selected email for revoking
+                                        }
+                                        handleRevokePopupClose(); // Close the drawer after revoking
+                                    }} sx={{
+                                    background: '#5052B2',
+                                    borderRadius: '4px',
+                                    border: '1px solid #5052b2',
+                                    boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
+                                    color: '#fff !important',
+                                    textTransform: 'none',
+                                    padding: '10px 24px',
+                                    '&:hover': {
+                                        color: '#5052B2 !important'
+                                    }
+                                }}>
+                                    Revoke
+                                </Button>
+                            </Box>
+                        </Box>
+                    </Box>
+                </Box>
+
+            </Drawer>
+
+            <Drawer
+                anchor="right"
+                open={removePopupOpen}
+                onClose={handleRemovePopupClose}
+                PaperProps={{
+                    sx: {
+                        width: '620px',
+                        position: 'fixed',
+                        zIndex: 1301,
+                        top: 0,
+                        bottom: 0,
+                        '@media (max-width: 600px)': {
+                            width: '100%',
+                        }
+                    },
+                }}
+            >
+
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 3.5, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
+                    <Typography variant="h6" className='first-sub-title' sx={{ textAlign: 'center' }}>
+                        Confirm Remove
+                    </Typography>
+                    <IconButton onClick={handleRemovePopupClose} sx={{ p: 0 }}>
+                        <CloseIcon sx={{ width: '20px', height: '20px' }} />
+                    </IconButton>
+                </Box>
+
+                <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', gap: 5, height: '100%' }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Image src='/remove-team-member-icon.svg' alt='delete-card-icon' width={403} height={403} />
+                        <Typography className='second-sub-title' sx={{
+                            fontWeight: '600 !important',
+                            lineHeight: '20px !important',
+                            color: '#4a4a4a !important',
+                            marginBottom: '20px'
+                        }}>
+                            Delete
+                        </Typography>
+                        <Typography className='paragraph' sx={{
+                            lineHeight: '16px !important',
+                            color: '#5f6368 !important'
+                        }}>
+                            Are you sure you want to remove this member?
+                        </Typography>
+                    </Box>
+
+                    <Box sx={{ position: 'relative' }}>
+                        <Box sx={{
+                            px: 2, py: 3.5, border: '1px solid #e4e4e4', position: 'fixed', bottom: 0, right: 0, background: '#fff',
+                            width: '620px',
+                            '@media (max-width: 600px)': {
+                                width: '100%',
+                            }
+                        }}>
+                            <Box display="flex" justifyContent="flex-end" mt={2}>
+                                <Button className="hyperlink-red" onClick={handleRemovePopupClose} sx={{
+                                    borderRadius: '4px',
+                                    border: '1px solid #5052b2',
+                                    boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
+                                    color: '#5052b2 !important',
+                                    marginRight: '16px',
+                                    textTransform: 'none',
+                                    padding: '10px 24px'
+                                }}>
+                                    Cancel
+                                </Button>
+                                <Button className="hyperlink-red" onClick={() => {
+                                        if (selectedMemberEmail) {
+                                            handleRemoveMember(selectedMemberEmail); // Use the selected email for revoking
+                                        }
+                                        handleRemovePopupClose(); // Close the drawer after revoking
+                                    }} sx={{
+                                    background: '#5052B2',
+                                    borderRadius: '4px',
+                                    border: '1px solid #5052b2',
+                                    boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
+                                    color: '#fff !important',
+                                    textTransform: 'none',
+                                    padding: '10px 24px',
+                                    '&:hover': {
+                                        color: '#5052B2 !important'
+                                    }
+                                }}>
+                                    Delete
+                                </Button>
+                            </Box>
+                        </Box>
+                    </Box>
+                </Box>
+
+            </Drawer>
+
         </Box>
     );
 };
