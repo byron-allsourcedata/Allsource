@@ -238,6 +238,7 @@ export const SettingsSubscription: React.FC = () => {
                 }
             }
         } catch (error) {
+            showErrorToast('Access denied. Admins only');
             console.error('Error choosing plan:', error);
         } finally {
             setIsLoading(false)

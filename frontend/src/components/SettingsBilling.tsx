@@ -28,9 +28,7 @@ const billingStyles = {
     tableColumn: {
         lineHeight: '16px !important',
         position: 'relative',
-        paddingLeft: '45px',
-        paddingTop: '18px',
-        paddingBottom: '18px',
+        textAlign: 'center',
         '&::after': {
             content: '""',
             display: 'block',
@@ -54,9 +52,7 @@ const billingStyles = {
     tableBodyColumn: {
         lineHeight: '16px !important',
         position: 'relative',
-        paddingLeft: '45px',
-        paddingTop: '13.5px',
-        paddingBottom: '13.5px',
+        textAlign: 'center',
         '&::after': {
             content: '""',
             display: 'block',
@@ -250,7 +246,6 @@ export const SettingsBilling: React.FC = () => {
     const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '');
     const [open, setOpen] = useState(false);
     const [email, setEmail] = useState('');
-
 
     const handleOpen = () => setOpen(true);
     const handleClose = () => setOpen(false);
@@ -593,22 +588,22 @@ export const SettingsBilling: React.FC = () => {
             case 'successful':
                 return {
                     background: '#eaf8dd',
-                    color: '#2b5b00 !important'
+                    color: '#2b5b00'
                 };
             case 'decline':
                 return {
                     background: '#ececec',
-                    color: '#4a4a4a !important'
+                    color: '#4a4a4a'
                 };
             case 'failed':
                 return {
                     background: '#fcd4cf',
-                    color: '#a61100 !important'
+                    color: '#a61100'
                 };
             default:
                 return {
                     background: '#ececec',
-                    color: '#4a4a4a !important'
+                    color: '#4a4a4a'
                 };
         }
     };
@@ -845,7 +840,7 @@ export const SettingsBilling: React.FC = () => {
                                             fontWeight: '600',
                                             lineHeight: '16px',
                                         }}>
-                                            Downgraded to {downgrade_plan}
+                                            Downgrade pending - {downgrade_plan}
                                         </Typography>
                                     </Box>
                                 ) : (
@@ -1153,7 +1148,7 @@ export const SettingsBilling: React.FC = () => {
                                             lineHeight: '16px !important',
                                             color: '#5f6368 !important'
                                         }}>
-                                            {renderValue(value)}
+                                            {renderValue(value).includes('-1') ? renderValue(value).replace('-1', '∞') : renderValue(value)}
                                         </Typography>
                                     </Box>
                                 );
@@ -1327,9 +1322,7 @@ export const SettingsBilling: React.FC = () => {
                                 <TableRow sx={billingStyles.tableBodyRow}>
                                     <TableCell className='table-data' colSpan={5} sx={{
                                         ...billingStyles.tableBodyColumn,
-                                        textAlign: 'center',
-                                        paddingTop: '18px',
-                                        paddingBottom: '18px'
+                                        textAlign: 'center'
                                     }}>
                                         No history found
                                     </TableCell>
@@ -1348,7 +1341,7 @@ export const SettingsBilling: React.FC = () => {
 
                                         }}
                                     >
-                                        <TableCell className="table-data sticky-cell" sx={{
+                                        <TableCell className="table-data" sx={{
                                             ...billingStyles.tableBodyColumn,
                                             cursor: 'pointer',
                                             backgroundColor: '#fff'
@@ -1362,15 +1355,16 @@ export const SettingsBilling: React.FC = () => {
                                         <TableCell className='table-data' sx={billingStyles.tableBodyColumn}>
                                             <Typography component="span" className='table-data' sx={{
                                                 ...getStatusStyles(history.status),
-                                                // background: '#eaf8dd',
+                                                background: '#eaf8dd',
                                                 padding: '6px 8px',
-                                                borderRadius: '2px'
+                                                borderRadius: '2px',
+                                                color: '#2b5b00 !important',
                                             }}>
                                                 {history.status}
                                             </Typography>
                                         </TableCell>
                                         <TableCell className='table-data' sx={billingStyles.tableBodyColumn}>
-                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2 }}>
                                                 <IconButton onClick={() => fetchSaveBillingHistory(history.invoice_id)} sx={{ ':hover': { backgroundColor: 'transparent', }, padding: 0 }}>
                                                     <DownloadIcon sx={{ width: '24px', height: '24px', color: 'rgba(188, 188, 188, 1)', ':hover': { color: 'rgba(80, 82, 178, 1)' } }} />
                                                 </IconButton>
