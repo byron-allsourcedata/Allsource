@@ -12,6 +12,7 @@ from models.users_payments_transactions import UsersPaymentsTransactions
 from persistence.plans_persistence import PlansPersistence
 from persistence.user_persistence import UserPersistence
 from utils import get_utc_aware_date_for_postgres
+from decimal import *
 from .stripe_service import determine_plan_name_from_product_id
 
 logger = logging.getLogger(__name__)
@@ -128,7 +129,7 @@ class SubscriptionService:
         end_date = datetime.fromtimestamp(end_date_timestamp, timezone.utc).replace(tzinfo=None)
         created_at = get_utc_aware_date_for_postgres()
         currency = stripe_payload.get("data").get("object").get("currency")
-        price = int(stripe_payload.get("data").get("object").get("plan").get("amount_decimal")) / 100
+        amount = Decimal(stripe_payload.get("data").get("object").get("plan").get("amount_decimal")) / Decimal(100)
         price_id = stripe_payload.get("data").get("object").get("plan").get("id")
         status = stripe_payload.get("data").get("object").get("status")
         plan_type = determine_plan_name_from_product_id(
@@ -150,7 +151,7 @@ class SubscriptionService:
             created_at=created_at,
             status=status,
             stripe_request_created_at=stripe_request_created_at,
-            pricing=price
+            amount=amount
         )
         self.db.add(subscription_transaction_obj)
         self.db.flush()
@@ -279,7 +280,7 @@ class SubscriptionService:
             plan_type = determine_plan_name_from_product_id(stripe_payload.get("plan").get("product"))
             interval = stripe_payload.get("plan").get("interval")
             plan_id = self.plans_persistence.get_plan_by_title(plan_type, interval)
-            domains_limit, integrations_limit, leads_credits, prospect_credits, members_limit, overage = self.plans_persistence.get_plan_limit_by_id(
+            domains_limit, integrations_limit, leads_credits, prospect_credits, members_limit, lead_credit_price = self.plans_persistence.get_plan_limit_by_id(
                 plan_id=plan_id)
             if user_subscription is not None and user_subscription.status == 'active':
                 if canceled_at:
@@ -308,7 +309,7 @@ class SubscriptionService:
                     user_id=user_id,
                     price_id=price_id,
                     platform_subscription_id=platform_subscription_id,
-                    overage=overage
+                    lead_credit_price=lead_credit_price
                 )
                 self.db.add(new_subscription)
                 self.db.flush()
