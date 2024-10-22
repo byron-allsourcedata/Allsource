@@ -15,7 +15,9 @@ sys.path.append(parent_dir)
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.dialects.postgresql import insert
 from dotenv import load_dotenv
+import pandas as pd
 from datetime import datetime
 from models.five_x_five_cookie_sync_file import FiveXFiveCookieSyncFile
 
@@ -39,11 +41,14 @@ def assume_role(role_arn, sts_client):
     return credentials
 
 
-async def save_files_for_db(table, session):
+async def save_files_for_db(table, session, file_key):
     for i in (range(len(table))):
         requested_at_str = str(table['EVENT_DATE'][i].as_py())
         requested_at = datetime.fromisoformat(requested_at_str).replace(tzinfo=None)
-        five_x_five_cookie_sync_file = FiveXFiveCookieSyncFile(
+        up_id = None
+        if str(table['UP_ID'][i]) != 'None':
+            up_id = str(table['UP_ID'][i])
+        five_x_five_cookie_sync_file = insert(FiveXFiveCookieSyncFile).values(
             trovo_id=str(table['TROVO_ID'][i]),
             partner_id=str(table['PARTNER_ID'][i]),
             partner_uid=str(table['PARTNER_UID'][i]),
@@ -51,10 +56,12 @@ async def save_files_for_db(table, session):
             ip=str(table['IP'][i]),
             json_headers=str(table['JSON_HEADERS'][i]),
             event_date=requested_at,
-            up_id=str(table['UP_ID'][i])
-        )
-        session.add(five_x_five_cookie_sync_file)
+            up_id=up_id,
+            file_name=file_key
+        ).on_conflict_do_nothing()
+        session.execute(five_x_five_cookie_sync_file)
         session.flush()
+
     session.commit()
 
 
@@ -66,7 +73,7 @@ async def process_file(bucket, file_key, session):
             temp_file.write(file_data)
             temp_file.seek(0)
             table = pq.read_table(temp_file.name)
-            await save_files_for_db(table, session)
+            await save_files_for_db(table, session, file_key)
 
 
 def update_last_processed_file(file_key):
