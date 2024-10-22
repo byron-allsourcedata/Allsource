@@ -398,7 +398,7 @@ const Dashboard: React.FC = () => {
     if (start && end) {
       const formattedStart = dayjs(start).format('MMM D');
       const formattedEnd = dayjs(end).format('D, YYYY');
-  
+
       setFormattedDates(`${formattedStart} - ${formattedEnd}`);
     } else if (start) {
       const formattedStart = dayjs(start).format('MMM D, YYYY');
@@ -410,27 +410,19 @@ const Dashboard: React.FC = () => {
       setFormattedDates('');
     }
   };
-  
-  
 
-  // В вашем родительском компоненте, где находится CalendarPopup
-const handleApply = (dates: { start: Date | null; end: Date | null }) => {
-  if (dates.start && dates.end) {
-    const fromUnix = Math.floor(dates.start.getTime() / 1000);
-    const toUnix = Math.floor(dates.end.getTime() / 1000);
+  const handleApply = (dates: { start: Date | null; end: Date | null }) => {
+    if (dates.start && dates.end) {
+      const fromUnix = Math.floor(dates.start.getTime() / 1000);
+      const toUnix = Math.floor(dates.end.getTime() / 1000);
 
-    setAppliedDates(dates);
-    setCalendarAnchorEl(null);
+      setAppliedDates(dates);
+      setCalendarAnchorEl(null);
 
 
-    handleCalendarClose();
-  }
-};
-
-  
-
-  
-
+      handleCalendarClose();
+    }
+  };
 
   useEffect(() => {
     const fetchUserDataAndUpdateState = async () => {
@@ -509,47 +501,54 @@ const handleApply = (dates: { start: Date | null; end: Date | null }) => {
             }}
           >
             <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', "@media (max-width: 600px)": { flexDirection: 'column', alignItems: 'start', } }}>
-            <Typography
-                variant="h4"
-                component="h1"
-                sx={{...dashboardStyles.title, '@media (max-width: 600px)': {
-                  display: 'none'} }}
-              >
-                Dashboard <CustomTooltip title={"Text about dashboard"} />
-              </Typography>
-              <Box sx={{display: 'none', width: '100%', justifyContent: 'space-between', '@media (max-width: 600px)': {
-                  display: 'flex'}}}>
               <Typography
                 variant="h4"
                 component="h1"
-                sx={dashboardStyles.title}
+                sx={{
+                  ...dashboardStyles.title, '@media (max-width: 600px)': {
+                    display: 'none'
+                  }
+                }}
               >
-                Dashboard
+                Dashboard <CustomTooltip title={"Text about dashboard"} />
               </Typography>
-
-              <Box sx={{ display: 'none', justifyContent: 'flex-end', alignItems: 'center', pt:0.5, gap: 1, '@media (max-width: 600px)': {
-                  display: 'flex',
+              <Box sx={{
+                display: 'none', width: '100%', justifyContent: 'space-between', '@media (max-width: 600px)': {
+                  display: 'flex'
                 }
               }}>
-                {/* Calendary picker*/}
-                <Typography className="second-sub-title">{selectedDateLabel}</Typography>
-                <Button
-                  aria-controls={isCalendarOpen ? 'calendar-popup' : undefined}
-                  aria-haspopup="true"
-                  aria-expanded={isCalendarOpen ? 'true' : undefined}
-                  onClick={handleCalendarClick}
-                  sx={{
-                    textTransform: 'none',
-                    color: 'rgba(128, 128, 128, 1)',
-                    border: '1px solid rgba(184, 184, 184, 1)',
-                    borderRadius: '4px',
-                    padding: '8px',
-                    minWidth: 'auto',
-                  }}
+                <Typography
+                  variant="h4"
+                  component="h1"
+                  sx={dashboardStyles.title}
                 >
-                  <DateRangeIcon fontSize='small' />
-                </Button>
-              </Box>
+                  Dashboard
+                </Typography>
+
+                <Box sx={{
+                  display: 'none', justifyContent: 'flex-end', alignItems: 'center', pt: 0.5, gap: 1, '@media (max-width: 600px)': {
+                    display: 'flex',
+                  }
+                }}>
+                  {/* Calendary picker*/}
+                  <Typography className="second-sub-title">{selectedDateLabel}</Typography>
+                  <Button
+                    aria-controls={isCalendarOpen ? 'calendar-popup' : undefined}
+                    aria-haspopup="true"
+                    aria-expanded={isCalendarOpen ? 'true' : undefined}
+                    onClick={handleCalendarClick}
+                    sx={{
+                      textTransform: 'none',
+                      color: 'rgba(128, 128, 128, 1)',
+                      border: '1px solid rgba(184, 184, 184, 1)',
+                      borderRadius: '4px',
+                      padding: '8px',
+                      minWidth: 'auto',
+                    }}
+                  >
+                    <DateRangeIcon fontSize='small' />
+                  </Button>
+                </Box>
               </Box>
 
               <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center', width: '100%', alignItems: 'center', mt: 2, }}>
@@ -650,7 +649,7 @@ const handleApply = (dates: { start: Date | null; end: Date | null }) => {
                   }
                 }}
               >
-                <DateRangeIcon fontSize='medium' sx={{color: 'rgba(80, 82, 178, 1)' }} />
+                <DateRangeIcon fontSize='medium' sx={{ color: 'rgba(80, 82, 178, 1)' }} />
                 <Typography variant="body1" sx={{
                   fontFamily: 'Roboto',
                   fontSize: '14px',
@@ -661,10 +660,10 @@ const handleApply = (dates: { start: Date | null; end: Date | null }) => {
                 }}>
                   {formattedDates}
                 </Typography>
-                {formattedDates && 
-                <Box sx={{pl:2, display: 'flex', alignItems: 'center'}}> 
-                  <Image src="/arrow_down.svg" alt="arrow down" width={16} height={16} />
-                </Box>
+                {formattedDates &&
+                  <Box sx={{ pl: 2, display: 'flex', alignItems: 'center' }}>
+                    <Image src="/arrow_down.svg" alt="arrow down" width={16} height={16} />
+                  </Box>
                 }
               </Button>
             </Box>
@@ -673,12 +672,12 @@ const handleApply = (dates: { start: Date | null; end: Date | null }) => {
 
             <Box sx={{ width: '100%' }}>
               <TabPanel value={tabIndex} index={0}>
-              <DashboardRevenue appliedDates={appliedDates} />
+                <DashboardRevenue appliedDates={appliedDates} />
               </TabPanel>
             </Box>
             <Box sx={{ width: '100%', padding: 0, margin: 0 }}>
               <TabPanel value={tabIndex} index={1}>
-              <DashboardContact appliedDates={appliedDates} />
+                <DashboardContact appliedDates={appliedDates} />
               </TabPanel>
             </Box>
 
