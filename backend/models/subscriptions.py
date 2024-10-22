@@ -18,7 +18,6 @@ class UserSubscriptions(Base):
     plan_id = Column(BIGINT, nullable=True)
     is_trial = Column(BOOLEAN, nullable=True, default=False)
     domains_limit = Column(Integer, nullable=True)
-    users_limit = Column(Integer, nullable=True)
     overage = Column(VARCHAR, nullable=False)
     members_limit = Column(Integer, nullable=True)
     integrations_limit = Column(Integer, nullable=True)

@@ -2,6 +2,7 @@ import asyncio
 import json
 import logging
 import os
+import random
 import re
 import sys
 import tempfile
@@ -40,7 +41,7 @@ from models.leads_orders import LeadOrders
 from models.integrations.suppresions import LeadsSupperssion
 from dotenv import load_dotenv
 from sqlalchemy.dialects.postgresql import insert
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from config.rmq_connection import publish_rabbitmq_message, RabbitMQConnection
 from models.integrations.users_domains_integrations import UserIntegration
 from dependencies import (SubscriptionService, UserPersistence, PlansPersistence)
@@ -59,6 +60,8 @@ ROOT_BOT_CLIENT_EMAIL = 'demo@maximiz.ai'
 ROOT_BOT_CLIENT_DOMAIN = 'all-leads.com'
 
 EMAIL_LIST = ['business_email', 'personal_emails', 'additional_personal_emails']
+
+count = 0
 
 
 def create_sts_client(key_id, key_secret):
@@ -204,8 +207,53 @@ async def check_activate_based_urls(page, suppression_rule):
     return False
 
 
+def generate_random_order_detail():
+    return {
+        'platform_order_id': random.randint(1000, 9999),
+        'total_price': round(random.uniform(10.0, 500.0), 2),
+        'currency': random.choice(['USD', 'EUR', 'GBP']),
+        'platform_created_at': datetime.now(timezone.utc).isoformat()
+    }
+
+
+def process_root_user_behavior(lead_user, behavior_type, requested_at, session):
+    events = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+    random_event = random.choice(events)
+
+    if behavior_type == 'checkout_completed' or random_event % 4 == 0:
+        if not lead_user.is_converted_sales:
+            lead_user.is_converted_sales = True
+            session.flush()
+
+        order_detail = generate_random_order_detail()
+        session.add(LeadOrders(
+            lead_user_id=lead_user.id,
+            platform_order_id=order_detail.get('platform_order_id'),
+            total_price=order_detail.get('total_price'),
+            currency_code=order_detail.get('currency'),
+            platform_created_at=order_detail['platform_created_at'],
+            created_at=datetime.now()
+        ))
+
+        existing_record = session.query(LeadsUsersOrdered).filter_by(lead_user_id=lead_user.id).first()
+        if existing_record:
+            existing_record.ordered_at = requested_at
+        else:
+            new_record = LeadsUsersOrdered(lead_user_id=lead_user.id, ordered_at=requested_at)
+            session.add(new_record)
+
+    if behavior_type == 'product_added_to_cart' or random_event % 3 == 0:
+        existing_record = session.query(LeadsUsersAddedToCart).filter_by(lead_user_id=lead_user.id).first()
+        if existing_record:
+            existing_record.added_at = requested_at
+        else:
+            new_record = LeadsUsersAddedToCart(lead_user_id=lead_user.id, added_at=requested_at)
+            session.add(new_record)
+
+
 async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, session: Session, rmq_connection,
                             subscription_service: SubscriptionService, root_user=None):
+    global count
     partner_uid_decoded = urllib.parse.unquote(str(possible_lead['PARTNER_UID']).lower())
     partner_uid_dict = json.loads(partner_uid_decoded)
     partner_uid_client_id = partner_uid_dict.get('client_id')
@@ -213,23 +261,35 @@ async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, sess
     if root_user:
         result = root_user
     else:
-        result = session.query(Users, UserDomains.id) \
+        result = session.query(Users, UserDomains) \
             .join(UserDomains, UserDomains.user_id == Users.id) \
             .filter(UserDomains.data_provider_id == str(partner_uid_client_id)) \
             .first()
     if not result:
         logging.info(f"Customer not found {partner_uid_client_id}")
         return
-    user, user_domain_id = result
+    user, user_domain = result
+    if not user_domain.enable:
+        logging.info(f"domain has not enable {user_domain.id}")
+        return
+    user_domain_id = user_domain.id
     if not subscription_service.is_user_has_active_subscription(user.id):
         logging.info(f"user has not active subscription {partner_uid_client_id}")
         return
-    page = partner_uid_dict.get('current_page')
+
     if page is None:
         json_headers = json.loads(str(possible_lead['JSON_HEADERS']).lower())
         referer = json_headers.get('referer')[0]
         page = referer
     behavior_type = 'visitor' if not partner_uid_dict.get('action') else partner_uid_dict.get('action')
+    if root_user:
+        if count % 12 == 0:
+            behavior_type = 'visitor'
+        elif count % 8 == 0:
+            behavior_type = 'viewed_product'
+        elif count % 4 == 0:
+            behavior_type = 'product_added_to_cart'
+
     lead_user = session.query(LeadUser).filter_by(five_x_five_user_id=five_x_five_user.id,
                                                   domain_id=user_domain_id).first()
     is_first_request = False
@@ -256,7 +316,7 @@ async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, sess
                     return
 
             if suppression_rule.is_based_activation and suppression_rule.activate_certain_urls:
-                if check_activate_based_urls(page, suppression_rule):
+                if await check_activate_based_urls(page, suppression_rule):
                     return
 
         emails_to_check = get_all_five_x_user_emails(five_x_five_user.business_email, five_x_five_user.personal_emails,
@@ -289,8 +349,6 @@ async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, sess
                                            'id': lead_user.id,
                                            'five_x_five_user_id': lead_user.five_x_five_user_id
                                        }})
-    else:
-        first_visit_id = lead_user.first_visit_id
     requested_at_str = str(possible_lead['EVENT_DATE'])
     requested_at = datetime.fromisoformat(requested_at_str).replace(tzinfo=None)
     thirty_minutes_ago = requested_at - timedelta(minutes=30)
@@ -346,33 +404,35 @@ async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, sess
                         last_subscription.plan_end = date_now + relativedelta(days=trial_days)
                         session.flush()
         else:
-            if lead_user.is_returning_visitor == False:
+            if not lead_user.is_returning_visitor:
                 lead_user.is_returning_visitor = True
                 session.flush()
-
-    if behavior_type == 'checkout_completed':
-        if lead_user.is_converted_sales == False:
-            lead_user.is_converted_sales = True
-            session.flush()
-        order_detail = partner_uid_dict.get('order_detail')
-        session.add(LeadOrders(lead_user_id=lead_user.id,
-                               platform_order_id=order_detail.get('order_id'),
-                               total_price=order_detail.get('total_price'),
-                               currency_code=order_detail.get('currency'),
-                               platform_created_at=order_detail['created_at_shopify'], created_at=datetime.now()))
-        existing_record = session.query(LeadsUsersOrdered).filter_by(lead_user_id=lead_user.id).first()
-        if existing_record:
-            existing_record.ordered_at = requested_at
-        else:
-            new_record = LeadsUsersOrdered(lead_user_id=lead_user.id, ordered_at=requested_at)
-            session.add(new_record)
-    if behavior_type == 'product_added_to_cart':
-        existing_record = session.query(LeadsUsersAddedToCart).filter_by(lead_user_id=lead_user.id).first()
-        if existing_record:
-            existing_record.added_at = requested_at
-        else:
-            new_record = LeadsUsersAddedToCart(lead_user_id=lead_user.id, added_at=requested_at)
-            session.add(new_record)
+    if root_user:
+        process_root_user_behavior(lead_user, behavior_type, requested_at, session)
+    else:
+        if behavior_type == 'checkout_completed':
+            if lead_user.is_converted_sales == False:
+                lead_user.is_converted_sales = True
+                session.flush()
+            order_detail = partner_uid_dict.get('order_detail')
+            session.add(LeadOrders(lead_user_id=lead_user.id,
+                                   platform_order_id=order_detail.get('platform_order_id'),
+                                   total_price=order_detail.get('total_price'),
+                                   currency_code=order_detail.get('currency'),
+                                   platform_created_at=order_detail['platform_created_at'], created_at=datetime.now()))
+            existing_record = session.query(LeadsUsersOrdered).filter_by(lead_user_id=lead_user.id).first()
+            if existing_record:
+                existing_record.ordered_at = requested_at
+            else:
+                new_record = LeadsUsersOrdered(lead_user_id=lead_user.id, ordered_at=requested_at)
+                session.add(new_record)
+        if behavior_type == 'product_added_to_cart':
+            existing_record = session.query(LeadsUsersAddedToCart).filter_by(lead_user_id=lead_user.id).first()
+            if existing_record:
+                existing_record.added_at = requested_at
+            else:
+                new_record = LeadsUsersAddedToCart(lead_user_id=lead_user.id, added_at=requested_at)
+                session.add(new_record)
     lead_request = insert(LeadsRequests).values(
         lead_id=lead_user.id,
         page=page, requested_at=requested_at, visit_id=lead_visit_id
@@ -381,6 +441,7 @@ async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, sess
     session.flush()
 
     session.commit()
+    count += 1
 
 
 def convert_leads_requests_to_utc(leads_requests):

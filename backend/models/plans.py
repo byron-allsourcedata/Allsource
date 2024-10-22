@@ -23,7 +23,6 @@ class SubscriptionPlan(Base):
     integrations_limit = Column(Integer, nullable=True)
     leads_credits = Column(INTEGER, nullable=True)
     prospect_credits = Column(INTEGER, nullable=True)
-    users_limit = Column(Integer, nullable=True)
     members_limit = Column(Integer, nullable=True)
     features = Column(JSONB, nullable=True)
     overage = Column(VARCHAR, nullable=False)
