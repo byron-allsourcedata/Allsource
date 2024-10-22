@@ -257,7 +257,7 @@ class SettingsService:
             'plan_name': current_plan.title,
             'domains': f"{user_limit_domain}/{plan_limit_domain}",
             'prospect_credits': prospect_credits,
-            'overage': user_subscription.overage,
+            'overage': user_subscription.lead_credit_price,
             'next_billing_date': None,
             'monthly_total': None,
             'active': True
@@ -279,7 +279,7 @@ class SettingsService:
                 'plan_name': plan_name,
                 'domains': f"{user_limit_domain}/{plan_limit_domain}",
                 'prospect_credits': prospect_credits,
-                'overage': user_subscription.overage,
+                'overage': user_subscription.lead_credit_price,
                 'next_billing_date': self.timestamp_to_date(subscription['current_period_end']).strftime('%b %d, %Y'),
                 'monthly_total': monthly_total,
                 'active': is_active,
@@ -296,7 +296,7 @@ class SettingsService:
         current_plan = self.plan_persistence.get_current_plan(user_id=user.get('id'))
         result['card_details'] = get_card_details_by_customer_id(user.get('customer_id'))
         result['billing_details'] = self.extract_subscription_details(user.get('customer_id'), user.get('prospect_credits'), user.get('id'))
-        result['billing_details']['overage'] = user.get('is_leads_auto_charging')
+        result['billing_details']['is_leads_auto_charging'] = user.get('is_leads_auto_charging')
         result['usages_credits'] = {
                         'leads_credits': user.get('leads_credits'),
                         'plan_leads_credits': current_plan.leads_credits if current_plan else 0,

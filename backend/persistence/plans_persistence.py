@@ -37,13 +37,12 @@ class PlansPersistence:
     def get_plan_limit_by_id(self, plan_id: int):
         plan = self.db.query(SubscriptionPlan).filter(SubscriptionPlan.id == plan_id).first()
         domains_limit = plan.domains_limit
-        users_limit = plan.users_limit
         integrations_limit = plan.integrations_limit
         leads_credits = plan.leads_credits
         prospect_credits = plan.prospect_credits
         members_limit = plan.members_limit
-        overage = plan.overage
-        return domains_limit, users_limit, integrations_limit, leads_credits, prospect_credits, members_limit, overage
+        lead_credit_price = plan.lead_credit_price
+        return domains_limit, integrations_limit, leads_credits, prospect_credits, members_limit, lead_credit_price
 
     def get_free_trail_plan(self):
         return self.db.query(SubscriptionPlan).filter(SubscriptionPlan.is_free_trial == True).first()

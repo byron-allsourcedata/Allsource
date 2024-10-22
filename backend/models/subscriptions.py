@@ -1,4 +1,4 @@
-from sqlalchemy import Column, event, Integer, BOOLEAN, TEXT
+from sqlalchemy import Column, event, Integer, BOOLEAN, TEXT, DECIMAL
 from sqlalchemy.dialects.postgresql import BIGINT, TIMESTAMP, VARCHAR
 
 from .base import Base, create_timestamps, update_timestamps
@@ -18,8 +18,7 @@ class UserSubscriptions(Base):
     plan_id = Column(BIGINT, nullable=True)
     is_trial = Column(BOOLEAN, nullable=True, default=False)
     domains_limit = Column(Integer, nullable=True)
-    users_limit = Column(Integer, nullable=True)
-    overage = Column(VARCHAR, nullable=False)
+    lead_credit_price = Column(DECIMAL(10, 2), nullable=False)
     members_limit = Column(Integer, nullable=True)
     integrations_limit = Column(Integer, nullable=True)
     downgrade_at = Column(TIMESTAMP(precision=7), nullable=True)

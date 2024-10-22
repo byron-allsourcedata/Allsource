@@ -1,4 +1,6 @@
 import logging
+
+import pandas as pd
 import stripe
 from config.stripe import StripeConfig
 from schemas.users import UserSignUpForm
@@ -272,27 +274,34 @@ def fetch_last_id_of_previous_page(customer_id, per_page, page):
 def get_billing_history_by_userid(customer_id, page, per_page):
     import math
     starting_after = fetch_last_id_of_previous_page(customer_id, per_page, page) if page > 1 else None
-    
+
     billing_history_invoices = stripe.Invoice.list(
         customer=customer_id,
         limit=per_page,
         starting_after=starting_after
     )
-    
+
     billing_history_charges = stripe.Charge.list(
         customer=customer_id,
         limit=per_page,
         starting_after=starting_after
     )
-    
+
     non_subscription_charges = [
         charge for charge in billing_history_charges.data if charge.invoice is None
     ]
 
-    billing_history = billing_history_invoices.data + non_subscription_charges
+    limit = min(len(billing_history_invoices.data), per_page)
+
+    billing_history = (billing_history_invoices.data[:limit] + non_subscription_charges)[
+                      :min(limit + len(non_subscription_charges), per_page)]
 
     count = len(billing_history)
     max_page = math.ceil(count / per_page) if per_page else 1
-    has_more = billing_history_invoices.has_more or (billing_history_charges.has_more and len(non_subscription_charges) < per_page)
-    
+    has_more = billing_history_invoices.has_more or (
+            billing_history_charges.has_more and len(non_subscription_charges) < per_page)
+
     return billing_history, count, max_page, has_more
+
+
+

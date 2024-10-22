@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect, useRef } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
-import { Box, Typography, Button, Table, TableBody, Modal, TableCell, TableContainer, TableHead, TableRow, Grid, IconButton, Switch, Divider, Popover, Drawer, LinearProgress, Tooltip, TextField, TablePagination, Chip, useMediaQuery } from '@mui/material';
+import { Box, Typography, Button, Table, TableBody, Modal, TableCell, TableContainer, TableHead, TableRow, Grid, IconButton, Switch, Divider, Popover, Drawer, LinearProgress, Tooltip, TextField, TablePagination, Chip } from '@mui/material';
 import Image from 'next/image';
 import { Elements } from '@stripe/react-stripe-js';
 import axiosInterceptorInstance from '@/axios/axiosInterceptorInstance';
@@ -55,8 +55,8 @@ const billingStyles = {
         lineHeight: '16px !important',
         position: 'relative',
         paddingLeft: '45px',
-        paddingTop: '8px',
-        paddingBottom: '8px',
+        paddingTop: '13.5px',
+        paddingBottom: '13.5px',
         '&::after': {
             content: '""',
             display: 'block',
@@ -250,8 +250,6 @@ export const SettingsBilling: React.FC = () => {
     const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '');
     const [open, setOpen] = useState(false);
     const [email, setEmail] = useState('');
-    const isMobile = useMediaQuery('(max-width: 600px)'); 
-    const [hoveredRowIndex, setHoveredRowIndex] = useState<number | null>(null);
 
 
     const handleOpen = () => setOpen(true);
@@ -262,7 +260,7 @@ export const SettingsBilling: React.FC = () => {
             setIsLoading(true);
             const response = await axiosInterceptorInstance.get('/settings/billing');
             setCardDetails(response.data.card_details);
-            setChecked(response.data.billing_details.overage);
+            setChecked(response.data.billing_details.is_leads_auto_charging);
             setBillingDetails(response.data.billing_details.subscription_details);
             setDowngrade_plan(response.data.billing_details.downgrade_plan);
             setCanceled_at(response.data.billing_details.canceled_at);
@@ -621,20 +619,6 @@ export const SettingsBilling: React.FC = () => {
     if (isLoading) {
         return <CustomizedProgressBar />;
     }
-
-    const handleMouseEnter = (index: number) => {
-        if (!isMobile) setHoveredRowIndex(index);
-    };
-    
-    const handleMouseLeave = () => {
-        if (!isMobile) setHoveredRowIndex(null);
-    };
-    
-    const handleClickOrHover = (index: number) => {
-        if (isMobile) {
-            setHoveredRowIndex(prevIndex => (prevIndex === index ? null : index));
-        }
-    };
 
 
     return (
@@ -1353,9 +1337,6 @@ export const SettingsBilling: React.FC = () => {
                             ) : (
                                 billingHistory.map((history, index) => (
                                     <TableRow key={index}
-                                    onMouseEnter={() => handleMouseEnter(index)}  // Hover for the specific row
-                                    onMouseLeave={handleMouseLeave}  // Reset hover
-                                    onClick={() => handleClickOrHover(index)}  // Mobile tap toggle
                                         sx={{
                                             ...billingStyles.tableBodyRow,
                                             '&:hover': {
@@ -1389,24 +1370,12 @@ export const SettingsBilling: React.FC = () => {
                                             </Typography>
                                         </TableCell>
                                         <TableCell className='table-data' sx={billingStyles.tableBodyColumn}>
-                                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                                <IconButton sx={{
-                                                    paddingleft: '0'
-                                                }} onClick={() => fetchSaveBillingHistory(history.invoice_id)}>
-                                                    <Image
-                                                        src={hoveredRowIndex === index ? '/hover-download-icon.svg' : '/download-icon.svg'}
-                                                        alt='download-icon'
-                                                        height={20}
-                                                        width={20}
-                                                    />
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                                <IconButton onClick={() => fetchSaveBillingHistory(history.invoice_id)} sx={{ ':hover': { backgroundColor: 'transparent', }, padding: 0 }}>
+                                                    <DownloadIcon sx={{ width: '24px', height: '24px', color: 'rgba(188, 188, 188, 1)', ':hover': { color: 'rgba(80, 82, 178, 1)' } }} />
                                                 </IconButton>
-                                                <IconButton onClick={() => handleSendInvoicePopupOpen(history.invoice_id)}>
-                                                    <Image
-                                                        src={hoveredRowIndex === index ? '/hover-share-icon.svg' : '/share-icon.svg'}
-                                                        alt='share-icon'
-                                                        height={20}
-                                                        width={20}
-                                                    />
+                                                <IconButton onClick={() => handleSendInvoicePopupOpen(history.invoice_id)} sx={{ ':hover': { backgroundColor: 'transparent', }, padding: 0 }}>
+                                                    <TelegramIcon sx={{ width: '24px', height: '24px', color: 'rgba(188, 188, 188, 1)', ':hover': { color: 'rgba(80, 82, 178, 1)' } }} />
                                                 </IconButton>
                                             </Box>
                                         </TableCell>
