@@ -28,11 +28,39 @@ const CustomIcon = () => (
     <Image src="/arrow_down.svg" alt="arrow down" width={16} height={16} />
 );
 
-const DashboardContact: React.FC = () => {
 
+interface AppliedDates {
+    start: Date | null;
+    end: Date | null;
+  }
+
+interface DashboardContactProps {
+    appliedDates: AppliedDates;
+}
+
+const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates }) => {
     const [chartType, setChartType] = useState<'line' | 'bar'>('line');
 
-    // Функция для переключения типа графика
+    useEffect(() => {
+        const fetchData = async () => {
+            if (appliedDates.start && appliedDates.end) {
+                const fromUnix = Math.floor(appliedDates.start.getTime() / 1000);
+                const toUnix = Math.floor(appliedDates.end.getTime() / 1000);
+
+                try {
+                    const response = await axiosInstance.get("/dashboard/contact", {
+                        params: { from_date: fromUnix, to_date: toUnix },
+                    });
+                    console.log(response.data);
+                } catch (error) {
+                    console.error("Error fetching contact data:", error);
+                }
+            }
+        };
+
+        fetchData();
+    }, [appliedDates]);
+
     const toggleChartType = (type: 'line' | 'bar') => {
         setChartType(type);
     };

@@ -34,7 +34,12 @@ function getDaysInMonth(month: number, year: number) {
     return days;
 }
 
-const DashboardRevenue = ({ fromDate, toDate }: { fromDate: number | null; toDate: number | null }) => {
+interface AppliedDates {
+    start: Date | null;
+    end: Date | null;
+  }
+
+const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
     const [lifetimeRevenue, setLifetimeRevenue] = useState(0);
     const [ROI, setROI] = useState(0);
     const [totalCounts, setTotalCounts] = useState<any>(null);
@@ -80,24 +85,28 @@ const DashboardRevenue = ({ fromDate, toDate }: { fromDate: number | null; toDat
         }));
     };
 
-    const fetchRevenueData = async () => {
-        try {
-            const response = await axiosInterceptorInstance.get('/dashboard/revenue');
-            setLifetimeRevenue(response.data.lifetime_revenue)
-            setROI(response.data.ROI)
-            setTotalCounts(response.data.total_counts)
-            setTotalOrder(response.data.total_order)
-            setAverageOrder(response.data.avarage_order)
-            setDailyData(response.data.daily_data)
-        } catch (error) {
-            console.error('Error fetching data:', error);
-        } finally {
-        }
-    };
-    
     useEffect(() => {
-        fetchRevenueData();
-    }, []);
+        const fetchData = async () => {
+          if (appliedDates.start && appliedDates.end) {
+            const fromUnix = Math.floor(appliedDates.start.getTime() / 1000);
+            const toUnix = Math.floor(appliedDates.end.getTime() / 1000);
+    
+            try {
+              const response = await axiosInstance.get("/dashboard/revenue", {
+                params: { from_date: fromUnix, to_date: toUnix },
+              });
+              // Обработка полученных данных
+              setLifetimeRevenue(response.data.lifetimeRevenue);
+              console.log(response.data);
+              // Добавьте другие состояния для графиков
+            } catch (error) {
+              console.error("Error fetching revenue data:", error);
+            }
+          }
+        };
+    
+        fetchData();
+      }, [appliedDates]); // Запрос данных при изменении выбранных дат
 
     const options = [
         { id: 'revenue', label: 'Total Revenue', color: 'rgba(180, 218, 193, 1)' },
@@ -270,7 +279,7 @@ const DashboardRevenue = ({ fromDate, toDate }: { fromDate: number | null; toDat
                 </Box>
                 <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
                     <Typography variant="h5" component='div' sx={{ display: 'flex', flexDirection: 'row', alignItems: 'end', fontWeight: '700', fontSize: '22px', fontFamily: 'Nunito Sans', lineHeight: '30.01px', color: 'rgba(32, 33, 36, 1)', gap: 1, '@media (max-width: 600px)': { flexDirection: 'column', alignItems: 'start' } }}>
-                        ${lifetimeRevenue.toLocaleString('en-US')} <Typography component='span' sx={{ fontFamily: 'Nunito Sans', fontSize: '14px', pb: 0.5, fontWeight: 500, lineHeight: '19.6px', textAlign: 'left' }}>(Lifetime revenue)</Typography>
+                        ${lifetimeRevenue?.toLocaleString('en-US')} <Typography component='span' sx={{ fontFamily: 'Nunito Sans', fontSize: '14px', pb: 0.5, fontWeight: 500, lineHeight: '19.6px', textAlign: 'left' }}>(Lifetime revenue)</Typography>
                     </Typography>
                     <Typography variant="h5" component='div' sx={{ display: 'flex', flexDirection: 'row', fontWeight: '700', alignItems: 'end', fontSize: '27px', fontFamily: 'Nunito Sans', lineHeight: '36.83px', color: 'rgba(0, 0, 0, 1)', gap: 1, '@media (max-width: 600px)': { flexDirection: 'column', alignItems: 'start' } }}>
                         {ROI.toLocaleString('en-US')}x <Typography component='span' sx={{ fontFamily: 'Nunito Sans', color: 'rgba(32, 33, 36, 1)', fontSize: '14px', pb: 0.5, fontWeight: 500, lineHeight: '19.6px', textAlign: 'left' }}>ROI</Typography>

@@ -367,7 +367,8 @@ const SupportSection: React.FC = () => {
 const Dashboard: React.FC = () => {
   const router = useRouter();
   const { setTrial, setDaysLeft } = useTrial();
-  const [data, setData] = useState<any>(null);
+  const [dataRevenue, setDataRevenue] = useState<any>(null);
+  const [dataContact, setDataContact] = useState<any>(null);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [dropdownEl, setDropdownEl] = useState<null | HTMLElement>(null);
   const [showSlider, setShowSlider] = useState(false);
@@ -378,10 +379,6 @@ const Dashboard: React.FC = () => {
   const [formattedDates, setFormattedDates] = useState<string>('');
   const [appliedDates, setAppliedDates] = useState<{ start: Date | null; end: Date | null }>({ start: null, end: null });
   const [selectedDateLabel, setSelectedDateLabel] = useState<string>('');
-  const [dateRangeUnix, setDateRangeUnix] = useState<{ from_date: number | null; to_date: number | null }>({
-    from_date: null,
-    to_date: null,
-  });
 
   const handleDateLabelChange = (label: string) => {
     setSelectedDateLabel(label);
@@ -416,20 +413,22 @@ const Dashboard: React.FC = () => {
   
   
 
-  const handleApply = (dates: { start: Date | null; end: Date | null }) => {
-    if (dates.start && dates.end) {
-      const from_date_unix = Math.floor(dates.start.getTime() / 1000);
-      const to_date_unix = Math.floor(dates.end.getTime() / 1000);
+  // В вашем родительском компоненте, где находится CalendarPopup
+const handleApply = (dates: { start: Date | null; end: Date | null }) => {
+  if (dates.start && dates.end) {
+    const fromUnix = Math.floor(dates.start.getTime() / 1000);
+    const toUnix = Math.floor(dates.end.getTime() / 1000);
+
+    setAppliedDates(dates);
+    setCalendarAnchorEl(null);
+
+
+    handleCalendarClose();
+  }
+};
+
   
-      setAppliedDates(dates);
-      setCalendarAnchorEl(null);
-  
-      handleCalendarClose();
-      
-      // Передача дат в Unix формате как пропсы
-      setDateRangeUnix({ from_date: from_date_unix, to_date: to_date_unix });
-    }
-  };
+
   
 
 
@@ -461,7 +460,6 @@ const Dashboard: React.FC = () => {
       const fetchData = async () => {
         try {
           const response = await axiosInstance.get("/dashboard/contact");
-          setData(response.data);
           if (response.status === 200) {
             setShowCharts(true);
           }
@@ -675,12 +673,12 @@ const Dashboard: React.FC = () => {
 
             <Box sx={{ width: '100%' }}>
               <TabPanel value={tabIndex} index={0}>
-              <DashboardRevenue fromDate={dateRangeUnix.from_date} toDate={dateRangeUnix.to_date} />
+              <DashboardRevenue appliedDates={appliedDates} />
               </TabPanel>
             </Box>
             <Box sx={{ width: '100%', padding: 0, margin: 0 }}>
               <TabPanel value={tabIndex} index={1}>
-                <DashboardContact />
+              <DashboardContact appliedDates={appliedDates} />
               </TabPanel>
             </Box>
 
