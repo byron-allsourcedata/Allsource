@@ -12,6 +12,7 @@ from models.users_payments_transactions import UsersPaymentsTransactions
 from persistence.plans_persistence import PlansPersistence
 from persistence.user_persistence import UserPersistence
 from utils import get_utc_aware_date_for_postgres
+from decimal import *
 from .stripe_service import determine_plan_name_from_product_id
 
 logger = logging.getLogger(__name__)
@@ -128,7 +129,7 @@ class SubscriptionService:
         end_date = datetime.fromtimestamp(end_date_timestamp, timezone.utc).replace(tzinfo=None)
         created_at = get_utc_aware_date_for_postgres()
         currency = stripe_payload.get("data").get("object").get("currency")
-        amount = stripe_payload.get("data").get("object").get("plan").get("amount_decimal") / 100
+        amount = Decimal(stripe_payload.get("data").get("object").get("plan").get("amount_decimal")) / Decimal(100)
         price_id = stripe_payload.get("data").get("object").get("plan").get("id")
         status = stripe_payload.get("data").get("object").get("status")
         plan_type = determine_plan_name_from_product_id(
