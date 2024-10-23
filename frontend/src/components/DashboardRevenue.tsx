@@ -37,24 +37,29 @@ function getDaysInMonth(month: number, year: number) {
 interface AppliedDates {
     start: Date | null;
     end: Date | null;
-  }
+}
 
 const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
     const [lifetimeRevenue, setLifetimeRevenue] = useState(0);
     const [ROI, setROI] = useState(0);
-    const [totalCounts, setTotalCounts] = useState<any>(null);
-    const [totalOrder, setTotalOrder] = useState<any[]>([]);
-    const [averageOrder, setAverageOrder] = useState<any[]>([]);
-    const [dailyData, setDailyData] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true)
     const [values, setValues] = useState({
         totalRevenue: 0,
         totalVisitors: 0,
         viewProducts: 0,
         totalAbandonedCart: 0,
-      });
-    
-    //first chart
-    const data = getDaysInMonth(10, 2024);
+    });
+    const [average_orders, setAverageOrders] = useState({
+        averageVisitors: 0,
+        averageViewProducts: 0,
+        averageAddToCart: 0,
+    });
+    const [total_orders, setTotalOrders] = useState({
+        averageVisitors: 0,
+        averageViewProducts: 0,
+        averageAddToCart: 0,
+    });
+
 
     const colorPalette = [
         'rgba(244, 87, 69, 1)',
@@ -67,21 +72,21 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
         revenue: 'rgba(244, 87, 69, 1)',
         visitors: 'rgba(80, 82, 178, 1)',
         viewed_product: 'rgba(224, 176, 5, 1)',
-        abondoned_cart: 'rgba(144, 190, 109, 1)'
+        abandoned_cart: 'rgba(144, 190, 109, 1)'
     };
 
     type VisibleSeries = {
         revenue: boolean;
         visitors: boolean;
         viewed_product: boolean;
-        abondoned_cart: boolean;
+        abandoned_cart: boolean;
     };
 
     const [visibleSeries, setVisibleSeries] = useState<VisibleSeries>({
         revenue: true,
         visitors: true,
         viewed_product: true,
-        abondoned_cart: true,
+        abandoned_cart: true,
     });
 
     const handleChipClick = (seriesId: keyof VisibleSeries) => {
@@ -93,37 +98,174 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
 
     useEffect(() => {
         const fetchData = async () => {
-          if (appliedDates.start && appliedDates.end) {
-            const fromUnix = Math.floor(appliedDates.start.getTime() / 1000);
-            const toUnix = Math.floor(appliedDates.end.getTime() / 1000);
-    
-            try {
-              const response = await axiosInstance.get("/dashboard/revenue", {
-                params: { from_date: fromUnix, to_date: toUnix },
-              });
-              const { total_revenue, total_visitors, total_view_products, total_abandoned_cart } = response.data.total_counts;
-              setValues({
-                totalRevenue: total_revenue,
-                totalVisitors: total_visitors,
-                viewProducts: total_view_products,
-                totalAbandonedCart: total_abandoned_cart,
-              });
-              setLifetimeRevenue(response.data.lifetimeRevenue);
-              setROI(response.data.ROI)
-            } catch (error) {
-              console.error("Error fetching revenue data:", error);
+            setLoading(true);
+            if (appliedDates.start && appliedDates.end) {
+                const fromUnix = Math.floor(appliedDates.start.getTime() / 1000);
+                const toUnix = Math.floor(appliedDates.end.getTime() / 1000);
+
+                try {
+                    const response = await axiosInstance.get("/dashboard/revenue", {
+                        params: { from_date: fromUnix, to_date: toUnix },
+                    });
+                    const { total_revenue, total_visitors, total_view_products, total_abandoned_cart } = response.data.total_counts;
+                    setValues({
+                        totalRevenue: total_revenue,
+                        totalVisitors: total_visitors,
+                        viewProducts: total_view_products,
+                        totalAbandonedCart: total_abandoned_cart,
+                    });
+                    setLifetimeRevenue(response.data.lifetime_revenue);
+                    setROI(response.data.ROI)
+                    const { daily_data } = response.data;
+
+                    const days = Object.keys(daily_data).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
+
+                    const revenueData = days.map((day) => daily_data[day].total_price || 0);
+                    const visitorsData = days.map((day) => daily_data[day].visitor || 0);
+                    const viewedProductData = days.map((day) => daily_data[day].viewed_product || 0);
+                    const abandonedCartData = days.map((day) => daily_data[day].abandoned_cart || 0);
+
+                    setSeries([
+                        {
+                            id: 'revenue',
+                            label: 'Total Revenue',
+                            data: revenueData,
+                            curve: 'linear',
+                            stack: 'total',
+                            showMark: false,
+                            area: false,
+                            stackOrder: 'ascending',
+                        },
+                        {
+                            id: 'visitors',
+                            label: 'Total Visitors',
+                            data: visitorsData,
+                            curve: 'linear',
+                            stack: 'total',
+                            showMark: false,
+                            area: false,
+                            stackOrder: 'ascending',
+                        },
+                        {
+                            id: 'viewed_product',
+                            label: 'View Products',
+                            data: viewedProductData,
+                            curve: 'linear',
+                            stack: 'total',
+                            showMark: false,
+                            area: false,
+                            stackOrder: 'ascending',
+                        },
+                        {
+                            id: 'abandoned_cart',
+                            label: 'Abandoned to Cart',
+                            data: abandonedCartData,
+                            curve: 'linear',
+                            stack: 'total',
+                            showMark: false,
+                            area: false,
+                            stackOrder: 'ascending',
+                        },
+                    ]);
+                    setDays(days);
+                } catch (error) {
+                    console.error("Error fetching revenue data:", error);
+                } finally {
+                    setLoading(false)
+                }
+            } else {
+                setLoading(true);
+                try {
+                    const response = await axiosInstance.get("/dashboard/revenue");
+                    const { total_revenue, total_visitors, total_view_products, total_abandoned_cart } = response.data.total_counts;
+                    setValues({
+                        totalRevenue: total_revenue,
+                        totalVisitors: total_visitors,
+                        viewProducts: total_view_products,
+                        totalAbandonedCart: total_abandoned_cart,
+                    });
+                    const { average_order_visitors, average_order_view_products, average_order_abandoned_cart } = response.data.average_order
+                    const { total_orders_visitors, total_orders_view_products, total_orders_abandoned_cart } = response.data.total_order
+                    setAverageOrders({
+                        averageVisitors: average_order_visitors,
+                        averageAddToCart: average_order_abandoned_cart,
+                        averageViewProducts: average_order_view_products
+                    })
+                    setTotalOrders({
+                        averageVisitors: total_orders_visitors,
+                        averageAddToCart: total_orders_abandoned_cart,
+                        averageViewProducts: total_orders_view_products
+                    })
+                    setLifetimeRevenue(response.data.lifetime_revenue);
+                    setROI(response.data.ROI)
+
+                    const { daily_data } = response.data;
+                    const days = Object.keys(daily_data).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
+
+
+                    const revenueData = days.map((day) => daily_data[day].total_price || 0);
+                    const visitorsData = days.map((day) => daily_data[day].visitor || 0);
+                    const viewedProductData = days.map((day) => daily_data[day].viewed_product || 0);
+                    const abandonedCartData = days.map((day) => daily_data[day].abandoned_cart || 0);
+
+                    setSeries([
+                        {
+                            id: 'revenue',
+                            label: 'Total Revenue',
+                            data: revenueData,
+                            curve: 'linear',
+                            stack: 'total',
+                            showMark: false,
+                            area: false,
+                            stackOrder: 'ascending',
+                        },
+                        {
+                            id: 'visitors',
+                            label: 'Total Visitors',
+                            data: visitorsData,
+                            curve: 'linear',
+                            stack: 'total',
+                            showMark: false,
+                            area: false,
+                            stackOrder: 'ascending',
+                        },
+                        {
+                            id: 'viewed_product',
+                            label: 'View Products',
+                            data: viewedProductData,
+                            curve: 'linear',
+                            stack: 'total',
+                            showMark: false,
+                            area: false,
+                            stackOrder: 'ascending',
+                        },
+                        {
+                            id: 'abandoned_cart',
+                            label: 'Abandoned to Cart',
+                            data: abandonedCartData,
+                            curve: 'linear',
+                            stack: 'total',
+                            showMark: false,
+                            area: false,
+                            stackOrder: 'ascending',
+                        },
+                    ]);
+                    setDays(days);
+                }
+                finally {
+                    setLoading(false)
+                }
             }
-          }
         };
-    
+
         fetchData();
-      }, [appliedDates]); // Запрос данных при изменении выбранных дат
+    }, [appliedDates]);
 
     const options = [
         { id: 'revenue', label: 'Total Revenue', color: 'rgba(180, 218, 193, 1)' },
         { id: 'visitors', label: 'Total Visitors', color: 'rgba(252, 229, 204, 1)' },
         { id: 'viewed_product', label: 'View Products', color: 'rgba(201, 218, 248, 1)' },
-        { id: 'abondoned_cart', label: 'Abandoned cart', color: 'rgba(254, 238, 236, 1)' },
+        { id: 'abandoned_cart', label: 'Abandoned cart', color: 'rgba(254, 238, 236, 1)' },
     ];
 
     const selectedGraphs = options
@@ -161,8 +303,18 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
     const isMediumScreen = useMediaQuery('(min-width:768px)');
 
     const chartSize = isLargeScreen ? 400 : isMediumScreen ? 300 : 200;
-
-    const series = [
+    const [series, setSeries] = useState<
+        {
+            id: keyof typeof colorMapping;
+            label: string;
+            curve: string;
+            stack: string;
+            showMark: boolean;
+            area: boolean;
+            stackOrder: string;
+            data: number[];
+        }[]
+    >([
         {
             id: 'revenue' as keyof typeof colorMapping,
             label: 'Total Revenue',
@@ -171,9 +323,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
             showMark: false,
             area: false,
             stackOrder: 'ascending',
-            data: [300, 900, 600, 1200, 1500, 1800, 2400, 2100, 2700, 3000, 1800, 3300,
-                3600, 3900, 4200, 4500, 3900, 4800, 5100, 5400, 4800, 5700, 6000,
-                6300, 6600, 6900, 7200, 7500, 7800, 8100, 8400],
+            data: [],
         },
         {
             id: 'visitors' as keyof typeof colorMapping,
@@ -183,9 +333,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
             showMark: false,
             area: false,
             stackOrder: 'ascending',
-            data: [500, 900, 700, 1400, 1100, 1700, 2300, 2000, 2600, 2900, 2300, 3200,
-                3500, 3800, 4100, 4400, 2900, 4700, 5000, 5300, 5600, 5900, 6200,
-                6500, 5600, 6800, 7100, 7400, 7700, 8000, 8200],
+            data: [0],
         },
         {
             id: 'viewed_product' as keyof typeof colorMapping,
@@ -195,25 +343,34 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
             stack: 'total',
             area: false,
             stackOrder: 'ascending',
-            data: [1000, 1500, 1200, 1700, 1300, 2000, 2400, 2200, 2600, 2800, 2500,
-                3000, 3400, 3700, 3200, 3900, 4100, 3500, 4300, 4500, 4000, 4700,
-                5000, 5200, 4800, 5400, 5600, 5900, 6100, 6300, 6700],
+            data: [0],
         },
         {
-            id: 'abondoned_cart' as keyof typeof colorMapping,
+            id: 'abandoned_cart' as keyof typeof colorMapping,
             label: 'Abandoned to Cart',
             curve: 'linear',
             stack: 'total',
             showMark: false,
             area: false,
             stackOrder: 'ascending',
-            data: [1000, 1500, 2200, 2700, 2800, 2900, 2500, 1200, 1300, 2800, 2500,
-                3000, 3400, 3700, 3200, 3900, 4100, 3500, 4300, 4500, 4000, 4700,
-                5000, 5200, 4800, 5400, 5600, 5900, 6100, 6300, 7800],
+            data: [0],
         },
-    ].filter((s) => visibleSeries[s.id as keyof VisibleSeries]);
-    const filteredSeries = series.filter((s) => visibleSeries[s.id as keyof VisibleSeries]) as [];
+    ].filter((s) => visibleSeries[s.id as keyof VisibleSeries]));
 
+
+    const [data, setDays] = useState<string[]>([]);
+    const formattedData = data.map(dateStr => {
+        return new Date(dateStr).toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+        });
+    });
+    const filteredSeries = series.filter((s) => visibleSeries[s.id as keyof VisibleSeries]) as [];
+    const filteredSeriescolor = series.filter((s) => visibleSeries[s.id as keyof VisibleSeries]);
+
+    const viewedProductSeries = series.filter((s) => s.id === 'viewed_product') as [];
+    const addToCartSeries = series.filter((s) => s.id === 'abandoned_cart') as [];
+    const visitorSeries = series.filter((s) => s.id === 'visitors') as [];
 
     const dataChart = [
         { id: 'Total Visitors', value: 50000 },
@@ -301,7 +458,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                 </Box>
             </Box>
 
-            <Box sx={{ width: '100%', mt:1, mb:1, '@media (max-width: 900px)': { mt:0, mb:0,}  }}>
+            <Box sx={{ width: '100%', mt: 1, mb: 1, '@media (max-width: 900px)': { mt: 0, mb: 0, } }}>
                 <StatsCard values={values} />
             </Box>
 
@@ -318,7 +475,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                 }}
                             >
                                 <Typography component="div" className="second-sub-title" sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', fontWeight: '600 !important', fontFamily: 'Nunito Sans', fontSize: '16px', lineHeight: '19.1px !important', textWrap: 'nowrap', textAlign: 'left', gap: 1, '@media (max-width: 900px)': { flexDirection: 'row', width: '100%', textWrap: 'nowrap' } }}>
-                                    Total Revenue -<Typography component="span" sx={{ fontFamily: 'Nunito Sans', color: 'rgba(74, 74, 74, 1)', fontSize: '22px', fontWeight: 600, lineHeight: '30.01px', textAlign: 'left' }}>$22,301</Typography>
+                                    Total Revenue <Typography component="span" sx={{ fontFamily: 'Nunito Sans', color: 'rgba(74, 74, 74, 1)', fontSize: '22px', fontWeight: 600, lineHeight: '30.01px', textAlign: 'left' }}>$22,301</Typography>
                                 </Typography>
                             </Stack>
                             <Stack
@@ -347,7 +504,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                                 />
                                                 <Typography className="paragraph"
                                                     sx={{
-                                                        fontFamily: 'Roboto', 
+                                                        fontFamily: 'Roboto',
                                                         fontSize: '12px',
                                                         textTransform: 'none',
                                                         textAlign: 'left',
@@ -439,29 +596,51 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
 
                         </Stack>
 
-                        <LineChart
-                            colors={series.map(s => colorMapping[s.id as keyof typeof colorMapping])}
-                            xAxis={[{ scaleType: 'point', data, tickInterval: (index, i) => (i + 1) % 5 === 0 }]}
+                        {loading ? <Box
+                            sx={{
+                                position: 'relative',
+                                background: 'rgba(255, 255, 255, 0.8)',
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                zIndex: 1000,
+                                overflow: 'hidden'
+                            }}
+                        >
+                            <Box
+                                sx={{
+                                    border: '8px solid #f3f3f3',
+                                    borderTop: '8px solid #4285f4',
+                                    borderRadius: '50%',
+                                    width: '40px',
+                                    height: '40px',
+                                    animation: 'spin 1s linear infinite',
+                                    '@keyframes spin': {
+                                        '0%': { transform: 'rotate(0deg)' },
+                                        '100%': { transform: 'rotate(360deg)' },
+                                    },
+                                }}
+                            />
+                        </Box> : <LineChart
+                            colors={filteredSeriescolor.map(s => colorMapping[s.id as keyof typeof colorMapping])}
+                            xAxis={[{
+                                scaleType: 'point',
+                                data: formattedData,
+                            }]}
                             yAxis={[
                                 {
-                                  valueFormatter: (value) => {
-                                    return `${new Intl.NumberFormat('en-US').format(value)}$`;
-                                  },
-                                }
-                              ]}
+                                    valueFormatter: (value) => {
+                                        return `${new Intl.NumberFormat('en-US').format(value)}$`;
+                                    },
+                                },
+                            ]}
                             series={filteredSeries}
                             height={250}
                             margin={{ left: 70, right: 20, top: 20, bottom: 20 }}
                             grid={{ horizontal: true }}
-                            sx={{
-                                border: 'none',
-                            }}
-                            slotProps={{
-                                legend: { hidden: true },
-                            }}
-                        >
-
-                        </LineChart>
+                            sx={{ border: 'none' }}
+                            slotProps={{ legend: { hidden: true } }}
+                        />}
 
                     </CardContent>
                 </Card>
@@ -496,13 +675,13 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                             </Box>
                             <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'start', width: '100%' }}>
                                 <Typography component='div' sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', fontWeight: '700', fontSize: '22px', justifyContent: 'flex-end', mt: 1, fontFamily: 'Nunito Sans', lineHeight: '30.01px', color: 'rgba(32, 33, 36, 1)', '@media (max-width: 900px)': { flexDirection: 'row', alignItems: 'center', gap: 2 } }}>
-                                    $23,233 <Typography component='span' sx={{ fontFamily: 'Nunito Sans', fontSize: '14px', pb: 0.5, fontWeight: 500, lineHeight: '19.6px', textAlign: 'left', '@media (max-width: 900px)': { pt: 0.5 } }}>View Products</Typography>
+                                    ${values.viewProducts ? values.viewProducts : 0} <Typography component='span' sx={{ fontFamily: 'Nunito Sans', fontSize: '14px', pb: 0.5, fontWeight: 500, lineHeight: '19.6px', textAlign: 'left', '@media (max-width: 900px)': { pt: 0.5 } }}>View Products</Typography>
                                 </Typography>
                             </Box>
                         </Box>
                         <Box sx={{ border: '0.2px solid rgba(189, 189, 189, 1)', backgroundColor: 'rgba(250, 250, 246, 1)', maxHeight: '52px', mt: 0.5, borderRadius: '4px', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: '8px 16px', '@media (max-width: 900px)': { justifyContent: 'space-between', mb: 2 } }}>
                             <Typography component='div' sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', fontWeight: '600', fontSize: '12px', justifyContent: 'flex-end', fontFamily: 'Nunito Sans', lineHeight: '16.08px', color: 'rgba(74, 74, 74, 1)' }}>
-                                Average Order <Typography component='span' sx={{ fontFamily: 'Nunito Sans', fontSize: '16px', fontWeight: 700, lineHeight: '21.82px', color: 'rgba(32, 33, 36, 1)', textAlign: 'left' }}>$55.50</Typography>
+                                Average Order <Typography component='span' sx={{ fontFamily: 'Nunito Sans', fontSize: '16px', fontWeight: 700, lineHeight: '21.82px', color: 'rgba(32, 33, 36, 1)', textAlign: 'left' }}>${average_orders.averageViewProducts ? average_orders.averageViewProducts : 0}</Typography>
                             </Typography>
                             <Box
                                 sx={{
@@ -518,33 +697,51 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                 }}
                             />
                             <Typography component='div' sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', fontWeight: '600', fontSize: '12px', justifyContent: 'flex-end', fontFamily: 'Nunito Sans', lineHeight: '16.08px', color: 'rgba(74, 74, 74, 1)', '@media (max-width: 900px)': { alignItems: 'end' } }}>
-                                Total Orders <Typography component='span' sx={{ fontFamily: 'Nunito Sans', fontSize: '16px', fontWeight: 700, lineHeight: '21.82px', color: 'rgba(32, 33, 36, 1)', textAlign: 'left' }}>555</Typography>
+                                Total Orders <Typography component='span' sx={{ fontFamily: 'Nunito Sans', fontSize: '16px', fontWeight: 700, lineHeight: '21.82px', color: 'rgba(32, 33, 36, 1)', textAlign: 'left' }}>{total_orders.averageViewProducts ? total_orders.averageViewProducts : 0}</Typography>
                             </Typography>
                         </Box>
                     </Box>
                     <Box sx={{ mb: 3, boxShadow: '0px 2px 10px 0px rgba(0, 0, 0, 0.1)' }}>
                         <Card variant="outlined" sx={{ width: '100%' }}>
                             <CardContent>
-                                <LineChart
+
+                                {loading ? <Box
+                                    sx={{
+                                        position: 'relative',
+                                        background: 'rgba(255, 255, 255, 0.8)',
+                                        display: 'flex',
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                        zIndex: 1000,
+                                        overflow: 'hidden'
+                                    }}
+                                >
+                                    <Box
+                                        sx={{
+                                            border: '8px solid #f3f3f3',
+                                            borderTop: '8px solid #4285f4',
+                                            borderRadius: '50%',
+                                            width: '40px',
+                                            height: '40px',
+                                            animation: 'spin 1s linear infinite',
+                                            '@keyframes spin': {
+                                                '0%': { transform: 'rotate(0deg)' },
+                                                '100%': { transform: 'rotate(360deg)' },
+                                            },
+                                        }}
+                                    />
+                                </Box> : <LineChart
                                     colors={['rgba(255, 230, 180, 1)']}
-                                    xAxis={[{ scaleType: 'point', data, tickInterval: (index, i) => (i + 1) % 5 === 0 }]}
+                                    xAxis={[{
+                                        scaleType: 'point',
+                                        data: formattedData,
+                                    }]}
                                     yAxis={[
                                         {
-                                            valueFormatter: (value) => `${value}$`, // Форматируем значения с добавлением $
+                                            valueFormatter: (value) => `${value}$`,
                                         }
                                     ]}
-                                    series={[{
-                                        id: 'viewed_product',
-                                        label: 'View Products',
-                                        curve: 'linear',
-                                        stack: 'total',
-                                        showMark: false,
-                                        area: true,
-                                        stackOrder: 'ascending',
-                                        data: [1000, 1500, 1200, 1700, 1300, 2000, 2400, 2200, 2600, 2800, 2500,
-                                            3000, 3400, 3700, 3200, 3900, 4100, 3500, 4300, 4500, 4000, 4700,
-                                            5000, 5200, 4800, 5400, 5600, 5900, 6100, 6300, 6700],
-                                    }]}
+                                    series={viewedProductSeries}
                                     height={250}
                                     margin={{ left: 50, right: 20, top: 20, bottom: 20 }}
                                     grid={{ horizontal: true }}
@@ -554,7 +751,8 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                     slotProps={{
                                         legend: { hidden: true },
                                     }}
-                                />
+                                />}
+
                             </CardContent>
                         </Card>
                     </Box>
@@ -586,13 +784,13 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                             </Box>
                             <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'start', width: '100%' }}>
                                 <Typography component='div' sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', fontWeight: '700', fontSize: '22px', justifyContent: 'flex-end', mt: 1, fontFamily: 'Nunito Sans', lineHeight: '30.01px', color: 'rgba(32, 33, 36, 1)', '@media (max-width: 900px)': { flexDirection: 'row', alignItems: 'center', gap: 2 } }}>
-                                    $12,233 <Typography component='span' sx={{ fontFamily: 'Nunito Sans', fontSize: '14px', pb: 0.5, fontWeight: 500, lineHeight: '19.6px', textAlign: 'left' }}>Abandoned cart</Typography>
+                                    ${values.totalAbandonedCart ? values.totalAbandonedCart : 0} <Typography component='span' sx={{ fontFamily: 'Nunito Sans', fontSize: '14px', pb: 0.5, fontWeight: 500, lineHeight: '19.6px', textAlign: 'left' }}>Add to cart</Typography>
                                 </Typography>
                             </Box>
                         </Box>
                         <Box sx={{ border: '0.2px solid rgba(189, 189, 189, 1)', backgroundColor: 'rgba(250, 250, 246, 1)', maxHeight: '52px', mt: 0.5, borderRadius: '4px', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: '8px 16px', '@media (max-width: 900px)': { justifyContent: 'space-between', mb: 2 } }}>
                             <Typography component='div' sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', fontWeight: '600', fontSize: '12px', justifyContent: 'flex-end', fontFamily: 'Nunito Sans', lineHeight: '16.08px', color: 'rgba(74, 74, 74, 1)' }}>
-                                Average Order <Typography component='span' sx={{ fontFamily: 'Nunito Sans', fontSize: '16px', fontWeight: 700, lineHeight: '21.82px', color: 'rgba(32, 33, 36, 1)', textAlign: 'left' }}>$52.50</Typography>
+                                Average Order <Typography component='span' sx={{ fontFamily: 'Nunito Sans', fontSize: '16px', fontWeight: 700, lineHeight: '21.82px', color: 'rgba(32, 33, 36, 1)', textAlign: 'left' }}>${average_orders.averageAddToCart ? average_orders.averageAddToCart : 0}</Typography>
                             </Typography>
                             <Box
                                 sx={{
@@ -608,43 +806,58 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                 }}
                             />
                             <Typography component='div' sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', fontWeight: '600', fontSize: '12px', justifyContent: 'flex-end', fontFamily: 'Nunito Sans', lineHeight: '16.08px', color: 'rgba(74, 74, 74, 1)', '@media (max-width: 900px)': { alignItems: 'end' } }}>
-                                Total Orders <Typography component='span' sx={{ fontFamily: 'Nunito Sans', fontSize: '16px', fontWeight: 700, lineHeight: '21.82px', color: 'rgba(32, 33, 36, 1)', textAlign: 'left' }}>1111</Typography>
+                                Total Orders <Typography component='span' sx={{ fontFamily: 'Nunito Sans', fontSize: '16px', fontWeight: 700, lineHeight: '21.82px', color: 'rgba(32, 33, 36, 1)', textAlign: 'left' }}>{total_orders.averageAddToCart ? total_orders.averageAddToCart : 0}</Typography>
                             </Typography>
                         </Box>
                     </Box>
                     <Box sx={{ mb: 3, boxShadow: '0px 2px 10px 0px rgba(0, 0, 0, 0.1)' }}>
                         <Card variant="outlined" sx={{ width: '100%' }}>
                             <CardContent>
-                                <LineChart
-                                    colors={['rgba(180, 218, 193, 1)']}
-                                    xAxis={[{ scaleType: 'point', data, tickInterval: (index, i) => (i + 1) % 5 === 0 }]}
-                                    yAxis={[
-                                        {
-                                            valueFormatter: (value) => `${value}$`, // Форматируем значения с добавлением $
-                                        }
-                                    ]}
-                                    series={[{
-                                        id: 'viewed_product',
-                                        label: 'View Products',
-                                        curve: 'linear',
-                                        stack: 'total',
-                                        showMark: false,
-                                        area: true,
-                                        stackOrder: 'ascending',
-                                        data: [1000, 1500, 2200, 2700, 2800, 2900, 2500, 1200, 1300, 2800, 2500,
-                                            3000, 3400, 3700, 3200, 3900, 4100, 3500, 4300, 4500, 4000, 4700,
-                                            5000, 5200, 4800, 5400, 5600, 5900, 6100, 6300, 7800],
-                                    }]}
-                                    height={250}
-                                    margin={{ left: 50, right: 20, top: 20, bottom: 20 }}
-                                    grid={{ horizontal: true }}
+                                {loading ? <Box
                                     sx={{
-                                        border: 'none',
+                                        position: 'relative',
+                                        background: 'rgba(255, 255, 255, 0.8)',
+                                        display: 'flex',
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                        zIndex: 1000,
+                                        overflow: 'hidden'
                                     }}
-                                    slotProps={{
-                                        legend: { hidden: true },
-                                    }}
-                                />
+                                >
+                                    <Box
+                                        sx={{
+                                            border: '8px solid #f3f3f3',
+                                            borderTop: '8px solid #4285f4',
+                                            borderRadius: '50%',
+                                            width: '40px',
+                                            height: '40px',
+                                            animation: 'spin 1s linear infinite',
+                                            '@keyframes spin': {
+                                                '0%': { transform: 'rotate(0deg)' },
+                                                '100%': { transform: 'rotate(360deg)' },
+                                            },
+                                        }}
+                                    />
+                                </Box> :
+                                    <LineChart
+                                        colors={['rgba(180, 218, 193, 1)']}
+                                        xAxis={[{ scaleType: 'point', data: formattedData }]}
+                                        yAxis={[
+                                            {
+                                                valueFormatter: (value) => `${value}$`,
+                                            }
+                                        ]}
+                                        series={addToCartSeries}
+                                        height={250}
+                                        margin={{ left: 50, right: 20, top: 20, bottom: 20 }}
+                                        grid={{ horizontal: true }}
+                                        sx={{
+                                            border: 'none',
+                                        }}
+                                        slotProps={{
+                                            legend: { hidden: true },
+                                        }}
+                                    />}
                             </CardContent>
                         </Card>
                     </Box>
@@ -677,13 +890,13 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                             </Box>
                             <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'start', width: '100%' }}>
                                 <Typography component='div' sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', fontWeight: '700', fontSize: '22px', justifyContent: 'flex-end', mt: 1, fontFamily: 'Nunito Sans', lineHeight: '30.01px', color: 'rgba(32, 33, 36, 1)', '@media (max-width: 900px)': { flexDirection: 'row', alignItems: 'center', gap: 2 } }}>
-                                    $23,233 <Typography component='span' sx={{ fontFamily: 'Nunito Sans', fontSize: '14px', pb: 0.5, fontWeight: 500, lineHeight: '19.6px', textAlign: 'left' }}>Total Visitors</Typography>
+                                    ${values.totalVisitors ? values.totalVisitors : 0} <Typography component='span' sx={{ fontFamily: 'Nunito Sans', fontSize: '14px', pb: 0.5, fontWeight: 500, lineHeight: '19.6px', textAlign: 'left' }}>Total Visitors</Typography>
                                 </Typography>
                             </Box>
                         </Box>
                         <Box sx={{ border: '0.2px solid rgba(189, 189, 189, 1)', backgroundColor: 'rgba(250, 250, 246, 1)', maxHeight: '52px', mt: 0.5, borderRadius: '4px', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: '8px 16px', '@media (max-width: 900px)': { justifyContent: 'space-between', mb: 2 } }}>
                             <Typography component='div' sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', fontWeight: '600', fontSize: '12px', justifyContent: 'flex-end', fontFamily: 'Nunito Sans', lineHeight: '16.08px', color: 'rgba(74, 74, 74, 1)' }}>
-                                Average Order <Typography component='span' sx={{ fontFamily: 'Nunito Sans', fontSize: '16px', fontWeight: 700, lineHeight: '21.82px', color: 'rgba(32, 33, 36, 1)', textAlign: 'left' }}>$55.50</Typography>
+                                Average Order <Typography component='span' sx={{ fontFamily: 'Nunito Sans', fontSize: '16px', fontWeight: 700, lineHeight: '21.82px', color: 'rgba(32, 33, 36, 1)', textAlign: 'left' }}>${average_orders.averageVisitors ? average_orders.averageVisitors : 0}</Typography>
                             </Typography>
                             <Box
                                 sx={{
@@ -699,43 +912,58 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                 }}
                             />
                             <Typography component='div' sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', fontWeight: '600', fontSize: '12px', justifyContent: 'flex-end', fontFamily: 'Nunito Sans', lineHeight: '16.08px', color: 'rgba(74, 74, 74, 1)', '@media (max-width: 900px)': { alignItems: 'end' } }}>
-                                Total Orders <Typography component='span' sx={{ fontFamily: 'Nunito Sans', fontSize: '16px', fontWeight: 700, lineHeight: '21.82px', color: 'rgba(32, 33, 36, 1)', textAlign: 'left' }}>555</Typography>
+                                Total Orders <Typography component='span' sx={{ fontFamily: 'Nunito Sans', fontSize: '16px', fontWeight: 700, lineHeight: '21.82px', color: 'rgba(32, 33, 36, 1)', textAlign: 'left' }}>{total_orders.averageVisitors ? total_orders.averageVisitors : 0}</Typography>
                             </Typography>
                         </Box>
                     </Box>
                     <Box sx={{ mb: 3, boxShadow: '0px 2px 10px 0px rgba(0, 0, 0, 0.1)' }}>
                         <Card variant="outlined" sx={{ width: '100%' }}>
                             <CardContent>
-                                <LineChart
-                                    colors={['rgba(181, 218, 248, 1)']}
-                                    xAxis={[{ scaleType: 'point', data, tickInterval: (index, i) => (i + 1) % 5 === 0 }]}
-                                    yAxis={[
-                                        {
-                                            valueFormatter: (value) => `${value}$`, // Форматируем значения с добавлением $
-                                        }
-                                    ]}
-                                    series={[{
-                                        id: 'viewed_product',
-                                        label: 'View Products',
-                                        curve: 'linear',
-                                        stack: 'total',
-                                        showMark: false,
-                                        area: true,
-                                        stackOrder: 'ascending',
-                                        data: [500, 900, 700, 1400, 1100, 1700, 2300, 2000, 2600, 2900, 2300, 3200,
-                                            3500, 3800, 4100, 4400, 2900, 4700, 5000, 5300, 5600, 5900, 6200,
-                                            6500, 5600, 6800, 7100, 7400, 7700, 8000, 8200],
-                                    }]}
-                                    height={250}
-                                    margin={{ left: 50, right: 20, top: 20, bottom: 20 }}
-                                    grid={{ horizontal: true }}
+                                {loading ? <Box
                                     sx={{
-                                        border: 'none',
+                                        position: 'relative',
+                                        background: 'rgba(255, 255, 255, 0.8)',
+                                        display: 'flex',
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                        zIndex: 1000,
+                                        overflow: 'hidden'
                                     }}
-                                    slotProps={{
-                                        legend: { hidden: true },
-                                    }}
-                                />
+                                >
+                                    <Box
+                                        sx={{
+                                            border: '8px solid #f3f3f3',
+                                            borderTop: '8px solid #4285f4',
+                                            borderRadius: '50%',
+                                            width: '40px',
+                                            height: '40px',
+                                            animation: 'spin 1s linear infinite',
+                                            '@keyframes spin': {
+                                                '0%': { transform: 'rotate(0deg)' },
+                                                '100%': { transform: 'rotate(360deg)' },
+                                            },
+                                        }}
+                                    />
+                                </Box> :
+                                    <LineChart
+                                        colors={['rgba(181, 218, 248, 1)']}
+                                        xAxis={[{ scaleType: 'point', data: formattedData, }]}
+                                        yAxis={[
+                                            {
+                                                valueFormatter: (value) => `${value}$`, // Форматируем значения с добавлением $
+                                            }
+                                        ]}
+                                        series={visitorSeries}
+                                        height={250}
+                                        margin={{ left: 50, right: 20, top: 20, bottom: 20 }}
+                                        grid={{ horizontal: true }}
+                                        sx={{
+                                            border: 'none',
+                                        }}
+                                        slotProps={{
+                                            legend: { hidden: true },
+                                        }}
+                                    />}
                             </CardContent>
                         </Card>
                     </Box>
@@ -874,15 +1102,15 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                     <Image src={'/meta-icon.svg'} alt={'Meta'} width={19.46} height={13} />
                                 </Box>
                                 <Typography variant="h4" component="div" sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', color: 'rgba(74, 74, 74, 1)', fontFamily: 'Nunito Sans', fontSize: '14px', fontWeight: 500, lineHeight: '19.6px', textAlign: 'left', gap: 1 }}>
-                                    Meta Contacts -<Typography component="span" sx={{ fontFamily: 'Nunito Sans', color: 'rgba(74, 74, 74, 1)', fontSize: '22px', fontWeight: 600, lineHeight: '30.01px', textAlign: 'left' }}>$22,301</Typography>
+                                    Meta Contacts <Typography component="span" sx={{ fontFamily: 'Nunito Sans', color: 'rgba(74, 74, 74, 1)', fontSize: '22px', fontWeight: 600, lineHeight: '30.01px', textAlign: 'left' }}>$22,301</Typography>
                                 </Typography>
                             </Stack>
 
                         </Stack>
 
-                        <LineChart
+                        {/* <LineChart
                             colors={['rgba(5, 104, 225, 1)']}
-                            xAxis={[{ scaleType: 'point', data, tickInterval: (index, i) => (i + 1) % 5 === 0 }]}yAxis={[
+                            xAxis={[{ scaleType: 'point', data, tickInterval: (index, i) => (i + 1) % 5 === 0 }]} yAxis={[
                                 {
                                     valueFormatter: (value) => `${value}$`,
                                 }
@@ -910,14 +1138,16 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                             }}
                         >
 
-                        </LineChart>
+                        </LineChart> */}
 
                     </CardContent>
                 </Card>
             </Box>
+            {loading && (<CustomizedProgressBar />)}
         </Box>
     )
-}
+};
+
 
 
 export default DashboardRevenue;

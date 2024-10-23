@@ -12,13 +12,19 @@ const style = {
     button_date: {
         fontFamily: 'Roboto',
         fontWeight: '500',
-        color: 'rgba(74, 74, 74, 1)',
+        color: '#4a4a4a',
         textTransform: 'none',
         textAlign: 'left',
         display: 'flex',
         fontSize: '12px',
         lineHeight: '16px',
-        justifyContent: 'start'
+        justifyContent: 'start',
+        padding: '4px 10px',
+        '&:hover': {
+            backgroundColor: 'rgba(80, 82, 178, 0.10)',
+            borderRadius: '4px',
+            color: '#171619'
+        }
     }
 }
 
@@ -39,6 +45,7 @@ const CalendarPopup: React.FC<CalendarPopupProps> = ({ anchorEl, open, onClose, 
 
     const [startDateString, setStartDateString] = useState<string>('');
     const [endDateString, setEndDateString] = useState<string>('');
+    const [showDatePicker, setShowDatePicker] = useState(false);
 
     const handleChangeStringStart = () => {
         const start = new Date(startDateString);
@@ -66,6 +73,8 @@ const CalendarPopup: React.FC<CalendarPopupProps> = ({ anchorEl, open, onClose, 
         setStartDate(start);
         setEndDate(end);
         onDateChange({ start, end });
+        setStartDateString(start ? start.toLocaleDateString() : '');
+        setEndDateString(end ? end.toLocaleDateString() : '');
         onDateLabelChange("");
     };
 
@@ -134,6 +143,7 @@ const CalendarPopup: React.FC<CalendarPopupProps> = ({ anchorEl, open, onClose, 
         onApply({ start: startDate, end: endDate });
         onDateChange({ start: startDate, end: endDate });
         onClose();
+        setShowDatePicker(false);
     };
 
     const handleCancel = () => {
@@ -171,6 +181,10 @@ const CalendarPopup: React.FC<CalendarPopupProps> = ({ anchorEl, open, onClose, 
         setKey(prevKey => prevKey + 1);
     }, [startDate, endDate]);
 
+    const handleCustomClick = () => {
+        setShowDatePicker(true); // Show the date picker
+    };
+
     return (
         <>
             <Backdrop open={open} sx={{ zIndex: 1200, color: '#fff' }} />
@@ -186,9 +200,40 @@ const CalendarPopup: React.FC<CalendarPopupProps> = ({ anchorEl, open, onClose, 
                     vertical: 'top',
                     horizontal: 'left',
                 }}
+                PaperProps={{
+                    sx: {
+                      "@media (max-width: 900px)": {
+                        width: '100%', // Full width on mobile,
+                        maxWidth: '100%',
+                        left: '0 !important',
+                        top: '0 !important',
+                        borderRadius: 0,
+                        height: '100vh',
+                        maxHeight: '100%',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'space-between'
+                      },
+                    },
+                  }}
             >
-                <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
-                    <Box sx={{ padding: 2, display: 'flex', flexDirection: 'column', flexWrap: 'wrap', justifyContent: 'space-between', width: '100%', mb: 0, mr: 1, borderRight: '1px solid var(--Color-4, rgba(23, 22, 25, 0.04))' }}>
+                <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2,
+                    "@media (max-width: 900px)": {
+                        display: 'block'
+                    }
+                 }}>
+                    <Box sx={{ padding: 2, display: 'flex', flexDirection: 'column', gap: 2, flexWrap: 'wrap', width: '100%', mb: 0, borderRight: '1px solid var(--Color-4, rgba(23, 22, 25, 0.04))',
+                        "@media (max-width: 900px)": {
+                            display: showDatePicker ? 'none' : 'flex',
+                            borderRight: 'none'
+                        }
+                        
+                     }}>
+                        <Button sx={{...style.button_date,
+                            "@media (min-width: 901px)": {
+                                display: 'none'
+                            }
+                        }} onClick={handleCustomClick}>Custom</Button>
                         <Button sx={style.button_date} onClick={handleToday}>Today</Button>
                         <Button sx={style.button_date} onClick={handleYesterday}>Yesterday</Button>
                         <Button sx={style.button_date} onClick={handleThisWeek}>This Week</Button>
@@ -200,64 +245,10 @@ const CalendarPopup: React.FC<CalendarPopupProps> = ({ anchorEl, open, onClose, 
                         <Button sx={style.button_date} onClick={handleAllTime}>All Time</Button>
                     </Box>
 
-                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                        <Box sx={{ padding: 2, display: 'flex', justifyContent: 'center', mb: 0, gap: 2, "@media (max-width: 900px)": { display: 'none' } }}>
-                            <DatePicker
-                                selected={startDate}
-                                onChange={(date) => handleChange([date, endDate])} // Изменяем на вызов handleChange
-                                selectsStart
-                                startDate={startDate || undefined}
-                                endDate={endDate || undefined}
-                                dayClassName={dayClassName}
-                                inline
-                            />
-                            <Box sx={{ width: '2px', height: 'auto', border: '1px solid var(--Color-4, rgba(23, 22, 25, 0.04))' }} />
-                            <DatePicker
-                                selected={endDate}
-                                onChange={(date) => handleChange([startDate, date])} // Изменяем на вызов handleChange
-                                selectsEnd
-                                startDate={startDate || undefined}
-                                endDate={endDate || undefined}
-                                dayClassName={dayClassName}
-                                inline
-                            />
-                        </Box>
-
-                        <Box
-                            sx={{
-                                display: 'none',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                width: '100%',
-                                mb: 2,
-                                borderBottom: '0.5px solid rgba(190, 190, 190, 1)',
-                                "@media (max-width: 900px)": {
-                                    display: 'flex',
-                                    '& .react-datepicker': {
-                                        fontSize: '0.8rem',
-                                        width: '100%',
-                                        padding:1,
-                                    },
-                                }
-                            }}
-                        >
-                            <DatePicker
-                                selected={startDate}
-                                startDate={startDate || undefined}
-                                endDate={endDate || undefined}
-                                onChange={handleChange}
-                                selectsRange
-                                dayClassName={dayClassName}
-                                inline
-                                calendarClassName="react-datepicker"
-                                renderDayContents={(day) => <span>{day}</span>}
-                            />
-                        </Box>
-
-                        <Box
-                            sx={{ gap: 1, display: 'flex', flexDirection: 'row', width: '100%', justifyContent: 'space-between', paddingBottom: 1, pr: 2, alignItems: 'center', borderTop: '1px solid var(--Color-4, rgba(23, 22, 25, 0.04))' }}
-                        >
-                            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', pl: 2, pt: 1, "@media (max-width: 900px)": {display: 'none'} }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                            <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', pt: 2, pb: 1, "@media (max-width: 900px)": {
+                                                display: 'none'
+                                            } }}>
                                 <TextField
                                     value={startDateString}
                                     onChange={(e) => setStartDateString(e.target.value)}
@@ -275,13 +266,19 @@ const CalendarPopup: React.FC<CalendarPopupProps> = ({ anchorEl, open, onClose, 
                                             '& .MuiInputBase-input': {
                                                 fontSize: '12px',
                                                 padding: 0,
-                                                pl: 1.5
+                                                p: '8px 12px'
                                             },
+                                            '& .MuiOutlinedInput-notchedOutline': {
+                                                borderColor: 'rgba(23, 22, 25, 0.10)'
+                                            },
+                                            "@media (max-width: 900px)": {
+                                                display: 'none'
+                                            }
                                         },
                                     }}
-                                    sx={{ width: '94px', height: '24px' }}
+                                    sx={{ width: '94px', height: '32px' }}
                                 />
-                                <Box sx={{ width: '11px', height: '1px', border: '1px solid var(--Color-2, rgba(23, 22, 25, 0.1))' }}>
+                                <Box sx={{ width: '11px', height: '1px', border: '1px solid rgba(23, 22, 25, 0.1)',  }}>
                                 </Box>
                                 <TextField
                                     value={endDateString}
@@ -301,24 +298,192 @@ const CalendarPopup: React.FC<CalendarPopupProps> = ({ anchorEl, open, onClose, 
                                             '& .MuiInputBase-input': {
                                                 fontSize: '12px',
                                                 padding: 0,
-                                                pl: 1.5
+                                                p: '8px 12px'
                                             },
+                                            '& .MuiOutlinedInput-notchedOutline': {
+                                                borderColor: 'rgba(23, 22, 25, 0.10)'
+                                            },
+                                            "@media (max-width: 900px)": {
+                                                display: 'none'
+                                            }
                                         },
                                     }}
-                                    sx={{ width: '94px', height: '24px' }}
+                                    sx={{ width: '94px', height: '32px' }}
                                 />
                             </Box>
-                            <Box sx={{ width: '100%', display: 'flex', justifyContent: 'end', gap: 2, alignItems: 'end', pt: 1.5 }}>
-                                <Button variant="outlined" onClick={handleCancel} className='second-sub-title' sx={{ backgroundColor: 'rgba(255, 255, 255, 1)', color: 'rgba(80, 82, 178, 1) !important', textTransform: 'none', border: '1px solid rgba(80, 82, 178, 1)', '@media (max-width: 600px)': { width: '100%' }, }}>
+
+                        <Box
+                        sx={{
+                            padding: 2,
+                            display: 'flex',
+                            justifyContent: 'center',
+                            flexDirection: 'column',
+                            mb: 0,
+                            gap: 4,
+                            pl: 0,
+                            '&  .react-datepicker': {
+                            border: 'none'
+                            },
+                            '& .react-datepicker__header': {
+                            backgroundColor: 'transparent',
+                            borderBottom: 'none',
+                            padding: 0
+                            },
+                            '& .react-datepicker__day-names': {
+                            marginBottom: '10px',
+                            marginTop: '10px'
+                            },
+                            '& .react-datepicker__day-name': {
+                            fontFamily: 'Roboto',
+                            fontSize: '12px',
+                            fontWeight: '500',
+                            lineHeight: 'normal',
+                            color: 'rgba(74, 74, 74, 0.40)',
+                            margin: '6px'
+                            },
+                            '& .react-datepicker__day': {
+                            fontFamily: 'Roboto',
+                            fontSize: '12px',
+                            fontWeight: '500',
+                            color: '#4a4a4a',
+                            margin: '6px',
+                            },
+                            '& .react-datepicker__day.in-range': {
+                                background: 'rgba(80, 82, 178, 0.04) !important',
+                                color: 'rgba(74, 74, 74, 0.40) !important',
+                                position: 'relative',
+                                borderRadius: 0
+                            },
+                            '& .react-datepicker__day.in-range:before': {
+                                content: '""',
+                                width: '12px',
+                                position: 'absolute',
+                                height: '27.2px',
+                                left: '-12px',
+                                background: 'rgba(80, 82, 178, 0.04)!important'
+                            },
+                            '& .react-datepicker__day.start-date': {
+                                borderTopRightRadius: 0,
+                                borderBottomRightRadius: 0
+                            },
+                            '& .react-datepicker__day.end-date': {
+                                position: 'relative',
+                                borderTopLeftRadius: 0,
+                                borderBottomLeftRadius: 0
+                            },
+                            '& .react-datepicker__day.end-date:before': {
+                                content: '""',
+                                width: '12px',
+                                position: 'absolute',
+                                height: '27.2px',
+                                left: '-12px',
+                                background: 'rgba(80, 82, 178, 0.04)!important'
+                            },
+                            '& .react-datepicker__day.in-range.react-datepicker__day--outside-month:before': {
+                                content: '""',
+                                width: 0,
+                                background: 'none'
+                            },
+                            '& .react-datepicker__day.end-date.react-datepicker__day--outside-month:before': {
+                                content: '""',
+                                width: 0,
+                                background: 'none'
+                            },
+                            '& .react-datepicker__day--in-selecting-range:not(.react-datepicker__day--in-range, .react-datepicker__month-text--in-range, .react-datepicker__quarter-text--in-range, .react-datepicker__year-text--in-range)':
+                             {
+                                background: 'rgba(80, 82, 178, 0.04) !important',
+                                color: 'rgba(74, 74, 74, 0.40) !important'
+                            },
+                            '& .react-datepicker__day--disabled': {
+                            fontFamily: 'Roboto',
+                            fontSize: '12px',
+                            fontWeight: '500',
+                            color: 'rgba(74, 74, 74, 0.40)',
+                            margin: '6px'
+                            },
+                            '& .react-datepicker__day--keyboard-selected': {
+                                backgroundColor: '#5052B2 !important',
+                                color: '#fff !important'
+                            },
+                            '& .react-datepicker__day:hover': {
+                            backgroundColor: '#5052B2 !important',
+                            color: '#fff !important'
+                            },
+                            '& .react-datepicker__day--disabled:hover': {
+                                backgroundColor: 'transparent !important',
+                                color: 'rgba(74, 74, 74, 0.40) !important'
+                            },
+                            '& .react-datepicker__current-month': {
+                            fontFamily: 'Roboto',
+                            fontSize: '14px',
+                            fontWeight: '700',
+                            color: '#4a4a4a',
+                            margin: '10px 0',
+                            textAlign: 'left', // Align the month name to the left
+                            width: '100%' // Ensure it takes up the full width
+                            },
+                            '& .react-datepicker__navigation': {
+                            top: '10px',
+                            lineHeight: '24px',
+                            width: '20px',
+                            height: '20px'
+                            },
+                            '& .react-datepicker__navigation--previous': {
+                            right: '45px', // Move left navigation closer to the left
+                            left: 'auto', // Ensure it's properly aligned
+                            },
+                            '& .react-datepicker__navigation--next': {
+                            left: 'auto', // Ensure the right navigation is on the far right
+                            right: '10px',
+                            },
+                            '& .react-datepicker__month-container': {
+                            display: 'block', // Stack months vertically instead of side by side
+                            width: '100%', // Ensure each month takes up full width,
+                            float: 'none'
+                            },
+                            '& .react-datepicker__navigation-icon::before': {
+                                borderColor: '#4a4a4a',
+                                borderWidth: '2px 2px 0 0'
+                            },
+                            "@media (max-width: 900px)": {
+                                display: showDatePicker ? 'flex' : 'none',
+                                pl: 2
+                            }
+                        }}
+                        >
+                        <DatePicker
+                            selected={startDate}
+                            onChange={handleChange}
+                            selectsStart
+                            startDate={startDate || undefined}
+                            endDate={endDate || undefined}
+                            dayClassName={dayClassName}
+                            selectsRange
+                            inline
+                            monthsShown={2} // Show two months
+                            maxDate={new Date()} // Disable future dates
+                        />
+                        </Box>
+                    </Box>
+                </Box>
+                <Box
+                            sx={{ gap: 1, display: 'flex', flexDirection: 'row', width: '100%', justifyContent: 'space-between', paddingBottom: 2, pr: 2, pl: 2, alignItems: 'center', borderTop: '1px solid var(--Color-4, rgba(23, 22, 25, 0.04))' }}
+                        >
+                            
+                            <Box sx={{ width: '100%', display: 'flex', justifyContent: 'end', gap: 2, alignItems: 'end', pt: 2 }}>
+                                <Button variant="outlined" onClick={handleCancel} className='second-sub-title' sx={{ backgroundColor: 'rgba(255, 255, 255, 1)', color: 'rgba(80, 82, 178, 1) !important', textTransform: 'none',
+                                border: '1px solid rgba(80, 82, 178, 1)',
+                                padding: '6px 12px',
+                                     '@media (max-width: 600px)': { width: '100%' }, }}>
                                     Cancel
                                 </Button>
-                                <Button variant="contained" onClick={handleApply} className='second-sub-title' sx={{ backgroundColor: 'rgba(80, 82, 178, 1)', color: 'rgba(255, 255, 255, 1) !important', textTransform: 'none', '@media (max-width: 600px)': { width: '100%' } }}>
+                                <Button variant="contained" onClick={handleApply} className='second-sub-title' sx={{ backgroundColor: 'rgba(80, 82, 178, 1)', color: 'rgba(255, 255, 255, 1) !important', textTransform: 'none',
+                                padding: '6px 12px',
+                                    '@media (max-width: 600px)': { width: '100%' } }}>
                                     Apply
                                 </Button>
                             </Box>
                         </Box>
-                    </Box>
-                </Box>
             </Popover>
         </>
     );
