@@ -432,6 +432,7 @@ export const SettingsTeams: React.FC = () => {
     return (
         <Box>
             {pendingInvitations.length > 0 && (
+                <>
                 <Box sx={{ marginBottom: 2 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', mb: 3 }}>
                         <Typography variant="h6" className='first-sub-title' sx={{
@@ -531,8 +532,10 @@ export const SettingsTeams: React.FC = () => {
                         </Table>
                     </TableContainer>
                 </Box>
+                    <Divider sx={{ borderColor: '#e4e4e4' }} />
+                </>
             )}
-            <Divider sx={{ borderColor: '#e4e4e4' }} />
+            
 
             <Box>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', my: 3.75, alignItems: 'center' }}>

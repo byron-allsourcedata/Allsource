@@ -301,8 +301,11 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
 
     const isLargeScreen = useMediaQuery('(min-width:1200px)');
     const isMediumScreen = useMediaQuery('(min-width:768px)');
+    const isMobile = useMediaQuery('(max-width: 380px)');
 
-    const chartSize = isLargeScreen ? 400 : isMediumScreen ? 300 : 200;
+    const chartSize = isLargeScreen ? 400 : isMediumScreen ? 300 : isMobile ? 200 : 260;
+
+
     const [series, setSeries] = useState<
         {
             id: keyof typeof colorMapping;
@@ -629,11 +632,17 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                             }]}
                             yAxis={[
                                 {
-                                    valueFormatter: (value) => {
-                                        return `${new Intl.NumberFormat('en-US').format(value)}$`;
-                                    },
-                                },
-                            ]}
+                                valueFormatter: (value) => {
+                                    if (value >= 1000 && value < 1000000) {
+                                      return `$${(value / 1000).toFixed(0)}k`; // Formats 10,000 as 10k
+                                    } else if (value >= 1000000) {
+                                      return `$${(value / 1000000).toFixed(1)}M`; // Formats 1,000,000 as 1.0M
+                                    } else {
+                                      return value.toString(); // Return smaller numbers without formatting
+                                    }
+                                  },
+                                }
+                              ]}
                             series={filteredSeries}
                             height={250}
                             margin={{ left: 70, right: 20, top: 20, bottom: 20 }}
@@ -738,7 +747,15 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                     }]}
                                     yAxis={[
                                         {
-                                            valueFormatter: (value) => `${value}$`,
+                                            valueFormatter: (value) => {
+                                                if (value >= 1000 && value < 1000000) {
+                                                  return `$${(value / 1000).toFixed(0)}k`; // Formats 10,000 as 10k
+                                                } else if (value >= 1000000) {
+                                                  return `$${(value / 1000000).toFixed(1)}M`; // Formats 1,000,000 as 1.0M
+                                                } else {
+                                                  return value.toString(); // Return smaller numbers without formatting
+                                                }
+                                              },
                                         }
                                     ]}
                                     series={viewedProductSeries}
@@ -843,10 +860,18 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                         colors={['rgba(180, 218, 193, 1)']}
                                         xAxis={[{ scaleType: 'point', data: formattedData }]}
                                         yAxis={[
-                                            {
-                                                valueFormatter: (value) => `${value}$`,
-                                            }
-                                        ]}
+                                        {
+                                            valueFormatter: (value) => {
+                                                if (value >= 1000 && value < 1000000) {
+                                                  return `$${(value / 1000).toFixed(0)}k`; // Formats 10,000 as 10k
+                                                } else if (value >= 1000000) {
+                                                  return `$${(value / 1000000).toFixed(1)}M`; // Formats 1,000,000 as 1.0M
+                                                } else {
+                                                  return value.toString(); // Return smaller numbers without formatting
+                                                }
+                                              },
+                                        }
+                                    ]}
                                         series={addToCartSeries}
                                         height={250}
                                         margin={{ left: 50, right: 20, top: 20, bottom: 20 }}
@@ -949,10 +974,18 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                         colors={['rgba(181, 218, 248, 1)']}
                                         xAxis={[{ scaleType: 'point', data: formattedData, }]}
                                         yAxis={[
-                                            {
-                                                valueFormatter: (value) => `${value}$`, // Форматируем значения с добавлением $
-                                            }
-                                        ]}
+                                        {
+                                            valueFormatter: (value) => {
+                                                if (value >= 1000 && value < 1000000) {
+                                                  return `$${(value / 1000).toFixed(0)}k`; // Formats 10,000 as 10k
+                                                } else if (value >= 1000000) {
+                                                  return `$${(value / 1000000).toFixed(1)}M`; // Formats 1,000,000 as 1.0M
+                                                } else {
+                                                  return value.toString(); // Return smaller numbers without formatting
+                                                }
+                                              },
+                                        }
+                                    ]}
                                         series={visitorSeries}
                                         height={250}
                                         margin={{ left: 50, right: 20, top: 20, bottom: 20 }}
@@ -1004,7 +1037,11 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                             sx={{ display: 'flex', flexDirection: 'row', gap: '0px', flexGrow: 1, justifyContent: 'center', width: '100%' }}
                         >
                             <CardContent sx={{ flexGrow: 1 }}>
-                                <Box sx={{ display: 'flex', alignItems: 'start', justifyContent: 'center', width: '100%', }}>
+                                <Box className='third-sub-title' sx={{ display: 'flex', alignItems: 'start', justifyContent: 'center', width: '100%',
+                                    '@media (max-width: 460px)': {
+                                        fontSize: '8px !important'
+                                    }
+                                 }}>
                                     <PieChart
                                         colors={country_color}
                                         margin={{
@@ -1028,8 +1065,9 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                                 highlightScope: { faded: 'global', highlighted: 'item' },
                                             },
                                         ]}
-                                        height={260}
-                                        width={260}
+                                        height={isMobile ? 200 : 260}
+                                        width={isMobile ? 200 : 260}
+                                        
                                         slotProps={{
                                             legend: { hidden: true },
                                         }}
@@ -1038,7 +1076,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                 </Box>
                             </CardContent>
 
-                            <Stack sx={{ padding: 2, display: 'flex', alignItems: 'start', justifyContent: 'center', '@media (max-width: 600px)': { pr: 10 } }}>
+                            <Stack sx={{ padding: 2, display: 'flex', alignItems: 'start', justifyContent: 'center' }}>
                                 {distribution.map((type, index) => (
                                     <Stack
                                         key={index}
@@ -1054,7 +1092,11 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                                     gap: 2,
                                                 }}
                                             >
-                                                <Typography variant="body2" sx={{ fontFamily: 'Roboto', fontSize: '12px', fontWeight: 400, lineHeight: '11.72px', textAlign: 'left', display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 0.5 }}>
+                                                <Typography variant="body2" className="paragraph" sx={{ lineHeight: '11.72px !important', color: 'rgba(32, 33, 36, 1) !important', textAlign: 'left', display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 0.5,
+                                                    '@media (max-width: 460px)': {
+                                                        fontSize: '10px !important'
+                                                    }
+                                                 }}>
                                                     <Box
                                                         sx={{
                                                             width: 12,
@@ -1112,7 +1154,15 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                             colors={['rgba(5, 104, 225, 1)']}
                             xAxis={[{ scaleType: 'point', data, tickInterval: (index, i) => (i + 1) % 5 === 0 }]} yAxis={[
                                 {
-                                    valueFormatter: (value) => `${value}$`,
+                                    valueFormatter: (value) => {
+                                        if (value >= 1000 && value < 1000000) {
+                                          return `$${(value / 1000).toFixed(0)}k`; // Formats 10,000 as 10k
+                                        } else if (value >= 1000000) {
+                                          return `$${(value / 1000000).toFixed(1)}M`; // Formats 1,000,000 as 1.0M
+                                        } else {
+                                          return value.toString(); // Return smaller numbers without formatting
+                                        }
+                                      },
                                 }
                             ]}
                             series={[{

@@ -76,10 +76,10 @@ export const leadsStyles: { [key: string]: SxProps<Theme> } = {
   },
   table_column: {
     fontFamily: 'Nunito Sans', fontSize: '12px', fontWeight: '600',
-    lineHeight: '19.6px',
+    lineHeight: '16px',
     textAlign: 'left',
     textWrap: 'nowrap',
-    color: '#4a4a4a',
+    color: '#202124',
     '&::after': {
       content: '""',
       display: 'block',

@@ -1216,9 +1216,10 @@ const Leads: React.FC = () => {
                     <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, mt: 2 }}>
                         {selectedFilters.length > 0 && (
                             <Chip
+                            className='second-sub-title'
                                 label="Clear all"
                                 onClick={handleResetFilters}
-                                sx={{ backgroundColor: 'rgba(255, 255, 255, 1)', color: 'rgba(80, 82, 178, 1)', borderRadius: '3px', fontFamily: 'Nunito', fontWeight: '600', fontSize: '12px' }}
+                                sx={{ color: '#5052B2 !important', backgroundColor: 'transparent', lineHeight: '20px !important' }}
                             />
                         )}
                         {selectedFilters.map(filter => {
@@ -1234,6 +1235,7 @@ const Leads: React.FC = () => {
                             }
                             return (
                                 <Chip
+                                    className='paragraph'
                                     key={filter.label}
                                     label={`${filter.label}: ${displayValue.charAt(0).toUpperCase() + displayValue.slice(1)}`}
                                     onDelete={() => handleDeleteFilter(filter)}
@@ -1241,18 +1243,16 @@ const Leads: React.FC = () => {
                                         <CloseIcon
                                             sx={{
                                                 backgroundColor: 'transparent',
-                                                color: 'rgba(74, 74, 74, 1)',
-                                                fontSize: '14px'
+                                                color: '#828282 !important',
+                                                fontSize: '14px !important'
                                             }}
                                         />
                                     }
                                     sx={{
                                         borderRadius: '4.5px',
-                                        backgroundColor: 'rgba(237, 237, 247, 1)',
-                                        color: 'rgba(74, 74, 74, 1)',
-                                        fontFamily: 'Nunito',
-                                        fontWeight: '600',
-                                        fontSize: '12px'
+                                        backgroundColor: 'rgba(80, 82, 178, 0.10)',
+                                        color: '#5F6368 !important',
+                                        lineHeight: '16px !important'
                                     }}
                                 />
                             );

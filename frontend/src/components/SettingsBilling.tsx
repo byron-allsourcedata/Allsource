@@ -28,7 +28,9 @@ const billingStyles = {
     tableColumn: {
         lineHeight: '16px !important',
         position: 'relative',
-        textAlign: 'center',
+        paddingLeft: '45px',
+        paddingTop: '18px',
+        paddingBottom: '18px',
         '&::after': {
             content: '""',
             display: 'block',
@@ -52,7 +54,9 @@ const billingStyles = {
     tableBodyColumn: {
         lineHeight: '16px !important',
         position: 'relative',
-        textAlign: 'center',
+        paddingLeft: '45px',
+        paddingTop: '13.5px',
+        paddingBottom: '13.5px',
         '&::after': {
             content: '""',
             display: 'block',
@@ -634,22 +638,22 @@ export const SettingsBilling: React.FC = () => {
             case 'successful':
                 return {
                     background: '#eaf8dd',
-                    color: '#2b5b00'
+                    color: '#2b5b00 !important'
                 };
             case 'decline':
                 return {
                     background: '#ececec',
-                    color: '#4a4a4a'
+                    color: '#4a4a4a !important'
                 };
             case 'failed':
                 return {
                     background: '#fcd4cf',
-                    color: '#a61100'
+                    color: '#a61100 !important'
                 };
             default:
                 return {
                     background: '#ececec',
-                    color: '#4a4a4a'
+                    color: '#4a4a4a !important'
                 };
         }
     };
@@ -690,8 +694,8 @@ export const SettingsBilling: React.FC = () => {
                             <Box sx={{
                                 border: '1px dashed #5052B2',
                                 borderRadius: '4px',
-                                width: '62px',
-                                height: '62px',
+                                width: '24px',
+                                height: '24px',
                                 display: 'flex',
                                 justifyContent: 'center',
                                 alignItems: 'center',
@@ -700,7 +704,7 @@ export const SettingsBilling: React.FC = () => {
                                 }
                             }}>
                                 <Button onClick={handleOpen} sx={{ padding: 2 }}>
-                                    <Image src="/add-square.svg" alt="add-square" height={32} width={32} />
+                                    <Image src="/add-square.svg" alt="add-square" height={24} width={24} />
                                 </Button>
                             </Box>
                         </Box>
@@ -1414,7 +1418,9 @@ export const SettingsBilling: React.FC = () => {
                                 <TableRow sx={billingStyles.tableBodyRow}>
                                     <TableCell className='table-data' colSpan={5} sx={{
                                         ...billingStyles.tableBodyColumn,
-                                        textAlign: 'center'
+                                        textAlign: 'center',
+                                        paddingTop: '18px',
+                                        paddingBottom: '18px'
                                     }}>
                                         No history found
                                     </TableCell>
@@ -1433,7 +1439,7 @@ export const SettingsBilling: React.FC = () => {
 
                                         }}
                                     >
-                                        <TableCell className="table-data" sx={{
+                                        <TableCell className="sticky-cell table-data" sx={{
                                             ...billingStyles.tableBodyColumn,
                                             cursor: 'pointer',
                                             backgroundColor: '#fff'
@@ -1447,16 +1453,14 @@ export const SettingsBilling: React.FC = () => {
                                         <TableCell className='table-data' sx={billingStyles.tableBodyColumn}>
                                             <Typography component="span" className='table-data' sx={{
                                                 ...getStatusStyles(history.status),
-                                                background: '#eaf8dd',
                                                 padding: '6px 8px',
                                                 borderRadius: '2px',
-                                                color: '#2b5b00 !important',
                                             }}>
                                                 {history.status}
                                             </Typography>
                                         </TableCell>
                                         <TableCell className='table-data' sx={billingStyles.tableBodyColumn}>
-                                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2 }}>
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                                                 <IconButton onClick={() => fetchSaveBillingHistory(history.invoice_id)} sx={{ ':hover': { backgroundColor: 'transparent', }, padding: 0 }}>
                                                     <DownloadIcon sx={{ width: '24px', height: '24px', color: 'rgba(188, 188, 188, 1)', ':hover': { color: 'rgba(80, 82, 178, 1)' } }} />
                                                 </IconButton>

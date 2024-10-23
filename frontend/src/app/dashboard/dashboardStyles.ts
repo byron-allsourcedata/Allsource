@@ -45,15 +45,9 @@ export const dashboardStyles: { [key: string]: SxProps<Theme> } = {
     gap: '5.25rem'
   },
   title: {
-    fontWeight: 'bold',
-    fontSize: '16px',
     whiteSpace: 'nowrap',
     textAlign: 'start',
-    padding: '1.5rem 0rem 0',
-    fontFamily: 'Nunito',
-    '@media (max-width: 1199px)': {
-      paddingTop: '1rem'
-    }
+    lineHeight: '22px !important'
   },
   formContainer: {
     display: 'grid',

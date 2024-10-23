@@ -501,10 +501,11 @@ const Dashboard: React.FC = () => {
               flexDirection: "column",
             }}
           >
-            <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', "@media (max-width: 600px)": { flexDirection: 'column', alignItems: 'start', } }}>
+            <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', mt: 3, "@media (max-width: 600px)": { flexDirection: 'column', alignItems: 'start', } }}>
               <Typography
                 variant="h4"
                 component="h1"
+                className="first-sub-title"
                 sx={{
                   ...dashboardStyles.title, '@media (max-width: 600px)': {
                     display: 'none'
@@ -521,6 +522,7 @@ const Dashboard: React.FC = () => {
                 <Typography
                   variant="h4"
                   component="h1"
+                  className="first-sub-title"
                   sx={dashboardStyles.title}
                 >
                   Dashboard
@@ -552,7 +554,10 @@ const Dashboard: React.FC = () => {
                 </Box>
               </Box>
 
-              <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center', width: '100%', alignItems: 'center', mt: 2, }}>
+              <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', '@media (max-width: 600px)': {
+                width: '100%',
+                mt: 2
+              } }}>
                 <Tabs
                   value={tabIndex}
                   onChange={handleTabChange}
@@ -622,11 +627,8 @@ const Dashboard: React.FC = () => {
                 </Tabs>
               </Box>
 
-
-            </Box>
-
-            <Box sx={{
-              width: '100%', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 2, '@media (max-width: 600px)': {
+              <Box sx={{
+              display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 2, '@media (max-width: 600px)': {
                 display: 'none',
               }
             }}>
@@ -668,6 +670,11 @@ const Dashboard: React.FC = () => {
                 }
               </Button>
             </Box>
+
+
+            </Box>
+
+            
 
 
 
