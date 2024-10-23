@@ -234,7 +234,7 @@ export const SettingsBilling: React.FC = () => {
     const [selectedCardId, setSelectedCardId] = useState<string | null>();
     const [selectedInvoiceId, setselectedInvoiceId] = useState<string | null>();
     const [removePopupOpen, setRemovePopupOpen] = useState(false);
-    const [downgrade_plan, setDowngrade_plan] = useState<string | null>();
+    const [downgrade_plan, setDowngrade_plan] = useState<any | null>();
     const [canceled_at, setCanceled_at] = useState<string | null>();
     const [sendInvoicePopupOpen, setSendInvoicePopupOpen] = useState(false);
     const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -603,6 +603,28 @@ export const SettingsBilling: React.FC = () => {
         return new Date(dateString).toLocaleDateString('en-US', options);
     };
 
+    const handleRedirectSubscription = () => {
+        window.location.href = '/settings?section=subscription';
+    };
+
+    const handleCancel = async() => {
+        try {
+            const response = await axiosInterceptorInstance.get(`/subscriptions/cancel-downgrade`);
+            if (response && response.data) {
+                showToast(response.data);
+            }
+        } catch (error: unknown) {
+            if (axios.isAxiosError(error)) {
+                showErrorToast(error.message);
+            } else if (error instanceof Error) {
+                showErrorToast(error.message);
+            } else {
+                showErrorToast("An unexpected error occurred.");
+            }
+        }
+        window.location.reload();
+      };
+
 
     const getStatusStyles = (status: string) => {
         switch (status?.toLowerCase()) {
@@ -853,15 +875,36 @@ export const SettingsBilling: React.FC = () => {
                                         <Image src={'danger.svg'} alt='danger' width={14} height={13.5} />
                                     </Box>
                                 ) : downgrade_plan ? (
-                                    <Box sx={{ display: 'flex', borderRadius: '4px', background: '#FDF2CA', padding: '2px 12px', gap: '3px', alignItems: 'center' }}>
-                                        <Typography className="main-text" sx={{
+                                    <Box
+                                        sx={{
+                                            display: 'flex',
                                             borderRadius: '4px',
-                                            color: '#795E00',
-                                            fontSize: '12px',
-                                            fontWeight: '600',
-                                            lineHeight: '16px',
-                                        }}>
-                                            Downgrade pending - {downgrade_plan}
+                                            background: '#FDF2CA',
+                                            padding: '2px 12px',
+                                            gap: '3px',
+                                            alignItems: 'center'
+                                        }}
+                                    >
+                                        <Typography
+                                            className="main-text"
+                                            sx={{
+                                                borderRadius: '4px',
+                                                color: '#795E00',
+                                                fontSize: '12px',
+                                                fontWeight: '600',
+                                                lineHeight: '16px',
+                                            }}
+                                        >
+                                            Downgrade pending - {downgrade_plan.plan_name} {downgrade_plan.downgrade_at}.{' '}
+                                            <span
+                                                onClick={handleCancel}
+                                                style={{
+                                                    color: 'blue',
+                                                    cursor: 'pointer'
+                                                }}
+                                            >
+                                                Cancel
+                                            </span>
                                         </Typography>
                                     </Box>
                                 ) : (
@@ -878,15 +921,38 @@ export const SettingsBilling: React.FC = () => {
                                     </Box>
                                 )
                             ) : (
-                                <Box sx={{ display: 'flex', borderRadius: '4px', background: '#f8dede', padding: '2px 12px', gap: '3px' }}>
-                                    <Typography className="main-text" sx={{
+                                <Box
+                                    sx={{
+                                        display: 'flex',
                                         borderRadius: '4px',
-                                        color: '#b00000',
-                                        fontSize: '12px',
-                                        fontWeight: '600',
-                                        lineHeight: '16px'
-                                    }}>
-                                        Canceled
+                                        background: '#f8dede',
+                                        padding: '2px 12px',
+                                        gap: '3px'
+                                    }}
+                                >
+                                    <Typography
+                                        className="main-text"
+                                        sx={{
+                                            borderRadius: '4px',
+                                            color: '#b00000',
+                                            fontSize: '12px',
+                                            fontWeight: '600',
+                                            lineHeight: '16px',
+                                            cursor: 'pointer'
+                                        }}
+                                    >
+                                        Subscription Cancelled.{' '}
+                                        <span
+                                            onClick={handleRedirectSubscription}
+                                            style={{
+                                                color: '#146EF6',
+                                                cursor: 'pointer'
+                                            }}
+                                            onMouseEnter={(e) => (e.currentTarget.style.color = 'darkblue')}
+                                            onMouseLeave={(e) => (e.currentTarget.style.color = '#146EF6')}
+                                        >
+                                            Choose Plan
+                                        </span>
                                     </Typography>
                                 </Box>
                             )}
@@ -1229,7 +1295,7 @@ export const SettingsBilling: React.FC = () => {
                             }}
                         />
                         <Typography className='paragraph' sx={{ color: '#787878' }}>
-                            {planContactsCollected - contactsCollected} out of {planContactsCollected} Remaining
+                            {Math.max(0, planContactsCollected - contactsCollected)} out of {planContactsCollected} Remaining
                         </Typography>
                     </Box>
 

@@ -292,11 +292,16 @@ class SettingsService:
                 'active': is_active,
             }
 
-        billing_detail = {'subscription_details': subscription_details,
-                          'downgrade_plan': get_product_from_price_id(
-                              user_subscription.downgrade_price_id).name if user_subscription and user_subscription.downgrade_price_id else None,
-                          'canceled_at': user_subscription.cancel_scheduled_at if user_subscription else None
-                          }
+        billing_detail = {
+            'subscription_details': subscription_details,
+            'downgrade_plan': {
+                'plan_name': get_product_from_price_id(
+                    user_subscription.downgrade_price_id).name if user_subscription and user_subscription.downgrade_price_id else None,
+                'downgrade_at': user_subscription.plan_end.strftime('%b %d, %Y') if user_subscription and user_subscription.downgrade_price_id else None,
+            },
+            'canceled_at': user_subscription.cancel_scheduled_at if user_subscription else None
+        }
+
         return billing_detail
 
     def get_billing(self, user: dict):
