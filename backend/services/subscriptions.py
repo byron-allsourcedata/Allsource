@@ -316,7 +316,8 @@ class SubscriptionService:
                     user_id=user_id,
                     price_id=price_id,
                     platform_subscription_id=platform_subscription_id,
-                    lead_credit_price=lead_credit_price
+                    lead_credit_price=lead_credit_price,
+                    is_trial=True if stripe_status == 'trialing' else False,
                 )
                 self.db.add(new_subscription)
                 self.db.flush()

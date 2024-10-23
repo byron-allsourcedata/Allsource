@@ -33,11 +33,11 @@ class UsersService:
             return {
                 'is_trial_pending': True
             }
-        user_plan = self.plan_persistence.get_user_subscription(self.user.get('id'))
-        if user_plan:
+        user_subscription, is_free_trial = self.plan_persistence.get_user_subscription_with_trial_status(self.user.get('id'))
+        if user_subscription:
             return {
-                "is_trial": user_plan.is_trial,
-                "plan_end": user_plan.plan_end,
+                "is_trial": is_free_trial,
+                "plan_end": user_subscription.plan_end,
             }
         return {
             "is_trial_pending": True
