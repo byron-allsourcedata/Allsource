@@ -361,10 +361,10 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
     const [data, setDays] = useState<string[]>([]);
     const formattedData = data.map(dateStr => {
         return new Date(dateStr).toLocaleDateString('en-US', {
-          month: 'short', // сокращенное название месяца
-          day: 'numeric', // числовой день
+            month: 'short',
+            day: 'numeric',
         });
-      });
+    });
     const filteredSeries = series.filter((s) => visibleSeries[s.id as keyof VisibleSeries]) as [];
     const filteredSeriescolor = series.filter((s) => visibleSeries[s.id as keyof VisibleSeries]);
 
@@ -813,7 +813,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                     <Box sx={{ mb: 3, boxShadow: '0px 2px 10px 0px rgba(0, 0, 0, 0.1)' }}>
                         <Card variant="outlined" sx={{ width: '100%' }}>
                             <CardContent>
-                            {loading ? <Box
+                                {loading ? <Box
                                     sx={{
                                         position: 'relative',
                                         background: 'rgba(255, 255, 255, 0.8)',
@@ -839,25 +839,25 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                         }}
                                     />
                                 </Box> :
-                                <LineChart
-                                    colors={['rgba(180, 218, 193, 1)']}
-                                    xAxis={[{ scaleType: 'point', data: formattedData }]}
-                                    yAxis={[
-                                        {
-                                            valueFormatter: (value) => `${value}$`,
-                                        }
-                                    ]}
-                                    series={addToCartSeries}
-                                    height={250}
-                                    margin={{ left: 50, right: 20, top: 20, bottom: 20 }}
-                                    grid={{ horizontal: true }}
-                                    sx={{
-                                        border: 'none',
-                                    }}
-                                    slotProps={{
-                                        legend: { hidden: true },
-                                    }}
-                                />}
+                                    <LineChart
+                                        colors={['rgba(180, 218, 193, 1)']}
+                                        xAxis={[{ scaleType: 'point', data: formattedData }]}
+                                        yAxis={[
+                                            {
+                                                valueFormatter: (value) => `${value}$`,
+                                            }
+                                        ]}
+                                        series={addToCartSeries}
+                                        height={250}
+                                        margin={{ left: 50, right: 20, top: 20, bottom: 20 }}
+                                        grid={{ horizontal: true }}
+                                        sx={{
+                                            border: 'none',
+                                        }}
+                                        slotProps={{
+                                            legend: { hidden: true },
+                                        }}
+                                    />}
                             </CardContent>
                         </Card>
                     </Box>
@@ -919,7 +919,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                     <Box sx={{ mb: 3, boxShadow: '0px 2px 10px 0px rgba(0, 0, 0, 0.1)' }}>
                         <Card variant="outlined" sx={{ width: '100%' }}>
                             <CardContent>
-                            {loading ? <Box
+                                {loading ? <Box
                                     sx={{
                                         position: 'relative',
                                         background: 'rgba(255, 255, 255, 0.8)',
@@ -945,25 +945,25 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                         }}
                                     />
                                 </Box> :
-                                <LineChart
-                                    colors={['rgba(181, 218, 248, 1)']}
-                                    xAxis={[{ scaleType: 'point', data: formattedData, }]}
-                                    yAxis={[
-                                        {
-                                            valueFormatter: (value) => `${value}$`, // Форматируем значения с добавлением $
-                                        }
-                                    ]}
-                                    series={visitorSeries}
-                                    height={250}
-                                    margin={{ left: 50, right: 20, top: 20, bottom: 20 }}
-                                    grid={{ horizontal: true }}
-                                    sx={{
-                                        border: 'none',
-                                    }}
-                                    slotProps={{
-                                        legend: { hidden: true },
-                                    }}
-                                />}
+                                    <LineChart
+                                        colors={['rgba(181, 218, 248, 1)']}
+                                        xAxis={[{ scaleType: 'point', data: formattedData, }]}
+                                        yAxis={[
+                                            {
+                                                valueFormatter: (value) => `${value}$`, // Форматируем значения с добавлением $
+                                            }
+                                        ]}
+                                        series={visitorSeries}
+                                        height={250}
+                                        margin={{ left: 50, right: 20, top: 20, bottom: 20 }}
+                                        grid={{ horizontal: true }}
+                                        sx={{
+                                            border: 'none',
+                                        }}
+                                        slotProps={{
+                                            legend: { hidden: true },
+                                        }}
+                                    />}
                             </CardContent>
                         </Card>
                     </Box>
