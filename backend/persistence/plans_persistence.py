@@ -57,20 +57,11 @@ class PlansPersistence:
         return subscription_plan
 
     def get_user_subscription(self, user_id):
-        subscription = (
-            self.db.query(UserSubscriptions, SubscriptionPlan.is_free_trial)
-            .join(User, User.current_subscription_id == UserSubscriptions.id)
-            .join(SubscriptionPlan, SubscriptionPlan.id == UserSubscriptions.plan_id)
-            .filter(User.id == user_id)
-            .first()
-        )
-
-        if subscription:
-            user_subscription, is_free_trial = subscription
-            user_subscription.is_trial = is_free_trial
-            return user_subscription
-
-        return None
+        return self.db.query(
+            UserSubscriptions
+        ).join(User, User.current_subscription_id == UserSubscriptions.id).filter(
+            User.id == user_id
+        ).first()
 
     def get_plan_by_price_id(self, price_id):
         subscription_plan = self.db.query(SubscriptionPlan).filter(

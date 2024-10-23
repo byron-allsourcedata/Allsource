@@ -609,7 +609,7 @@ export const SettingsBilling: React.FC = () => {
 
     const handleCancel = async() => {
         try {
-            setIsLoading(true);
+            setIsLoading(false);
             const response = await axiosInterceptorInstance.get(`/subscriptions/cancel-downgrade`);
             if (response && response.data) {
                 showToast(response.data);
