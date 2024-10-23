@@ -413,14 +413,15 @@ const Dashboard: React.FC = () => {
 
   const handleApply = (dates: { start: Date | null; end: Date | null }) => {
     if (dates.start && dates.end) {
-      const fromUnix = Math.floor(dates.start.getTime() / 1000);
-      const toUnix = Math.floor(dates.end.getTime() / 1000);
 
       setAppliedDates(dates);
       setCalendarAnchorEl(null);
 
 
       handleCalendarClose();
+    }
+    else {
+      setAppliedDates({ start: null, end: null })
     }
   };
 
@@ -632,7 +633,7 @@ const Dashboard: React.FC = () => {
               }
             }}>
               {/* Calendary picker*/}
-              <Typography className="second-sub-title">{selectedDateLabel}</Typography>
+              <Typography className="second-sub-title">{selectedDateLabel? selectedDateLabel : 'All time'}</Typography>
               <Button
                 aria-controls={isCalendarOpen ? 'calendar-popup' : undefined}
                 aria-haspopup="true"
