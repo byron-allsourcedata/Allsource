@@ -444,8 +444,14 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                             xAxis={[{ scaleType: 'point', data, tickInterval: (index, i) => (i + 1) % 5 === 0 }]}
                             yAxis={[
                                 {
-                                  valueFormatter: (value) => {
-                                    return `${new Intl.NumberFormat('en-US').format(value)}$`;
+                                valueFormatter: (value) => {
+                                    if (value >= 1000 && value < 1000000) {
+                                      return `$${(value / 1000).toFixed(0)}k`; // Formats 10,000 as 10k
+                                    } else if (value >= 1000000) {
+                                      return `$${(value / 1000000).toFixed(1)}M`; // Formats 1,000,000 as 1.0M
+                                    } else {
+                                      return value.toString(); // Return smaller numbers without formatting
+                                    }
                                   },
                                 }
                               ]}
@@ -530,7 +536,15 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                     xAxis={[{ scaleType: 'point', data, tickInterval: (index, i) => (i + 1) % 5 === 0 }]}
                                     yAxis={[
                                         {
-                                            valueFormatter: (value) => `${value}$`, // Форматируем значения с добавлением $
+                                            valueFormatter: (value) => {
+                                                if (value >= 1000 && value < 1000000) {
+                                                  return `$${(value / 1000).toFixed(0)}k`; // Formats 10,000 as 10k
+                                                } else if (value >= 1000000) {
+                                                  return `$${(value / 1000000).toFixed(1)}M`; // Formats 1,000,000 as 1.0M
+                                                } else {
+                                                  return value.toString(); // Return smaller numbers without formatting
+                                                }
+                                              },
                                         }
                                     ]}
                                     series={[{
@@ -620,7 +634,15 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                     xAxis={[{ scaleType: 'point', data, tickInterval: (index, i) => (i + 1) % 5 === 0 }]}
                                     yAxis={[
                                         {
-                                            valueFormatter: (value) => `${value}$`, // Форматируем значения с добавлением $
+                                            valueFormatter: (value) => {
+                                                if (value >= 1000 && value < 1000000) {
+                                                  return `$${(value / 1000).toFixed(0)}k`; // Formats 10,000 as 10k
+                                                } else if (value >= 1000000) {
+                                                  return `$${(value / 1000000).toFixed(1)}M`; // Formats 1,000,000 as 1.0M
+                                                } else {
+                                                  return value.toString(); // Return smaller numbers without formatting
+                                                }
+                                              },
                                         }
                                     ]}
                                     series={[{
@@ -711,7 +733,15 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                     xAxis={[{ scaleType: 'point', data, tickInterval: (index, i) => (i + 1) % 5 === 0 }]}
                                     yAxis={[
                                         {
-                                            valueFormatter: (value) => `${value}$`, // Форматируем значения с добавлением $
+                                            valueFormatter: (value) => {
+                                                if (value >= 1000 && value < 1000000) {
+                                                  return `$${(value / 1000).toFixed(0)}k`; // Formats 10,000 as 10k
+                                                } else if (value >= 1000000) {
+                                                  return `$${(value / 1000000).toFixed(1)}M`; // Formats 1,000,000 as 1.0M
+                                                } else {
+                                                  return value.toString(); // Return smaller numbers without formatting
+                                                }
+                                              },
                                         }
                                     ]}
                                     series={[{
@@ -884,7 +914,15 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                             colors={['rgba(5, 104, 225, 1)']}
                             xAxis={[{ scaleType: 'point', data, tickInterval: (index, i) => (i + 1) % 5 === 0 }]}yAxis={[
                                 {
-                                    valueFormatter: (value) => `${value}$`,
+                                    valueFormatter: (value) => {
+                                        if (value >= 1000 && value < 1000000) {
+                                          return `$${(value / 1000).toFixed(0)}k`; // Formats 10,000 as 10k
+                                        } else if (value >= 1000000) {
+                                          return `$${(value / 1000000).toFixed(1)}M`; // Formats 1,000,000 as 1.0M
+                                        } else {
+                                          return value.toString(); // Return smaller numbers without formatting
+                                        }
+                                      },
                                 }
                             ]}
                             series={[{

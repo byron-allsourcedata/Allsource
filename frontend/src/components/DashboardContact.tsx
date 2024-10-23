@@ -378,7 +378,15 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates }) => 
                             xAxis={[{ scaleType: 'point', data, tickInterval: (index, i) => (i + 1) % 5 === 0 }]}
                             yAxis={[
                                 {
-                                    valueFormatter: (value) => `${value}$`, // Форматируем значения с добавлением $
+                                    valueFormatter: (value) => {
+                                        if (value >= 1000 && value < 1000000) {
+                                            return `${(value / 1000).toFixed(0)}k`; // Formats 10,000 as 10k
+                                        } else if (value >= 1000000) {
+                                            return `${(value / 1000000).toFixed(1)}M`; // Formats 1,000,000 as 1.0M
+                                        } else {
+                                            return value.toString(); // Return smaller numbers without formatting
+                                        }
+                                        },
                                 }
                             ]}
                             series={filteredSeries}
@@ -401,7 +409,15 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates }) => 
                             xAxis={[{ scaleType: 'band', data: data }]} // Дни по оси X
                             yAxis={[
                                 {
-                                    valueFormatter: (value) => `${value}$`, // Форматируем значения
+                                    valueFormatter: (value) => {
+                                        if (value >= 1000 && value < 1000000) {
+                                          return `${(value / 1000).toFixed(0)}k`; // Formats 10,000 as 10k
+                                        } else if (value >= 1000000) {
+                                          return `${(value / 1000000).toFixed(1)}M`; // Formats 1,000,000 as 1.0M
+                                        } else {
+                                          return value.toString(); // Return smaller numbers without formatting
+                                        }
+                                      },
                                 }
                             ]}
                             series={series.map((s) => ({ data: s.data, label: s.label }))} // Здесь важна правильная структура данных для отображения рядом

@@ -93,7 +93,7 @@ const DemographicsCard: React.FC<{ value: number }> = ({ value }) => (
 const SalesOverTimeCard: React.FC<{ value: number }> = ({ value }) => (
   <StatCard
     value={value}
-    title="Add to cart"
+    title="Abandoned Cart"
     imageUrl='/cart.svg'
     textColor="rgba(74, 74, 74, 1)"
     borderColor="rgba(202, 239, 169, 0.2)"

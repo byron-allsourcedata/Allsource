@@ -1642,11 +1642,12 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                           ? "1px solid rgba(80, 82, 178, 1)"
                           : "1px solid rgba(220, 220, 239, 1)",
                         color: isSelected
-                          ? "rgba(80, 82, 178, 1)"
-                          : "rgba(74, 74, 74, 1)",
+                          ? "rgba(80, 82, 178, 1) !important"
+                          : "#5F6368 !important",
                         backgroundColor: isSelected
                           ? "rgba(237, 237, 247, 1)"
                           : "rgba(255, 255, 255, 1)",
+                          lineHeight: '20px !important'
                       }}
                     >
                       {label}
@@ -1722,14 +1723,15 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                         alignItems: "center",
                         justifyContent: "center",
                         border: isSelected
-                          ? "1px solid rgba(80, 82, 178, 1)"
-                          : "1px solid rgba(220, 220, 239, 1)",
+                        ? "1px solid rgba(80, 82, 178, 1)"
+                        : "1px solid rgba(220, 220, 239, 1)",
                         color: isSelected
-                          ? "rgba(80, 82, 178, 1)"
-                          : "rgba(74, 74, 74, 1)",
-                        background: isSelected
+                          ? "rgba(80, 82, 178, 1) !important"
+                          : "#5F6368 !important",
+                        backgroundColor: isSelected
                           ? "rgba(237, 237, 247, 1)"
-                          : "transparent",
+                          : "rgba(255, 255, 255, 1)",
+                        lineHeight: '20px !important',
                         '@media (max-width:600px)': {
                           width: '48%'
                         }
