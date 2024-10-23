@@ -4,6 +4,7 @@ import pandas as pd
 import stripe
 from config.stripe import StripeConfig
 from schemas.users import UserSignUpForm
+from datetime import datetime, timedelta, timezone
 
 stripe.api_key = StripeConfig.api_key
 
@@ -24,12 +25,14 @@ def get_default_payment_method(customer_id):
     return default_payment_method_id
 
 
-def renew_subscription(new_price_id, customer_id):
+def renew_subscription(new_price_id, customer_id, trial_period):
     new_subscription = stripe.Subscription.create(
         customer=customer_id,
         items=[{"price": new_price_id}],
+        trial_period_days=trial_period if trial_period else None
     )
-
+    if new_subscription.status == 'trialing':
+        return 'active'
     return new_subscription
 
 

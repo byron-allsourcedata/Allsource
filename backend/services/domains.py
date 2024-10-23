@@ -28,23 +28,18 @@ class UserDomainsService:
     def get_domains(self, user_id: int, **filter_by):
         domains = self.domain_persistence.get_domain_by_user(user_id)
         sorted_domains = sorted(domains, key=lambda x: x.created_at)
-        user_subscription = self.subscription_service.get_user_subscription(user_id=user_id)
-
         return [
-            self.domain_mapped(domain, user_subscription.domains_limit == self.UNLIMITED)
+            self.domain_mapped(domain)
             for i, domain in enumerate(sorted_domains)
         ]
 
-    def domain_mapped(self, domain: UserDomains, enable=False):
-        domain_enable = domain.enable
-        if enable:
-            domain_enable = enable
+    def domain_mapped(self, domain: UserDomains):
         return DomainResponse(
             id=domain.id,
             domain=domain.domain,
             data_provider_id=domain.data_provider_id,
             is_pixel_installed=domain.is_pixel_installed,
-            enable=domain_enable
+            enable=domain.enable
         ).model_dump()
 
     def delete_domain(self, user_id: int, domain_id: int):

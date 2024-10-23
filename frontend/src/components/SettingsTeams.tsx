@@ -546,7 +546,7 @@ export const SettingsTeams: React.FC = () => {
                             padding: '4px 6px',
                             lineHeight: '16px !important'
                         }}>
-                            {memberCount}/{memberLimit} Member limit
+                            {memberLimit === -1 ? 'unlimited' : `${memberCount}/${memberLimit} Member limit`}
                         </Typography>
                         <CustomTooltip title={"Team Info"} linkText="Learn more" linkUrl="https://maximiz.ai" />
                     </Box>

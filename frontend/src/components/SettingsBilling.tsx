@@ -246,6 +246,8 @@ export const SettingsBilling: React.FC = () => {
     const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '');
     const [open, setOpen] = useState(false);
     const [email, setEmail] = useState('');
+    const [inactiveContactCounts, setInactiveContactCounts] = useState(0);
+    const [inactiveDate, setInactiveDate] = useState<string | null>();
 
     const handleOpen = () => setOpen(true);
     const handleClose = () => setOpen(false);
@@ -309,6 +311,7 @@ export const SettingsBilling: React.FC = () => {
 
     const handleSwitchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setChecked(event.target.checked);
+        handleSwitchOverage()
         if (event.target.checked) {
             setOverageAnchorEl(event.currentTarget); // Set anchor to display popover
         } else {
@@ -535,6 +538,24 @@ export const SettingsBilling: React.FC = () => {
         } finally {
             setOverageAnchorEl(null);
             setIsLoading(false);
+        }
+    };
+
+    const handleSwitchOverage = async () => {
+        try {
+            const response = await axiosInterceptorInstance.post('/settings/billing/switch-overage');
+            if (response.status === 200) {
+                setInactiveContactCounts(response.data.contact_count)
+                setInactiveDate(response.data.date)
+            }
+        } catch (error) {
+            if (axios.isAxiosError(error)) {
+                if (error.response && error.response.status === 403) {
+                    showErrorToast('Access denied: You do not have permission to remove this member.');
+                } else {
+                    console.error('Error removing team member:', error);
+                }
+            }
         }
     };
 
@@ -898,7 +919,7 @@ export const SettingsBilling: React.FC = () => {
                                                     lineHeight: '16px',
                                                     color: '#5f6368',
                                                     letterSpacing: '0.06px'
-                                                }}>$ 0.49/contact</Typography>
+                                                }}>$ {billingDetails.overage}/contact</Typography>
                                             </Box>
                                             <Box position="relative" display="inline-block">
                                                 <Switch
@@ -1018,8 +1039,8 @@ export const SettingsBilling: React.FC = () => {
                                                             lineHeight: '16px !important',
                                                             paddingBottom: '24px'
                                                         }}>
-                                                            On enabling overage, we will send 10,000 contacts that were collected after 7th September, when your plan exceeded the limit and from now  new contacts will be added with overage charge
-                                                            $0.49/contact.
+                                                            On enabling overage, we will send {inactiveContactCounts} contacts that were collected after {inactiveDate ? formatDate(inactiveDate) : 'N/A'}, when your plan exceeded the limit and from now  new contacts will be added with overage charge
+                                                            ${billingDetails.overage}/contact.
                                                         </Typography>
                                                         <Box display="flex" justifyContent="flex-end" mt={2}>
                                                             <Button className='hyperlink-red' onClick={handleOverageClose} sx={{
@@ -1148,7 +1169,7 @@ export const SettingsBilling: React.FC = () => {
                                             lineHeight: '16px !important',
                                             color: '#5f6368 !important'
                                         }}>
-                                            {renderValue(value).includes('-1') ? renderValue(value).replace('-1', '∞') : renderValue(value)}
+                                            {renderValue(value).includes('-1') ? renderValue(value).replace('-1', 'unlimited') : renderValue(value)}
                                         </Typography>
                                     </Box>
                                 );
@@ -1190,13 +1211,13 @@ export const SettingsBilling: React.FC = () => {
                             </Typography>
                             <Typography className='second-sub-title' sx={{ lineHeight: '20px !important', mb: '12px' }}>
                                 {planContactsCollected
-                                    ? `${((contactsCollected / planContactsCollected) * 100).toFixed(2)}% Used`
+                                    ? `${Math.floor(((planContactsCollected - contactsCollected) / planContactsCollected) * 100)}% Used`
                                     : 0}
                             </Typography>
                         </Box>
                         <LinearProgress
                             variant="determinate"
-                            value={Math.round((contactsCollected / planContactsCollected) * 100)}
+                            value={Math.round(((planContactsCollected - contactsCollected) / planContactsCollected) * 100)}
                             sx={{
                                 height: '8px',
                                 borderRadius: '4px',
@@ -1208,9 +1229,11 @@ export const SettingsBilling: React.FC = () => {
                             }}
                         />
                         <Typography className='paragraph' sx={{ color: '#787878' }}>
-                            {contactsCollected} out of {planContactsCollected} Remaining
+                            {planContactsCollected - contactsCollected} out of {planContactsCollected} Remaining
                         </Typography>
                     </Box>
+
+
                     <Box sx={{
                         width: '100%',
                         '@media (min-width: 601px)': {

@@ -283,12 +283,14 @@ def get_settings_service(settings_persistence: SettingsPersistence = Depends(
         subscription_service: SubscriptionService = Depends(
             get_subscription_service
         ),
-        user_domains_service: UserDomainsService = Depends(get_domain_service)
+        user_domains_service: UserDomainsService = Depends(get_domain_service),
+        lead_persistence: LeadsPersistence = Depends(get_leads_persistence)
 ):
     return SettingsService(settings_persistence=settings_persistence, plan_persistence=plan_persistence,
                            user_persistence=user_persistence,
                            send_grid_persistence=send_grid_persistence, subscription_service=subscription_service,
-                           user_domains_service=user_domains_service)
+                           user_domains_service=user_domains_service, lead_persistence=lead_persistence
+                           )
 
 
 def get_suppression_service(suppression_persistence: SuppressionPersistence = Depends(get_suppression_persistence)):
