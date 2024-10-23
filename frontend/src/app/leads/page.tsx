@@ -725,8 +725,6 @@ const Leads: React.FC = () => {
     }, [appliedDates, orderBy, order, page, rowsPerPage, activeFilter, filterParams]);
 
     const handleDateLabelChange = (label: string) => {
-        console.log('Date label changed to:', label);
-        // Update label state or perform any action
       };
 
 
@@ -780,7 +778,7 @@ const Leads: React.FC = () => {
                     background: 'rgba(235, 243, 254, 1)',
                     color: 'rgba(20, 110, 246, 1)',
                 };
-            case 'abandoned_cart':
+            case 'product_added_to_cart':
                 return {
                     background: 'rgba(241, 241, 249, 1)',
                     color: 'rgba(80, 82, 178, 1)',
