@@ -40,6 +40,7 @@ interface DashboardContactProps {
 
 const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates }) => {
     const [chartType, setChartType] = useState<'line' | 'bar'>('line');
+    const [loading, setLoading] = useState(true)
     const [values, setValues] = useState({
         totalContact: 0,
         totalVisitors: 0,
@@ -51,36 +52,38 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates }) => 
 
     useEffect(() => {
         const fetchData = async () => {
-            if (appliedDates.start && appliedDates.end) {
-                const fromUnix = Math.floor(appliedDates.start.getTime() / 1000);
-                const toUnix = Math.floor(appliedDates.end.getTime() / 1000);
-
-                try {
-                    const response = await axiosInstance.get("/dashboard/contact", {
+            try {
+                let response;
+                if (appliedDates.start && appliedDates.end) {
+                    const fromUnix = Math.floor(appliedDates.start.getTime() / 1000);
+                    const toUnix = Math.floor(appliedDates.end.getTime() / 1000);
+                    
+                    response = await axiosInstance.get("/dashboard/contact", {
                         params: { from_date: fromUnix, to_date: toUnix },
                     });
-                    console.log(response.data);
-                    const { total_contacts_collected, total_visitors, total_view_products, total_abandoned_cart } = response.data.total_counts;
-                    setValues({
-                        totalContact: total_contacts_collected,
-                        totalVisitors: total_visitors,
-                        viewProducts: total_view_products,
-                        totalAbandonedCart: total_abandoned_cart,
-                      });
-                } catch (error) {
-                    console.error("Error fetching contact data:", error);
+                } else {
+                    response = await axiosInstance.get("/dashboard/contact");
                 }
+    
+                const { total_contacts_collected, total_visitors, total_view_products, total_abandoned_cart } = response.data.total_counts;
+                setValues({
+                    totalContact: total_contacts_collected,
+                    totalVisitors: total_visitors,
+                    viewProducts: total_view_products,
+                    totalAbandonedCart: total_abandoned_cart,
+                });
+            } catch (error) {
+                console.error("Error fetching contact data:", error);
+            } finally {
+                setLoading(false);
             }
         };
+    
 
-        if (
-            appliedDates.start?.getTime() !== previousDates.current.start?.getTime() ||
-            appliedDates.end?.getTime() !== previousDates.current.end?.getTime()
-        ) {
             fetchData();
-            previousDates.current = appliedDates;
-        }
     }, [appliedDates]);
+    
+    
 
     const toggleChartType = (type: 'line' | 'bar') => {
         setChartType(type);
@@ -99,21 +102,21 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates }) => 
         contacts: 'rgba(244, 87, 69, 1)',
         visitors: 'rgba(80, 82, 178, 1)',
         viewed_product: 'rgba(224, 176, 5, 1)',
-        abondoned_cart: 'rgba(144, 190, 109, 1)',
+        abandoned_cart: 'rgba(144, 190, 109, 1)',
     };
 
     type VisibleSeries = {
         contacts: boolean;
         visitors: boolean;
         viewed_product: boolean;
-        abondoned_cart: boolean;
+        abandoned_cart: boolean;
     };
 
     const [visibleSeries, setVisibleSeries] = useState<VisibleSeries>({
         contacts: true,
         visitors: true,
         viewed_product: true,
-        abondoned_cart: true,
+        abandoned_cart: true,
     });
 
     const handleChipClick = (seriesId: keyof VisibleSeries) => {
@@ -127,7 +130,7 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates }) => 
         { id: 'contacts', label: 'Total Contacts', color: 'rgba(244, 87, 69, 1)' },
         { id: 'visitors', label: 'Total Visitors', color: 'rgba(80, 82, 178, 1)' },
         { id: 'viewed_product', label: 'View Products', color: 'rgba(224, 176, 5, 1)' },
-        { id: 'abondoned_cart', label: 'Abandoned cart', color: 'rgba(144, 190, 109, 1)' },
+        { id: 'abandoned_cart', label: 'Abandoned cart', color: 'rgba(144, 190, 109, 1)' },
     ];
 
     const selectedGraphs = options
@@ -198,7 +201,7 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates }) => 
                 5000, 5200, 4800, 5400, 5600, 5900, 6100, 6300, 6700],
         },
         {
-            id: 'abondoned_cart' as keyof typeof colorMapping,
+            id: 'abandoned_cart' as keyof typeof colorMapping,
             label: 'Abandoned to Cart',
             curve: 'linear',
             stack: 'total',
@@ -414,7 +417,9 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates }) => 
 
                     )}
                 </CardContent>
-            </Card></>
+            </Card>
+            {loading && (<CustomizedProgressBar />)}
+            </>
     )
 }
 
