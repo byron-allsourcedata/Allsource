@@ -419,9 +419,8 @@ import { datasyncStyle } from "@/app/data-sync/datasyncStyle";
                       <Box
                         sx={{
                           display: "flex",
-                          padding: "2px 8px",
                           borderRadius: "2px",
-                          justifyContent: "center",
+                          justifyContent: "start",
                           textTransform: "capitalize",
                         }}
                       >
@@ -472,11 +471,12 @@ import { datasyncStyle } from "@/app/data-sync/datasyncStyle";
                           alignItems: "center",
                           justifyContent: "space-between",
                           textTransform: "capitalize",
+                          paddingLeft: 0
                         }}
                       >
                         {row.suppression}
                         <IconButton
-                          sx={{ padding: 0, margin: 0, borderRadius: 4 }}
+                          sx={{ padding: 0, margin: 0, borderRadius: 4, justifyContent: "start" }}
                           onClick={(e) => handleClick(e, row.id)}
                         >
                           <Image
