@@ -46,9 +46,15 @@ from models.integrations.users_domains_integrations import UserIntegration
 from dependencies import (SubscriptionService, UserPersistence, PlansPersistence)
 
 load_dotenv()
-logging.basicConfig(level=logging.INFO)
 
-LAST_PROCESSED_FILE_PATH = 'tmp/last_processed_file_resolved.txt'
+def setup_logging(level):
+    logging.basicConfig(
+        level=level,
+        format='%(asctime)s - %(levelname)s - %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S'
+    )
+
+LAST_PROCESSED_FILE_PATH = 'tmp/last_processed_leads_sync.txt'
 AMOUNT_CREDITS = 1
 QUEUE_CREDITS_CHARGING = 'credits_charging'
 QUEUE_DATA_SYNC = 'data_sync_leads'
@@ -57,17 +63,6 @@ ROOT_BOT_CLIENT_EMAIL = 'demo@maximiz.ai'
 ROOT_BOT_CLIENT_DOMAIN = 'all-leads.com'
 
 count = 0
-
-
-def create_sts_client(key_id, key_secret):
-    return boto3.client('sts', aws_access_key_id=key_id, aws_secret_access_key=key_secret, region_name='us-west-2')
-
-
-def assume_role(role_arn, sts_client):
-    credentials = sts_client.assume_role(RoleArn=role_arn, RoleSessionName="create-use-assume-role-scenario")[
-        'Credentials']
-    logging.info(f"Assumed role '{role_arn}', got temporary credentials.")
-    return credentials
 
 
 def group_requests_by_date(request_row, groupped_requests):
@@ -106,10 +101,10 @@ async def process_table(session, groupped_requests, rabbitmq_connection, subscri
                 up_ids = session.query(FiveXFiveHems.up_id).filter(
                     FiveXFiveHems.sha256_lc_hem == str(possible_lead['SHA256_LOWER_CASE'])).all()
                 if len(up_ids) == 0:
-                    logging.warning(f"Not found SHA256_LOWER_CASE {possible_lead['SHA256_LOWER_CASE']}")
+                    logging.debug(f"Not found SHA256_LOWER_CASE {possible_lead['SHA256_LOWER_CASE']}")
                     continue
                 elif len(up_ids) > 1:
-                    logging.info(f"Too many SHA256_LOWER_CASEs {possible_lead['SHA256_LOWER_CASE']}")
+                    logging.debug(f"Too many SHA256_LOWER_CASEs {possible_lead['SHA256_LOWER_CASE']}")
                     continue
                 up_id = up_ids[0][0]
                 logging.info(f"Lead found by SHA256_LOWER_CASE {possible_lead['SHA256_LOWER_CASE']}")
@@ -199,11 +194,6 @@ def generate_random_order_detail():
 
 
 async def process_lead_sync(rabbitmq_connection, user_domain_id, behavior_type, lead_user):
-    channel = await rabbitmq_connection.channel()
-    await channel.declare_queue(
-        name=QUEUE_DATA_SYNC,
-        durable=True
-    )
     await publish_rabbitmq_message(rabbitmq_connection, QUEUE_DATA_SYNC,
                                    {'domain_id': user_domain_id, 'leads_type': behavior_type, 'lead': {
                                        'id': lead_user.id,
@@ -506,7 +496,6 @@ def add_new_leads_visits(visited_datetime, lead_id, session, behavior_type, lead
 
 
 def update_last_processed_file(file_key):
-    logging.info(f"Writing last processed file {file_key}")
     with open(LAST_PROCESSED_FILE_PATH, "w") as file:
         file.write(file_key)
 
@@ -553,6 +542,7 @@ async def process_files(session, rabbitmq_connection, root_user):
             await process_table(session, groupped_requests, rabbitmq_connection, subscription_service, None)
             if root_user:
                 await process_table(session, groupped_requests, rabbitmq_connection, subscription_service, root_user)
+            logging.debug(f"Last processed event time {str(last_processed_file_name)}")
             update_last_processed_file(str(last_processed_file_name))
     except StopIteration:
         pass
@@ -566,6 +556,17 @@ async def main():
     rabbitmq_connection = RabbitMQConnection()
     connection = await rabbitmq_connection.connect()
     channel = await connection.channel()
+    log_level = logging.INFO
+    if len(sys.argv) > 1:
+        arg = sys.argv[1].upper()
+        if arg == 'DEBUG':
+            log_level = logging.DEBUG
+        elif arg == 'INFO':
+            log_level = logging.INFO
+        else:
+            sys.exit(1)
+
+    setup_logging(log_level)
 
     await channel.declare_queue(
         name=QUEUE_CREDITS_CHARGING,
@@ -573,6 +574,10 @@ async def main():
         arguments={
             'x-consumer-timeout': 3600000,
         }
+    )
+    await channel.declare_queue(
+        name=QUEUE_DATA_SYNC,
+        durable=True
     )
 
     logging.info("Started")

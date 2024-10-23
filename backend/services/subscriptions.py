@@ -27,6 +27,11 @@ class SubscriptionService:
     def get_userid_by_customer(self, customer_id):
         return self.db.query(User).filter(User.customer_id == customer_id).first()
 
+    def cancellation_downgrade(self, subscription_id):
+        self.db.query(UserSubscriptions).where(UserSubscriptions.id == subscription_id).update(
+            {"downgrade_at": None, 'downgrade_price_id': None})
+        self.db.commit()
+
     def check_duplicate_send(self, stripe_request_created_at, platform_subscription_id, price_id):
         subscription_data = self.db.query(SubscriptionTransactions).filter(
             SubscriptionTransactions.price_id == price_id,

@@ -25,7 +25,7 @@ logging.basicConfig(level=logging.INFO)
 
 BUCKET_NAME = 'trovo-coop-shakespeare'
 FILES_PATH = 'outgoing/cookie_sync/resolved'
-LAST_PROCESSED_FILE_PATH = 'tmp/last_processed_cookie_sync_file.txt'
+LAST_PROCESSED_FILE_PATH = 'tmp/last_processed_5x5_cookie_sync.txt'
 
 
 def create_sts_client(key_id, key_secret):
