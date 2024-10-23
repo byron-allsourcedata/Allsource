@@ -12,7 +12,6 @@ import { ChevronLeft, ChevronRight } from '@mui/icons-material';
 import DownloadIcon from '@mui/icons-material/Download';
 import DateRangeIcon from '@mui/icons-material/DateRange';
 import FilterListIcon from '@mui/icons-material/FilterList';
-import CalendarPopup from '../../components/CalendarPopup';
 import FilterPopup from '@/components/FiltersSlider';
 import AudiencePopup from '@/components/AudienceSlider';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
@@ -23,6 +22,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import CustomizedProgressBar from '@/components/CustomizedProgressBar';
 import Tooltip from '@mui/material/Tooltip';
 import CustomToolTip from '@/components/customToolTip';
+import CalendarPopup from '@/components/CustomCalendar'
 
 
 
@@ -724,6 +724,9 @@ const Leads: React.FC = () => {
         });
     }, [appliedDates, orderBy, order, page, rowsPerPage, activeFilter, filterParams]);
 
+    const handleDateLabelChange = (label: string) => {
+      };
+
 
     if (isLoading) {
         return <CustomizedProgressBar />;
@@ -775,7 +778,7 @@ const Leads: React.FC = () => {
                     background: 'rgba(235, 243, 254, 1)',
                     color: 'rgba(20, 110, 246, 1)',
                 };
-            case 'abandoned_cart':
+            case 'product_added_to_cart':
                 return {
                     background: 'rgba(241, 241, 249, 1)',
                     color: 'rgba(80, 82, 178, 1)',
@@ -1519,12 +1522,14 @@ const Leads: React.FC = () => {
                     <FilterPopup open={filterPopupOpen} onClose={handleFilterPopupClose} onApply={handleApplyFilters} />
                     <AudiencePopup open={audiencePopupOpen} onClose={handleAudiencePopupClose}
                         selectedLeads={Array.from(selectedRows)} />
+                        
                     <CalendarPopup
                         anchorEl={calendarAnchorEl}
                         open={isCalendarOpen}
                         onClose={handleCalendarClose}
                         onDateChange={handleDateChange}
                         onApply={handleApply}
+                        onDateLabelChange={handleDateLabelChange}
                     />
                 </Box>
             </Box>
