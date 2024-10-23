@@ -20,6 +20,7 @@ class LeadUser(Base):
     total_visit = Column(Integer, nullable=True)
     avarage_visit_time = Column(Integer, nullable=True)
     total_visit_time = Column(Integer, nullable=True)
+    is_active = Column(Boolean, nullable=False, default=True)
 
 
 event.listen(LeadUser, "before_insert", create_timestamps)

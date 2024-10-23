@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, Request as fastRequest, HTTPException, s
 
 from dependencies import get_plans_service, get_payments_service, get_webhook, check_user_authentication, \
     check_user_authorization_without_pixel
+from enums import TeamAccessLevel
 from models.users import Users
 from schemas.subscriptions import UnsubscribeRequest
 from services.payments import PaymentsService
@@ -47,10 +48,10 @@ def cancel_user_subscription(unsubscribe_request: UnsubscribeRequest,
                              user: dict = Depends(check_user_authorization_without_pixel)):
     if user.get('team_member'):
         team_member = user.get('team_member')
-        if team_member.get('team_access_level') != 'admin':
+        if team_member.get('team_access_level') not in {TeamAccessLevel.ADMIN.value, TeamAccessLevel.OWNER.value}:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Access denied. Admins and standard only."
+                detail="Access denied. Admins only."
             )
     return payments_service.cancel_user_subscription(user=user,
                                                      reason_unsubscribe=unsubscribe_request.reason_unsubscribe)
@@ -62,10 +63,10 @@ def upgrade_and_downgrade_user_subscription(price_id: str,
                                             user: dict = Depends(check_user_authentication)):
     if user.get('team_member'):
         team_member = user.get('team_member')
-        if team_member.get('team_access_level') != 'admin':
+        if team_member.get('team_access_level') not in {TeamAccessLevel.ADMIN.value, TeamAccessLevel.OWNER.value}:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Access denied. Admins and standard only."
+                detail="Access denied. Admins only."
             )
     return payments_service.upgrade_and_downgrade_user_subscription(price_id=price_id, user=user)
 
@@ -75,10 +76,10 @@ def cancel_downgrade(payments_service: PaymentsService = Depends(get_payments_se
                      user: dict = Depends(check_user_authorization_without_pixel)):
     if user.get('team_member'):
         team_member = user.get('team_member')
-        if team_member.get('team_access_level') != 'admin':
+        if team_member.get('team_access_level') not in {TeamAccessLevel.ADMIN.value, TeamAccessLevel.OWNER.value}:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Access denied. Admins and standard only."
+                detail="Access denied. Admins only."
             )
     return payments_service.cancel_downgrade(user)
 
@@ -88,9 +89,9 @@ def buy_credits(credits_used: int, payments_service: PaymentsService = Depends(g
                 user: dict = Depends(check_user_authorization_without_pixel)):
     if user.get('team_member'):
         team_member = user.get('team_member')
-        if team_member.get('team_access_level') != 'admin':
+        if team_member.get('team_access_level') not in {TeamAccessLevel.ADMIN.value, TeamAccessLevel.OWNER.value}:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Access denied. Admins and standard only."
+                detail="Access denied. Admins only."
             )
     return payments_service.charge_user_for_extra_credits(credits_used, user)

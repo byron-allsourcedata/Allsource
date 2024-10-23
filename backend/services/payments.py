@@ -18,7 +18,8 @@ logger = logging.getLogger(__name__)
 
 def create_stripe_checkout_session(success_url: str, cancel_url: str, customer_id: str,
                                    line_items: List[dict],
-                                   mode: str):
+                                   mode: str,
+                                   trial_period: int = 0):
     session = stripe.checkout.Session.create(
         success_url=success_url,
         cancel_url=cancel_url,
@@ -26,7 +27,10 @@ def create_stripe_checkout_session(success_url: str, cancel_url: str, customer_i
         customer=customer_id,
         payment_method_types=["card"],
         line_items=line_items,
-        mode=mode
+        mode=mode,
+        subscription_data={
+            'trial_period_days': trial_period
+        } if trial_period > 0 else None,
     )
     return {"link": session.url}
 
@@ -85,7 +89,8 @@ def compare_prices(price_id1: int, price_id2: int) -> int:
 
 class PaymentsService:
 
-    def __init__(self, plans_service: PlansService, plan_persistence: PlansPersistence, subscription_service: SubscriptionService):
+    def __init__(self, plans_service: PlansService, plan_persistence: PlansPersistence,
+                 subscription_service: SubscriptionService):
         self.plans_service = plans_service
         self.plan_persistence = plan_persistence
         self.subscription_service = subscription_service
@@ -104,7 +109,8 @@ class PaymentsService:
                 {"price": price_id}
             ],
             proration_behavior='none',
-            billing_cycle_anchor='now'
+            billing_cycle_anchor='now',
+            trial_end='now'
         )
         return get_subscription_status(upgrade_subscription)
 
@@ -114,15 +120,19 @@ class PaymentsService:
 
     def create_customer_session(self, price_id: str, user):
         customer_id = self.plans_service.get_customer_id(user)
+        trial_period = None
+        if not self.plan_persistence.get_user_subscription(user.get('id')):
+            trial_period = self.plan_persistence.get_plan_by_price_id(price_id).trial_days
         if get_default_payment_method(customer_id):
-            status_subscription = renew_subscription(price_id, customer_id).status
+            status_subscription = renew_subscription(price_id, customer_id, trial_period)
             return {"status_subscription": status_subscription}
         return create_stripe_checkout_session(
             success_url=StripeConfig.success_url,
             cancel_url=StripeConfig.cancel_url,
             customer_id=self.plans_service.get_customer_id(user),
             line_items=[{"price": price_id, "quantity": 1}],
-            mode="subscription"
+            mode="subscription",
+            trial_period=trial_period
         )
 
     def get_user_subscription_authorization_status(self):
@@ -154,7 +164,7 @@ class PaymentsService:
             return {'status': SubscriptionStatus.INCOMPLETE}
         platform_subscription_id = subscription.platform_subscription_id
         current_subscription = stripe.Subscription.retrieve(platform_subscription_id)
-        is_downgrade = self.is_downgrade(price_id, user.get('id'))
+        is_downgrade = self.is_downgrade(price_id, user.get('current_subscription_id'))
         if is_downgrade:
             return self.downgrade_subscription(current_subscription, platform_subscription_id, price_id, subscription)
         else:
@@ -170,15 +180,16 @@ class PaymentsService:
 
         return SubscriptionStatus.SUCCESS
 
-    def is_downgrade(self, price_id: str, user_id: int) -> bool:
-        current_price = self.plans_service.get_current_price(user_id)
-        new_price = self.plans_service.get_plan_price(price_id)
+    def is_downgrade(self, price_id: str, current_subscription_id: int) -> bool:
+        current_price = self.plans_service.get_current_price(current_subscription_id).priority
+        new_price = self.plans_service.get_plan_price(price_id).priority
         return compare_prices(new_price, current_price) < 0
 
     def charge_user_for_extra_credits(self, quantity: int, users):
         customer_id = self.plans_service.get_customer_id(users)
         try:
-            purchase_product(customer_id, self.plans_service.get_additional_credits_price_id(), quantity, 'prospect_credits')
+            purchase_product(customer_id, self.plans_service.get_additional_credits_price_id(), quantity,
+                             'prospect_credits')
             return {"status": "PAYMENT_SUCCESS"}
         except Exception as e:
             return create_stripe_checkout_session(

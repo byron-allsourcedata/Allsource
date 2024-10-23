@@ -47,28 +47,35 @@ class PlansPersistence:
     def get_free_trail_plan(self):
         return self.db.query(SubscriptionPlan).filter(SubscriptionPlan.is_free_trial == True).first()
 
-    def get_current_price(self, user_id):
-        price = self.db.query(SubscriptionPlan.price).join(
+    def get_current_price(self, current_subscription_id):
+        subscription_plan = self.db.query(SubscriptionPlan).join(
             UserSubscriptions,
             UserSubscriptions.plan_id == SubscriptionPlan.id
         ).filter(
-            UserSubscriptions.user_id == user_id
-        ).order_by(
-            UserSubscriptions.id.desc()
-        ).limit(1).scalar()
-        return price
+            UserSubscriptions.id == current_subscription_id
+        ).first()
+        return subscription_plan
 
     def get_user_subscription(self, user_id):
-        return self.db.query(
-            UserSubscriptions
-        ).join(User, User.current_subscription_id == UserSubscriptions.id).filter(
-            User.id == user_id
-        ).first()
+        subscription = (
+            self.db.query(UserSubscriptions, SubscriptionPlan.is_free_trial)
+            .join(User, User.current_subscription_id == UserSubscriptions.id)
+            .join(SubscriptionPlan, SubscriptionPlan.id == UserSubscriptions.plan_id)
+            .filter(User.id == user_id)
+            .first()
+        )
 
-    def get_plan_price(self, price_id):
-        price = self.db.query(SubscriptionPlan.price).filter(
-            SubscriptionPlan.stripe_price_id == price_id).scalar()
-        return price
+        if subscription:
+            user_subscription, is_free_trial = subscription
+            user_subscription.is_trial = is_free_trial
+            return user_subscription
+
+        return None
+
+    def get_plan_by_price_id(self, price_id):
+        subscription_plan = self.db.query(SubscriptionPlan).filter(
+            SubscriptionPlan.stripe_price_id == price_id).first()
+        return subscription_plan
 
     def get_current_plan(self, user_id):
         subscription_plan = self.db.query(SubscriptionPlan).join(
