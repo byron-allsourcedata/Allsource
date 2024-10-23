@@ -609,6 +609,7 @@ export const SettingsBilling: React.FC = () => {
 
     const handleCancel = async() => {
         try {
+            setIsLoading(true);
             const response = await axiosInterceptorInstance.get(`/subscriptions/cancel-downgrade`);
             if (response && response.data) {
                 showToast(response.data);
@@ -621,6 +622,8 @@ export const SettingsBilling: React.FC = () => {
             } else {
                 showErrorToast("An unexpected error occurred.");
             }
+        }finally {
+            setIsLoading(false);
         }
         window.location.reload();
       };
@@ -874,7 +877,7 @@ export const SettingsBilling: React.FC = () => {
                                         </Typography>
                                         <Image src={'danger.svg'} alt='danger' width={14} height={13.5} />
                                     </Box>
-                                ) : downgrade_plan ? (
+                                ) : downgrade_plan.plan_name ? (
                                     <Box
                                         sx={{
                                             display: 'flex',

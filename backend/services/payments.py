@@ -124,7 +124,7 @@ class PaymentsService:
         if not self.plan_persistence.get_user_subscription(user.get('id')):
             trial_period = self.plan_persistence.get_plan_by_price_id(price_id).trial_days
         if get_default_payment_method(customer_id):
-            status_subscription = renew_subscription(price_id, customer_id, trial_period).status
+            status_subscription = renew_subscription(price_id, customer_id, trial_period)
             return {"status_subscription": status_subscription}
         return create_stripe_checkout_session(
             success_url=StripeConfig.success_url,

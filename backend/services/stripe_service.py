@@ -33,7 +33,7 @@ def renew_subscription(new_price_id, customer_id, trial_period):
     )
     if new_subscription.status == 'trialing':
         return 'active'
-    return new_subscription
+    return new_subscription.status
 
 
 def create_customer_google(user: dict):

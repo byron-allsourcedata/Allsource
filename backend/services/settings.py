@@ -271,7 +271,7 @@ class SettingsService:
             }
         elif subscription and user_subscription:
             plan = subscription['items']['data'][0]['plan']
-            is_active = subscription.get('status') == 'active'
+            is_active = subscription.get('status') == 'active' or subscription.get('status') == 'trialing'
             plan_name = determine_plan_name_from_product_id(plan['product'])
             if user_subscription.downgrade_price_id:
                 downgrade_plan = get_price_from_price_id(user_subscription.downgrade_price_id)
