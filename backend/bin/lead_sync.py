@@ -9,9 +9,7 @@ import tempfile
 import time
 import traceback
 import urllib.parse
-
 import boto3
-import pyarrow.parquet as pq
 import pytz
 from dateutil.relativedelta import relativedelta
 
@@ -20,6 +18,7 @@ parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 
 from utils import normalize_url
+from models.five_x_five_cookie_sync_file import FiveXFiveCookieSyncFile
 from urllib.parse import urlparse, parse_qs
 from models.leads_requests import LeadsRequests
 from models.users_domains import UserDomains
@@ -47,11 +46,15 @@ from models.integrations.users_domains_integrations import UserIntegration
 from dependencies import (SubscriptionService, UserPersistence, PlansPersistence)
 
 load_dotenv()
-logging.basicConfig(level=logging.INFO)
 
-BUCKET_NAME = 'trovo-coop-shakespeare'
-FILES_PATH = 'outgoing/cookie_sync/resolved'
-LAST_PROCESSED_FILE_PATH = 'tmp/last_processed_file_resolved.txt'
+def setup_logging(level):
+    logging.basicConfig(
+        level=level,
+        format='%(asctime)s - %(levelname)s - %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S'
+    )
+
+LAST_PROCESSED_FILE_PATH = 'tmp/last_processed_leads_sync.txt'
 AMOUNT_CREDITS = 1
 QUEUE_CREDITS_CHARGING = 'credits_charging'
 QUEUE_DATA_SYNC = 'data_sync_leads'
@@ -59,52 +62,24 @@ QUEUE_DATA_SYNC = 'data_sync_leads'
 ROOT_BOT_CLIENT_EMAIL = 'demo@maximiz.ai'
 ROOT_BOT_CLIENT_DOMAIN = 'all-leads.com'
 
-EMAIL_LIST = ['business_email', 'personal_emails', 'additional_personal_emails']
-
 count = 0
 
 
-def create_sts_client(key_id, key_secret):
-    return boto3.client('sts', aws_access_key_id=key_id, aws_secret_access_key=key_secret, region_name='us-west-2')
-
-
-def assume_role(role_arn, sts_client):
-    credentials = sts_client.assume_role(RoleArn=role_arn, RoleSessionName="create-use-assume-role-scenario")[
-        'Credentials']
-    logging.info(f"Assumed role '{role_arn}', got temporary credentials.")
-    return credentials
-
-
-async def save_files_by_hour(table, cookie_sync_by_hour):
-    for i in (range(len(table))):
-        ip = str(table['IP'][i])
-        requested_at_str = str(table['EVENT_DATE'][i].as_py())
-        requested_at = datetime.fromisoformat(requested_at_str).replace(tzinfo=None)
-        key = f"{requested_at}_{ip}"
-        if key not in cookie_sync_by_hour:
-            cookie_sync_by_hour[key] = []
-        lead_info = {
-            'TROVO_ID:': str(table['TROVO_ID'][i]),
-            'PARTNER_ID': str(table['PARTNER_ID'][i]),
-            'PARTNER_UID': str(table['PARTNER_UID'][i]),
-            'SHA256_LOWER_CASE': str(table['SHA256_LOWER_CASE'][i]),
-            'IP': str(table['IP'][i]),
-            'JSON_HEADERS': str(table['JSON_HEADERS'][i]),
-            'EVENT_DATE': str(table['EVENT_DATE'][i]),
-            'UP_ID': str(table['UP_ID'][i])
-        }
-        cookie_sync_by_hour[key].append(lead_info)
-
-
-async def process_file(bucket, file_key, cookie_sync_by_hour):
-    obj = bucket.Object(file_key)
-    file_data = obj.get()['Body'].read()
-    if file_key.endswith('.snappy.parquet'):
-        with tempfile.NamedTemporaryFile(delete=True) as temp_file:
-            temp_file.write(file_data)
-            temp_file.seek(0)
-            table = pq.read_table(temp_file.name)
-            await save_files_by_hour(table, cookie_sync_by_hour)
+def group_requests_by_date(request_row, groupped_requests):
+    key = f"{request_row.event_date}_{request_row.ip}"
+    if key not in groupped_requests:
+        groupped_requests[key] = []
+    lead_info = {
+        'TROVO_ID:': request_row.trovo_id,
+        'PARTNER_ID': request_row.partner_id,
+        'PARTNER_UID': request_row.partner_uid,
+        'SHA256_LOWER_CASE': request_row.sha256_lower_case,
+        'IP': request_row.ip,
+        'JSON_HEADERS': request_row.json_headers,
+        'EVENT_DATE': request_row.event_date,
+        'UP_ID': request_row.up_id
+    }
+    groupped_requests[key].append(lead_info)
 
 
 def get_all_five_x_user_emails(business_email, personal_emails, additional_personal_emails):
@@ -118,18 +93,18 @@ def get_all_five_x_user_emails(business_email, personal_emails, additional_perso
     return list(emails)
 
 
-async def process_table(session, cookie_sync_by_hour, channel, root_user, subscription_service):
-    for key, possible_leads in cookie_sync_by_hour.items():
+async def process_table(session, groupped_requests, rabbitmq_connection, subscription_service, root_user=None):
+    for key, possible_leads in groupped_requests.items():
         for possible_lead in reversed(possible_leads):
             up_id = possible_lead['UP_ID']
             if up_id is None or up_id == 'None':
                 up_ids = session.query(FiveXFiveHems.up_id).filter(
                     FiveXFiveHems.sha256_lc_hem == str(possible_lead['SHA256_LOWER_CASE'])).all()
                 if len(up_ids) == 0:
-                    logging.warning(f"Not found SHA256_LOWER_CASE {possible_lead['SHA256_LOWER_CASE']}")
+                    logging.debug(f"Not found SHA256_LOWER_CASE {possible_lead['SHA256_LOWER_CASE']}")
                     continue
                 elif len(up_ids) > 1:
-                    logging.info(f"Too many SHA256_LOWER_CASEs {possible_lead['SHA256_LOWER_CASE']}")
+                    logging.debug(f"Too many SHA256_LOWER_CASEs {possible_lead['SHA256_LOWER_CASE']}")
                     continue
                 up_id = up_ids[0][0]
                 logging.info(f"Lead found by SHA256_LOWER_CASE {possible_lead['SHA256_LOWER_CASE']}")
@@ -138,17 +113,19 @@ async def process_table(session, cookie_sync_by_hour, channel, root_user, subscr
                     FiveXFiveUser.up_id == str(up_id).lower()).first()
                 if five_x_five_user:
                     logging.info(f"Lead found by UP_ID {up_id}")
-                    await process_user_data(possible_lead, five_x_five_user, session, channel, subscription_service,
+                    await process_user_data(possible_lead, five_x_five_user, session, rabbitmq_connection,
+                                            subscription_service,
                                             None)
                     if root_user:
-                        await process_user_data(possible_lead, five_x_five_user, session, channel, subscription_service,
+                        await process_user_data(possible_lead, five_x_five_user, session, rabbitmq_connection,
+                                                subscription_service,
                                                 root_user)
                     break
                 else:
                     logging.warning(f"Not found by UP_ID {up_id}")
 
 
-async def process_payment_transaction(session, five_x_five_user_up_id, user_domain_id, user, rmq_connection):
+async def process_payment_transaction(session, five_x_five_user_up_id, user_domain_id, user, rabbitmq_connection):
     users_payments_transactions = session.query(UsersPaymentsTransactions).filter(
         UsersPaymentsTransactions.five_x_five_up_id == str(five_x_five_user_up_id),
         UsersPaymentsTransactions.domain_id == user_domain_id
@@ -168,7 +145,7 @@ async def process_payment_transaction(session, five_x_five_user_up_id, user_doma
         user.leads_credits -= AMOUNT_CREDITS
         if user.leads_credits % 100 == 0:
             await publish_rabbitmq_message(
-                connection=rmq_connection,
+                connection=rabbitmq_connection,
                 queue_name=QUEUE_CREDITS_CHARGING,
                 message_body={'customer_id': user.customer_id, 'credits': user.leads_credits}
             )
@@ -176,10 +153,10 @@ async def process_payment_transaction(session, five_x_five_user_up_id, user_doma
             logging.info(f"Push to rmq {customer_data}")
     else:
         user.leads_credits -= AMOUNT_CREDITS
-    session.flush()
+    session.commit()
 
 
-async def check_certain_urls(page, suppression_rule):
+def check_certain_urls(page, suppression_rule):
     if suppression_rule.is_url_certain_activation and suppression_rule.activate_certain_urls:
         page_path = urlparse(page).path.strip('/')
         urls_to_check = suppression_rule.activate_certain_urls.split(', ')
@@ -195,7 +172,7 @@ async def check_certain_urls(page, suppression_rule):
     return False
 
 
-async def check_activate_based_urls(page, suppression_rule):
+def check_activate_based_urls(page, suppression_rule):
     if suppression_rule.is_based_activation and suppression_rule.activate_certain_urls:
         parsed_url = urlparse(page)
         query_params = parse_qs(parsed_url.query)
@@ -214,6 +191,14 @@ def generate_random_order_detail():
         'currency': random.choice(['USD', 'EUR', 'GBP']),
         'platform_created_at': datetime.now(timezone.utc).isoformat()
     }
+
+
+async def process_lead_sync(rabbitmq_connection, user_domain_id, behavior_type, lead_user):
+    await publish_rabbitmq_message(rabbitmq_connection, QUEUE_DATA_SYNC,
+                                   {'domain_id': user_domain_id, 'leads_type': behavior_type, 'lead': {
+                                       'id': lead_user.id,
+                                       'five_x_five_user_id': lead_user.five_x_five_user_id
+                                   }})
 
 
 def process_root_user_behavior(lead_user, behavior_type, requested_at, session):
@@ -251,7 +236,7 @@ def process_root_user_behavior(lead_user, behavior_type, requested_at, session):
             session.add(new_record)
 
 
-async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, session: Session, rmq_connection,
+async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, session: Session, rabbitmq_connection,
                             subscription_service: SubscriptionService, root_user=None):
     global count
     partner_uid_decoded = urllib.parse.unquote(str(possible_lead['PARTNER_UID']).lower())
@@ -269,7 +254,7 @@ async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, sess
         logging.info(f"Customer not found {partner_uid_client_id}")
         return
     user, user_domain = result
-    if user_domain.enable or root_user:
+    if not user_domain.enable and not root_user:
         logging.info(f"domain has not enable {user_domain.id}")
         return
     user_domain_id = user_domain.id
@@ -312,11 +297,11 @@ async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, sess
                     return
         if suppression_rule:
             if suppression_rule.is_url_certain_activation and suppression_rule.activate_certain_urls:
-                if await check_certain_urls(page, suppression_rule):
+                if check_certain_urls(page, suppression_rule):
                     return
 
             if suppression_rule.is_based_activation and suppression_rule.activate_certain_urls:
-                if await check_activate_based_urls(page, suppression_rule):
+                if check_activate_based_urls(page, suppression_rule):
                     return
 
         emails_to_check = get_all_five_x_user_emails(five_x_five_user.business_email, five_x_five_user.personal_emails,
@@ -332,23 +317,15 @@ async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, sess
             logging.info(f"No charging option supressed, skip lead")
             return
         if root_user is None and not subscription_service.is_trial_subscription(user.id):
-            await process_payment_transaction(session, five_x_five_user.up_id, user_domain_id, user, rmq_connection)
+            await process_payment_transaction(session, five_x_five_user.up_id, user_domain_id, user,
+                                              rabbitmq_connection)
         is_first_request = True
         lead_user = LeadUser(five_x_five_user_id=five_x_five_user.id, user_id=user.id, behavior_type=behavior_type,
                              domain_id=user_domain_id, total_visit=0, avarage_visit_time=0, total_visit_time=0)
 
         session.add(lead_user)
         session.flush()
-        channel = await rmq_connection.channel()
-        await channel.declare_queue(
-            name=QUEUE_DATA_SYNC,
-            durable=True
-        )
-        await publish_rabbitmq_message(rmq_connection, QUEUE_DATA_SYNC,
-                                       {'domain_id': user_domain_id, 'leads_type': behavior_type, 'lead': {
-                                           'id': lead_user.id,
-                                           'five_x_five_user_id': lead_user.five_x_five_user_id
-                                       }})
+        await process_lead_sync(rabbitmq_connection, user_domain_id, behavior_type, lead_user)
     requested_at_str = str(possible_lead['EVENT_DATE'])
     requested_at = datetime.fromisoformat(requested_at_str).replace(tzinfo=None)
     thirty_minutes_ago = requested_at - timedelta(minutes=30)
@@ -519,19 +496,11 @@ def add_new_leads_visits(visited_datetime, lead_id, session, behavior_type, lead
 
 
 def update_last_processed_file(file_key):
-    logging.info(f"Writing last processed file {file_key}")
     with open(LAST_PROCESSED_FILE_PATH, "w") as file:
         file.write(file_key)
 
 
-async def process_files(sts_client, session, channel, root_user):
-    credentials = assume_role(os.getenv('S3_ROLE_ARN'), sts_client)
-    s3 = boto3.resource('s3', region_name='us-west-2', aws_access_key_id=credentials['AccessKeyId'],
-                        aws_secret_access_key=credentials['SecretAccessKey'],
-                        aws_session_token=credentials['SessionToken'])
-
-    bucket = s3.Bucket(BUCKET_NAME)
-
+async def process_files(session, rabbitmq_connection, root_user):
     subscription_service = SubscriptionService(
         db=session,
         user_persistence_service=UserPersistence(session),
@@ -546,47 +515,69 @@ async def process_files(sts_client, session, channel, root_user):
             except FileNotFoundError:
                 last_processed_file = None
 
-            if last_processed_file:
-                files = bucket.objects.filter(Prefix=FILES_PATH, Marker=last_processed_file)
-            else:
-                files = bucket.objects.filter(Prefix=FILES_PATH)
+            five_x_five_cookie_sync_event_date = session.query(FiveXFiveCookieSyncFile.event_date)
 
-            file_iterator = iter(files)
-            first_file = next(file_iterator)
-            match_file_by_hours = re.search(r'y=(\d{4})/m=(\d{2})/d=(\d{2})/h=(\d{2})/', first_file.key)
-            year = int(match_file_by_hours.group(1))
-            month = int(match_file_by_hours.group(2))
-            day = int(match_file_by_hours.group(3))
-            hour = int(match_file_by_hours.group(4))
-            time_key = f"{FILES_PATH}/y={year}/m={month:02d}/d={day:02d}/h={hour:02d}"
-            cookie_sync_by_hour = {}
-            files = bucket.objects.filter(Prefix=time_key)
+            if last_processed_file:
+                date_object = datetime.strptime(last_processed_file, '%Y-%m-%d %H:%M:%S.%f')
+                five_x_five_cookie_sync_event_date = five_x_five_cookie_sync_event_date.filter(
+                    FiveXFiveCookieSyncFile.event_date > date_object)
+
+            five_x_five_cookie_sync_file = five_x_five_cookie_sync_event_date.order_by(
+                FiveXFiveCookieSyncFile.event_date)
+            event_date = five_x_five_cookie_sync_file.limit(1).scalar()
+            if not event_date:
+                return
+
+            new_dt = event_date + timedelta(hours=1)
+
+            cookie_sync_files_query = session.query(FiveXFiveCookieSyncFile).filter(
+                FiveXFiveCookieSyncFile.event_date.between(event_date, new_dt)
+            )
+            cookie_sync_files = cookie_sync_files_query.order_by(FiveXFiveCookieSyncFile.event_date).all()
             last_processed_file_name = ''
-            for file in files:
-                await process_file(bucket, file.key, cookie_sync_by_hour)
-                last_processed_file_name = file.key
-            await process_table(session, cookie_sync_by_hour, channel, root_user, subscription_service)
-            update_last_processed_file(last_processed_file_name)
+            groupped_requests = {}
+            for request_row in cookie_sync_files:
+                group_requests_by_date(request_row, groupped_requests)
+                last_processed_file_name = request_row.event_date
+            await process_table(session, groupped_requests, rabbitmq_connection, subscription_service, None)
+            if root_user:
+                await process_table(session, groupped_requests, rabbitmq_connection, subscription_service, root_user)
+            logging.debug(f"Last processed event time {str(last_processed_file_name)}")
+            update_last_processed_file(str(last_processed_file_name))
     except StopIteration:
         pass
 
 
 async def main():
-    sts_client = create_sts_client(os.getenv('S3_KEY_ID'), os.getenv('S3_KEY_SECRET'))
     engine = create_engine(
         f"postgresql://{os.getenv('DB_USERNAME')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}")
     Session = sessionmaker(bind=engine)
     session = Session()
-
     rabbitmq_connection = RabbitMQConnection()
     connection = await rabbitmq_connection.connect()
     channel = await connection.channel()
+    log_level = logging.INFO
+    if len(sys.argv) > 1:
+        arg = sys.argv[1].upper()
+        if arg == 'DEBUG':
+            log_level = logging.DEBUG
+        elif arg == 'INFO':
+            log_level = logging.INFO
+        else:
+            sys.exit(1)
+
+    setup_logging(log_level)
+
     await channel.declare_queue(
         name=QUEUE_CREDITS_CHARGING,
         durable=True,
         arguments={
             'x-consumer-timeout': 3600000,
         }
+    )
+    await channel.declare_queue(
+        name=QUEUE_DATA_SYNC,
+        durable=True
     )
 
     logging.info("Started")
@@ -597,8 +588,7 @@ async def main():
             .first()
 
         while True:
-            await process_files(sts_client=sts_client, session=session, channel=connection, root_user=None)
-            await process_files(sts_client=sts_client, session=session, channel=connection, root_user=result)
+            await process_files(session=session, rabbitmq_connection=connection, root_user=result)
             logging.info('Sleeping for 10 minutes...')
             time.sleep(60 * 10)
     except Exception as e:

@@ -9,7 +9,8 @@ from enums import SubscriptionStatus
 from persistence.plans_persistence import PlansPersistence
 from services.plans import PlansService
 from .stripe_service import renew_subscription, get_default_payment_method, purchase_product, \
-    cancel_subscription_at_period_end
+    cancel_subscription_at_period_end, cancel_downgrade
+from .subscriptions import SubscriptionService
 
 stripe.api_key = StripeConfig.api_key
 logger = logging.getLogger(__name__)
@@ -84,9 +85,10 @@ def compare_prices(price_id1: int, price_id2: int) -> int:
 
 class PaymentsService:
 
-    def __init__(self, plans_service: PlansService, plan_persistence: PlansPersistence):
+    def __init__(self, plans_service: PlansService, plan_persistence: PlansPersistence, subscription_service: SubscriptionService):
         self.plans_service = plans_service
         self.plan_persistence = plan_persistence
+        self.subscription_service = subscription_service
 
     def upgrade_subscription(self, current_subscription, platform_subscription_id, price_id):
         if current_subscription['schedule']:
@@ -110,15 +112,15 @@ class PaymentsService:
         schedule = stripe.SubscriptionSchedule.retrieve(current_subscription.get("schedule"))
         stripe.SubscriptionSchedule.release(schedule.id)
 
-    def create_customer_session(self, price_id: str, users):
-        customer_id = self.plans_service.get_customer_id(users)
+    def create_customer_session(self, price_id: str, user):
+        customer_id = self.plans_service.get_customer_id(user)
         if get_default_payment_method(customer_id):
             status_subscription = renew_subscription(price_id, customer_id).status
             return {"status_subscription": status_subscription}
         return create_stripe_checkout_session(
             success_url=StripeConfig.success_url,
             cancel_url=StripeConfig.cancel_url,
-            customer_id=self.plans_service.get_customer_id(users),
+            customer_id=self.plans_service.get_customer_id(user),
             line_items=[{"price": price_id, "quantity": 1}],
             mode="subscription"
         )
@@ -136,8 +138,6 @@ class PaymentsService:
         subscription = self.plan_persistence.get_user_subscription(user_id=user.get('id'))
         if not subscription:
             return SubscriptionStatus.SUBSCRIPTION_NOT_FOUND
-        if subscription.status == 'canceled':
-            return SubscriptionStatus.SUBSCRIPTION_ALREADY_CANCELED
         subscription_data = cancel_subscription_at_period_end(subscription.platform_subscription_id)
         if subscription_data['status'] == 'active':
             cancel_at = subscription_data.get('canceled_at')
@@ -159,6 +159,16 @@ class PaymentsService:
             return self.downgrade_subscription(current_subscription, platform_subscription_id, price_id, subscription)
         else:
             return self.upgrade_subscription(current_subscription, platform_subscription_id, price_id)
+
+    def cancel_downgrade(self, user: dict):
+        subscription = self.plan_persistence.get_user_subscription(user_id=user.get('id'))
+        if not subscription:
+            return SubscriptionStatus.SUBSCRIPTION_NOT_FOUND
+        subscription_data = cancel_downgrade(subscription.platform_subscription_id)
+        if subscription_data == 'SUCCESS':
+            self.subscription_service.cancellation_downgrade(subscription.id)
+
+        return SubscriptionStatus.SUCCESS
 
     def is_downgrade(self, price_id: str, user_id: int) -> bool:
         current_price = self.plans_service.get_current_price(user_id)

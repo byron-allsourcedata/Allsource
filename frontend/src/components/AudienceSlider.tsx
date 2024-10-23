@@ -239,7 +239,6 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
 
     return (
         <>
-            <Backdrop open={open} sx={{ zIndex: 1200, color: '#fff' }} />
             <Drawer
                 anchor="right"
                 open={open}
