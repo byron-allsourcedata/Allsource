@@ -42,15 +42,22 @@ interface AppliedDates {
 const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
     const [lifetimeRevenue, setLifetimeRevenue] = useState(0);
     const [ROI, setROI] = useState(0);
-    const [totalCounts, setTotalCounts] = useState<any>(null);
-    const [totalOrder, setTotalOrder] = useState<any[]>([]);
-    const [averageOrder, setAverageOrder] = useState<any[]>([]);
-    const [dailyData, setDailyData] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true)
     const [values, setValues] = useState({
         totalRevenue: 0,
         totalVisitors: 0,
         viewProducts: 0,
         totalAbandonedCart: 0,
+      });
+    const [average_orders, setAverageOrders] = useState({
+        averageVisitors: 0,
+        averageViewProducts: 0,
+        averageAddToCart: 0,
+      });
+    const [total_orders, setTotalOrders] = useState({
+        averageVisitors: 0,
+        averageViewProducts: 0,
+        averageAddToCart: 0,
       });
     
     //first chart
@@ -67,21 +74,21 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
         revenue: 'rgba(244, 87, 69, 1)',
         visitors: 'rgba(80, 82, 178, 1)',
         viewed_product: 'rgba(224, 176, 5, 1)',
-        abondoned_cart: 'rgba(144, 190, 109, 1)'
+        abandoned_cart: 'rgba(144, 190, 109, 1)'
     };
 
     type VisibleSeries = {
         revenue: boolean;
         visitors: boolean;
         viewed_product: boolean;
-        abondoned_cart: boolean;
+        abandoned_cart: boolean;
     };
 
     const [visibleSeries, setVisibleSeries] = useState<VisibleSeries>({
         revenue: true,
         visitors: true,
         viewed_product: true,
-        abondoned_cart: true,
+        abandoned_cart: true,
     });
 
     const handleChipClick = (seriesId: keyof VisibleSeries) => {
@@ -108,22 +115,52 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                 viewProducts: total_view_products,
                 totalAbandonedCart: total_abandoned_cart,
               });
-              setLifetimeRevenue(response.data.lifetimeRevenue);
+              setLifetimeRevenue(response.data.lifetime_revenue);
               setROI(response.data.ROI)
             } catch (error) {
               console.error("Error fetching revenue data:", error);
+            } finally {
+                setLoading(false)
             }
+          } else {
+            try {
+              const response = await axiosInstance.get("/dashboard/revenue");
+              const { total_revenue, total_visitors, total_view_products, total_abandoned_cart } = response.data.total_counts;
+              setValues({
+                totalRevenue: total_revenue,
+                totalVisitors: total_visitors,
+                viewProducts: total_view_products,
+                totalAbandonedCart: total_abandoned_cart,
+              });
+              const { average_order_visitors, average_order_view_products, average_order_abandoned_cart } = response.data.average_order
+              const { total_orders_visitors, total_orders_view_products, total_orders_abandoned_cart } = response.data.total_order
+              setAverageOrders({
+                averageVisitors: average_order_visitors,
+                averageAddToCart: average_order_abandoned_cart,
+                averageViewProducts: average_order_view_products
+              })
+              setTotalOrders({
+                averageVisitors: total_orders_visitors,
+                averageAddToCart: total_orders_abandoned_cart,
+                averageViewProducts: total_orders_view_products
+              })
+              setLifetimeRevenue(response.data.lifetime_revenue);
+              setROI(response.data.ROI)
+          } 
+          finally {
+            setLoading(false)
           }
+        }
         };
     
         fetchData();
-      }, [appliedDates]); // Запрос данных при изменении выбранных дат
+      }, [appliedDates]);
 
     const options = [
         { id: 'revenue', label: 'Total Revenue', color: 'rgba(180, 218, 193, 1)' },
         { id: 'visitors', label: 'Total Visitors', color: 'rgba(252, 229, 204, 1)' },
         { id: 'viewed_product', label: 'View Products', color: 'rgba(201, 218, 248, 1)' },
-        { id: 'abondoned_cart', label: 'Abandoned cart', color: 'rgba(254, 238, 236, 1)' },
+        { id: 'abandoned_cart', label: 'Abandoned cart', color: 'rgba(254, 238, 236, 1)' },
     ];
 
     const selectedGraphs = options
@@ -200,7 +237,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                 5000, 5200, 4800, 5400, 5600, 5900, 6100, 6300, 6700],
         },
         {
-            id: 'abondoned_cart' as keyof typeof colorMapping,
+            id: 'abandoned_cart' as keyof typeof colorMapping,
             label: 'Abandoned to Cart',
             curve: 'linear',
             stack: 'total',
@@ -496,13 +533,13 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                             </Box>
                             <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'start', width: '100%' }}>
                                 <Typography component='div' sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', fontWeight: '700', fontSize: '22px', justifyContent: 'flex-end', mt: 1, fontFamily: 'Nunito Sans', lineHeight: '30.01px', color: 'rgba(32, 33, 36, 1)', '@media (max-width: 900px)': { flexDirection: 'row', alignItems: 'center', gap: 2 } }}>
-                                    $23,233 <Typography component='span' sx={{ fontFamily: 'Nunito Sans', fontSize: '14px', pb: 0.5, fontWeight: 500, lineHeight: '19.6px', textAlign: 'left', '@media (max-width: 900px)': { pt: 0.5 } }}>View Products</Typography>
+                                    ${values.viewProducts ? values.viewProducts : 0} <Typography component='span' sx={{ fontFamily: 'Nunito Sans', fontSize: '14px', pb: 0.5, fontWeight: 500, lineHeight: '19.6px', textAlign: 'left', '@media (max-width: 900px)': { pt: 0.5 } }}>View Products</Typography>
                                 </Typography>
                             </Box>
                         </Box>
                         <Box sx={{ border: '0.2px solid rgba(189, 189, 189, 1)', backgroundColor: 'rgba(250, 250, 246, 1)', maxHeight: '52px', mt: 0.5, borderRadius: '4px', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: '8px 16px', '@media (max-width: 900px)': { justifyContent: 'space-between', mb: 2 } }}>
                             <Typography component='div' sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', fontWeight: '600', fontSize: '12px', justifyContent: 'flex-end', fontFamily: 'Nunito Sans', lineHeight: '16.08px', color: 'rgba(74, 74, 74, 1)' }}>
-                                Average Order <Typography component='span' sx={{ fontFamily: 'Nunito Sans', fontSize: '16px', fontWeight: 700, lineHeight: '21.82px', color: 'rgba(32, 33, 36, 1)', textAlign: 'left' }}>$55.50</Typography>
+                                Average Order <Typography component='span' sx={{ fontFamily: 'Nunito Sans', fontSize: '16px', fontWeight: 700, lineHeight: '21.82px', color: 'rgba(32, 33, 36, 1)', textAlign: 'left' }}>${average_orders.averageViewProducts? average_orders.averageViewProducts : 0 }</Typography>
                             </Typography>
                             <Box
                                 sx={{
@@ -518,7 +555,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                 }}
                             />
                             <Typography component='div' sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', fontWeight: '600', fontSize: '12px', justifyContent: 'flex-end', fontFamily: 'Nunito Sans', lineHeight: '16.08px', color: 'rgba(74, 74, 74, 1)', '@media (max-width: 900px)': { alignItems: 'end' } }}>
-                                Total Orders <Typography component='span' sx={{ fontFamily: 'Nunito Sans', fontSize: '16px', fontWeight: 700, lineHeight: '21.82px', color: 'rgba(32, 33, 36, 1)', textAlign: 'left' }}>555</Typography>
+                                Total Orders <Typography component='span' sx={{ fontFamily: 'Nunito Sans', fontSize: '16px', fontWeight: 700, lineHeight: '21.82px', color: 'rgba(32, 33, 36, 1)', textAlign: 'left' }}>{total_orders.averageViewProducts? total_orders.averageViewProducts : 0 }</Typography>
                             </Typography>
                         </Box>
                     </Box>
@@ -530,7 +567,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                     xAxis={[{ scaleType: 'point', data, tickInterval: (index, i) => (i + 1) % 5 === 0 }]}
                                     yAxis={[
                                         {
-                                            valueFormatter: (value) => `${value}$`, // Форматируем значения с добавлением $
+                                            valueFormatter: (value) => `${value}$`,
                                         }
                                     ]}
                                     series={[{
@@ -586,13 +623,13 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                             </Box>
                             <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'start', width: '100%' }}>
                                 <Typography component='div' sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', fontWeight: '700', fontSize: '22px', justifyContent: 'flex-end', mt: 1, fontFamily: 'Nunito Sans', lineHeight: '30.01px', color: 'rgba(32, 33, 36, 1)', '@media (max-width: 900px)': { flexDirection: 'row', alignItems: 'center', gap: 2 } }}>
-                                    $12,233 <Typography component='span' sx={{ fontFamily: 'Nunito Sans', fontSize: '14px', pb: 0.5, fontWeight: 500, lineHeight: '19.6px', textAlign: 'left' }}>Abandoned cart</Typography>
+                                    ${values.totalAbandonedCart ? values.totalAbandonedCart : 0} <Typography component='span' sx={{ fontFamily: 'Nunito Sans', fontSize: '14px', pb: 0.5, fontWeight: 500, lineHeight: '19.6px', textAlign: 'left' }}>Add to cart</Typography>
                                 </Typography>
                             </Box>
                         </Box>
                         <Box sx={{ border: '0.2px solid rgba(189, 189, 189, 1)', backgroundColor: 'rgba(250, 250, 246, 1)', maxHeight: '52px', mt: 0.5, borderRadius: '4px', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: '8px 16px', '@media (max-width: 900px)': { justifyContent: 'space-between', mb: 2 } }}>
                             <Typography component='div' sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', fontWeight: '600', fontSize: '12px', justifyContent: 'flex-end', fontFamily: 'Nunito Sans', lineHeight: '16.08px', color: 'rgba(74, 74, 74, 1)' }}>
-                                Average Order <Typography component='span' sx={{ fontFamily: 'Nunito Sans', fontSize: '16px', fontWeight: 700, lineHeight: '21.82px', color: 'rgba(32, 33, 36, 1)', textAlign: 'left' }}>$52.50</Typography>
+                                Average Order <Typography component='span' sx={{ fontFamily: 'Nunito Sans', fontSize: '16px', fontWeight: 700, lineHeight: '21.82px', color: 'rgba(32, 33, 36, 1)', textAlign: 'left' }}>${average_orders.averageAddToCart ? average_orders.averageAddToCart : 0}</Typography>
                             </Typography>
                             <Box
                                 sx={{
@@ -608,7 +645,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                 }}
                             />
                             <Typography component='div' sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', fontWeight: '600', fontSize: '12px', justifyContent: 'flex-end', fontFamily: 'Nunito Sans', lineHeight: '16.08px', color: 'rgba(74, 74, 74, 1)', '@media (max-width: 900px)': { alignItems: 'end' } }}>
-                                Total Orders <Typography component='span' sx={{ fontFamily: 'Nunito Sans', fontSize: '16px', fontWeight: 700, lineHeight: '21.82px', color: 'rgba(32, 33, 36, 1)', textAlign: 'left' }}>1111</Typography>
+                                Total Orders <Typography component='span' sx={{ fontFamily: 'Nunito Sans', fontSize: '16px', fontWeight: 700, lineHeight: '21.82px', color: 'rgba(32, 33, 36, 1)', textAlign: 'left' }}>{total_orders.averageAddToCart ? total_orders.averageAddToCart : 0}</Typography>
                             </Typography>
                         </Box>
                     </Box>
@@ -677,13 +714,13 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                             </Box>
                             <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'start', width: '100%' }}>
                                 <Typography component='div' sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', fontWeight: '700', fontSize: '22px', justifyContent: 'flex-end', mt: 1, fontFamily: 'Nunito Sans', lineHeight: '30.01px', color: 'rgba(32, 33, 36, 1)', '@media (max-width: 900px)': { flexDirection: 'row', alignItems: 'center', gap: 2 } }}>
-                                    $23,233 <Typography component='span' sx={{ fontFamily: 'Nunito Sans', fontSize: '14px', pb: 0.5, fontWeight: 500, lineHeight: '19.6px', textAlign: 'left' }}>Total Visitors</Typography>
+                                    ${values.totalVisitors ? values.totalVisitors : 0} <Typography component='span' sx={{ fontFamily: 'Nunito Sans', fontSize: '14px', pb: 0.5, fontWeight: 500, lineHeight: '19.6px', textAlign: 'left' }}>Total Visitors</Typography>
                                 </Typography>
                             </Box>
                         </Box>
                         <Box sx={{ border: '0.2px solid rgba(189, 189, 189, 1)', backgroundColor: 'rgba(250, 250, 246, 1)', maxHeight: '52px', mt: 0.5, borderRadius: '4px', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: '8px 16px', '@media (max-width: 900px)': { justifyContent: 'space-between', mb: 2 } }}>
                             <Typography component='div' sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', fontWeight: '600', fontSize: '12px', justifyContent: 'flex-end', fontFamily: 'Nunito Sans', lineHeight: '16.08px', color: 'rgba(74, 74, 74, 1)' }}>
-                                Average Order <Typography component='span' sx={{ fontFamily: 'Nunito Sans', fontSize: '16px', fontWeight: 700, lineHeight: '21.82px', color: 'rgba(32, 33, 36, 1)', textAlign: 'left' }}>$55.50</Typography>
+                                Average Order <Typography component='span' sx={{ fontFamily: 'Nunito Sans', fontSize: '16px', fontWeight: 700, lineHeight: '21.82px', color: 'rgba(32, 33, 36, 1)', textAlign: 'left' }}>${average_orders.averageVisitors ? average_orders.averageVisitors : 0}</Typography>
                             </Typography>
                             <Box
                                 sx={{
@@ -699,7 +736,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                 }}
                             />
                             <Typography component='div' sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', fontWeight: '600', fontSize: '12px', justifyContent: 'flex-end', fontFamily: 'Nunito Sans', lineHeight: '16.08px', color: 'rgba(74, 74, 74, 1)', '@media (max-width: 900px)': { alignItems: 'end' } }}>
-                                Total Orders <Typography component='span' sx={{ fontFamily: 'Nunito Sans', fontSize: '16px', fontWeight: 700, lineHeight: '21.82px', color: 'rgba(32, 33, 36, 1)', textAlign: 'left' }}>555</Typography>
+                                Total Orders <Typography component='span' sx={{ fontFamily: 'Nunito Sans', fontSize: '16px', fontWeight: 700, lineHeight: '21.82px', color: 'rgba(32, 33, 36, 1)', textAlign: 'left' }}>{total_orders.averageVisitors ? total_orders.averageVisitors : 0}</Typography>
                             </Typography>
                         </Box>
                     </Box>
@@ -915,9 +952,11 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                     </CardContent>
                 </Card>
             </Box>
+            {loading && (<CustomizedProgressBar />)}
         </Box>
     )
-}
+};
+
 
 
 export default DashboardRevenue;
