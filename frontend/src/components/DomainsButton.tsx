@@ -214,6 +214,7 @@ const DomainButton: React.FC = () => {
     const fetchData = async () => {
       try {
         setLoading(true)
+        if (!localStorage.getItem('token')) { return }
         const response = await axiosInstance.get('domains/');
         if (response.status === 200) {
           setDomains(response.data);
