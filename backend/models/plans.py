@@ -26,6 +26,7 @@ class SubscriptionPlan(Base):
     members_limit = Column(Integer, nullable=True)
     features = Column(JSONB, nullable=True)
     lead_credit_price = Column(DECIMAL(10, 2), nullable=False)
+    priority = Column(INTEGER, nullable=False)
 
 
 event.listen(SubscriptionPlan, "before_insert", create_timestamps)

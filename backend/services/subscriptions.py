@@ -23,6 +23,7 @@ class SubscriptionService:
         self.plans_persistence = plans_persistence
         self.db = db
         self.user_persistence_service = user_persistence_service
+        self.UNLIMITED = -1
 
     def get_userid_by_customer(self, customer_id):
         return self.db.query(User).filter(User.customer_id == customer_id).first()
@@ -246,11 +247,11 @@ class SubscriptionService:
         if domains:
             sorted_domains = sorted(domains, key=lambda x: x.created_at)
             for i, domain in enumerate(sorted_domains, start=1):
-                domain.enable = i <= domains_limit
+                domain.enable = i <= domains_limit or domains_limit == self.UNLIMITED
         self.db.commit()
 
     def update_team_members(self, team_owner_id, members_limit):
-        if team_owner_id:
+        if team_owner_id and members_limit != self.UNLIMITED:
             users = self.db.query(Users).filter(Users.team_owner_id == team_owner_id).all()
             if users:
                 sorted_users = sorted(users,
@@ -271,7 +272,7 @@ class SubscriptionService:
         start_date = datetime.fromtimestamp(start_date_timestamp, timezone.utc).replace(tzinfo=None)
         end_date = datetime.fromtimestamp(end_date_timestamp, timezone.utc).replace(tzinfo=None)
         stripe_status = stripe_payload.get("status")
-        if stripe_status in ["active", "succeeded"]:
+        if stripe_status in ["active", "succeeded", "trialing"]:
             status = "active"
         elif stripe_status in ["incomplete", "requires_action", "pending", "past_due"]:
             status = "inactive"
@@ -295,6 +296,7 @@ class SubscriptionService:
                     user_subscription.plan_start = start_date
                     user_subscription.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
                     user_subscription.plan_end = end_date
+                    user_subscription.is_trial = False
                     user.leads_credits = leads_credits if user.leads_credits >= 0 else leads_credits - user.leads_credits
                     user.prospect_credits = prospect_credits
                 self.db.flush()
@@ -342,7 +344,7 @@ class SubscriptionService:
         if user_subscription:
             subscription_member_limit = user_subscription.members_limit
             user_member_limit = len(self.user_persistence_service.get_combined_team_info(user_id=user_id)) + 1
-            if user_member_limit < subscription_member_limit:
+            if user_member_limit < subscription_member_limit or subscription_member_limit == self.UNLIMITED:
                 return True
 
         return False

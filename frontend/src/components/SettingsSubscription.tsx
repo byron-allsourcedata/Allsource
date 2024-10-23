@@ -8,6 +8,7 @@ import CustomTooltip from './customToolTip';
 import CustomizedProgressBar from '@/components/CustomizedProgressBar';
 import Image from 'next/image';
 import { showErrorToast, showToast } from './ToastNotification';
+import axios from 'axios';
 
 
 
@@ -238,8 +239,13 @@ export const SettingsSubscription: React.FC = () => {
                 }
             }
         } catch (error) {
-            showErrorToast('Access denied. Admins only');
-            console.error('Error choosing plan:', error);
+            if (axios.isAxiosError(error)) {
+                if (error.response && error.response.status === 403) {
+                    showErrorToast('Access denied: You do not have permission to remove this member.');
+                } else {
+                    console.error('Error removing team member:', error);
+                }
+            }
         } finally {
             setIsLoading(false)
         }

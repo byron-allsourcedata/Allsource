@@ -422,6 +422,14 @@ class LeadsPersistence:
     def get_lead_data(self, lead_id):
         return self.db.query(FiveXFiveUser).filter(FiveXFiveUser.id == lead_id).first()
 
+    def get_inactive_leads_user(self, user_id):
+        return (
+            self.db.query(LeadUser)
+            .filter(LeadUser.user_id == user_id, LeadUser.is_active.is_(False))
+            .order_by(LeadUser.id)
+            .all()
+        )
+
     def get_ids_user_leads_ids(self, domain_id, leads_ids):
         lead_users = self.db.query(LeadUser).filter(LeadUser.domain_id == domain_id,
                                                     LeadUser.lead_id.in_(leads_ids)).all()

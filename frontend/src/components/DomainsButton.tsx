@@ -313,11 +313,7 @@ const DomainButton: React.FC = () => {
         </Box>
         {domains.map((domain) => (
           <MenuItem key={domain.id} onClick={() => {
-            if (domain.enable) {
-              handleSetDomain(domain.domain);
-            } else {
-              setUpgradePlanPopup(true);
-            }
+            handleSetDomain(domain.domain);
           }}>
             <Box sx={{
               display: 'flex',

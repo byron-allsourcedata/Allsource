@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from sqlalchemy import Column, Integer, BOOLEAN, VARCHAR, TIMESTAMP
 
 from .base import Base
@@ -11,5 +13,5 @@ class UserDomains(Base):
     domain = Column(VARCHAR, nullable=False)
     data_provider_id = Column(VARCHAR(64))
     is_pixel_installed = Column(BOOLEAN, default=False)
-    enable = Column(BOOLEAN, default=True)
-    created_at = Column(TIMESTAMP, nullable=False)
+    enable = Column(BOOLEAN, default=False)
+    created_at = Column(TIMESTAMP, nullable=False, default=datetime.utcnow)
