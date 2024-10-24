@@ -96,32 +96,26 @@ const NavigationMenu = () => {
     setOpen(!open);
   };
 
-  const handleNavigation = async (path: string) => {
+  const handleNavigation = async (route: string) => {
     try {
-        const response = await axiosInstance.get("dashboard");
+        const response = await axiosInstance.get('/check-user-authorization');
         if (response.data.status === "NEED_BOOK_CALL") {
             sessionStorage?.setItem("is_slider_opened", "true");
             setShowSlider(true);
-            setShowBookSlider(true);
-            setOpen(!open);
         } else {
-            setShowSlider(false);
-            setShowBookSlider(false);
-            setOpen(!open);
-            router.push(path);
+            router.push(route)
+          }
         }
-    } catch (error) {
+    catch (error) {
         if (error instanceof AxiosError && error.response?.status === 403) {
             if (error.response.data.status === "NEED_BOOK_CALL") {
                 sessionStorage?.setItem("is_slider_opened", "true");
                 setShowSlider(true);
                 setShowBookSlider(true);
-                setOpen(!open);
             } else {
                 setShowSlider(false);
                 setShowBookSlider(false);
-                setOpen(!open);
-                router.push(path);
+                router.push(route)
             }
         } else {
             console.error("Error fetching data:", error);
