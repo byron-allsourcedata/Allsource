@@ -392,13 +392,13 @@ class LeadsPersistence:
         query = (
             self.db.query(
                 LeadsVisits.start_date,
-                ,
+                LeadsVisits.behavior_type,
                 func.sum(LeadOrders.total_price).label('total_price'),
                 func.count(LeadOrders.id).label('total_orders')
             )
             .join(LeadUser, LeadsVisits.id == LeadUser.first_visit_id)
             .join(LeadOrders, LeadOrders.lead_user_id == LeadUser.id)
-            .filter(LeadUser.domaLeadsVisits.behavior_typein_id == domain_id)
+            .filter(LeadUser.domain_id == domain_id)
         )
 
         if from_date and to_date:
