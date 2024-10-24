@@ -33,7 +33,6 @@ class LeadsService:
 
         leads_list = []
         for lead in leads:
-            print(lead[66])
             if not lead[66]:
                 leads_list.append({
                     'id': None,
