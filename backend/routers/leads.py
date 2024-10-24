@@ -12,7 +12,7 @@ router = APIRouter()
 @router.get("")
 async def get_leads(
         page: int = Query(1, alias="page", ge=1, description="Page number"),
-        per_page: int = Query(15, alias="per_page", ge=1, le=100, description="Items per page"),
+        per_page: int = Query(15, alias="per_page", ge=1, le=500, description="Items per page"),
         from_date: int = Query(None, description="Start date in integer format"),
         to_date: int = Query(None, description="End date in integer format"),
         regions: str = Query(None, description="Comma-separated list of regions"),

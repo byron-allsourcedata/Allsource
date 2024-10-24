@@ -788,7 +788,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                             </Box>
                             <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'start', width: '100%' }}>
                                 <Typography component='div' sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', fontWeight: '700', fontSize: '22px', justifyContent: 'flex-end', mt: 1, fontFamily: 'Nunito Sans', lineHeight: '30.01px', color: 'rgba(32, 33, 36, 1)', '@media (max-width: 900px)': { flexDirection: 'row', alignItems: 'center', gap: 2 } }}>
-                                    ${values.totalAbandonedCart ? values.totalAbandonedCart : 0} <Typography component='span' sx={{ fontFamily: 'Nunito Sans', fontSize: '14px', pb: 0.5, fontWeight: 500, lineHeight: '19.6px', textAlign: 'left' }}>Add to cart</Typography>
+                                    ${values.totalAbandonedCart ? values.totalAbandonedCart : 0} <Typography component='span' sx={{ fontFamily: 'Nunito Sans', fontSize: '14px', pb: 0.5, fontWeight: 500, lineHeight: '19.6px', textAlign: 'left' }}>Abandoned Cart</Typography>
                                 </Typography>
                             </Box>
                         </Box>

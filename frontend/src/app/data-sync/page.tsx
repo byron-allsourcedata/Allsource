@@ -51,6 +51,7 @@ const centerContainerStyles = {
       maxWidth: '100%'
   }
 };
+import CustomTablePagination from "@/components/CustomTablePagination";
 
 interface DataSyncProps {
   service_name?: string
@@ -64,6 +65,10 @@ const DataSync = () => {
   const [klaviyoIconPopupOpen, setKlaviyoIconPopupOpen] = useState(false);
   const [metaIconPopupOpen, setMetaIconPopupOpen] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [totalRows, setTotalRows] = useState(0);
+  const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
 
   const handleSortRequest = (property: string) => {
     const isAsc = orderBy === property && order === "asc";
@@ -78,8 +83,29 @@ const DataSync = () => {
       const response = await axiosInstance.get('/data-sync/sync', {
         params: params
       });
-      console.log(response)
+      const { count } = response.data;
+
       setData(response.data);
+      setTotalRows(count);
+      let newRowsPerPageOptions: number[] = []; 
+            if (count <= 10) {
+                newRowsPerPageOptions = [5, 10]; 
+            } else if (count <= 50) {
+                newRowsPerPageOptions = [10, 20]; 
+            } else if (count <= 100) {
+                newRowsPerPageOptions = [10, 20, 50]; 
+            } else if (count <= 300) {
+                newRowsPerPageOptions = [10, 20, 50, 100]; 
+            } else if (count <= 500) {
+                newRowsPerPageOptions = [10, 20, 50, 100, 300]; 
+            } else {
+                newRowsPerPageOptions = [10, 20, 50, 100, 300, 500]; 
+            }
+            if (!newRowsPerPageOptions.includes(count)) {
+                newRowsPerPageOptions.push(count);
+                newRowsPerPageOptions.sort((a, b) => a - b); // Ensure the options remain sorted
+            }
+            setRowsPerPageOptions(newRowsPerPageOptions); // Update the options
     } catch (error) {
       if (error instanceof AxiosError && error.response?.status === 403) {
           if (error.response.data.status === 'NEED_BOOK_CALL') {
@@ -307,7 +333,17 @@ const DataSync = () => {
     router.push('/dashboard');
   };
 
+  const handleChangePage = (_: React.MouseEvent<HTMLButtonElement> | null, newPage: number) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0); // Reset to first page when changing rows per page
+  };
+
   return (
+    <>
     <Box sx={datasyncStyle.mainContent}>
       <Box
         sx={{
@@ -503,7 +539,20 @@ const DataSync = () => {
             <DataSyncList />}
         </Box>
       </Box>
-      );
+    </Box>
+    <Box sx={{ display: 'flex', justifyContent: 'flex-end', padding: '16px' }}>
+        <CustomTablePagination
+        count={totalRows}
+        page={page}
+        rowsPerPage={rowsPerPage}
+        onPageChange={handleChangePage}
+        onRowsPerPageChange={handleChangeRowsPerPage}
+        rowsPerPageOptions={rowsPerPageOptions}
+        />
+      </Box>
+      </>
+
+  );
 };
 
 const DatasyncPage: React.FC = () => {

@@ -81,16 +81,34 @@ class SubscriptionService:
         )
         return user_subscription
 
-    def is_user_has_active_subscription(self, user_id):
-        user_subscription = self.get_user_subscription(user_id=user_id)
-        if user_subscription:
-            if user_subscription.is_trial and user_subscription.plan_end is None:
-                return True
-            if user_subscription.status in ('active', 'canceled'):
-                user_subscription.plan_end = user_subscription.plan_end.replace(tzinfo=timezone.utc)
-                return user_subscription.plan_end > datetime.now(timezone.utc)
+    def get_user_subscription_with_trial_status(self, user_id):
+        result_dict = {
+            'subscription': None,
+            'is_artificial_status': False,
+            'artificial_trial_days': None
+        }
+        result = self.plans_persistence.get_user_subscription_with_trial_status(user_id)
+        if result:
+            user_subscription, is_free_trial, trail_days = result
+            result_dict['subscription'] = user_subscription
+            result_dict['artificial_trial_days'] = trail_days
+            result_dict['is_artificial_status'] = is_free_trial
+            return result_dict
+        return result_dict
 
-        return False
+    def is_user_has_active_subscription(self, user_id):
+        result = self.get_user_subscription_with_trial_status(user_id=user_id)
+        if not result['subscription']:
+            return False
+        if result['is_artificial_status']:
+            if not result['subscription'].plan_end:
+                return True
+
+        if result['subscription'].status == 'inactive':
+            return False
+        subscription_plan_end = result['subscription'].plan_end.replace(tzinfo=timezone.utc)
+
+        return subscription_plan_end > datetime.now(timezone.utc)
 
     def is_trial_subscription(self, user_id):
         user_subscription = self.get_user_subscription(user_id=user_id)
@@ -193,7 +211,7 @@ class SubscriptionService:
         plan = self.plans_persistence.get_free_trail_plan()
         status = 'active'
         created_at = datetime.strptime(get_utc_aware_date_for_postgres(), '%Y-%m-%dT%H:%M:%SZ')
-        domains_limit, integrations_limit, leads_credits, prospect_credits, members_limit = self.plans_persistence.get_plan_limit_by_id(
+        domains_limit, integrations_limit, leads_credits, prospect_credits, members_limit, lead_credit_price = self.plans_persistence.get_plan_limit_by_id(
             plan_id=plan.id)
         add_subscription_obj = Subscription(
             domains_limit=domains_limit,
@@ -326,6 +344,7 @@ class SubscriptionService:
                 user.leads_credits = leads_credits if user.leads_credits >= 0 else leads_credits - user.leads_credits
                 user.prospect_credits = prospect_credits
                 user.current_subscription_id = new_subscription.id
+                user.is_leads_auto_charging = True
             self.db.commit()
 
         if status == "canceled" or status == 'inactive':

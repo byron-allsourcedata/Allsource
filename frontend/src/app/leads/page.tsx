@@ -23,17 +23,11 @@ import CustomizedProgressBar from '@/components/CustomizedProgressBar';
 import Tooltip from '@mui/material/Tooltip';
 import CustomToolTip from '@/components/customToolTip';
 import CalendarPopup from '@/components/CustomCalendar'
+import CustomTablePagination from '@/components/CustomTablePagination';
 
 
 
 
-interface CustomTablePaginationProps {
-    count: number;
-    page: number;
-    rowsPerPage: number;
-    onPageChange: (event: React.MouseEvent<HTMLButtonElement>, newPage: number) => void;
-    onRowsPerPageChange: (event: React.ChangeEvent<{ value: unknown }>) => void;
-}
 
 interface FetchDataParams {
     sortBy?: string;
@@ -43,113 +37,6 @@ interface FetchDataParams {
     activeFilter: string;
     appliedDates: { start: Date | null; end: Date | null };
 }
-
-const CustomTablePagination: React.FC<CustomTablePaginationProps> = ({
-    count,
-    page,
-    rowsPerPage,
-    onPageChange,
-    onRowsPerPageChange,
-}) => {
-    const totalPages = Math.ceil(count / rowsPerPage);
-    const maxPagesToShow = 3;
-
-    const handlePageChange = (newPage: number) => {
-        if (newPage >= 0 && newPage < totalPages) {
-            onPageChange(null as any, newPage);
-        }
-    };
-
-    const getPageButtons = () => {
-        const pages = [];
-        let startPage = Math.max(0, page - Math.floor(maxPagesToShow / 2));
-        let endPage = Math.min(totalPages - 1, startPage + maxPagesToShow - 1);
-
-        if (endPage - startPage + 1 < maxPagesToShow) {
-            startPage = Math.max(0, endPage - maxPagesToShow + 1);
-        }
-
-        for (let i = startPage; i <= endPage; i++) {
-            pages.push(i);
-        }
-
-        return pages;
-    };
-
-    return (
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', padding: 1 }}>
-            <select
-                value={rowsPerPage}
-                onChange={onRowsPerPageChange}
-                style={{
-                    marginLeft: 8,
-                    border: '1px solid rgba(235, 235, 235, 1)',
-                    backgroundColor: 'rgba(255, 255, 255, 1)'
-                }}
-            >
-                {[10, 15, 25, 50].map((option) => (
-                    <option key={option} value={option}>
-                        {option} rows
-                    </option>
-                ))}
-            </select>
-            <Button
-                onClick={(e) => handlePageChange(page - 1)}
-                disabled={page === 0}
-                sx={{
-                    minWidth: '30px',
-                    minHeight: '30px',
-                }}
-            >
-                <ChevronLeft
-                    sx={{
-                        border: page === 0 ? 'none' : '1px solid rgba(235, 235, 235, 1)',
-                        borderRadius: '4px'
-                    }} />
-            </Button>
-            {totalPages > 1 && (
-                <>
-                    {page > 1 && <Button onClick={() => handlePageChange(0)} sx={leadsStyles.page_number}>1</Button>}
-                    {page > 2 && <Typography variant="body2" sx={{ mx: 1 }}>...</Typography>}
-                    {getPageButtons().map((pageNumber) => (
-                        <Button
-                            key={pageNumber}
-                            onClick={() => handlePageChange(pageNumber)}
-                            sx={{
-                                mx: 0.5, ...leadsStyles.page_number,
-                                border: page === pageNumber ? '1px solid rgba(80, 82, 178, 1)' : 'none',
-                                color: page === pageNumber ? 'rgba(80, 82, 178, 1)' : 'rgba(122, 122, 122, 1)',
-                                minWidth: '30px',
-                                ':hover': { backgroundColor: '#fff' },
-                                minHeight: '30px',
-                                padding: 0
-                            }}
-                            variant={page === pageNumber ? 'contained' : 'text'}
-                        >
-                            {pageNumber + 1}
-                        </Button>
-                    ))}
-                    {totalPages - page > 3 && <Typography variant="body2" sx={{ mx: 1 }}>...</Typography>}
-                    {page < totalPages - 1 && <Button onClick={() => handlePageChange(totalPages - 1)}
-                        sx={leadsStyles.page_number}>{totalPages}</Button>}
-                </>
-            )}
-            <Button
-                onClick={(e) => handlePageChange(page + 1)}
-                disabled={page >= totalPages - 1}
-                sx={{
-                    minWidth: '30px',
-                    minHeight: '30px',
-                }}
-            >
-                <ChevronRight sx={{
-                    border: page >= totalPages - 1 ? 'none' : '1px solid rgba(235, 235, 235, 1)',
-                    borderRadius: '4px'
-                }} />
-            </Button>
-        </Box>
-    );
-};
 
 
 const Leads: React.FC = () => {
@@ -166,7 +53,7 @@ const Leads: React.FC = () => {
     const dropdownOpen = Boolean(dropdownEl);
     const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
     const [page, setPage] = useState(0);
-    const [rowsPerPage, setRowsPerPage] = useState(15);
+    const [rowsPerPage, setRowsPerPage] = useState(10);
     const [activeFilter, setActiveFilter] = useState<string>('');
     const [calendarAnchorEl, setCalendarAnchorEl] = useState<null | HTMLElement>(null);
     const [selectedDates, setSelectedDates] = useState<{ start: Date | null; end: Date | null }>({ start: null, end: null });
@@ -178,6 +65,7 @@ const Leads: React.FC = () => {
     const [selectedFilters, setSelectedFilters] = useState<{ label: string, value: string }[]>([]);
     const [openPopup, setOpenPopup] = React.useState(false);
     const [popupData, setPopupData] = React.useState<any>(null);
+    const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
 
     useEffect(() => {
         document.body.style.overflow = 'hidden';
@@ -464,6 +352,26 @@ const Leads: React.FC = () => {
             setData(Array.isArray(leads) ? leads : []);
             setCount(count || 0);
             setStatus(response.data.status);
+            let newRowsPerPageOptions: number[] = []; // Default options
+            if (count <= 10) {
+                newRowsPerPageOptions = [5, 10]; 
+            } else if (count <= 50) {
+                newRowsPerPageOptions = [10, 20]; 
+            } else if (count <= 100) {
+                newRowsPerPageOptions = [10, 20, 50]; 
+            } else if (count <= 300) {
+                newRowsPerPageOptions = [10, 20, 50, 100]; 
+            } else if (count <= 500) {
+                newRowsPerPageOptions = [10, 20, 50, 100, 300]; 
+            } else {
+                newRowsPerPageOptions = [10, 20, 50, 100, 300, 500]; 
+            }
+            if (!newRowsPerPageOptions.includes(count)) {
+                newRowsPerPageOptions.push(count);
+                newRowsPerPageOptions.sort((a, b) => a - b); // Ensure the options remain sorted
+            }
+            
+            setRowsPerPageOptions(newRowsPerPageOptions);
         } catch (error) {
             if (error instanceof AxiosError && error.response?.status === 403) {
                 if (error.response.data.status === 'NEED_BOOK_CALL') {
@@ -1505,15 +1413,19 @@ const Leads: React.FC = () => {
                                             </TableBody>
                                         </Table>
                                     </TableContainer>
-                                    <CustomTablePagination
-                                        count={count_leads ?? 0}
-                                        page={page}
-                                        rowsPerPage={rowsPerPage}
-                                        onPageChange={handleChangePage}
-                                        onRowsPerPageChange={handleChangeRowsPerPage}
-                                    />
+                                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', padding: '24px 0 0'  }}>
+                                        <CustomTablePagination
+                                            count={count_leads ?? 0}
+                                            page={page}
+                                            rowsPerPage={rowsPerPage}
+                                            onPageChange={handleChangePage}
+                                            onRowsPerPageChange={handleChangeRowsPerPage}
+                                            rowsPerPageOptions={rowsPerPageOptions}
+                                        />
+                                    </Box>
                                 </Grid>
                             </Grid>
+                            
                         )}
                         {showSlider && <Slider />}
                     </Box>
