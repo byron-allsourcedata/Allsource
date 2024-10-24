@@ -199,6 +199,7 @@ const UserIntegrationsList = ({ integrationsCredentials, changeTab = () => { }, 
         setOpenShopifyConnect(false)
         setOpenBigcommerceConnect(false)
         setOpenOmnisendConnect(false)
+        setOpenMailchimpConnect(false)
     }
 
     const handleOnSave = () => {
