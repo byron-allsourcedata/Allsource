@@ -31,6 +31,7 @@ import axiosInterceptorInstance from '@/axios/axiosInterceptorInstance';
 import { showErrorToast, showToast } from "@/components/ToastNotification";
 import axios from "axios";
 import DataSyncList from "@/components/DataSyncList";
+import CustomTablePagination from "@/components/CustomTablePagination";
 
 interface DataSyncProps {
   service_name?: string
@@ -42,6 +43,10 @@ const DataSync = () => {
   const [data, setData] = useState<any[]>([]);
   const [klaviyoIconPopupOpen, setKlaviyoIconPopupOpen] = useState(false);
   const [metaIconPopupOpen, setMetaIconPopupOpen] = useState(false);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [totalRows, setTotalRows] = useState(0);
+  const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
 
   const handleSortRequest = (property: string) => {
     const isAsc = orderBy === property && order === "asc";
@@ -56,8 +61,29 @@ const DataSync = () => {
       const response = await axiosInstance.get('/data-sync/sync', {
         params: params
       });
+      const { count } = response.data;
 
       setData(response.data);
+      setTotalRows(count);
+      let newRowsPerPageOptions: number[] = []; 
+            if (count <= 10) {
+                newRowsPerPageOptions = [5, 10]; 
+            } else if (count <= 50) {
+                newRowsPerPageOptions = [10, 20]; 
+            } else if (count <= 100) {
+                newRowsPerPageOptions = [10, 20, 50]; 
+            } else if (count <= 300) {
+                newRowsPerPageOptions = [10, 20, 50, 100]; 
+            } else if (count <= 500) {
+                newRowsPerPageOptions = [10, 20, 50, 100, 300]; 
+            } else {
+                newRowsPerPageOptions = [10, 20, 50, 100, 300, 500]; 
+            }
+            if (!newRowsPerPageOptions.includes(count)) {
+                newRowsPerPageOptions.push(count);
+                newRowsPerPageOptions.sort((a, b) => a - b); // Ensure the options remain sorted
+            }
+            setRowsPerPageOptions(newRowsPerPageOptions); // Update the options
     } catch (error) {
       console.error('Error fetching leads:', error);
     }
@@ -273,7 +299,17 @@ const DataSync = () => {
     }
   };
 
+  const handleChangePage = (_: React.MouseEvent<HTMLButtonElement> | null, newPage: number) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0); // Reset to first page when changing rows per page
+  };
+
   return (
+    <>
     <Box sx={datasyncStyle.mainContent}>
         <Box
         sx={{
@@ -426,6 +462,17 @@ const DataSync = () => {
         <DataSyncList />
       </Box>
     </Box>
+    <Box sx={{ display: 'flex', justifyContent: 'flex-end', padding: '16px' }}>
+        <CustomTablePagination
+        count={totalRows}
+        page={page}
+        rowsPerPage={rowsPerPage}
+        onPageChange={handleChangePage}
+        onRowsPerPageChange={handleChangeRowsPerPage}
+        rowsPerPageOptions={rowsPerPageOptions}
+        />
+      </Box>
+      </>
 
   );
 };
