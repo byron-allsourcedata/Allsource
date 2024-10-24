@@ -29,19 +29,41 @@ import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import { leadsStyles } from "../leads/leadsStyles";
 import axiosInterceptorInstance from '@/axios/axiosInterceptorInstance';
 import { showErrorToast, showToast } from "@/components/ToastNotification";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import DataSyncList from "@/components/DataSyncList";
+import { useRouter } from "next/navigation";
+
+const centerContainerStyles = {
+  display: 'flex',
+  flexDirection: 'column',
+  justifyContent: 'center',
+  alignItems: 'center',
+  border: '1px solid rgba(235, 235, 235, 1)',
+  borderRadius: 2,
+  padding: 3,
+  boxSizing: 'border-box',
+  width: '100%',
+  textAlign: 'center',
+  flex: 1,
+  '& img': {
+      width: 'auto',
+      height: 'auto',
+      maxWidth: '100%'
+  }
+};
 
 interface DataSyncProps {
   service_name?: string
-} 
+}
 
 const DataSync = () => {
+  const router = useRouter();
   const [order, setOrder] = useState<"asc" | "desc" | undefined>(undefined);
   const [orderBy, setOrderBy] = useState<string | undefined>(undefined);
   const [data, setData] = useState<any[]>([]);
   const [klaviyoIconPopupOpen, setKlaviyoIconPopupOpen] = useState(false);
   const [metaIconPopupOpen, setMetaIconPopupOpen] = useState(false);
+  const [status, setStatus] = useState<string | null>(null);
 
   const handleSortRequest = (property: string) => {
     const isAsc = orderBy === property && order === "asc";
@@ -52,14 +74,22 @@ const DataSync = () => {
   const handleIntegrationsSync = async () => {
     try {
 
-      let params = null 
+      let params = null
       const response = await axiosInstance.get('/data-sync/sync', {
         params: params
       });
-
+      console.log(response)
       setData(response.data);
     } catch (error) {
-      console.error('Error fetching leads:', error);
+      if (error instanceof AxiosError && error.response?.status === 403) {
+          if (error.response.data.status === 'NEED_BOOK_CALL') {
+              sessionStorage.setItem('is_slider_opened', 'true');
+          } else if (error.response.data.status === 'PIXEL_INSTALLATION_NEEDED') {
+              setStatus(error.response.data.status);
+          }
+      } else {
+          console.error('Error fetching data:', error);
+      }
     }
     finally {
 
@@ -179,12 +209,12 @@ const DataSync = () => {
     setSelectedId(null);
     try {
       const response = await axiosInstance.get(`/data-sync/sync?integrations_users_sync_id=${selectedId}`);
-      if (response){
-        setData(prevData => 
-          prevData.map(item => 
-              item.id === selectedId ? { ...item, ...response.data } : item
+      if (response) {
+        setData(prevData =>
+          prevData.map(item =>
+            item.id === selectedId ? { ...item, ...response.data } : item
           )
-      );      
+        );
       }
     } catch (error) {
       console.error('Error fetching leads:', error);
@@ -196,12 +226,12 @@ const DataSync = () => {
     setSelectedId(null);
     try {
       const response = await axiosInstance.get(`/data-sync/sync?integrations_users_sync_id=${selectedId}`);
-      if (response){
-        setData(prevData => 
-          prevData.map(item => 
-              item.id === selectedId ? { ...item, ...response.data } : item
+      if (response) {
+        setData(prevData =>
+          prevData.map(item =>
+            item.id === selectedId ? { ...item, ...response.data } : item
           )
-      );      
+        );
       }
     } catch (error) {
       console.error('Error fetching leads:', error);
@@ -212,14 +242,14 @@ const DataSync = () => {
     const foundItem = data.find(item => item.id === selectedId);
     const dataSyncPlatform = foundItem ? foundItem.platform : null;
     if (dataSyncPlatform) {
-        if (dataSyncPlatform === 'klaviyo') {
-          setKlaviyoIconPopupOpen(true);
-        } else if (dataSyncPlatform === 'meta') {
-          setMetaIconPopupOpen(true);
-        }
-        setAnchorEl(null);
+      if (dataSyncPlatform === 'klaviyo') {
+        setKlaviyoIconPopupOpen(true);
+      } else if (dataSyncPlatform === 'meta') {
+        setMetaIconPopupOpen(true);
       }
-    };
+      setAnchorEl(null);
+    }
+  };
 
   const handleDelete = async () => {
     try {
@@ -273,9 +303,13 @@ const DataSync = () => {
     }
   };
 
+  const installPixel = () => {
+    router.push('/dashboard');
+  };
+
   return (
     <Box sx={datasyncStyle.mainContent}>
-        <Box
+      <Box
         sx={{
           display: "flex",
           flexDirection: "row",
@@ -423,15 +457,57 @@ const DataSync = () => {
         </Box>
       </Box>
       <Box sx={{ width: "100%", pl: 0.5, pt: 3, pr: 1 }}>
-        <DataSyncList />
+          {status === 'PIXEL_INSTALLATION_NEEDED' ? (
+            <Box sx={centerContainerStyles} >
+              <Typography variant="h5" className='first-sub-title' sx={{
+                mb: 3,
+                fontFamily: "Nunito",
+                fontSize: "20px",
+                color: "#4a4a4a",
+                fontWeight: "600",
+                lineHeight: "28px"
+              }}>
+                Pixel Integration isn&apos;t completed yet!
+              </Typography>
+              <Image src='/pixel_installation_needed.svg' alt='Need Pixel Install'
+                height={250} width={300} />
+              <Typography variant="body1" className='table-data' sx={{
+                mt: 3,
+                fontFamily: "Nunito",
+                fontSize: "14px",
+                color: "#808080",
+                fontWeight: "600",
+                lineHeight: "20px"
+              }}>
+                Install the pixel to unlock and gain valuable insights! Start viewing your leads now
+              </Typography>
+              <Button
+                variant="contained"
+                onClick={installPixel}
+                className='second-sub-title'
+                sx={{
+                  backgroundColor: 'rgba(80, 82, 178, 1)',
+                  textTransform: 'none',
+                  padding: '10px 24px',
+                  mt: 3,
+                  color: '#fff !important',
+                  ':hover': {
+                    backgroundColor: 'rgba(80, 82, 178, 1)'
+                  }
+                }}
+              >
+                Setup Pixel
+              </Button>
+            </Box>
+          ) : 
+            <DataSyncList />}
+        </Box>
       </Box>
-    </Box>
-
-  );
+      );
 };
 
 const DatasyncPage: React.FC = () => {
   return <DataSync />;
 };
 
-export default DatasyncPage;
+      export default DatasyncPage;

@@ -703,7 +703,7 @@ const Dashboard: React.FC = () => {
       ) : (
         <Grid container sx={{
           height: '100%',
-          overflow: 'hidden'
+          pt:3
         }}>
           <Grid item xs={12} sx={{ display: { md: 'none' }, overflow: 'hidden' }}>
             <Typography
