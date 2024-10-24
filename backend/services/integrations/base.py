@@ -84,7 +84,10 @@ class IntegrationService:
                                                    integration_persistence=self.integration_persistence,
                                                    domain_persistence=self.domain_persistence
                                                    )
-        # self.mailchimp = MailchimpIntegrationsService(self.integration_persistence)
+        self.mailchimp = MailchimpIntegrationsService(self.domain_persistence, 
+                                                self.integration_persistence,  
+                                                self.lead_persistence,
+                                                self.integrations_user_sync_persistence)
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):

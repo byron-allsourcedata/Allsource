@@ -27,6 +27,8 @@ import {
   import { showErrorToast, showToast } from "@/components/ToastNotification";
   import axios from "axios";
 import { datasyncStyle } from "@/app/data-sync/datasyncStyle";
+import MailchimpDatasync from "./MailchimpDatasync";
+import OmnisendDataSync from "./OmnisendDataSync";
   
   interface DataSyncProps {
     service_name?: string
@@ -39,7 +41,8 @@ import { datasyncStyle } from "@/app/data-sync/datasyncStyle";
     const [data, setData] = useState<any[]>([]);
     const [klaviyoIconPopupOpen, setKlaviyoIconPopupOpen] = useState(false);
     const [metaIconPopupOpen, setMetaIconPopupOpen] = useState(false);
-  
+    const [mailchimpIconPopupOpen, setMailchimpIconPopupOpen] = useState(false)
+    const [omnisendIconPopupOpen, setOmnisendIconPopupOpen] = useState(false)
     const handleSortRequest = (property: string) => {
       const isAsc = orderBy === property && order === "asc";
       setOrder(isAsc ? "desc" : "asc");
@@ -121,6 +124,14 @@ import { datasyncStyle } from "@/app/data-sync/datasyncStyle";
           return (
             <Image src={"/meta-icon.svg"} alt="klaviyo" width={18} height={18} />
           );
+        case 'omnisend':
+           return (
+           <Image src={'/omnisend_icon_black.svg'} alt='omnisend' width={18} height={18} />
+          )
+        case 'mailchimp':
+           return (
+           <Image src={'/mailchimp-icon.svg'} alt='mailchimp' width={18} height={18} />
+          )
         default:
           return null;
       }
@@ -214,6 +225,40 @@ import { datasyncStyle } from "@/app/data-sync/datasyncStyle";
         console.error('Error fetching leads:', error);
       }
     };
+
+    const handleMailchimpIconPopupClose = async() => {
+      setMailchimpIconPopupOpen(false);
+      setSelectedId(null);
+      try {
+        const response = await axiosInstance.get(`/data-sync/sync?integrations_users_sync_id=${selectedId}`);
+        if (response){
+          setData(prevData => 
+            prevData.map(item => 
+                item.id === selectedId ? { ...item, ...response.data } : item
+            )
+        );      
+        }
+      } catch (error) {
+        console.error('Error fetching leads:', error);
+      }
+    }
+
+    const handleOmnisendIconPopupClose = async() => {
+      setOmnisendIconPopupOpen(false);
+      setSelectedId(null);
+      try {
+        const response = await axiosInstance.get(`/data-sync/sync?integrations_users_sync_id=${selectedId}`);
+        if (response){
+          setData(prevData => 
+            prevData.map(item => 
+                item.id === selectedId ? { ...item, ...response.data } : item
+            )
+        );      
+        }
+      } catch (error) {
+        console.error('Error fetching leads:', error);
+      }
+    }
   
     const handleEdit = async () => {
       const foundItem = data.find(item => item.id === selectedId);
@@ -223,6 +268,10 @@ import { datasyncStyle } from "@/app/data-sync/datasyncStyle";
             setKlaviyoIconPopupOpen(true);
           } else if (dataSyncPlatform === 'meta') {
             setMetaIconPopupOpen(true);
+          } else if (dataSyncPlatform === 'mailchimp') {
+            setMailchimpIconPopupOpen(true);
+          } else if (dataSyncPlatform === 'omnisend') {
+            setOmnisendIconPopupOpen(true);
           }
           setIsLoading(false);
           setAnchorEl(null);
@@ -592,6 +641,8 @@ import { datasyncStyle } from "@/app/data-sync/datasyncStyle";
         </Box>
         <ConnectKlaviyo open={klaviyoIconPopupOpen} onClose={handleKlaviyoIconPopupClose} data={data.find(item => item.id === selectedId)}/>
         <ConnectMeta open={metaIconPopupOpen} onClose={handleMetaIconPopupClose} data={data.find(item => item.id === selectedId)}/>
+        <MailchimpDatasync open={mailchimpIconPopupOpen} onClose={handleMailchimpIconPopupClose} data={data.find(item => item.id === selectedId)} />
+        <OmnisendDataSync open={omnisendIconPopupOpen} onClose={handleOmnisendIconPopupClose} data={data.find(item => item.id === selectedId)} />
       </Box>
   
     );

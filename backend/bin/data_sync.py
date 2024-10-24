@@ -55,6 +55,7 @@ async def process_data_sync(message_body, session):
         service.klaviyo.process_data_sync(message_body)
         service.meta.process_data_sync(message_body)
         service.omnisend.process_data_sync(message_body)
+        service.mailchimp.process_data_sync(message_body)
 
 async def consume(rmq_connection: RabbitMQConnection, db_session):
     connection = await rmq_connection.connect()
