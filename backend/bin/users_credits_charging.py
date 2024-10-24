@@ -24,8 +24,6 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO)
 
 QUEUE_CREDITS_CHARGING = 'credits_charging'
-CREDITS = 'Additional_prospect_credits'
-PRICE_CREDIT = 0.49
 
 
 async def on_message_received(message, session):
@@ -33,9 +31,10 @@ async def on_message_received(message, session):
         message_json = json.loads(message.body)
         customer_id = message_json['customer_id']
         credits = abs(message_json['credits'])
-        stripe_price_id = session.query(SubscriptionPlan.stripe_price_id).filter(
-            SubscriptionPlan.title == CREDITS).scalar()
-        result = purchase_product(customer_id, stripe_price_id, credits, 'leads_credits')
+        plan_id = message_json['plan_id']
+        subscription_plan = session.query(SubscriptionPlan).filter(
+            SubscriptionPlan.id == plan_id).first()
+        result = purchase_product(customer_id, subscription_plan.stripe_price_id, credits, 'leads_credits')
         if result['success']:
             stripe_payload = result['stripe_payload']
             transaction_id = stripe_payload.get("id")
@@ -45,10 +44,10 @@ async def on_message_received(message, session):
                 created_timestamp = stripe_payload.get("created")
                 created_at = datetime.fromtimestamp(created_timestamp, timezone.utc).replace(
                     tzinfo=None) if created_timestamp else None
-                amount_credits = int(stripe_payload.get("amount") / 100 / PRICE_CREDIT)
+                amount_credits = int(stripe_payload.get("amount") / 100 / subscription_plan.price)
                 status = stripe_payload.get("status")
                 if status == 'succeeded':
-                    user = session.query(Users).filter(Users.customer_id == customer_id).first()
+                    user = session.query(Users).filter(Users.customer_id == customer_id).with_for_update().first()
                     payment_transaction_obj = UsersPaymentsTransactions(
                         user_id=user.id,
                         transaction_id=transaction_id,

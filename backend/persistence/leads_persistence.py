@@ -152,7 +152,8 @@ class LeadsPersistence:
                 recurring_visits_subquery.c.recurring_visits,
                 LeadUser.is_returning_visitor,
                 LeadUser.avarage_visit_time,
-                LeadUser.is_converted_sales
+                LeadUser.is_converted_sales,
+                LeadUser.is_active
             )
             .join(LeadUser, LeadUser.five_x_five_user_id == FiveXFiveUser.id)
             .join(FirstNameAlias, FirstNameAlias.id == FiveXFiveUser.first_name_id)
@@ -174,7 +175,8 @@ class LeadsPersistence:
                 LeadsVisits.full_time_sec,
                 recurring_visits_subquery.c.recurring_visits,
                 LeadUser.avarage_visit_time,
-                LeadUser.is_converted_sales
+                LeadUser.is_converted_sales,
+                LeadUser.is_active
             )
         )
         sort_options = {

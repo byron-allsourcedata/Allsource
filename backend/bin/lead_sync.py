@@ -3,13 +3,11 @@ import json
 import logging
 import os
 import random
-import re
 import sys
-import tempfile
 import time
 import traceback
 import urllib.parse
-import boto3
+
 import pytz
 from dateutil.relativedelta import relativedelta
 
@@ -26,7 +24,6 @@ from models.suppression_rule import SuppressionRule
 from models.leads_users_added_to_cart import LeadsUsersAddedToCart
 from models.leads_users_ordered import LeadsUsersOrdered
 from models.leads_visits import LeadsVisits
-from models.subscriptions import UserSubscriptions
 from models.five_x_five_hems import FiveXFiveHems
 from models.suppressions_list import SuppressionList
 from models.users_payments_transactions import UsersPaymentsTransactions
@@ -35,7 +32,6 @@ from sqlalchemy.orm import sessionmaker, Session
 from models.five_x_five_users import FiveXFiveUser
 from models.leads_users import LeadUser
 from models.users import Users
-from models.plans import SubscriptionPlan
 from models.leads_orders import LeadOrders
 from models.integrations.suppresions import LeadsSupperssion
 from dotenv import load_dotenv
@@ -47,12 +43,14 @@ from dependencies import (SubscriptionService, UserPersistence, PlansPersistence
 
 load_dotenv()
 
+
 def setup_logging(level):
     logging.basicConfig(
         level=level,
         format='%(asctime)s - %(levelname)s - %(message)s',
         datefmt='%Y-%m-%d %H:%M:%S'
     )
+
 
 LAST_PROCESSED_FILE_PATH = 'tmp/last_processed_leads_sync.txt'
 AMOUNT_CREDITS = 1
@@ -125,7 +123,8 @@ async def process_table(session, groupped_requests, rabbitmq_connection, subscri
                     logging.warning(f"Not found by UP_ID {up_id}")
 
 
-async def process_payment_transaction(session, five_x_five_user_up_id, user_domain_id, user, rabbitmq_connection):
+async def process_payment_transaction(session, five_x_five_user_up_id, user_domain_id, user, rabbitmq_connection,
+                                      lead_user, plan_id):
     users_payments_transactions = session.query(UsersPaymentsTransactions).filter(
         UsersPaymentsTransactions.five_x_five_up_id == str(five_x_five_user_up_id),
         UsersPaymentsTransactions.domain_id == user_domain_id
@@ -140,6 +139,7 @@ async def process_payment_transaction(session, five_x_five_user_up_id, user_doma
     session.add(user_payment_transactions)
     if (user.leads_credits - AMOUNT_CREDITS) < 0:
         if user.is_leads_auto_charging is False:
+            lead_user.is_active = False
             logging.info(f"User leads_auto_charging is False")
             return
         user.leads_credits -= AMOUNT_CREDITS
@@ -147,7 +147,8 @@ async def process_payment_transaction(session, five_x_five_user_up_id, user_doma
             await publish_rabbitmq_message(
                 connection=rabbitmq_connection,
                 queue_name=QUEUE_CREDITS_CHARGING,
-                message_body={'customer_id': user.customer_id, 'credits': user.leads_credits}
+                message_body={'customer_id': user.customer_id, 'credits': user.leads_credits,
+                              'plan_id': plan_id}
             )
             customer_data = {'customer_id': user.customer_id, 'credits': user.leads_credits}
             logging.info(f"Push to rmq {customer_data}")
@@ -316,12 +317,15 @@ async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, sess
         if lead_suppression:
             logging.info(f"No charging option supressed, skip lead")
             return
-        if root_user is None and not subscription_service.is_trial_subscription(user.id):
-            await process_payment_transaction(session, five_x_five_user.up_id, user_domain_id, user,
-                                              rabbitmq_connection)
+
         is_first_request = True
         lead_user = LeadUser(five_x_five_user_id=five_x_five_user.id, user_id=user.id, behavior_type=behavior_type,
                              domain_id=user_domain_id, total_visit=0, avarage_visit_time=0, total_visit_time=0)
+
+        if root_user is None and not subscription_service.is_trial_subscription(user.id):
+            user_subscription = subscription_service.get_user_subscription(user.id)
+            await process_payment_transaction(session, five_x_five_user.up_id, user_domain_id, user,
+                                              rabbitmq_connection, lead_user, user_subscription.plan_id)
 
         session.add(lead_user)
         session.flush()
@@ -375,7 +379,8 @@ async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, sess
                     if subscription_result['artificial_trial_days']:
                         date_now = datetime.now(timezone.utc)
                         subscription_result['subscription'].plan_start = date_now.replace(tzinfo=None)
-                        subscription_result['subscription'].plan_end = (date_now + relativedelta(days=subscription_result['artificial_trial_days'])).replace(tzinfo=None)
+                        subscription_result['subscription'].plan_end = (date_now + relativedelta(
+                            days=subscription_result['artificial_trial_days'])).replace(tzinfo=None)
                         session.flush()
             if not user_domain.is_pixel_installed:
                 domain_lead_users = session.query(LeadUser).filter_by(domain_id=user_domain.id).limit(2).all()
