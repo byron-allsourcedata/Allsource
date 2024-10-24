@@ -368,18 +368,20 @@ async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, sess
         if is_first_request == True:
             lead_user.first_visit_id = lead_visit_id
             session.flush()
-            lead_users = session.query(LeadUser).filter_by(domain_id=user_domain_id).limit(2).all()
+            lead_users = session.query(LeadUser).filter_by(user_id=user.id).limit(2).all()
             if len(lead_users) == 1:
-                last_subscription = session.query(UserSubscriptions).filter(
-                    UserSubscriptions.user_id == user.id).order_by(UserSubscriptions.id.desc()).first()
-                if last_subscription and last_subscription.plan_start is None and last_subscription.plan_end is None:
-                    trial_days = session.query(SubscriptionPlan.trial_days).filter(
-                        SubscriptionPlan.is_free_trial == True).scalar()
-                    if trial_days:
-                        date_now = datetime.now()
-                        last_subscription.plan_start = date_now
-                        last_subscription.plan_end = date_now + relativedelta(days=trial_days)
+                subscription_result = subscription_service.get_user_subscription_with_trial_status(user.id)
+                if subscription_result['is_artificial_status'] and not subscription_result['subscription'].plan_end:
+                    if subscription_result['artificial_trial_days']:
+                        date_now = datetime.now(timezone.utc)
+                        subscription_result['subscription'].plan_start = date_now
+                        subscription_result['subscription'].plan_end = date_now + relativedelta(days=subscription_result['artificial_trial_days'])
                         session.flush()
+            if not user_domain.is_pixel_installed:
+                domain_lead_users = session.query(LeadUser).filter_by(domain_id=user_domain.id).limit(2).all()
+                if len(domain_lead_users) == 1:
+                    user_domain.is_pixel_installed = True
+                    session.flush()
         else:
             if not lead_user.is_returning_visitor:
                 lead_user.is_returning_visitor = True
