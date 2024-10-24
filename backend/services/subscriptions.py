@@ -106,9 +106,9 @@ class SubscriptionService:
 
         if result['subscription'].status == 'inactive':
             return False
-        result['subscription'].plan_end = result['subscription'].plan_end.replace(tzinfo=timezone.utc)
+        subscription_plan_end = result['subscription'].plan_end.replace(tzinfo=timezone.utc)
 
-        return result['subscription'].plan_end > datetime.now(timezone.utc)
+        return subscription_plan_end > datetime.now(timezone.utc)
 
     def is_trial_subscription(self, user_id):
         user_subscription = self.get_user_subscription(user_id=user_id)
