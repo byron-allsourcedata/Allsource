@@ -374,8 +374,8 @@ async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, sess
                 if subscription_result['is_artificial_status'] and not subscription_result['subscription'].plan_end:
                     if subscription_result['artificial_trial_days']:
                         date_now = datetime.now(timezone.utc)
-                        subscription_result['subscription'].plan_start = date_now
-                        subscription_result['subscription'].plan_end = date_now + relativedelta(days=subscription_result['artificial_trial_days'])
+                        subscription_result['subscription'].plan_start = date_now.replace(tzinfo=None)
+                        subscription_result['subscription'].plan_end = (date_now + relativedelta(days=subscription_result['artificial_trial_days'])).replace(tzinfo=None)
                         session.flush()
             if not user_domain.is_pixel_installed:
                 domain_lead_users = session.query(LeadUser).filter_by(domain_id=user_domain.id).limit(2).all()
