@@ -32,6 +32,7 @@ class MailchimpIntegrationsService:
     def get_list(self, domain_id: int = None, api_key: str = None, server: str = None):
         if domain_id:
             credentials = self.get_credentials(domain_id)
+            if not credentials: return
             self.client.set_config({
                 'api_key': credentials.access_token,
                 'server': credentials.data_center
