@@ -347,7 +347,6 @@ const Leads: React.FC = () => {
 
             const response = await axiosInstance.get(url);
             const [leads, count] = response.data;
-            console.log(response)
 
             setData(Array.isArray(leads) ? leads : []);
             setCount(count || 0);

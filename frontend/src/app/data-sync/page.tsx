@@ -69,6 +69,7 @@ const DataSync = () => {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [totalRows, setTotalRows] = useState(0);
   const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const handleSortRequest = (property: string) => {
     const isAsc = orderBy === property && order === "asc";
@@ -76,9 +77,13 @@ const DataSync = () => {
     setOrderBy(property);
   };
 
+  useEffect(() => {
+    handleIntegrationsSync()
+}, []);
+
   const handleIntegrationsSync = async () => {
     try {
-
+      setIsLoading(true)
       let params = null
       const response = await axiosInstance.get('/data-sync/sync', {
         params: params
@@ -118,9 +123,11 @@ const DataSync = () => {
       }
     }
     finally {
-
+      setIsLoading(false)
     }
   };
+
+
 
   const statusIcon = (status: string) => {
     switch (status) {
@@ -342,10 +349,14 @@ const DataSync = () => {
     setPage(0); // Reset to first page when changing rows per page
   };
 
+  if (isLoading) {
+    return <CustomizedProgressBar />;
+  }
+
   return (
     <>
     <Box sx={datasyncStyle.mainContent}>
-      <Box
+        <Box
         sx={{
           display: "flex",
           flexDirection: "row",
@@ -493,7 +504,7 @@ const DataSync = () => {
         </Box>
       </Box>
       <Box sx={{ width: "100%", pl: 0.5, pt: 3, pr: 1 }}>
-          {status === 'PIXEL_INSTALLATION_NEEDED' ? (
+      {status === 'PIXEL_INSTALLATION_NEEDED' && !isLoading ? (
             <Box sx={centerContainerStyles} >
               <Typography variant="h5" className='first-sub-title' sx={{
                 mb: 3,
@@ -535,21 +546,22 @@ const DataSync = () => {
                 Setup Pixel
               </Button>
             </Box>
-          ) : 
-            <DataSyncList />}
-        </Box>
+          ) : !isLoading && (
+            <><DataSyncList /><>
+              <Box sx={{ display: 'flex', justifyContent: 'flex-end', padding: '16px' }}>
+                <CustomTablePagination
+                  count={totalRows}
+                  page={page}
+                  rowsPerPage={rowsPerPage}
+                  onPageChange={handleChangePage}
+                  onRowsPerPageChange={handleChangeRowsPerPage}
+                  rowsPerPageOptions={rowsPerPageOptions} />
+              </Box>
+            </></>)
+          }
       </Box>
     </Box>
-    <Box sx={{ display: 'flex', justifyContent: 'flex-end', padding: '16px' }}>
-        <CustomTablePagination
-        count={totalRows}
-        page={page}
-        rowsPerPage={rowsPerPage}
-        onPageChange={handleChangePage}
-        onRowsPerPageChange={handleChangeRowsPerPage}
-        rowsPerPageOptions={rowsPerPageOptions}
-        />
-      </Box>
+
       </>
 
   );
