@@ -347,7 +347,7 @@ class LeadsPersistence:
                 LeadUser.behavior_type,
                 func.count(LeadUser.id).label('lead_count')
             )
-            .join(LeadsVisits, LeadsVisits.lead_id == LeadUser.id)
+            .join(LeadsVisits, LeadsVisits.id == LeadUser.first_visit_id)
             .group_by(LeadsVisits.start_date, LeadUser.behavior_type)
             .filter(LeadUser.domain_id == domain_id)
         )
@@ -392,13 +392,13 @@ class LeadsPersistence:
         query = (
             self.db.query(
                 LeadsVisits.start_date,
-                LeadUser.behavior_type,
+                ,
                 func.sum(LeadOrders.total_price).label('total_price'),
                 func.count(LeadOrders.id).label('total_orders')
             )
-            .join(LeadsVisits, LeadsVisits.lead_id == LeadUser.id)
+            .join(LeadUser, LeadsVisits.id == LeadUser.first_visit_id)
             .join(LeadOrders, LeadOrders.lead_user_id == LeadUser.id)
-            .filter(LeadUser.domain_id == domain_id)
+            .filter(LeadUser.domaLeadsVisits.behavior_typein_id == domain_id)
         )
 
         if from_date and to_date:
@@ -411,7 +411,7 @@ class LeadsPersistence:
                 )
             )
 
-        query = query.group_by(func.date(LeadsVisits.start_date), LeadUser.behavior_type)
+        query = query.group_by(func.date(LeadsVisits.start_date), LeadsVisits.behavior_type)
 
         lifetime_revenue = self.get_lifetime_revenue(domain_id)
         investment = self.get_investment(user_id)
