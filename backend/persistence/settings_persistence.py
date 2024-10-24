@@ -24,16 +24,17 @@ class SettingsPersistence:
                     MemberAlias.email,
                     MemberAlias.reset_password_sent_at,
                     MemberAlias.is_email_confirmed,
+                    MemberAlias.password,
                     OwnerAlias.company_name,
                     OwnerAlias.company_website,
                     OwnerAlias.company_website_visits
                 )
-                .join(MemberAlias, MemberAlias.team_owner_id == OwnerAlias.id)
-                .filter(MemberAlias.id == member_id)
-                .first()
+                    .join(MemberAlias, MemberAlias.team_owner_id == OwnerAlias.id)
+                    .filter(MemberAlias.id == member_id)
+                    .first()
             )
         return self.db.query(User.full_name, User.email, User.reset_password_sent_at, User.company_name,
-                             User.company_website,
+                             User.company_website, User.password,
                              User.company_website_visits, User.is_email_confirmed).filter(User.id == owner_id).first()
 
     def change_columns_data_by_userid(self, changes: dict, user_id: int):
@@ -128,11 +129,11 @@ class SettingsPersistence:
     def exists_team_member(self, user_id, user_mail):
         pending_invitations = (
             self.db.query(TeamInvitation)
-            .filter(
+                .filter(
                 TeamInvitation.mail == user_mail,
                 TeamInvitation.team_owner_id == user_id
             )
-            .first()
+                .first()
         )
 
         if pending_invitations:
@@ -181,3 +182,11 @@ class SettingsPersistence:
 
         result['success'] = True
         return result
+
+
+if __name__ == '__main__':
+    from dependencies import get_settings_persistence
+
+    s = get_settings_persistence()
+    r = s.get_account_details(110, None)
+    print(r)

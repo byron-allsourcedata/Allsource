@@ -1,5 +1,6 @@
 import logging
 
+import uvicorn
 from h11._abnf import status_code
 
 from config.base import Base
@@ -76,3 +77,7 @@ external_api.add_middleware(
 app.include_router(subapi_router)
 external_api.include_router(main_router)
 app.mount('/api', external_api)
+
+
+if __name__ == '__main__':
+    uvicorn.run(app, host='127.0.0.1', port=8000)

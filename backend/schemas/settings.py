@@ -17,6 +17,7 @@ class BusinessInfo(BaseModel):
 class AccountDetailsRequest(BaseModel):
     account: Optional[Account] = None
     change_password: Optional[ChangePassword] = None
+    set_password: Optional[ChangePassword] = None
     business_info: Optional[BusinessInfo] = None
     
 class ResetEmailForm(BaseModel):

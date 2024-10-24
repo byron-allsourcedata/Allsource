@@ -6,6 +6,7 @@ import axiosInterceptorInstance from '@/axios/axiosInterceptorInstance';
 import Image from 'next/image';
 import { showErrorToast, showToast } from './ToastNotification';
 import CustomizedProgressBar from './CustomizedProgressBar';
+import { display } from '@mui/system';
 
 const accontDetailsStyles = {
     formField: {
@@ -94,6 +95,7 @@ interface SettingsAccountDetailsProps {
     accountDetails: {
         full_name: string;
         email_address: string;
+        pass_exists: boolean;
         company_name: string;
         company_website: string;
         company_website_visits: string;
@@ -227,12 +229,22 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
         }
 
         if (newPassword === confirmNewPassword) {
-            const changePasswordData = {
+            let changePasswordData;
+            if (accountDetails.pass_exists){
+            changePasswordData = {
                 change_password: {
                     current_password: currentPassword,
                     new_password: newPassword
                 }
-            };
+            }}
+            else{
+                changePasswordData = {set_password: {
+                    current_password: null,
+                    new_password: newPassword
+                }}}
+
+            console.log(changePasswordData)
+            
             axiosInterceptorInstance.put('/settings/account-details', changePasswordData)
                 .then(response => {
                     if (response.data === 'SUCCESS') {
@@ -597,8 +609,7 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
                                             >
                                                 <Image src="/write-icon.svg" alt="write-icon" height={24} width={24} />
                                             </IconButton>
-                                        )}
-                        
+                                        )}chb                        
                                         {/* Show close icon if user starts typing */}
                                         {showCloseIcon(isEmailTyping, emailAddress, initialEmail) && (
                                             <IconButton
@@ -735,7 +746,8 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
                                 </Typography>
 
                                 <TextField sx={{...accontDetailsStyles.formField,
-                                    maxWidth: '100%'
+                                    maxWidth: '100%', 
+                                    display: accountDetails.pass_exists ? 'block':'none' 
                                 }}
                                     InputLabelProps={{ 
                                         className: "form-input-label",
@@ -887,7 +899,7 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
                                         backgroundColor: '#5052B2',
                                         letterSpacing: 'normal',
                                         color: "#fff !important",
-                                        textTransform: 'none',
+                                        textTransform: 'none',  
                                         padding: '10px 24px',
                                         '&:hover': {
                                             backgroundColor: '#5052B2'
