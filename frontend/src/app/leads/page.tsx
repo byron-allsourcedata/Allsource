@@ -373,11 +373,11 @@ const Leads: React.FC = () => {
             setRowsPerPageOptions(newRowsPerPageOptions);
         } catch (error) {
             if (error instanceof AxiosError && error.response?.status === 403) {
-                if (error.response.data.detail.status === 'NEED_BOOK_CALL') {
+                if (error.response.data.status === 'NEED_BOOK_CALL') {
                     sessionStorage.setItem('is_slider_opened', 'true');
                     setShowSlider(true);
-                } else if (error.response.data.detail.status === 'PIXEL_INSTALLATION_NEEDED') {
-                    setStatus(error.response.data.detail.status);
+                } else if (error.response.data.status === 'PIXEL_INSTALLATION_NEEDED') {
+                    setStatus(error.response.data.status);
                 } else {
                     setShowSlider(false);
                 }

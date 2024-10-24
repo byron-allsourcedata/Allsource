@@ -90,10 +90,14 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
 
     useEffect(() => {
         const fetchData = async() => {
+            try {
             const response = await axiosInstance.get('/integrations/credentials/')
             if(response.status === 200) {
                 setIntegrationsCredentials(response.data)
             }
+        } catch (error) {
+            
+        }
         }
         fetchData()
     }, [])

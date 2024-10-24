@@ -164,6 +164,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
     };
 
     const getKlaviyoList = async () => {
+        try {
         setLoading(true)
         const response = await axiosInstance.get('/integrations/sync/list/', {
             params: {
@@ -183,6 +184,9 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
         }
         setSelectedRadioValue(data?.type);
         setLoading(false)
+    } catch (error) {
+        
+    }
     }
     useEffect(() => {
         getKlaviyoList()
