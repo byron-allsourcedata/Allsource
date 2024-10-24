@@ -11,9 +11,9 @@ import CheckoutForm from './CheckoutForm';
 import { showErrorToast, showToast } from './ToastNotification';
 import axios from 'axios';
 import CustomTooltip from './customToolTip';
-import { ChevronLeft, ChevronRight } from '@mui/icons-material';
 import DownloadIcon from '@mui/icons-material/Download';
 import TelegramIcon from '@mui/icons-material/Telegram';
+import CustomTablePagination from './CustomTablePagination';
 
 type CardBrand = 'visa' | 'mastercard' | 'americanexpress' | 'discover';
 
@@ -105,125 +105,6 @@ const billingStyles = {
     },
 }
 
-interface CustomTablePaginationProps {
-    count: number;
-    page: number;
-    rowsPerPage: number;
-    onPageChange: (event: React.MouseEvent<HTMLButtonElement>, newPage: number) => void;
-    onRowsPerPageChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
-}
-
-const CustomTablePagination: React.FC<CustomTablePaginationProps> = ({
-    count,
-    page,
-    rowsPerPage,
-    onPageChange,
-    onRowsPerPageChange,
-}) => {
-    const totalPages = Math.ceil(count / rowsPerPage);
-    const maxPagesToShow = 3;
-
-    const handlePageChange = (newPage: number) => {
-        if (newPage >= 0 && newPage < totalPages) {
-            onPageChange(null as any, newPage);
-        }
-    };
-
-    const getPageButtons = () => {
-        const pages = [];
-        let startPage = Math.max(0, page - Math.floor(maxPagesToShow / 2));
-        let endPage = Math.min(totalPages - 1, startPage + maxPagesToShow - 1);
-
-        if (endPage - startPage + 1 < maxPagesToShow) {
-            startPage = Math.max(0, endPage - maxPagesToShow + 1);
-        }
-
-        for (let i = startPage; i <= endPage; i++) {
-            pages.push(i);
-        }
-
-        return pages;
-    };
-
-    return (
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', padding: 1 }}>
-            {page > 0 && (<select
-                value={rowsPerPage}
-                onChange={onRowsPerPageChange}
-                style={{
-                    marginLeft: 8,
-                    border: '1px solid rgba(235, 235, 235, 1)',
-                    backgroundColor: 'rgba(255, 255, 255, 1)'
-                }}
-            >
-                {[5, 10, 15, 25].map((option) => (
-                    <option key={option} value={option}>
-                        {option} rows
-                    </option>
-                ))}
-            </select>
-            )}
-            {page > 0 && (
-                <Button
-                    onClick={(e) => handlePageChange(page - 1)}
-                    disabled={page === 0}
-                    sx={{
-                        minWidth: '30px',
-                        minHeight: '30px',
-                    }}
-                >
-                    <ChevronLeft
-                        sx={{
-                            border: page === 0 ? 'none' : '1px solid rgba(235, 235, 235, 1)',
-                            borderRadius: '4px'
-                        }} />
-                </Button>
-            )}
-            {totalPages > 1 && (
-                <>
-                    {page > 1 && <Button onClick={() => handlePageChange(0)} sx={billingStyles.page_number}>1</Button>}
-                    {page > 2 && <Typography variant="body2" sx={{ mx: 1 }}>...</Typography>}
-                    {getPageButtons().map((pageNumber) => (
-                        <Button
-                            key={pageNumber}
-                            onClick={() => handlePageChange(pageNumber)}
-                            sx={{
-                                mx: 0.5, ...billingStyles.page_number,
-                                border: page === pageNumber ? '1px solid rgba(80, 82, 178, 1)' : 'none',
-                                color: page === pageNumber ? 'rgba(80, 82, 178, 1)' : 'rgba(122, 122, 122, 1)',
-                                minWidth: '30px',
-                                minHeight: '30px',
-                                padding: 0
-                            }}
-                            variant={page === pageNumber ? 'contained' : 'text'}
-                        >
-                            {pageNumber + 1}
-                        </Button>
-                    ))}
-                    {totalPages - page > 3 && <Typography variant="body2" sx={{ mx: 1 }}>...</Typography>}
-                    {page < totalPages - 1 && <Button onClick={() => handlePageChange(totalPages - 1)}
-                        sx={billingStyles.page_number}>{totalPages}</Button>}
-                </>
-            )}
-            {page > 0 && (
-                <Button
-                    onClick={(e) => handlePageChange(page + 1)}
-                    disabled={page >= totalPages - 1}
-                    sx={{
-                        minWidth: '30px',
-                        minHeight: '30px',
-                    }}
-                >
-                    <ChevronRight sx={{
-                        border: page >= totalPages - 1 ? 'none' : '1px solid rgba(235, 235, 235, 1)',
-                        borderRadius: '4px'
-                    }} />
-                </Button>
-            )}
-        </Box>
-    );
-};
-
 
 export const SettingsBilling: React.FC = () => {
     const [prospectData, setProspectData] = useState(0);
@@ -279,14 +160,33 @@ export const SettingsBilling: React.FC = () => {
         try {
             setIsLoading(true);
             const response = await axiosInterceptorInstance.get('/settings/billing-history', {
-                params: {
-                    page: page + 1, // сервер принимает 1 как первую страницу, а пагинация в React считает с 0
-                    per_page: rowsPerPage,
-                },
+                // params: {
+                //     page: page + 1, // сервер принимает 1 как первую страницу, а пагинация в React считает с 0
+                //     per_page: rowsPerPage,
+                // },
             });
             const { billing_history, count } = response.data;
             setBillingHistory(billing_history);
             setTotalRows(count); // Устанавливаем общее количество строк
+            let newRowsPerPageOptions: number[] = []; 
+            if (count <= 10) {
+                newRowsPerPageOptions = [5, 10]; 
+            } else if (count <= 50) {
+                newRowsPerPageOptions = [10, 20]; 
+            } else if (count <= 100) {
+                newRowsPerPageOptions = [10, 20, 50]; 
+            } else if (count <= 300) {
+                newRowsPerPageOptions = [10, 20, 50, 100]; 
+            } else if (count <= 500) {
+                newRowsPerPageOptions = [10, 20, 50, 100, 300]; 
+            } else {
+                newRowsPerPageOptions = [10, 20, 50, 100, 300, 500]; 
+            }
+            if (!newRowsPerPageOptions.includes(count)) {
+                newRowsPerPageOptions.push(count);
+                newRowsPerPageOptions.sort((a, b) => a - b); // Ensure the options remain sorted
+            }
+            setRowsPerPageOptions(newRowsPerPageOptions); // Update the options
         } catch (error) {
             console.error('Error fetching data:', error);
         } finally {
@@ -593,10 +493,15 @@ export const SettingsBilling: React.FC = () => {
 
 
     // Handler for rows per page change
-    const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLSelectElement>) => {
-        const newRowsPerPage = parseInt(event.target.value, 10); // Преобразуем строку в число
-        setRowsPerPage(newRowsPerPage);
-    };
+    // const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    //     const newRowsPerPage = parseInt(event.target.value, 10); // Преобразуем строку в число
+    //     setRowsPerPage(newRowsPerPage);
+    // };
+
+    const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setRowsPerPage(parseInt(event.target.value, 10));
+        setPage(0); // Reset to first page when changing rows per page
+      };
 
     const handleCheckoutSuccess = (data: any) => {
         setCardDetails(prevDetails => [...prevDetails, data]);
@@ -1480,28 +1385,14 @@ export const SettingsBilling: React.FC = () => {
                     </Table>
                 </TableContainer>
                 {/* Pagination Component */}
-                <Box sx={{ display: 'flex', justifyContent: 'flex-end', padding: '16px' }}>
-                    {/* <TablePagination
-                        component="div"
-                        count={totalRows}
-                        page={page}
-                        onPageChange={handleChangePage}
-                        rowsPerPage={rowsPerPage}
-                        onRowsPerPageChange={handleChangeRowsPerPage}
-                        rowsPerPageOptions={rowsPerPageOptions}  // Options [10, 25, 50]
-                        labelRowsPerPage=""
-                        sx={{
-                            '& .MuiTablePagination-selectLabel, .MuiTablePagination-displayedRows': {
-                                fontSize: '0.875rem',
-                            }
-                        }}
-                    /> */}
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end', padding: '42px 0 24px'  }}>
                     <CustomTablePagination
                         count={totalRows}
                         page={page}
                         rowsPerPage={rowsPerPage}
                         onPageChange={handleChangePage}
                         onRowsPerPageChange={handleChangeRowsPerPage}
+                        rowsPerPageOptions={rowsPerPageOptions}
                     />
                 </Box>
             </Box>
