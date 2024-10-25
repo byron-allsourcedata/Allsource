@@ -26,7 +26,7 @@ const headerStyles = {
     left: 0,
     right: 0,
     background: '#fff',
-    zIndex: 1
+    zIndex: 1200
   },
   logoContainer: {
     display: 'flex',
