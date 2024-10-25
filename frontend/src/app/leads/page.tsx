@@ -1248,7 +1248,7 @@ const Leads: React.FC = () => {
                                         sx={{
                                             border: '1px solid rgba(235, 235, 235, 1)',
                                             maxHeight: selectedFilters.length < 0 ? '70vh' : '67vh',
-                                            overflowY: 'auto'
+                                            overflowY: 'scroll'
                                         }}
                                     >
                                         <Table stickyHeader aria-label="leads table">

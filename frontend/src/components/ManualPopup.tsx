@@ -109,6 +109,7 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode }) => {
               marginLeft: '3em',
               maxHeight: '14em',
               overflowY: 'auto',
+              overflowX: 'hidden',
               '@media (max-width: 600px)': {
                 maxHeight: '14em',
               },

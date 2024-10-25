@@ -296,6 +296,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
     const isMobile = useMediaQuery('(max-width: 380px)');
 
     const chartSize = isLargeScreen ? 400 : isMediumScreen ? 300 : isMobile ? 200 : 260;
+    const mainchartSize = isLargeScreen ? 450 : isMediumScreen ? 300 : isMobile ? 200 : 260;
 
 
     const [series, setSeries] = useState<
@@ -465,7 +466,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                 }}
                             >
                                 <Typography component="div" className="second-sub-title" sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', fontWeight: '600 !important', fontFamily: 'Nunito Sans', fontSize: '16px', lineHeight: '19.1px !important', textWrap: 'nowrap', textAlign: 'left', gap: 1, '@media (max-width: 900px)': { flexDirection: 'row', width: '100%', textWrap: 'nowrap' } }}>
-                                    Total Revenue <Typography component="span" sx={{ fontFamily: 'Nunito Sans', color: 'rgba(74, 74, 74, 1)', fontSize: '22px', fontWeight: 600, lineHeight: '30.01px', textAlign: 'left' }}>$22,301</Typography>
+                                    Total Revenue <Typography component="span" sx={{ fontFamily: 'Nunito Sans', color: 'rgba(74, 74, 74, 1)', fontSize: '22px', fontWeight: 600, lineHeight: '30.01px', textAlign: 'left' }}>${lifetimeRevenue ? lifetimeRevenue.toLocaleString('en-US') : 0}</Typography>
                                 </Typography>
                             </Stack>
                             <Stack
@@ -611,32 +612,31 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                     },
                                 }}
                             />
-                        </Box> : <LineChart
-                            colors={filteredSeriescolor.map(s => colorMapping[s.id as keyof typeof colorMapping])}
-                            xAxis={[{
-                                scaleType: 'point',
-                                data: formattedData,
-                            }]}
-                            yAxis={[
-                                {
-                                valueFormatter: (value) => {
-                                    if (value >= 1000 && value < 1000000) {
-                                      return `$${(value / 1000).toFixed(0)}k`; // Formats 10,000 as 10k
-                                    } else if (value >= 1000000) {
-                                      return `$${(value / 1000000).toFixed(1)}M`; // Formats 1,000,000 as 1.0M
-                                    } else {
-                                      return value.toString(); // Return smaller numbers without formatting
-                                    }
-                                  },
-                                }
-                              ]}
-                            series={filteredSeries}
-                            height={250}
-                            margin={{ left: 70, right: 20, top: 20, bottom: 20 }}
-                            grid={{ horizontal: true }}
-                            sx={{ border: 'none' }}
-                            slotProps={{ legend: { hidden: true } }}
-                        />}
+                        </Box> :
+                <LineChart
+                    colors={filteredSeriescolor.map(s => colorMapping[s.id as keyof typeof colorMapping])}
+                    xAxis={[{
+                        scaleType: 'point',
+                        data: formattedData,
+                    }]}
+                    yAxis={[{
+                        valueFormatter: (value) => {
+                            if (value >= 1000 && value < 1000000) {
+                                return `$${(value / 1000).toFixed(0)}k`;
+                            } else if (value >= 1000000) {
+                                return `$${(value / 1000000).toFixed(1)}M`;
+                            } else {
+                                return value.toString();
+                            }
+                        },
+                    }]}
+                    series={filteredSeries}
+                    height={mainchartSize} // Занимает 100% от контейнера
+                    margin={{ left: 70, right: 20, top: 20, bottom: 20 }}
+                    grid={{ horizontal: true }}
+                    sx={{ border: 'none' }}
+                    slotProps={{ legend: { hidden: true } }}
+                />}
 
                     </CardContent>
                 </Card>
@@ -727,7 +727,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                         }}
                                     />
                                 </Box> : <LineChart
-                                    colors={['rgba(255, 230, 180, 1)']}
+                                    colors={['rgba(224, 176, 5, 1)']}
                                     xAxis={[{
                                         scaleType: 'point',
                                         data: formattedData,
@@ -844,7 +844,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                     />
                                 </Box> :
                                     <LineChart
-                                        colors={['rgba(180, 218, 193, 1)']}
+                                        colors={['rgba(128, 201, 64, 1)']}
                                         xAxis={[{ scaleType: 'point', data: formattedData }]}
                                         yAxis={[
                                         {
@@ -958,7 +958,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                     />
                                 </Box> :
                                     <LineChart
-                                        colors={['rgba(181, 218, 248, 1)']}
+                                        colors={['rgba(124, 125, 197, 1)']}
                                         xAxis={[{ scaleType: 'point', data: formattedData, }]}
                                         yAxis={[
                                         {
