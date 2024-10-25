@@ -45,6 +45,7 @@ const HoverableImage = ({ srcDefault, srcHover, alt, onClick }: HoverImageProps)
         e.stopPropagation();
         onClick();
       }}
+      className="delete-icon"
       sx={{
         padding: 0,
         minWidth: 'auto',
@@ -314,6 +315,15 @@ const DomainButton: React.FC = () => {
         {domains.map((domain) => (
           <MenuItem key={domain.id} onClick={() => {
             handleSetDomain(domain.domain);
+          }}
+          sx={{
+            '&:hover .delete-icon': {
+              opacity: 1,
+            },
+            '& .delete-icon': {
+              opacity: 0, 
+              transition: 'opacity 0.3s ease',
+            },
           }}>
             <Box sx={{
               display: 'flex',

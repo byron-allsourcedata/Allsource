@@ -74,6 +74,9 @@ export const InviteUsersPopup: React.FC<InviteUsersPopupProps> = ({ open, onClos
         }
     };
 
+    const handleArrowClick = () => {
+        setSelectOpen(true);
+    };
 
     return (
         <Drawer
@@ -378,6 +381,7 @@ export const InviteUsersPopup: React.FC<InviteUsersPopupProps> = ({ open, onClos
                         <InputLabel className='main-text' sx={{ fontSize: '12px', lineHeight: '16px' }}>Access level</InputLabel>
                         <Select
                             value={role}
+                            open={selectOpen}
                             onChange={handleRoleChange}
                             onOpen={handleSelectOpen}
                             onClose={handleSelectClose}
@@ -401,12 +405,24 @@ export const InviteUsersPopup: React.FC<InviteUsersPopupProps> = ({ open, onClos
                                     label="Access level"
                                     endAdornment={
                                         <InputAdornment position="end">
-                                            <Image
-                                                src={selectOpen ? '/chevron-drop-up.svg' : '/chevron-drop-down.svg'}
-                                                alt={selectOpen ? 'chevron-drop-up' : 'chevron-drop-down'}
-                                                height={24}
-                                                width={24}
-                                            />
+                                            <Box
+                                                component="span"
+                                                sx={{
+                                                    cursor: 'pointer',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                }}
+                                                onClick={handleArrowClick}
+                                                tabIndex={0} // Ensure it can be focused
+                                                role="button" // Make it behave like a button for accessibility
+                                                >
+                                                <Image
+                                                    src={selectOpen ? '/chevron-drop-up.svg' : '/chevron-drop-down.svg'}
+                                                    alt={selectOpen ? 'chevron-drop-up' : 'chevron-drop-down'}
+                                                    height={24}
+                                                    width={24}
+                                                />
+                                                </Box>
                                         </InputAdornment>
                                     }
                                 />

@@ -10,15 +10,19 @@ from services.jwt_service import get_password_hash
 import requests
 from dotenv import load_dotenv
 
+from services.subscriptions import SubscriptionService
+
 logger = logging.getLogger(__name__)
 load_dotenv()
 
 
 class UsersService:
-    def __init__(self, user, user_persistence_service: UserPersistence, plan_persistence: PlansPersistence):
+    def __init__(self, user, user_persistence_service: UserPersistence, plan_persistence: PlansPersistence,
+                 subscription_service: SubscriptionService):
         self.user = user
         self.user_persistence_service = user_persistence_service
         self.plan_persistence = plan_persistence
+        self.subscription_service = subscription_service
 
     def update_password(self, update_data: UpdatePassword):
         if update_data.password != update_data.confirm_password:
@@ -33,11 +37,12 @@ class UsersService:
             return {
                 'is_trial_pending': True
             }
-        user_plan = self.plan_persistence.get_user_subscription(self.user.get('id'))
-        if user_plan:
+        result = self.subscription_service.get_user_subscription_with_trial_status(
+            self.user.get('id'))
+        if result['subscription']:
             return {
-                "is_trial": user_plan.is_trial,
-                "plan_end": user_plan.plan_end,
+                "is_trial": result['is_artificial_status'],
+                "plan_end": result['subscription'].plan_end,
             }
         return {
             "is_trial_pending": True
@@ -50,33 +55,33 @@ class UsersService:
                 "email": team_member.get('email'),
                 "full_name": team_member.get('full_name'),
                 "activate_percent": team_member.get('activate_steps_percent'),
-                }
+            }
         return {
-                "email": self.user.get('email'),
-                "full_name": self.user.get('full_name'),
-                "activate_percent": self.user.get('activate_steps_percent'),
-                }
+            "email": self.user.get('email'),
+            "full_name": self.user.get('full_name'),
+            "activate_percent": self.user.get('activate_steps_percent'),
+        }
 
     def get_calendly_info(self):
         try:
             if self.user.get('calendly_uuid'):
                 if self.user.get('calendly_invitee_uuid'):
-                        calendly_uuid = self.get_calendly_uuid()
-                        invitee_uuid = self.get_calendly_invitee_uuid()
+                    calendly_uuid = self.get_calendly_uuid()
+                    invitee_uuid = self.get_calendly_invitee_uuid()
 
-                        if calendly_uuid and invitee_uuid:
-                            url = f"https://api.calendly.com/scheduled_events/{calendly_uuid}/invitees/{invitee_uuid}"
+                    if calendly_uuid and invitee_uuid:
+                        url = f"https://api.calendly.com/scheduled_events/{calendly_uuid}/invitees/{invitee_uuid}"
 
-                            headers = {
-                                'Authorization': f'Bearer {os.getenv("CALENDLY_TOKEN")}',
-                                'Content-Type': 'application/json'
-                            }
+                        headers = {
+                            'Authorization': f'Bearer {os.getenv("CALENDLY_TOKEN")}',
+                            'Content-Type': 'application/json'
+                        }
 
-                            response = requests.get(url, headers=headers).json()
+                        response = requests.get(url, headers=headers).json()
 
-                            return {"email": response.get('resource').get('email'),
-                                    "full_name": response.get('resource').get('name')
-                                    }
+                        return {"email": response.get('resource').get('email'),
+                                "full_name": response.get('resource').get('name')
+                                }
 
         except requests.exceptions.RequestException as e:
             logger.error(f"Request failed: {str(e)}")
@@ -127,4 +132,3 @@ class UsersService:
 
         self.user_persistence_service.update_calendly_uuid(self.user.get('id'), str(uuid), str(invitees))
         return 'OK'
-

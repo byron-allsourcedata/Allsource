@@ -164,6 +164,7 @@ const MailchimpDatasync: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, 
     };
 
     const getKlaviyoList = async () => {
+        try {
         setLoading(true)
         const response = await axiosInstance.get('/integrations/sync/list/', {
             params: {
@@ -183,6 +184,9 @@ const MailchimpDatasync: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, 
         }
         setSelectedRadioValue(data?.type);
         setLoading(false)
+    } catch (error) {
+        
+    }
     }
     useEffect(() => {
         getKlaviyoList()
@@ -190,6 +194,7 @@ const MailchimpDatasync: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, 
     }, [open])
 
     const createNewList = async () => {
+        try {
         const newListResponse = await axiosInstance.post('/integrations/sync/list/', {
             name: selectedOption?.list_name
         }, {
@@ -203,6 +208,8 @@ const MailchimpDatasync: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, 
         }
 
         return newListResponse.data;
+    } catch (error) {
+    }
     };
 
 
