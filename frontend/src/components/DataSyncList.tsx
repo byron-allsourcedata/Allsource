@@ -64,7 +64,6 @@ import OmnisendDataSync from "./OmnisendDataSync";
   
         setData(response.data);
       } catch (error) {
-        console.error('Error fetching leads:', error);
       }
       finally {
         setIsLoading(false)

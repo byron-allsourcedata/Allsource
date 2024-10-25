@@ -32,6 +32,8 @@ import DataSyncList from "@/components/DataSyncList";
 import BCommerceConnect from "@/components/Bcommerce";
 import OmnisendConnect from "@/components/Omnisend";
 import MailchimpConnect from "@/components/MailchimpConnect";
+import RevenueTracking from "@/components/RevenueTracking";
+
 
 interface IntegrationBoxProps {
     image: string;
@@ -39,6 +41,8 @@ interface IntegrationBoxProps {
     service_name: string;
     active?: boolean;
     is_avalible?: boolean
+    error_message?: string
+    is_failed?: boolean
 }
 
 interface IntegrationCredentials {
@@ -47,6 +51,8 @@ interface IntegrationCredentials {
     shop_domain: string;
     ad_account_id: string;
     is_with_suppresions: boolean;
+    error_message?: string
+    is_failed: boolean
 }
 
 const integrationStyle = {
@@ -73,7 +79,7 @@ const integrationStyle = {
 };
 
 
-const IntegrationBox = ({ image, handleClick, service_name, active, is_avalible }: IntegrationBoxProps) => {
+const IntegrationBox = ({ image, handleClick, service_name, active, is_avalible, is_failed, error_message }: IntegrationBoxProps) => {
 
     return (
         <Box sx={{
@@ -102,24 +108,33 @@ const IntegrationBox = ({ image, handleClick, service_name, active, is_avalible 
             }}>
               
                 {!is_avalible && (
-                  <>
+                  <Box sx={{
+                    display: 'flex',
+                    justifyContent: 'center'
+                  }}>
                   <Box onClick={handleClick} sx={{
                 position: 'absolute',
-                top: '5%',
-                left: '5%',  
+                top: '0%',
+                left: '0%',
+                margin: '8px 0 0 8px',
                 transition: 'opacity 0.2s',
                 cursor: 'pointer',
                 display: 'flex',
-                background: '#EAF8DD',
-                height: '2rem',
-                p: 1,
-                borderRadius: '0.5rem'
-              }}><Typography fontSize={'0.8rem'} fontFamily={'Nunito Sans'} color={'#2B5B00'} fontWeight={600}>Integrated</Typography></Box>
-                  
+                background: !is_failed ? '#EAF8DD' : '#FCDBDC' ,
+                height: '20px',
+                padding: '2px 8px 1px 8px',
+                // p: 1,
+                borderRadius: '4px'
+              }}>{!is_failed ? ( <Typography fontSize={'12px'} fontFamily={'Nunito Sans'} color={'#2B5B00'} fontWeight={600}>Integrated</Typography> ) : (
+                <>
+                  <Typography fontSize={'12px'} fontFamily={'Nunito Sans'} color={'#4E0110'} fontWeight={600}>Failed</Typography>
+                </>
+              ) }</Box>
                     <Box className="edit-icon" onClick={handleClick} sx={{
                         position: 'absolute',
-                        top: '5%',
-                        right: '5%',
+                        top: '0%',
+                        right: '0%',
+                        margin: '8px 8.4px 0 0',
                         opacity: 0,  
                         transition: 'opacity 0.2s',
                         cursor: 'pointer',
@@ -127,20 +142,20 @@ const IntegrationBox = ({ image, handleClick, service_name, active, is_avalible 
                         alignItems: 'center',
                         justifyContent: 'center',
                         borderRadius: '50%',
-                        width: '2rem', 
-                        height: '2rem', 
+                        width: '20px', 
+                        height: '20px', 
                         '&:hover': {
                             backgroundColor: '#EDEEF7' 
                         }
                     }}>
                         <Image
                             src={'/pen.svg'}
-                            width={12}
-                            height={12}
+                            width={9.6}
+                            height={9.6}
                             alt={'edit'}
                         />
                     </Box>
-                    </>
+                    </Box>
                 )}
                 <Image src={image} width={32} height={32} alt={service_name} />
             </Box>
@@ -216,6 +231,7 @@ const UserIntegrationsList = ({ integrationsCredentials, changeTab = () => { }, 
                         service_name="Shopify"
                         active={activeService === 'Shopify'}
                         handleClick={() => setOpenShopifyConnect(true)}
+                        is_failed={integrationsCredentials?.find(integration => integration.service_name === 'Shopify')?.is_failed}
                     />
                 </Box>
             )}
@@ -226,6 +242,7 @@ const UserIntegrationsList = ({ integrationsCredentials, changeTab = () => { }, 
                         service_name="Klaviyo"
                         active={activeService === 'Klaviyo'}
                         handleClick={() => setOpenKlaviyoConnect(true)}
+                        is_failed={integrationsCredentials?.find(integration => integration.service_name === 'Klaviyo')?.is_failed}
                     />
                 </Box>
             )}
@@ -236,6 +253,7 @@ const UserIntegrationsList = ({ integrationsCredentials, changeTab = () => { }, 
                         service_name="Meta"
                         active={activeService === 'Meta'}
                         handleClick={() => setOpenMetaConnect(true)}
+                        is_failed={integrationsCredentials?.find(integration => integration.service_name === 'Meta')?.is_failed}
                     />
                 </Box>
             )}
@@ -246,6 +264,7 @@ const UserIntegrationsList = ({ integrationsCredentials, changeTab = () => { }, 
                         service_name="Bigcommerce"
                         active={activeService === 'Bigcommerce'}
                         handleClick={() => setOpenBigcommerceConnect(true)}
+                        is_failed={integrationsCredentials?.find(integration => integration.service_name === 'BigCommerce')?.is_failed}
                     />
                 </Box>
             )}
@@ -256,6 +275,18 @@ const UserIntegrationsList = ({ integrationsCredentials, changeTab = () => { }, 
                         service_name="Omnisend"
                         active={activeService === 'Omnisend'}
                         handleClick={() => setOpenOmnisendConnect(true)}
+                        is_failed={integrationsCredentials?.find(integration => integration.service_name === 'Omnisend')?.is_failed}
+                    />
+                </Box>
+            )}
+            {integrationsCredentials.some(integration => integration.service_name === "Mailchimp") && (
+                <Box onClick={() => handleActive('Mailchimp')}>
+                    <IntegrationBox
+                        image="/mailchimp-icon.svg"
+                        service_name="Mailchimp"
+                        active={activeService === 'Mailchimp'}
+                        handleClick={() => setOpenMailchimpConnect(true)}
+                        is_failed={integrationsCredentials?.find(integration => integration.service_name === 'Mailchimp')?.is_failed}
                     />
                 </Box>
             )}
@@ -905,6 +936,7 @@ const PixelManagment = () => {
         <TabPanel value="2">
           <PixelInstallation />
           <VerifyPixelIntegration />
+          <RevenueTracking />
         </TabPanel>
       </TabContext>
       
@@ -1012,7 +1044,7 @@ const Integrations = () => {
                         />
                     </Box>
                     {/* Tabs */}
-                    {status !== 'PIXEL_INSTALLATION_NEEDED' && (
+                    {status !== 'PIXEL_INSTALLATION_NEEDED' && !isLoading && (
                         <Box sx={{ display: 'flex', alignItems: 'center', margin: '0 auto'}}>
                             <TabList
                                 centered
@@ -1027,21 +1059,22 @@ const Integrations = () => {
                                 }}
                                 onChange={handleTabChange}
                             >
-                                <Tab label="Your Integration" value="1" sx={{ ...integrationStyle.tabHeading }} />
+                                <Tab label="Your Integrations" value="1" sx={{ ...integrationStyle.tabHeading }} />
                                 <Tab label="Available Integrations" value="2" sx={{ ...integrationStyle.tabHeading }} />
                                 <Tab label="Pixel Management" value="3" sx={{ ...integrationStyle.tabHeading }} />
                             </TabList>
                         </Box>
                     )}  
                 </Box>
+                {status !== 'PIXEL_INSTALLATION_NEEDED' && !isLoading && (
                 <Box sx={{
                     border: '1px solid #E4E4E4',
                     mt: 2.5
-                }}></Box>
-                {status === 'PIXEL_INSTALLATION_NEEDED' ? (
+                }}></Box>)}
+                {status === 'PIXEL_INSTALLATION_NEEDED' && !isLoading ? (
                     <Box sx={centerContainerStyles}>
                         <Typography variant="h5" sx={{ mb: 2, fontSize: '0.9rem' }}>
-                            Pixel Integration isn&#39t completed yet!
+                            Pixel Integration isn&apos;t completed yet!
                         </Typography>
                         <Image src={'/pixel_installation_needed.svg'} width={300} height={241} alt="pixel installed needed"/>
                         <Typography sx={{ mb: 3, color: '#808080', fontSize: '0.8rem', mt: 3 }}>
@@ -1066,7 +1099,7 @@ const Integrations = () => {
                             Setup Pixel
                         </Button>
                     </Box>
-                ) : (
+                ) : ( !isLoading && (
                     <>
                         <TabPanel value="1" sx={{ px: 0 }}>
                             <UserIntegrationsList 
@@ -1083,7 +1116,7 @@ const Integrations = () => {
                             <PixelManagment />
                         </TabPanel>
                     </>
-                )}
+                ))}
             </TabContext>
             {showSlider && <Slider/>}
         </>
