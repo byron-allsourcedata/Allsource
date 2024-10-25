@@ -45,7 +45,6 @@ async def on_message_received(message, session):
 
         lead_users = (
             session.query(LeadUser)
-            .join(FiveXFiveUser, LeadUser.five_x_five_user_id == FiveXFiveUser.id)
             .filter_by(user_id=user.id, is_active=False)
             .order_by(LeadUser.created_at)
             .all()
