@@ -195,7 +195,6 @@ const SuppressionRules: React.FC = () => {
             });
 
             if (response.status === 200) {
-                console.log("URLs successfully sent:", response.data);
                 showToast('URLs successfully processed!');
             }
         } catch (error) {

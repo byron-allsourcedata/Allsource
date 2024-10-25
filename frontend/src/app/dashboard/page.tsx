@@ -44,7 +44,19 @@ const TabPanel: React.FC<TabPanelProps> = ({ children, value, index, ...other })
       aria-labelledby={`tab-${index}`}
       {...other}
     >
-      {value === index && <Box sx={{ pt: 3, margin: 0, }}>{children}</Box>}
+      {value === index &&
+        <Box sx={{
+          margin: 0,
+          pt: 3,
+          paddingLeft: '2.5rem',
+          paddingRight: '2.5rem',
+          '@media (min-width: 1600px)': {
+            paddingLeft: '4.25rem',
+            paddingRight: '4.25rem',
+          }
+        }}>
+          {children}
+        </Box>}
     </div>
   );
 };
@@ -554,10 +566,12 @@ const Dashboard: React.FC = () => {
                 </Box>
               </Box>
 
-              <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', '@media (max-width: 600px)': {
-                width: '100%',
-                mt: 2
-              } }}>
+              <Box sx={{
+                flexGrow: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', '@media (max-width: 600px)': {
+                  width: '100%',
+                  mt: 2
+                }
+              }}>
                 <Tabs
                   value={tabIndex}
                   onChange={handleTabChange}
@@ -628,53 +642,53 @@ const Dashboard: React.FC = () => {
               </Box>
 
               <Box sx={{
-              display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 2, '@media (max-width: 600px)': {
-                display: 'none',
-              }
-            }}>
-              {/* Calendary picker*/}
-              <Typography className="second-sub-title">{selectedDateLabel? selectedDateLabel : 'All time'}</Typography>
-              <Button
-                aria-controls={isCalendarOpen ? 'calendar-popup' : undefined}
-                aria-haspopup="true"
-                aria-expanded={isCalendarOpen ? 'true' : undefined}
-                onClick={handleCalendarClick}
-                sx={{
-                  textTransform: 'none',
-                  color: 'rgba(128, 128, 128, 1)',
-                  border: '1.5px solid rgba(80, 82, 178, 1)',
-                  borderRadius: '4px',
-                  padding: '8px',
-                  minWidth: 'auto',
-                  '@media (max-width: 900px)': {
-                    border: 'none',
-                    padding: 0
-                  }
-                }}
-              >
-                <DateRangeIcon fontSize='medium' sx={{ color: 'rgba(80, 82, 178, 1)' }} />
-                <Typography variant="body1" sx={{
-                  fontFamily: 'Roboto',
-                  fontSize: '14px',
-                  fontWeight: '600',
-                  color: 'rgba(32, 33, 36, 1)',
-                  lineHeight: '19.6px',
-                  textAlign: 'left'
-                }}>
-                  {formattedDates}
-                </Typography>
-                {formattedDates &&
-                  <Box sx={{ pl: 2, display: 'flex', alignItems: 'center' }}>
-                    <Image src="/arrow_down.svg" alt="arrow down" width={16} height={16} />
-                  </Box>
+                display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 2, '@media (max-width: 600px)': {
+                  display: 'none',
                 }
-              </Button>
-            </Box>
+              }}>
+                {/* Calendary picker*/}
+                <Typography className="second-sub-title">{selectedDateLabel ? selectedDateLabel : 'All time'}</Typography>
+                <Button
+                  aria-controls={isCalendarOpen ? 'calendar-popup' : undefined}
+                  aria-haspopup="true"
+                  aria-expanded={isCalendarOpen ? 'true' : undefined}
+                  onClick={handleCalendarClick}
+                  sx={{
+                    textTransform: 'none',
+                    color: 'rgba(128, 128, 128, 1)',
+                    border: '1.5px solid rgba(80, 82, 178, 1)',
+                    borderRadius: '4px',
+                    padding: '8px',
+                    minWidth: 'auto',
+                    '@media (max-width: 900px)': {
+                      border: 'none',
+                      padding: 0
+                    }
+                  }}
+                >
+                  <DateRangeIcon fontSize='medium' sx={{ color: 'rgba(80, 82, 178, 1)' }} />
+                  <Typography variant="body1" sx={{
+                    fontFamily: 'Roboto',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    color: 'rgba(32, 33, 36, 1)',
+                    lineHeight: '19.6px',
+                    textAlign: 'left'
+                  }}>
+                    {formattedDates}
+                  </Typography>
+                  {formattedDates &&
+                    <Box sx={{ pl: 2, display: 'flex', alignItems: 'center' }}>
+                      <Image src="/arrow_down.svg" alt="arrow down" width={16} height={16} />
+                    </Box>
+                  }
+                </Button>
+              </Box>
 
 
             </Box>
 
-            
+
 
 
 
@@ -703,7 +717,7 @@ const Dashboard: React.FC = () => {
       ) : (
         <Grid container sx={{
           height: '100%',
-          overflow: 'hidden'
+          pt: 3
         }}>
           <Grid item xs={12} sx={{ display: { md: 'none' }, overflow: 'hidden' }}>
             <Typography

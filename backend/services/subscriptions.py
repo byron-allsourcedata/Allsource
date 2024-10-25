@@ -344,6 +344,7 @@ class SubscriptionService:
                 user.leads_credits = leads_credits if user.leads_credits >= 0 else leads_credits - user.leads_credits
                 user.prospect_credits = prospect_credits
                 user.current_subscription_id = new_subscription.id
+                user.is_leads_auto_charging = True
             self.db.commit()
 
         if status == "canceled" or status == 'inactive':

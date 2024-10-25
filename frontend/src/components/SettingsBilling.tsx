@@ -516,7 +516,7 @@ export const SettingsBilling: React.FC = () => {
         window.location.href = '/settings?section=subscription';
     };
 
-    const handleCancel = async() => {
+    const handleCancel = async () => {
         try {
             setIsLoading(false);
             const response = await axiosInterceptorInstance.get(`/subscriptions/cancel-downgrade`);
@@ -531,11 +531,11 @@ export const SettingsBilling: React.FC = () => {
             } else {
                 showErrorToast("An unexpected error occurred.");
             }
-        }finally {
+        } finally {
             setIsLoading(false);
         }
         window.location.reload();
-      };
+    };
 
 
     const getStatusStyles = (status: string) => {
@@ -1188,14 +1188,20 @@ export const SettingsBilling: React.FC = () => {
                                 Contacts collected
                             </Typography>
                             <Typography className='second-sub-title' sx={{ lineHeight: '20px !important', mb: '12px' }}>
-                                {planContactsCollected
-                                    ? `${Math.floor(((planContactsCollected - contactsCollected) / planContactsCollected) * 100)}% Used`
-                                    : 0}
+                                {planContactsCollected === -1 && contactsCollected === -1
+                                    ? 'Unlimited'
+                                    : planContactsCollected
+                                        ? `${Math.floor(((planContactsCollected - contactsCollected) / planContactsCollected) * 100)}% Used`
+                                        : 0}
                             </Typography>
                         </Box>
                         <LinearProgress
                             variant="determinate"
-                            value={Math.round(((planContactsCollected - contactsCollected) / planContactsCollected) * 100)}
+                            value={
+                                planContactsCollected === -1 && contactsCollected === -1
+                                    ? 0
+                                    : Math.round(((planContactsCollected - contactsCollected) / planContactsCollected) * 100)
+                            }
                             sx={{
                                 height: '8px',
                                 borderRadius: '4px',
@@ -1207,11 +1213,11 @@ export const SettingsBilling: React.FC = () => {
                             }}
                         />
                         <Typography className='paragraph' sx={{ color: '#787878' }}>
-                            {Math.max(0, planContactsCollected - contactsCollected)} out of {planContactsCollected} Remaining
+                            {planContactsCollected === -1 && contactsCollected === -1
+                                ? ''
+                                : `${Math.max(0, planContactsCollected - contactsCollected)} out of ${planContactsCollected} Remaining`}
                         </Typography>
                     </Box>
-
-
                     <Box sx={{
                         width: '100%',
                         '@media (min-width: 601px)': {
@@ -1224,8 +1230,6 @@ export const SettingsBilling: React.FC = () => {
                             marginRight: '-24px'
                         }} />
                     </Box>
-
-
                     <Box sx={{ width: '100%', marginBottom: 2 }}>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', opacity: 0.6 }}>
                             <Typography className='second-sub-title' sx={{ lineHeight: '20px !important', mb: '12px' }}>

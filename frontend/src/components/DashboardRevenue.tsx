@@ -296,6 +296,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
     const isMobile = useMediaQuery('(max-width: 380px)');
 
     const chartSize = isLargeScreen ? 400 : isMediumScreen ? 300 : isMobile ? 200 : 260;
+    const mainchartSize = isLargeScreen ? 450 : isMediumScreen ? 300 : isMobile ? 200 : 260;
 
 
     const [series, setSeries] = useState<
@@ -363,9 +364,9 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
     const visitorSeries = series.filter((s) => s.id === 'visitors') as [];
 
     const dataChart = [
-        { id: 'Total Visitors', value: 50000 },
-        { id: 'View Products', value: 35000 },
-        { id: 'Abandoden cart', value: 10000 },
+        { id: 'Total Visitors', value: values.totalVisitors },
+        { id: 'View Products', value: values.viewProducts },
+        { id: 'Abandoden cart', value: values.totalAbandonedCart },
     ];
 
     const distribution = [
@@ -397,7 +398,6 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
         id: 'meta',
         label: 'Meta',
         curve: 'linear',
-        stack: 'total',
         showMark: false,
         area: false,
         stackOrder: 'ascending',
@@ -465,7 +465,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                 }}
                             >
                                 <Typography component="div" className="second-sub-title" sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', fontWeight: '600 !important', fontFamily: 'Nunito Sans', fontSize: '16px', lineHeight: '19.1px !important', textWrap: 'nowrap', textAlign: 'left', gap: 1, '@media (max-width: 900px)': { flexDirection: 'row', width: '100%', textWrap: 'nowrap' } }}>
-                                    Total Revenue <Typography component="span" sx={{ fontFamily: 'Nunito Sans', color: 'rgba(74, 74, 74, 1)', fontSize: '22px', fontWeight: 600, lineHeight: '30.01px', textAlign: 'left' }}>$22,301</Typography>
+                                    Total Revenue <Typography component="span" sx={{ fontFamily: 'Nunito Sans', color: 'rgba(74, 74, 74, 1)', fontSize: '22px', fontWeight: 600, lineHeight: '30.01px', textAlign: 'left' }}>${lifetimeRevenue ? lifetimeRevenue.toLocaleString('en-US') : 0}</Typography>
                                 </Typography>
                             </Stack>
                             <Stack
@@ -611,32 +611,31 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                     },
                                 }}
                             />
-                        </Box> : <LineChart
-                            colors={filteredSeriescolor.map(s => colorMapping[s.id as keyof typeof colorMapping])}
-                            xAxis={[{
-                                scaleType: 'point',
-                                data: formattedData,
-                            }]}
-                            yAxis={[
-                                {
-                                valueFormatter: (value) => {
-                                    if (value >= 1000 && value < 1000000) {
-                                      return `$${(value / 1000).toFixed(0)}k`; // Formats 10,000 as 10k
-                                    } else if (value >= 1000000) {
-                                      return `$${(value / 1000000).toFixed(1)}M`; // Formats 1,000,000 as 1.0M
-                                    } else {
-                                      return value.toString(); // Return smaller numbers without formatting
-                                    }
-                                  },
-                                }
-                              ]}
-                            series={filteredSeries}
-                            height={250}
-                            margin={{ left: 70, right: 20, top: 20, bottom: 20 }}
-                            grid={{ horizontal: true }}
-                            sx={{ border: 'none' }}
-                            slotProps={{ legend: { hidden: true } }}
-                        />}
+                        </Box> :
+                <LineChart
+                    colors={filteredSeriescolor.map(s => colorMapping[s.id as keyof typeof colorMapping])}
+                    xAxis={[{
+                        scaleType: 'point',
+                        data: formattedData,
+                    }]}
+                    yAxis={[{
+                        valueFormatter: (value) => {
+                            if (value >= 1000 && value < 1000000) {
+                                return `$${(value / 1000).toFixed(0)}k`;
+                            } else if (value >= 1000000) {
+                                return `$${(value / 1000000).toFixed(1)}M`;
+                            } else {
+                                return value.toString();
+                            }
+                        },
+                    }]}
+                    series={filteredSeries}
+                    height={mainchartSize} // Занимает 100% от контейнера
+                    margin={{ left: 70, right: 20, top: 20, bottom: 20 }}
+                    grid={{ horizontal: true }}
+                    sx={{ border: 'none' }}
+                    slotProps={{ legend: { hidden: true } }}
+                />}
 
                     </CardContent>
                 </Card>
@@ -727,7 +726,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                         }}
                                     />
                                 </Box> : <LineChart
-                                    colors={['rgba(255, 230, 180, 1)']}
+                                    colors={['rgba(224, 176, 5, 1)']}
                                     xAxis={[{
                                         scaleType: 'point',
                                         data: formattedData,
@@ -788,7 +787,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                             </Box>
                             <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'start', width: '100%' }}>
                                 <Typography component='div' sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', fontWeight: '700', fontSize: '22px', justifyContent: 'flex-end', mt: 1, fontFamily: 'Nunito Sans', lineHeight: '30.01px', color: 'rgba(32, 33, 36, 1)', '@media (max-width: 900px)': { flexDirection: 'row', alignItems: 'center', gap: 2 } }}>
-                                    ${values.totalAbandonedCart ? values.totalAbandonedCart : 0} <Typography component='span' sx={{ fontFamily: 'Nunito Sans', fontSize: '14px', pb: 0.5, fontWeight: 500, lineHeight: '19.6px', textAlign: 'left' }}>Add to cart</Typography>
+                                    ${values.totalAbandonedCart ? values.totalAbandonedCart : 0} <Typography component='span' sx={{ fontFamily: 'Nunito Sans', fontSize: '14px', pb: 0.5, fontWeight: 500, lineHeight: '19.6px', textAlign: 'left' }}>Abandoned Cart</Typography>
                                 </Typography>
                             </Box>
                         </Box>
@@ -844,7 +843,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                     />
                                 </Box> :
                                     <LineChart
-                                        colors={['rgba(180, 218, 193, 1)']}
+                                        colors={['rgba(128, 201, 64, 1)']}
                                         xAxis={[{ scaleType: 'point', data: formattedData }]}
                                         yAxis={[
                                         {
@@ -958,7 +957,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                     />
                                 </Box> :
                                     <LineChart
-                                        colors={['rgba(181, 218, 248, 1)']}
+                                        colors={['rgba(124, 125, 197, 1)']}
                                         xAxis={[{ scaleType: 'point', data: formattedData, }]}
                                         yAxis={[
                                         {
@@ -1029,6 +1028,32 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                         fontSize: '8px !important'
                                     }
                                  }}>
+                                    {loading ? <Box
+                                    sx={{
+                                        position: 'relative',
+                                        background: 'rgba(255, 255, 255, 0.8)',
+                                        display: 'flex',
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                        zIndex: 1000,
+                                        overflow: 'hidden'
+                                    }}
+                                >
+                                    <Box
+                                        sx={{
+                                            border: '8px solid #f3f3f3',
+                                            borderTop: '8px solid #4285f4',
+                                            borderRadius: '50%',
+                                            width: '40px',
+                                            height: '40px',
+                                            animation: 'spin 1s linear infinite',
+                                            '@keyframes spin': {
+                                                '0%': { transform: 'rotate(0deg)' },
+                                                '100%': { transform: 'rotate(360deg)' },
+                                            },
+                                        }}
+                                    />
+                                </Box> :
                                     <PieChart
                                         colors={country_color}
                                         margin={{
@@ -1059,7 +1084,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                             legend: { hidden: true },
                                         }}
                                     >
-                                    </PieChart>
+                                    </PieChart>}
                                 </Box>
                             </CardContent>
 
@@ -1071,6 +1096,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                         sx={{ alignItems: 'start', gap: 2, pb: 2 }}
                                     >
                                         <Stack sx={{ gap: 1, flexGrow: 1 }}>
+                                        {!loading && (
                                             <Stack
                                                 direction="row"
                                                 sx={{
@@ -1093,7 +1119,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                                         }}
                                                     /> {type.name}
                                                 </Typography>
-                                            </Stack>
+                                            </Stack>)}
                                         </Stack>
                                     </Stack>
                                 ))}

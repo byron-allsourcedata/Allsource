@@ -272,7 +272,7 @@ class SettingsService:
                 'plan_name': current_plan.title,
                 'domains': f"{user_limit_domain}/{plan_limit_domain}",
                 'prospect_credits': 'Coming soon',
-                'overage': user_subscription.lead_credit_price,
+                'overage': 'free' if user_subscription.lead_credit_price == -1 else user_subscription.lead_credit_price,
                 'next_billing_date': None,
                 'monthly_total': None,
                 'active': True
@@ -294,7 +294,7 @@ class SettingsService:
                 'plan_name': plan_name,
                 'domains': f"{user_limit_domain}/{plan_limit_domain}",
                 'prospect_credits': 'Coming soon',
-                'overage': user_subscription.lead_credit_price,
+                'overage': 'free' if user_subscription.lead_credit_price == -1 else user_subscription.lead_credit_price,
                 'next_billing_date': self.timestamp_to_date(subscription['current_period_end']).strftime('%b %d, %Y'),
                 'monthly_total': monthly_total,
                 'active': is_active,
