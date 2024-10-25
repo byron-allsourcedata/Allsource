@@ -267,7 +267,7 @@ class SettingsService:
                 'overage': 'free' if user_subscription.lead_credit_price == -1 else user_subscription.lead_credit_price,
                 'next_billing_date': None,
                 'monthly_total': None,
-                'active': True
+                'active': True if user_subscription.status == 'active' else False,
             }
         elif subscription and user_subscription:
             plan = subscription['items']['data'][0]['plan']

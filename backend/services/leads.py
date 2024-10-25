@@ -180,15 +180,24 @@ class LeadsService:
         return leads_list, count, max_page
 
     def download_leads(self, from_date=None, to_date=None, regions=None, page_visits=None, average_time_spent=None,
-                                          behavior_type=None, status=None, recurring_visits=None,sort_by=None,
-                                          sort_order=None, search_query=None, from_time=None, to_time=None, leads_ids=0):
+                       behavior_type=None, status=None, recurring_visits=None, sort_by=None,
+                       sort_order=None, search_query=None, from_time=None, to_time=None, leads_ids=0):
         if leads_ids == 0:
-            results = self.leads_persistence_service.get_full_user_leads_by_filters(domain_id=self.domain.id, from_date=from_date, to_date=to_date, regions=regions,page_visits=page_visits,
-                                                                                       average_time_spent=average_time_spent, behavior_type=behavior_type, status=status, recurring_visits=recurring_visits, sort_by=sort_by, sort_order=sort_order,
-                                                                                       search_query=search_query, from_time=from_time, to_time=to_time
-                                                                                       )
+            results = self.leads_persistence_service.get_full_user_leads_by_filters(domain_id=self.domain.id,
+                                                                                    from_date=from_date,
+                                                                                    to_date=to_date, regions=regions,
+                                                                                    page_visits=page_visits,
+                                                                                    average_time_spent=average_time_spent,
+                                                                                    behavior_type=behavior_type,
+                                                                                    status=status,
+                                                                                    recurring_visits=recurring_visits,
+                                                                                    sort_by=sort_by,
+                                                                                    sort_order=sort_order,
+                                                                                    search_query=search_query,
+                                                                                    from_time=from_time, to_time=to_time
+                                                                                    )
         else:
-            result = self.leads_persistence_service.get_full_user_leads_by_ids(self.domain.id, leads_ids)
+            results = self.leads_persistence_service.get_full_user_leads_by_ids(self.domain.id, leads_ids)
         if len(results) == 0:
             return None
         output = io.StringIO()
@@ -198,28 +207,26 @@ class LeadsService:
              'Company Zip', 'Business Email', 'Age min', 'Age_max', 'Company domain', 'Company phone', 'Company sic',
              'Company address', 'Company revenue', 'Company employee count'])
         for result in results:
-            lead_data = result[0]
-            if lead_data:
-                relevant_data = [
-                    lead_data.first_name if lead_data.first_name is not None else 'None',
-                    lead_data.last_name if lead_data.last_name is not None else 'None',
-                    lead_data.gender if lead_data.gender is not None else 'None',
-                    lead_data.mobile_phone if lead_data.mobile_phone is not None else 'None',
-                    lead_data.company_name if lead_data.company_name is not None else 'None',
-                    lead_data.company_city if lead_data.company_city is not None else 'None',
-                    lead_data.company_state if lead_data.company_state is not None else 'None',
-                    lead_data.company_zip if lead_data.company_zip is not None else 'None',
-                    lead_data.business_email if lead_data.business_email is not None else 'None',
-                    lead_data.age_min if lead_data.age_min is not None else 'None',
-                    lead_data.age_max if lead_data.age_max is not None else 'None',
-                    lead_data.company_domain if lead_data.company_domain is not None else 'None',
-                    lead_data.company_phone if lead_data.company_phone is not None else 'None',
-                    lead_data.company_sic if lead_data.company_sic is not None else 'None',
-                    lead_data.company_address if lead_data.company_address is not None else 'None',
-                    lead_data.company_revenue if lead_data.company_revenue is not None else 'None',
-                    lead_data.company_employee_count if lead_data.company_employee_count is not None else 'None',
-                ]
-                writer.writerow(relevant_data)
+            relevant_data = [
+                result.first_name if result.first_name else 'None',
+                result.last_name if result.last_name else 'None',
+                result.gender if result.gender else 'None',
+                result.mobile_phone if result.mobile_phone else 'None',
+                result.company_name if result.company_name else 'None',
+                result.company_city if result.company_city else 'None',
+                result.company_state if result.company_state else 'None',
+                result.company_zip if result.company_zip else 'None',
+                result.business_email if result.business_email else 'None',
+                result.age_min if result.age_min else 'None',
+                result.age_max if result.age_max else 'None',
+                result.company_domain if result.company_domain else 'None',
+                result.company_phone if result.company_phone else 'None',
+                result.company_sic if result.company_sic else 'None',
+                result.company_address if result.company_address else 'None',
+                result.company_revenue if result.company_revenue else 'None',
+                result.company_employee_count if result.company_employee_count else 'None',
+            ]
+            writer.writerow(relevant_data)
 
         output.seek(0)
         return output
@@ -268,7 +275,8 @@ class LeadsService:
         return limited_results
 
     def search_location(self, start_letter):
-        location_data = self.leads_persistence_service.search_location(start_letter=start_letter, dommain_id=self.domain.id)
+        location_data = self.leads_persistence_service.search_location(start_letter=start_letter,
+                                                                       dommain_id=self.domain.id)
         results_set = set()
 
         for location in location_data:
@@ -281,4 +289,3 @@ class LeadsService:
         results = [dict(item) for item in results_set]
         limited_results = list(results)[:10]
         return limited_results
-

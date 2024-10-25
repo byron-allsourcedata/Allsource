@@ -259,8 +259,8 @@ async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, sess
         logging.info(f"domain has not enable {user_domain.id}")
         return
     user_domain_id = user_domain.id
-    if not subscription_service.is_user_has_active_subscription(user.id):
-        logging.info(f"user has not active subscription {partner_uid_client_id}")
+    if not subscription_service.is_allow_add_lead(user.id):
+        logging.info(f"user not active partner_uid_client_id: {partner_uid_client_id}")
         return
 
     if page is None:

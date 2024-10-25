@@ -1,6 +1,7 @@
 import logging
 from datetime import datetime, timezone
 
+from dateutil.relativedelta import relativedelta
 from sqlalchemy.orm import Session
 
 from models.plans import SubscriptionPlan
@@ -98,17 +99,33 @@ class SubscriptionService:
 
     def is_user_has_active_subscription(self, user_id):
         result = self.get_user_subscription_with_trial_status(user_id=user_id)
-        if not result['subscription']:
+        return self.is_subscription_active(result)
+
+    def is_subscription_active(self, subscription_with_trial):
+        if not subscription_with_trial['subscription']:
             return False
-        if result['is_artificial_status']:
-            if not result['subscription'].plan_end:
+        if subscription_with_trial['is_artificial_status']:
+            if not subscription_with_trial['subscription'].plan_end:
                 return True
 
-        if result['subscription'].status == 'inactive':
+        if subscription_with_trial['subscription'].status == 'inactive':
             return False
-        subscription_plan_end = result['subscription'].plan_end.replace(tzinfo=timezone.utc)
+        subscription_plan_end = subscription_with_trial['subscription'].plan_end.replace(tzinfo=timezone.utc)
 
         return subscription_plan_end > datetime.now(timezone.utc)
+
+    def is_allow_add_lead(self, user_id):
+        result = self.get_user_subscription_with_trial_status(user_id=user_id)
+        is_active = self.is_subscription_active(result)
+        user_subscription = result['subscription']
+        if not user_subscription:
+            return False
+        if not is_active and user_subscription.status == 'inactive':
+            billing_date = user_subscription.plan_end.astimezone(timezone.utc)
+            if billing_date + relativedelta(months=1) <= datetime.now(timezone.utc):
+                return False
+
+        return True
 
     def is_trial_subscription(self, user_id):
         user_subscription = self.get_user_subscription(user_id=user_id)
@@ -319,7 +336,8 @@ class SubscriptionService:
                     user.prospect_credits = prospect_credits
                 self.db.flush()
             else:
-                self.db.query(UserSubscriptions).where(UserSubscriptions.user_id == user_id).update(
+                self.db.query(UserSubscriptions).where(UserSubscriptions.user_id == user_id,
+                                                       UserSubscriptions.status == 'active').update(
                     {"status": "inactive", "updated_at": datetime.now(timezone.utc).replace(tzinfo=None)})
                 self.db.flush()
                 new_subscription = UserSubscriptions(
@@ -345,7 +363,7 @@ class SubscriptionService:
                 user.prospect_credits = prospect_credits
                 user.current_subscription_id = new_subscription.id
                 user.is_leads_auto_charging = True
-            self.db.commit()
+                self.db.flush()
 
         if status == "canceled" or status == 'inactive':
             self.db.query(UserSubscriptions).filter(
@@ -353,7 +371,8 @@ class SubscriptionService:
                 UserSubscriptions.price_id == price_id
             ).update({"status": status})
 
-            self.db.commit()
+        user.payment_status = status
+        self.db.commit()
         return status
 
     def get_invitation_limit(self, user_id):

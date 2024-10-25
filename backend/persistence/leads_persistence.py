@@ -438,12 +438,12 @@ class LeadsPersistence:
         lead_ids_set = {lead_user.lead_id for lead_user in lead_users}
         return lead_ids_set
 
-    def get_full_user_leads_by_ids(self, dommain_id, leads_ids):
+    def get_full_user_leads_by_ids(self, domain_id, leads_ids):
         lead_users = (
             self.db.query(FiveXFiveUser)
             .join(LeadUser, LeadUser.five_x_five_user_id == FiveXFiveUser.id)
             .filter(
-                LeadUser.domain_id == dommain_id,
+                LeadUser.domain_id == domain_id,
                 FiveXFiveUser.id.in_(leads_ids)
             )
             .all()
@@ -466,8 +466,7 @@ class LeadsPersistence:
         )
         query = (
             self.db.query(
-                FiveXFiveUser,
-                recurring_visits_subquery.c.recurring_visits,
+                FiveXFiveUser
             )
             .join(LeadUser, LeadUser.five_x_five_user_id == FiveXFiveUser.id)
             .join(FirstNameAlias, FirstNameAlias.id == FiveXFiveUser.first_name_id)
@@ -479,9 +478,7 @@ class LeadsPersistence:
             .outerjoin(recurring_visits_subquery, recurring_visits_subquery.c.lead_id == LeadUser.id)
             .filter(LeadUser.domain_id == domain_id)
             .group_by(
-                FiveXFiveUser.id,
-                LeadsVisits.start_date,
-                recurring_visits_subquery.c.recurring_visits
+                FiveXFiveUser.id
             )
         )
         query = query.order_by(desc(LeadsVisits.start_date))
@@ -503,6 +500,8 @@ class LeadsPersistence:
                     filters.append(LeadUser.is_converted_sales == True)
                 elif status_data == 'view_product':
                     filters.append(LeadUser.behavior_type == "viewed_product")
+                elif status_data == 'visitor':
+                    filters.append(LeadUser.behavior_type == "visitor")
                 elif status_data == 'abandoned_cart':
                     query = (
                         query
