@@ -182,11 +182,3 @@ class SettingsPersistence:
 
         result['success'] = True
         return result
-
-
-if __name__ == '__main__':
-    from dependencies import get_settings_persistence
-
-    s = get_settings_persistence()
-    r = s.get_account_details(110, None)
-    print(r)

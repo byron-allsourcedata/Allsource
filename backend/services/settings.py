@@ -114,7 +114,7 @@ class SettingsService:
 
         if account_details.set_password:
             if account_details.set_password.new_password:
-                if user.get('password') is not None:
+                if user.get('password'):
                     return SettingStatus.INCORRECT_PASSWORD
                 changes['password'] = get_password_hash(account_details.set_password.new_password)
                 self.settings_persistence.set_reset_password_sent_now(user.get('id'))
