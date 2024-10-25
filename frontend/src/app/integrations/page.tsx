@@ -344,7 +344,6 @@ const UserIntegrationsList = ({ integrationsCredentials, changeTab = () => { }, 
             handleClose={handleClose}
             onSave={handleOnSave}  
             initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'Shopify')?.access_token}
-            initShopDomain={integrationsCredentials?.find(integration => integration.service_name === 'Shopify')?.shop_domain}
         />
         <BCommerceConnect 
             open={openBigcommrceConnect} 
