@@ -444,6 +444,7 @@ class LeadsPersistence:
             .join(LeadUser, LeadUser.five_x_five_user_id == FiveXFiveUser.id)
             .filter(
                 LeadUser.domain_id == domain_id,
+                LeadUser.is_active == True,
                 FiveXFiveUser.id.in_(leads_ids)
             )
             .all()
@@ -476,7 +477,7 @@ class LeadsPersistence:
             .outerjoin(FiveXFiveLocations, FiveXFiveLocations.id == FiveXFiveUsersLocations.location_id)
             .outerjoin(States, States.id == FiveXFiveLocations.state_id)
             .outerjoin(recurring_visits_subquery, recurring_visits_subquery.c.lead_id == LeadUser.id)
-            .filter(LeadUser.domain_id == domain_id)
+            .filter(LeadUser.domain_id == domain_id, LeadUser.is_active == True)
             .group_by(
                 FiveXFiveUser.id
             )

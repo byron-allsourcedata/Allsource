@@ -11,20 +11,6 @@ class DashboardService:
         self.leads_persistence_service = leads_persistence_service
         self.domain = domain
 
-    def calculate_distribution(self, accumulated_abandoned_cart, accumulated_view_products, accumulated_visitor):
-        total_orders = accumulated_abandoned_cart + accumulated_view_products + accumulated_visitor
-
-        if total_orders > 0:
-            abandoned_cart_percentage = (accumulated_abandoned_cart / total_orders) * 100
-            view_products_percentage = (accumulated_view_products / total_orders) * 100
-            visitors_percentage = (accumulated_visitor / total_orders) * 100
-        else:
-            abandoned_cart_percentage = 0
-            view_products_percentage = 0
-            visitors_percentage = 0
-
-        return round(abandoned_cart_percentage, 2), round(view_products_percentage, 2), round(visitors_percentage, 2)
-
     def get_revenue(self, from_date, to_date, user):
         results, lifetime_revenue, investment = self.leads_persistence_service.get_revenue_data(
             domain_id=self.domain.id,
@@ -81,9 +67,7 @@ class DashboardService:
         abandoned_cart = accumulated_abandoned_cart
 
         roi = (lifetime_revenue - investment) / investment if lifetime_revenue > 0 and investment > 0 else 0
-        abandoned_cart_percentage, view_products_percentage, visitors_percentage = self.calculate_distribution(
-            accumulated_visitor, accumulated_viewed_product,
-            abandoned_cart)
+
         response = {
             'daily_data': daily_data,
             'total_counts': {
@@ -105,12 +89,7 @@ class DashboardService:
                 'average_order_view_products': round(view_products / total_orders_view_products,
                                                      3) if total_orders_view_products > 0 else 0
             },
-            'distribution': {
-                'abandoned_cart_percentage': abandoned_cart_percentage,
-                'view_products_percentage': view_products_percentage,
-                'visitors_percentage': visitors_percentage
-            },
-            'ROI': round(roi, 3) if roi else 0,
+            'ROI': round(roi, 2) if roi else 0,
             'lifetime_revenue': int(lifetime_revenue),
         }
         return response

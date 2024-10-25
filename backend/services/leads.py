@@ -205,7 +205,8 @@ class LeadsService:
         writer.writerow(
             ['First Name', 'Last Name', 'Gender', 'Mobile Phone', 'Company Name', 'Company City', 'Company State',
              'Company Zip', 'Business Email', 'Age min', 'Age_max', 'Company domain', 'Company phone', 'Company sic',
-             'Company address', 'Company revenue', 'Company employee count'])
+             'Company address', 'Company revenue', 'Company employee count',
+             'Personal city', 'Personal state', 'Net worth', 'Married', 'Children', 'Homeowner', 'State', 'City', 'Personal phone'])
         for result in results:
             relevant_data = [
                 result.first_name if result.first_name else 'None',
@@ -225,6 +226,13 @@ class LeadsService:
                 result.company_address if result.company_address else 'None',
                 result.company_revenue if result.company_revenue else 'None',
                 result.company_employee_count if result.company_employee_count else 'None',
+                result.personal_city if result.personal_city else 'None',
+                result.personal_state if result.personal_state else 'None',
+                result.net_worth if result.net_worth else 'None',
+                result.married if result.married else 'None',
+                result.children if result.children else 'None',
+                result.homeowner if result.homeowner else 'None',
+                result.personal_phone if result.personal_phone else 'None'
             ]
             writer.writerow(relevant_data)
 

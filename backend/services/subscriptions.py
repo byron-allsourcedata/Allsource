@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from dateutil.relativedelta import relativedelta
 from sqlalchemy.orm import Session
 
+from models.leads_users import LeadUser
 from models.plans import SubscriptionPlan
 from models.subscription_transactions import SubscriptionTransactions
 from models.subscriptions import Subscription, UserSubscriptions
@@ -205,9 +206,9 @@ class SubscriptionService:
         if status == "succeeded":
             if product_description == 'leads_credits':
                 user = self.db.query(User).filter(User.id == user_id).first()
-                if user.leads_credits is None:
-                    user.leads_credits = 0
-                user.leads_credits += int(amount_credits)
+                lead_users = self.db.query(LeadUser).filter(LeadUser.user_id == user.id).limit(quantity).all()
+                for lead_user in lead_users:
+                    lead_user.is_active = True
                 self.db.commit()
             elif product_description == 'prospect_credits':
                 user = self.db.query(User).filter(User.id == user_id).first()
