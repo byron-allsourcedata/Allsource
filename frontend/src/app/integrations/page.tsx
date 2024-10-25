@@ -34,6 +34,7 @@ import OmnisendConnect from "@/components/Omnisend";
 import MailchimpConnect from "@/components/MailchimpConnect";
 import RevenueTracking from "@/components/RevenueTracking";
 
+
 interface IntegrationBoxProps {
     image: string;
     handleClick?: () => void;
@@ -286,6 +287,16 @@ const UserIntegrationsList = ({ integrationsCredentials, changeTab = () => { }, 
                         active={activeService === 'Mailchimp'}
                         handleClick={() => setOpenMailchimpConnect(true)}
                         is_failed={integrationsCredentials?.find(integration => integration.service_name === 'Mailchimp')?.is_failed}
+                    />
+                </Box>
+            )}
+            {integrationsCredentials.some(integration => integration.service_name === "Mailchimp") && (
+                <Box onClick={() => handleActive('Mailchimp')}>
+                    <IntegrationBox
+                        image="/mailchimp-icon.svg"
+                        service_name="Mailchimp"
+                        active={activeService === 'Mailchimp'}
+                        handleClick={() => setOpenMailchimpConnect(true)}
                     />
                 </Box>
             )}
@@ -1034,7 +1045,7 @@ const Integrations = () => {
                         />
                     </Box>
                     {/* Tabs */}
-                    {status !== 'PIXEL_INSTALLATION_NEEDED' && (
+                    {status !== 'PIXEL_INSTALLATION_NEEDED' && !isLoading && (
                         <Box sx={{ display: 'flex', alignItems: 'center', margin: '0 auto'}}>
                             <TabList
                                 centered
@@ -1056,14 +1067,15 @@ const Integrations = () => {
                         </Box>
                     )}  
                 </Box>
+                {status !== 'PIXEL_INSTALLATION_NEEDED' && !isLoading && (
                 <Box sx={{
                     border: '1px solid #E4E4E4',
                     mt: 2.5
-                }}></Box>
-                {status === 'PIXEL_INSTALLATION_NEEDED' ? (
+                }}></Box>)}
+                {status === 'PIXEL_INSTALLATION_NEEDED' && !isLoading ? (
                     <Box sx={centerContainerStyles}>
                         <Typography variant="h5" sx={{ mb: 2, fontSize: '0.9rem' }}>
-                            Pixel Integration isn&#39t completed yet!
+                            Pixel Integration isn&apos;t completed yet!
                         </Typography>
                         <Image src={'/pixel_installation_needed.svg'} width={300} height={241} alt="pixel installed needed"/>
                         <Typography sx={{ mb: 3, color: '#808080', fontSize: '0.8rem', mt: 3 }}>
@@ -1088,7 +1100,7 @@ const Integrations = () => {
                             Setup Pixel
                         </Button>
                     </Box>
-                ) : (
+                ) : ( !isLoading && (
                     <>
                         <TabPanel value="1" sx={{ px: 0 }}>
                             <UserIntegrationsList 
@@ -1105,7 +1117,7 @@ const Integrations = () => {
                             <PixelManagment />
                         </TabPanel>
                     </>
-                )}
+                ))}
             </TabContext>
             {showSlider && <Slider/>}
         </>

@@ -176,19 +176,15 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading }) => {
     const pathname = usePathname();
     const [showBookSlider, setShowBookSlider] = useState(false);
 
-    const handleNavigation = async (path: string, route?: string) => {
+    const handleNavigation = async (route: string) => {
         try {
             setLoading(true)
-            const response = await axiosInstance.get(path);
+            const response = await axiosInstance.get('/check-user-authorization');
             if (response.data.status === "NEED_BOOK_CALL") {
                 sessionStorage?.setItem("is_slider_opened", "true");
                 setShowSlider(true);
             } else {
-                if(route){
-                    router.push(route)
-                } else {
-                    router.push(path);
-                }
+                router.push(route)
             }
         
         } catch (error) {
@@ -200,11 +196,7 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading }) => {
                 } else {
                     setShowSlider(false);
                     setShowBookSlider(false);
-                    if(route){
-                        router.push(route)
-                    } else {
-                        router.push(path);
-                    }
+                    router.push(route);
                 }
             } else {
                 console.error("Error fetching data:", error);
@@ -220,19 +212,19 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading }) => {
     return (
         <Box sx={sidebarStyles.container} >
             <List sx={sidebarStyles.menu}>
-                <ListItem button onClick={() => handleNavigation('/check-user-authorization', '/dashboard')} sx={isActive('/dashboard') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
+                <ListItem button onClick={() => handleNavigation('/dashboard')} sx={isActive('/dashboard') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
                         <SpaceDashboardIcon />
                     </ListItemIcon>
                     <ListItemText primary="Dashboard" />
                 </ListItem>
-                <ListItem button onClick={() => handleNavigation('/check-user-authorization', '/leads')} sx={isActive('/leads') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
+                <ListItem button onClick={() => handleNavigation('/leads')} sx={isActive('/leads') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
                         <LeadsIcon />
                     </ListItemIcon>
                     <ListItemText primary="Contacts" />
                 </ListItem>
-                <ListItem button onClick={() => handleNavigation('/check-user-authorization', '/data-sync')} sx={isActive('/data-sync') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
+                <ListItem button onClick={() => handleNavigation('/data-sync')} sx={isActive('/data-sync') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
                         <CategoryIcon />
                     </ListItemIcon>
@@ -244,7 +236,7 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading }) => {
                     </ListItemIcon>
                     <ListItemText primary="Prospect" />
                 </ListItem> */}
-                <ListItem button onClick={() => handleNavigation('/check-user-authorization','/integrations')} sx={isActive('/integrations') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
+                <ListItem button onClick={() => handleNavigation('/integrations')} sx={isActive('/integrations') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
                         <IntegrationsIcon />
                     </ListItemIcon>
@@ -256,7 +248,7 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading }) => {
                     </ListItemIcon>
                     <ListItemText primary="Analytics" />
                 </ListItem> */}
-                <ListItem button onClick={() => handleNavigation('/check-user-authorization', '/suppressions')} sx={isActive('/suppressions') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
+                <ListItem button onClick={() => handleNavigation('/suppressions')} sx={isActive('/suppressions') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
                         <FeaturedPlayListIcon />
                     </ListItemIcon>
@@ -284,7 +276,7 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading }) => {
             }}>
                 <SetupSection meData={meData ? meData : { percent_steps: 0 }} />
                 <Box sx={sidebarStyles.settings}>
-                    <ListItem button onClick={() => handleNavigation('/check-user-authorization', 'settings?section=accountDetails')} sx={isActive('/settings') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
+                    <ListItem button onClick={() => handleNavigation('settings?section=accountDetails')} sx={isActive('/settings') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
                         <ListItemIcon sx={sidebarStyles.listItemIcon}>
                             <SettingsIcon />
                         </ListItemIcon>

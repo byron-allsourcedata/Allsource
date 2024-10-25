@@ -63,6 +63,16 @@ class PlansPersistence:
             User.id == user_id
         ).first()
 
+    def get_user_subscription_with_trial_status(self, user_id):
+        result = (
+            self.db.query(UserSubscriptions, SubscriptionPlan.is_free_trial, SubscriptionPlan.trial_days)
+            .join(User, User.current_subscription_id == UserSubscriptions.id)
+            .join(SubscriptionPlan, SubscriptionPlan.id == UserSubscriptions.plan_id)
+            .filter(User.id == user_id)
+            .first()
+        )
+        return result
+
     def get_plan_by_price_id(self, price_id):
         subscription_plan = self.db.query(SubscriptionPlan).filter(
             SubscriptionPlan.stripe_price_id == price_id).first()
@@ -80,4 +90,3 @@ class PlansPersistence:
             UserSubscriptions.plan_end.desc()
         ).first()
         return subscription_plan
-
