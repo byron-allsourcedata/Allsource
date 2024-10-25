@@ -74,11 +74,10 @@ import OmnisendDataSync from "./OmnisendDataSync";
       handleIntegrationsSync();
     }, [service_name]);
   
-    const statusIcon = (status: string) => {
-      switch (status) {
-        case "success":
+    const statusIcon = (status: boolean) => {
+      if (status)
           return <CheckCircleIcon sx={{ color: "green", fontSize: "16px" }} />;
-        case "error":
+      else
           return (
             <Tooltip
               title={"Please choose repair sync in action section."}
@@ -108,9 +107,6 @@ import OmnisendDataSync from "./OmnisendDataSync";
               />
             </Tooltip>
           );
-        default:
-          return null;
-      }
     };
   
     const platformIcon = (platform: string) => {

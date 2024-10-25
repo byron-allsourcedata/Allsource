@@ -52,10 +52,10 @@ async def process_data_sync(message_body, session):
         suppression_persistence=SuppressionPersistence(session)
     )
     with integration_service as service:
-        service.klaviyo.process_data_sync(message_body)
+        await service.klaviyo.process_data_sync(message_body)
         service.meta.process_data_sync(message_body)
-        service.omnisend.process_data_sync(message_body)
-        service.mailchimp.process_data_sync(message_body)
+        await service.omnisend.process_data_sync(message_body)
+        await service.mailchimp.process_data_sync(message_body)
 
 async def consume(rmq_connection: RabbitMQConnection, db_session):
     connection = await rmq_connection.connect()

@@ -1,4 +1,7 @@
+import asyncio
+from datetime import timedelta
 import re
+import time
 from persistence.leads_persistence import LeadsPersistence, LeadUser, FiveXFiveUser
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence, IntegrationUserSync
@@ -35,12 +38,10 @@ class KlaviyoIntegrationsService:
                 'content-type': 'application/json'
             }
         response = self.client.request(method, url, headers=headers, json=json, data=data, params=params)
-
         if response.is_redirect:
             redirect_url = response.headers.get('Location')
             if redirect_url:
                 response = self.client.request(method, redirect_url, headers=headers, json=json, data=data, params=params)
-
         return response
 
     def get_credentials(self, domain_id: str):
@@ -52,6 +53,8 @@ class KlaviyoIntegrationsService:
         credential = self.get_credentials(domain_id)
         if credential:
             credential.access_token = api_key
+            credential.is_failed = False
+            credential.error_message = None
             self.integrations_persisntece.db.commit()
             return credential
         integartions = self.integrations_persisntece.create_integration({
@@ -71,31 +74,45 @@ class KlaviyoIntegrationsService:
         credentials = self.get_credentials(domain_id)
         if not credentials:
             return
-        return self.__get_list(credentials.access_token)
+        return self.__get_list(credentials.access_token, credentials)
 
-    def __get_list(self, access_token: str):
+    def __get_list(self, access_token: str, credential = None):
         response = self.client.get('https://a.klaviyo.com/api/lists/', headers={
              'Authorization': f'Klaviyo-API-Key {access_token}',
              'revision': '2023-08-15'
              })
+        if response.status_code == 401 and credential:
+            credential.error_message = 'Invalid API KEY'
+            credential.is_failed = True
+            self.integrations_persisntece.db.commit()
+            return
         return [self.__mapped_list(list) for list in response.json().get('data')]
 
 
-    def __get_tags(self, access_token: str):
+    def __get_tags(self, access_token: str, credential):
         response = self.__handle_request(method='GET', url="https://a.klaviyo.com/api/tags/", api_key=access_token)
+        if response.status_code == 401 and credential:
+            credential.error_message = 'Invalid API KEY'
+            credential.is_failed = True
+            self.integrations_persisntece.db.commit()
+            return
         return [self.__mapped_tags(tag) for tag in response.json().get('data')]
 
     def get_tags(self, domain_id: int):
         credentials = self.get_credentials(domain_id)
-        return self.__get_tags(credentials.access_token)
+        return self.__get_tags(credentials.access_token, credentials)
 
 
     def create_tags(self, tag_name: str, domain_id: int):
-        credentail = self.get_credentials(domain_id)
-        response = self.__handle_request(method='POST', url='https://a.klaviyo.com/api/tags/', api_key=credentail.access_token, json=self.__mapped_tags_json_to_klaviyo(tag_name))
+        credential = self.get_credentials(domain_id)
+        response = self.__handle_request(method='POST', url='https://a.klaviyo.com/api/tags/', api_key=credential.access_token, json=self.__mapped_tags_json_to_klaviyo(tag_name))
         if response.status_code == 201 or response.status_code == 200:
             return self.__mapped_tags(response.json().get('data'))
-        else: raise HTTPException(status_code=400, detail={'status': IntegrationsStatus.CREATE_IS_FAILED.value})
+        elif response.status_code == 401:
+            credential.error_message = 'Invalid API Key'
+            credential.is_failed = True
+            self.integrations_persisntece.db.commit()
+            raise HTTPException(status_code=400, detail={'status': IntegrationsStatus.CREATE_IS_FAILED.value})
         
     
     async def edit_sync(self, leads_type: str, list_id: str, list_name: str, integrations_users_sync_id: int,  data_map: List[DataMap], domain_id: int, created_by: str,tags_id: str = None):
@@ -141,14 +158,17 @@ class KlaviyoIntegrationsService:
 
 
     def create_list(self, list_name: str, domain_id: int):
-        credentail = self.get_credentials(domain_id)
+        credential = self.get_credentials(domain_id)
         response = self.client.post('https://a.klaviyo.com/api/lists', headers={
-            'Authorization': f'Klaviyo-API-Key {credentail.access_token}',
+            'Authorization': f'Klaviyo-API-Key {credential.access_token}',
             'revision': '2024-07-15',
             'accept': 'application/json', 
             'content-type': 'application/json'
             }, data=json.dumps( { "data": { "type": "list", "attributes": { "name": list_name } } } ) )
-        if response.status_code != 201:
+        if response.status_code == 401:
+            credential.error_message = 'Invalid API Key'
+            credential.is_failed = True
+            self.integrations_persisntece.db.commit()
             raise HTTPException(status_code=400, detail={'status': IntegrationsStatus.CREATE_IS_FAILED.value})
         return self.__mapped_list(response.json().get('data'))
 
@@ -222,47 +242,115 @@ class KlaviyoIntegrationsService:
         await publish_rabbitmq_message(
             connection=connection,
             queue_name=self.QUEUE_DATA_SYNC, 
-            message_body=message)
-    
+            message_body=message)        
 
-    def process_data_sync(self, message):
+    async def process_lead_sync(self, rabbitmq_connection, user_domain_id, behavior_type, lead_user, stage, next_try):
+        await publish_rabbitmq_message(rabbitmq_connection, self.QUEUE_DATA_SYNC,
+                                    {'domain_id': user_domain_id, 'leads_type': behavior_type, 'lead': {
+                                        'id': lead_user.id,
+                                        'five_x_five_user_id': lead_user.five_x_five_user_id
+                                    }, 'stage': stage, 'next_try': next_try})
+
+
+    async def process_data_sync(self, message):
         sync = None
         try:
             sync = IntegrationUserSync(**message.get('sync'))
-        except: pass
+        except Exception as e:
+            ...
         leads_type = message.get('leads_type')
-        domain_id = message.get('domain_id')
-        lead = LeadUser(**message.get('lead')) if message.get('lead') else None
+        domain_id = message.get('domain_id', None)
+        lead = message.get('lead', None)
+        if domain_id and lead:
+            lead = self.leads_persistence.get_leads_domain(domain_id=domain_id, id=lead.get('id'))
+        stage = message.get('stage') if message.get('stage') else 1
+        next_try = message.get('next_try') if message.get('next_try') else None
+
+        rabbitmq_connection = RabbitMQConnection()
+        connection = await rabbitmq_connection.connect()
+        channel = await connection.channel()
+        await channel.declare_queue(
+            name=self.QUEUE_DATA_SYNC,
+            durable=True
+        )
+        logging.info("RabbitMQ queue declared.")
+
         domains = self.domain_persistence.get_domain_by_filter(**{'id': domain_id} if domain_id else {})
+        logging.info(f"Retrieved domains: {[domain.id for domain in domains]}",)
+
         for domain in domains:
             credentials = self.get_credentials(domain.id)
             if not credentials:
+                logging.warning("No credentials found for domain id %s.", domain.id)
                 return
+            
             data_syncs_list = self.sync_persistence.get_data_sync_filter_by(
                 domain_id=domain.id,
                 integration_id=credentials.id,
                 is_active=True
             )
-            if lead:
-                leads = [lead]
-            elif not leads_type or leads_type == 'allContacts':
-                leads = self.leads_persistence.get_leads_domain(domain.id) 
-            else:
-                leads = self.leads_persistence.get_leads_domain(domain.id, behavior_type=leads_type)
+
+            leads = [lead] if lead else (
+                self.leads_persistence.get_leads_domain(domain.id, behavior_type=leads_type)
+                if leads_type and leads_type != 'allContacts' else
+                self.leads_persistence.get_leads_domain(domain.id)
+            )
+
             for data_sync_item in data_syncs_list if not sync else [sync]:
-                if lead and lead.behavior_type != data_sync_item.leads_type or data_sync_item.leads_type in ('allContacts', None):
-                    return
-                if data_sync_item.data_map:
-                    data_map = data_sync_item.data_map
-                else: data_map = None
+                if lead and lead.behavior_type != data_sync_item.leads_type and data_sync_item.leads_type not in ('allContacts', None):
+                    logging.warning("Lead behavior type mismatch: %s vs %s", lead.behavior_type, data_sync_item.leads_type)
+                    continue
+
+                data_map = data_sync_item.data_map if data_sync_item.data_map else None
+
                 for lead in leads:
+                    if stage > 3:
+                        logging.info("Stage limit reached. Exiting.")
+                        return
+                    
+                    if next_try and datetime.now() < datetime.fromisoformat(next_try):
+                        await asyncio.sleep(1)
+                        logging.info("Processing lead sync with next try: %s", next_try)
+                        await self.process_lead_sync(
+                            lead_user=lead,
+                            rabbitmq_connection=connection, 
+                            user_domain_id=domain.id, 
+                            behavior_type=lead.behavior_type, 
+                            stage=stage, 
+                            next_try=next_try  
+                        )
+                        continue
                     
                     profile = self.__create_profile(lead.five_x_five_user_id, credentials.access_token, data_map)
-                    if profile:
-                        self.__add_profile_to_list(data_sync_item.list_id, profile.get('id'), credentials.access_token)
+
+                    if not profile:
+                        self.sync_persistence.db.query(IntegrationUserSync).filter(IntegrationUserSync.id == data_sync_item.id).update({
+                        'sync_status': False
+                        })
+                        self.sync_persistence.db.commit()
+                        logging.error("Profile creation failed for lead: %s", lead.five_x_five_user_id)
+                        if stage != 3:
+                            next_try_str = (datetime.now() + timedelta(hours=3)).isoformat()
+                            await self.process_lead_sync(
+                                lead_user=lead,
+                                rabbitmq_connection=connection, 
+                                user_domain_id=domain.id, 
+                                behavior_type=lead.behavior_type, 
+                                stage=stage + 1, 
+                                next_try=next_try_str
+                            )
+                        continue
+                    
+                    logging.info("Profile added successfully for lead: %s", lead.five_x_five_user_id)
+                    self.__add_profile_to_list(data_sync_item.list_id, profile.get('id'), credentials.access_token)
+                    self.sync_persistence.db.query(IntegrationUserSync).filter(IntegrationUserSync.id == data_sync_item.id).update({
+                        'sync_status': True
+                    })
+                    self.sync_persistence.db.commit()
                 self.sync_persistence.update_sync({
-                    'last_sync_date': datetime.now()
+                    'last_sync_date': datetime.now().isoformat()
                 }, id=data_sync_item.id)
+                logging.info("Sync updated for item id: %s", data_sync_item.id)
 
 
     def validate_and_format_phone(self, phone_number: str) -> str:
@@ -310,19 +398,19 @@ class KlaviyoIntegrationsService:
             }
         }
         json_data['data']['attributes'] = {k: v for k, v in json_data['data']['attributes'].items() if v is not None}
-        try:
-            response = self.__handle_request(
-                method='POST',
-                url='https://a.klaviyo.com/api/profiles/',
-                api_key=api_key,
-                json=json_data
-            )
+        response = self.__handle_request(
+            method='POST',
+            url='https://a.klaviyo.com/api/profiles/',
+            api_key=api_key,
+            json=json_data
+        )
 
-            if response.status_code != 201:
-                logging.error("Error response: %s", response.text)
-                return None 
-        except: return None
-        return response.json().get('data')
+        if response.status_code == 201:
+                return response.json().get('data')
+        if response.status_code == 409:
+            return {'id': response.json().get('errors')[0].get('meta').get('duplicate_profile_id')}
+        
+        
 
     def __add_profile_to_list(self, list_id: str, profile_id: str, api_key: str):
         response = self.__handle_request(method='POST', url=f'https://a.klaviyo.com/api/lists/{list_id}/relationships/profiles/',api_key=api_key, json={
@@ -332,7 +420,8 @@ class KlaviyoIntegrationsService:
                 "id": profile_id
                 }
             ]
-            }) 
+            })
+        
     def set_suppression(self, suppression: bool, domain_id: int):
             credential = self.get_credentials(domain_id)
             if not credential:
@@ -388,12 +477,17 @@ class KlaviyoIntegrationsService:
 
     def __map_properties(self, lead: FiveXFiveUser, data_map: List[DataMap]) -> dict:
         properties = {}
+        
         for mapping in data_map:
             five_x_five_field = mapping.get("type")  
             new_field = mapping.get("value")  
             value_field = getattr(lead, five_x_five_field, None)
-            if value_field is not None:
-                properties[new_field] = value_field
+            
+            if value_field is not None: 
+                if isinstance(value_field, datetime):
+                    properties[new_field] = value_field.isoformat() 
+                else:
+                    properties[new_field] = value_field 
         return properties
 
 

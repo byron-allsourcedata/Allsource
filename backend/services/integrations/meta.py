@@ -20,11 +20,15 @@ from datetime import datetime
 from schemas.integrations.integrations import IntegrationCredentials, DataMap
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 from typing import List
+from config.meta import MetaConfig
+
+APP_SERCRET = MetaConfig.app_secret
+APP_ID = MetaConfig.app_piblic
+
 
 class MetaIntegrationsService:
 
-    APP_SERCRET = '197b80d673337f0fda58b21e34dcb986'
-    APP_ID = '470766002467450'
+   
 
     def __init__(self, domain_persistence: UserDomainsPersistence, integrations_persistence: IntegrationsPresistence, leads_persistence: LeadsPersistence,
                 sync_persistence: IntegrationsUserSyncPersistence):
@@ -85,12 +89,11 @@ class MetaIntegrationsService:
         url = 'https://graph.facebook.com/v20.0/oauth/access_token'
         params = {
             'grant_type': 'fb_exchange_token',
-            'client_id': self.APP_ID,
-            'client_secret': self.APP_SERCRET,
+            'client_id': APP_ID,
+            'client_secret': APP_SERCRET,
             'fb_exchange_token': fb_exchange_token
         }
         response = self.__handle_request('GET', url=url, params=params)
-        print(response.json())
         if response.status_code != 200:
              raise HTTPException(status_code=400, detail={'status': 'Long-lived token unavailable'})
         data = response.json()
@@ -126,7 +129,6 @@ class MetaIntegrationsService:
         for sync in data_syncs:
             if sync.id == credentials.id and sync.leads_type == leads_type:
                 return
-        self.create_list(list_name, domain_id)
         sync = self.sync_persistence.create_sync({
             'integration_id': credentials.id,
             'list_id': list_id,
@@ -166,7 +168,9 @@ class MetaIntegrationsService:
         except: pass
         leads_type = message.get('leads_type')
         domain_id = message.get('domain_id')
-        lead = LeadUser(**message.get('lead')) if message.get('lead') else None
+        lead = message.get('lead', None)
+        if domain_id and lead:
+            lead = self.leads_persistence.get_leads_domain(domain_id=domain_id, id=lead.get('id'))
         domains = self.domain_persistence.get_domain_by_filter(**{'id': domain_id} if domain_id else {})
         for domain in domains:
             credentials = self.get_credentials(domain.id)
@@ -195,6 +199,8 @@ class MetaIntegrationsService:
                     'last_sync_date': datetime.now()
                 }, id=data_sync_item.id)
     
+
+    
     def __create_user(self, session_id: int, lead_id: int, custom_audience_id: str, access_token: str):
         lead_data = self.leads_persistence.get_lead_data(lead_id)
         profile = self.__mapped_meta_user(lead_data)
@@ -217,7 +223,6 @@ class MetaIntegrationsService:
             'payload': payload,
             'app_id': self.APP_ID
             })
-        print(response.json())
 
     def __mapped_meta_user(self, lead: FiveXFiveUser):
         first_email = (

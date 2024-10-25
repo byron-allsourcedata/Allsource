@@ -391,11 +391,12 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
     };
 
 
-    const handleNextTab = () => {
+    const handleNextTab = async() => {
         if (value === '1') {
             // Validate Tab 3
             if (isDropdownValid) {
                 // Proceed to next tab
+                await createList()
                 setValue((prevValue) => String(Number(prevValue) + 1));
             }
         }

@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { showToast } from "./ToastNotification";
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 
+
 interface MetaConnectPopupProps {
     open: boolean
     onClose: () => void
@@ -77,6 +78,7 @@ const MetaConnectButton = ({open, onClose, initAdId}: MetaConnectPopupProps) => 
     const [loading, setLoading] = useState(false)
     const [userID, setUserID] = useState(undefined)
     const [fullName, setFullName] = useState(undefined)
+    const appID = process.env.NEXT_PUBLIC_META_APP_ID
     const handleAdIdChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setAdId(event.target.value);
         setAdIdError(event.target.value === ''); // Set error if API Key is empty
@@ -143,6 +145,13 @@ const MetaConnectButton = ({open, onClose, initAdId}: MetaConnectPopupProps) => 
                     }
                 },
             }}
+            slotProps={{
+                backdrop: {
+                  sx: {
+                    backgroundColor: 'rgba(0, 0, 0, .1)'
+                  }
+                }
+              }}
         >
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 3.5, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
                 <Typography variant="h6" sx={{ textAlign: 'center', color: '#202124', fontFamily: 'Nunito Sans', fontWeight: '600', fontSize: '16px', lineHeight: 'normal' }}>
@@ -198,7 +207,7 @@ const MetaConnectButton = ({open, onClose, initAdId}: MetaConnectPopupProps) => 
                 sx={{ margin: 0}}
                 />
             <FacebookLogin
-                appId="470766002467450"
+                appId={appID || ''}
                 scope='ads_read,ads_management'
                 onSuccess={(response) => {
                     handleChangeAccessToken(response)
