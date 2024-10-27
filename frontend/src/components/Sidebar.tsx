@@ -192,10 +192,8 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading }) => {
                 if (error.response.data.status === "NEED_BOOK_CALL") {
                     sessionStorage?.setItem("is_slider_opened", "true");
                     setShowSlider(true);
-                    setShowBookSlider(true);
                 } else {
                     setShowSlider(false);
-                    setShowBookSlider(false);
                     router.push(route);
                 }
             } else {
