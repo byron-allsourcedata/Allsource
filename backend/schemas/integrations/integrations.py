@@ -81,6 +81,7 @@ class SyncCreate(BaseModel):
 
 class CreateListOrTags(BaseModel):
     name: str
+    sender_id: Optional[str] = None
     description: Optional[str] = None
 
 class ContactSuppression(BaseModel):

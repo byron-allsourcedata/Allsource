@@ -157,14 +157,14 @@ class KlaviyoIntegrationsService:
             message_body=message)
 
 
-    def create_list(self, list_name: str, domain_id: int):
+    def create_list(self, list, domain_id: int):
         credential = self.get_credentials(domain_id)
         response = self.client.post('https://a.klaviyo.com/api/lists', headers={
             'Authorization': f'Klaviyo-API-Key {credential.access_token}',
             'revision': '2024-07-15',
             'accept': 'application/json', 
             'content-type': 'application/json'
-            }, data=json.dumps( { "data": { "type": "list", "attributes": { "name": list_name } } } ) )
+            }, data=json.dumps( { "data": { "type": "list", "attributes": { "name": list.name } } } ) )
         if response.status_code == 401:
             credential.error_message = 'Invalid API Key'
             credential.is_failed = True

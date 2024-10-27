@@ -104,7 +104,7 @@ class MetaIntegrationsService:
         }
 
 
-    def create_list(self, name: str, domain_id: int, description: str = None):
+    def create_list(self, list, domain_id: int, description: str = None):
         credential = self.get_credentials(domain_id)
         if not credential:
             raise HTTPException(status_code=403, detail={'status': IntegrationsStatus.CREDENTIALS_NOT_FOUND.value})
@@ -112,7 +112,7 @@ class MetaIntegrationsService:
         fields = [
         ]
         params = {
-            'name': name,
+            'name': list.name,
             'subtype': 'CUSTOM',
             'description': description if description else None,
             'customer_file_source': 'USER_PROVIDED_ONLY',

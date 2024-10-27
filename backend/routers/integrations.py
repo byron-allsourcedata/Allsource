@@ -115,7 +115,12 @@ async def create_list(list_data: CreateListOrTags,
                       user=Depends(check_user_authorization), domain=Depends(check_pixel_install_domain)):
     with integrations_service as service:
         service = getattr(service, service_name)
-        return service.create_list(list_data.name, domain.id)
+        return service.create_list(list_data, domain.id)
+    
+@router.get('/sync/sender', status_code=200)
+async def get_sender(integrations_service: IntegrationService = Depends(get_integration_service), user = Depends(check_user_authorization), domain = Depends(check_pixel_install_domain)):
+    with integrations_service as service:
+        return service.sendlane.get_sender(domain.id)
 
 
 @router.post('/suppression/')

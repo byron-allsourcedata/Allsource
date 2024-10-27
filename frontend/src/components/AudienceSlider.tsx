@@ -19,6 +19,7 @@ import OnmisendDataSync from './OmnisendDataSync';
 import MailchimpConnect from './MailchimpConnect';
 import MailchimpDatasync from './MailchimpDatasync';
 import SendlaneConnect from './SendlaneConnect';
+import SendlaneDatasync from './SendlaneDatasync';
 
 interface AudiencePopupProps {
     open: boolean;
@@ -292,7 +293,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
     }
 
     const handleSendlaneIconPopupClose = () => {
-        setOpenmailchimpConnect(false)
+        setOpenSendlaneIconPopupOpen(false)
     }
 
     const handleSendlaneConnectOpen = () => {
@@ -675,6 +676,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
             <MailchimpDatasync data={null} open={mailchimpIconPopupOpen} onClose={handleMailchimpIconPopupIconClose} />
             <MailchimpConnect onSave={handleSaveSettingsMailchimp} open={openMailchimpConnect} handleClose={handleOpenMailchimpConnectClose} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'Mailchimp')?.access_token}  />
             <SendlaneConnect open={openSendlaneConnect} handleClose={handleSendlaneConnectClose} onSave={handleSaveSettingsSendlane} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'Sendlane')?.access_token} />
+            <SendlaneDatasync open={openSendlaneIconPopupOpen} onClose={handleSendlaneIconPopupClose} data={ null } />
         </>
     );
 };

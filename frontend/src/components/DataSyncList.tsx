@@ -29,6 +29,7 @@ import {
 import { datasyncStyle } from "@/app/data-sync/datasyncStyle";
 import MailchimpDatasync from "./MailchimpDatasync";
 import OmnisendDataSync from "./OmnisendDataSync";
+import SendlaneDatasync from "./SendlaneDatasync";
   
   interface DataSyncProps {
     service_name?: string
@@ -43,6 +44,8 @@ import OmnisendDataSync from "./OmnisendDataSync";
     const [metaIconPopupOpen, setMetaIconPopupOpen] = useState(false);
     const [mailchimpIconPopupOpen, setMailchimpIconPopupOpen] = useState(false)
     const [omnisendIconPopupOpen, setOmnisendIconPopupOpen] = useState(false)
+    const [sendlaneIconPopupOpen, setOpenSendlaneIconPopup] = useState(false)
+
     const handleSortRequest = (property: string) => {
       const isAsc = orderBy === property && order === "asc";
       setOrder(isAsc ? "desc" : "asc");
@@ -127,12 +130,15 @@ import OmnisendDataSync from "./OmnisendDataSync";
            return (
            <Image src={'/mailchimp-icon.svg'} alt='mailchimp' width={18} height={18} />
           )
+        case 'sendlane':
+           return (
+           <Image src={'/sendlane-icon.svg'} alt='mailchimp' width={18} height={18} />
+          )
         default:
           return null;
       }
     };
   
-    // Action
     const [anchorEl, setAnchorEl] = useState(null);
     const [selectedId, setSelectedId] = useState<number | null>(null);
   
@@ -267,13 +273,17 @@ import OmnisendDataSync from "./OmnisendDataSync";
             setMailchimpIconPopupOpen(true);
           } else if (dataSyncPlatform === 'omnisend') {
             setOmnisendIconPopupOpen(true);
+          } else if (dataSyncPlatform === 'sendlane') {
+            setOpenSendlaneIconPopup(true);
           }
           setIsLoading(false);
           setAnchorEl(null);
         }
       };
   
-  
+    const handleSendlaneIconPopupClose = () => {
+      setOpenSendlaneIconPopup(false)
+    }
   
     const handleDelete = async () => {
       try {
@@ -638,6 +648,7 @@ import OmnisendDataSync from "./OmnisendDataSync";
         <ConnectMeta open={metaIconPopupOpen} onClose={handleMetaIconPopupClose} data={data.find(item => item.id === selectedId)}/>
         <MailchimpDatasync open={mailchimpIconPopupOpen} onClose={handleMailchimpIconPopupClose} data={data.find(item => item.id === selectedId)} />
         <OmnisendDataSync open={omnisendIconPopupOpen} onClose={handleOmnisendIconPopupClose} data={data.find(item => item.id === selectedId)} />
+        <SendlaneDatasync open={sendlaneIconPopupOpen} onClose={handleSendlaneIconPopupClose} data={data.find(item => item.id === selectedId)} />
       </Box>
   
     );

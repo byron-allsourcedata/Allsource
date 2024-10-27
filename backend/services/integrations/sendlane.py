@@ -42,7 +42,7 @@ class SendlaneIntegrationService:
                 'accept': 'application/json', 
                 'content-type': 'application/json'
             }
-        url = f'https://api.sendlane.com/v2/' + url
+        url = f'https://api.sendlane.com/v2' + url
         response = self.client.request(method, url, headers=headers, json=json, data=data, params=params)
 
         if response.is_redirect:
@@ -74,12 +74,12 @@ class SendlaneIntegrationService:
         response = self.__handle_request(url='/lists', api_key=api_key)
         return response
 
-    def get_lits(self, domain_id):
+    def get_list(self, domain_id):
         credential = self.get_credentials(domain_id)
         if not credential:
             return
         lists = self.__get_list(credential.access_token)
-        if list.status_code == 401:
+        if lists.status_code == 401:
             credential.is_failed = True
             credential.error_message = 'Invalid API Key'
             self.integrations_persisntece.db.commit()
@@ -110,22 +110,21 @@ class SendlaneIntegrationService:
             return
         return [self.__mapped_sender(sender) for sender in senders.json().get('data')]
 
-
-    def create_list(self, list_name: str, seder_id, domain_id: int):
+    def create_list(self, list, domain_id: int):
         credential = self.get_credentials(domain_id)
         if not credential:
             raise HTTPException(status_code=403, detail={'status': IntegrationsStatus.CREDENTIALS_NOT_FOUND})
         json = {
-            'name': list_name,
-            'sender_id': seder_id
+            'name': list.name,
+            'sender_id': list.sender_id
         }
-        response = self.__handle_request('/sender', method='POST', api_key=credential.access_token, json=json)
+        response = self.__handle_request('/lists', method='POST', api_key=credential.access_token, json=json)
         if response == 401:
             credential.is_failed = True
             credential.error_message = 'Invalid API Key'
             self.integrations_persisntece.db.commit()
             return
-        return response.json().get('data')
+        return self.__mapped_list(response.json().get('data'))
  
     async def create_sync(self, leads_type: str, list_id: str, list_name: str, data_map: List[DataMap], domain_id: int, created_by: str, tags_id: str = None):
         credentials = self.get_credentials(domain_id)
@@ -277,13 +276,13 @@ class SendlaneIntegrationService:
 
     def __mapped_list(self, list):
         return ListFromIntegration(
-            id=list.get('id'),
+            id=str(list.get('id')),
             list_name=list.get('name')
         )
     
     def __mapped_sender(self, sender):
         return SendlaneSender(
-            id=sender.get('id'),
+            id=str(sender.get('id')),
             sender_name=sender.get('from_name')
         )
     
