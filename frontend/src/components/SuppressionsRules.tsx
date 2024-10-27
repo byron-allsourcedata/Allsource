@@ -547,7 +547,7 @@ const SuppressionRules: React.FC = () => {
                                         borderRadius: '4px',
                                         width: '69%',
                                         height: '48px',
-                                        "@media (max-width: 900px)": { width: '100%', height: '48px' },
+                                        "@media (max-width: 700px)": { width: '100%', height: '48px' },
                                         fontFamily: 'Nunito',
                                         fontSize: '14px',
                                         fontWeight: 400,
