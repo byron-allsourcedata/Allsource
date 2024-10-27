@@ -34,8 +34,6 @@ import OmnisendConnect from "@/components/OmnisendConnect";
 import MailchimpConnect from "@/components/MailchimpConnect";
 import RevenueTracking from "@/components/RevenueTracking";
 import SendlaneConnect from "@/components/SendlaneConnect";
-
-
 interface IntegrationBoxProps {
     image: string;
     handleClick?: () => void;
@@ -331,7 +329,6 @@ const UserIntegrationsList = ({ integrationsCredentials, changeTab = () => { }, 
             handleClose={handleClose}
             onSave={() => { }}  
             initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'Shopify')?.access_token}
-            initShopDomain={integrationsCredentials?.find(integration => integration.service_name === 'Shopify')?.shop_domain}
         />
         <BCommerceConnect 
             open={openBigcommrceConnect} 

@@ -61,6 +61,8 @@ axiosInterceptorInstance.interceptors.response.use(
             case "NEED_CONFIRM_EMAIL":
               navigateTo("/email-verificate");
               break;
+            case "PIXEL_INSTALLATION_NEEDED": 
+              break;
             case "FILL_COMPANY_DETAILS":
               navigateTo("/account-setup");
               break;

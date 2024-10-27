@@ -30,9 +30,10 @@ import { datasyncStyle } from "@/app/data-sync/datasyncStyle";
 import MailchimpDatasync from "./MailchimpDatasync";
 import OmnisendDataSync from "./OmnisendDataSync";
 import SendlaneDatasync from "./SendlaneDatasync";
-  
+import CustomTablePagination from "./CustomTablePagination";
+
   interface DataSyncProps {
-    service_name?: string
+    service_name?: string | null
   } 
   
   const DataSyncList = ({service_name}: DataSyncProps) => {
@@ -44,8 +45,11 @@ import SendlaneDatasync from "./SendlaneDatasync";
     const [metaIconPopupOpen, setMetaIconPopupOpen] = useState(false);
     const [mailchimpIconPopupOpen, setMailchimpIconPopupOpen] = useState(false)
     const [omnisendIconPopupOpen, setOmnisendIconPopupOpen] = useState(false)
+    const [page, setPage] = useState(0);
+    const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [totalRows, setTotalRows] = useState(0);
+    const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
     const [sendlaneIconPopupOpen, setOpenSendlaneIconPopup] = useState(false)
-
     const handleSortRequest = (property: string) => {
       const isAsc = orderBy === property && order === "asc";
       setOrder(isAsc ? "desc" : "asc");
@@ -64,8 +68,28 @@ import SendlaneDatasync from "./SendlaneDatasync";
         const response = await axiosInstance.get('/data-sync/sync', {
           params: params
         });
-  
+        const { length: count } = response.data;
         setData(response.data);
+        setTotalRows(count);
+      let newRowsPerPageOptions: number[] = []; 
+            if (count <= 10) {
+                newRowsPerPageOptions = [5, 10]; 
+            } else if (count <= 50) {
+                newRowsPerPageOptions = [10, 20]; 
+            } else if (count <= 100) {
+                newRowsPerPageOptions = [10, 20, 50]; 
+            } else if (count <= 300) {
+                newRowsPerPageOptions = [10, 20, 50, 100]; 
+            } else if (count <= 500) {
+                newRowsPerPageOptions = [10, 20, 50, 100, 300]; 
+            } else {
+                newRowsPerPageOptions = [10, 20, 50, 100, 300, 500]; 
+            }
+            if (!newRowsPerPageOptions.includes(count)) {
+                newRowsPerPageOptions.push(count);
+                newRowsPerPageOptions.sort((a, b) => a - b);
+            }
+            setRowsPerPageOptions(newRowsPerPageOptions);
       } catch (error) {
       }
       finally {
@@ -138,7 +162,14 @@ import SendlaneDatasync from "./SendlaneDatasync";
           return null;
       }
     };
+    const handleChangePage = (_: React.MouseEvent<HTMLButtonElement> | null, newPage: number) => {
+      setPage(newPage);
+    };
   
+    const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+      setRowsPerPage(parseInt(event.target.value, 10));
+      setPage(0);
+    };
     const [anchorEl, setAnchorEl] = useState(null);
     const [selectedId, setSelectedId] = useState<number | null>(null);
   
@@ -417,7 +448,7 @@ import SendlaneDatasync from "./SendlaneDatasync";
                 </TableRow>
               </TableHead>
               <TableBody>
-                {data.map((row, index) => (
+                {data.slice(page * rowsPerPage, (page + 1) * rowsPerPage).map((row, index) => (
                   <TableRow
                     key={row.id}
                     sx={{
@@ -643,6 +674,19 @@ import SendlaneDatasync from "./SendlaneDatasync";
               </Button>
             </Box>
           </Popover>
+          {
+            totalRows > 10 && (
+              <Box sx={{ display: 'flex', justifyContent: 'flex-end', padding: '16px' }}>
+                <CustomTablePagination
+                  count={totalRows}
+                  page={page}
+                  rowsPerPage={rowsPerPage}
+                  onPageChange={handleChangePage}
+                  onRowsPerPageChange={handleChangeRowsPerPage}
+                  rowsPerPageOptions={rowsPerPageOptions} />
+              </Box>
+            ) 
+          }
         </Box>
         <ConnectKlaviyo open={klaviyoIconPopupOpen} onClose={handleKlaviyoIconPopupClose} data={data.find(item => item.id === selectedId)}/>
         <ConnectMeta open={metaIconPopupOpen} onClose={handleMetaIconPopupClose} data={data.find(item => item.id === selectedId)}/>

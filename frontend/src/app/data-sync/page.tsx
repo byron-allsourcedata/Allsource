@@ -88,7 +88,7 @@ const DataSync = () => {
       const response = await axiosInstance.get('/data-sync/sync', {
         params: params
       });
-      const { count } = response.data;
+      const { count } = response.data.length;
 
       setData(response.data);
       setTotalRows(count);
@@ -108,7 +108,7 @@ const DataSync = () => {
             }
             if (!newRowsPerPageOptions.includes(count)) {
                 newRowsPerPageOptions.push(count);
-                newRowsPerPageOptions.sort((a, b) => a - b); // Ensure the options remain sorted
+                newRowsPerPageOptions.sort((a, b) => a - b);
             }
             setRowsPerPageOptions(newRowsPerPageOptions); // Update the options
     } catch (error) {
@@ -547,17 +547,9 @@ const DataSync = () => {
               </Button>
             </Box>
           ) : !isLoading && (
-            <><DataSyncList /><>
-              <Box sx={{ display: 'flex', justifyContent: 'flex-end', padding: '16px' }}>
-                <CustomTablePagination
-                  count={totalRows}
-                  page={page}
-                  rowsPerPage={rowsPerPage}
-                  onPageChange={handleChangePage}
-                  onRowsPerPageChange={handleChangeRowsPerPage}
-                  rowsPerPageOptions={rowsPerPageOptions} />
-              </Box>
-            </></>)
+            <>
+            <DataSyncList service_name={null} />
+            </>)
           }
       </Box>
     </Box>
@@ -571,4 +563,4 @@ const DatasyncPage: React.FC = () => {
   return <DataSync />;
 };
 
-      export default DatasyncPage;
+export default DatasyncPage;

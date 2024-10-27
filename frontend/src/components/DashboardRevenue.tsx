@@ -364,9 +364,9 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
     const visitorSeries = series.filter((s) => s.id === 'visitors') as [];
 
     const dataChart = [
-        { id: 'Total Visitors', value: 50000 },
-        { id: 'View Products', value: 35000 },
-        { id: 'Abandoden cart', value: 10000 },
+        { id: 'Total Visitors', value: values.totalVisitors },
+        { id: 'View Products', value: values.viewProducts },
+        { id: 'Abandoden cart', value: values.totalAbandonedCart },
     ];
 
     const distribution = [
@@ -398,7 +398,6 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
         id: 'meta',
         label: 'Meta',
         curve: 'linear',
-        stack: 'total',
         showMark: false,
         area: false,
         stackOrder: 'ascending',
@@ -1029,6 +1028,32 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                         fontSize: '8px !important'
                                     }
                                  }}>
+                                    {loading ? <Box
+                                    sx={{
+                                        position: 'relative',
+                                        background: 'rgba(255, 255, 255, 0.8)',
+                                        display: 'flex',
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                        zIndex: 1000,
+                                        overflow: 'hidden'
+                                    }}
+                                >
+                                    <Box
+                                        sx={{
+                                            border: '8px solid #f3f3f3',
+                                            borderTop: '8px solid #4285f4',
+                                            borderRadius: '50%',
+                                            width: '40px',
+                                            height: '40px',
+                                            animation: 'spin 1s linear infinite',
+                                            '@keyframes spin': {
+                                                '0%': { transform: 'rotate(0deg)' },
+                                                '100%': { transform: 'rotate(360deg)' },
+                                            },
+                                        }}
+                                    />
+                                </Box> :
                                     <PieChart
                                         colors={country_color}
                                         margin={{
@@ -1059,7 +1084,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                             legend: { hidden: true },
                                         }}
                                     >
-                                    </PieChart>
+                                    </PieChart>}
                                 </Box>
                             </CardContent>
 
@@ -1071,6 +1096,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                         sx={{ alignItems: 'start', gap: 2, pb: 2 }}
                                     >
                                         <Stack sx={{ gap: 1, flexGrow: 1 }}>
+                                        {!loading && (
                                             <Stack
                                                 direction="row"
                                                 sx={{
@@ -1093,7 +1119,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                                         }}
                                                     /> {type.name}
                                                 </Typography>
-                                            </Stack>
+                                            </Stack>)}
                                         </Stack>
                                     </Stack>
                                 ))}
