@@ -48,7 +48,7 @@ const TabPanel: React.FC<TabPanelProps> = ({ children, value, index, ...other })
             aria-labelledby={`tab-${index}`}
             {...other}
         >
-            {value === index && <Box sx={{ pt: 3, margin: 0, }}>{children}</Box>}
+            {value === index && <Box sx={{ pt: 3, margin: 0, pl:'7rem', pr: '7rem', '@media (max-width: 800px)' :{pl:2, pr:2} }}>{children}</Box>}
         </div>
     );
 };
