@@ -165,6 +165,13 @@ class SendlaneIntegrationService:
             queue_name=self.QUEUE_DATA_SYNC, 
             message_body=message)
 
+    async def process_lead_sync(self, rabbitmq_connection, user_domain_id, behavior_type, lead_user, stage, next_try):
+        await publish_rabbitmq_message(rabbitmq_connection, self.QUEUE_DATA_SYNC,
+                                    {'domain_id': user_domain_id, 'leads_type': behavior_type, 'lead': {
+                                        'id': lead_user.id,
+                                        'five_x_five_user_id': lead_user.five_x_five_user_id
+                                    }, 'stage': stage, 'next_try': next_try})
+
     async def process_data_sync(self, message):
         sync = None
         try:
@@ -235,7 +242,6 @@ class SendlaneIntegrationService:
                             next_try=next_try  
                         )
                         continue
-                    
                     profile = self.__create_contact(lead.five_x_five_user_id, credentials, data_sync_item.list_id)
                     if not profile:
                         data_sync_item.sync_status = False
@@ -255,9 +261,9 @@ class SendlaneIntegrationService:
                     data_sync_item.sync_status = True
                     self.sync_persistence.db.commit()
                     logging.info("Profile added successfully for lead: %s", lead.five_x_five_user_id)
-                self.sync_persistence.update_sync({
-                    'last_sync_date': datetime.now()
-                }, id=data_sync_item.id)
+                    self.sync_persistence.update_sync({
+                        'last_sync_date': datetime.now()
+                    }, id=data_sync_item.id)
                 logging.info("Sync updated for item id: %s", data_sync_item.id)
 
     def __create_contact(self, lead_id: int, credential: UserIntegration, list_id: int):
@@ -265,14 +271,18 @@ class SendlaneIntegrationService:
         try:
             profile = self.__mapped_sendlane_contact(lead_data)
         except: return
-        repsonse = self.__handle_request(f'/{list_id}/contact', api_key=credential.access_token, json=profile.model_dump())
-        if repsonse.status_code == 401:
+        json = {
+            'contacts': [{**profile.model_dump()}]
+        }
+        respsonse = self.__handle_request(f'/lists/{list_id}/contacts', api_key=credential.access_token, json=json, method="POST")
+        print(respsonse.json())
+        if respsonse.status_code == 401:
             credential.is_failed = True
             credential.error_message = 'Invalid API Key'
             self.integrations_persisntece.db.commit()
             return
-        if repsonse.status_code == 202:
-            return repsonse.json()
+        if respsonse.status_code == 202:
+            return respsonse
 
     def __mapped_list(self, list):
         return ListFromIntegration(
@@ -322,10 +332,15 @@ class SendlaneIntegrationService:
             getattr(lead, 'company_phone', None)
         )
 
+        if first_phone:
+            first_phone = first_phone.split(',')[-1]
+
+        if first_email:
+            first_email = first_email.split(',')[0]
 
         return SendlaneContact(
             email=first_email,
-            first_email=lead.first_name,
-            last_name=lead.last_name,
+            first_name = lead.first_name or "Unknown",
+            last_name=lead.last_name or "Unknown",
             phone=self.validate_and_format_phone(first_phone)
         )

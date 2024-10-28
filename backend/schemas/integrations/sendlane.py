@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr
-from typing import List, Any
+from typing import List, Any, Optional
 
 
 
@@ -33,8 +33,8 @@ class SendlaneSender(BaseModel):
     sender_name: str
 
 class SendlaneContact(BaseModel):
-    email: EmailStr
-    first_name: str
-    last_name: str
-    phone: str
+    email: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    phone: Optional[str] = None
     email_consent: bool = True

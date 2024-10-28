@@ -52,6 +52,7 @@ async def process_data_sync(message_body, session):
         suppression_persistence=SuppressionPersistence(session)
     )
     with integration_service as service:
+        await service.sendlane.process_data_sync(message_body)
         await service.klaviyo.process_data_sync(message_body)
         service.meta.process_data_sync(message_body)
         await service.omnisend.process_data_sync(message_body)
