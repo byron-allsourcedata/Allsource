@@ -27,6 +27,7 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO)
 
 QUEUE_CREDITS_CHARGING = 'credits_charging'
+QUANTITY = 100
 
 
 async def on_message_received(message, session):
@@ -50,20 +51,19 @@ async def on_message_received(message, session):
             .all()
         )
 
-        quantity = len(lead_users)
+        lead_user_count = len(lead_users)
 
-        if quantity > 0:
+        if lead_user_count > 0:
             if user.leads_credits > 0:
-                activate_count = min(user.leads_credits, quantity)
+                activate_count = min(user.leads_credits, lead_user_count)
                 for lead_user in lead_users[:activate_count]:
                     lead_user.is_active = True
                 user.leads_credits -= activate_count
                 session.commit()
             else:
                 if user.is_leads_auto_charging:
-                    if quantity >= 100:
-                        quantity -= 100
-                        result = purchase_product(customer_id, subscription_plan.stripe_price_id, 100, 'leads_credits')
+                    if lead_user_count >= QUANTITY:
+                        result = purchase_product(customer_id, subscription_plan.stripe_price_id, QUANTITY, 'leads_credits')
                         if result['success']:
                             stripe_payload = result['stripe_payload']
                             transaction_id = stripe_payload.get("id")
@@ -79,12 +79,12 @@ async def on_message_received(message, session):
                                         created_at=datetime.now(timezone.utc),
                                         stripe_request_created_at=created_at,
                                         status=status,
-                                        amount_credits=100,
+                                        amount_credits=QUANTITY,
                                         type='leads_credits'
                                     )
                                     session.add(payment_transaction_obj)
                                     session.flush()
-                                    for lead_user in lead_users[:100]:
+                                    for lead_user in lead_users[:QUANTITY]:
                                         lead_user.is_active = True
                                     session.commit()
                         else:
