@@ -122,7 +122,6 @@ class SendgridTemplate(Enum):
     CHANGE_EMAIL_TEMPLATE = 'change_email_template'
     TEAM_MEMBERS_TEMPLATE = 'team_members_template'
     PAYMENT_INVOICE_TEMPLATE = 'payment_invoice_template'
-    INVITE_TEMPLATE = 'invite_template'
 
 
 class ResetPasswordEnum(Enum):
