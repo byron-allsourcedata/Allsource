@@ -192,13 +192,14 @@ interface IntegrationsListProps {
     handleSaveMailchip: (new_integration: any) => void
     handleSaveSendlane: (new_integration: any) => void
     handleSaveShopify: (new_integration: any) => void
+    handleSaveMeta: (new_integration: any) => void
 }
 
 interface DataSyncIntegrationsProps {
     service_name: string | null
 }
 
-const UserIntegrationsList = ({ integrationsCredentials, changeTab = () => { }, integrations, handleSaveKlaviyo, handleSaveMailchip, handleSaveOmnisend, handleSaveSendlane, handleSaveShopify }: IntegrationsListProps) => {
+const UserIntegrationsList = ({ integrationsCredentials, changeTab = () => { }, integrations, handleSaveKlaviyo, handleSaveMailchip, handleSaveOmnisend, handleSaveSendlane, handleSaveShopify, handleSaveMeta }: IntegrationsListProps) => {
     const [activeService, setActiveService] = useState<string | null>(null);
     const [openAvalible, setOpenAvalible] = useState(false)
     const [openKlaviyoConnect, setOpenKlaviyoConnect] = useState(false)
@@ -322,7 +323,7 @@ const UserIntegrationsList = ({ integrationsCredentials, changeTab = () => { }, 
         <MetaConnectButton 
             open={openMetaConnect} 
             onClose={handleClose} 
-            initAdId={integrationsCredentials?.find(integration => integration.service_name === 'Meta')?.ad_account_id} 
+            onSave={handleSaveMeta}
         />
         <ShopifySettings 
             open={openShopifyConnect} 
@@ -354,7 +355,7 @@ const UserIntegrationsList = ({ integrationsCredentials, changeTab = () => { }, 
 };
 
 
-const IntegrationsAvailable = ({ integrationsCredentials: integrations, handleSaveKlaviyo, handleSaveMailchip, handleSaveOmnisend, handleSaveSendlane, handleSaveShopify }: IntegrationsListProps) => {
+const IntegrationsAvailable = ({ integrationsCredentials: integrations, handleSaveKlaviyo, handleSaveMailchip, handleSaveOmnisend, handleSaveSendlane, handleSaveShopify, handleSaveMeta }: IntegrationsListProps) => {
     const [search, setSearch] = useState<string>('');
     const [openMetaConnect, setOpenMetaConnect] = useState(false)
     const [openKlaviyoConnect, setOpenKlaviyoConnect] = useState(false)
@@ -445,7 +446,8 @@ const IntegrationsAvailable = ({ integrationsCredentials: integrations, handleSa
             <KlaviyoIntegrationPopup open={openKlaviyoConnect} handleClose={handleClose} onSave={handleSaveKlaviyo}/>
             <MetaConnectButton 
                 open={openMetaConnect} 
-                onClose={handleClose} 
+                onClose={handleClose}
+                onSave={handleSaveMeta}
             />
             <ShopifySettings open={openShopifyConnect} handleClose={handleClose} onSave={handleSaveShopify}/>
             <BCommerceConnect open={openBigcommrceConnect} handleClose={handleClose} />
@@ -1047,6 +1049,18 @@ const Integrations = () => {
       });
     };
 
+    const handleSaveSettingsMeta = (newIntegration: IntegrationCredentials) => {
+      setIntegrationsCredentials(prevIntegrations => {
+          if (prevIntegrations.some(integration => integration.service_name === 'Meta')) {
+              return prevIntegrations.map(integration =>
+                  integration.service_name === 'Meta' ? newIntegration : integration
+              );
+          } else {
+              return [...prevIntegrations, newIntegration];
+          }
+      });
+    };
+
     const handleSaveSettingsShopify = (newIntegration: IntegrationCredentials) => {
       setIntegrationsCredentials(prevIntegrations => {
           if (prevIntegrations.some(integration => integration.service_name === 'Shopify')) {
@@ -1173,6 +1187,7 @@ const Integrations = () => {
                                 handleSaveOmnisend={handleSaveSettingsOmnisend}
                                 handleSaveSendlane={handleSaveSettingsSendlane}
                                 handleSaveShopify={handleSaveSettingsShopify}
+                                handleSaveMeta={handleSaveSettingsMeta}
                             />
                         </TabPanel>
                         <TabPanel value="2" sx={{ px: 0 }}>
@@ -1184,6 +1199,7 @@ const Integrations = () => {
                               handleSaveOmnisend={handleSaveSettingsOmnisend}
                               handleSaveSendlane={handleSaveSettingsSendlane}
                               handleSaveShopify={handleSaveSettingsShopify}
+                              handleSaveMeta={handleSaveSettingsMeta}
                             />
                         </TabPanel>
                         <TabPanel value="3" sx={{ px: 0 }}>

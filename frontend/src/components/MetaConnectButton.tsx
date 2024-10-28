@@ -10,7 +10,40 @@ import axiosInstance from '@/axios/axiosInterceptorInstance';
 interface MetaConnectPopupProps {
     open: boolean
     onClose: () => void
-    initAdId?: string
+    onSave: (new_integration: any) => void
+}
+
+declare global {
+    interface Window {
+        fbAsyncInit: () => void;
+        FB: {
+            init: (options: { appId: string; cookie: boolean; xfbml: boolean; version: string }) => void;
+            login: (callback: (response: fb.AuthResponse) => void, options?: { scope?: string, config_id?: string, response_type?: string, override_default_response_type?: boolean }) => void;
+            api: (
+                path: string,
+                method: string,
+                params: Record<string, string>,
+                callback: (response: fb.ApiResponse) => void
+            ) => void;
+            getAuthResponse: () => fb.AuthResponse;
+        };
+    }
+}
+
+namespace fb {
+    export interface AuthResponse {
+        status: string;
+        authResponse: {
+            code: string;
+            userID?: string;
+        };
+    }
+
+    export interface ApiResponse {
+        id?: string;
+        name?: string;
+        error?: any;
+    }
 }
 
 const metaStyles = {
@@ -71,57 +104,79 @@ const metaStyles = {
       
 }
 
-const MetaConnectButton = ({open, onClose, initAdId}: MetaConnectPopupProps) => {
+const MetaConnectButton = ({open, onClose, onSave}: MetaConnectPopupProps) => {
     const [accessToken, setAccessToken] = useState('')
-    const [adId, setAdId] = useState('');
-    const [adIdError, setAdIdError] = useState(false);
     const [loading, setLoading] = useState(false)
-    const [userID, setUserID] = useState(undefined)
-    const [fullName, setFullName] = useState(undefined)
     const appID = process.env.NEXT_PUBLIC_META_APP_ID
-    const handleAdIdChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setAdId(event.target.value);
-        setAdIdError(event.target.value === ''); // Set error if API Key is empty
-    };
-    useEffect(() => {
-        setAdId(initAdId || '')
-    }, [initAdId])
+    const configID = process.env.NEXT_META_LOGIN_CONFIG
 
-    const handleChangeAccessToken = (response: any) => {
-        setAccessToken(response.accessToken)
-    }
-
-    const handleProfileSuccess = (response: any) => {
-        setUserID(response.id);
-        setFullName(response.name);
-    };
 
     useEffect(() => {
-        if (accessToken && userID) {
-            handleCreateIntegration(userID, fullName);
-        }
-    }, [accessToken, userID, fullName]);
+        const loadFacebookSDK = () => {
+            window.fbAsyncInit = () => {
+                window.FB.init({
+                    appId: appID ?? '',
+                    cookie: true,
+                    xfbml: true,
+                    version: 'v16.0',
+                });
+            };
+            (function (d, s, id) {
+                const fjs = d.getElementsByTagName(s)[0];
+                if (d.getElementById(id)) return;
+                const js = d.createElement(s) as HTMLScriptElement;
+                js.id = id;
+                js.src = "https://connect.facebook.net/en_US/sdk.js";
+                fjs?.parentNode?.insertBefore(js, fjs);
+            })(document, 'script', 'facebook-jssdk');
+        };
+        loadFacebookSDK();
+    }, [appID]);
 
-    const handleCreateIntegration = async(userID?: string, fullName?: string) => {
-        setLoading(true)
-        const response = await axiosInstance.post('/integrations/', {
-            meta: {
-                ad_account_id: adId,
-                access_token: accessToken,
-                platform_user_id: userID,
-                full_name: fullName
+    const handleLogin = () => {
+        window.FB.login(
+            (response) => {
+                console.log(response)
+                if (response.status === 'connected') {
+                    setAccessToken(response.authResponse.code);
+                } else {
+                    console.log('Login failed!');
+                }
+            },
+            { config_id: configID, response_type: 'code',
+                override_default_response_type: true}
+        );
+    };
+
+    useEffect(() => {
+        if (accessToken) {
+            const saveMeta = async() => {
+                await handleCreateIntegration();
+                onSave({'service_name': 'Meta', is_failed: false})
             }
-        }, {
-            params: {
-                service_name: 'meta'
-            }
-        })
-        if(response.status === 200) {
-            showToast('Connect to Meta Successfuly')
+            saveMeta()
         }
-        setLoading(false)
-        onClose()
-    }
+    }, [accessToken]);
+
+    const handleCreateIntegration = async () => {
+        setLoading(true);
+        try {
+            const response = await axiosInstance.post('/integrations/', {
+                meta: {
+                    access_token: accessToken,
+                },
+            }, {
+                params: { service_name: 'meta' },
+            });
+            if (response.status === 200) {
+                showToast('Connect to Meta Successfuly');
+            }
+        } finally {
+            setLoading(false);
+            onClose();
+        }
+    };
+
 
     return (
         <Drawer
@@ -193,61 +248,32 @@ const MetaConnectButton = ({open, onClose, initAdId}: MetaConnectPopupProps) => 
             }}>
             login to your Facebook
             </Typography>
-            <TextField
-                label="AD ID"
-                variant="outlined"
+            <Box>
+                <Button
                 fullWidth
-                margin="normal"
-                error={adIdError}
-                helperText={adIdError ? 'AD ID is required' : ''}
-                value={adId}
-                onChange={handleAdIdChange}
-                InputLabelProps={{ sx: metaStyles.inputLabel }}
-                InputProps={{ sx: metaStyles.formInput }}
-                sx={{ margin: 0}}
-                />
-            <FacebookLogin
-                appId={appID || ''}
-                scope='ads_read,ads_management'
-                onSuccess={(response) => {
-                    handleChangeAccessToken(response)
+                onClick={handleLogin}
+                variant="contained"
+                startIcon={<Image src='/facebook-icon.svg' alt='facebook' height={24} width={24} />}
+                sx={{
+                    backgroundColor: '#0066ff',
+                    fontFamily: "Nunito Sans",
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    lineHeight: '17px',
+                    letterSpacing: '0.25px',
+                    color: "#fff",
+                    textTransform: 'none',
+                    padding: '14.5px 24px',
+                    '&:hover': {
+                    backgroundColor: '#0066ff'
+                    },
+                    borderRadius: '6px',
+                    border: '1px solid #0066ff',
                 }}
-                onFail={(error) => {
-                console.log('Login Failed!', error);
-                }}
-                onProfileSuccess={(response) => {
-                    handleProfileSuccess(response)
-                }}
-                render={({ onClick, logout }) => (
-                <Box>
-                    
-                    <Button
-                    fullWidth
-                    disabled={!adId}
-                    onClick={onClick}
-                    variant="contained"
-                    startIcon={<Image src='/facebook-icon.svg' alt='facebook' height={24} width={24} />}
-                    sx={{
-                        backgroundColor: '#0066ff',
-                        fontFamily: "Nunito Sans",
-                        fontSize: '14px',
-                        fontWeight: '600',
-                        lineHeight: '17px',
-                        letterSpacing: '0.25px',
-                        color: "#fff",
-                        textTransform: 'none',
-                        padding: '14.5px 24px',
-                        '&:hover': {
-                        backgroundColor: '#0066ff'
-                        },
-                        borderRadius: '6px',
-                        border: '1px solid #0066ff',
-                    }}
-                    >
-                    Connect to Facebook
-                    </Button>
-                </Box>
-                )}/>                            
+                >
+                Connect to Facebook
+                </Button>
+            </Box>                  
         </Box>
     </Box>
 </Box>

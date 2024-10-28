@@ -3,6 +3,7 @@
 import hashlib
 import json
 import random
+from schemas.integrations.meta import AdAccountScheme
 from models.five_x_five_users import FiveXFiveUser
 from models.integrations.integrations_users_sync import IntegrationUserSync
 from models.leads_users import LeadUser
@@ -16,8 +17,8 @@ from facebook_business.adobjects.customaudience import CustomAudience
 from facebook_business.api import FacebookAdsApi
 from fastapi import HTTPException
 from enums import IntegrationsStatus
-from datetime import datetime
-from schemas.integrations.integrations import IntegrationCredentials, DataMap
+from datetime import datetime, timedelta
+from schemas.integrations.integrations import IntegrationCredentials, DataMap, ListFromIntegration, ReqestList
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 from typing import List
 from config.meta import MetaConfig
@@ -58,26 +59,39 @@ class MetaIntegrationsService:
     def get_credentials(self, domain_id: int):
         return self.integrations_persisntece.get_credentials_for_service(domain_id, 'Meta')
 
+    def get_info_by_access_token(self, access_token: str):
+        url = 'https://graph.facebook.com/v20.0/me'
+        params = {
+            'access_token': access_token
+        }
+        response = self.__handle_request('GET', url=url, params=params)
+        if response.status_code != 200:
+            return
+        return response.json()
 
     def add_integration(self, credentials: IntegrationCredentials, domain, user):
         credential = self.get_credentials(domain.id)
+        access_token = self.get_long_lived_token(credentials.meta.access_token)
+        if not access_token:
+            raise HTTPException(status_code=400, detail={'status': 'Long-lived token unavailable'})
         if credential:
-            raise HTTPException(status_code=409, detail={'status': IntegrationsStatus.INTEGRATIONS_ALREADY_EXIST.value})
-        credential = self.get_long_lived_token(credentials.meta.access_token)
+            credential.is_failed = False
+            credential.error_message = None
+            self.integrations_persisntece.db.commit()
+            return
+        ad_account_info = self.get_info_by_access_token(access_token.get('access_token'))
         new_integration = self.integrations_persisntece.create_integration({
             'domain_id': domain.id,
-            'ad_account_id': credentials.meta.ad_account_id.replace('act_', ''),
-            'access_token': credential.get('access_token'),
-            'expire_access_token': credential.get('expires_in'),
+            'ad_account_id': ad_account_info.get('id'),
+            'access_token': access_token.get('access_token'),
+            'expire_access_token': access_token.get('expires_in'),
             'last_access_token_update': datetime.now(),
-            'platform_user_id': credentials.meta.platform_user_id,
-            'full_name': credentials.meta.full_name,
             'service_name': 'Meta',
         })
-        integrations = self.integrations_persisntece.get_all_integrations_filter_by(platform_user_id=credentials.meta.platform_user_id)
+        integrations = self.integrations_persisntece.get_all_integrations_filter_by(ad_account_id=ad_account_info.get('id'), domain_id=domain.id)
         for integration in integrations:
-            integration.access_token == credential.get('access_token')
-            integration.expire_access_token = credential.get('expires_in')
+            integration.access_token == access_token.get('access_token')
+            integration.expire_access_token = access_token.get('expires_in')
             integration.last_access_token_update = datetime.now()
             self.integrations_persisntece.db.commit()
         if not new_integration:
@@ -88,20 +102,62 @@ class MetaIntegrationsService:
     def get_long_lived_token(self, fb_exchange_token):
         url = 'https://graph.facebook.com/v20.0/oauth/access_token'
         params = {
-            'grant_type': 'fb_exchange_token',
             'client_id': APP_ID,
             'client_secret': APP_SERCRET,
-            'fb_exchange_token': fb_exchange_token
+            'code': fb_exchange_token
         }
         response = self.__handle_request('GET', url=url, params=params)
         if response.status_code != 200:
-             raise HTTPException(status_code=400, detail={'status': 'Long-lived token unavailable'})
+            return
         data = response.json()
         return {
             "access_token": data.get('access_token'),
             "token_type": data.get('token_type'),
             "expires_in": data.get('expires_in'),
         }
+
+    def __get_ad_accounts(self, access_token: str):
+        url = 'https://graph.facebook.com/v20.0/me/adaccounts'
+        params = {
+            'fields': 'name',
+            'access_token': access_token
+        }
+        response = self.__handle_request(url=url, params=params, method="GET")
+        return response
+        
+    def get_ad_accounts(self, domain_id: int):
+        credentials = self.get_credentials(domain_id)
+        if not credentials:
+            return
+        response = self.__get_ad_accounts(credentials.access_token)
+        if not response:
+            credentials.is_failed = True
+            credentials.error_message = 'Connection Error'
+            self.integrations_persisntece.db.commit()
+            return
+        return [self.__mapped_ad_account(ad_account) for ad_account in response.json().get('data')]
+    
+    def __get_list(self, ad_account_id, access_token: str):
+        url = f'https://graph.facebook.com/v20.0/{ad_account_id}/customaudiences?fields=name'
+        params = {
+            'fields': 'name',
+            'access_token': access_token
+        }
+        response = self.__handle_request(url=url, params=params, method="GET")
+        return response
+
+    def get_list(self, ad_account_id: str, domain_id: str):
+        credentials = self.get_credentials(domain_id)
+        if not credentials:
+            return
+        response = self.__get_list(ad_account_id, credentials.access_token)
+        if not response:
+            credentials.is_failed = True
+            credentials.error_message = 'Connection Error'
+            self.integrations_persisntece.db.commit()
+            return
+        return [self.__mapped_meta_list(ad_account) for ad_account in response.json().get('data')]
+    
 
 
     def create_list(self, list, domain_id: int, description: str = None):
@@ -117,10 +173,13 @@ class MetaIntegrationsService:
             'description': description if description else None,
             'customer_file_source': 'USER_PROVIDED_ONLY',
         }
-        return AdAccount(f'act_{credential.ad_account_id}').create_custom_audience(
-            fields=fields,
-            params=params,
-        )
+        return {
+            'id': AdAccount(f'{list.ad_account_id}').create_custom_audience(
+                fields=fields,
+                params=params,
+            ).get('id'),
+            'list_name': list.name
+        }
        
 
     async def create_sync(self, domain_id: int, created_by: str, data_map: List[DataMap] = None, leads_type: str = None, list_id: str = None, list_name: str = None,):
@@ -162,6 +221,7 @@ class MetaIntegrationsService:
             message_body=message)
         
     def process_data_sync(self, message):
+        counter = 0
         sync = None
         try:
             sync = IntegrationUserSync(**message.get('sync'))
@@ -170,16 +230,14 @@ class MetaIntegrationsService:
         domain_id = message.get('domain_id')
         lead = message.get('lead', None)
         if domain_id and lead:
-            lead = self.leads_persistence.get_leads_domain(domain_id=domain_id, id=lead.get('id'))
+            lead = self.leads_persistence.get_leads_domain(domain_id=domain_id, five_x_five_user_id=lead.get('five_x_five_user_id'))[0]
+            if message.get('lead') and not lead:
+                return
         domains = self.domain_persistence.get_domain_by_filter(**{'id': domain_id} if domain_id else {})
         for domain in domains:
             credentials = self.get_credentials(domain.id)
             if not credentials:
                 return 
-            credentials.access_token = self.get_long_lived_token(credentials.access_token).get('access_token')
-            self.integrations_persisntece.db.commit()
-            if not credentials:
-                return
             data_syncs_list = self.sync_persistence.get_data_sync_filter_by(
                 domain_id=domain.id,
                 integration_id=credentials.id,
@@ -195,10 +253,11 @@ class MetaIntegrationsService:
                 session_id = random.getrandbits(64)
                 for lead in leads:
                     profile = self.__create_user(session_id, lead.five_x_five_user_id, data_sync_item.list_id, credentials.access_token)
+                    counter += 1
                 self.sync_persistence.update_sync({
                     'last_sync_date': datetime.now()
-                }, id=data_sync_item.id)
-    
+                },counter=counter, id=data_sync_item.id)
+
 
     
     def __create_user(self, session_id: int, lead_id: int, custom_audience_id: str, access_token: str):
@@ -221,7 +280,7 @@ class MetaIntegrationsService:
         response = self.__handle_request('POST', url=url, data={
             'access_token': access_token,
             'payload': payload,
-            'app_id': self.APP_ID
+            'app_id': APP_ID
             })
 
     def __mapped_meta_user(self, lead: FiveXFiveUser):
@@ -251,3 +310,15 @@ class MetaIntegrationsService:
                 hash_value(lead.personal_zip),                                         # ZIP
             ]
             
+    def __mapped_meta_list(self, list):
+        return ListFromIntegration(
+            id=list.get('id'),
+            list_name=list.get('name')
+        )
+
+
+    def __mapped_ad_account(self, ad_account):
+        return AdAccountScheme(
+            id=ad_account.get('id'),
+            name=ad_account.get('name')
+        )

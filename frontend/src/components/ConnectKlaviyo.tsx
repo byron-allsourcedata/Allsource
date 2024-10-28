@@ -189,7 +189,9 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
     }
     }
     useEffect(() => {
-        getKlaviyoList()
+        if(open) {
+            getKlaviyoList()
+        }
         setLoading(false)
     }, [open])
 

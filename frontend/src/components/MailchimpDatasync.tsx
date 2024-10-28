@@ -193,7 +193,9 @@ const MailchimpDatasync: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, 
 
     }
     useEffect(() => {
-        getKlaviyoList()
+        if(open) {
+            getKlaviyoList()
+        }
         setLoading(false)
     }, [open])
 

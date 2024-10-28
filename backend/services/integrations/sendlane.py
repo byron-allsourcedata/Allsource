@@ -173,6 +173,7 @@ class SendlaneIntegrationService:
                                     }, 'stage': stage, 'next_try': next_try})
 
     async def process_data_sync(self, message):
+        counter = 0
         sync = None
         try:
             sync = IntegrationUserSync(**message.get('sync'))
@@ -184,7 +185,9 @@ class SendlaneIntegrationService:
         domain_id = message.get('domain_id')
         lead = message.get('lead', None)
         if domain_id and lead:
-            lead = self.leads_persistence.get_leads_domain(domain_id=domain_id, id=lead.get('id'))
+            lead = self.leads_persistence.get_leads_domain(domain_id=domain_id, five_x_five_user_id=lead.get('five_x_five_user_id'))[0]
+            if message.get('lead') and not lead:
+                return
         stage = message.get('stage') if message.get('stage') else 1
         next_try = message.get('next_try') if message.get('next_try') else None
 
@@ -261,9 +264,10 @@ class SendlaneIntegrationService:
                     data_sync_item.sync_status = True
                     self.sync_persistence.db.commit()
                     logging.info("Profile added successfully for lead: %s", lead.five_x_five_user_id)
-                    self.sync_persistence.update_sync({
-                        'last_sync_date': datetime.now()
-                    }, id=data_sync_item.id)
+                    counter += 1
+                self.sync_persistence.update_sync({
+                    'last_sync_date': datetime.now()
+                },counter=counter, id=data_sync_item.id)
                 logging.info("Sync updated for item id: %s", data_sync_item.id)
 
     def __create_contact(self, lead_id: int, credential: UserIntegration, list_id: int):

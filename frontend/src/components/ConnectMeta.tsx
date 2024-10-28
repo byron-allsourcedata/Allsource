@@ -11,6 +11,7 @@ import { showErrorToast, showToast } from './ToastNotification';
 import { create } from 'lodash';
 import { cursorTo } from 'readline';
 import CustomizedProgressBar from './CustomizedProgressBar';
+import axios from 'axios';
 
 
 interface ConnectMetaPopupProps {
@@ -19,6 +20,15 @@ interface ConnectMetaPopupProps {
     data: any
 }
 
+interface adAccount {
+    id: string
+    name: string
+}
+
+interface MetaAuidece {
+    id: string
+    list_name: string
+}
 
 const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) => {
 
@@ -27,7 +37,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
     const [checked, setChecked] = useState(false);
     const [selectedRadioValue, setSelectedRadioValue] = useState('');
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-    const [selectedOption, setSelectedOption] = useState<string>('');
+    const [selectedOption, setSelectedOption] = useState<MetaAuidece | null>(null);
     const [showCreateForm, setShowCreateForm] = useState<boolean>(false);
     const [newListName, setNewListName] = useState<string>('');
     const [tagName, setTagName] = useState<string>('');
@@ -42,7 +52,12 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
     const [newMapListName, setNewMapListName] = useState<string>('');
     const [showCreateMapForm, setShowCreateMapForm] = useState<boolean>(false);
     const [maplistNameError, setMapListNameError] = useState(false);
-    const [loading, setLoading] = useState(false)
+    const [loading, setLoading] = useState(true)
+    const [adAccounts, setAdAccounts] = useState<adAccount[]>([])
+    const [optionAdAccount, setOptionAdAccount] = useState<adAccount | null>(null)
+    const [metaAuidence, setMetaAuidence] = useState<MetaAuidece[]>([])
+    const [UpdateKlaviuo, setUpdateKlaviuo] = useState<any>(null);
+    const [newKlaviyoList, setNewKlaviyoList] = useState()
     const [mapListOptions, setMapListOptions] = useState<string[]>([
         'Email',
         'Phone number',
@@ -54,28 +69,88 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
         'Location',
     ]);
 
+    useEffect(() => {
+        if(open) {
+            const fetchAdAccount = async() => {
+                const response = await axiosInstance.get('/integrations/sync/ad_accounts', {
+                })
+                if(response.status === 200) { setAdAccounts(response.data) }
+            }
+            fetchAdAccount()
+        } else {
+            resetToDefaultValues()
+        }
+        setLoading(false)
+    }, [open])
+
+
+    useEffect(() => {
+        const getList = async() => {
+            setLoading(true)
+            const response = await axiosInstance.get('/integrations/sync/list', {
+                params: {
+                    service_name: 'meta',
+                    ad_account_id: optionAdAccount?.id
+                }
+            })
+            if(response.status === 200) { setMetaAuidence(response.data)
+                const foundItem = response.data?.find((item: any) => item.list_name === data?.name);
+                if (foundItem) {
+                    setUpdateKlaviuo(data.id)
+                    setSelectedOption({
+                        id: foundItem.id,
+                        list_name: foundItem.list_name
+                    });
+                } else {
+                    setSelectedOption(null);
+                }
+                setSelectedRadioValue(data?.type);
+                setLoading(false)}
+            }
+        if(optionAdAccount) {
+            getList()
+        }
+        setLoading(false)
+    }, [optionAdAccount])
+        
+
+    const createNewList = async () => {
+        const newListResponse = await axiosInstance.post('/integrations/sync/list/', {
+            name: selectedOption?.list_name,
+            ad_account_id: optionAdAccount?.id
+        }, {
+            params: {
+                service_name: 'meta'
+            }
+        });
+
+        if (newListResponse.status !== 201) {
+            throw new Error('Failed to create a new tags')
+        }
+
+        return newListResponse.data;
+    };
+        
+
       // Handle click outside to unshrink the label if input is empty
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (textFieldRef.current && !textFieldRef.current.contains(event.target as Node)) {
+      useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (textFieldRef.current && !textFieldRef.current.contains(event.target as Node)) {
+                // If clicked outside, reset shrink only if there is no input value
+                if (selectedOption?.list_name === '') {
+                    setIsShrunk(false);
+                }
+                if (isDropdownOpen) {
+                    setIsDropdownOpen(false); // Close dropdown when clicking outside
+                }
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
 
-        // If clicked outside, reset shrink only if there is no input value
-        if (selectedOption === '') {
-            setIsShrunk(false);
-          }
-          if (isDropdownOpen) {
-            setIsDropdownOpen(false); // Close dropdown when clicking outside
-          }
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    
-    // Clean up event listener on component unmount
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [selectedOption]);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [selectedOption]);
 
     // Static options
     const staticOptions = ['Email List', 'Phone List', 'SMS List', 'Maximiz Contacts', 'Preview List', 'Maximiz'];
@@ -108,22 +183,38 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
         setNewMapListName(''); // Clear new list name when closing
     };
 
+    const handleSelectAdAccount = async(value: any) => {
+        setOptionAdAccount(value);
+        handleClose();
+        setIsDropdownValid(value.naem !== '');
+    }
+
     // Handle option selection
-    const handleSelectOption = (value: string) => {
+    const handleSelectOption = (value: MetaAuidece | string) => {
         if (value === 'createNew') {
-            // If the form is already open, close it
-            if (showCreateForm) {
-                setShowCreateForm(false);
-            } else {
-                // If the form is not open, open it and keep the dropdown open
-                setShowCreateForm(true);
-                setAnchorEl(textFieldRef.current); // Keep the menu open
+            setShowCreateForm(prev => !prev);
+            if (!showCreateForm) {
+                setAnchorEl(textFieldRef.current);
             }
-        } else {
-            setSelectedOption(value);
+        } else if (isKlaviyoList(value)) {
+            // Проверка, является ли value объектом KlaviyoList
+            setSelectedOption({
+                id: value.id,
+                list_name: value.list_name
+            });
+            setIsDropdownValid(true);
             handleClose();
+        } else {
+            setIsDropdownValid(false);
+            setSelectedOption(null);
         }
-        setIsDropdownValid(value !== '');
+    };
+
+    const isKlaviyoList = (value: any): value is MetaAuidece => {
+        return value !== null &&
+            typeof value === 'object' &&
+            'id' in value &&
+            'list_name' in value;
     };
 
     const handleSelectMapOption = (value: string, event: React.MouseEvent<HTMLElement>, id: number) => {
@@ -142,9 +233,9 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
     };
 
     // Handle Save action for the create new list form
-    const handleSave = () => {
+    const handleSave = async () => {
         let valid = true;
-    
+
         // Validate List Name
         if (newListName.trim() === '') {
             setListNameError(true);
@@ -152,10 +243,14 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
         } else {
             setListNameError(false);
         }
-    
-        // If valid, save and close
+
+
         if (valid) {
-            setSelectedOption(newListName); // Update selected option with new list name
+            const newKlaviyoList = { id: '-1', list_name: newListName }
+            setSelectedOption(newKlaviyoList);
+            if (isKlaviyoList(newKlaviyoList)) {
+                setIsDropdownValid(true);
+            }
             handleClose();
         }
     };
@@ -291,7 +386,33 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
                 return (
                     <Button
                         variant="contained"
-                        onClick={createDataSync}
+                        onClick={handleNextTab}
+                        disabled={!isDropdownValid}
+                        sx={{
+                            backgroundColor: '#5052B2',
+                            fontFamily: "Nunito Sans",
+                            fontSize: '14px',
+                            fontWeight: '600',
+                            lineHeight: '20px',
+                            letterSpacing: 'normal',
+                            color: "#fff",
+                            textTransform: 'none',
+                            padding: '10px 24px',
+                            boxShadow:'0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
+                            '&:hover': {
+                                backgroundColor: '#5052B2'
+                            },
+                            borderRadius: '4px',
+                        }}
+                    >
+                        Next
+                    </Button>
+                );
+            case '3':
+                return (
+                    <Button
+                        variant="contained"
+                        onClick={handleSaveSync}
                         disabled={!selectedOption}
                         sx={{
                             backgroundColor: '#5052B2',
@@ -393,10 +514,12 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
 
     const handleNextTab = async() => {
         if (value === '1') {
+            setValue((prevValue) => String(Number(prevValue) + 1));
+        }
+        if (value === '2') {
             // Validate Tab 3
             if (isDropdownValid) {
                 // Proceed to next tab
-                await createList()
                 setValue((prevValue) => String(Number(prevValue) + 1));
             }
         }
@@ -406,35 +529,57 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
     const deleteId = deleteOpen ? 'delete-popover' : undefined;
 
 
-    const createDataSync = async() => {
-        const response = await axiosInstance.post('/data-sync/sync/', {
-            list_id: listID,
-            list_name: selectedOption
-        }, {
-            params: {
-                service_name: 'meta'
+    const handleSaveSync = async () => {
+        setLoading(true);
+        let list: MetaAuidece | null = null;
+        try {
+            if (selectedOption && selectedOption.id === '-1') {
+                list = await createNewList();
+            } else if (selectedOption) {
+                list = selectedOption;
+            } else {
+                showToast('Please select a valid option.');
+                return;
             }
-        });
-        if (response.status === 201) {
-            showToast('Create Sync Meta')
-        }
-        setLoading(false)
-        onClose()
-    }
 
-    const createList = async() => {
-        setLoading(true)
-        const response = await axiosInstance.post('/integrations/sync/list/', {
-            name: selectedOption
-        }, {
-            params: {
-                service_name: 'meta'
+            if (UpdateKlaviuo) {
+                const response = await axiosInstance.put(`/data-sync/sync`, {
+                    integrations_users_sync_id: UpdateKlaviuo,
+                    list_id: list?.id,
+                    list_name: list?.list_name,
+                    leads_type: selectedRadioValue,
+                }, {
+                    params: {
+                        service_name: 'meta'
+                    }
+                });
+                if (response.status === 201 || response.status === 200) {
+                    resetToDefaultValues();
+                    onClose();
+                    showToast('Data sync updated successfully');
+                }
+            } else {
+                const response = await axiosInstance.post('/data-sync/sync/', {
+                    list_id: list?.id,
+                    list_name: list?.list_name,
+                    leads_type: selectedRadioValue,
+                }, {
+                    params: {
+                        service_name: 'meta'
+                    }
+                });
+                if (response.status === 201 || response.status === 200) {
+                    resetToDefaultValues();
+                    onClose();
+                    showToast('Data sync created successfully');
+                }
             }
-        })
-        setListID(response.data.id)
-        setLoading(false)
-        return response.data
-    }
+
+
+        } finally {
+            setLoading(false);
+        }
+    };
 
     
     const resetToDefaultValues = () => {
@@ -443,7 +588,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
         setChecked(false);
         setSelectedRadioValue('');
         setAnchorEl(null);
-        setSelectedOption('');
+        setSelectedOption(null);
         setShowCreateForm(false);
         setNewListName('');
         setTagName('');
@@ -458,6 +603,8 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
         setShowCreateMapForm(false);
         setMapListNameError(false);
         setLoading(false);
+        setOptionAdAccount(null)
+        setSelectedOption(null)
     };
     const handleChangeTab = (event: React.SyntheticEvent, newValue: string) => {
         setValue(newValue);
@@ -539,8 +686,9 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
                                 gap: '16px'
                             }
                         }}} onChange={handleChangeTab}>
-                        <Tab label="Contact Sync" value="1" sx={{...metaStyles.tabHeading}} />
-                        <Tab label="Map data" value="2" sx={{...metaStyles.tabHeading}} />
+                        <Tab label="AD ACCOUNT" value="1" sx={{...metaStyles.tabHeading}} />
+                        <Tab label="Contact sync" value="2" sx={{...metaStyles.tabHeading}} />
+                        <Tab label="Map data" value="3" sx={{...metaStyles.tabHeading}} />
                         </TabList>
                     </Box>
                     <TabPanel value="1" sx={{ p: 0 }}>
@@ -548,7 +696,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
                             <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)' }}>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', mb: 3 }}>
                                     <Image src='/meta-icon.svg' alt='meta-icon' height={24} width={36} />
-                                    <Typography variant="h6" className='first-sub-title'>Contact sync</Typography>
+                                    <Typography variant="h6" className='first-sub-title'>AD ACCOUNT</Typography>
                                     <Tooltip title="Sync data with list" placement="right">
                                         <Image src='/baseline-info-icon.svg' alt='baseline-info-icon' height={16} width={16} />
                                     </Tooltip>
@@ -558,13 +706,15 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
                                     <TextField
                                     ref={textFieldRef}
                                         variant="outlined"
-                                        value={selectedOption}
+                                        value={
+                                            optionAdAccount?.name || null // Установить значение по умолчанию на пустую строку
+                                        }
                                         onClick={handleClick} // Shrinks the label when clicked
                                         size="small"
                                         fullWidth
-                                        label="Select or Create custom audience list"
+                                        label={optionAdAccount?.name ? '' : 'Select or Create new list'}
                                         InputLabelProps={{
-                                            shrink: isShrunk || selectedOption !== "", // Shrinks label if clicked or if value is not empty
+                                            shrink: isShrunk || optionAdAccount?.name !== "", // Shrinks label if clicked or if value is not empty
                                             sx: {
                                                 fontFamily: 'Nunito Sans',
                                             fontSize: '12px',
@@ -617,161 +767,15 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
                                                 
                                             }}
                                         >
-                                            {/* Show "Create New List" option */}
-                                            <MenuItem onClick={() => handleSelectOption('createNew')} sx={{
-                                                borderBottom: showCreateForm ?  "none" : "1px solid #cdcdcd",
-                                                '&:hover': {
-                                                    background: 'rgba(80, 82, 178, 0.10)'
-                                                }
-                                            }}>
-                                                <ListItemText primary={`+ Create custom audience list`} primaryTypographyProps={{
-                                                        sx: {
-                                                            fontFamily: "Nunito Sans",
-                                                            fontSize: "14px",
-                                                            color: showCreateForm ?  "#5052B2" : "rgba(0, 0, 0, 0.89)",
-                                                            fontWeight: "500",
-                                                            lineHeight: "20px",
-                                                            
-                                                        }
-                                                    }}/>
-                                            </MenuItem>
-
-                                            {/* Show Create New List form if 'showCreateForm' is true */}
-                                            {showCreateForm && (
-                                                <Box>
-                                                    <Box sx={{
-                                                        display: 'flex',
-                                                        gap: '24px',
-                                                        p: 2,
-                                                        width: anchorEl ? `${anchorEl.clientWidth}px` : '538px',
-                                                        pt: 0,
-                                                        '@media (max-width: 600px)': {
-                                                            flexDirection: 'column'
-                                                        },
-                                                    }}>
-                                                    <Box
-                                                        sx={{
-                                                            display: 'flex',
-                                                            justifyContent: 'space-between',
-                                                            gap: '16px',
-                                                            width: '100%',
-                                                            '@media (max-width: 600px)': {
-                                                                flexDirection: 'column'
-                                                            },
-                                                        }}
-                                                    >
-                                                        <TextField
-                                                            label="List Name"
-                                                            variant="outlined"
-                                                            value={newListName}
-                                                            onChange={(e) => setNewListName(e.target.value)}
-                                                            size="small"
-                                                            fullWidth
-                                                            onKeyDown={(e) => e.stopPropagation()}
-                                                            error={listNameError}
-                                                            helperText={listNameError ? 'List Name is required' : ''}
-                                                            InputLabelProps={{
-                                                                sx: {
-                                                                fontFamily: 'Nunito Sans',
-                                                                fontSize: '12px',
-                                                                lineHeight: '16px',
-                                                                fontWeight: '400',
-                                                                color: 'rgba(17, 17, 19, 0.60)',
-                                                                '&.Mui-focused': {
-                                                                    color: '#0000FF',
-                                                                },
-                                                                }
-                                                            }}
-                                                            InputProps={{
-                                                                
-                                                                endAdornment: (
-                                                                    newListName && ( // Conditionally render close icon if input is not empty
-                                                                        <InputAdornment position="end">
-                                                                          <IconButton 
-                                                                            edge="end"
-                                                                            onClick={() => setNewListName('')} // Clear the text field when clicked
-                                                                          >
-                                                                            <Image 
-                                                                              src='/close-circle.svg' 
-                                                                              alt='close-circle' 
-                                                                              height={18} 
-                                                                              width={18} // Adjust the size as needed
-                                                                            />
-                                                                          </IconButton>
-                                                                        </InputAdornment>
-                                                                      )
-                                                                ),
-                                                                sx: {
-                                                                    '&.MuiOutlinedInput-root': {
-                                                                        height: '32px',
-                                                                        '& .MuiOutlinedInput-input': {
-                                                                            padding: '5px 16px 4px 16px',
-                                                                            fontFamily: 'Roboto',
-                                                                            color: '#202124',
-                                                                            fontSize: '14px',
-                                                                            fontWeight: '400',
-                                                                            lineHeight: '20px'
-                                                                        },
-                                                                        '& .MuiOutlinedInput-notchedOutline': {
-                                                                            borderColor: '#A3B0C2',
-                                                                        },
-                                                                        '&:hover .MuiOutlinedInput-notchedOutline': {
-                                                                            borderColor: '#A3B0C2',
-                                                                        },
-                                                                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                                                            borderColor: '#0000FF',
-                                                                        },
-                                                                        },
-                                                                        '&+.MuiFormHelperText-root': {
-                                                                            marginLeft: '0',
-                                                                        },
-                                                                }
-                                                              }}
-                                                        />
-                                                        
-                                                    </Box>
-                                                        <Box sx={{textAlign: 'right'}}>
-                                                        <Button variant="contained" onClick={handleSave}
-                                                        disabled={listNameError || !newListName}
-                                                        sx={{
-                                                            borderRadius: '4px',
-                                                            border: '1px solid #5052B2',
-                                                            background: '#fff',
-                                                            boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                                                            fontFamily: 'Nunito Sans',
-                                                            fontSize: '14px',
-                                                            fontWeight: '600',
-                                                            lineHeight: '20px',
-                                                            color: '#5052b2',
-                                                            textTransform: 'none',
-                                                            padding: '4px 22px',
-                                                            '&:hover' : {
-                                                                background: 'transparent'
-                                                            },
-                                                            '&.Mui-disabled' : {
-                                                                background: 'transparent',
-                                                                color: '#5052b2'
-                                                            }
-                                                        }}>
-                                                                Save
-                                                            </Button>
-                                                        </Box>
-
-                                                        </Box>
-                                                    
-
-                                                    {/* Add a Divider to separate form from options */}
-                                                    <Divider sx={{ borderColor: '#cdcdcd' }} />
-                                                </Box>
-                                            )}
+                                
 
                                             {/* Show static options */}
-                                            {staticOptions.map((option, index) => (
-                                                <MenuItem key={index} onClick={() => handleSelectOption(option)} sx={{
+                                            {adAccounts.map((adAccount) => (
+                                                <MenuItem key={adAccount.id} onClick={() => handleSelectAdAccount(adAccount)} sx={{
                                                     '&:hover': {
                                                         background: 'rgba(80, 82, 178, 0.10)'
                                                     } }}>
-                                                    <ListItemText primary={option}  primaryTypographyProps={{
+                                                    <ListItemText primary={adAccount.name}  primaryTypographyProps={{
                                                         sx: {
                                                             fontFamily: "Nunito Sans",
                                                             fontSize: "14px",
@@ -790,6 +794,256 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
                         </Box>
                     </TabPanel>
                     <TabPanel value="2" sx={{ p: 0 }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                            <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)' }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', mb: 3 }}>
+                                    <Image src='/meta-icon.svg' alt='meta-icon' height={24} width={36} />
+                                    <Typography variant="h6" className='first-sub-title'>Contact sync</Typography>
+                                    <Tooltip title="Sync data with list" placement="right">
+                                        <Image src='/baseline-info-icon.svg' alt='baseline-info-icon' height={16} width={16} />
+                                    </Tooltip>
+                                </Box>
+                                <ClickAwayListener onClickAway={handleClose}>
+                                            <Box>
+                                                <TextField
+                                                    ref={textFieldRef}
+                                                    variant="outlined"
+                                                    value={selectedOption?.list_name}
+                                                    onClick={handleClick}
+                                                    size="small"
+                                                    fullWidth
+                                                    label={selectedOption ? '' : 'Select or Create new list'}
+                                                    InputLabelProps={{
+                                                        shrink: selectedOption ? false : isShrunk,
+                                                        sx: {
+                                                            fontFamily: 'Nunito Sans',
+                                                            fontSize: '12px',
+                                                            lineHeight: '16px',
+                                                            color: 'rgba(17, 17, 19, 0.60)',
+                                                            letterSpacing: '0.06px',
+                                                            top: '5px',
+                                                            '&.Mui-focused': {
+                                                                color: '#0000FF',
+                                                            },
+                                                        }
+                                                    }}
+                                                    InputProps={{
+
+                                                        endAdornment: (
+                                                            <InputAdornment position="end">
+                                                                <IconButton onClick={handleDropdownToggle} edge="end">
+                                                                    {isDropdownOpen ? <Image src='/chevron-drop-up.svg' alt='chevron-drop-up' height={24} width={24} /> : <Image src='/chevron-drop-down.svg' alt='chevron-drop-down' height={24} width={24} />}
+                                                                </IconButton>
+                                                            </InputAdornment>
+                                                        ),
+                                                        sx: metaStyles.formInput
+                                                    }}
+                                                    sx={{
+                                                        '& input': {
+                                                            caretColor: 'transparent', // Hide caret with transparent color
+                                                            fontFamily: "Nunito",
+                                                            fontSize: "14px",
+                                                            color: "rgba(0, 0, 0, 0.89)",
+                                                            fontWeight: "600",
+                                                            lineHeight: "normal",
+                                                        },
+                                                        '& .MuiOutlinedInput-input': {
+                                                            cursor: 'default', // Prevent showing caret on input field
+                                                            top: '5px'
+                                                        },
+
+                                                    }}
+                                                />
+
+                                                <Menu
+                                                    anchorEl={anchorEl}
+                                                    open={Boolean(anchorEl) && isDropdownOpen}
+                                                    onClose={handleClose}
+                                                    PaperProps={{
+                                                        sx: {
+                                                            width: anchorEl ? `${anchorEl.clientWidth}px` : '538px', borderRadius: '4px',
+                                                            border: '1px solid #e4e4e4'
+                                                        }, // Match dropdown width to input
+                                                    }}
+                                                    sx={{
+
+                                                    }}
+                                                >
+                                                    {/* Show "Create New List" option */}
+                                                    <MenuItem onClick={() => handleSelectOption('createNew')} sx={{
+                                                        borderBottom: showCreateForm ? "none" : "1px solid #cdcdcd",
+                                                        '&:hover': {
+                                                            background: 'rgba(80, 82, 178, 0.10)'
+                                                        }
+                                                    }}>
+                                                        <ListItemText primary={`+ Create new list`} primaryTypographyProps={{
+                                                            sx: {
+                                                                fontFamily: "Nunito Sans",
+                                                                fontSize: "14px",
+                                                                color: showCreateForm ? "#5052B2" : "#202124",
+                                                                fontWeight: "500",
+                                                                lineHeight: "20px",
+
+                                                            }
+                                                        }} />
+                                                    </MenuItem>
+
+                                                    {/* Show Create New List form if 'showCreateForm' is true */}
+                                                    {showCreateForm && (
+                                                        <Box>
+                                                            <Box sx={{
+                                                                display: 'flex',
+                                                                flexDirection: 'column',
+                                                                gap: '24px',
+                                                                p: 2,
+                                                                width: anchorEl ? `${anchorEl.clientWidth}px` : '538px',
+                                                                pt: 0
+                                                            }}>
+                                                                <Box
+                                                                    sx={{
+
+
+                                                                        mt: 1, // Margin-top to separate form from menu item
+                                                                        display: 'flex',
+                                                                        justifyContent: 'space-between',
+                                                                        gap: '16px',
+                                                                        '@media (max-width: 600px)': {
+                                                                            flexDirection: 'column'
+                                                                        },
+                                                                    }}
+                                                                >
+                                                                    <TextField
+                                                                        label="List Name"
+                                                                        variant="outlined"
+                                                                        value={newListName}
+                                                                        onChange={(e) => setNewListName(e.target.value)}
+                                                                        size="small"
+                                                                        fullWidth
+                                                                        onKeyDown={(e) => e.stopPropagation()}
+                                                                        error={listNameError}
+                                                                        helperText={listNameError ? 'List Name is required' : ''}
+                                                                        InputLabelProps={{
+                                                                            sx: {
+                                                                                fontFamily: 'Nunito Sans',
+                                                                                fontSize: '12px',
+                                                                                lineHeight: '16px',
+                                                                                fontWeight: '400',
+                                                                                color: 'rgba(17, 17, 19, 0.60)',
+                                                                                '&.Mui-focused': {
+                                                                                    color: '#0000FF',
+                                                                                },
+                                                                            }
+                                                                        }}
+                                                                        InputProps={{
+
+                                                                            endAdornment: (
+                                                                                newListName && ( // Conditionally render close icon if input is not empty
+                                                                                    <InputAdornment position="end">
+                                                                                        <IconButton
+                                                                                            edge="end"
+                                                                                            onClick={() => setNewListName('')} // Clear the text field when clicked
+                                                                                        >
+                                                                                            <Image
+                                                                                                src='/close-circle.svg'
+                                                                                                alt='close-circle'
+                                                                                                height={18}
+                                                                                                width={18} // Adjust the size as needed
+                                                                                            />
+                                                                                        </IconButton>
+                                                                                    </InputAdornment>
+                                                                                )
+                                                                            ),
+                                                                            sx: {
+                                                                                '&.MuiOutlinedInput-root': {
+                                                                                    height: '32px',
+                                                                                    '& .MuiOutlinedInput-input': {
+                                                                                        padding: '5px 16px 4px 16px',
+                                                                                        fontFamily: 'Roboto',
+                                                                                        color: '#202124',
+                                                                                        fontSize: '14px',
+                                                                                        fontWeight: '400',
+                                                                                        lineHeight: '20px'
+                                                                                    },
+                                                                                    '& .MuiOutlinedInput-notchedOutline': {
+                                                                                        borderColor: '#A3B0C2',
+                                                                                    },
+                                                                                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                                                        borderColor: '#A3B0C2',
+                                                                                    },
+                                                                                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                                                                        borderColor: '#0000FF',
+                                                                                    },
+                                                                                },
+                                                                                '&+.MuiFormHelperText-root': {
+                                                                                    marginLeft: '0',
+                                                                                },
+                                                                            }
+                                                                        }}
+                                                                    />
+                                                    
+                                                                </Box>
+                                                                <Box sx={{ textAlign: 'right' }}>
+                                                                    <Button variant="contained" onClick={handleSave}
+                                                                        disabled={listNameError || !newListName }
+                                                                        sx={{
+                                                                            borderRadius: '4px',
+                                                                            border: '1px solid #5052B2',
+                                                                            background: '#fff',
+                                                                            boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
+                                                                            fontFamily: 'Nunito Sans',
+                                                                            fontSize: '14px',
+                                                                            fontWeight: '600',
+                                                                            lineHeight: '20px',
+                                                                            color: '#5052b2',
+                                                                            textTransform: 'none',
+                                                                            padding: '4px 22px',
+                                                                            '&:hover': {
+                                                                                background: 'transparent'
+                                                                            },
+                                                                            '&.Mui-disabled': {
+                                                                                background: 'transparent',
+                                                                                color: '#5052b2'
+                                                                            }
+                                                                        }}>
+                                                                        Save
+                                                                    </Button>
+                                                                </Box>
+
+                                                            </Box>
+
+
+                                                            {/* Add a Divider to separate form from options */}
+                                                            <Divider sx={{ borderColor: '#cdcdcd' }} />
+                                                        </Box>
+                                                    )}
+
+                                                    {/* Show static options */}
+                                                    {metaAuidence && metaAuidence.map((klaviyo, option) => (
+                                                        <MenuItem key={klaviyo.id} onClick={() => handleSelectOption(klaviyo)} sx={{
+                                                            '&:hover': {
+                                                                background: 'rgba(80, 82, 178, 0.10)'
+                                                            }
+                                                        }}>
+                                                            <ListItemText primary={klaviyo.list_name} primaryTypographyProps={{
+                                                                sx: {
+                                                                    fontFamily: "Nunito Sans",
+                                                                    fontSize: "14px",
+                                                                    color: "#202124",
+                                                                    fontWeight: "500",
+                                                                    lineHeight: "20px"
+                                                                }
+                                                            }} />
+                                                        </MenuItem>
+                                                    ))}
+                                                </Menu>
+                                            </Box>
+                                        </ClickAwayListener>
+
+                                
+                            </Box>
+                        </Box>
+                    </TabPanel>
+                    <TabPanel value="3" sx={{ p: 0 }}>
                         <Box sx={{
                             borderRadius: '4px',
                             border: '1px solid #f0f0f0',
@@ -809,7 +1063,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
                                             padding: '2px 4px',
                                             lineHeight: '16px'
                                         }}>
-                                            {selectedOption}
+                                            {selectedOption?.list_name}
                                         </Typography>
                             </Box>
 

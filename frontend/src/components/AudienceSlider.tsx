@@ -89,8 +89,10 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                 setIntegrations(response.data)
             }
         }
-        fetchData()
-    }, [])
+        if(open) {
+            fetchData()
+        }
+    }, [open])
 
     useEffect(() => {
         const fetchData = async() => {
@@ -103,8 +105,10 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
             
         }
         }
-        fetchData()
-    }, [])
+        if(open) {
+            fetchData()
+        }
+    }, [open])
 
     useEffect(() => {
         if (open) {
@@ -252,6 +256,14 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
       };
 
     const handleSaveSettingsKlaviyo = (newIntegrations: IntegrationsCredentials) => {
+        setIntegrationsCredentials(prevIntegrations => [
+            ...prevIntegrations, 
+            newIntegrations
+        ]);
+        setKlaviyoIconPopupOpen(true)
+    }
+
+    const handleSaveSettingsMeta = (newIntegrations: IntegrationsCredentials) => {
         setIntegrationsCredentials(prevIntegrations => [
             ...prevIntegrations, 
             newIntegrations
@@ -665,7 +677,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
             <ConnectMeta data = {null} open={metaIconPopupOpen} onClose={handleMetaIconPopupClose} />
             <OnmisendDataSync open={omnisendIconPopupOpen} onClose={handleOmnisendIconPopupOpenClose} />
             <KlaviyoIntegrationPopup open={createKlaviyo} handleClose={() => setCreateKlaviyo(false)} onSave={handleSaveSettingsKlaviyo} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'Klaviyo')?.access_token}/>
-            <MetaConnectButton open={metaConnectApp} onClose={handleCloseMetaConnectApp}/>
+            <MetaConnectButton open={metaConnectApp} onClose={handleCloseMetaConnectApp} onSave={handleSaveSettingsMeta}/>
             <BCommerceConnect 
                     open={openBigcommrceConnect} 
                     handleClose={() => setOpenBigcommerceConnect(false)}

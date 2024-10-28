@@ -380,7 +380,7 @@ const AlivbleIntagrationsSlider = ({open, isContactSync = false, integrations, i
                     </Box>
                 </Box>
         </Drawer>
-        <MetaConnectButton open={openMetaConnect} onClose={handleClose}/>
+        <MetaConnectButton open={openMetaConnect} onClose={handleClose} onSave={() => { }}/>
         <KlaviyoIntegrationPopup open={openKlaviyoConnect} handleClose={handleClose} onSave={handleSave}/>
         <ShopifySettings open={openShopifuConnect} handleClose={handleClose} onSave={handleSave} />
         <BCommerceConnect 
