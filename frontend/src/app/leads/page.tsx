@@ -365,10 +365,6 @@ const Leads: React.FC = () => {
             } else {
                 newRowsPerPageOptions = [10, 20, 50, 100, 300, 500]; 
             }
-            if (!newRowsPerPageOptions.includes(count)) {
-                newRowsPerPageOptions.push(count);
-                newRowsPerPageOptions.sort((a, b) => a - b); // Ensure the options remain sorted
-            }
             
             setRowsPerPageOptions(newRowsPerPageOptions);
         } catch (error) {
@@ -1247,7 +1243,7 @@ const Leads: React.FC = () => {
                                         component={Paper}
                                         sx={{
                                             border: '1px solid rgba(235, 235, 235, 1)',
-                                            maxHeight: selectedFilters.length < 0 ? '70vh' : '67vh',
+                                            maxHeight: selectedFilters.length < 0 ? '74vh' : '67vh',
                                             overflowY: 'scroll'
                                         }}
                                     >
