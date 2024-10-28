@@ -96,7 +96,7 @@ async def update_payment_confirmation(request: fastRequest, webhook_service: Web
         connection = await rabbitmq_connection.connect()
         try:
             if result_update_subscription['status'] == 'succeeded':
-                message_text = 'Payment succeeded'
+                message_text = 'Payment contacts succeeded'
             else:
                 message_text = 'It looks like your payment didn’t go through. Kindly check your payment card, go to - billing'
             await publish_rabbitmq_message(

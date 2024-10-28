@@ -15,7 +15,7 @@ sys.path.append(parent_dir)
 from models.plans import SubscriptionPlan
 from models.five_x_five_users import FiveXFiveUser
 from models.leads_users import LeadUser
-from config.rmq_connection import RabbitMQConnection
+from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 from sqlalchemy.orm import sessionmaker
 from models.users import Users
 from datetime import datetime, timezone
@@ -35,7 +35,7 @@ async def on_message_received(message, session):
         message_json = json.loads(message.body)
         customer_id = message_json.get('customer_id')
         plan_id = message_json.get('plan_id')
-
+        message_text = 'It looks like your payment didn’t go through. Kindly check your payment card, go to - billing'
         subscription_plan = session.query(SubscriptionPlan).filter_by(id=plan_id).first()
         user = session.query(Users).filter_by(customer_id=customer_id).first()
 
@@ -60,6 +60,7 @@ async def on_message_received(message, session):
                     lead_user.is_active = True
                 user.leads_credits -= activate_count
                 session.commit()
+                message_text = 'Payment contacts succeeded'
             else:
                 if user.is_leads_auto_charging:
                     if lead_user_count >= QUANTITY:
@@ -73,6 +74,8 @@ async def on_message_received(message, session):
                                 status = stripe_payload.get("status")
 
                                 if status == 'succeeded':
+                                    message_text = 'Payment contacts succeeded'
+
                                     payment_transaction_obj = UsersPaymentsTransactions(
                                         user_id=user.id,
                                         transaction_id=transaction_id,
@@ -89,6 +92,20 @@ async def on_message_received(message, session):
                                     session.commit()
                         else:
                             logging.error(f"Purchase failed: {result['error']}", exc_info=True)
+
+        queue_name = f'sse_events_{str(user.id)}'
+        rabbitmq_connection = RabbitMQConnection()
+        connection = await rabbitmq_connection.connect()
+        try:
+            await publish_rabbitmq_message(
+                connection=connection,
+                queue_name=queue_name,
+                message_body={'notification_text': message_text}
+            )
+        except:
+            await rabbitmq_connection.close()
+        finally:
+            await rabbitmq_connection.close()
 
         await message.ack()
     except Exception as e:
