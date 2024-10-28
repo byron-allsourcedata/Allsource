@@ -513,7 +513,29 @@ const Dashboard: React.FC = () => {
               flexDirection: "column",
             }}
           >
-            <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', mt: 3, "@media (max-width: 600px)": { flexDirection: 'column', alignItems: 'start', } }}>
+            <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center',
+                py: 3,
+                position: 'fixed',
+                top: '68px',
+                right: '16px',
+                left: '170px',
+                background: '#fff',
+                zIndex: '1',
+                paddingLeft: '60px',
+                paddingRight: '65px',
+                '@media (min-width: 1600px)': {
+                  paddingLeft: '85px',
+                  paddingRight: '90px',
+                },
+                mx: '-24px',
+                "@media (max-width: 900px)": { 
+                  left: '20px'
+                },
+                "@media (max-width: 600px)": { 
+                  flexDirection: 'column',
+                  alignItems: 'start', 
+                  } 
+                }}>
               <Typography
                 variant="h4"
                 component="h1"
@@ -527,7 +549,7 @@ const Dashboard: React.FC = () => {
                 Dashboard <CustomTooltip title={"Text about dashboard"} />
               </Typography>
               <Box sx={{
-                display: 'none', width: '100%', justifyContent: 'space-between', '@media (max-width: 600px)': {
+                display: 'none', width: '100%', justifyContent: 'space-between', alignItems: 'center', '@media (max-width: 600px)': {
                   display: 'flex'
                 }
               }}>
@@ -692,7 +714,14 @@ const Dashboard: React.FC = () => {
 
 
 
-            <Box sx={{ width: '100%' }}>
+            <Box sx={{ width: '100%', marginTop: '68px',
+              "@media (max-width: 900px)": { 
+                  marginTop: '40px'
+                },
+                "@media (max-width: 600px)": { 
+                  marginTop: '100px'
+                }
+             }}>
               <TabPanel value={tabIndex} index={0}>
                 <DashboardRevenue appliedDates={appliedDates} />
               </TabPanel>

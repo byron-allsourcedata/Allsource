@@ -97,8 +97,27 @@ const Suppressions: React.FC = () => {
 
     return (
         <Box sx={suppressionsStyle.mainContent}>
-            <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%', mt: 1, ml: 0, "@media (max-width: 600px)": { flexDirection: 'column', display: 'flex', alignItems: 'flex-start' }, "@media (max-width: 440px)": { flexDirection: 'column', pt: 8, justifyContent: 'flex-start' } }}>
-                <Box sx={{ flexShrink: 0, display: 'flex', flexDirection: 'row', alignItems: 'center', width: '10%', gap: 1, "@media (max-width: 600px)": { mb: 2 } }}>
+            <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%', ml:0,
+            position: 'fixed',
+            top: '68px',
+            right: '16px',
+            left: '170px',
+            background: '#fff',
+            zIndex: '1200',
+            mx: '-24px',
+            py: 3,
+            "@media (min-width: 900px)": {
+                paddingLeft: '140px',
+                paddingRight: '140px',
+            },
+            "@media (max-width: 900px)": { 
+              left: '20px',
+              paddingLeft: '24px',
+              paddingRight: '24px'
+            },
+            "@media (max-width: 600px)": {flexDirection: 'column', display: 'flex', alignItems: 'flex-start'},
+            "@media (max-width: 440px)": {flexDirection: 'column', pt:8, justifyContent: 'flex-start'} }}>
+                <Box sx={{ flexShrink: 0, display: 'flex', flexDirection: 'row', alignItems: 'center', width: '10%', gap: 1, "@media (max-width: 600px)": {mb:2 }}}>
                     <Typography className="first-sub-title">Suppressions</Typography>
                     <CustomTooltip title={"Suppressions help manage and filter out contacts or data points that should not receive communications or updates."} linkText="Learn more" linkUrl="https://maximiz.ai" />
                 </Box>
@@ -216,18 +235,29 @@ const Suppressions: React.FC = () => {
                         />
                     </Tabs>
                 </Box>
-                )}
-            </Box> 
-            <Box sx={{ width: '100%' }}>
-                <TabPanel value={tabIndex} index={0}>
-                    <SuppressionRules />
-                </TabPanel>
+            )}
             </Box>
-            <Box sx={{ width: '100%', padding: 0, margin: 0 }}>
-                <TabPanel value={tabIndex} index={1}>
-                    <CollectionRules />
-                </TabPanel>
+            <Box sx={{
+                marginTop: '68px',
+                "@media (max-width: 900px)": { 
+                    marginTop: '46px'
+                  },
+                  "@media (max-width: 600px)": { 
+                    marginTop: '86px'
+                  }
+            }}>
+                <Box sx={{ width: '100%' }}>
+                    <TabPanel value={tabIndex} index={0}>
+                        <SuppressionRules />
+                    </TabPanel>
+                </Box>
+                <Box sx={{ width: '100%', padding: 0, margin: 0 }}>
+                    <TabPanel value={tabIndex} index={1}>
+                        <CollectionRules />
+                    </TabPanel>
+                </Box>
             </Box>
+            
         </Box>
     );
 };

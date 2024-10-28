@@ -1021,6 +1021,18 @@ const Integrations = () => {
                     display: "flex",
                     flexDirection: "row",
                     alignItems: "center",
+                    position: 'fixed',
+                    top: '68px',
+                    right: '16px',
+                    left: '170px',
+                    background: '#fff',
+                    zIndex: '1200',
+                    paddingLeft: '20px',
+                    paddingRight: '24px',
+                    mx: '-24px',
+                    "@media (max-width: 900px)": { 
+                      left: '20px'
+                    },
                     "@media (max-width: 600px)": { mb: 2 },
                 }}>
                     {/* Title and Tooltip */}
@@ -1066,6 +1078,8 @@ const Integrations = () => {
                         </Box>
                     )}  
                 </Box>
+                <Box sx={{ marginTop: '84px'
+                }}>
                 {status !== 'PIXEL_INSTALLATION_NEEDED' && !isLoading && (
                 <Box sx={{
                     border: '1px solid #E4E4E4',
@@ -1117,6 +1131,7 @@ const Integrations = () => {
                         </TabPanel>
                     </>
                 ))}
+              </Box>
             </TabContext>
             {showSlider && <Slider/>}
         </>
