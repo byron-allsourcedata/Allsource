@@ -19,6 +19,7 @@ from persistence.integrations.suppression import IntegrationsSuppressionPersiste
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.leads_order_persistence import LeadOrdersPersistence
 from persistence.leads_persistence import LeadsPersistence
+from persistence.notification import NotificationPersistence
 from persistence.plans_persistence import PlansPersistence
 from persistence.sendgrid_persistence import SendgridPersistence
 from persistence.settings_persistence import SettingsPersistence
@@ -33,6 +34,7 @@ from services.dashboard import DashboardService
 from services.domains import UserDomainsService
 from services.integrations.base import IntegrationService
 from services.leads import LeadsService
+from services.notification import Notification
 from services.payments import PaymentsService
 from services.payments_plans import PaymentsPlans
 from services.pixel_installation import PixelInstallationService
@@ -215,6 +217,10 @@ def get_user_domain_persistence(db: Session = Depends(get_db)) -> UserDomainsPer
     return UserDomainsPersistence(db)
 
 
+def get_notification_persistence(db: Session = Depends(get_db)):
+    return NotificationPersistence(db)
+
+
 def check_domain(
         CurrentDomain: Annotated[str, Header()],
         user=Depends(check_user_authentication),
@@ -240,6 +246,15 @@ def get_users_service(user=Depends(check_user_authentication),
                       ):
     return UsersService(user=user, user_persistence_service=user_persistence, plan_persistence=plan_persistence,
                         subscription_service=subscription_service)
+
+
+def get_notification_service(notification_persistence: NotificationPersistence = Depends(get_notification_persistence),
+                             subscription_service: SubscriptionService = Depends(get_subscription_service),
+                             leads_persistence: LeadsPersistence = Depends(get_leads_persistence),
+                             plan_persistence: PlansPersistence = Depends(get_plans_persistence)
+                             ):
+    return Notification(notification_persistence=notification_persistence, subscription_service=subscription_service,
+                        plan_persistence=plan_persistence, leads_persistence=leads_persistence)
 
 
 def get_domain_service(user_domain_persistence: UserDomainsPersistence = Depends(get_user_domain_persistence),

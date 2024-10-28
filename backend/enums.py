@@ -154,6 +154,13 @@ class DomainStatus(Enum):
     DOMAIN_NOT_FOUND = 'DOMAIN_NOT_FOUND'
 
 
+class NotificationTitles(Enum):
+    PLAN_LIMIT_EXCEEDED = 'plan_limit_exceeded'
+    PAYMENT_FAILED = 'payment_failed'
+    CONTACT_LIMIT_APPROACHING = 'contact_limit_approaching'
+    CHOOSE_PLAN = 'choose_plan'
+
+
 class IntegrationsStatus(Enum):
     CREDENTAILS_INVALID = 'CREDENTIALS_INVALID'
     CREATE_IS_FAILED = 'CREATED_IS_FAILED'

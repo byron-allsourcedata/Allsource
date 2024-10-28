@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, Request as fastRequest, HTTPException, status
 
+from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 from dependencies import get_plans_service, get_payments_service, get_webhook, check_user_authentication, \
     check_user_authorization_without_pixel
 from enums import TeamAccessLevel
@@ -21,25 +22,94 @@ async def get_subscription_plans(plans_service: PlansService = Depends(get_plans
 @router.get("/session/new")
 async def create_customer_session(price_id: str, payments_service: PaymentsService = Depends(get_payments_service),
                                   user: Users = Depends(check_user_authentication)):
+
     return payments_service.create_customer_session(price_id=price_id, user=user)
 
 
 @router.post("/update-subscription-webhook")
 async def update_payment_confirmation(request: fastRequest, webhook_service: WebhookService = Depends(get_webhook)):
     payload = await request.json()
-    return webhook_service.update_subscription_confirmation(payload=payload)
+    result_update_subscription = webhook_service.update_subscription_confirmation(payload=payload)
+    if result_update_subscription['status']:
+        user = result_update_subscription['user']
+        queue_name = f'sse_events_{str(user.id)}'
+        rabbitmq_connection = RabbitMQConnection()
+        connection = await rabbitmq_connection.connect()
+        try:
+            message_text = None
+            if result_update_subscription['status'] == 'active':
+                message_text = 'Update subscription success'
+            elif result_update_subscription['status'] == 'inactive':
+                message_text = 'It looks like your payment didn’t go through. Kindly check your payment card, go to - billing'
+            elif result_update_subscription['status'] == 'canceled':
+                message_text = 'Update subscription failed'
+            await publish_rabbitmq_message(
+                connection=connection,
+                queue_name=queue_name,
+                message_body={'notification_text': message_text}
+            )
+        except:
+            await rabbitmq_connection.close()
+        finally:
+            await rabbitmq_connection.close()
+
+    return "OK"
 
 
 @router.post("/cancel-subscription-webhook")
 async def update_payment_confirmation(request: fastRequest, webhook_service: WebhookService = Depends(get_webhook)):
     payload = await request.json()
-    return webhook_service.cancel_subscription_confirmation(payload=payload)
+    result_update_subscription = webhook_service.cancel_subscription_confirmation(payload=payload)
+    if result_update_subscription['status']:
+        user = result_update_subscription['user']
+        queue_name = f'sse_events_{str(user.id)}'
+        rabbitmq_connection = RabbitMQConnection()
+        connection = await rabbitmq_connection.connect()
+        try:
+            message_text = None
+            if result_update_subscription['status'] == 'active':
+                message_text = 'Update subscription success'
+            elif result_update_subscription['status'] == 'inactive':
+                message_text = 'It looks like your payment didn’t go through. Kindly check your payment card, go to - billing'
+            elif result_update_subscription['status'] == 'canceled':
+                message_text = 'Update subscription failed'
+            await publish_rabbitmq_message(
+                connection=connection,
+                queue_name=queue_name,
+                message_body={'notification_text': message_text}
+            )
+        except:
+            await rabbitmq_connection.close()
+        finally:
+            await rabbitmq_connection.close()
 
+    return "OK"
 
 @router.post("/update-payment-webhook")
 async def update_payment_confirmation(request: fastRequest, webhook_service: WebhookService = Depends(get_webhook)):
     payload = await request.json()
-    return webhook_service.create_payment_confirmation(payload=payload)
+    result_update_subscription = webhook_service.create_payment_confirmation(payload=payload)
+    if result_update_subscription['status']:
+        user = result_update_subscription['user']
+        queue_name = f'sse_events_{str(user.id)}'
+        rabbitmq_connection = RabbitMQConnection()
+        connection = await rabbitmq_connection.connect()
+        try:
+            if result_update_subscription['status'] == 'succeeded':
+                message_text = 'Payment succeeded'
+            else:
+                message_text = 'It looks like your payment didn’t go through. Kindly check your payment card, go to - billing'
+            await publish_rabbitmq_message(
+                connection=connection,
+                queue_name=queue_name,
+                message_body={'notification_text': message_text}
+            )
+        except:
+            await rabbitmq_connection.close()
+        finally:
+            await rabbitmq_connection.close()
+
+    return
 
 
 @router.post("/cancel-plan")
@@ -53,8 +123,8 @@ def cancel_user_subscription(unsubscribe_request: UnsubscribeRequest,
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Access denied. Admins only."
             )
-    return payments_service.cancel_user_subscription(user=user,
-                                                     reason_unsubscribe=unsubscribe_request.reason_unsubscribe)
+
+    return payments_service.cancel_user_subscription(user=user, reason_unsubscribe=unsubscribe_request.reason_unsubscribe)
 
 
 @router.get("/upgrade-and-downgrade-user-subscription")
@@ -68,6 +138,7 @@ def upgrade_and_downgrade_user_subscription(price_id: str,
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Access denied. Admins only."
             )
+
     return payments_service.upgrade_and_downgrade_user_subscription(price_id=price_id, user=user)
 
 
@@ -81,6 +152,7 @@ def cancel_downgrade(payments_service: PaymentsService = Depends(get_payments_se
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Access denied. Admins only."
             )
+
     return payments_service.cancel_downgrade(user)
 
 
@@ -94,4 +166,5 @@ def buy_credits(credits_used: int, payments_service: PaymentsService = Depends(g
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Access denied. Admins only."
             )
+
     return payments_service.charge_user_for_extra_credits(credits_used, user)

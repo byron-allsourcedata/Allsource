@@ -43,7 +43,10 @@ class WebhookService:
             saved_details_of_payment = save_payment_details_in_stripe(customer_id=customer_id)
             if not saved_details_of_payment:
                 logger.warning("set default card false")
-        return result_status
+        return {
+            'status': result_status,
+            'user': user_data
+        }
 
     def cancel_subscription_confirmation(self, payload):
         stripe_request_created_timestamp = payload.get("created")
@@ -66,7 +69,10 @@ class WebhookService:
                                                                   stripe_payload=payload)
 
         result_status = self.subscription_service.process_subscription(user=user_data, stripe_payload=data_object)
-        return result_status
+        return {
+            'status': result_status,
+            'user': user_data
+        }
 
     def create_payment_confirmation(self, payload):
         data_object = payload.get("data").get("object")
@@ -87,8 +93,11 @@ class WebhookService:
         if not result_transaction:
             return payload
 
-        user_payment = self.subscription_service.create_payment_from_webhook(user_id=user_data.id,
+        result_status = self.subscription_service.create_payment_from_webhook(user_id=user_data.id,
                                                                              stripe_payload=payload,
                                                                              product_description=product_description,
                                                                              quantity=quantity)
-        return user_payment
+        return {
+            'status': result_status,
+            'user': user_data
+        }

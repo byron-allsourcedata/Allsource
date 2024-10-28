@@ -65,6 +65,7 @@ async def on_message_received(message, session):
                     if lead_user_count >= QUANTITY:
                         result = purchase_product(customer_id, subscription_plan.stripe_price_id, QUANTITY, 'leads_credits')
                         if result['success']:
+                            await asyncio.sleep(10)
                             stripe_payload = result['stripe_payload']
                             transaction_id = stripe_payload.get("id")
                             if not session.query(UsersPaymentsTransactions).filter_by(transaction_id=transaction_id).first():
