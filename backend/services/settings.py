@@ -258,6 +258,7 @@ class SettingsService:
         plan_limit_domain = user_subscription.domains_limit if user_subscription else 0
         user_limit_domain = len(self.user_domains_service.get_domains(user_id))
         subscription_details = None
+        total_key = 'monthly_total' if current_plan.interval == 'month' else 'yearly_total'
         if subscription is None and user_subscription:
             subscription_details = {
                 'billing_cycle': f"{user_subscription.plan_start.strftime('%b %d, %Y')} to {user_subscription.plan_end.strftime('%b %d, %Y')}" if user_subscription.plan_start else None,
@@ -266,8 +267,8 @@ class SettingsService:
                 'prospect_credits': 'Coming soon',
                 'overage': 'free' if user_subscription.lead_credit_price == -1 else user_subscription.lead_credit_price,
                 'next_billing_date': None,
-                'monthly_total': None,
-                'active': True
+                'total_key': None,
+                'active': True if user_subscription.status == 'active' else False,
             }
         elif subscription and user_subscription:
             plan = subscription['items']['data'][0]['plan']
@@ -276,11 +277,11 @@ class SettingsService:
             if user_subscription.downgrade_price_id:
                 downgrade_plan = get_price_from_price_id(user_subscription.downgrade_price_id)
                 downgrade_amount = downgrade_plan['unit_amount'] if downgrade_plan else 0
-                monthly_total = f"${downgrade_amount / 100:,.0f}"
+                total_price = f"${downgrade_amount / 100:,.0f}"
             elif user_subscription.cancel_scheduled_at:
-                monthly_total = None
+                total_price = None
             else:
-                monthly_total = f"${plan['amount'] / 100:,.0f}"
+                total_price = f"${plan['amount'] / 100:,.0f}"
             subscription_details = {
                 'billing_cycle': f"{user_subscription.plan_start.strftime('%b %d, %Y')} to {user_subscription.plan_end.strftime('%b %d, %Y')}" if user_subscription.plan_start else None,
                 'plan_name': plan_name,
@@ -288,7 +289,7 @@ class SettingsService:
                 'prospect_credits': 'Coming soon',
                 'overage': 'free' if user_subscription.lead_credit_price == -1 else user_subscription.lead_credit_price,
                 'next_billing_date': self.timestamp_to_date(subscription['current_period_end']).strftime('%b %d, %Y'),
-                'monthly_total': monthly_total,
+                total_key: total_price,
                 'active': is_active,
             }
 
@@ -297,7 +298,8 @@ class SettingsService:
             'downgrade_plan': {
                 'plan_name': get_product_from_price_id(
                     user_subscription.downgrade_price_id).name if user_subscription and user_subscription.downgrade_price_id else None,
-                'downgrade_at': user_subscription.plan_end.strftime('%b %d, %Y') if user_subscription and user_subscription.downgrade_price_id else None,
+                'downgrade_at': user_subscription.plan_end.strftime(
+                    '%b %d, %Y') if user_subscription and user_subscription.downgrade_price_id else None,
             },
             'canceled_at': user_subscription.cancel_scheduled_at if user_subscription else None
         }

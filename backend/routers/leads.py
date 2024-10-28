@@ -62,7 +62,7 @@ async def search_contact(start_letter: str = Query(..., min_length=3),
 @router.post("/download_leads")
 async def download_leads(leads_request: LeadsRequest,
                          leads_service: LeadsService = Depends(get_leads_service)):
-    result = leads_service.download_leads(leads_request.leads_ids)
+    result = leads_service.download_leads(leads_ids=leads_request.leads_ids)
     if result:
         return StreamingResponse(result, media_type="text/csv",
                                  headers={"Content-Disposition": "attachment; filename=data.csv"})

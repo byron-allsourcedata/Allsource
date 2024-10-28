@@ -3,7 +3,8 @@ from fastapi.params import Header
 from typing_extensions import Annotated
 
 from dependencies import get_users_auth_service, get_users_email_verification_service, get_users_service, \
-    check_user_authorization
+    check_user_authorization, check_pixel_install_domain
+from models.users_domains import UserDomains
 from schemas.auth_google_token import AuthGoogleData
 from schemas.users import UserSignUpForm, UserSignUpFormResponse, UserLoginFormResponse, UserLoginForm, UpdatePassword, \
     ResendVerificationEmailResponse, ResetPasswordForm, ResetPasswordResponse, UpdatePasswordResponse, \
@@ -25,7 +26,7 @@ def get_me(user_service: UsersService = Depends(get_users_service)):
 
 
 @router.get("/check-user-authorization")
-def check_user_authorization(user=Depends(check_user_authorization)):
+def check_user_authorization(user=Depends(check_user_authorization), domain: UserDomains = Depends(check_pixel_install_domain)):
     return {
         "status": 'SUCCESS'
     }
