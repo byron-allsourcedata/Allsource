@@ -3,13 +3,11 @@ import json
 import logging
 import os
 import random
-import re
 import sys
-import tempfile
 import time
 import traceback
 import urllib.parse
-import boto3
+
 import pytz
 from dateutil.relativedelta import relativedelta
 
@@ -26,7 +24,6 @@ from models.suppression_rule import SuppressionRule
 from models.leads_users_added_to_cart import LeadsUsersAddedToCart
 from models.leads_users_ordered import LeadsUsersOrdered
 from models.leads_visits import LeadsVisits
-from models.subscriptions import UserSubscriptions
 from models.five_x_five_hems import FiveXFiveHems
 from models.suppressions_list import SuppressionList
 from models.users_payments_transactions import UsersPaymentsTransactions
@@ -35,7 +32,6 @@ from sqlalchemy.orm import sessionmaker, Session
 from models.five_x_five_users import FiveXFiveUser
 from models.leads_users import LeadUser
 from models.users import Users
-from models.plans import SubscriptionPlan
 from models.leads_orders import LeadOrders
 from models.integrations.suppresions import LeadsSupperssion
 from dotenv import load_dotenv
@@ -47,12 +43,14 @@ from dependencies import (SubscriptionService, UserPersistence, PlansPersistence
 
 load_dotenv()
 
+
 def setup_logging(level):
     logging.basicConfig(
         level=level,
         format='%(asctime)s - %(levelname)s - %(message)s',
         datefmt='%Y-%m-%d %H:%M:%S'
     )
+
 
 LAST_PROCESSED_FILE_PATH = 'tmp/last_processed_leads_sync.txt'
 AMOUNT_CREDITS = 1
@@ -125,7 +123,7 @@ async def process_table(session, groupped_requests, rabbitmq_connection, subscri
                     logging.warning(f"Not found by UP_ID {up_id}")
 
 
-async def process_payment_transaction(session, five_x_five_user_up_id, user_domain_id, user, rabbitmq_connection):
+async def process_payment_transaction(session, five_x_five_user_up_id, user_domain_id, user, lead_user):
     users_payments_transactions = session.query(UsersPaymentsTransactions).filter(
         UsersPaymentsTransactions.five_x_five_up_id == str(five_x_five_user_up_id),
         UsersPaymentsTransactions.domain_id == user_domain_id
@@ -137,23 +135,15 @@ async def process_payment_transaction(session, five_x_five_user_up_id, user_doma
                                                           amount_credits=AMOUNT_CREDITS, type='buy_lead',
                                                           domain_id=user_domain_id,
                                                           five_x_five_up_id=five_x_five_user_up_id)
-    session.add(user_payment_transactions)
     if (user.leads_credits - AMOUNT_CREDITS) < 0:
         if user.is_leads_auto_charging is False:
+            lead_user.is_active = False
             logging.info(f"User leads_auto_charging is False")
             return
-        user.leads_credits -= AMOUNT_CREDITS
-        if user.leads_credits % 100 == 0:
-            await publish_rabbitmq_message(
-                connection=rabbitmq_connection,
-                queue_name=QUEUE_CREDITS_CHARGING,
-                message_body={'customer_id': user.customer_id, 'credits': user.leads_credits}
-            )
-            customer_data = {'customer_id': user.customer_id, 'credits': user.leads_credits}
-            logging.info(f"Push to rmq {customer_data}")
-    else:
-        user.leads_credits -= AMOUNT_CREDITS
-    session.commit()
+
+    session.add(user_payment_transactions)
+    user.leads_credits -= AMOUNT_CREDITS
+    session.flush()
 
 
 def check_certain_urls(page, suppression_rule):
@@ -236,6 +226,26 @@ def process_root_user_behavior(lead_user, behavior_type, requested_at, session):
             session.add(new_record)
 
 
+async def dispatch_leads_to_rabbitmq(session, user, rabbitmq_connection, plan_id):
+    user_ids = (
+        session.query(LeadUser)
+        .filter_by(user_id=user.id, is_active=False)
+        .all()
+    )
+
+    if user_ids and len(user_ids) % 100 == 0:
+        await publish_rabbitmq_message(
+            connection=rabbitmq_connection,
+            queue_name=QUEUE_CREDITS_CHARGING,
+            message_body={
+                'customer_id': user.customer_id,
+                'plan_id': plan_id
+            }
+        )
+
+        logging.info(f"Push to RMQ: {{'customer_id': {user.customer_id}, 'plan_id': {plan_id}")
+
+
 async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, session: Session, rabbitmq_connection,
                             subscription_service: SubscriptionService, root_user=None):
     global count
@@ -258,8 +268,8 @@ async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, sess
         logging.info(f"domain has not enable {user_domain.id}")
         return
     user_domain_id = user_domain.id
-    if not subscription_service.is_user_has_active_subscription(user.id):
-        logging.info(f"user has not active subscription {partner_uid_client_id}")
+    if not subscription_service.is_allow_add_lead(user.id):
+        logging.info(f"user not active partner_uid_client_id: {partner_uid_client_id}")
         return
 
     if page is None:
@@ -316,15 +326,25 @@ async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, sess
         if lead_suppression:
             logging.info(f"No charging option supressed, skip lead")
             return
-        if root_user is None and not subscription_service.is_trial_subscription(user.id):
-            await process_payment_transaction(session, five_x_five_user.up_id, user_domain_id, user,
-                                              rabbitmq_connection)
+
         is_first_request = True
         lead_user = LeadUser(five_x_five_user_id=five_x_five_user.id, user_id=user.id, behavior_type=behavior_type,
                              domain_id=user_domain_id, total_visit=0, avarage_visit_time=0, total_visit_time=0)
 
+        plan_id = None
+        if root_user is None and not subscription_service.is_trial_subscription(user.id):
+            user_subscription = subscription_service.get_user_subscription(user.id)
+            plan_id = user_subscription.plan_id
+            await process_payment_transaction(session, five_x_five_user.up_id, user_domain_id, user,
+                                              lead_user)
+
         session.add(lead_user)
         session.flush()
+
+        if not lead_user.is_active:
+            await dispatch_leads_to_rabbitmq(session=session, user=user, rabbitmq_connection=rabbitmq_connection,
+                                             plan_id=plan_id)
+
         await process_lead_sync(rabbitmq_connection, user_domain_id, behavior_type, lead_user)
     requested_at_str = str(possible_lead['EVENT_DATE'])
     requested_at = datetime.fromisoformat(requested_at_str).replace(tzinfo=None)
@@ -375,7 +395,8 @@ async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, sess
                     if subscription_result['artificial_trial_days']:
                         date_now = datetime.now(timezone.utc)
                         subscription_result['subscription'].plan_start = date_now.replace(tzinfo=None)
-                        subscription_result['subscription'].plan_end = (date_now + relativedelta(days=subscription_result['artificial_trial_days'])).replace(tzinfo=None)
+                        subscription_result['subscription'].plan_end = (date_now + relativedelta(
+                            days=subscription_result['artificial_trial_days'])).replace(tzinfo=None)
                         session.flush()
             if not user_domain.is_pixel_installed:
                 domain_lead_users = session.query(LeadUser).filter_by(domain_id=user_domain.id).limit(2).all()
