@@ -16,7 +16,6 @@ import { useTrial } from "../../context/TrialProvider";
 import StatsCards from "../../components/StatsCard";
 import { PopupButton } from "react-calendly";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
-import { fetchUserData } from '../../services/meService';
 import { showErrorToast, showToast } from '@/components/ToastNotification';
 import axiosInterceptorInstance from "../../axios/axiosInterceptorInstance";
 import ManualPopup from "@/components/ManualPopup";
@@ -378,7 +377,6 @@ const SupportSection: React.FC = () => {
 
 const Dashboard: React.FC = () => {
   const router = useRouter();
-  const { setTrial, setDaysLeft } = useTrial();
   const [dataRevenue, setDataRevenue] = useState<any>(null);
   const [dataContact, setDataContact] = useState<any>(null);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -437,35 +435,14 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    const fetchUserDataAndUpdateState = async () => {
-      try {
-        const userData = await fetchUserData();
-        if (userData) {
-          setTrial(userData.trial);
-          setDaysLeft(userData.days_left);
-        }
-      } catch (error) {
-        console.error('Error fetching user data:', error);
-      }
-    };
-
-    fetchUserDataAndUpdateState();
-  }, []);
 
   useEffect(() => {
     const accessToken = localStorage.getItem("token");
     if (accessToken) {
-      const storedMe = sessionStorage.getItem("me");
-      if (storedMe) {
-        const { trial, days_left } = JSON.parse(storedMe);
-        setTrial(trial);
-        setDaysLeft(days_left);
-      }
       const fetchData = async () => {
         try {
-          const response = await axiosInstance.get("/dashboard/contact");
-          if (response.status === 200) {
+          const response = await axiosInstance.get("/check-user-authorization");
+          if (response.data.status === 'SUCCESS') {
             setShowCharts(true);
           }
           if (response.data.status === "NEED_BOOK_CALL") {
@@ -492,7 +469,7 @@ const Dashboard: React.FC = () => {
     } else {
       router.push("/signin");
     }
-  }, [setShowSlider, setTrial, setDaysLeft, router]);
+  }, [setShowSlider, router]);
 
   const [tabIndex, setTabIndex] = useState(0);
   const handleTabChange = (event: React.SyntheticEvent, newIndex: number) => {

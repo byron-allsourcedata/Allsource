@@ -953,8 +953,10 @@ const Integrations = () => {
     const router = useRouter();
     const [showSlider, setShowSlider] = useState(false);
     const [isLoading, setLoading] = useState(true)
+    const [activeTab, setActiveTab] = useState("1");
     const handleTabChange = (event: React.SyntheticEvent, newValue: string) => {
         setValue(newValue);
+        setActiveTab(newValue)
     };
 
     const installPixel = () => {
@@ -1072,7 +1074,7 @@ const Integrations = () => {
                                 onChange={handleTabChange}
                             >
                                 <Tab label="Your Integrations" value="1" sx={{ ...integrationStyle.tabHeading }} />
-                                <Tab label="Available Integrations" value="2" sx={{ ...integrationStyle.tabHeading }} />
+                                <Tab label="Add an Integrations" value="2" sx={{ ...integrationStyle.tabHeading }} />
                                 <Tab label="Pixel Management" value="3" sx={{ ...integrationStyle.tabHeading }} />
                             </TabList>
                         </Box>
@@ -1080,7 +1082,7 @@ const Integrations = () => {
                 </Box>
                 <Box sx={{ marginTop: '84px'
                 }}>
-                {status !== 'PIXEL_INSTALLATION_NEEDED' && !isLoading && (
+                {status !== 'PIXEL_INSTALLATION_NEEDED' && !isLoading && activeTab === "3" && (
                 <Box sx={{
                     border: '1px solid #E4E4E4',
                     mt: 2.5
