@@ -48,7 +48,19 @@ const Settings: React.FC = () => {
 
     return (
         <Box>
-            <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1, mb: 2, padding: '1rem 0rem 0',
+            <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1, padding: '1rem 0rem 1rem',
+                position: 'fixed',
+                top: '68px',
+                right: '16px',
+                left: '170px',
+                background: '#fff',
+                zIndex: '1200',
+                paddingLeft: '20px',
+                paddingRight: '24px',
+                mx: '-24px',
+                "@media (max-width: 900px)": { 
+                  left: '20px'
+                },
                 '@media (max-width: 1199px)': {
                     paddingTop: '1rem'
                 }
@@ -105,7 +117,11 @@ const Settings: React.FC = () => {
                         {isLoading ? (
                 <CustomizedProgressBar />
             ) : (
-                <>
+                <Box sx={{ marginTop: '68px',
+                 "@media (max-width: 900px)": {
+                    marginTop: '52px'
+                    },
+                }}>
                     {activeSection === 'accountDetails' && accountDetails && (
                         <SettingsAccountDetails accountDetails={accountDetails} />
                     )}
@@ -117,7 +133,7 @@ const Settings: React.FC = () => {
                     {activeSection === 'subscription' && <SettingsSubscription />}
 
                     {activeSection === 'apiDetails' && <SettingsApiDetails />}
-                </>
+                </Box>
             )}
         </Box>
     );

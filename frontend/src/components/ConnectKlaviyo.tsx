@@ -722,11 +722,11 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                     zIndex: 1301,
                     top: 0,
                     bottom: 0,
-                    msOverflowStyle: 'none',
-                    scrollbarWidth: 'none',
-                    '&::-webkit-scrollbar': {
-                        display: 'none',
-                    },
+                    // msOverflowStyle: 'none',
+                    // scrollbarWidth: 'none',
+                    // '&::-webkit-scrollbar': {
+                    //     display: 'none',
+                    // },
                     '@media (max-width: 600px)': {
                         width: '100%',
                     }
@@ -1793,7 +1793,12 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                         {/* Button based on selected tab */}
 
                     </Box>
-                    <Box sx={{ px: 2, py: 3.5, width: '100%', border: '1px solid #e4e4e4' }}>
+                    <Box sx={{ px: 2, py: 3.5, border: '1px solid #e4e4e4', position: 'fixed', bottom: 0, right: 0, background: '#fff',
+                        width: '620px',
+                        '@media (max-width: 600px)': {
+                                width: '100%',
+                        }
+                     }}>
                         <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
 
                             {getButton(value)}

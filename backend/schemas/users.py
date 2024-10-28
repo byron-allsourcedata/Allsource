@@ -13,6 +13,7 @@ class UserSignUpForm(BaseModel):
     password: str = Field(...)
     is_without_card: bool = Field(...)
     teams_token: Optional[str] = None
+    spi: Optional[str] = None
 
 
 class UserSignUpFormResponse(BaseModel):
@@ -75,6 +76,7 @@ class UpdatePasswordResponse(BaseModel):
 
 class CompanyInfoResponse(BaseModel):
     status: CompanyInfoEnum
+    stripe_payment_url: Optional[str] = None
 
 
 class CheckVerificationStatusResponse(BaseModel):

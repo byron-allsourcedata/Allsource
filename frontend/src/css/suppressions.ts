@@ -81,13 +81,11 @@ export const suppressionsStyles: { [key: string]: SxProps<Theme> } = {
         lineHeight: '16px'
     },
     tableColumn: {
-        fontFamily: 'Nunito Sans',
-        fontSize: '12px',
-        fontWeight: '600',
-        lineHeight: '16px',
-        color: '#202124',
+        lineHeight: '16px !important',
         position: 'relative',
-        textAlign: 'center',
+        paddingLeft: '45px',
+        paddingTop: '18px',
+        paddingBottom: '18px',
         '&::after': {
             content: '""',
             display: 'block',
@@ -109,13 +107,11 @@ export const suppressionsStyles: { [key: string]: SxProps<Theme> } = {
         }
     },
     tableBodyColumn: {
-        fontFamily: 'Roboto',
-        fontSize: '12px',
-        fontWeight: '400',
-        lineHeight: '16px',
-        color: '#5f6368',
+        lineHeight: '16px !important',
         position: 'relative',
-        textAlign: 'center',
+        paddingLeft: '45px',
+        paddingTop: '13.5px',
+        paddingBottom: '13.5px',
         '&::after': {
             content: '""',
             display: 'block',

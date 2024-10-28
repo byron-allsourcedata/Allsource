@@ -489,7 +489,9 @@ export const SettingsTeams: React.FC = () => {
                                         }}>
                                             <TableCell className="sticky-cell table-data" sx={{
                                                 ...teamsStyles.tableBodyColumn,
-                                                cursor: 'pointer', position: 'sticky', left: '0', zIndex: 9, backgroundColor: '#fff'
+                                                cursor: 'pointer', position: 'sticky', left: '0', zIndex: 9, backgroundColor: '#fff',
+                                                paddingTop: '18px',
+                                            paddingBottom: '18px'
                                             }}>{invitation.email}</TableCell>
                                             <TableCell className='table-data' sx={teamsStyles.tableBodyColumn}>{invitation.role}</TableCell>
                                             <TableCell className='table-data' sx={teamsStyles.tableBodyColumn}>{invitation.date}</TableCell>

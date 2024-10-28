@@ -104,19 +104,25 @@ def get_users_auth_service(db: Session = Depends(get_db),
                            user_persistence_service: UserPersistence = Depends(get_user_persistence_service),
                            send_grid_persistence_service: SendgridPersistence = Depends(
                                get_send_grid_persistence_service),
+                           plans_persistence: PlansPersistence = Depends(
+                               get_plans_persistence),
                            subscription_service: SubscriptionService = Depends(get_subscription_service)):
     return UsersAuth(db=db, payments_service=payments_plans, user_persistence_service=user_persistence_service,
                      send_grid_persistence_service=send_grid_persistence_service,
-                     subscription_service=subscription_service)
+                     subscription_service=subscription_service,
+                     plans_persistence=plans_persistence
+                     )
 
 
 def get_admin_customers_service(db: Session = Depends(get_db),
                                 subscription_service: SubscriptionService = Depends(get_subscription_service),
                                 user_persistence: UserPersistence = Depends(get_user_persistence_service),
                                 users_auth_service: UsersAuth = Depends(get_users_auth_service),
-                                plans_presistence: PlansPersistence = Depends(get_plans_persistence)):
+                                plans_presistence: PlansPersistence = Depends(get_plans_persistence),
+                                send_grid_persistence: SendgridPersistence = Depends(get_settings_persistence)):
     return AdminCustomersService(db=db, subscription_service=subscription_service,
                                  user_persistence=user_persistence, plans_persistence=plans_presistence,
+                                 send_grid_persistence=send_grid_persistence,
                                  users_auth_service=users_auth_service)
 
 

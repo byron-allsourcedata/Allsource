@@ -168,19 +168,19 @@ export const SettingsBilling: React.FC = () => {
             const { billing_history, count } = response.data;
             setBillingHistory(billing_history);
             setTotalRows(count); // Устанавливаем общее количество строк
-            let newRowsPerPageOptions: number[] = []; 
+            let newRowsPerPageOptions: number[] = [];
             if (count <= 10) {
-                newRowsPerPageOptions = [5, 10]; 
+                newRowsPerPageOptions = [5, 10];
             } else if (count <= 50) {
-                newRowsPerPageOptions = [10, 20]; 
+                newRowsPerPageOptions = [10, 20];
             } else if (count <= 100) {
-                newRowsPerPageOptions = [10, 20, 50]; 
+                newRowsPerPageOptions = [10, 20, 50];
             } else if (count <= 300) {
-                newRowsPerPageOptions = [10, 20, 50, 100]; 
+                newRowsPerPageOptions = [10, 20, 50, 100];
             } else if (count <= 500) {
-                newRowsPerPageOptions = [10, 20, 50, 100, 300]; 
+                newRowsPerPageOptions = [10, 20, 50, 100, 300];
             } else {
-                newRowsPerPageOptions = [10, 20, 50, 100, 300, 500]; 
+                newRowsPerPageOptions = [10, 20, 50, 100, 300, 500];
             }
             if (!newRowsPerPageOptions.includes(count)) {
                 newRowsPerPageOptions.push(count);
@@ -501,7 +501,7 @@ export const SettingsBilling: React.FC = () => {
     const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
         setRowsPerPage(parseInt(event.target.value, 10));
         setPage(0); // Reset to first page when changing rows per page
-      };
+    };
 
     const handleCheckoutSuccess = (data: any) => {
         setCardDetails(prevDetails => [...prevDetails, data]);
@@ -897,7 +897,9 @@ export const SettingsBilling: React.FC = () => {
                                                     lineHeight: '16px',
                                                     color: '#5f6368',
                                                     letterSpacing: '0.06px'
-                                                }}>$ {billingDetails.overage}/contact</Typography>
+                                                }}>
+                                                    {billingDetails.overage === -1 ? `${billingDetails.overage}/contact` : `$ ${billingDetails.overage}/contact`}
+                                                </Typography>
                                             </Box>
                                             <Box position="relative" display="inline-block">
                                                 <Switch
@@ -1114,6 +1116,21 @@ export const SettingsBilling: React.FC = () => {
                                                         </Box>
                                                     );
                                                 }
+                                                if (nextKey === 'yearly_total') {
+                                                    return (
+                                                        <Box key={nextIndex} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                                                            <Typography className='main-text' sx={{
+                                                                fontSize: '12px',
+                                                                fontWeight: '600',
+                                                                lineHeight: '16px',
+                                                                color: '#4a4a4a'
+                                                            }}>Yearly Total</Typography>
+                                                            <Typography className='first-sub-title' sx={{
+                                                                fontWeight: '700 !important'
+                                                            }}>{renderValue(nextValue)}</Typography>
+                                                        </Box>
+                                                    );
+                                                }
                                                 return null;
                                             })}
                                         </Box>
@@ -1121,7 +1138,7 @@ export const SettingsBilling: React.FC = () => {
                                 }
 
                                 // Skip rendering 'Monthly Total' in its own row, since it's already handled
-                                if (key === 'monthly_total' || key === 'active') {
+                                if (key === 'monthly_total' || key === 'active' || key === 'yearly_total') {
                                     return null;
                                 }
 
@@ -1385,7 +1402,7 @@ export const SettingsBilling: React.FC = () => {
                     </Table>
                 </TableContainer>
                 {/* Pagination Component */}
-                <Box sx={{ display: 'flex', justifyContent: 'flex-end', padding: '42px 0 24px'  }}>
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end', padding: '42px 0 24px' }}>
                     <CustomTablePagination
                         count={totalRows}
                         page={page}

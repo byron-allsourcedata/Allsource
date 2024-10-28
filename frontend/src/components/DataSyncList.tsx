@@ -1,37 +1,37 @@
 import {
-    Box,
-    Typography,
-    Button,
-    Paper,
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TableRow,
-    IconButton,
-    Popover,
-    Tooltip,
-  } from "@mui/material";
-  import React, { useState, useEffect } from "react";
-  import Image from "next/image";
-  import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-  import CustomizedProgressBar from '@/components/CustomizedProgressBar';
-  import axiosInstance from '../axios/axiosInterceptorInstance';
-  import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
-  import ConnectKlaviyo from '@/components/ConnectKlaviyo';
-  import ConnectMeta from '@/components/ConnectMeta';
-  import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
-  import { leadsStyles } from "@/app/leads/leadsStyles";
-  import axiosInterceptorInstance from '@/axios/axiosInterceptorInstance';
-  import { showErrorToast, showToast } from "@/components/ToastNotification";
-  import axios from "axios";
+  Box,
+  Typography,
+  Button,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  IconButton,
+  Popover,
+  Tooltip,
+} from "@mui/material";
+import React, { useState, useEffect } from "react";
+import Image from "next/image";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import CustomizedProgressBar from '@/components/CustomizedProgressBar';
+import axiosInstance from '../axios/axiosInterceptorInstance';
+import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
+import ConnectKlaviyo from '@/components/ConnectKlaviyo';
+import ConnectMeta from '@/components/ConnectMeta';
+import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
+import { leadsStyles } from "@/app/leads/leadsStyles";
+import axiosInterceptorInstance from '@/axios/axiosInterceptorInstance';
+import { showErrorToast, showToast } from "@/components/ToastNotification";
+import axios from "axios";
 import { datasyncStyle } from "@/app/data-sync/datasyncStyle";
 import MailchimpDatasync from "./MailchimpDatasync";
 import OmnisendDataSync from "./OmnisendDataSync";
 import SendlaneDatasync from "./SendlaneDatasync";
 import CustomTablePagination from "./CustomTablePagination";
-
+  
   interface DataSyncProps {
     service_name?: string | null
   } 
@@ -59,7 +59,7 @@ import CustomTablePagination from "./CustomTablePagination";
     const handleIntegrationsSync = async () => {
       try {
         setIsLoading(true)
-        let params = null 
+        let params = null
         if (service_name) {
           params = {
             service_name: service_name
@@ -71,25 +71,25 @@ import CustomTablePagination from "./CustomTablePagination";
         const { length: count } = response.data;
         setData(response.data);
         setTotalRows(count);
-      let newRowsPerPageOptions: number[] = []; 
-            if (count <= 10) {
-                newRowsPerPageOptions = [5, 10]; 
-            } else if (count <= 50) {
-                newRowsPerPageOptions = [10, 20]; 
-            } else if (count <= 100) {
-                newRowsPerPageOptions = [10, 20, 50]; 
-            } else if (count <= 300) {
-                newRowsPerPageOptions = [10, 20, 50, 100]; 
-            } else if (count <= 500) {
-                newRowsPerPageOptions = [10, 20, 50, 100, 300]; 
-            } else {
-                newRowsPerPageOptions = [10, 20, 50, 100, 300, 500]; 
-            }
-            if (!newRowsPerPageOptions.includes(count)) {
-                newRowsPerPageOptions.push(count);
-                newRowsPerPageOptions.sort((a, b) => a - b);
-            }
-            setRowsPerPageOptions(newRowsPerPageOptions);
+        let newRowsPerPageOptions: number[] = [];
+        if (count <= 10) {
+          newRowsPerPageOptions = [5, 10];
+        } else if (count <= 50) {
+          newRowsPerPageOptions = [10, 20];
+        } else if (count <= 100) {
+          newRowsPerPageOptions = [10, 20, 50];
+        } else if (count <= 300) {
+          newRowsPerPageOptions = [10, 20, 50, 100];
+        } else if (count <= 500) {
+          newRowsPerPageOptions = [10, 20, 50, 100, 300];
+        } else {
+          newRowsPerPageOptions = [10, 20, 50, 100, 300, 500];
+        }
+        if (!newRowsPerPageOptions.includes(count)) {
+          newRowsPerPageOptions.push(count);
+          newRowsPerPageOptions.sort((a, b) => a - b);
+        }
+        setRowsPerPageOptions(newRowsPerPageOptions);
       } catch (error) {
       }
       finally {
@@ -100,6 +100,7 @@ import CustomTablePagination from "./CustomTablePagination";
     useEffect(() => {
       handleIntegrationsSync();
     }, [service_name]);
+  
   
     const statusIcon = (status: boolean) => {
       if (status)
@@ -154,7 +155,7 @@ import CustomTablePagination from "./CustomTablePagination";
            return (
            <Image src={'/mailchimp-icon.svg'} alt='mailchimp' width={18} height={18} />
           )
-        case 'sendlane':
+          case 'sendlane':
            return (
            <Image src={'/sendlane-icon.svg'} alt='mailchimp' width={18} height={18} />
           )
@@ -170,6 +171,8 @@ import CustomTablePagination from "./CustomTablePagination";
       setRowsPerPage(parseInt(event.target.value, 10));
       setPage(0);
     };
+  
+    // Action
     const [anchorEl, setAnchorEl] = useState(null);
     const [selectedId, setSelectedId] = useState<number | null>(null);
   
@@ -258,22 +261,22 @@ import CustomTablePagination from "./CustomTablePagination";
       }
     };
 
-    const handleMailchimpIconPopupClose = async() => {
-      setMailchimpIconPopupOpen(false);
-      setSelectedId(null);
-      try {
-        const response = await axiosInstance.get(`/data-sync/sync?integrations_users_sync_id=${selectedId}`);
-        if (response){
-          setData(prevData => 
-            prevData.map(item => 
-                item.id === selectedId ? { ...item, ...response.data } : item
-            )
-        );      
-        }
-      } catch (error) {
-        console.error('Error fetching leads:', error);
+  const handleMailchimpIconPopupClose = async () => {
+    setMailchimpIconPopupOpen(false);
+    setSelectedId(null);
+    try {
+      const response = await axiosInstance.get(`/data-sync/sync?integrations_users_sync_id=${selectedId}`);
+      if (response) {
+        setData(prevData =>
+          prevData.map(item =>
+            item.id === selectedId ? { ...item, ...response.data } : item
+          )
+        );
       }
+    } catch (error) {
+      console.error('Error fetching leads:', error);
     }
+  }
 
     const handleOmnisendIconPopupClose = async() => {
       setOmnisendIconPopupOpen(false);
@@ -312,9 +315,9 @@ import CustomTablePagination from "./CustomTablePagination";
         }
       };
   
-    const handleSendlaneIconPopupClose = () => {
-      setOpenSendlaneIconPopup(false)
-    }
+      const handleSendlaneIconPopupClose = () => {
+        setOpenSendlaneIconPopup(false)
+      }
   
     const handleDelete = async () => {
       try {
@@ -448,7 +451,22 @@ import CustomTablePagination from "./CustomTablePagination";
                 </TableRow>
               </TableHead>
               <TableBody>
-                {data.slice(page * rowsPerPage, (page + 1) * rowsPerPage).map((row, index) => (
+              {data.length === 0 ? (
+                <TableRow sx={datasyncStyle.tableBodyRow}>
+                  <TableCell
+                    colSpan={11} // измените количество в зависимости от количества столбцов
+                    sx={{
+                      ...datasyncStyle.tableBodyColumn,
+                      textAlign: 'center',
+                      paddingTop: '18px',
+                      paddingBottom: '18px',
+                    }}
+                  >
+                    No data synchronization available
+                  </TableCell>
+                </TableRow>
+              ) : (
+                data.slice(page * rowsPerPage, (page + 1) * rowsPerPage).map((row, index) => (
                   <TableRow
                     key={row.id}
                     sx={{
@@ -472,18 +490,10 @@ import CustomTablePagination from "./CustomTablePagination";
                     >
                       {row.name}
                     </TableCell>
-                    <TableCell sx={datasyncStyle.table_array}>
-                      {row.type}
-                    </TableCell>
-                    <TableCell sx={datasyncStyle.table_array}>
-                      {row.contacts}
-                    </TableCell>
-                    <TableCell sx={datasyncStyle.table_array}>
-                      {row.createdBy}
-                    </TableCell>
-                    <TableCell sx={datasyncStyle.table_array}>
-                      {row.createdDate}
-                    </TableCell>
+                    <TableCell sx={datasyncStyle.table_array}>{row.type}</TableCell>
+                    <TableCell sx={datasyncStyle.table_array}>{row.contacts}</TableCell>
+                    <TableCell sx={datasyncStyle.table_array}>{row.createdBy}</TableCell>
+                    <TableCell sx={datasyncStyle.table_array}>{row.createdDate}</TableCell>
                     <TableCell>
                       <Box
                         sx={{
@@ -497,9 +507,7 @@ import CustomTablePagination from "./CustomTablePagination";
                         {platformIcon(row.platform)}
                       </Box>
                     </TableCell>
-                    <TableCell sx={datasyncStyle.table_array}>
-                      {row.accountId}
-                    </TableCell>
+                    <TableCell sx={datasyncStyle.table_array}>{row.accountId}</TableCell>
                     <TableCell sx={datasyncStyle.table_array}>
                       <Box
                         sx={{
@@ -514,25 +522,17 @@ import CustomTablePagination from "./CustomTablePagination";
                           sx={{
                             fontFamily: "Roboto",
                             fontSize: "12px",
-                            color:
-                              row.dataSync === true
-                                ? "rgba(43, 91, 0, 1) !important"
-                                : "rgba(74, 74, 74, 1)!important",
-                            backgroundColor:
-                              row.dataSync === true
-                                ? "rgba(234, 248, 221, 1) !important"
-                                : "rgba(219, 219, 219, 1) !important",
+                            color: row.dataSync ? "rgba(43, 91, 0, 1) !important" : "rgba(74, 74, 74, 1)!important",
+                            backgroundColor: row.dataSync ? "rgba(234, 248, 221, 1) !important" : "rgba(219, 219, 219, 1) !important",
                             padding: "3px 14.5px",
-                            maxHeigh: "1.25rem",
+                            maxHeight: "1.25rem",
                           }}
                         >
                           {formatFunnelText(row.dataSync)}
                         </Typography>
                       </Box>
                     </TableCell>
-                    <TableCell sx={datasyncStyle.table_array}>
-                      {row.lastSync}
-                    </TableCell>
+                    <TableCell sx={datasyncStyle.table_array}>{row.lastSync}</TableCell>
                     <TableCell
                       sx={{ ...datasyncStyle.table_column, position: "relative" }}
                     >
@@ -547,7 +547,7 @@ import CustomTablePagination from "./CustomTablePagination";
                         {statusIcon(row.syncStatus)}
                       </Box>
                     </TableCell>
-                    <TableCell sx={{ ...datasyncStyle.table_array }}>
+                    <TableCell sx={datasyncStyle.table_array}>
                       <Box
                         sx={{
                           display: "flex",
@@ -556,7 +556,7 @@ import CustomTablePagination from "./CustomTablePagination";
                           alignItems: "center",
                           justifyContent: "space-between",
                           textTransform: "capitalize",
-                          paddingLeft: 0
+                          paddingLeft: 0,
                         }}
                       >
                         {row.suppression}
@@ -574,8 +574,9 @@ import CustomTablePagination from "./CustomTablePagination";
                       </Box>
                     </TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
+                ))
+              )}
+            </TableBody>
             </Table>
           </TableContainer>
           <Popover
@@ -654,7 +655,8 @@ import CustomTablePagination from "./CustomTablePagination";
               >
                 Delete
               </Button>
-              <Button
+              {data.find((row) => row.id === selectedId)?.sync_status === false &&
+                <Button
                 sx={{
                   justifyContent: "flex-start",
                   width: "100%",
@@ -672,6 +674,7 @@ import CustomTablePagination from "./CustomTablePagination";
               >
                 Repair Sync
               </Button>
+              }
             </Box>
           </Popover>
           {

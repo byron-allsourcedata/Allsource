@@ -21,22 +21,24 @@ class CompanyInfoService:
         result = self.check_company_info_authorization()
         if result == CompanyInfoEnum.SUCCESS:
             if not self.user.get('is_with_card') and not self.user.get('is_email_confirmed'):
-                return CompanyInfoEnum.NEED_EMAIL_VERIFIED
-            self.db.query(Users).filter(Users.id == self.user.get('id')).update(
-                {Users.company_name: company_info.organization_name,
-                 Users.company_website: company_info.company_website,
-                 Users.employees_workers: company_info.employees_workers,
-                 Users.company_role: company_info.company_role,
-                 Users.company_website_visits: company_info.monthly_visits,
-                 Users.is_company_details_filled: True
-                 },
-                synchronize_session=False)
+                return {'status': CompanyInfoEnum.NEED_EMAIL_VERIFIED}
+            user = self.db.query(Users).filter(Users.id == self.user.get('id')).first()
+            user.company_name = company_info.organization_name
+            user.company_website = company_info.company_website
+            user.employees_workers = company_info.employees_workers
+            user.company_role = company_info.company_role
+            user.company_website_visits = company_info.monthly_visits
+            user.is_company_details_filled = True
             self.db.flush()
-            self.db.add(UserDomains(user_id=self.user.get('id'), domain=company_info.company_website.replace('https://', '').replace('http://', '')))
+            self.db.add(UserDomains(user_id=self.user.get('id'),
+                                    domain=company_info.company_website.replace('https://', '').replace('http://', '')))
             self.db.commit()
-            return CompanyInfoEnum.SUCCESS
+            return {
+                'status': CompanyInfoEnum.SUCCESS,
+                'stripe_payment_url': user.stripe_payment_url
+                    }
         else:
-            return result
+            return {'status': result}
 
     def get_company_info(self):
         return self.check_company_info_authorization()

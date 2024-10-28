@@ -958,8 +958,10 @@ const Integrations = () => {
     const router = useRouter();
     const [showSlider, setShowSlider] = useState(false);
     const [isLoading, setLoading] = useState(true)
+    const [activeTab, setActiveTab] = useState("1");
     const handleTabChange = (event: React.SyntheticEvent, newValue: string) => {
         setValue(newValue);
+        setActiveTab(newValue)
     };
 
     const installPixel = () => {
@@ -1097,6 +1099,18 @@ const Integrations = () => {
                     display: "flex",
                     flexDirection: "row",
                     alignItems: "center",
+                    position: 'fixed',
+                    top: '68px',
+                    right: '16px',
+                    left: '170px',
+                    background: '#fff',
+                    zIndex: '1200',
+                    paddingLeft: '20px',
+                    paddingRight: '24px',
+                    mx: '-24px',
+                    "@media (max-width: 900px)": { 
+                      left: '20px'
+                    },
                     "@media (max-width: 600px)": { mb: 2 },
                 }}>
                     {/* Title and Tooltip */}
@@ -1136,13 +1150,15 @@ const Integrations = () => {
                                 onChange={handleTabChange}
                             >
                                 <Tab label="Your Integrations" value="1" sx={{ ...integrationStyle.tabHeading }} />
-                                <Tab label="Available Integrations" value="2" sx={{ ...integrationStyle.tabHeading }} />
+                                <Tab label="Add an Integrations" value="2" sx={{ ...integrationStyle.tabHeading }} />
                                 <Tab label="Pixel Management" value="3" sx={{ ...integrationStyle.tabHeading }} />
                             </TabList>
                         </Box>
                     )}  
                 </Box>
-                {status !== 'PIXEL_INSTALLATION_NEEDED' && !isLoading && (
+                <Box sx={{ marginTop: '84px'
+                }}>
+                {status !== 'PIXEL_INSTALLATION_NEEDED' && !isLoading && activeTab === "3" && (
                 <Box sx={{
                     border: '1px solid #E4E4E4',
                     mt: 2.5
@@ -1207,6 +1223,7 @@ const Integrations = () => {
                         </TabPanel>
                     </>
                 ))}
+              </Box>
             </TabContext>
             {showSlider && <Slider/>}
         </>

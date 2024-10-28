@@ -627,11 +627,11 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
                     zIndex: 1301,
                     top: 0,
                     bottom: 0,
-                    msOverflowStyle: 'none',
-                    scrollbarWidth: 'none',
-                    '&::-webkit-scrollbar': {
-                        display: 'none',
-                    },
+                    // msOverflowStyle: 'none',
+                    // scrollbarWidth: 'none',
+                    // '&::-webkit-scrollbar': {
+                    //     display: 'none',
+                    // },
                     '@media (max-width: 600px)': {
                         width: '100%',
                     }

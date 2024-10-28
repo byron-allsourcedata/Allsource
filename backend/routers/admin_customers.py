@@ -25,6 +25,7 @@ async def verify_token(admin_customers_service: AdminCustomersService = Depends(
         await rabbitmq_connection.close()
     return "OK"
 
+
 @router.get("/pixel_code_passed")
 async def verify_token(admin_customers_service: AdminCustomersService = Depends(get_admin_customers_service),
                        mail: str = Query(...)):
@@ -46,6 +47,7 @@ async def verify_token(admin_customers_service: AdminCustomersService = Depends(
         await rabbitmq_connection.close()
 
     return 'OK'
+
 
 @router.get('/users')
 async def get_users(admin_customers_service: AdminCustomersService = Depends(get_admin_customers_service)):
