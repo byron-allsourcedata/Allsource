@@ -1,19 +1,18 @@
 import logging
 from datetime import datetime, timedelta
-from typing import List
 
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from config.stripe import StripeConfig
+from enums import UserAuthorizationStatus
 from models.plans import SubscriptionPlan
 from models.subscriptions import UserSubscriptions
 from models.users import Users
 from persistence.plans_persistence import PlansPersistence
-from services.users_auth import UsersAuth
+from persistence.sendgrid_persistence import SendgridPersistence
 from persistence.user_persistence import UserPersistence
 from services.subscriptions import SubscriptionService
-from enums import UserAuthorizationStatus
+from services.users_auth import UsersAuth
 
 logger = logging.getLogger(__name__)
 
@@ -21,12 +20,13 @@ logger = logging.getLogger(__name__)
 class AdminCustomersService:
 
     def __init__(self, db: Session, subscription_service: SubscriptionService, user_persistence: UserPersistence,
-                 plans_persistence: PlansPersistence, users_auth_service: UsersAuth):
+                 plans_persistence: PlansPersistence, users_auth_service: UsersAuth, send_grid_persistence: SendgridPersistence):
         self.db = db
         self.subscription_service = subscription_service
         self.user_persistence = user_persistence
-        self.plans_presistence = plans_persistence
+        self.plans_persistence = plans_persistence
         self.users_auth_service = users_auth_service
+        self.send_grid_persistence = send_grid_persistence
 
     def get_users(self):
         users_object = self.user_persistence.get_users()
@@ -56,7 +56,7 @@ class AdminCustomersService:
                 "full_name": user.get('full_name'),
                 "created_at": user.get('created_at'),
                 'payment_status': payment_status,
-                "is_trial": self.plans_presistence.get_trial_status_by_user_id(user.get('id'))
+                "is_trial": self.plans_persistence.get_trial_status_by_user_id(user.get('id'))
             })
         return result
 
@@ -81,26 +81,6 @@ class AdminCustomersService:
             {Users.is_book_call_passed: True},
             synchronize_session=False)
         self.db.commit()
-
-    def create_customer_session(self, price_id: str, customer_id: str):
-        return self.create_stripe_checkout_session(
-            success_url=StripeConfig.success_url,
-            cancel_url=StripeConfig.cancel_url,
-            customer_id=customer_id,
-            line_items=[{"price": price_id, "quantity": 1}],
-            mode="subscription"
-        )
-
-    def create_stripe_checkout_session(self, success_url: str, cancel_url: str, customer_id: str,
-                                       line_items: List[dict],
-                                       mode: str):
-        import stripe
-
-        session = stripe.checkout.Session.create(
-            success_url=success_url, cancel_url=cancel_url, allow_promotion_codes=True, customer=customer_id,
-            payment_method_types=["card"], line_items=line_items, mode=mode
-        )
-        return {"link": session.url}
 
     def set_user_subscription(self, user_id, plan_start, plan_end):
         (

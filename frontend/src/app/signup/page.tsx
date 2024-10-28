@@ -22,7 +22,8 @@ const Signup: React.FC = () => {
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const user_teams_mail = searchParams.get('user_teams_mail');
   const teams_token = searchParams.get('token');
-  const [formValues, setFormValues] = useState({ full_name: '', email: user_teams_mail, password: '', is_without_card: isWithoutCard ? 'true' : 'false', termsAccepted: false, teams_token: teams_token });
+  const spi = searchParams.get('spi');
+  const [formValues, setFormValues] = useState({ full_name: '', email: user_teams_mail, password: '', is_without_card: isWithoutCard ? 'true' : 'false', termsAccepted: false, teams_token: teams_token, spi: spi });
   const [formSubmitted, setFormSubmitted] = useState(false);
 
 
@@ -251,6 +252,7 @@ const Signup: React.FC = () => {
               try {
                 const response = await axiosInstance.post('/sign-up-google', {
                   token: credentialResponse.credential,
+                  ...(spi && { spi }),
                   ...(teams_token && { teams_token })
                 });
 
