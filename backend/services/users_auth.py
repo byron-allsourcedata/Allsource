@@ -47,6 +47,8 @@ class UsersAuth:
                 subscription_plan_is_active = self.subscription_service.is_user_has_active_subscription(user.get('id'))
                 if subscription_plan_is_active:
                     return UserAuthorizationStatus.SUCCESS
+                if user.get('stripe_payment_url'):
+                    return UserAuthorizationStatus.PAYMENT_NEEDED
                 return UserAuthorizationStatus.NEED_CHOOSE_PLAN
             return UserAuthorizationStatus.FILL_COMPANY_DETAILS
         if user.get('is_email_confirmed'):

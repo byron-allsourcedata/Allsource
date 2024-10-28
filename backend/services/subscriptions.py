@@ -354,7 +354,7 @@ class SubscriptionService:
                     price_id=price_id,
                     platform_subscription_id=platform_subscription_id,
                     lead_credit_price=lead_credit_price,
-                    is_trial=True if stripe_status == 'trialing' else False,
+                    is_trial=True if stripe_status == 'trialing' else False
                 )
                 self.db.add(new_subscription)
                 self.db.flush()
@@ -364,6 +364,8 @@ class SubscriptionService:
                 user.prospect_credits = prospect_credits
                 user.current_subscription_id = new_subscription.id
                 user.is_leads_auto_charging = True
+                if user.stripe_payment_url:
+                    user.stripe_payment_url = None
                 self.db.flush()
 
         if status == "canceled" or status == 'inactive':
