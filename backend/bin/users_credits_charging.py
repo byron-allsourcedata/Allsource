@@ -83,6 +83,9 @@ async def on_message_received(message, session):
                                         type='leads_credits'
                                     )
                                     session.add(payment_transaction_obj)
+                                    session.flush()
+                                    for lead_user in lead_users[:100]:
+                                        lead_user.is_active = True
                                     session.commit()
                         else:
                             logging.error(f"Purchase failed: {result['error']}", exc_info=True)
