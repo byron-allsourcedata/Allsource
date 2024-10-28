@@ -61,7 +61,7 @@ async def on_message_received(message, session):
                 session.commit()
             else:
                 if user.is_leads_auto_charging:
-                    while quantity >= 100:
+                    if quantity >= 100:
                         quantity -= 100
                         result = purchase_product(customer_id, subscription_plan.stripe_price_id, 100, 'leads_credits')
                         if result['success']:
