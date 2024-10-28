@@ -3,12 +3,13 @@ from fastapi.params import Header
 from typing_extensions import Annotated
 
 from dependencies import get_users_auth_service, get_users_email_verification_service, get_users_service, \
-    check_user_authorization, check_pixel_install_domain
+    check_user_authorization, check_pixel_install_domain, check_user_authentication, get_notification_service
 from models.users_domains import UserDomains
 from schemas.auth_google_token import AuthGoogleData
 from schemas.users import UserSignUpForm, UserSignUpFormResponse, UserLoginFormResponse, UserLoginForm, UpdatePassword, \
     ResendVerificationEmailResponse, ResetPasswordForm, ResetPasswordResponse, UpdatePasswordResponse, \
     CheckVerificationStatusResponse, VerifyTokenResponse
+from services.notification import Notification
 from services.users import UsersService
 from services.users_auth import UsersAuth
 from services.users_email_verification import UsersEmailVerificationService
@@ -23,6 +24,12 @@ def get_me(user_service: UsersService = Depends(get_users_service)):
         "user_info": user_service.get_my_info(),
         "user_plan": plan
     }
+
+
+@router.get("/notification")
+async def get_notification(notification_service: Notification = Depends(get_notification_service),
+                           user=Depends(check_user_authentication)):
+    return notification_service.get_notification(user)
 
 
 @router.get("/check-user-authorization")

@@ -216,7 +216,7 @@ class SubscriptionService:
                     user.prospect_credits = 0
                 user.prospect_credits += int(amount_credits)
                 self.db.commit()
-        return stripe_payload
+        return status
 
     def get_user_payment_by_transaction_id(self, transaction_id):
         user_payment_transaction = self.db.query(UsersPaymentsTransactions).filter(
