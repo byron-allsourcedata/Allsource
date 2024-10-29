@@ -108,6 +108,8 @@ class IntegrationsUserSyncPersistence:
     def get_data_sync_filter_by(self, **filter_by):
         return self.db.query(IntegrationUserSync).filter_by(**filter_by).all()
     
-    def update_sync(self, update_data: dict, **filter_by):
-        update_data['no_of_contacts'] = IntegrationUserSync.no_of_contacts + 1
-        return self.db.query(IntegrationUserSync).filter_by(**filter_by).update(update_data)
+    def update_sync(self, update_data: dict, counter, **filter_by):
+        update_data['no_of_contacts'] = IntegrationUserSync.no_of_contacts + counter
+        update = self.db.query(IntegrationUserSync).filter_by(**filter_by).update(update_data) 
+        self.db.commit()
+        return update

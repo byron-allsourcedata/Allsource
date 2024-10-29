@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import httpx
 from typing import List
@@ -11,7 +12,7 @@ from models.leads_users import LeadUser
 from models.integrations.integrations_users_sync import IntegrationUserSync
 from models.five_x_five_users import FiveXFiveUser
 from enums import IntegrationsStatus
-from datetime import datetime
+from datetime import datetime, timedelta
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 
 class OmnisendIntegrationService:
@@ -45,7 +46,7 @@ class OmnisendIntegrationService:
         return response
 
     def get_list_contact(self, api_key):
-        contacts = self.__handle_request('/contacts', api_key=api_key)
+        contacts = self.__handle_request('/contacts', api_key=api_key)   
         return contacts
     
     def __save_integrations(self, api_key: str, domain_id: int):
@@ -107,46 +108,114 @@ class OmnisendIntegrationService:
             queue_name=self.QUEUE_DATA_SYNC, 
             message_body=message)
     
-    def process_data_sync(self, message):
+
+    async def process_lead_sync(self, rabbitmq_connection, user_domain_id, behavior_type, lead_user, stage, next_try):
+        await publish_rabbitmq_message(rabbitmq_connection, self.QUEUE_DATA_SYNC,
+                                    {'domain_id': user_domain_id, 'leads_type': behavior_type, 'lead': {
+                                        'id': lead_user.id,
+                                        'five_x_five_user_id': lead_user.five_x_five_user_id
+                                    }, 'stage': stage, 'next_try': next_try})
+
+    async def process_data_sync(self, message):
+        counter = 0
         sync = None
         try:
             sync = IntegrationUserSync(**message.get('sync'))
-        except: pass
+            logging.info("IntegrationUserSync created successfully.")
+        except Exception as e:
+            logging.error("Error creating IntegrationUserSync: %s", e)
+
         leads_type = message.get('leads_type')
         domain_id = message.get('domain_id')
-        lead = LeadUser(**message.get('lead')) if message.get('lead') else None
+        lead = message.get('lead', None)
+        if domain_id and lead:
+            lead = self.leads_persistence.get_leads_domain(domain_id=domain_id, five_x_five_user_id=lead.get('five_x_five_user_id'))[0]
+            if message.get('lead') and not lead:
+                return
+        stage = message.get('stage') if message.get('stage') else 1
+        next_try = message.get('next_try') if message.get('next_try') else None
+
+        rabbitmq_connection = RabbitMQConnection()
+        connection = await rabbitmq_connection.connect()
+        channel = await connection.channel()
+        await channel.declare_queue(
+            name=self.QUEUE_DATA_SYNC,
+            durable=True
+        )
+        logging.info("RabbitMQ queue declared.")
+
         domains = self.domain_persistence.get_domain_by_filter(**{'id': domain_id} if domain_id else {})
+        logging.info(f"Retrieved domains: {[domain.id for domain in domains]}",)
+
         for domain in domains:
             credentials = self.get_credentials(domain.id)
             if not credentials:
+                logging.warning("No credentials found for domain id %s.", domain.id)
                 return
+            
             data_syncs_list = self.sync_persistence.get_data_sync_filter_by(
                 domain_id=domain.id,
                 integration_id=credentials.id,
                 is_active=True
             )
-            if lead:
-                leads = [lead]
-            elif not leads_type or leads_type == 'allContacts':
-                leads = self.leads_persistence.get_leads_domain(domain.id) 
-            else:
-                leads = self.leads_persistence.get_leads_domain(domain.id, behavior_type=leads_type)
-            for data_sync_item in data_syncs_list if not sync else [sync]:
-                if lead and leads.behavior_type != data_sync_item.leads_type or data_sync_item.leads_type in ('allContacts', None):
-                    return
-                if data_sync_item.data_map:
-                    data_map = data_sync_item.data_map
-                else: data_map = None
-                for lead in leads:
-                    
-                    profile = self.__create_profile(lead.five_x_five_user_id, credentials.access_token, data_map)
-                    if profile:
-                        self.__add_profile_to_list(data_sync_item.list_id, profile.get('id'), credentials.access_token)
-                self.sync_persistence.update_sync({
-                    'last_sync_date': datetime.now()
-                }, id=data_sync_item.id)
 
-    def __create_profile(self, lead_id: int, api_key: str, data_map):
+            leads = [lead] if lead else (
+                self.leads_persistence.get_leads_domain(domain.id, behavior_type=leads_type)
+                if leads_type and leads_type != 'allContacts' else
+                self.leads_persistence.get_leads_domain(domain.id)
+            )
+
+            for data_sync_item in data_syncs_list if not sync else [sync]:
+                if lead and lead.behavior_type != data_sync_item.leads_type and data_sync_item.leads_type not in ('allContacts', None):
+                    logging.warning("Lead behavior type mismatch: %s vs %s", lead.behavior_type, data_sync_item.leads_type)
+                    continue
+
+                data_map = data_sync_item.data_map if data_sync_item.data_map else None
+
+                for lead in leads:
+                    if stage > 3:
+                        logging.info("Stage limit reached. Exiting.")
+                        return
+                    
+                    if next_try and datetime.now() < datetime.fromisoformat(next_try):
+                        await asyncio.sleep(1)
+                        logging.info("Processing lead sync with next try: %s", next_try)
+                        await self.process_lead_sync(
+                            lead_user=lead,
+                            rabbitmq_connection=connection, 
+                            user_domain_id=domain.id, 
+                            behavior_type=lead.behavior_type, 
+                            stage=stage, 
+                            next_try=next_try  
+                        )
+                        continue
+                    
+                    profile = self.__create_profile(lead.five_x_five_user_id, credentials, data_sync_item.list_id)
+                    if not profile:
+                        data_sync_item.sync_status = False
+                        self.sync_persistence.db.commit()
+                        logging.error("Profile creation failed for lead: %s", lead.five_x_five_user_id)
+                        if stage != 3:
+                            next_try_str = (datetime.now() + timedelta(hours=3)).isoformat()
+                            await self.process_lead_sync(
+                                lead_user=lead,
+                                rabbitmq_connection=connection, 
+                                user_domain_id=domain.id, 
+                                behavior_type=lead.behavior_type, 
+                                stage=stage + 1, 
+                                next_try=next_try_str
+                            )
+                        continue
+                    data_sync_item.sync_status = True
+                    self.sync_persistence.db.commit()
+                    logging.info("Profile added successfully for lead: %s", lead.five_x_five_user_id)
+                    counter += 1
+                    self.sync_persistence.update_sync({
+                        'last_sync_date': datetime.now()
+                    }, id=data_sync_item.id)
+                logging.info("Sync updated for item id: %s", data_sync_item.id)
+
+    def __create_profile(self, lead_id: int, credentials, data_map):
         lead_data = self.leads_persistence.get_lead_data(lead_id)
         try:
             profile = self.__mapped_profile(lead_data)
@@ -171,11 +240,15 @@ class OmnisendIntegrationService:
         }
         json_data = {k: v for k, v in json_data.items() if v is not None}
         try:
-            response = self.__handle_request('/contacts', method='POST', api_key=api_key, json=json_data)
+            response = self.__handle_request('/contacts', method='POST', api_key=credentials.access_token, json=json_data)
             if response.status_code != 200:
+                if response.status_code in (403, 401):
+                    credentials.error_message = 'Invalid API Key'
+                    self.integration_persistence.db.commit()
+                    return
                 logging.error("Error response: %s", response.text)
-                return None 
-        except: return None
+                return  
+        except: return
         return response.json()
 
 

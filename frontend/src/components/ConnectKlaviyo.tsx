@@ -189,7 +189,9 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
     }
     }
     useEffect(() => {
-        getKlaviyoList()
+        if(open) {
+            getKlaviyoList()
+        }
         setLoading(false)
     }, [open])
 
@@ -260,7 +262,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                     showToast('Data sync updated successfully');
                 }
             } else {
-                const response = await axiosInstance.post('/data-sync/sync/', {
+                const response = await axiosInstance.post('/data-sync/sync', {
                     list_id: list?.id,
                     list_name: list?.list_name,
                     tags_id: tag ? tag.id : null,

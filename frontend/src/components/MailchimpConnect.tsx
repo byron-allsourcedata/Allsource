@@ -163,6 +163,7 @@ const MailchimpConnect = ({ handleClose, open, onSave, initApiKey}: CreateOmnise
             }
         }, {params: {service_name: 'mailchimp'}})
         if(response.status === 200) {
+            onSave({'service_name': 'Mailchimp', 'is_failed': false})
             handleNextTab()
         }
     }
@@ -193,7 +194,6 @@ const MailchimpConnect = ({ handleClose, open, onSave, initApiKey}: CreateOmnise
     };
 
     const handleSave = async() => {
-        onSave({id: '123'})
         handleClose()
     }
 
@@ -303,7 +303,7 @@ const MailchimpConnect = ({ handleClose, open, onSave, initApiKey}: CreateOmnise
                 <Box sx={{ width: '100%', padding: '16px 24px 24px 24px', position: 'relative' }}>
                 <TabContext value={value}>
                     <Box sx={{pb: 4}}>
-                        <TabList centered aria-label="Connect to Klaviyo Tabs"
+                        <TabList centered aria-label="Connect to Mailchimp Tabs"
                         TabIndicatorProps={{sx: {backgroundColor: "#5052b2" } }} 
                         sx={{
                             "& .MuiTabs-scroller": {
@@ -357,7 +357,7 @@ const MailchimpConnect = ({ handleClose, open, onSave, initApiKey}: CreateOmnise
                                     fontWeight: '600',
                                     color: '#202124',
                                     lineHeight: 'normal'
-                                }}>How to integrate Klaviyo</Typography>
+                                }}>How to integrate Mailchimp</Typography>
                             </Box>
                             <List dense sx={{ p: 0 }}>
                                 {instructions.map((instruction, index) => (
@@ -399,7 +399,7 @@ const MailchimpConnect = ({ handleClose, open, onSave, initApiKey}: CreateOmnise
                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                             <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)', display: 'flex', flexDirection:'column', gap: '16px' }}>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <Image src='/klaviyo.svg' alt='klaviyo' height={26} width={32} />
+                                    <Image src='/mailchimp-icon.svg' alt='mailchimp' height={26} width={32} />
                                     <Typography variant="h6" sx={{
                                         fontFamily: 'Nunito Sans',
                                         fontSize: '16px',
@@ -416,7 +416,7 @@ const MailchimpConnect = ({ handleClose, open, onSave, initApiKey}: CreateOmnise
                                         lineHeight: '20px',
                                         letterSpacing: '0.06px'
                                     }}>Sync your current list to avoid collecting contacts you already possess.
-                                    Newly added contacts in Klaviyo will be automatically suppressed each day.</Typography>
+                                    Newly added contacts in Mailchimp will be automatically suppressed each day.</Typography>
                                 
 
                                         <Box sx={{ display: 'flex', gap: '32px', alignItems: 'center' }}>
@@ -533,7 +533,7 @@ const MailchimpConnect = ({ handleClose, open, onSave, initApiKey}: CreateOmnise
                                         color: '#808080',
                                         lineHeight: '20px',
                                         letterSpacing: '0.06px'
-                                    }}>By performing this action, all your Klaviyo contacts will be added to your Grow suppression list, and new contacts will be imported daily around 6pm EST.</Typography>
+                                    }}>By performing this action, all your Mailchimp contacts will be added to your Grow suppression list, and new contacts will be imported daily around 6pm EST.</Typography>
                                 </Box>
                             </Box>
                         </Box>
