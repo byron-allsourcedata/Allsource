@@ -212,10 +212,10 @@ async def process_payment_transaction(session, five_x_five_user_up_id, user_doma
 
     if (user.leads_credits - AMOUNT_CREDITS) < 0:
         if user.is_leads_auto_charging is False:
-            lead_user.is_active = False
             await handle_inactive_leads_notification(user, leads_persistence, notification_persistence)
             logging.info(f"User leads_auto_charging is False")
-            return
+        lead_user.is_active = False
+        return
 
     session.add(user_payment_transactions)
     user.leads_credits -= AMOUNT_CREDITS
