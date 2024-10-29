@@ -344,7 +344,7 @@ async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, sess
         logging.info(f"Customer not found {partner_uid_client_id}")
         return
     user, user_domain = result
-    if not user_domain.enable and not root_user:
+    if not user_domain.is_enable and not root_user:
         logging.info(f"domain has not enable {user_domain.id}")
         return
     user_domain_id = user_domain.id

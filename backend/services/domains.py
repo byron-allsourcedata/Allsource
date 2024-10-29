@@ -39,7 +39,7 @@ class UserDomainsService:
             domain=domain.domain,
             data_provider_id=domain.data_provider_id,
             is_pixel_installed=domain.is_pixel_installed,
-            enable=domain.enable
+            enable=domain.is_enable
         ).model_dump()
 
     def delete_domain(self, user_id: int, domain_id: int):

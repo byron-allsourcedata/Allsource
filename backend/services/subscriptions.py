@@ -283,7 +283,7 @@ class SubscriptionService:
         if domains:
             sorted_domains = sorted(domains, key=lambda x: x.created_at)
             for i, domain in enumerate(sorted_domains, start=1):
-                domain.enable = i <= domains_limit or domains_limit == self.UNLIMITED
+                domain.is_enable = i <= domains_limit or domains_limit == self.UNLIMITED
         self.db.commit()
 
     def update_team_members(self, team_owner_id, members_limit):
