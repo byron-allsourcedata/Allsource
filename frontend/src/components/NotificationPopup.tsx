@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Drawer, Box, Typography, Link, IconButton, Divider } from "@mui/material";
 import CustomizedProgressBar from './CustomizedProgressBar';
 import CloseIcon from '@mui/icons-material/Close';
+import axiosInstance from "@/axios/axiosInterceptorInstance";
 
 interface NotificationPopupProps {
     open: boolean;
@@ -9,7 +10,28 @@ interface NotificationPopupProps {
 }
 
 const NotificationPopup: React.FC<NotificationPopupProps> = ({ open, onClose }) => {
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        if (open) {
+        setLoading(true)
+        const accessToken = localStorage.getItem("token");
+        if (accessToken) {
+          const fetchData = async () => {
+            try {
+              const response = await axiosInstance.get("/notification");
+              console.log(response)
+            } catch (error) {
+            } finally {
+              setLoading(false);
+            }
+          };
+        
+          fetchData();
+        }
+    }
+      }, [open]);
+
 return (
     <>
     {loading && <CustomizedProgressBar />}
