@@ -209,8 +209,7 @@ async def process_payment_transaction(session, five_x_five_user_up_id, user_doma
                                                           amount_credits=AMOUNT_CREDITS, type='buy_lead',
                                                           domain_id=user_domain_id,
                                                           five_x_five_up_id=five_x_five_user_up_id)
-    print(user.leads_credits)
-    print(AMOUNT_CREDITS)
+
     if (user.leads_credits - AMOUNT_CREDITS) < 0:
         if user.is_leads_auto_charging is False:
             lead_user.is_active = False
