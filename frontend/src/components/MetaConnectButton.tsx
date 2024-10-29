@@ -130,8 +130,8 @@ const MetaConnectButton = ({open, onClose, onSave}: MetaConnectPopupProps) => {
                 fjs?.parentNode?.insertBefore(js, fjs);
             })(document, 'script', 'facebook-jssdk');
         };
-        loadFacebookSDK();
-    }, [appID]);
+        if(open) { loadFacebookSDK(); }
+    }, [appID, open]);
 
     const handleLogin = () => {
         window.FB.login(
