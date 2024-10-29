@@ -14,30 +14,26 @@ class Notification:
         self.leads_persistence = leads_persistence
 
     def get_notification(self, user: dict):
-        user_subscription = self.subscription_service.get_user_subscription(user_id=user.get('user_id'))
-        if not user_subscription:
-            return self.notification_persistence.get_notification_text_by_title(
-                NotificationTitles.CHOOSE_PLAN.value).text
+        notifications = self.notification_persistence.get_notifications_by_user_id(user_id=user.get('id'))
 
-        current_plan = self.plan_persistence.get_current_plan(user_id=user.get('user_id'))
-        plan_leads_credits = current_plan.leads_credits
-        plan_lead_credit_price = current_plan.lead_credit_price
-        leads_credits = user.get('leads_credits')
+        result = []
+        for notification in notifications:
+            params = notification.params.split(', ') if notification.params else []
 
-        result = ((plan_leads_credits - leads_credits) / plan_leads_credits) * 100
+            try:
+                converted_params = [float(param) if '.' in param else int(param) for param in params]
+            except ValueError:
+                converted_params = []
 
-        if 80 <= result <= 90:
-            notification_template = self.notification_persistence.get_notification_text_by_title(
-                NotificationTitles.CONTACT_LIMIT_APPROACHING.value).text
-            notification_text = notification_template.format(int(result), plan_lead_credit_price)
-            return notification_text
+            text = notification.text.format(*converted_params) if converted_params else notification.text
 
-        if leads_credits == 0:
-            notification_template = self.notification_persistence.get_notification_text_by_title(
-                NotificationTitles.PLAN_LIMIT_EXCEEDED.value).text
-            inactive_leads_user = self.leads_persistence.get_inactive_leads_user(user_id=user.get('user_id'))
-            notification_text = notification_template.format(len(inactive_leads_user))
-            return notification_text
+            result.append({
+                'id': notification.id,
+                'text': text,
+                'is_checked': notification.is_checked,
+            })
 
-        return None
+        return result
 
+    def dismiss(self, notification_id):
+        return self.notification_persistence.dismiss(notification_id=notification_id)

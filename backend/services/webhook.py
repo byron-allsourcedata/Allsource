@@ -38,15 +38,21 @@ class WebhookService:
         self.subscription_service.create_subscription_transaction(user_id=user_data.id,
                                                                   stripe_payload=payload)
 
-        result_status = self.subscription_service.process_subscription(user=user_data, stripe_payload=data_object)
-        if result_status == 'active':
+        result = self.subscription_service.process_subscription(user=user_data, stripe_payload=data_object)
+        lead_credit_plan_id = None
+        if result['lead_credit_price']:
+            plan = self.subscription_service.get_plan_by_price(lead_credit_price=result['lead_credit_price'])
+            lead_credit_plan_id = plan.id
+        if result['status'] == 'active':
             saved_details_of_payment = save_payment_details_in_stripe(customer_id=customer_id)
             if not saved_details_of_payment:
                 logger.warning("set default card false")
-        return {
-            'status': result_status,
-            'user': user_data
+        result = {
+            'status': result['status'],
+            'user': user_data,
+            'lead_credit_plan_id': lead_credit_plan_id if lead_credit_plan_id else None
         }
+        return result
 
     def cancel_subscription_confirmation(self, payload):
         stripe_request_created_timestamp = payload.get("created")
@@ -68,9 +74,9 @@ class WebhookService:
         self.subscription_service.create_subscription_transaction(user_id=user_data.id,
                                                                   stripe_payload=payload)
 
-        result_status = self.subscription_service.process_subscription(user=user_data, stripe_payload=data_object)
+        result = self.subscription_service.process_subscription(user=user_data, stripe_payload=data_object)
         return {
-            'status': result_status,
+            'status': result['status'],
             'user': user_data
         }
 

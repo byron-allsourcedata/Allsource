@@ -10,6 +10,9 @@ from services.payments import PaymentsService
 from services.plans import PlansService
 from services.webhook import WebhookService
 
+
+QUEUE_CREDITS_CHARGING = 'credits_charging'
+
 router = APIRouter()
 
 
@@ -47,6 +50,20 @@ async def update_payment_confirmation(request: fastRequest, webhook_service: Web
                 connection=connection,
                 queue_name=queue_name,
                 message_body={'notification_text': message_text}
+            )
+        except:
+            await rabbitmq_connection.close()
+        finally:
+            await rabbitmq_connection.close()
+
+        try:
+            await publish_rabbitmq_message(
+                connection=rabbitmq_connection,
+                queue_name=QUEUE_CREDITS_CHARGING,
+                message_body={
+                    'customer_id': user.customer_id,
+                    'plan_id': result_update_subscription['lead_credit_plan_id']
+                }
             )
         except:
             await rabbitmq_connection.close()

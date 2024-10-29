@@ -79,14 +79,6 @@ class PlansPersistence:
         return subscription_plan
 
     def get_current_plan(self, user_id):
-        subscription_plan = self.db.query(SubscriptionPlan).join(
-            UserSubscriptions,
-            UserSubscriptions.plan_id == SubscriptionPlan.id
-        ).filter(
-            UserSubscriptions.user_id == user_id,
-            UserSubscriptions.status.in_(('active', 'canceled'))
-        ).order_by(
-            UserSubscriptions.status,
-            UserSubscriptions.plan_end.desc()
-        ).first()
-        return subscription_plan
+        return self.db.query(SubscriptionPlan).join(
+            UserSubscriptions, UserSubscriptions.plan_id == SubscriptionPlan.id).join(
+            User, User.current_subscription_id == UserSubscriptions.id).filter(User.id == user_id).first()

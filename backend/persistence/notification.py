@@ -1,13 +1,41 @@
-from models.account_notification import AccountNotification
-from models.sendgrid_template import SendgridTemplate
+from sqlalchemy import func
 from sqlalchemy.orm import Session
+
+from models.account_notification import AccountNotification
+from models.users import Users
+from models.users_account_notification import UserAccountNotification
 
 
 class NotificationPersistence:
     def __init__(self, db: Session):
         self.db = db
 
-    def get_notification_text_by_title(self, title: str) -> str:
+    def get_account_notification_by_title(self, title: str) -> str:
         return self.db.query(AccountNotification).filter(AccountNotification.title == title).first()
 
+    def save_account_notification(self, user_id, account_notification_id, params=None):
+        account_notification = UserAccountNotification(
+            user_id=user_id,
+            notification_id=account_notification_id,
+            params=str(params)
+        )
+        self.db.add(account_notification)
+        self.db.commit()
 
+    def dismiss(self, notification_id):
+        self.db.query(UserAccountNotification).filter(UserAccountNotification.id == notification_id).update({UserAccountNotification.is_checked: True},
+                                                                synchronize_session=False)
+        self.db.commit()
+
+    def get_notifications_by_user_id(self, user_id: str):
+        return (self.db.query(
+            AccountNotification.text,
+            UserAccountNotification.id,
+            UserAccountNotification.params,
+            UserAccountNotification.is_checked
+        )
+                .join(UserAccountNotification, AccountNotification.id == UserAccountNotification.notification_id)
+                .join(Users, UserAccountNotification.user_id == Users.id)
+                .filter(Users.id == user_id)
+                .limit(20)
+                .all())

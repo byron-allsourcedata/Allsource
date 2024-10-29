@@ -298,7 +298,14 @@ class SubscriptionService:
 
                 self.db.commit()
 
+    def get_plan_by_price(self, lead_credit_price):
+        return self.db.query(SubscriptionPlan).filter(SubscriptionPlan.price == lead_credit_price).first()
+
     def process_subscription(self, stripe_payload, user: Users):
+        result = {
+            'status': None,
+            'lead_credit_price': None
+        }
         user_id = user.id
         platform_subscription_id = stripe_payload.get("id")
         price_id = stripe_payload.get("plan").get("id")
@@ -324,6 +331,7 @@ class SubscriptionService:
             plan_id = self.plans_persistence.get_plan_by_title(plan_type, interval)
             domains_limit, integrations_limit, leads_credits, prospect_credits, members_limit, lead_credit_price = self.plans_persistence.get_plan_limit_by_id(
                 plan_id=plan_id)
+            result['lead_credit_price'] = lead_credit_price
             if user_subscription is not None and user_subscription.status == 'active':
                 if canceled_at:
                     user_subscription.cancel_scheduled_at = datetime.fromtimestamp(canceled_at, timezone.utc).replace(
@@ -376,7 +384,8 @@ class SubscriptionService:
 
         user.payment_status = status
         self.db.commit()
-        return status
+        result['status'] = status
+        return result
 
     def get_invitation_limit(self, user_id):
         return len(self.user_persistence_service.get_combined_team_info(user_id=user_id)) + 1
