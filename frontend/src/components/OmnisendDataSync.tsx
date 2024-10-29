@@ -155,7 +155,7 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data
                     showToast('Data sync updated successfully');
                 }
             } else {
-                const response = await axiosInstance.post('/data-sync/sync/', {
+                const response = await axiosInstance.post('/data-sync/sync', {
                     leads_type: selectedRadioValue,
                     data_map: customFields
                 }, {

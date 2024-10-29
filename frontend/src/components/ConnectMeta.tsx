@@ -87,7 +87,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
     useEffect(() => {
         const getList = async() => {
             setLoading(true)
-            const response = await axiosInstance.get('/integrations/sync/list', {
+            const response = await axiosInstance.get('/integrations/sync/list/', {
                 params: {
                     service_name: 'meta',
                     ad_account_id: optionAdAccount?.id
