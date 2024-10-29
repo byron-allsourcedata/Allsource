@@ -100,12 +100,16 @@ async def delete_integration(service_name: str = Query(...),
 
 
 @router.get('/sync/list/')
-async def get_list(service_name: str = Query(...),
+async def get_list(ad_account_id: str = Query(None),
+                   service_name: str = Query(...),
                    integration_service: IntegrationService = Depends(get_integration_service),
                    user=Depends(check_user_authorization), domain=Depends(check_pixel_install_domain)):
     with integration_service as service:
         service = getattr(service, service_name.lower())
-        return service.get_list(domain.id)
+        _ = {'domain_id': domain.id}
+        if ad_account_id:
+            _['ad_account_id'] = ad_account_id
+        return service.get_list(**_)
 
 
 @router.post('/sync/list/', status_code=201)
@@ -115,7 +119,19 @@ async def create_list(list_data: CreateListOrTags,
                       user=Depends(check_user_authorization), domain=Depends(check_pixel_install_domain)):
     with integrations_service as service:
         service = getattr(service, service_name)
-        return service.create_list(list_data.name, domain.id)
+        return service.create_list(list_data, domain.id)
+    
+@router.get('/sync/sender', status_code=200)
+async def get_sender(integrations_service: IntegrationService = Depends(get_integration_service), user = Depends(check_user_authorization), domain = Depends(check_pixel_install_domain)):
+    with integrations_service as service:
+        return service.sendlane.get_sender(domain.id)
+
+
+@router.get('/sync/ad_accounts')
+async def get_ad_accounts(integration_service: IntegrationService = Depends(get_integration_service),
+                          user = Depends(check_user_authorization), domain = Depends(check_pixel_install_domain)):
+    with integration_service as serivce:
+        return serivce.meta.get_ad_accounts(domain.id)
 
 
 @router.post('/suppression/')

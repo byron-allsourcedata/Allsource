@@ -38,7 +38,7 @@ type KlaviyoTags = {
 
 
 
-const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, data }) => {
+const SendlaneDatasync: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, data }) => {
     const [loading, setLoading] = useState(false)
     const [value, setValue] = React.useState('1');
     const [checked, setChecked] = useState(false);
@@ -65,6 +65,8 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
     const [UpdateKlaviuo, setUpdateKlaviuo] = useState<any>(null);
     const [maplistNameError, setMapListNameError] = useState(false);
     const [klaviyoList, setKlaviyoList] = useState<KlaviyoList[]>([])
+    const [senders, setSenders] = useState<any[]>([])
+    const [optionSender, setOptionSender] = useState<any>(null)
     const [customFieldsList, setCustomFieldsList] = useState([{ type: 'Gender', value: 'gender' },
     { type: 'Company Name', value: 'company_name' },
     { type: 'Company Domain', value: 'company_domain' },
@@ -113,6 +115,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
         };
     }, [selectedOption]);
 
+
     const [customFields, setCustomFields] = useState<{ type: string, value: string }[]>([]);
 
     useEffect(() => {
@@ -137,7 +140,8 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
 
         setCustomFields(customFields.map((item, i) => (i === index ? { ...item, [field]: value } : item)));
     };
-    const resetToDefaultValues = () => {
+    useEffect(() => {
+        if(open) { return }
         setLoading(false);
         setValue('1');
         setChecked(false);
@@ -161,14 +165,25 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
         setNewMapListName('');
         setShowCreateMapForm(false);
         setMapListNameError(false);
-    };
+    }, [open])
 
-    const getKlaviyoList = async () => {
+    const getSender = async () => {
+        try {
+            setLoading(true)
+            const response = await axiosInstance.get('/integrations/sync/sender')
+            setSenders(response.data)
+        }
+        finally {
+            setLoading(false)
+        }
+    }
+
+    const getSendlaneList = async () => {
         try {
         setLoading(true)
         const response = await axiosInstance.get('/integrations/sync/list/', {
             params: {
-                service_name: 'Klaviyo'
+                service_name: 'sendlane'
             }
         })
         setKlaviyoList(response.data)
@@ -185,22 +200,25 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
         setSelectedRadioValue(data?.type);
         setLoading(false)
     } catch (error) {
-
+        
     }
     }
     useEffect(() => {
         if(open) {
-            getKlaviyoList()
+            getSendlaneList()
+            getSender()
         }
         setLoading(false)
     }, [open])
 
     const createNewList = async () => {
+        try {
         const newListResponse = await axiosInstance.post('/integrations/sync/list/', {
-            name: selectedOption?.list_name
+            name: selectedOption?.list_name,
+            sender_id: optionSender?.id
         }, {
             params: {
-                service_name: 'klaviyo'
+                service_name: 'sendlane'
             }
         });
 
@@ -209,26 +227,14 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
         }
 
         return newListResponse.data;
+    } catch (error) {
+    }
     };
 
-    const createTag = async () => {
-        const newTagsResponse = await axiosInstance.post('/data-sync/sync/tags', {
-            name: tagName
-        }, {
-            params: {
-                service_name: 'klaviyo'
-            }
-        })
-        if (newTagsResponse.status !== 201 && newTagsResponse.status !== 200) {
-            throw new Error('Failed to create a new tags')
-        }
-        return newTagsResponse.data
-    }
 
     const handleSaveSync = async () => {
         setLoading(true);
         let list: KlaviyoList | null = null;
-        let tag = null;
 
         try {
             if (selectedOption && selectedOption.id === '-1') {
@@ -239,25 +245,19 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                 showToast('Please select a valid option.');
                 return;
             }
-
-            if (tagName) {
-                tag = await createTag();
-            }
             if (UpdateKlaviuo) {
                 const response = await axiosInstance.put(`/data-sync/sync`, {
                     integrations_users_sync_id: UpdateKlaviuo,
                     list_id: list?.id,
                     list_name: list?.list_name,
-                    tags_id: tag ? tag.id : null,
                     leads_type: selectedRadioValue,
-                    data_map: customFields
+                    // data_map: customFields
                 }, {
                     params: {
-                        service_name: 'klaviyo'
+                        service_name: 'sendlane'
                     }
                 });
                 if (response.status === 201 || response.status === 200) {
-                    resetToDefaultValues();
                     onClose();
                     showToast('Data sync updated successfully');
                 }
@@ -265,16 +265,14 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                 const response = await axiosInstance.post('/data-sync/sync/', {
                     list_id: list?.id,
                     list_name: list?.list_name,
-                    tags_id: tag ? tag.id : null,
                     leads_type: selectedRadioValue,
                     data_map: customFields
                 }, {
                     params: {
-                        service_name: 'klaviyo'
+                        service_name: 'sendlane'
                     }
                 });
                 if (response.status === 201 || response.status === 200) {
-                    resetToDefaultValues();
                     onClose();
                     showToast('Data sync created successfully');
                 }
@@ -292,6 +290,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
         setIsShrunk(true);
         setIsDropdownOpen(prev => !prev);
         setAnchorEl(event.currentTarget);
+        console.log('handle CLICK PIDORAS')
         setShowCreateForm(false); // Reset form when menu opens
     };
 
@@ -307,6 +306,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
         setAnchorEl(null);
         setShowCreateForm(false);
         setIsDropdownOpen(false);
+        console.log('handle CLOSe PIDORAS')
         setNewListName(''); // Clear new list name when closing
     };
 
@@ -356,14 +356,6 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
             valid = false;
         } else {
             setListNameError(false);
-        }
-
-        // Validate Tag Name
-        if (tagName.trim() === '') {
-            setTagNameError(true);
-            valid = false;
-        } else {
-            setTagNameError(false);
         }
 
         // If valid, save and close
@@ -477,17 +469,16 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
         return <>{parts}</>; // Return the array wrapped in a fragment.
     };
 
-    const instructions = [
-        { id: 'unique-id-1', text: 'Go to the Klaviyo website and log into your account.' },
-        { id: 'unique-id-2', text: 'Click on the Settings option located in your Klaviyo account options.' },
-        { id: 'unique-id-3', text: 'Click Create Private API Key Name to Maximiz.' },
-        { id: 'unique-id-4', text: 'Assign full access permissions to Lists and Profiles, and read access permissions to Metrics, Events, and Templates for your Klaviyo key.' },
-        { id: 'unique-id-5', text: 'Click Create.' },
-        { id: 'unique-id-6', text: 'Copy the API key in the next screen and paste to API Key field located in Maximiz Klaviyo section.' },
-        { id: 'unique-id-7', text: 'Click Connect.' },
-        { id: 'unique-id-8', text: 'Select the existing list or create a new one to integrate with Maximiz.' },
-        { id: 'unique-id-9', text: 'Click Export.' },
-
+    const instructions: any[] = [
+        // { id: 'unique-id-1', text: 'Go to the Klaviyo website and log into your account.' },
+        // { id: 'unique-id-2', text: 'Click on the Settings option located in your Klaviyo account options.' },
+        // { id: 'unique-id-3', text: 'Click Create Private API Key Name to Maximiz.' },
+        // { id: 'unique-id-4', text: 'Assign full access permissions to Lists and Profiles, and read access permissions to Metrics, Events, and Templates for your Klaviyo key.' },
+        // { id: 'unique-id-5', text: 'Click Create.' },
+        // { id: 'unique-id-6', text: 'Copy the API key in the next screen and paste to API Key field located in Maximiz Klaviyo section.' },
+        // { id: 'unique-id-7', text: 'Click Connect.' },
+        // { id: 'unique-id-8', text: 'Select the existing list or create a new one to integrate with Maximiz.' },
+        // { id: 'unique-id-9', text: 'Click Export.' },
     ]
 
     // Define the keywords and their styles
@@ -540,7 +531,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                     <Button
                         variant="contained"
                         disabled={!isDropdownValid}
-                        onClick={handleNextTab}
+                        onClick={handleSaveSync}
                         sx={{
                             backgroundColor: '#5052B2',
                             fontFamily: "Nunito Sans",
@@ -558,7 +549,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                             borderRadius: '4px',
                         }}
                     >
-                        Next
+                        Save
                     </Button>
                 );
             case '3':
@@ -704,7 +695,6 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
     };
 
     const handlePopupClose = () => {
-        resetToDefaultValues()
         onClose()
     }
 
@@ -722,11 +712,11 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                     zIndex: 1301,
                     top: 0,
                     bottom: 0,
-                    // msOverflowStyle: 'none',
-                    // scrollbarWidth: 'none',
-                    // '&::-webkit-scrollbar': {
-                    //     display: 'none',
-                    // },
+                    msOverflowStyle: 'none',
+                    scrollbarWidth: 'none',
+                    '&::-webkit-scrollbar': {
+                        display: 'none',
+                    },
                     '@media (max-width: 600px)': {
                         width: '100%',
                     }
@@ -742,7 +732,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
         >
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 3.5, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
                 <Typography variant="h6" className="first-sub-title" sx={{ textAlign: 'center' }}>
-                    Connect to Klaviyo
+                    Connect to Sendlane
                 </Typography>
                 <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
                     <Link href="#" className="main-text" sx={{
@@ -762,7 +752,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                 <Box sx={{ width: '100%', padding: '16px 24px 24px 24px', position: 'relative' }}>
                 <TabContext value={value}>
                     <Box sx={{pb: 4}}>
-                        <TabList centered aria-label="Connect to Klaviyo Tabs"
+                        <TabList centered aria-label="Connect to Sendlane Tabs"
                         TabIndicatorProps={{sx: {backgroundColor: "#5052b2" } }} 
                         sx={{
                             "& .MuiTabs-scroller": {
@@ -777,21 +767,21 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                         }}} onChange={handleChangeTab}>
                         <Tab label="Suppression Sync" value="1" className='tab-heading' sx={klaviyoStyles.tabHeading} />
                         <Tab label="Contact Sync" value="2" className='tab-heading' sx={klaviyoStyles.tabHeading} />
-                        <Tab label="Map data" value="3" className='tab-heading' sx={klaviyoStyles.tabHeading} />
+                        {/* <Tab label="Map data" value="3" className='tab-heading' sx={klaviyoStyles.tabHeading} /> */}
                         </TabList>
                     </Box>
                     <TabPanel value="1" sx={{ p: 0 }}>
                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                             <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)', display: 'flex', flexDirection:'column', gap: '16px' }}>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <Image src='/klaviyo.svg' alt='klaviyo' height={26} width={32} />
+                                    <Image src='/sendlane-icon.svg' alt='sendlane' height={26} width={32} />
                                     <Typography variant="h6" className='first-sub-title'>Eliminate Redundancy: Stop Paying for Contacts You Already Own</Typography>
                                 </Box>
                                 <Typography variant="subtitle1" className='paragraph' sx={{
                                         lineHeight: '20px',
                                         letterSpacing: '0.06px'
                                     }}>Sync your current list to avoid collecting contacts you already possess.
-                                    Newly added contacts in Klaviyo will be automatically suppressed each day.</Typography>
+                                    Newly added contacts in Sendlane will be automatically suppressed each day.</Typography>
                                 
 
                                         <Box sx={{ display: 'flex', gap: '32px', alignItems: 'center' }}>
@@ -896,7 +886,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                                             <Image src='/info-circle.svg' alt='info-circle' height={20} width={20} />
                                             <Typography variant="subtitle1" className='paragraph' sx={{
                                                 lineHeight: '20px'
-                                            }}>By performing this action, all your Klaviyo contacts will be added to your Grow suppression list, and new contacts will be imported daily around 6pm EST.</Typography>
+                                            }}>By performing this action, all your Sendlane contacts will be added to your Grow suppression list, and new contacts will be imported daily around 6pm EST.</Typography>
                                         </Box>
                                     </Box>
                                     <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -1035,7 +1025,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                                     <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)' }}>
                                         <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', mb: 3 }}>
-                                            <Image src='/klaviyo.svg' alt='klaviyo' height={26} width={32} />
+                                            <Image src='/sendlane-icon.svg' alt='sendlane' height={26} width={32} />
                                             <Typography variant="h6" className='first-sub-title'>Contact sync</Typography>
                                             <Tooltip title="Sync data with list" placement="right">
                                                 <Image src='/baseline-info-icon.svg' alt='baseline-info-icon' height={16} width={16} />
@@ -1043,7 +1033,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                                         </Box>
 
 
-                                        <ClickAwayListener onClickAway={handleClose}>
+                                        <ClickAwayListener onClickAway={() => {}}>
                                             <Box>
                                                 <TextField
                                                     ref={textFieldRef}
@@ -1221,47 +1211,34 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                                                                         }}
                                                                     />
                                                                     <TextField
-                                                                        label="Enter Tag Name"
-                                                                        variant="outlined"
-                                                                        value={tagName}
-                                                                        onChange={(e) => setTagName(e.target.value)}
-                                                                        size="small"
+                                                                        select
                                                                         fullWidth
-                                                                        onKeyDown={(e) => e.stopPropagation()}
-                                                                        error={tagNameError}
-                                                                        helperText={tagNameError ? 'Tag Name is required' : ''}
+                                                                        variant="outlined"
+                                                                        label='Sender'
+                                                                        value={optionSender?.sender_name}
+                                                                        onChange={(e) => setOptionSender(senders.find(item => item.sender_name === e.target.value))}
                                                                         InputLabelProps={{
                                                                             sx: {
                                                                                 fontFamily: 'Nunito Sans',
                                                                                 fontSize: '12px',
                                                                                 lineHeight: '16px',
-                                                                                fontWeight: '400',
                                                                                 color: 'rgba(17, 17, 19, 0.60)',
+                                                                                top: '-5px',
                                                                                 '&.Mui-focused': {
                                                                                     color: '#0000FF',
+                                                                                    top: 0
                                                                                 },
+                                                                                '&.MuiInputLabel-shrink': {
+                                                                                    top: 0
+                                                                                }
                                                                             }
                                                                         }}
                                                                         InputProps={{
-                                                                            endAdornment: (
-                                                                                tagName && (
-                                                                                    <InputAdornment position="end">
-                                                                                        <IconButton edge="end"
-                                                                                            onClick={() => setTagName('')}>
-                                                                                            <Image
-                                                                                                src='/close-circle.svg'
-                                                                                                alt='close-circle'
-                                                                                                height={18} width={18} // Adjust the size as needed
-                                                                                            />
-                                                                                        </IconButton>
-                                                                                    </InputAdornment>
-                                                                                )
-                                                                            ),
                                                                             sx: {
                                                                                 '&.MuiOutlinedInput-root': {
-                                                                                    height: '32px',
+                                                                                    height: '36px',
                                                                                     '& .MuiOutlinedInput-input': {
-                                                                                        padding: '5px 16px 4px 16px',
+                                                                                        padding: '6.5px 8px',
                                                                                         fontFamily: 'Roboto',
                                                                                         color: '#202124',
                                                                                         fontSize: '14px',
@@ -1283,11 +1260,22 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                                                                                 },
                                                                             }
                                                                         }}
-                                                                    />
+                                                                    >
+
+                                                                        {senders.map((item) => (
+                                                                            <MenuItem
+                                                                                key={item.id}
+                                                                                value={item.sender_name}
+                                                                            >
+                                                                                {item.sender_name}
+                                                                            </MenuItem>
+                                                                        ))}
+                                                                    </TextField>
+                    
                                                                 </Box>
                                                                 <Box sx={{ textAlign: 'right' }}>
                                                                     <Button variant="contained" onClick={handleSave}
-                                                                        disabled={listNameError || tagNameError || !newListName || !tagName}
+                                                                        disabled={listNameError || !newListName || !optionSender}
                                                                         sx={{
                                                                             borderRadius: '4px',
                                                                             border: '1px solid #5052B2',
@@ -1311,7 +1299,6 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                                                                         Save
                                                                     </Button>
                                                                 </Box>
-
                                                             </Box>
 
 
@@ -1389,7 +1376,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                                                 minWidth: '196px'
                                             }
                                         }}>
-                                            <Image src='/klaviyo.svg' alt='klaviyo' height={20} width={24} />
+                                            <Image src='/sendlane-icon.svg' alt='sendlane' height={20} width={24} />
                                         </Grid>
                                         <Grid item xs="auto" sm={1}>&nbsp;</Grid>
                                     </Grid>
@@ -1793,12 +1780,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                         {/* Button based on selected tab */}
 
                     </Box>
-                    <Box sx={{ px: 2, py: 3.5, border: '1px solid #e4e4e4', position: 'fixed', bottom: 0, right: 0, background: '#fff',
-                        width: '620px',
-                        '@media (max-width: 600px)': {
-                                width: '100%',
-                        }
-                     }}>
+                    <Box sx={{ px: 2, py: 3.5, width: '100%', border: '1px solid #e4e4e4' }}>
                         <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
 
                             {getButton(value)}
@@ -1810,4 +1792,4 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
         </>
     );
 };
-export default ConnectKlaviyo;
+export default SendlaneDatasync;

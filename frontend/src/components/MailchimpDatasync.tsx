@@ -113,6 +113,7 @@ const MailchimpDatasync: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, 
         };
     }, [selectedOption]);
 
+
     const [customFields, setCustomFields] = useState<{ type: string, value: string }[]>([]);
 
     useEffect(() => {
@@ -137,7 +138,8 @@ const MailchimpDatasync: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, 
 
         setCustomFields(customFields.map((item, i) => (i === index ? { ...item, [field]: value } : item)));
     };
-    const resetToDefaultValues = () => {
+    useEffect(() => {
+        if(open) { return }
         setLoading(false);
         setValue('1');
         setChecked(false);
@@ -161,7 +163,7 @@ const MailchimpDatasync: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, 
         setNewMapListName('');
         setShowCreateMapForm(false);
         setMapListNameError(false);
-    };
+    }, [open])
 
     const getKlaviyoList = async () => {
         try {
@@ -191,7 +193,9 @@ const MailchimpDatasync: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, 
 
     }
     useEffect(() => {
-        getKlaviyoList()
+        if(open) {
+            getKlaviyoList()
+        }
         setLoading(false)
     }, [open])
 
@@ -243,7 +247,6 @@ const MailchimpDatasync: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, 
                     }
                 });
                 if (response.status === 201 || response.status === 200) {
-                    resetToDefaultValues();
                     onClose();
                     showToast('Data sync updated successfully');
                 }
@@ -259,7 +262,6 @@ const MailchimpDatasync: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, 
                     }
                 });
                 if (response.status === 201 || response.status === 200) {
-                    resetToDefaultValues();
                     onClose();
                     showToast('Data sync created successfully');
                 }
@@ -680,7 +682,6 @@ const MailchimpDatasync: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, 
     };
 
     const handlePopupClose = () => {
-        resetToDefaultValues()
         onClose()
     }
 
@@ -708,6 +709,13 @@ const MailchimpDatasync: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, 
                     }
                 },
             }}
+            slotProps={{
+                backdrop: {
+                  sx: {
+                    backgroundColor: 'rgba(0, 0, 0, 0)'
+                  }
+                }
+              }}
         >
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 3.5, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
                 <Typography variant="h6" className="first-sub-title" sx={{ textAlign: 'center' }}>

@@ -1,28 +1,28 @@
-# from models.users import User
-# from persistence.integrations.integrations_persistence import IntegrationsPresistence
+# from httpx import Client
 # from woocommerce import API
-# from .utils import mapped_customers
 
+# from backend.persistence.integrations.integrations_persistence import IntegrationsPresistence
+# from backend.persistence.integrations.user_sync import IntegrationsUserSyncPersistence
+# from backend.persistence.leads_order_persistence import LeadOrdersPersistence
+# from backend.persistence.leads_persistence import LeadsPersistence
+# from backend.services.aws import AWSService
 
-class WoocommerceIntegrationService:
-    ...
+# class WoocommerceIntegrationsService:
 
-#     def __init__(self, user_integration_persistence: IntegrationsPresistence, user: User):
-#         self.user_integration_persistence = user_integration_persistence
-#         self.user = user
+#     def __init__(self, integration_persistence: IntegrationsPresistence, 
+#                  lead_persistence: LeadsPersistence, lead_orders_persistence: LeadOrdersPersistence,
+#                  integrations_user_sync_persistence: IntegrationsUserSyncPersistence,
+#                  client: Client, aws_service: AWSService):
+#         self.integration_persistence = integration_persistence
+#         self.lead_persistence = lead_persistence
+#         self.lead_orders_persistence = lead_orders_persistence
+#         self.integrations_user_sync_persistence = integrations_user_sync_persistence
+#         self.client = client
+#         self.AWS = aws_service
+        
+#     def get_credentials(self, domain_id: int):
+#         return self.integration_persistence.get_credentials_for_service(domain_id=domain_id, service_name='Woocommerce')
+    
 
-
-#     def get_customers(self, url: str, consumer_key: str, consumer_secret: str):
-#         wcapi = API(url, consumer_key, consumer_secret, wp_api=True, version="wc/v3")
-#         customers = wcapi.get("customers").json()
-#         return mapped_customers('woocommerce', customers)
-
-
-#     def create_integration(self, url: str, consumer_key: str, consumer_secret: str):
-#         self.user_integration_persistence.create_integration({
-#             'shop_domain': url,
-#             'user_id': self.user.id,
-#             'consumer_key': consumer_key,
-#             'consumer_secret': consumer_secret,
-#             'service_name': 'woocommerce'
-#         })
+#     def __get_orders(self, credentials):
+#         ...

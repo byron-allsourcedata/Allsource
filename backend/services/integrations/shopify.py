@@ -1,5 +1,6 @@
 import hashlib
 import os
+from enums import IntegrationsStatus
 from models.users_domains import UserDomains
 from schemas.integrations.shopify import ShopifyCustomer, ShopifyOrderAPI
 from schemas.integrations.integrations import IntegrationCredentials
@@ -43,9 +44,9 @@ class ShopifyIntegrationService:
         return response
 
 
-    def __get_orders(self, shop_domain: str, access_token: str):
+    def __get_orders(self, credential):
         date = datetime.now() - timedelta(hours=24)
-        url = f'{shop_domain}/admin/api/2024-07/orders.json'
+        url = f'{credential.shop_domain}/admin/api/2024-07/orders.json'
         params = {
             'status': 'closed',
             'fields': 'created_at,id,name,total_price,customer',
@@ -53,12 +54,15 @@ class ShopifyIntegrationService:
         }
         
         headers = {
-            'X-Shopify-Access-Token': access_token,
+            'X-Shopify-Access-Token': credential.access_token,
             "Content-Type": "application/json"
         }
-
+         
         response = self.__handle_request('GET', url, headers=headers, params=params)
-        print(response.json())
+        if response.status_code == 401:
+            credential.error_message = 'Invalid Access Token'
+            credential.is_failde = True
+            self.integration_persistence.db.commit()
         return response.json().get('orders')
 
 
@@ -66,7 +70,7 @@ class ShopifyIntegrationService:
         return self.integration_persistence.get_credentials_for_service(domain_id, 'Shopify')
 
 
-    def __set_pixel(self, user, domain, shop_domain: str, access_token: str):
+    def __set_pixel(self, user, domain, credentials):
         client_id = domain.data_provider_id
         if client_id is None:
             client_id = hashlib.sha256((str(domain.id) + os.getenv('SECRET_SALT')).encode()).hexdigest()
@@ -81,16 +85,20 @@ class ShopifyIntegrationService:
         script_shopify = f"window.pixelClientId = '{client_id}';\n" + existing_script_code
         self.AWS.upload_string(script_shopify, f'shopify-pixel-code/{client_id}.js')
         script_event_url = f'https://maximiz-data.s3.us-east-2.amazonaws.com/shopify-pixel-code/{client_id}.js'
-        url = f'{shop_domain}/admin/api/2024-07/script_tags.json'
+        url = f'{credentials.shop_domain}/admin/api/2024-07/script_tags.json'
 
         headers = {
-            'X-Shopify-Access-Token': access_token,
+            'X-Shopify-Access-Token': credentials.access_token,
             "Content-Type": "application/json"
         }
         scrips_list = self.__handle_request("GET", url, headers=headers)
+        if scrips_list.status_code == 401:
+            credentials.error_message = 'Invalid Access Token'
+            self.integration_persistence.db.commit()
+            raise HTTPException(status_code=403, detail={'status': IntegrationsStatus.CREDENTAILS_INVALID.value})
         for script in scrips_list.json().get('script_tags'):
             if 'shopify-pixel-code' in script.get('src'):
-                self.__handle_request('DELETE', f"{shop_domain}/admin/api/2024-07/script_tags/{script.get('id')}.json", headers=headers)
+                self.__handle_request('DELETE', f"{credentials.shop_domain}/admin/api/2024-07/script_tags/{script.get('id')}.json", headers=headers)
         script_event_data = {
             "script_tag": {
                 "event": "onload",
@@ -110,6 +118,12 @@ class ShopifyIntegrationService:
 
 
     def __save_integration(self, shop_domain: str, access_token: str, domain_id: int):
+        credential = self.get_credentials(domain_id=domain_id)
+        if credential:
+            credential.access_token = access_token
+            credential.shop_domain = shop_domain
+            self.integration_persistence.db.commit()
+            return
         credentials = {
             'domain_id': domain_id, 
             'shop_domain': shop_domain,
@@ -137,7 +151,6 @@ class ShopifyIntegrationService:
             'X-Shopify-Token': access_token,
             "Content-Type": "application/json"
         }
-
         response = self.__handle_request('POST', url, headers=headers, json=customer_json)
         return response.json().get('customers')
 
@@ -149,9 +162,10 @@ class ShopifyIntegrationService:
         user_website = domain.domain.lower().lstrip('http://').lstrip('https://')
         if user_website != shop_domain:
             raise HTTPException(status_code=400, detail={'status': 'error', 'detail': {'message': 'Store Domain does not match the one you specified earlier'}})
+        self.__get_orders(credential=credentials.shopify)
         self.__save_integration(credentials.shopify.shop_domain, credentials.shopify.access_token, domain.id)
         if not domain.is_pixel_installed:
-            self.__set_pixel(user, domain, credentials.shopify.shop_domain, credentials.shopify.access_token)
+            self.__set_pixel(user, domain, credentials)
         return {
             'status': 'Successfully',
             'detail': {
@@ -161,7 +175,7 @@ class ShopifyIntegrationService:
     
     def order_sync(self, domain_id):
         credential = self.get_credentials(domain_id)
-        orders = [self.__mapped_customer_shopify_order(order) for order in self.__get_orders(credential.shop_domain, credential.access_token) if order]
+        orders = [self.__mapped_customer_shopify_order(order) for order in self.__get_orders(credential) if order]
         for order in orders:
             lead_user = self.lead_persistence.get_leads_user_filter_by_email(domain_id, order.email)
             if lead_user and len(lead_user) > 0: 

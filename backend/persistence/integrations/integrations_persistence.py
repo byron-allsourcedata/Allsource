@@ -23,9 +23,9 @@ class IntegrationsPresistence:
         return self.db.query(UserIntegration).filter(UserIntegration.domain_id == domain_id).all()
     
 
-    def get_credentials_for_service(self, domain_id: int, service_name: str) -> UserIntegration:
+    def get_credentials_for_service(self, domain_id: int, service_name: str, **filter_by) -> UserIntegration:
         return self.db.query(UserIntegration) \
-            .filter(UserIntegration.domain_id == domain_id, UserIntegration.service_name == service_name).first()
+            .filter(UserIntegration.domain_id == domain_id, UserIntegration.service_name == service_name).filter_by(**filter_by).first()
 
     def delete_integration(self, domain_id: int, service_name: str):
         self.db.query(UserIntegration) \
