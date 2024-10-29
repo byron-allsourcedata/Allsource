@@ -18,7 +18,7 @@ declare global {
         fbAsyncInit: () => void;
         FB: {
             init: (options: { appId: string; cookie: boolean; xfbml: boolean; version: string }) => void;
-            login: (callback: (response: fb.AuthResponse) => void, options?: { scope?: string, config_id?: string, response_type?: string, override_default_response_type?: boolean }) => void;
+            login: (callback: (response: fb.AuthResponse) => void, options?: { scope?: string, configId?: string, response_type?: string, override_default_response_type?: boolean }) => void;
             api: (
                 path: string,
                 method: string,
@@ -108,7 +108,7 @@ const MetaConnectButton = ({open, onClose, onSave}: MetaConnectPopupProps) => {
     const [accessToken, setAccessToken] = useState('')
     const [loading, setLoading] = useState(false)
     const appID = process.env.NEXT_PUBLIC_META_APP_ID
-    const configID = process.env.NEXT_META_LOGIN_CONFIG
+    const configID = process.env.NEXT_PUBLIC_META_LOGIN_CONFIG
 
 
     useEffect(() => {
@@ -118,7 +118,7 @@ const MetaConnectButton = ({open, onClose, onSave}: MetaConnectPopupProps) => {
                     appId: appID ?? '',
                     cookie: true,
                     xfbml: true,
-                    version: 'v16.0',
+                    version: 'v20.0',
                 });
             };
             (function (d, s, id) {
@@ -143,7 +143,7 @@ const MetaConnectButton = ({open, onClose, onSave}: MetaConnectPopupProps) => {
                     console.log('Login failed!');
                 }
             },
-            { config_id: configID, response_type: 'code',
+            { configId: configID, response_type: 'code',
                 override_default_response_type: true}
         );
     };
