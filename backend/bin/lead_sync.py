@@ -143,7 +143,7 @@ async def handle_payment_notification(user, notification_persistence, plan_leads
             await publish_rabbitmq_message(
                 connection=connection,
                 queue_name=queue_name,
-                message_body={'notification': notification_text}
+                message_body={'notification_text': notification_text}
             )
         except:
             await rabbitmq_connection.close()
@@ -167,7 +167,7 @@ async def handle_inactive_leads_notification(user, leads_persistence, notificati
             await publish_rabbitmq_message(
                 connection=connection,
                 queue_name=queue_name,
-                message_body={'notification': notification_text}
+                message_body={'notification_text': notification_text}
             )
         except:
             await rabbitmq_connection.close()
@@ -186,7 +186,7 @@ async def notify_missing_plan(notification_persistence, user):
         await publish_rabbitmq_message(
             connection=connection,
             queue_name=queue_name,
-            message_body={'notification': account_notification.text}
+            message_body={'notification_text': account_notification.text}
         )
     except:
         await rabbitmq_connection.close()
