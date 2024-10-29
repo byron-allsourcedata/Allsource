@@ -32,6 +32,12 @@ async def get_notification(notification_service: Notification = Depends(get_noti
     return notification_service.get_notification(user)
 
 
+@router.post("/notification/dismiss")
+async def get_notification(notification_id: int, notification_service: Notification = Depends(get_notification_service),
+                           user=Depends(check_user_authentication)):
+    return notification_service.dismiss(notification_id)
+
+
 @router.get("/check-user-authorization")
 def check_user_authorization(user=Depends(check_user_authorization),
                              domain: UserDomains = Depends(check_pixel_install_domain)):

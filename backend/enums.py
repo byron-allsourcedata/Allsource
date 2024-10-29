@@ -159,6 +159,7 @@ class NotificationTitles(Enum):
     PAYMENT_FAILED = 'payment_failed'
     CONTACT_LIMIT_APPROACHING = 'contact_limit_approaching'
     CHOOSE_PLAN = 'choose_plan'
+    PAYMENT_SUCCESS = 'payment_success'
 
 
 class IntegrationsStatus(Enum):
