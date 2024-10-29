@@ -37,5 +37,4 @@ class NotificationPersistence:
                 .join(UserAccountNotification, AccountNotification.id == UserAccountNotification.notification_id)
                 .join(Users, UserAccountNotification.user_id == Users.id)
                 .filter(Users.id == user_id)
-                .limit(20)
                 .all())
