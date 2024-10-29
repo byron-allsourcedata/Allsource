@@ -9,6 +9,7 @@ import DomainButton from "@/components/DomainsButton";
 import NavigationMenu from "@/components/NavigationMenu";
 import { SliderProvider } from "../context/SliderContext";
 import { useTrial } from '../context/TrialProvider';
+import NotificationPopup from "./NotificationPopup";
 
 const headerStyles = {
   headers: {
@@ -45,6 +46,7 @@ const Header = () => {
   const full_name = userFullName || meData.full_name;
   const email = userEmail || meData.email;
   const { resetTrialData } = useTrial();
+  const [notificationIconPopupOpen, setNotificationIconPopupOpen] = useState(false);
   const handleSignOut = () => {
     localStorage.clear();
     sessionStorage.clear();
@@ -68,6 +70,14 @@ const Header = () => {
   const handleLogoClick = () => {
     router.push("/dashboard");
   };
+
+  const handleNotificationIconPopupOpen = () => {
+    setNotificationIconPopupOpen(true);
+  };
+
+  const handleNotificationIconPopupClose = () => {
+    setNotificationIconPopupOpen(false);
+  }
   return (
     <>
       <Box sx={{ display: { md: 'none' } }}>
@@ -86,7 +96,7 @@ const Header = () => {
         <Box sx={{ display: "flex", alignItems: "center" }}>
           <TrialStatus />
 
-          <Button sx={{
+          <Button onClick={handleNotificationIconPopupOpen} sx={{
             minWidth: '32px',
             padding: '8px',
             color: 'rgba(128, 128, 128, 1)',
@@ -179,6 +189,7 @@ const Header = () => {
           </Menu>
         </Box>
       </Box>
+      <NotificationPopup open={notificationIconPopupOpen} onClose={handleNotificationIconPopupClose}/>
     </>
   );
 };
