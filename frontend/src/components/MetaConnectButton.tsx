@@ -18,7 +18,7 @@ declare global {
         fbAsyncInit: () => void;
         FB: {
             init: (options: { appId: string; cookie: boolean; xfbml: boolean; version: string }) => void;
-            login: (callback: (response: fb.AuthResponse) => void, options?: { scope?: string, configId?: string, response_type?: string, override_default_response_type?: boolean }) => void;
+            login: (callback: (response: fb.AuthResponse) => void, options?: { scope?: string, config_id?: string, response_type?: string, override_default_response_type?: boolean }) => void;
             api: (
                 path: string,
                 method: string,
@@ -143,7 +143,7 @@ const MetaConnectButton = ({open, onClose, onSave}: MetaConnectPopupProps) => {
                     console.log('Login failed!');
                 }
             },
-            { configId: configID, response_type: 'code',
+            { config_id: configID, response_type: 'code',
                 override_default_response_type: true}
         );
     };
