@@ -90,7 +90,8 @@ const TrialStatus: React.FC = () => {
 
   const plan_days = calculateDaysDifference(data?.user_plan?.plan_end)
   const check_active = data?.user_plan?.plan_end
-  const trialstatus = data?.user_plan?.is_trial
+  const trial_status = data?.user_plan?.is_trial
+  const is_artificial_status = data?.user_plan?.is_artificial_status
 
   const updateStatus = (isTrialPending: boolean) => {
     if (isTrialPending) {
@@ -98,7 +99,14 @@ const TrialStatus: React.FC = () => {
       setBackgroundColor('rgba(231, 231, 231, 1)');
       setTextColor('rgba(95, 99, 104, 1)');
       setIconColor('rgba(95, 99, 104, 1)');
-    } else if (trialstatus) {
+    }
+    else if (trial_status) {
+      setStatusText('Trial Activated');
+      setBackgroundColor('rgba(253, 242, 202, 1)');
+      setTextColor('rgba(148, 120, 21, 1)');
+      setIconColor('rgba(148, 120, 21, 1)');
+    }
+    else if (is_artificial_status) {
       if (plan_days !== undefined && plan_days <= 5 && plan_days >= 0) {
         setStatusText(`${plan_days} days Free Trial left`);
         setBackgroundColor('rgba(255, 233, 131, 1)');
@@ -182,7 +190,7 @@ const TrialStatus: React.FC = () => {
             {statusText}
           </Typography>
 
-          {(statusText.includes('Trial') && !(statusText.includes('Pending'))) && (
+          {((statusText.includes('Trial') && is_artificial_status) && !(statusText.includes('Pending'))) && (
             <Button onClick={handleOpenSlider} sx={{ ml: 0, textTransform: 'none', padding: 0, color: 'rgba(80, 82, 178, 1) !important' }}>
               <Typography className='first-sub-title' sx={{
                 color: 'rgba(20, 110, 246, 1) !important',

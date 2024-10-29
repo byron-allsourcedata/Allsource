@@ -41,7 +41,8 @@ class UsersService:
             self.user.get('id'))
         if result['subscription']:
             return {
-                "is_trial": result['is_artificial_status'],
+                "is_artificial_status": result['is_artificial_status'],
+                "is_trial": result['subscription'].is_trial,
                 "plan_end": result['subscription'].plan_end,
             }
         return {

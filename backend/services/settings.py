@@ -259,10 +259,11 @@ class SettingsService:
         user_limit_domain = len(self.user_domains_service.get_domains(user_id))
         subscription_details = None
         total_key = 'monthly_total' if current_plan.interval == 'month' else 'yearly_total'
+        plan_name = f"{current_plan.title} {'yearly' if current_plan.interval == 'year' else ''}".strip()
         if subscription is None and user_subscription:
             subscription_details = {
                 'billing_cycle': f"{user_subscription.plan_start.strftime('%b %d, %Y')} to {user_subscription.plan_end.strftime('%b %d, %Y')}" if user_subscription.plan_start else None,
-                'plan_name': current_plan.title,
+                'plan_name': plan_name,
                 'domains': f"{user_limit_domain}/{plan_limit_domain}",
                 'prospect_credits': 'Coming soon',
                 'overage': 'free' if user_subscription.lead_credit_price == -1 else user_subscription.lead_credit_price,
@@ -273,7 +274,6 @@ class SettingsService:
         elif subscription and user_subscription:
             plan = subscription['items']['data'][0]['plan']
             is_active = subscription.get('status') == 'active' or subscription.get('status') == 'trialing'
-            plan_name = determine_plan_name_from_product_id(plan['product'])
             if user_subscription.downgrade_price_id:
                 downgrade_plan = get_price_from_price_id(user_subscription.downgrade_price_id)
                 downgrade_amount = downgrade_plan['unit_amount'] if downgrade_plan else 0
