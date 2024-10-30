@@ -43,7 +43,7 @@ const RevenueTracking = () => {
         }}
       >
         <Typography variant="h6" component="div" mb={1} className="first-sub-title" sx={{
-        fontFamily: 'Nunito',
+        fontFamily: 'Nunito Sans',
         fontWeight: '700',
         lineHeight: '21.82px',
         textAlign: 'left',
@@ -59,7 +59,7 @@ const RevenueTracking = () => {
       </Typography>
       <Typography variant="body2" color="textSecondary" className="table-data" mb={2}
       sx={{
-        fontFamily: 'Nunito',
+        fontFamily: 'Nunito Sans',
         fontWeight: '500',
         color: 'rgba(128, 128, 128, 1)',
         fontSize: '12px',

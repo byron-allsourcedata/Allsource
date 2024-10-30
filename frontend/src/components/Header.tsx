@@ -140,7 +140,7 @@ const Header = () => {
               <Typography
                 variant="h6"
                 sx={{
-                  fontFamily: 'Nunito',
+                  fontFamily: 'Nunito Sans',
                   fontSize: '14px',
                   fontWeight: 600,
                   lineHeight: '19.6px',
@@ -154,7 +154,7 @@ const Header = () => {
                 variant="body2"
                 color="textSecondary"
                 sx={{
-                  fontFamily: 'Nunito',
+                  fontFamily: 'Nunito Sans',
                   fontSize: '14px',
                   fontWeight: 600,
                   lineHeight: '19.6px',
@@ -166,7 +166,7 @@ const Header = () => {
             </Box>
             <MenuItem
               sx={{
-                fontFamily: 'Nunito',
+                fontFamily: 'Nunito Sans',
                 fontSize: '14px',
                 fontWeight: 500,
                 lineHeight: '19.6px',
@@ -177,7 +177,7 @@ const Header = () => {
             </MenuItem>
             <MenuItem
               sx={{
-                fontFamily: 'Nunito',
+                fontFamily: 'Nunito Sans',
                 fontSize: '14px',
                 fontWeight: 500,
                 lineHeight: '19.6px',

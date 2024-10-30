@@ -1,8 +1,20 @@
 import React, { useEffect, useState } from "react";
 import { Drawer, Box, Typography, Link, IconButton, Divider } from "@mui/material";
-import CustomizedProgressBar from './CustomizedProgressBar';
 import CloseIcon from '@mui/icons-material/Close';
 import axiosInstance from "@/axios/axiosInterceptorInstance";
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
+
+
+dayjs.extend(relativeTime);
+
+interface Notification {
+    id: number;
+    sub_title: string;
+    text: string;
+    is_checked: boolean;
+    created_at: number;
+}
 
 interface NotificationPopupProps {
     open: boolean;
@@ -11,30 +23,32 @@ interface NotificationPopupProps {
 
 const NotificationPopup: React.FC<NotificationPopupProps> = ({ open, onClose }) => {
     const [loading, setLoading] = useState(false);
+    const [notifications, setNotifications] = useState<Notification[]>([]);
 
     useEffect(() => {
         if (open) {
-        setLoading(true)
-        const accessToken = localStorage.getItem("token");
-        if (accessToken) {
-          const fetchData = async () => {
-            try {
-              const response = await axiosInstance.get("/notification");
-              console.log(response)
-            } catch (error) {
-            } finally {
-              setLoading(false);
+            setLoading(true);
+            const accessToken = localStorage.getItem("token");
+            if (accessToken) {
+                const fetchData = async () => {
+                    try {
+                        const response = await axiosInstance.get("/notification");
+                        console.log(response.data)
+                        setNotifications(response.data);
+                    } catch (error) {
+                        console.error(error);
+                    } finally {
+                        setLoading(false);
+                    }
+                };
+                fetchData();
             }
-          };
-        
-          fetchData();
         }
-    }
-      }, [open]);
+    }, [open]);
 
-return (
-    <>
-    {loading && <CustomizedProgressBar />}
+    
+
+    return (
         <Drawer
             anchor="right"
             open={open}
@@ -56,184 +70,93 @@ return (
                 <Typography variant="h6" className="first-sub-title" sx={{ textAlign: 'center' }}>
                     Notifications
                 </Typography>
-                <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
-                    
-                    <IconButton onClick={onClose} sx={{ p: 0 }}>
-                        <CloseIcon sx={{ width: '20px', height: '20px' }} />
-                    </IconButton>
-                </Box>
+                <IconButton onClick={onClose} sx={{ p: 0 }}>
+                    <CloseIcon sx={{ width: '20px', height: '20px' }} />
+                </IconButton>
             </Box>
             <Divider />
             <Box sx={{ margin: '16px 24px 24px 24px', border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)' }}>
-                <Box sx={{ width: '100%', position: 'relative', padding: 2,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 2,
-                    borderBottom: '1px solid #E8E9EB',
-                    '&:last-child': {
-                        borderBottom: 'none'
-                    }
-                 }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                        position: 'relative',
-                        pl: 2,
-                        '&:before': {
-                            content: '""',
-                            width: '8px',
-                            height: '8px',
-                            borderRadius: '50%',
-                            background: '#5052B2',
-                            position: 'absolute',
-                            left: 0,
-                            top: '6px'
-
-                        }
-                    }}>
-                        <Typography variant="h6" className="second-sub-title" sx={{
-                            fontWeight: '500 !important',
-                            lineHeight: '20px !important'
-                        }}>
-                            Your plan is expiring soon!
-                        </Typography>
-                        <Typography variant="body1" className='paragraph' sx={{
-                            fontWeight: '500 !important',
-                            lineHeight: '16px !important',
-                            color: '#5F6368 !important'
-                        }} >
-                            5h ago
-                        </Typography>
-                    </Box>
-                    <Typography variant="body1" className='paragraph' sx={{ 
-                        lineHeight: '16px !important',
-                        color: '#5F6368 !important'
-                    }} >
-                    Please upgrade your basic plan by October 1st to continue using our services.
-                        {' '}<Link
+                {loading ? (
+                    <Box
                         sx={{
-                            textDecoration: 'none',
-                            color: '#146EF6 !important'
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            width: '100%',
+                            height: '100%',
+                            minHeight: '85vh'
                         }}
-                        href='/settings?section=subscription'
-                        >
-                        Choose Plan
-                        </Link>
-                        </Typography>
-                </Box>
-
-                <Box sx={{ width: '100%', position: 'relative', padding: 2,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 2,
-                    borderBottom: '1px solid #E8E9EB',
-                    '&:last-child': {
-                        borderBottom: 'none'
-                    }
-                 }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                        position: 'relative',
-                        pl: 2,
-                        '&:before': {
-                            content: '""',
-                            width: '8px',
-                            height: '8px',
+                    >
+                        {/* Spinner */}
+                        <Box sx={{
+                            border: '8px solid #f3f3f3',
+                            borderTop: '8px solid #3498db',
                             borderRadius: '50%',
-                            background: '#5052B2',
-                            position: 'absolute',
-                            left: 0,
-                            top: '6px'
-
-                        }
-                    }}>
-                        <Typography variant="h6" className="second-sub-title" sx={{
-                            fontWeight: '500 !important',
-                            lineHeight: '20px !important'
-                        }}>
-                            Blocked invoice overdue soon
-                        </Typography>
-                        <Typography variant="body1" className='paragraph' sx={{
-                            fontWeight: '500 !important',
-                            lineHeight: '16px !important',
-                            color: '#5F6368 !important'
-                        }} >
-                            12h ago
-                        </Typography>
+                            width: '40px',
+                            height: '40px',
+                            animation: 'spin 1s linear infinite',
+                        }} />
                     </Box>
-                    <Typography variant="body1" className='paragraph' sx={{ 
-                        lineHeight: '16px !important',
-                        color: '#5F6368 !important'
-                    }} >
-                    Invoice 1234243 is blocked for payment and will soon be overdue. Risk of late payment fee.
-                        </Typography>
-                </Box>
-
-                <Box sx={{ width: '100%', position: 'relative', padding: 2,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 2,
-                    borderBottom: '1px solid #E8E9EB',
-                    '&:last-child': {
-                        borderBottom: 'none'
-                    }
-                 }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
-                        <Typography variant="h6" className="second-sub-title" sx={{
-                            fontWeight: '500 !important',
-                            lineHeight: '20px !important'
-                        }}>
-                            Jolla deo - admin added one team member to Maximiz
-                        </Typography>
-                        <Typography variant="body1" className='paragraph' sx={{
-                            fontWeight: '500 !important',
-                            lineHeight: '16px !important',
-                            color: '#5F6368 !important'
-                        }} >
-                            Oct 21
-                        </Typography>
-                    </Box>
-                    <Typography variant="body1" className='paragraph' sx={{ 
-                        lineHeight: '16px !important',
-                        color: '#5F6368 !important'
-                    }} >
-                    Through invitation 1 team member added to the portal successfully.
-                        </Typography>
-                </Box>
-                
-                <Box sx={{ width: '100%', position: 'relative', padding: 2,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 2,
-                    borderBottom: '1px solid #E8E9EB',
-                    '&:last-child': {
-                        borderBottom: 'none'
-                    }
-                 }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
-                        <Typography variant="h6" className="second-sub-title" sx={{
-                            fontWeight: '500 !important',
-                            lineHeight: '20px !important'
-                        }}>
-                            Blocked invoice overdue soon
-                        </Typography>
-                        <Typography variant="body1" className='paragraph' sx={{
-                            fontWeight: '500 !important',
-                            lineHeight: '16px !important',
-                            color: '#5F6368 !important'
-                        }} >
-                            Oct 21
-                        </Typography>
-                    </Box>
-                    <Typography variant="body1" className='paragraph' sx={{ 
-                        lineHeight: '16px !important',
-                        color: '#5F6368 !important'
-                    }} >
-                    Invoice 1234243 is blocked for payment and will soon be overdue. Risk of late payment fee.
-                        </Typography>
-                </Box>
-                
+                ) : (
+                    notifications.sort((a, b) => b.created_at - a.created_at).map((notification) => (
+                        <Box key={notification.id} sx={{ width: '100%', position: 'relative', padding: 2,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: 2,
+                            borderBottom: '1px solid #E8E9EB',
+                            '&:last-child': {
+                                borderBottom: 'none'
+                            }
+                         }}>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                                position: 'relative',
+                                pl: notification.is_checked ? 2 : 0,
+                                '&:before': notification.is_checked == false ? {} : {
+                                    content: '""',
+                                    width: '8px',
+                                    height: '8px',
+                                    borderRadius: '50%',
+                                    background: '#5052B2',
+                                    position: 'absolute',
+                                    left: 0,
+                                    top: '6px',
+                                }
+                            }}>
+                                <Typography variant="h6" className="second-sub-title" sx={{
+                                    fontWeight: '500 !important',
+                                    lineHeight: '20px !important'
+                                }}>
+                                    {notification.sub_title}
+                                </Typography>
+                                <Typography variant="body1" className='paragraph' sx={{
+                                    fontWeight: '500 !important',
+                                    lineHeight: '16px !important',
+                                    color: '#5F6368 !important'
+                                }} >
+                                    {dayjs.unix(notification.created_at).fromNow()}
+                                </Typography>
+                            </Box>
+                            <Typography variant="body1" className='paragraph' sx={{ 
+                                lineHeight: '16px !important',
+                                color: '#5F6368 !important'
+                            }} >
+                            {notification.text} {/*Тут остальной текст*/}
+                                {' '}<Link
+                                sx={{
+                                    textDecoration: 'none',
+                                    color: '#146EF6 !important'
+                                }}
+                                href='/settings?section=subscription'
+                                >
+                                Choose Plan
+                                </Link>
+                                </Typography>
+                        </Box>
+                    ))
+                )}
             </Box>
         </Drawer>
-    </>
-)
+    );
 }
 
 export default NotificationPopup;

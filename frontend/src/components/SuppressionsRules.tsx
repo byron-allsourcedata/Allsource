@@ -548,7 +548,7 @@ const SuppressionRules: React.FC = () => {
                                         width: '69%',
                                         height: '48px',
                                         "@media (max-width: 700px)": { width: '100%', height: '48px' },
-                                        fontFamily: 'Nunito',
+                                        fontFamily: 'Nunito Sans',
                                         fontSize: '14px',
                                         fontWeight: 400,
                                         color: 'rgba(17, 17, 19, 1)',
@@ -1209,7 +1209,7 @@ const SuppressionRules: React.FC = () => {
                 </Box>
                 <Divider sx={{ pt: '1.5rem' }} />
 
-                <Box sx={{ ...suppressionsStyles.container, paddingLeft: 0, pr:0 }}>
+                <Box sx={{ ...suppressionsStyles.suppressionContainer, paddingLeft: 0, pr:0 }}>
                     <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '0.5rem', mb: '1.25rem' }}>
                         <Typography className="main-text" sx={{ ...suppressionsStyles.title, mb: 0 }}>
                             Suppression list

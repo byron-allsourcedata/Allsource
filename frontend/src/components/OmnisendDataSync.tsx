@@ -1306,7 +1306,7 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data
                                             >
                                                 <Typography sx={{
                                                     marginRight: '0.5em',
-                                                    fontFamily: 'Nunito',
+                                                    fontFamily: 'Nunito Sans',
                                                     lineHeight: '22.4px',
                                                     fontSize: '16px',
                                                     textAlign: 'left',

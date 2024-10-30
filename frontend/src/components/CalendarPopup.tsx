@@ -84,9 +84,9 @@ const CalendarPopup: React.FC<CalendarPopupProps> = ({ anchorEl, open, onClose, 
                 <Box sx={{ padding: 2, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                     <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', mb: 2, borderBottom: '0.5px solid rgba(190, 190, 190, 1)' }}>
                         <Box display="flex" justifyContent="space-between" mb={2}>
-                            <Button onClick={handleToday}><Typography sx={{ fontFamily: 'Nunito', color: 'rgba(0, 0, 0, 1)', textTransform: 'none' }}>Today</Typography></Button>
-                            <Button onClick={handleLast7Days}><Typography sx={{ fontFamily: 'Nunito', color: 'rgba(0, 0, 0, 1)', textTransform: 'none' }}>Last 7 days</Typography></Button>
-                            <Button onClick={handleLastMonth}><Typography sx={{ fontFamily: 'Nunito', color: 'rgba(0, 0, 0, 1)', textTransform: 'none' }}>Last Month</Typography></Button>
+                            <Button onClick={handleToday}><Typography sx={{ fontFamily: 'Nunito Sans', color: 'rgba(0, 0, 0, 1)', textTransform: 'none' }}>Today</Typography></Button>
+                            <Button onClick={handleLast7Days}><Typography sx={{ fontFamily: 'Nunito Sans', color: 'rgba(0, 0, 0, 1)', textTransform: 'none' }}>Last 7 days</Typography></Button>
+                            <Button onClick={handleLastMonth}><Typography sx={{ fontFamily: 'Nunito Sans', color: 'rgba(0, 0, 0, 1)', textTransform: 'none' }}>Last Month</Typography></Button>
                         </Box>
                     </Box>
 
@@ -119,7 +119,7 @@ const CalendarPopup: React.FC<CalendarPopupProps> = ({ anchorEl, open, onClose, 
                         onClick={handleClear}
                         sx={{
                             width: '55px',
-                            fontFamily: 'Nunito',
+                            fontFamily: 'Nunito Sans',
                             height: '30px',
                             padding: '4px 8px',
                             borderRadius: '4px 0 0 0',
@@ -132,7 +132,7 @@ const CalendarPopup: React.FC<CalendarPopupProps> = ({ anchorEl, open, onClose, 
                         }}
                         disabled={!startDate && !endDate}
                     >
-                        <Typography sx={{ fontFamily: 'Nunito' }}>Clear</Typography>
+                        <Typography sx={{ fontFamily: 'Nunito Sans' }}>Clear</Typography>
                     </Button>
                     <Button
                         onClick={handleApply}
@@ -147,7 +147,7 @@ const CalendarPopup: React.FC<CalendarPopupProps> = ({ anchorEl, open, onClose, 
                             textTransform: 'none',
                         }}
                     >
-                        <Typography sx={{ fontFamily: 'Nunito' }}>Apply</Typography>
+                        <Typography sx={{ fontFamily: 'Nunito Sans' }}>Apply</Typography>
                     </Button>
                 </Box>
             </Popover>

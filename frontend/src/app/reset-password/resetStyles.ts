@@ -132,13 +132,13 @@ export const resetStyles: { [key: string]: SxProps<Theme> } = {
       loginText: {
         mt: 2,
       margin: '1.25em 0px 24px',
-        fontFamily: 'Nunito',
+      fontFamily: 'Nunito Sans',
         fontSize: '16px',
       },
       resetPassword: {
         mt: 2,
       margin: '3em 0em 0em',
-        fontFamily: 'Nunito',
+        fontFamily: 'Nunito Sans',
         fontSize: '16px',
       },
       text: {
@@ -151,7 +151,7 @@ export const resetStyles: { [key: string]: SxProps<Theme> } = {
         color: '#F45745',
         cursor: 'pointer',
         fontWeight: 'bold',
-        fontFamily: 'Nunito',
+        fontFamily: 'Nunito Sans',
         textDecoration: 'none',
       },
       formField: {
@@ -162,7 +162,7 @@ export const resetStyles: { [key: string]: SxProps<Theme> } = {
           height: '48px',
           '& .MuiOutlinedInput-input': {
             padding: '12px 16px 13px 16px',
-            fontFamily: 'Nunito',
+            fontFamily: 'Nunito Sans',
           },
           '& .MuiOutlinedInput-notchedOutline': {
             borderColor: '#A3B0C2',

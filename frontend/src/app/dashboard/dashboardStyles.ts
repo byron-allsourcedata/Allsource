@@ -74,7 +74,7 @@ export const dashboardStyles: { [key: string]: SxProps<Theme> } = {
     width: '100%',
     maxWidth: '360px',
     padding: '220px 0px 24px',
-    fontFamily: 'Nunito',
+    fontFamily: 'Nunito Sans',
   },
   submitButton: {
     mt: 2,
@@ -89,7 +89,7 @@ export const dashboardStyles: { [key: string]: SxProps<Theme> } = {
     textTransform: 'none',
     minHeight: '3rem',
     fontSize: '16px',
-    fontFamily: 'Nunito',
+    fontFamily: 'Nunito Sans',
   },
   mainItemContent: {
     '@media (max-width: 900px)': {
@@ -107,7 +107,7 @@ export const dashboardStyles: { [key: string]: SxProps<Theme> } = {
   },
   description: {
     fontSize: '14px',
-    fontFamily: 'Nunito',
+    fontFamily: 'Nunito Sans',
     color: '#808080',
   }
 };

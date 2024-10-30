@@ -104,7 +104,7 @@ export const styles: { [key: string]: SxProps<Theme> } = {
     display: 'flex',
     marginTop: '10px',
     justifyContent: 'space-between',
-    fontFamily: 'Nunito',
+    fontFamily: 'Nunito Sans',
     fontSize: '16px',
     fontWeight: '600',
     lineHeight: '21.82px',
@@ -115,7 +115,7 @@ export const styles: { [key: string]: SxProps<Theme> } = {
     marginBottom: '1.25em',
   },
   subheader: {
-    fontFamily: 'Nunito',
+    fontFamily: 'Nunito Sans',
     fontSize: '16px',
     fontWeight: '400',
     lineHeight: '21.82px',
