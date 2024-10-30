@@ -94,12 +94,12 @@ async def publish_email_notification(email, title, params=None):
         message_body={
             'email': email,
             'data': {
-                'title': title,
+                'sendgrid_alias': title,
                 'params': params
             }
         }
     )
-    logging.info(f"Push to RMQ: {{'email:': {email}, 'title': {title}}}")
+    logging.info(f"Push to RMQ: {{'email:': {email}, 'sendgrid_alias': {title}}}")
 
 
 def get_all_five_x_user_emails(business_email, personal_emails, additional_personal_emails):

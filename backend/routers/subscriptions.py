@@ -79,7 +79,7 @@ async def update_payment_confirmation(request: fastRequest, webhook_service: Web
                 message_body={
                     'email': user.email,
                     'data': {
-                        'title': NotificationTitles.PAYMENT_FAILED.value,
+                        'sendgrid_alias': NotificationTitles.PAYMENT_FAILED.value,
                         'params': None
                     }
                 }

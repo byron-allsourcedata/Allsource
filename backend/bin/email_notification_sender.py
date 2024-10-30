@@ -6,6 +6,7 @@ import os
 import sys
 
 from models.account_notification import AccountNotification
+from models.sendgrid_template import SendgridTemplate
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
@@ -37,8 +38,8 @@ async def on_message_received(message, session):
         except ValueError:
             converted_params = []
 
-        notification = session.query(AccountNotification).filter(AccountNotification.title == data['title']).first()
-        text = notification.text.format(*converted_params) if converted_params else notification.text
+        description = session.query(SendgridTemplate.description).filter(SendgridTemplate.alias == data['sendgrid_alias']).scalar()
+        text = description.format(*converted_params) if converted_params else description
         mail_object = SendgridHandler()
         mail_object.send_sign_up_mail(
             to_emails=email,
