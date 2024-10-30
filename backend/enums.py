@@ -160,6 +160,7 @@ class NotificationTitles(Enum):
     CONTACT_LIMIT_APPROACHING = 'contact_limit_approaching'
     CHOOSE_PLAN = 'choose_plan'
     PAYMENT_SUCCESS = 'payment_success'
+    TEAM_MEMBER_ADDED = 'team_member_added'
 
 
 class IntegrationsStatus(Enum):
