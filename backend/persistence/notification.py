@@ -32,6 +32,7 @@ class NotificationPersistence:
     def get_notifications_by_user_id(self, user_id: str):
         return (self.db.query(
             AccountNotification.text,
+            AccountNotification.sub_title,
             UserAccountNotification.id,
             UserAccountNotification.created_at,
             UserAccountNotification.params,

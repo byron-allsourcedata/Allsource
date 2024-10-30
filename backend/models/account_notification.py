@@ -8,5 +8,6 @@ class AccountNotification(Base):
 
     id = Column(Integer, primary_key=True, nullable=False)
     title = Column(VARCHAR(32), nullable=False)
+    sub_title = Column(VARCHAR(32), nullable=False)
     text = Column(VARCHAR(128), nullable=False)
 
