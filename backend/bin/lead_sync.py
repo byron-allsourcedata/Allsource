@@ -85,7 +85,7 @@ def group_requests_by_date(request_row, groupped_requests):
     groupped_requests[key].append(lead_info)
 
 
-async def publish_email_notification(email, text):
+async def publish_email_notification(email, title, params=None):
     rabbitmq_connection = RabbitMQConnection()
     connection = await rabbitmq_connection.connect()
     await publish_rabbitmq_message(
@@ -93,10 +93,13 @@ async def publish_email_notification(email, text):
         queue_name=EMAIL_NOTIFICATIONS,
         message_body={
             'email': email,
-            'text': text
+            'data': {
+                'title': title,
+                'params': params
+            }
         }
     )
-    logging.info(f"Push to RMQ: {{'email:': {email}, 'text': {text}}}")
+    logging.info(f"Push to RMQ: {{'email:': {email}, 'title': {title}}}")
 
 
 def get_all_five_x_user_emails(business_email, personal_emails, additional_personal_emails):
@@ -155,7 +158,7 @@ async def handle_payment_notification(user, notification_persistence, plan_leads
         rabbitmq_connection = RabbitMQConnection()
         connection = await rabbitmq_connection.connect()
 
-        await publish_email_notification(user.email, notification_text)
+        await publish_email_notification(user.email, NotificationTitles.CONTACT_LIMIT_APPROACHING.value, f"{int(credit_usage_percentage)}, {plan_lead_credit_price}")
 
         save_account_notification = notification_persistence.save_account_notification(user.id, account_notification.id,
                                                                                        f"{credit_usage_percentage}, {plan_lead_credit_price}")
@@ -184,7 +187,7 @@ async def handle_inactive_leads_notification(user, leads_persistence, notificati
         connection = await rabbitmq_connection.connect()
         save_account_notification = notification_persistence.save_account_notification(user.id, account_notification.id,
                                                                                        len(inactive_leads_user))
-        await publish_email_notification(user.email, notification_text)
+        await publish_email_notification(user.email, NotificationTitles.PLAN_LIMIT_EXCEEDED.value, len(inactive_leads_user))
         try:
             await publish_rabbitmq_message(
                 connection=connection,
@@ -204,7 +207,7 @@ async def notify_missing_plan(notification_persistence, user):
     rabbitmq_connection = RabbitMQConnection()
     connection = await rabbitmq_connection.connect()
     save_account_notification = notification_persistence.save_account_notification(user.id, account_notification.id)
-    await publish_email_notification(user.email, account_notification.text)
+    await publish_email_notification(user.email, NotificationTitles.CHOOSE_PLAN.value)
 
     try:
         await publish_rabbitmq_message(
@@ -726,10 +729,7 @@ async def main():
 
     await channel.declare_queue(
         name=EMAIL_NOTIFICATIONS,
-        durable=True,
-        arguments={
-            'x-consumer-timeout': 3600000,
-        }
+        durable=True
     )
 
     logging.info("Started")
