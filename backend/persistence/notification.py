@@ -22,6 +22,7 @@ class NotificationPersistence:
         )
         self.db.add(account_notification)
         self.db.commit()
+        return account_notification
 
     def dismiss(self, notification_id):
         self.db.query(UserAccountNotification).filter(UserAccountNotification.id == notification_id).update({UserAccountNotification.is_checked: True},
@@ -31,6 +32,7 @@ class NotificationPersistence:
     def get_notifications_by_user_id(self, user_id: str):
         return (self.db.query(
             AccountNotification.text,
+            AccountNotification.sub_title,
             UserAccountNotification.id,
             UserAccountNotification.created_at,
             UserAccountNotification.params,

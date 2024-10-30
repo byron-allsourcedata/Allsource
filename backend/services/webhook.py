@@ -1,6 +1,8 @@
 import logging
 from datetime import datetime, timezone
 
+from enums import NotificationTitles
+from persistence.notification import NotificationPersistence
 from services.subscriptions import SubscriptionService
 from .stripe_service import save_payment_details_in_stripe
 
@@ -8,8 +10,9 @@ logger = logging.getLogger(__name__)
 
 
 class WebhookService:
-    def __init__(self, subscription_service: SubscriptionService):
+    def __init__(self, subscription_service: SubscriptionService, notification_persistence: NotificationPersistence):
         self.subscription_service = subscription_service
+        self.notification_persistence = notification_persistence
 
     def update_subscription_confirmation(self, payload):
         stripe_request_created_timestamp = payload.get("created")
@@ -55,11 +58,13 @@ class WebhookService:
         return result
 
     def cancel_subscription_confirmation(self, payload):
+        save_account_notification = None
         stripe_request_created_timestamp = payload.get("created")
         stripe_request_created_at = datetime.fromtimestamp(stripe_request_created_timestamp, timezone.utc).replace(
             tzinfo=None)
         data_object = payload.get("data").get("object")
         customer_id = data_object.get("customer")
+        stripe_status = data_object.get("status")
         user_data = self.subscription_service.get_userid_by_customer(customer_id)
         if not user_data:
             return payload
@@ -74,10 +79,16 @@ class WebhookService:
         self.subscription_service.create_subscription_transaction(user_id=user_data.id,
                                                                   stripe_payload=payload)
 
-        result = self.subscription_service.process_subscription(user=user_data, stripe_payload=data_object)
+        self.subscription_service.process_subscription(user=user_data, stripe_payload=data_object)
+        if stripe_status == 'failed':
+            account_notification = self.notification_persistence.get_account_notification_by_title(
+                NotificationTitles.PAYMENT_FAILED.value)
+            save_account_notification = self.notification_persistence.save_account_notification(user_data.id, account_notification.id)
+
         return {
-            'status': result['status'],
-            'user': user_data
+            'status': stripe_status,
+            'user': user_data,
+            'notification_id': save_account_notification.id if save_account_notification else None
         }
 
     def create_payment_confirmation(self, payload):

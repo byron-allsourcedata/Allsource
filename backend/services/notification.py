@@ -29,6 +29,7 @@ class Notification:
 
             result.append({
                 'id': notification.id,
+                'sub_title': notification.sub_title,
                 'text': text,
                 'is_checked': notification.is_checked,
                 'created_at': int(notification.created_at.timestamp())

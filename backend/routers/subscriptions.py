@@ -1,18 +1,19 @@
+import logging
+
 from fastapi import APIRouter, Depends, Request as fastRequest, HTTPException, status
 
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 from dependencies import get_plans_service, get_payments_service, get_webhook, check_user_authentication, \
     check_user_authorization_without_pixel
-from enums import TeamAccessLevel
+from enums import TeamAccessLevel, NotificationTitles
 from models.users import Users
 from schemas.subscriptions import UnsubscribeRequest
 from services.payments import PaymentsService
 from services.plans import PlansService
 from services.webhook import WebhookService
 
-
 QUEUE_CREDITS_CHARGING = 'credits_charging'
-
+EMAIL_NOTIFICATIONS = 'email_notifications'
 router = APIRouter()
 
 
@@ -25,7 +26,6 @@ async def get_subscription_plans(plans_service: PlansService = Depends(get_plans
 @router.get("/session/new")
 async def create_customer_session(price_id: str, payments_service: PaymentsService = Depends(get_payments_service),
                                   user: Users = Depends(check_user_authentication)):
-
     return payments_service.create_customer_session(price_id=price_id, user=user)
 
 
@@ -35,30 +35,11 @@ async def update_payment_confirmation(request: fastRequest, webhook_service: Web
     result_update_subscription = webhook_service.update_subscription_confirmation(payload=payload)
     if result_update_subscription['status']:
         user = result_update_subscription['user']
-        queue_name = f'sse_events_{str(user.id)}'
         rabbitmq_connection = RabbitMQConnection()
         connection = await rabbitmq_connection.connect()
         try:
-            message_text = None
-            if result_update_subscription['status'] == 'active':
-                message_text = 'Update subscription success'
-            elif result_update_subscription['status'] == 'inactive':
-                message_text = 'It looks like your payment didn’t go through. Kindly check your payment card, go to - billing'
-            elif result_update_subscription['status'] == 'canceled':
-                message_text = 'Update subscription failed'
             await publish_rabbitmq_message(
                 connection=connection,
-                queue_name=queue_name,
-                message_body={'notification_text': message_text}
-            )
-        except:
-            await rabbitmq_connection.close()
-        finally:
-            await rabbitmq_connection.close()
-
-        try:
-            await publish_rabbitmq_message(
-                connection=rabbitmq_connection,
                 queue_name=QUEUE_CREDITS_CHARGING,
                 message_body={
                     'customer_id': user.customer_id,
@@ -66,7 +47,7 @@ async def update_payment_confirmation(request: fastRequest, webhook_service: Web
                 }
             )
         except:
-            await rabbitmq_connection.close()
+            logging.error('Failed to publish rabbitmq message')
         finally:
             await rabbitmq_connection.close()
 
@@ -77,23 +58,31 @@ async def update_payment_confirmation(request: fastRequest, webhook_service: Web
 async def update_payment_confirmation(request: fastRequest, webhook_service: WebhookService = Depends(get_webhook)):
     payload = await request.json()
     result_update_subscription = webhook_service.cancel_subscription_confirmation(payload=payload)
-    if result_update_subscription['status']:
+    if result_update_subscription['status'] and result_update_subscription['status'] == 'failed':
         user = result_update_subscription['user']
         queue_name = f'sse_events_{str(user.id)}'
         rabbitmq_connection = RabbitMQConnection()
         connection = await rabbitmq_connection.connect()
         try:
-            message_text = None
-            if result_update_subscription['status'] == 'active':
-                message_text = 'Update subscription success'
-            elif result_update_subscription['status'] == 'inactive':
-                message_text = 'It looks like your payment didn’t go through. Kindly check your payment card, go to - billing'
-            elif result_update_subscription['status'] == 'canceled':
-                message_text = 'Update subscription failed'
+            message_text = ('It looks like your payment didn’t go through. Kindly check your payment card, go to - '
+                            'billing')
             await publish_rabbitmq_message(
                 connection=connection,
                 queue_name=queue_name,
-                message_body={'notification_text': message_text}
+                message_body={'notification_text': message_text,
+                              'notification_id': result_update_subscription['notification_id']}
+            )
+
+            await publish_rabbitmq_message(
+                connection=connection,
+                queue_name=EMAIL_NOTIFICATIONS,
+                message_body={
+                    'email': user.email,
+                    'data': {
+                        'sendgrid_alias': NotificationTitles.PAYMENT_FAILED.value,
+                        'params': None
+                    }
+                }
             )
         except:
             await rabbitmq_connection.close()
@@ -102,31 +91,12 @@ async def update_payment_confirmation(request: fastRequest, webhook_service: Web
 
     return "OK"
 
+
 @router.post("/update-payment-webhook")
 async def update_payment_confirmation(request: fastRequest, webhook_service: WebhookService = Depends(get_webhook)):
     payload = await request.json()
     result_update_subscription = webhook_service.create_payment_confirmation(payload=payload)
-    if result_update_subscription['status']:
-        user = result_update_subscription['user']
-        queue_name = f'sse_events_{str(user.id)}'
-        rabbitmq_connection = RabbitMQConnection()
-        connection = await rabbitmq_connection.connect()
-        try:
-            if result_update_subscription['status'] == 'succeeded':
-                message_text = 'Payment contacts succeeded'
-            else:
-                message_text = 'It looks like your payment didn’t go through. Kindly check your payment card, go to - billing'
-            await publish_rabbitmq_message(
-                connection=connection,
-                queue_name=queue_name,
-                message_body={'notification_text': message_text}
-            )
-        except:
-            await rabbitmq_connection.close()
-        finally:
-            await rabbitmq_connection.close()
-
-    return
+    return result_update_subscription
 
 
 @router.post("/cancel-plan")
@@ -141,7 +111,8 @@ def cancel_user_subscription(unsubscribe_request: UnsubscribeRequest,
                 detail="Access denied. Admins only."
             )
 
-    return payments_service.cancel_user_subscription(user=user, reason_unsubscribe=unsubscribe_request.reason_unsubscribe)
+    return payments_service.cancel_user_subscription(user=user,
+                                                     reason_unsubscribe=unsubscribe_request.reason_unsubscribe)
 
 
 @router.get("/upgrade-and-downgrade-user-subscription")
