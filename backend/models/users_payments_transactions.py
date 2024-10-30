@@ -15,7 +15,7 @@ class UsersPaymentsTransactions(Base):
     status = Column(VARCHAR, nullable=True)
     amount_credits = Column(Integer, nullable=True)
     type = Column(VARCHAR, nullable=False)
-    domain_id = Column(Integer, nullable=True)
+    domain_id = Column(Integer, ForeignKey("users_domains.id"), nullable=True)
     five_x_five_up_id = Column(VARCHAR, nullable=False)
     stripe_request_created_at = Column(TIMESTAMP)
 

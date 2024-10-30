@@ -14,7 +14,7 @@ class LeadUser(Base):
     mailchimp_user_id = Column(Integer, nullable=True)
     behavior_type = Column(VARCHAR, nullable=False, default='visitor')
     created_at = Column(TIMESTAMP, nullable=True)
-    first_visit_id = Column(Integer, nullable=False)
+    first_visit_id = Column(Integer, ForeignKey('leads_visits.id'), nullable=False)
     is_returning_visitor = Column(Boolean, nullable=False, default=False)
     is_converted_sales = Column(Boolean, nullable=False, default=False)
     total_visit = Column(Integer, nullable=True)
