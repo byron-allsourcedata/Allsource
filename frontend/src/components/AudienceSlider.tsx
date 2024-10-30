@@ -680,9 +680,8 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
             <MetaConnectButton open={metaConnectApp} onClose={handleCloseMetaConnectApp} onSave={handleSaveSettingsMeta}/>
             <BCommerceConnect 
                     open={openBigcommrceConnect} 
-                    handleClose={() => setOpenBigcommerceConnect(false)}
-                    initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'BigCommerce')?.access_token}
-                    initHashDomain={integrationsCredentials?.find(integration => integration.service_name === 'BigCommerce')?.shop_domain}
+                    onClose={() => setOpenBigcommerceConnect(false)}
+                    onSave={() => { }}
                 />
             <OmnisendConnect open={openOmnisendConnect} handleClose={() => setOpenOmnisendConnect(false)} onSave={handleSaveSettingsOmnisend} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'Omnisend')?.access_token} />
             <MailchimpDatasync data={null} open={mailchimpIconPopupOpen} onClose={handleMailchimpIconPopupIconClose} />

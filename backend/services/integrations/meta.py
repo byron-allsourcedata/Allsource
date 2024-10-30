@@ -13,12 +13,11 @@ from persistence.leads_persistence import LeadsPersistence
 from persistence.domains import UserDomainsPersistence
 import httpx
 from facebook_business.adobjects.adaccount import AdAccount
-from facebook_business.adobjects.customaudience import CustomAudience
 from facebook_business.api import FacebookAdsApi
 from fastapi import HTTPException
 from enums import IntegrationsStatus
 from datetime import datetime, timedelta
-from schemas.integrations.integrations import IntegrationCredentials, DataMap, ListFromIntegration, ReqestList
+from schemas.integrations.integrations import IntegrationCredentials, DataMap, ListFromIntegration
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 from typing import List
 from config.meta import MetaConfig

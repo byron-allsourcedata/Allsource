@@ -1,8 +1,10 @@
-from fastapi import APIRouter, Depends, Query, HTTPException, status
+from urllib.parse import urlencode
+from fastapi import APIRouter, Depends, Query, HTTPException, Request, status
+from fastapi.responses import RedirectResponse
 from enums import UserAuthorizationStatus
 from dependencies import get_integration_service, IntegrationService, IntegrationsPresistence, \
     get_user_integrations_presistence, \
-    check_user_authorization, check_domain, check_pixel_install_domain, check_user_authentication
+    check_user_authorization, check_domain, check_pixel_install_domain, check_user_authentication, get_user_persistence_service, UserPersistence, get_user_domain_persistence, UserDomainsPersistence
 from schemas.integrations.integrations import *
 from enums import TeamAccessLevel
 
@@ -149,3 +151,71 @@ async def set_suppression(suppression_data: SupperssionSet, service_name: str = 
         service.klaviyo.set_suppression()
         service = getattr(service, service_name)
         return service.set_supperssions(suppression_data.suppression, domain.id)
+
+
+
+from fastapi.responses import RedirectResponse, JSONResponse
+import httpx
+
+CLIENT_ID = '5at1jvto89a7yfkd1btao8o42sfid16'
+CLIENT_SECRET = '24f5980e7398195fbf8e5f8b388e7adc2a0abca0e95011441d411d59d55137f0'
+REDIRECT_URI = 'https://39e7-198-98-50-3.ngrok-free.app/api/integrations/bigcommerce/oauth/callback'
+FRONTEND_REDIRECT_URI = 'http://localhost:3000/integrations'
+
+
+@router.get("/bigcommerce/oauth")
+async def bigcommerce_redirect_login(store_hash: str = Query(...), user = Depends(check_user_authorization), domain = Depends(check_pixel_install_domain)):
+    scope = ['store_v2_orders_read_only','store_v2_content','store_content_checkout', 'store_v2_information_read_only']
+    params = {
+        "client_id": CLIENT_ID,
+        "redirect_uri": REDIRECT_URI,
+        "context": f"stores/{store_hash}",
+        "response_type": "code",
+        "scope": ' '.join(scope),
+        'state': f'{user.get("id")}:{domain.id}'
+    }
+    query_string = urlencode(params)
+    authorize_url = f"https://login.bigcommerce.com/oauth2/authorize?{query_string}"    
+    return {
+        'url': authorize_url
+    }
+
+@router.get("/bigcommerce/oauth/callback")
+async def bigcommerce_oauth_callback(code: str, state: str = Query(None), 
+                                     integration_service: IntegrationService = Depends(get_integration_service), 
+                                     user_persistence: UserPersistence = Depends(get_user_persistence_service),
+                                     domain_persistence: UserDomainsPersistence = Depends(get_user_domain_persistence)):
+    user_id, domain_id = state.split(':')
+    user = user_persistence.get_user_by_id(user_id)
+    domain = domain_persistence.get_domain_by_filter(id=domain_id)[0]
+    token_url = "https://login.bigcommerce.com/oauth2/token"
+    payload = {
+        "client_id": CLIENT_ID,
+        "client_secret": CLIENT_SECRET,
+        "code": code,
+        "redirect_uri": REDIRECT_URI,
+        "grant_type": "authorization_code"
+    }
+    response =  httpx.Client().post(token_url, data=payload)
+    if response.status_code == 200:
+        with integration_service as service:
+            token_data = response.json()
+            shop_hash = token_data.get('context').split('/')[1]
+            access_token = token_data.get('access_token')
+
+            with integration_service as service:
+                try:
+                    service.bigcommerce.add_integration(
+                    new_credentials=IntegrationCredentials(
+                        bigcommerce=ShopifyOrBigcommerceCredentials(
+                            shop_domain=shop_hash,
+                            access_token=access_token
+                        )
+                    ),
+                    user=user,
+                    domain=domain
+                )
+                except:  return RedirectResponse(url=f'{FRONTEND_REDIRECT_URI}?message=Failed')
+        return RedirectResponse(url=f'{FRONTEND_REDIRECT_URI}?message=Successfuly')
+    else:
+        return RedirectResponse(url=f'{FRONTEND_REDIRECT_URI}?message=Failed')
