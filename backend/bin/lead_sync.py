@@ -59,6 +59,7 @@ def setup_logging(level):
 LAST_PROCESSED_FILE_PATH = 'tmp/last_processed_leads_sync.txt'
 AMOUNT_CREDITS = 1
 QUEUE_CREDITS_CHARGING = 'credits_charging'
+EMAIL_NOTIFICATIONS = 'email_notifications'
 QUEUE_DATA_SYNC = 'data_sync_leads'
 
 ROOT_BOT_CLIENT_EMAIL = 'demo@maximiz.ai'
@@ -82,6 +83,20 @@ def group_requests_by_date(request_row, groupped_requests):
         'UP_ID': request_row.up_id
     }
     groupped_requests[key].append(lead_info)
+
+
+async def publish_email_notification(email, text):
+    rabbitmq_connection = RabbitMQConnection()
+    connection = await rabbitmq_connection.connect()
+    await publish_rabbitmq_message(
+        connection=connection,
+        queue_name=EMAIL_NOTIFICATIONS,
+        message_body={
+            'email': email,
+            'text': text
+        }
+    )
+    logging.info(f"Push to RMQ: {{'email:': {email}, 'text': {text}}}")
 
 
 def get_all_five_x_user_emails(business_email, personal_emails, additional_personal_emails):
@@ -139,18 +154,22 @@ async def handle_payment_notification(user, notification_persistence, plan_leads
         queue_name = f'sse_events_{str(user.id)}'
         rabbitmq_connection = RabbitMQConnection()
         connection = await rabbitmq_connection.connect()
+
+        await publish_email_notification(user.email, notification_text)
+
+        save_account_notification = notification_persistence.save_account_notification(user.id, account_notification.id,
+                                                                                       f"{credit_usage_percentage}, {plan_lead_credit_price}")
+
         try:
             await publish_rabbitmq_message(
                 connection=connection,
                 queue_name=queue_name,
-                message_body={'notification_text': notification_text}
+                message_body={'notification_text': notification_text, 'notification_id': save_account_notification.id}
             )
         except:
             await rabbitmq_connection.close()
         finally:
             await rabbitmq_connection.close()
-        notification_persistence.save_account_notification(user.id, account_notification.id,
-                                                           f"{credit_usage_percentage}, {plan_lead_credit_price}")
 
 
 async def handle_inactive_leads_notification(user, leads_persistence, notification_persistence):
@@ -163,17 +182,19 @@ async def handle_inactive_leads_notification(user, leads_persistence, notificati
         queue_name = f'sse_events_{str(user.id)}'
         rabbitmq_connection = RabbitMQConnection()
         connection = await rabbitmq_connection.connect()
+        save_account_notification = notification_persistence.save_account_notification(user.id, account_notification.id,
+                                                                                       len(inactive_leads_user))
+        await publish_email_notification(user.email, notification_text)
         try:
             await publish_rabbitmq_message(
                 connection=connection,
                 queue_name=queue_name,
-                message_body={'notification_text': notification_text}
+                message_body={'notification_text': notification_text, 'notification_id': save_account_notification.id}
             )
         except:
             await rabbitmq_connection.close()
         finally:
             await rabbitmq_connection.close()
-        notification_persistence.save_account_notification(user.id, account_notification.id, len(inactive_leads_user))
 
 
 async def notify_missing_plan(notification_persistence, user):
@@ -182,17 +203,20 @@ async def notify_missing_plan(notification_persistence, user):
     queue_name = f'sse_events_{str(user.id)}'
     rabbitmq_connection = RabbitMQConnection()
     connection = await rabbitmq_connection.connect()
+    save_account_notification = notification_persistence.save_account_notification(user.id, account_notification.id)
+    await publish_email_notification(user.email, account_notification.text)
+
     try:
         await publish_rabbitmq_message(
             connection=connection,
             queue_name=queue_name,
-            message_body={'notification_text': account_notification.text}
+            message_body={'notification_text': account_notification.text,
+                          'notification_id': save_account_notification.id}
         )
     except:
         await rabbitmq_connection.close()
     finally:
         await rabbitmq_connection.close()
-    notification_persistence.save_account_notification(user.id, account_notification.id)
 
 
 async def process_payment_transaction(session, five_x_five_user_up_id, user_domain_id, user, lead_user,
@@ -698,6 +722,14 @@ async def main():
     await channel.declare_queue(
         name=QUEUE_DATA_SYNC,
         durable=True
+    )
+
+    await channel.declare_queue(
+        name=EMAIL_NOTIFICATIONS,
+        durable=True,
+        arguments={
+            'x-consumer-timeout': 3600000,
+        }
     )
 
     logging.info("Started")

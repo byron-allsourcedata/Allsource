@@ -28,6 +28,7 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO)
 
 QUEUE_CREDITS_CHARGING = 'credits_charging'
+EMAIL_NOTIFICATIONS = 'email_notifications'
 QUANTITY = 100
 
 
@@ -43,6 +44,21 @@ async def save_account_notification(session, user_id, account_notification_id, p
     )
     session.add(account_notification)
     session.commit()
+    return account_notification
+
+
+async def publish_email_notification(email, text):
+    rabbitmq_connection = RabbitMQConnection()
+    connection = await rabbitmq_connection.connect()
+    await publish_rabbitmq_message(
+        connection=connection,
+        queue_name=EMAIL_NOTIFICATIONS,
+        message_body={
+            'email': email,
+            'text': text
+        }
+    )
+    logging.info(f"Push to RMQ: {{'email:': {email}, 'text': {text}}}")
 
 
 async def on_message_received(message, session):
@@ -118,6 +134,9 @@ async def on_message_received(message, session):
                         else:
                             logging.error(f"Purchase failed: {result['error']}", exc_info=True)
 
+        account_notification = await save_account_notification(session, user.id, account_notification.id)
+        await publish_email_notification(user.email, message_text)
+
         queue_name = f'sse_events_{str(user.id)}'
         rabbitmq_connection = RabbitMQConnection()
         connection = await rabbitmq_connection.connect()
@@ -125,14 +144,15 @@ async def on_message_received(message, session):
             await publish_rabbitmq_message(
                 connection=connection,
                 queue_name=queue_name,
-                message_body={'notification_text': message_text}
+                message_body={'notification_text': message_text, 'notification_id': account_notification.id}
             )
         except:
             await rabbitmq_connection.close()
         finally:
             await rabbitmq_connection.close()
 
-        await save_account_notification(session, user.id, account_notification.id)
+
+
 
         await message.ack()
     except Exception as e:
@@ -153,6 +173,14 @@ async def main():
         await channel.set_qos(prefetch_count=1)
         queue = await channel.declare_queue(
             name=QUEUE_CREDITS_CHARGING,
+            durable=True,
+            arguments={
+                'x-consumer-timeout': 3600000,
+            }
+        )
+
+        await channel.declare_queue(
+            name=EMAIL_NOTIFICATIONS,
             durable=True,
             arguments={
                 'x-consumer-timeout': 3600000,
