@@ -1,3 +1,5 @@
+from typing import Optional, List
+
 from fastapi import APIRouter, Depends, Query, HTTPException
 from fastapi.params import Header
 from typing_extensions import Annotated
@@ -8,7 +10,7 @@ from models.users_domains import UserDomains
 from schemas.auth_google_token import AuthGoogleData
 from schemas.users import UserSignUpForm, UserSignUpFormResponse, UserLoginFormResponse, UserLoginForm, UpdatePassword, \
     ResendVerificationEmailResponse, ResetPasswordForm, ResetPasswordResponse, UpdatePasswordResponse, \
-    CheckVerificationStatusResponse, VerifyTokenResponse
+    CheckVerificationStatusResponse, VerifyTokenResponse, DismissNotificationsRequest
 from services.notification import Notification
 from services.users import UsersService
 from services.users_auth import UsersAuth
@@ -33,9 +35,9 @@ async def get_notification(notification_service: Notification = Depends(get_noti
 
 
 @router.post("/notification/dismiss")
-async def get_notification(notification_id: int, notification_service: Notification = Depends(get_notification_service),
+async def get_notification(request: Optional[DismissNotificationsRequest] = None, notification_service: Notification = Depends(get_notification_service),
                            user=Depends(check_user_authentication)):
-    return notification_service.dismiss(notification_id)
+    return notification_service.dismiss(request, user)
 
 
 @router.get("/check-user-authorization")

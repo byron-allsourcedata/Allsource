@@ -16,6 +16,10 @@ class UserSignUpForm(BaseModel):
     spi: Optional[str] = None
 
 
+class DismissNotificationsRequest(BaseModel):
+    notification_ids: Optional[List[int]] = None
+
+
 class UserSignUpFormResponse(BaseModel):
     status: SignUpStatus
     token: Optional[str] = None
