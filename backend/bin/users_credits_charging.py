@@ -47,20 +47,6 @@ async def save_account_notification(session, user_id, account_notification_id, p
     return account_notification
 
 
-async def publish_email_notification(email, text):
-    rabbitmq_connection = RabbitMQConnection()
-    connection = await rabbitmq_connection.connect()
-    await publish_rabbitmq_message(
-        connection=connection,
-        queue_name=EMAIL_NOTIFICATIONS,
-        message_body={
-            'email': email,
-            'text': text
-        }
-    )
-    logging.info(f"Push to RMQ: {{'email:': {email}, 'text': {text}}}")
-
-
 async def on_message_received(message, session):
     try:
         message_json = json.loads(message.body)
@@ -135,7 +121,6 @@ async def on_message_received(message, session):
                             logging.error(f"Purchase failed: {result['error']}", exc_info=True)
 
         account_notification = await save_account_notification(session, user.id, account_notification.id)
-        await publish_email_notification(user.email, message_text)
 
         queue_name = f'sse_events_{str(user.id)}'
         rabbitmq_connection = RabbitMQConnection()

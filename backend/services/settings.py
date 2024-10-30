@@ -268,7 +268,7 @@ class SettingsService:
                 'prospect_credits': 'Coming soon',
                 'overage': 'free' if user_subscription.lead_credit_price == -1 else user_subscription.lead_credit_price,
                 'next_billing_date': None,
-                'total_key': None,
+                total_key: None,
                 'active': True if user_subscription.status == 'active' else False,
             }
         elif subscription and user_subscription:

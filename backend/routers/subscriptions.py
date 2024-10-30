@@ -59,7 +59,7 @@ async def update_payment_confirmation(request: fastRequest, webhook_service: Web
     payload = await request.json()
     result_update_subscription = webhook_service.cancel_subscription_confirmation(payload=payload)
     if result_update_subscription['status'] and result_update_subscription['status'] == 'failed':
-        user = result_update_subscription['user']
+        user = result_update_subscription['message_body']['user']
         queue_name = f'sse_events_{str(user.id)}'
         rabbitmq_connection = RabbitMQConnection()
         connection = await rabbitmq_connection.connect()
@@ -70,7 +70,7 @@ async def update_payment_confirmation(request: fastRequest, webhook_service: Web
                 connection=connection,
                 queue_name=queue_name,
                 message_body={'notification_text': message_text,
-                              'notification_id': result_update_subscription['notification_id']}
+                              'notification_id': result_update_subscription['message_body']['notification_id']}
             )
 
             await publish_rabbitmq_message(
@@ -78,12 +78,16 @@ async def update_payment_confirmation(request: fastRequest, webhook_service: Web
                 queue_name=EMAIL_NOTIFICATIONS,
                 message_body={
                     'email': user.email,
-                    'data': {
-                        'sendgrid_alias': NotificationTitles.PAYMENT_FAILED.value,
-                        'params': None
-                    }
+                    'full_name': result_update_subscription['message_body']['full_name'],
+                    'plan_name': result_update_subscription['message_body']['plan_name'],
+                    'date': result_update_subscription['message_body']['date'],
+                    'invoice_number': result_update_subscription['message_body']['invoice_number'],
+                    'invoice_date': result_update_subscription['message_body']['invoice_date'],
+                    'total': result_update_subscription['message_body']['total'],
+                    'link': result_update_subscription['message_body']['link']
                 }
             )
+
         except:
             await rabbitmq_connection.close()
         finally:

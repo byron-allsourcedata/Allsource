@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from enums import NotificationTitles
 from persistence.notification import NotificationPersistence
 from services.subscriptions import SubscriptionService
-from .stripe_service import save_payment_details_in_stripe
+from .stripe_service import save_payment_details_in_stripe, determine_plan_name_from_product_id
 
 logger = logging.getLogger(__name__)
 
@@ -58,7 +58,7 @@ class WebhookService:
         return result
 
     def cancel_subscription_confirmation(self, payload):
-        save_account_notification = None
+        message_body = {}
         stripe_request_created_timestamp = payload.get("created")
         stripe_request_created_at = datetime.fromtimestamp(stripe_request_created_timestamp, timezone.utc).replace(
             tzinfo=None)
@@ -80,15 +80,25 @@ class WebhookService:
                                                                   stripe_payload=payload)
 
         self.subscription_service.process_subscription(user=user_data, stripe_payload=data_object)
-        if stripe_status == 'failed':
+        if stripe_status == 'open':
             account_notification = self.notification_persistence.get_account_notification_by_title(
                 NotificationTitles.PAYMENT_FAILED.value)
             save_account_notification = self.notification_persistence.save_account_notification(user_data.id, account_notification.id)
+            stripe_request_created_timestamp = data_object.get("created")
+            stripe_request_created_at = datetime.fromtimestamp(stripe_request_created_timestamp)
+            message_body['user'] = user_data
+            message_body['notification_id'] = save_account_notification.id
+            message_body['full_name'] = user_data.full_name
+            message_body['plan_name'] = determine_plan_name_from_product_id(data_object.get("plan").get("product"))
+            message_body['date'] = stripe_request_created_at
+            message_body['invoice_number'] = data_object.get("id")
+            message_body['invoice_date'] = data_object.get("amount_due").strftime('%Y-%m-%d %H:%M:%S')
+            message_body['total'] = data_object.get("amount_due")
+            message_body['link'] = data_object.get('hosted_invoice_url')
 
         return {
             'status': stripe_status,
-            'user': user_data,
-            'notification_id': save_account_notification.id if save_account_notification else None
+            'message_body': message_body
         }
 
     def create_payment_confirmation(self, payload):

@@ -317,7 +317,7 @@ class SubscriptionService:
         stripe_status = stripe_payload.get("status")
         if stripe_status in ["active", "succeeded", "trialing"]:
             status = "active"
-        elif stripe_status in ["incomplete", "requires_action", "pending", "past_due"]:
+        elif stripe_status in ["incomplete", "requires_action", "pending", "past_due", "open"]:
             status = "inactive"
         else:
             status = "canceled"

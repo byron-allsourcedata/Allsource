@@ -90,21 +90,6 @@ class UsersAuth:
         finally:
             await rabbitmq_connection.close()
 
-    async def publish_email_notification(self, email, title, params=None):
-        rabbitmq_connection = RabbitMQConnection()
-        connection = await rabbitmq_connection.connect()
-        await publish_rabbitmq_message(
-            connection=connection,
-            queue_name=EMAIL_NOTIFICATIONS,
-            message_body={
-                'email': email,
-                'data': {
-                    'sendgrid_alias': title,
-                    'params': params
-                }
-            }
-        )
-        logging.info(f"Push to RMQ: {{'email:': {email}, 'sendgrid_alias': {title}}}")
 
     def save_account_notification(self, user_id, title, params=None):
         account_notification = self.db.query(AccountNotification).where(AccountNotification.title == title).first()
@@ -194,7 +179,6 @@ class UsersAuth:
         user_object = self.add_user(is_without_card=is_without_card, customer_id=customer_id, user_form=google_payload,
                                     spi=auth_google_data.spi)
         if teams_token:
-            self.publish_email_notification(user_object.email, NotificationTitles.TEAM_MEMBER_ADDED.value, params=None)
             notification_id = self.save_account_notification(self, user_object.id, NotificationTitles.TEAM_MEMBER_ADDED.value)
             self.send_member_notification(owner_id, NotificationTitles.TEAM_MEMBER_ADDED.value, notification_id)
             self.user_persistence_service.update_teams_owner_id(user_id=user_object.id, teams_token=teams_token,
@@ -353,7 +337,6 @@ class UsersAuth:
         user_object = self.add_user(is_without_card=is_without_card, customer_id=customer_id, user_form=user_data,
                                     spi=user_form.spi)
         if teams_token:
-            self.publish_email_notification(user_object.email, NotificationTitles.TEAM_MEMBER_ADDED.value, params=None)
             notification_id = self.save_account_notification(self, user_object.id, NotificationTitles.TEAM_MEMBER_ADDED.value.value)
             self.send_member_notification(owner_id, NotificationTitles.TEAM_MEMBER_ADDED.value, notification_id)
             self.user_persistence_service.update_teams_owner_id(user_id=user_object.id, teams_token=teams_token,
