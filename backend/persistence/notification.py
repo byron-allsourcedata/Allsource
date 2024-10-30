@@ -17,7 +17,8 @@ class NotificationPersistence:
         account_notification = UserAccountNotification(
             user_id=user_id,
             notification_id=account_notification_id,
-            params=str(params)
+            params=str(params),
+
         )
         self.db.add(account_notification)
         self.db.commit()
@@ -31,6 +32,7 @@ class NotificationPersistence:
         return (self.db.query(
             AccountNotification.text,
             UserAccountNotification.id,
+            UserAccountNotification.created_at,
             UserAccountNotification.params,
             UserAccountNotification.is_checked
         )

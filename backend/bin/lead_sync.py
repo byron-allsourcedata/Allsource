@@ -311,7 +311,7 @@ async def dispatch_leads_to_rabbitmq(session, user, rabbitmq_connection, plan_id
         .all()
     )
 
-    if user_ids and len(user_ids) % 1 == 0:
+    if user_ids and len(user_ids) % 100 == 0:
         await publish_rabbitmq_message(
             connection=rabbitmq_connection,
             queue_name=QUEUE_CREDITS_CHARGING,

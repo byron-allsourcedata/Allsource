@@ -31,6 +31,7 @@ class Notification:
                 'id': notification.id,
                 'text': text,
                 'is_checked': notification.is_checked,
+                'created_at': int(notification.created_at.timestamp())
             })
 
         return result
