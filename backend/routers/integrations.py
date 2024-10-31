@@ -182,7 +182,7 @@ async def bigcommerce_oauth_callback(code: str, state: str = Query(None),
                                      integration_service: IntegrationService = Depends(get_integration_service), 
                                      user_persistence: UserPersistence = Depends(get_user_persistence_service),
                                      domain_persistence: UserDomainsPersistence = Depends(get_user_domain_persistence)):
-    FRONTEND_REDIRECT_URI = 'http://localhost:3000/integrations'
+    FRONTEND_REDIRECT_URI = BigcommerceConfig.frontend_redirect
     user_id, domain_id = state.split(':')
     user = user_persistence.get_user_by_id(user_id)
     domain = domain_persistence.get_domain_by_filter(id=domain_id)[0]
