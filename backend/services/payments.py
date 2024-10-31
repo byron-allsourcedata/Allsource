@@ -9,30 +9,11 @@ from enums import SubscriptionStatus
 from persistence.plans_persistence import PlansPersistence
 from services.plans import PlansService
 from .stripe_service import renew_subscription, get_default_payment_method, purchase_product, \
-    cancel_subscription_at_period_end, cancel_downgrade
+    cancel_subscription_at_period_end, cancel_downgrade, create_stripe_checkout_session
 from .subscriptions import SubscriptionService
 
 stripe.api_key = StripeConfig.api_key
 logger = logging.getLogger(__name__)
-
-
-def create_stripe_checkout_session(success_url: str, cancel_url: str, customer_id: str,
-                                   line_items: List[dict],
-                                   mode: str,
-                                   trial_period: int = 0):
-    session = stripe.checkout.Session.create(
-        success_url=success_url,
-        cancel_url=cancel_url,
-        allow_promotion_codes=True,
-        customer=customer_id,
-        payment_method_types=["card"],
-        line_items=line_items,
-        mode=mode,
-        subscription_data={
-            'trial_period_days': trial_period
-        } if trial_period > 0 else None,
-    )
-    return {"link": session.url}
 
 
 def manage_subscription_schedule(current_subscription, platform_subscription_id, price_id):
@@ -127,8 +108,6 @@ class PaymentsService:
             status_subscription = renew_subscription(price_id, customer_id, trial_period)
             return {"status_subscription": status_subscription}
         return create_stripe_checkout_session(
-            success_url=StripeConfig.success_url,
-            cancel_url=StripeConfig.cancel_url,
             customer_id=self.plans_service.get_customer_id(user),
             line_items=[{"price": price_id, "quantity": 1}],
             mode="subscription",
@@ -193,8 +172,6 @@ class PaymentsService:
             return {"status": "PAYMENT_SUCCESS"}
         except Exception as e:
             return create_stripe_checkout_session(
-                success_url=StripeConfig.success_url,
-                cancel_url=StripeConfig.cancel_url,
                 customer_id=customer_id,
                 line_items=[{"price": self.plans_service.get_additional_credits_price_id(), "quantity": quantity}],
                 mode="payment"

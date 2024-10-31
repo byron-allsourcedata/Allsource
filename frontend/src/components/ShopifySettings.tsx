@@ -15,6 +15,7 @@ interface ShopifyProps {
     onSave: (integration: IntegrationsCredentials) => void 
     open: boolean
     initApiKey?: string 
+    initShopDomain?: string
 }
 
 interface IntegrationsCredentials {
@@ -84,9 +85,11 @@ const shopifySettingsStyle = {
       },
 }
 
-const ShopifySettings = ({ handleClose, open, onSave, initApiKey}: ShopifyProps) => {
+const ShopifySettings = ({ handleClose, open, onSave, initApiKey, initShopDomain}: ShopifyProps) => {
     const [apiKey, setApiKey] = useState('');
     const [apiKeyError, setApiKeyError] = useState(false);
+    const [shopDomain, setShopDomain] = useState(initShopDomain || '')
+    const [shopDomainError, setShopDomainError] = useState('')
     const [loading, setLoading] = useState(false)
     const [value, setValue] = useState<string>('1')
     const [checked, setChecked] = useState(false);
@@ -94,10 +97,12 @@ const ShopifySettings = ({ handleClose, open, onSave, initApiKey}: ShopifyProps)
     const label = { inputProps: { 'aria-label': 'Switch demo' } };
     const [selectedRadioValue, setSelectedRadioValue] = useState('');
     const [isDropdownValid, setIsDropdownValid] = useState(false);
+    const [isFocused, setIsFocused] = useState(false)
    
     useEffect(() => {
         setApiKey(initApiKey || '')
-    }, [initApiKey])
+        setShopDomain(initShopDomain || '')
+    }, [initApiKey, initShopDomain])
 
     const handleRadioChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setSelectedRadioValue(event.target.value);
@@ -105,12 +110,24 @@ const ShopifySettings = ({ handleClose, open, onSave, initApiKey}: ShopifyProps)
 
     const handleSwitchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setChecked(event.target.checked);};
-
+    const handleFocus = () => {
+        setIsFocused(true);
+        };
+    
+        const handleBlur = () => {
+        setIsFocused(false);
+        };
     const handleApiKeyChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const value = event.target.value;
         setApiKey(value);
         setApiKeyError(!value); 
     };
+
+    const handleShopDomainChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const value = event.target.value
+        setShopDomain(value)
+        setShopDomainError(value.replace('https://', '') != sessionStorage.getItem('current_domain') ? 'Shop domain not matched' : (value == '' ? 'Shop Domain is required' : '') )
+    }
 
     const instructions: any[] = [
         // { id: 'unique-id-1', text: 'Go to the Klaviyo website and log into your account.' },
@@ -157,14 +174,20 @@ const ShopifySettings = ({ handleClose, open, onSave, initApiKey}: ShopifyProps)
     };
 
     const handleApiKeySave = async() => {
-        const response = await axiosInstance.post('/integrations/', {
-            shopify: {
-                shop_domain: sessionStorage.getItem('domain'),
-                access_token: apiKey
+        setLoading(true)
+        try {
+            const response = await axiosInstance.post('/integrations/', {
+                shopify: {
+                    shop_domain: shopDomain,
+                    access_token: apiKey
+                }
+            }, {params: {service_name: 'shopify'}})
+            if(response.status === 200) {
+            showToast('Shopify Integrated')
             }
-        }, {params: {service_name: 'shopify'}})
-        if(response.status === 200) {
-           showToast('Shopify Integrated')
+        }
+        finally {
+            setLoading(false)
         }
     }
 
@@ -194,7 +217,7 @@ const ShopifySettings = ({ handleClose, open, onSave, initApiKey}: ShopifyProps)
     };
 
     const handleSave = async() => {
-        handleApiKeySave()
+        await handleApiKeySave()
         handleClose()
     }
 
@@ -254,6 +277,13 @@ const ShopifySettings = ({ handleClose, open, onSave, initApiKey}: ShopifyProps)
                     }
                 },
             }}
+            slotProps={{
+                backdrop: {
+                  sx: {
+                    backgroundColor: 'rgba(0, 0, 0, .1)'
+                  }
+                }
+              }}
         >
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 3.5, px: 2, borderBottom: '1px solid #e4e4e4' }}>
                 <Typography variant="h6" sx={{ textAlign: 'center', color: '#202124', fontFamily: 'Nunito Sans', fontWeight: '600', fontSize: '16px', lineHeight: 'normal' }}>
@@ -308,6 +338,23 @@ const ShopifySettings = ({ handleClose, open, onSave, initApiKey}: ShopifyProps)
                                     <Image src='/baseline-info-icon.svg' alt='baseline-info-icon' height={16} width={16} />
                                 </Tooltip>
                             </Box>
+                            <TextField
+                                label="Enter Shop Domain"
+                                variant="outlined"
+                                fullWidth
+                                margin="normal"
+                                onFocus={handleFocus}
+                                onBlur={handleBlur}
+                                error={!!shopDomainError}
+                                helperText={shopDomainError || ''}
+                                value={isFocused
+                                    ? (shopDomain ? shopDomain.replace(/^https?:\/\//, "") : "")
+                                    : (shopDomain ? `https://${shopDomain.replace(/^https?:\/\//, "")}` : "https://")
+                                  }
+                                onChange={handleShopDomainChange}
+                                InputLabelProps={{ sx: shopifySettingsStyle.inputLabel }}
+                                InputProps={{ sx: shopifySettingsStyle.formInput }}
+                            />
                             <TextField
                                 label="Enter Access Token"
                                 variant="outlined"

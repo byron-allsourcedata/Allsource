@@ -1,7 +1,7 @@
 "use client";
-import { Box, Grid, Typography, Button, Menu, MenuItem } from "@mui/material";
+import { Box, Typography, Button, Menu, MenuItem, IconButton } from "@mui/material";
 import Image from "next/image";
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "../context/UserContext";
 import TrialStatus from "./TrialLabel";
@@ -9,7 +9,7 @@ import DomainButton from "@/components/DomainsButton";
 import NavigationMenu from "@/components/NavigationMenu";
 import { SliderProvider } from "../context/SliderContext";
 import { useTrial } from '../context/TrialProvider';
-import { maxHeight } from "@mui/system";
+import NotificationPopup from "./NotificationPopup";
 
 const headerStyles = {
   headers: {
@@ -26,7 +26,7 @@ const headerStyles = {
     left: 0,
     right: 0,
     background: '#fff',
-    zIndex: 1
+    zIndex: 1200
   },
   logoContainer: {
     display: 'flex',
@@ -46,6 +46,7 @@ const Header = () => {
   const full_name = userFullName || meData.full_name;
   const email = userEmail || meData.email;
   const { resetTrialData } = useTrial();
+  const [notificationIconPopupOpen, setNotificationIconPopupOpen] = useState(false);
   const handleSignOut = () => {
     localStorage.clear();
     sessionStorage.clear();
@@ -65,6 +66,18 @@ const Header = () => {
     handleProfileMenuClose();
     router.push("/settings");
   };
+
+  const handleLogoClick = () => {
+    router.push("/dashboard");
+  };
+
+  const handleNotificationIconPopupOpen = () => {
+    setNotificationIconPopupOpen(true);
+  };
+
+  const handleNotificationIconPopupClose = () => {
+    setNotificationIconPopupOpen(false);
+  }
   return (
     <>
       <Box sx={{ display: { md: 'none' } }}>
@@ -75,13 +88,15 @@ const Header = () => {
 
       <Box sx={{ ...headerStyles.headers, display: { xs: 'none', md: 'flex' } }}>
         <Box sx={headerStyles.logoContainer}>
-          <Image src="/logo.svg" alt="logo" height={30} width={50} />
+          <IconButton onClick={handleLogoClick} sx={{"&:hover": {backgroundColor: 'transparent'} }}>
+            <Image src="/logo.svg" alt="logo" height={30} width={50}  />
+          </IconButton>
           <DomainButton />
         </Box>
         <Box sx={{ display: "flex", alignItems: "center" }}>
           <TrialStatus />
 
-          <Button sx={{
+          <Button onClick={handleNotificationIconPopupOpen} sx={{
             minWidth: '32px',
             padding: '8px',
             color: 'rgba(128, 128, 128, 1)',
@@ -174,6 +189,7 @@ const Header = () => {
           </Menu>
         </Box>
       </Box>
+      <NotificationPopup open={notificationIconPopupOpen} onClose={handleNotificationIconPopupClose}/>
     </>
   );
 };

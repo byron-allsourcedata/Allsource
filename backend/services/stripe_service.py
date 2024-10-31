@@ -1,10 +1,9 @@
-import logging
+from typing import List
 
-import pandas as pd
 import stripe
+
 from config.stripe import StripeConfig
 from schemas.users import UserSignUpForm
-from datetime import datetime, timedelta, timezone
 
 stripe.api_key = StripeConfig.api_key
 
@@ -292,6 +291,25 @@ def fetch_last_id_of_previous_page(customer_id, per_page, page):
             return None
 
     return starting_after
+
+
+def create_stripe_checkout_session(customer_id: str,
+                                   line_items: List[dict],
+                                   mode: str,
+                                   trial_period: int = 0):
+    session = stripe.checkout.Session.create(
+        success_url=StripeConfig.success_url,
+        cancel_url=StripeConfig.cancel_url,
+        allow_promotion_codes=True,
+        customer=customer_id,
+        payment_method_types=["card"],
+        line_items=line_items,
+        mode=mode,
+        subscription_data={
+            'trial_period_days': trial_period
+        } if trial_period > 0 else None,
+    )
+    return {"link": session.url}
 
 
 def get_billing_history_by_userid(customer_id, page, per_page):

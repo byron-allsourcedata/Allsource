@@ -14,17 +14,17 @@
 body {
   margin: 0;
   padding: 0;
-  overflow-y: scroll;
-  -ms-overflow-style: none; /* for Internet Explorer, Edge */
+  /* overflow-y: scroll;
+  -ms-overflow-style: none; */
   
 }
-body::-webkit-scrollbar {
-  display: none; /* for Chrome, Safari, and Opera */
-}
+/* body::-webkit-scrollbar {
+  display: none; 
+} */
 
-::-ms-reveal {
+/* ::-ms-reveal {
   display: none;
-}
+} */
 
 .Toastify__progress-bar--wrp {
   position: absolute;
@@ -192,6 +192,13 @@ body::-webkit-scrollbar {
   font-size: 14px;
   line-height: 20px;
   color: #707071;
+}
+.MuiInputLabel-shrink.MuiInputLabel-outlined {
+  color: rgba(17, 17, 19, 0.6);
+  font-family: 'Nunito Sans';
+  font-weight: 400;
+  font-size: 12px;
+  line-height: 16px;
 }
 .MuiOutlinedInput-root {
   height: 48px;

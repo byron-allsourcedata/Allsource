@@ -15,6 +15,8 @@ class UserIntegration(Base):
     platform_user_id = Column(VARCHAR)
     last_access_token_update = Column(TIMESTAMP)
     expire_access_token = Column(Integer)
+    error_message = Column(VARCHAR)
+    is_failed = Column(Boolean, default=False)
 
 class Integration(Base):
 

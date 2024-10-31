@@ -226,7 +226,11 @@ const AccountSetup = () => {
 
       switch (response.data.status) {
         case "SUCCESS":
-          router.push("/dashboard");
+          if (response.data.stripe_payment_url){
+            router.push(`${response.data.stripe_payment_url}`)
+          }else{
+            router.push("/dashboard");
+          }
           break;
         case "NEED_EMAIL_VERIFIED":
           router.push("/email-verificate");

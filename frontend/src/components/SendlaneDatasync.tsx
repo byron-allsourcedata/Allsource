@@ -19,19 +19,32 @@ interface Integrations {
     suppression: boolean
 }
 
-interface OnmisendDataSyncProps {
+interface ConnectKlaviyoPopupProps {
     open: boolean;
     onClose: () => void;
-    data?: any
+    data: any
 }
 
 
-const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data = null }) => {
+type KlaviyoList = {
+    id: string
+    list_name: string
+}
+
+type KlaviyoTags = {
+    id: string
+    tags_name: string
+}
+
+
+
+const SendlaneDatasync: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, data }) => {
     const [loading, setLoading] = useState(false)
     const [value, setValue] = React.useState('1');
     const [checked, setChecked] = useState(false);
     const [selectedRadioValue, setSelectedRadioValue] = useState(data?.type);
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+    const [selectedOption, setSelectedOption] = useState<KlaviyoList | null>(null);
     const [showCreateForm, setShowCreateForm] = useState<boolean>(false);
     const [newListName, setNewListName] = useState<string>('');
     const [tagName, setTagName] = useState<string>('');
@@ -51,7 +64,10 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data
     const [showCreateMapForm, setShowCreateMapForm] = useState<boolean>(false);
     const [UpdateKlaviuo, setUpdateKlaviuo] = useState<any>(null);
     const [maplistNameError, setMapListNameError] = useState(false);
-    const [customFieldsList, setCustomFieldsList] = useState([
+    const [klaviyoList, setKlaviyoList] = useState<KlaviyoList[]>([])
+    const [senders, setSenders] = useState<any[]>([])
+    const [optionSender, setOptionSender] = useState<any>(null)
+    const [customFieldsList, setCustomFieldsList] = useState([{ type: 'Gender', value: 'gender' },
     { type: 'Company Name', value: 'company_name' },
     { type: 'Company Domain', value: 'company_domain' },
     { type: 'Company SIC', value: 'company_sic' },
@@ -80,6 +96,26 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data
     { type: 'Related Domains', value: 'related_domains' },
     { type: 'Social Connections', value: 'social_connections' },
     { type: 'DPV Code', value: 'dpv_code' }]);
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (textFieldRef.current && !textFieldRef.current.contains(event.target as Node)) {
+                // If clicked outside, reset shrink only if there is no input value
+                if (selectedOption?.list_name === '') {
+                    setIsShrunk(false);
+                }
+                if (isDropdownOpen) {
+                    setIsDropdownOpen(false); // Close dropdown when clicking outside
+                }
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [selectedOption]);
+
+
     const [customFields, setCustomFields] = useState<{ type: string, value: string }[]>([]);
 
     useEffect(() => {
@@ -104,12 +140,14 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data
 
         setCustomFields(customFields.map((item, i) => (i === index ? { ...item, [field]: value } : item)));
     };
-    const resetToDefaultValues = () => {
+    useEffect(() => {
+        if(open) { return }
         setLoading(false);
         setValue('1');
         setChecked(false);
         setSelectedRadioValue('');
         setAnchorEl(null);
+        setSelectedOption(null);
         setShowCreateForm(false);
         setNewListName('');
         setTagName('');
@@ -127,44 +165,114 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data
         setNewMapListName('');
         setShowCreateMapForm(false);
         setMapListNameError(false);
-    };
+    }, [open])
 
-    
+    const getSender = async () => {
+        try {
+            setLoading(true)
+            const response = await axiosInstance.get('/integrations/sync/sender')
+            setSenders(response.data)
+        }
+        finally {
+            setLoading(false)
+        }
+    }
+
+    const getSendlaneList = async () => {
+        try {
+        setLoading(true)
+        const response = await axiosInstance.get('/integrations/sync/list/', {
+            params: {
+                service_name: 'sendlane'
+            }
+        })
+        setKlaviyoList(response.data)
+        const foundItem = response.data?.find((item: any) => item.list_name === data?.name);
+        if (foundItem) {
+            setUpdateKlaviuo(data.id)
+            setSelectedOption({
+                id: foundItem.id,
+                list_name: foundItem.list_name
+            });
+        } else {
+            setSelectedOption(null);
+        }
+        setSelectedRadioValue(data?.type);
+        setLoading(false)
+    } catch (error) {
+        
+    }
+    }
     useEffect(() => {
+        if(open) {
+            getSendlaneList()
+            getSender()
+        }
         setLoading(false)
     }, [open])
 
+    const createNewList = async () => {
+        try {
+        const newListResponse = await axiosInstance.post('/integrations/sync/list/', {
+            name: selectedOption?.list_name,
+            sender_id: optionSender?.id
+        }, {
+            params: {
+                service_name: 'sendlane'
+            }
+        });
+
+        if (newListResponse.status !== 201) {
+            throw new Error('Failed to create a new tags')
+        }
+
+        return newListResponse.data;
+    } catch (error) {
+    }
+    };
 
 
     const handleSaveSync = async () => {
         setLoading(true);
+        let list: KlaviyoList | null = null;
+
         try {
+            if (selectedOption && selectedOption.id === '-1') {
+                list = await createNewList();
+            } else if (selectedOption) {
+                list = selectedOption;
+            } else {
+                showToast('Please select a valid option.');
+                return;
+            }
             if (UpdateKlaviuo) {
                 const response = await axiosInstance.put(`/data-sync/sync`, {
                     integrations_users_sync_id: UpdateKlaviuo,
+                    list_id: list?.id,
+                    list_name: list?.list_name,
                     leads_type: selectedRadioValue,
-                    data_map: customFields
+                    // data_map: customFields
                 }, {
                     params: {
-                        service_name: 'omnisend'
+                        service_name: 'sendlane'
                     }
                 });
                 if (response.status === 201 || response.status === 200) {
-                    resetToDefaultValues();
                     onClose();
                     showToast('Data sync updated successfully');
                 }
             } else {
                 const response = await axiosInstance.post('/data-sync/sync', {
+                    list_id: list?.id,
+                    list_name: list?.list_name,
                     leads_type: selectedRadioValue,
                     data_map: customFields
                 }, {
                     params: {
-                        service_name: 'omnisend'
+                        service_name: 'sendlane'
                     }
                 });
                 if (response.status === 201 || response.status === 200) {
-                    resetToDefaultValues();
                     onClose();
                     showToast('Data sync created successfully');
                 }
@@ -182,6 +290,7 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data
         setIsShrunk(true);
         setIsDropdownOpen(prev => !prev);
         setAnchorEl(event.currentTarget);
+        console.log('handle CLICK PIDORAS')
         setShowCreateForm(false); // Reset form when menu opens
     };
 
@@ -197,6 +306,7 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data
         setAnchorEl(null);
         setShowCreateForm(false);
         setIsDropdownOpen(false);
+        console.log('handle CLOSe PIDORAS')
         setNewListName(''); // Clear new list name when closing
     };
 
@@ -205,6 +315,34 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data
         setShowCreateMapForm(false);
         setNewMapListName('');
     };
+
+    const handleSelectOption = (value: KlaviyoList | string) => {
+        if (value === 'createNew') {
+            setShowCreateForm(prev => !prev);
+            if (!showCreateForm) {
+                setAnchorEl(textFieldRef.current);
+            }
+        } else if (isKlaviyoList(value)) {
+            // Проверка, является ли value объектом KlaviyoList
+            setSelectedOption({
+                id: value.id,
+                list_name: value.list_name
+            });
+            setIsDropdownValid(true);
+            handleClose();
+        } else {
+            setIsDropdownValid(false);
+            setSelectedOption(null);
+        }
+    };
+
+    const isKlaviyoList = (value: any): value is KlaviyoList => {
+        return value !== null &&
+            typeof value === 'object' &&
+            'id' in value &&
+            'list_name' in value;
+    };
+
 
 
 
@@ -220,16 +358,13 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data
             setListNameError(false);
         }
 
-        // Validate Tag Name
-        if (tagName.trim() === '') {
-            setTagNameError(true);
-            valid = false;
-        } else {
-            setTagNameError(false);
-        }
-
         // If valid, save and close
         if (valid) {
+            const newKlaviyoList = { id: '-1', list_name: newListName }
+            setSelectedOption(newKlaviyoList);
+            if (isKlaviyoList(newKlaviyoList)) {
+                setIsDropdownValid(true);
+            }
             handleClose();
         }
     };
@@ -334,17 +469,16 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data
         return <>{parts}</>; // Return the array wrapped in a fragment.
     };
 
-    const instructions = [
-        { id: 'unique-id-1', text: 'Go to the Klaviyo website and log into your account.' },
-        { id: 'unique-id-2', text: 'Click on the Settings option located in your Klaviyo account options.' },
-        { id: 'unique-id-3', text: 'Click Create Private API Key Name to Maximiz.' },
-        { id: 'unique-id-4', text: 'Assign full access permissions to Lists and Profiles, and read access permissions to Metrics, Events, and Templates for your Klaviyo key.' },
-        { id: 'unique-id-5', text: 'Click Create.' },
-        { id: 'unique-id-6', text: 'Copy the API key in the next screen and paste to API Key field located in Maximiz Klaviyo section.' },
-        { id: 'unique-id-7', text: 'Click Connect.' },
-        { id: 'unique-id-8', text: 'Select the existing list or create a new one to integrate with Maximiz.' },
-        { id: 'unique-id-9', text: 'Click Export.' },
-
+    const instructions: any[] = [
+        // { id: 'unique-id-1', text: 'Go to the Klaviyo website and log into your account.' },
+        // { id: 'unique-id-2', text: 'Click on the Settings option located in your Klaviyo account options.' },
+        // { id: 'unique-id-3', text: 'Click Create Private API Key Name to Maximiz.' },
+        // { id: 'unique-id-4', text: 'Assign full access permissions to Lists and Profiles, and read access permissions to Metrics, Events, and Templates for your Klaviyo key.' },
+        // { id: 'unique-id-5', text: 'Click Create.' },
+        // { id: 'unique-id-6', text: 'Copy the API key in the next screen and paste to API Key field located in Maximiz Klaviyo section.' },
+        // { id: 'unique-id-7', text: 'Click Connect.' },
+        // { id: 'unique-id-8', text: 'Select the existing list or create a new one to integrate with Maximiz.' },
+        // { id: 'unique-id-9', text: 'Click Export.' },
     ]
 
     // Define the keywords and their styles
@@ -392,38 +526,38 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data
                         Next
                     </Button>
                 );
-            // case '2':
-            //     return (
-            //         <Button
-            //             variant="contained"
-            //             disabled={!isDropdownValid}
-            //             onClick={handleNextTab}
-            //             sx={{
-            //                 backgroundColor: '#5052B2',
-            //                 fontFamily: "Nunito Sans",
-            //                 fontSize: '14px',
-            //                 fontWeight: '600',
-            //                 lineHeight: '20px',
-            //                 letterSpacing: 'normal',
-            //                 color: "#fff",
-            //                 textTransform: 'none',
-            //                 padding: '10px 24px',
-            //                 boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-            //                 '&:hover': {
-            //                     backgroundColor: '#5052B2'
-            //                 },
-            //                 borderRadius: '4px',
-            //             }}
-            //         >
-            //             Next
-            //         </Button>
-            //     );
             case '2':
                 return (
                     <Button
                         variant="contained"
+                        disabled={!isDropdownValid}
                         onClick={handleSaveSync}
-                        disabled={!selectedRadioValue.trim()}
+                        sx={{
+                            backgroundColor: '#5052B2',
+                            fontFamily: "Nunito Sans",
+                            fontSize: '14px',
+                            fontWeight: '600',
+                            lineHeight: '20px',
+                            letterSpacing: 'normal',
+                            color: "#fff",
+                            textTransform: 'none',
+                            padding: '10px 24px',
+                            boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
+                            '&:hover': {
+                                backgroundColor: '#5052B2'
+                            },
+                            borderRadius: '4px',
+                        }}
+                    >
+                        Save
+                    </Button>
+                );
+            case '3':
+                return (
+                    <Button
+                        variant="contained"
+                        onClick={handleSaveSync}
+                        disabled={!selectedOption || !selectedRadioValue.trim()}
                         sx={{
                             backgroundColor: '#5052B2',
                             fontFamily: "Nunito Sans",
@@ -463,11 +597,11 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data
 
     const defaultRows: Row[] = [
         { id: 1, type: 'Email', value: 'Email' },
+        { id: 2, type: 'Phone number', value: 'Phone number' },
         { id: 3, type: 'First name', value: 'First name' },
         { id: 4, type: 'Second name', value: 'Second name' },
         { id: 5, type: 'Job Title', value: 'Job Title' },
-        { id: 6, type: 'Location', value: 'Location' },
-        { id: 7, type: 'Gender', value: 'Gender' }
+        { id: 6, type: 'Location', value: 'Location' }
     ];
 
     const [rows, setRows] = useState<Row[]>(defaultRows);
@@ -561,7 +695,6 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data
     };
 
     const handlePopupClose = () => {
-        resetToDefaultValues()
         onClose()
     }
 
@@ -599,7 +732,7 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data
         >
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 3.5, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
                 <Typography variant="h6" className="first-sub-title" sx={{ textAlign: 'center' }}>
-                    Connect to Omnisend
+                    Connect to Sendlane
                 </Typography>
                 <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
                     <Link href="#" className="main-text" sx={{
@@ -619,7 +752,7 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data
                 <Box sx={{ width: '100%', padding: '16px 24px 24px 24px', position: 'relative' }}>
                 <TabContext value={value}>
                     <Box sx={{pb: 4}}>
-                        <TabList centered aria-label="Connect to Klaviyo Tabs"
+                        <TabList centered aria-label="Connect to Sendlane Tabs"
                         TabIndicatorProps={{sx: {backgroundColor: "#5052b2" } }} 
                         sx={{
                             "& .MuiTabs-scroller": {
@@ -633,22 +766,22 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data
                             }
                         }}} onChange={handleChangeTab}>
                         <Tab label="Suppression Sync" value="1" className='tab-heading' sx={klaviyoStyles.tabHeading} />
-                        {/* <Tab label="Contact Sync" value="2" className='tab-heading' sx={klaviyoStyles.tabHeading} /> */}
-                        <Tab label="Map data" value="2" className='tab-heading' sx={klaviyoStyles.tabHeading} />
+                        <Tab label="Contact Sync" value="2" className='tab-heading' sx={klaviyoStyles.tabHeading} />
+                        {/* <Tab label="Map data" value="3" className='tab-heading' sx={klaviyoStyles.tabHeading} /> */}
                         </TabList>
                     </Box>
                     <TabPanel value="1" sx={{ p: 0 }}>
                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                             <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)', display: 'flex', flexDirection:'column', gap: '16px' }}>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <Image src='/omnisend_icon_black.svg' alt='klaviyo' height={26} width={32} />
+                                    <Image src='/sendlane-icon.svg' alt='sendlane' height={26} width={32} />
                                     <Typography variant="h6" className='first-sub-title'>Eliminate Redundancy: Stop Paying for Contacts You Already Own</Typography>
                                 </Box>
                                 <Typography variant="subtitle1" className='paragraph' sx={{
                                         lineHeight: '20px',
                                         letterSpacing: '0.06px'
                                     }}>Sync your current list to avoid collecting contacts you already possess.
-                                    Newly added contacts in Omnisend will be automatically suppressed each day.</Typography>
+                                    Newly added contacts in Sendlane will be automatically suppressed each day.</Typography>
                                 
 
                                         <Box sx={{ display: 'flex', gap: '32px', alignItems: 'center' }}>
@@ -753,7 +886,7 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data
                                             <Image src='/info-circle.svg' alt='info-circle' height={20} width={20} />
                                             <Typography variant="subtitle1" className='paragraph' sx={{
                                                 lineHeight: '20px'
-                                            }}>By performing this action, all your Klaviyo contacts will be added to your Grow suppression list, and new contacts will be imported daily around 6pm EST.</Typography>
+                                            }}>By performing this action, all your Sendlane contacts will be added to your Grow suppression list, and new contacts will be imported daily around 6pm EST.</Typography>
                                         </Box>
                                     </Box>
                                     <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -889,6 +1022,317 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data
                                 </Box>
                             </TabPanel>
                             <TabPanel value="2" sx={{ p: 0 }}>
+                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                    <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)' }}>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', mb: 3 }}>
+                                            <Image src='/sendlane-icon.svg' alt='sendlane' height={26} width={32} />
+                                            <Typography variant="h6" className='first-sub-title'>Contact sync</Typography>
+                                            <Tooltip title="Sync data with list" placement="right">
+                                                <Image src='/baseline-info-icon.svg' alt='baseline-info-icon' height={16} width={16} />
+                                            </Tooltip>
+                                        </Box>
+
+
+                                        <ClickAwayListener onClickAway={() => {}}>
+                                            <Box>
+                                                <TextField
+                                                    ref={textFieldRef}
+                                                    variant="outlined"
+                                                    value={selectedOption?.list_name}
+                                                    onClick={handleClick}
+                                                    size="small"
+                                                    fullWidth
+                                                    label={selectedOption ? '' : 'Select or Create new list'}
+                                                    InputLabelProps={{
+                                                        shrink: selectedOption ? false : isShrunk,
+                                                        sx: {
+                                                            fontFamily: 'Nunito Sans',
+                                                            fontSize: '12px',
+                                                            lineHeight: '16px',
+                                                            color: 'rgba(17, 17, 19, 0.60)',
+                                                            letterSpacing: '0.06px',
+                                                            top: '5px',
+                                                            '&.Mui-focused': {
+                                                                color: '#0000FF',
+                                                            },
+                                                        }
+                                                    }}
+                                                    InputProps={{
+
+                                                        endAdornment: (
+                                                            <InputAdornment position="end">
+                                                                <IconButton onClick={handleDropdownToggle} edge="end">
+                                                                    {isDropdownOpen ? <Image src='/chevron-drop-up.svg' alt='chevron-drop-up' height={24} width={24} /> : <Image src='/chevron-drop-down.svg' alt='chevron-drop-down' height={24} width={24} />}
+                                                                </IconButton>
+                                                            </InputAdornment>
+                                                        ),
+                                                        sx: klaviyoStyles.formInput
+                                                    }}
+                                                    sx={{
+                                                        '& input': {
+                                                            caretColor: 'transparent', // Hide caret with transparent color
+                                                            fontFamily: "Nunito",
+                                                            fontSize: "14px",
+                                                            color: "rgba(0, 0, 0, 0.89)",
+                                                            fontWeight: "600",
+                                                            lineHeight: "normal",
+                                                        },
+                                                        '& .MuiOutlinedInput-input': {
+                                                            cursor: 'default', // Prevent showing caret on input field
+                                                            top: '5px'
+                                                        },
+
+                                                    }}
+                                                />
+
+                                                <Menu
+                                                    anchorEl={anchorEl}
+                                                    open={Boolean(anchorEl) && isDropdownOpen}
+                                                    onClose={handleClose}
+                                                    PaperProps={{
+                                                        sx: {
+                                                            width: anchorEl ? `${anchorEl.clientWidth}px` : '538px', borderRadius: '4px',
+                                                            border: '1px solid #e4e4e4'
+                                                        }, // Match dropdown width to input
+                                                    }}
+                                                    sx={{
+
+                                                    }}
+                                                >
+                                                    {/* Show "Create New List" option */}
+                                                    <MenuItem onClick={() => handleSelectOption('createNew')} sx={{
+                                                        borderBottom: showCreateForm ? "none" : "1px solid #cdcdcd",
+                                                        '&:hover': {
+                                                            background: 'rgba(80, 82, 178, 0.10)'
+                                                        }
+                                                    }}>
+                                                        <ListItemText primary={`+ Create new list`} primaryTypographyProps={{
+                                                            sx: {
+                                                                fontFamily: "Nunito Sans",
+                                                                fontSize: "14px",
+                                                                color: showCreateForm ? "#5052B2" : "#202124",
+                                                                fontWeight: "500",
+                                                                lineHeight: "20px",
+
+                                                            }
+                                                        }} />
+                                                    </MenuItem>
+
+                                                    {/* Show Create New List form if 'showCreateForm' is true */}
+                                                    {showCreateForm && (
+                                                        <Box>
+                                                            <Box sx={{
+                                                                display: 'flex',
+                                                                flexDirection: 'column',
+                                                                gap: '24px',
+                                                                p: 2,
+                                                                width: anchorEl ? `${anchorEl.clientWidth}px` : '538px',
+                                                                pt: 0
+                                                            }}>
+                                                                <Box
+                                                                    sx={{
+
+
+                                                                        mt: 1, // Margin-top to separate form from menu item
+                                                                        display: 'flex',
+                                                                        justifyContent: 'space-between',
+                                                                        gap: '16px',
+                                                                        '@media (max-width: 600px)': {
+                                                                            flexDirection: 'column'
+                                                                        },
+                                                                    }}
+                                                                >
+                                                                    <TextField
+                                                                        label="List Name"
+                                                                        variant="outlined"
+                                                                        value={newListName}
+                                                                        onChange={(e) => setNewListName(e.target.value)}
+                                                                        size="small"
+                                                                        fullWidth
+                                                                        onKeyDown={(e) => e.stopPropagation()}
+                                                                        error={listNameError}
+                                                                        helperText={listNameError ? 'List Name is required' : ''}
+                                                                        InputLabelProps={{
+                                                                            sx: {
+                                                                                fontFamily: 'Nunito Sans',
+                                                                                fontSize: '12px',
+                                                                                lineHeight: '16px',
+                                                                                fontWeight: '400',
+                                                                                color: 'rgba(17, 17, 19, 0.60)',
+                                                                                '&.Mui-focused': {
+                                                                                    color: '#0000FF',
+                                                                                },
+                                                                            }
+                                                                        }}
+                                                                        InputProps={{
+
+                                                                            endAdornment: (
+                                                                                newListName && ( // Conditionally render close icon if input is not empty
+                                                                                    <InputAdornment position="end">
+                                                                                        <IconButton
+                                                                                            edge="end"
+                                                                                            onClick={() => setNewListName('')} // Clear the text field when clicked
+                                                                                        >
+                                                                                            <Image
+                                                                                                src='/close-circle.svg'
+                                                                                                alt='close-circle'
+                                                                                                height={18}
+                                                                                                width={18} // Adjust the size as needed
+                                                                                            />
+                                                                                        </IconButton>
+                                                                                    </InputAdornment>
+                                                                                )
+                                                                            ),
+                                                                            sx: {
+                                                                                '&.MuiOutlinedInput-root': {
+                                                                                    height: '32px',
+                                                                                    '& .MuiOutlinedInput-input': {
+                                                                                        padding: '5px 16px 4px 16px',
+                                                                                        fontFamily: 'Roboto',
+                                                                                        color: '#202124',
+                                                                                        fontSize: '14px',
+                                                                                        fontWeight: '400',
+                                                                                        lineHeight: '20px'
+                                                                                    },
+                                                                                    '& .MuiOutlinedInput-notchedOutline': {
+                                                                                        borderColor: '#A3B0C2',
+                                                                                    },
+                                                                                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                                                        borderColor: '#A3B0C2',
+                                                                                    },
+                                                                                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                                                                        borderColor: '#0000FF',
+                                                                                    },
+                                                                                },
+                                                                                '&+.MuiFormHelperText-root': {
+                                                                                    marginLeft: '0',
+                                                                                },
+                                                                            }
+                                                                        }}
+                                                                    />
+                                                                    <TextField
+                                                                        select
+                                                                        fullWidth
+                                                                        variant="outlined"
+                                                                        label='Sender'
+                                                                        value={optionSender?.sender_name}
+                                                                        onChange={(e) => setOptionSender(senders.find(item => item.sender_name === e.target.value))}
+                                                                        InputLabelProps={{
+                                                                            sx: {
+                                                                                fontFamily: 'Nunito Sans',
+                                                                                fontSize: '12px',
+                                                                                lineHeight: '16px',
+                                                                                color: 'rgba(17, 17, 19, 0.60)',
+                                                                                top: '-5px',
+                                                                                '&.Mui-focused': {
+                                                                                    color: '#0000FF',
+                                                                                    top: 0
+                                                                                },
+                                                                                '&.MuiInputLabel-shrink': {
+                                                                                    top: 0
+                                                                                }
+                                                                            }
+                                                                        }}
+                                                                        InputProps={{
+                                                                            sx: {
+                                                                                '&.MuiOutlinedInput-root': {
+                                                                                    height: '36px',
+                                                                                    '& .MuiOutlinedInput-input': {
+                                                                                        padding: '6.5px 8px',
+                                                                                        fontFamily: 'Roboto',
+                                                                                        color: '#202124',
+                                                                                        fontSize: '14px',
+                                                                                        fontWeight: '400',
+                                                                                        lineHeight: '20px'
+                                                                                    },
+                                                                                    '& .MuiOutlinedInput-notchedOutline': {
+                                                                                        borderColor: '#A3B0C2',
+                                                                                    },
+                                                                                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                                                        borderColor: '#A3B0C2',
+                                                                                    },
+                                                                                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                                                                        borderColor: '#0000FF',
+                                                                                    },
+                                                                                },
+                                                                                '&+.MuiFormHelperText-root': {
+                                                                                    marginLeft: '0',
+                                                                                },
+                                                                            }
+                                                                        }}
+                                                                    >
+
+                                                                        {senders.map((item) => (
+                                                                            <MenuItem
+                                                                                key={item.id}
+                                                                                value={item.sender_name}
+                                                                            >
+                                                                                {item.sender_name}
+                                                                            </MenuItem>
+                                                                        ))}
+                                                                    </TextField>
+                    
+                                                                </Box>
+                                                                <Box sx={{ textAlign: 'right' }}>
+                                                                    <Button variant="contained" onClick={handleSave}
+                                                                        disabled={listNameError || !newListName || !optionSender}
+                                                                        sx={{
+                                                                            borderRadius: '4px',
+                                                                            border: '1px solid #5052B2',
+                                                                            background: '#fff',
+                                                                            boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
+                                                                            fontFamily: 'Nunito Sans',
+                                                                            fontSize: '14px',
+                                                                            fontWeight: '600',
+                                                                            lineHeight: '20px',
+                                                                            color: '#5052b2',
+                                                                            textTransform: 'none',
+                                                                            padding: '4px 22px',
+                                                                            '&:hover': {
+                                                                                background: 'transparent'
+                                                                            },
+                                                                            '&.Mui-disabled': {
+                                                                                background: 'transparent',
+                                                                                color: '#5052b2'
+                                                                            }
+                                                                        }}>
+                                                                        Save
+                                                                    </Button>
+                                                                </Box>
+                                                            </Box>
+
+
+                                                            {/* Add a Divider to separate form from options */}
+                                                            <Divider sx={{ borderColor: '#cdcdcd' }} />
+                                                        </Box>
+                                                    )}
+
+                                                    {/* Show static options */}
+                                                    {klaviyoList && klaviyoList.map((klaviyo, option) => (
+                                                        <MenuItem key={klaviyo.id} onClick={() => handleSelectOption(klaviyo)} sx={{
+                                                            '&:hover': {
+                                                                background: 'rgba(80, 82, 178, 0.10)'
+                                                            }
+                                                        }}>
+                                                            <ListItemText primary={klaviyo.list_name} primaryTypographyProps={{
+                                                                sx: {
+                                                                    fontFamily: "Nunito Sans",
+                                                                    fontSize: "14px",
+                                                                    color: "#202124",
+                                                                    fontWeight: "500",
+                                                                    lineHeight: "20px"
+                                                                }
+                                                            }} />
+                                                        </MenuItem>
+                                                    ))}
+                                                </Menu>
+                                            </Box>
+                                        </ClickAwayListener>
+
+                                    </Box>
+                                </Box>
+                            </TabPanel>
+                            <TabPanel value="3" sx={{ p: 0 }}>
                                 <Box sx={{
                                     borderRadius: '4px',
                                     border: '1px solid #f0f0f0',
@@ -898,6 +1342,18 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data
                                 }}>
                                     <Box sx={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
                                         <Typography variant="h6" className='first-sub-title'>Map list</Typography>
+                                        <Typography variant='h6' sx={{
+                                            background: '#EDEDF7',
+                                            borderRadius: '3px',
+                                            fontFamily: 'Roboto',
+                                            fontSize: '12px',
+                                            fontWeight: '400',
+                                            color: '#5f6368',
+                                            padding: '2px 4px',
+                                            lineHeight: '16px'
+                                        }}>
+                                            {selectedOption?.list_name}
+                                        </Typography>
                                     </Box>
 
                                     <Grid container alignItems="center" sx={{ flexWrap: { xs: 'nowrap', sm: 'wrap' }, marginBottom: '14px' }}>
@@ -920,7 +1376,7 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data
                                                 minWidth: '196px'
                                             }
                                         }}>
-                                            <Image src='/omnisend_icon_black.svg' alt='klaviyo' height={20} width={24} />
+                                            <Image src='/sendlane-icon.svg' alt='sendlane' height={20} width={24} />
                                         </Grid>
                                         <Grid item xs="auto" sm={1}>&nbsp;</Grid>
                                     </Grid>
@@ -1336,4 +1792,4 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data
         </>
     );
 };
-export default OnmisendDataSync;
+export default SendlaneDatasync;

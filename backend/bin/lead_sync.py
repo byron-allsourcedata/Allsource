@@ -3,13 +3,11 @@ import json
 import logging
 import os
 import random
-import re
 import sys
-import tempfile
 import time
 import traceback
 import urllib.parse
-import boto3
+
 import pytz
 from dateutil.relativedelta import relativedelta
 
@@ -18,6 +16,10 @@ parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 
 from utils import normalize_url
+from enums import NotificationTitles
+from persistence.leads_persistence import LeadsPersistence
+from persistence.notification import NotificationPersistence
+from models.plans import SubscriptionPlan
 from models.five_x_five_cookie_sync_file import FiveXFiveCookieSyncFile
 from urllib.parse import urlparse, parse_qs
 from models.leads_requests import LeadsRequests
@@ -26,7 +28,6 @@ from models.suppression_rule import SuppressionRule
 from models.leads_users_added_to_cart import LeadsUsersAddedToCart
 from models.leads_users_ordered import LeadsUsersOrdered
 from models.leads_visits import LeadsVisits
-from models.subscriptions import UserSubscriptions
 from models.five_x_five_hems import FiveXFiveHems
 from models.suppressions_list import SuppressionList
 from models.users_payments_transactions import UsersPaymentsTransactions
@@ -35,7 +36,6 @@ from sqlalchemy.orm import sessionmaker, Session
 from models.five_x_five_users import FiveXFiveUser
 from models.leads_users import LeadUser
 from models.users import Users
-from models.plans import SubscriptionPlan
 from models.leads_orders import LeadOrders
 from models.integrations.suppresions import LeadsSupperssion
 from dotenv import load_dotenv
@@ -47,6 +47,7 @@ from dependencies import (SubscriptionService, UserPersistence, PlansPersistence
 
 load_dotenv()
 
+
 def setup_logging(level):
     logging.basicConfig(
         level=level,
@@ -54,9 +55,11 @@ def setup_logging(level):
         datefmt='%Y-%m-%d %H:%M:%S'
     )
 
+
 LAST_PROCESSED_FILE_PATH = 'tmp/last_processed_leads_sync.txt'
 AMOUNT_CREDITS = 1
 QUEUE_CREDITS_CHARGING = 'credits_charging'
+EMAIL_NOTIFICATIONS = 'email_notifications'
 QUEUE_DATA_SYNC = 'data_sync_leads'
 
 ROOT_BOT_CLIENT_EMAIL = 'demo@maximiz.ai'
@@ -93,7 +96,9 @@ def get_all_five_x_user_emails(business_email, personal_emails, additional_perso
     return list(emails)
 
 
-async def process_table(session, groupped_requests, rabbitmq_connection, subscription_service, root_user=None):
+async def process_table(session, groupped_requests, rabbitmq_connection, subscription_service, leads_persistence,
+                        notification_persistence,
+                        root_user=None):
     for key, possible_leads in groupped_requests.items():
         for possible_lead in reversed(possible_leads):
             up_id = possible_lead['UP_ID']
@@ -114,18 +119,91 @@ async def process_table(session, groupped_requests, rabbitmq_connection, subscri
                 if five_x_five_user:
                     logging.info(f"Lead found by UP_ID {up_id}")
                     await process_user_data(possible_lead, five_x_five_user, session, rabbitmq_connection,
-                                            subscription_service,
+                                            subscription_service, leads_persistence, notification_persistence,
                                             None)
                     if root_user:
                         await process_user_data(possible_lead, five_x_five_user, session, rabbitmq_connection,
-                                                subscription_service,
+                                                subscription_service, leads_persistence, notification_persistence,
                                                 root_user)
                     break
                 else:
                     logging.warning(f"Not found by UP_ID {up_id}")
 
 
-async def process_payment_transaction(session, five_x_five_user_up_id, user_domain_id, user, rabbitmq_connection):
+async def handle_payment_notification(user, notification_persistence, plan_leads_credits, leads_credits,
+                                      plan_lead_credit_price):
+    credit_usage_percentage = round(((plan_leads_credits - leads_credits) / plan_leads_credits) * 100, 2)
+    if 80 == credit_usage_percentage or credit_usage_percentage == 90:
+        account_notification = notification_persistence.get_account_notification_by_title(
+            NotificationTitles.CONTACT_LIMIT_APPROACHING.value)
+        notification_text = account_notification.text.format(int(credit_usage_percentage), plan_lead_credit_price)
+        queue_name = f'sse_events_{str(user.id)}'
+        rabbitmq_connection = RabbitMQConnection()
+        connection = await rabbitmq_connection.connect()
+
+        save_account_notification = notification_persistence.save_account_notification(user.id, account_notification.id,
+                                                                                       f"{credit_usage_percentage}, {plan_lead_credit_price}")
+
+        try:
+            await publish_rabbitmq_message(
+                connection=connection,
+                queue_name=queue_name,
+                message_body={'notification_text': notification_text, 'notification_id': save_account_notification.id}
+            )
+        except:
+            await rabbitmq_connection.close()
+        finally:
+            await rabbitmq_connection.close()
+
+
+async def handle_inactive_leads_notification(user, leads_persistence, notification_persistence):
+    inactive_leads_user = leads_persistence.get_inactive_leads_user(user_id=user.id)
+    if len(inactive_leads_user) > 0 and len(inactive_leads_user) % 10 == 0:
+        account_notification = notification_persistence.get_account_notification_by_title(
+            NotificationTitles.PLAN_LIMIT_EXCEEDED.value)
+        notification_text = account_notification.text.format(len(inactive_leads_user))
+
+        queue_name = f'sse_events_{str(user.id)}'
+        rabbitmq_connection = RabbitMQConnection()
+        connection = await rabbitmq_connection.connect()
+        save_account_notification = notification_persistence.save_account_notification(user.id, account_notification.id,
+                                                                                       len(inactive_leads_user))
+        try:
+            await publish_rabbitmq_message(
+                connection=connection,
+                queue_name=queue_name,
+                message_body={'notification_text': notification_text, 'notification_id': save_account_notification.id}
+            )
+        except:
+            await rabbitmq_connection.close()
+        finally:
+            await rabbitmq_connection.close()
+
+
+async def notify_missing_plan(notification_persistence, user):
+    account_notification = notification_persistence.get_account_notification_by_title(
+        NotificationTitles.CHOOSE_PLAN.value)
+    queue_name = f'sse_events_{str(user.id)}'
+    rabbitmq_connection = RabbitMQConnection()
+    connection = await rabbitmq_connection.connect()
+    save_account_notification = notification_persistence.save_account_notification(user.id, account_notification.id)
+
+    try:
+        await publish_rabbitmq_message(
+            connection=connection,
+            queue_name=queue_name,
+            message_body={'notification_text': account_notification.text,
+                          'notification_id': save_account_notification.id}
+        )
+    except:
+        await rabbitmq_connection.close()
+    finally:
+        await rabbitmq_connection.close()
+
+
+async def process_payment_transaction(session, five_x_five_user_up_id, user_domain_id, user, lead_user,
+                                      leads_persistence, notification_persistence, plan_leads_credits,
+                                      plan_lead_credit_price):
     users_payments_transactions = session.query(UsersPaymentsTransactions).filter(
         UsersPaymentsTransactions.five_x_five_up_id == str(five_x_five_user_up_id),
         UsersPaymentsTransactions.domain_id == user_domain_id
@@ -137,23 +215,19 @@ async def process_payment_transaction(session, five_x_five_user_up_id, user_doma
                                                           amount_credits=AMOUNT_CREDITS, type='buy_lead',
                                                           domain_id=user_domain_id,
                                                           five_x_five_up_id=five_x_five_user_up_id)
-    session.add(user_payment_transactions)
+
     if (user.leads_credits - AMOUNT_CREDITS) < 0:
         if user.is_leads_auto_charging is False:
+            await handle_inactive_leads_notification(user, leads_persistence, notification_persistence)
             logging.info(f"User leads_auto_charging is False")
-            return
-        user.leads_credits -= AMOUNT_CREDITS
-        if user.leads_credits % 100 == 0:
-            await publish_rabbitmq_message(
-                connection=rabbitmq_connection,
-                queue_name=QUEUE_CREDITS_CHARGING,
-                message_body={'customer_id': user.customer_id, 'credits': user.leads_credits}
-            )
-            customer_data = {'customer_id': user.customer_id, 'credits': user.leads_credits}
-            logging.info(f"Push to rmq {customer_data}")
-    else:
-        user.leads_credits -= AMOUNT_CREDITS
-    session.commit()
+        lead_user.is_active = False
+        return
+
+    session.add(user_payment_transactions)
+    user.leads_credits -= AMOUNT_CREDITS
+    session.flush()
+    await handle_payment_notification(user, notification_persistence, plan_leads_credits, user.leads_credits,
+                                      plan_lead_credit_price)
 
 
 def check_certain_urls(page, suppression_rule):
@@ -236,8 +310,30 @@ def process_root_user_behavior(lead_user, behavior_type, requested_at, session):
             session.add(new_record)
 
 
+async def dispatch_leads_to_rabbitmq(session, user, rabbitmq_connection, plan_id):
+    user_ids = (
+        session.query(LeadUser)
+        .filter_by(user_id=user.id, is_active=False)
+        .all()
+    )
+
+    if user_ids and len(user_ids) % 100 == 0:
+        await publish_rabbitmq_message(
+            connection=rabbitmq_connection,
+            queue_name=QUEUE_CREDITS_CHARGING,
+            message_body={
+                'customer_id': user.customer_id,
+                'plan_id': plan_id
+            }
+        )
+
+        logging.info(f"Push to RMQ: {{'customer_id': {user.customer_id}, 'plan_id': {plan_id}")
+
+
 async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, session: Session, rabbitmq_connection,
-                            subscription_service: SubscriptionService, root_user=None):
+                            subscription_service: SubscriptionService, leads_persistence: LeadsPersistence,
+                            notification_persistence: NotificationPersistence,
+                            root_user=None):
     global count
     partner_uid_decoded = urllib.parse.unquote(str(possible_lead['PARTNER_UID']).lower())
     partner_uid_dict = json.loads(partner_uid_decoded)
@@ -254,12 +350,13 @@ async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, sess
         logging.info(f"Customer not found {partner_uid_client_id}")
         return
     user, user_domain = result
-    if not user_domain.enable and not root_user:
+    if not user_domain.is_enable and not root_user:
         logging.info(f"domain has not enable {user_domain.id}")
         return
     user_domain_id = user_domain.id
-    if not subscription_service.is_user_has_active_subscription(user.id):
-        logging.info(f"user has not active subscription {partner_uid_client_id}")
+    if not subscription_service.is_allow_add_lead(user.id):
+        await notify_missing_plan(notification_persistence, user)
+        logging.info(f"user not active partner_uid_client_id: {partner_uid_client_id}")
         return
 
     if page is None:
@@ -314,17 +411,32 @@ async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, sess
             LeadsSupperssion.integration_id.in_(integrations_ids)
         ).first() is not None
         if lead_suppression:
-            logging.info(f"No charging option supressed, skip lead")
+            logging.info(f"No charging option suppressed, skip lead")
             return
-        if root_user is None and not subscription_service.is_trial_subscription(user.id):
-            await process_payment_transaction(session, five_x_five_user.up_id, user_domain_id, user,
-                                              rabbitmq_connection)
+
         is_first_request = True
         lead_user = LeadUser(five_x_five_user_id=five_x_five_user.id, user_id=user.id, behavior_type=behavior_type,
                              domain_id=user_domain_id, total_visit=0, avarage_visit_time=0, total_visit_time=0)
 
+        plan_contact_credits_id = None
+
+        if root_user is None and not subscription_service.is_trial_subscription(user.id):
+            user_subscription = subscription_service.get_user_subscription(user.id)
+            plan_contact_credits_id = session.query(SubscriptionPlan.id).filter(
+                SubscriptionPlan.price == user_subscription.lead_credit_price).scalar()
+            subscription_plan = session.query(SubscriptionPlan).filter(
+                SubscriptionPlan.id == user_subscription.plan_id).first()
+            await process_payment_transaction(session, five_x_five_user.up_id, user_domain_id, user,
+                                              lead_user, leads_persistence, notification_persistence,
+                                              subscription_plan.leads_credits, subscription_plan.lead_credit_price)
+
         session.add(lead_user)
         session.flush()
+
+        if not lead_user.is_active and user.is_leads_auto_charging:
+            await dispatch_leads_to_rabbitmq(session=session, user=user, rabbitmq_connection=rabbitmq_connection,
+                                             plan_id=plan_contact_credits_id)
+
         await process_lead_sync(rabbitmq_connection, user_domain_id, behavior_type, lead_user)
     requested_at_str = str(possible_lead['EVENT_DATE'])
     requested_at = datetime.fromisoformat(requested_at_str).replace(tzinfo=None)
@@ -375,7 +487,8 @@ async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, sess
                     if subscription_result['artificial_trial_days']:
                         date_now = datetime.now(timezone.utc)
                         subscription_result['subscription'].plan_start = date_now.replace(tzinfo=None)
-                        subscription_result['subscription'].plan_end = (date_now + relativedelta(days=subscription_result['artificial_trial_days'])).replace(tzinfo=None)
+                        subscription_result['subscription'].plan_end = (date_now + relativedelta(
+                            days=subscription_result['artificial_trial_days'])).replace(tzinfo=None)
                         session.flush()
             if not user_domain.is_pixel_installed:
                 domain_lead_users = session.query(LeadUser).filter_by(domain_id=user_domain.id).limit(2).all()
@@ -506,7 +619,14 @@ async def process_files(session, rabbitmq_connection, root_user):
     subscription_service = SubscriptionService(
         db=session,
         user_persistence_service=UserPersistence(session),
-        plans_persistence=PlansPersistence(session),
+        plans_persistence=PlansPersistence(session)
+    )
+    notification_persistence = NotificationPersistence(
+        db=session
+    )
+
+    leads_persistence = LeadsPersistence(
+        db=session
     )
 
     try:
@@ -541,9 +661,13 @@ async def process_files(session, rabbitmq_connection, root_user):
             for request_row in cookie_sync_files:
                 group_requests_by_date(request_row, groupped_requests)
                 last_processed_file_name = request_row.event_date
-            await process_table(session, groupped_requests, rabbitmq_connection, subscription_service, None)
+            await process_table(session, groupped_requests, rabbitmq_connection, subscription_service,
+                                leads_persistence,
+                                notification_persistence, None)
             if root_user:
-                await process_table(session, groupped_requests, rabbitmq_connection, subscription_service, root_user)
+                await process_table(session, groupped_requests, rabbitmq_connection, subscription_service,
+                                    leads_persistence,
+                                    notification_persistence, root_user)
             logging.debug(f"Last processed event time {str(last_processed_file_name)}")
             update_last_processed_file(str(last_processed_file_name))
     except StopIteration:
@@ -579,6 +703,11 @@ async def main():
     )
     await channel.declare_queue(
         name=QUEUE_DATA_SYNC,
+        durable=True
+    )
+
+    await channel.declare_queue(
+        name=EMAIL_NOTIFICATIONS,
         durable=True
     )
 

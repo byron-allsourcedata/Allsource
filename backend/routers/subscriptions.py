@@ -1,14 +1,19 @@
+import logging
+
 from fastapi import APIRouter, Depends, Request as fastRequest, HTTPException, status
 
+from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 from dependencies import get_plans_service, get_payments_service, get_webhook, check_user_authentication, \
     check_user_authorization_without_pixel
-from enums import TeamAccessLevel
+from enums import TeamAccessLevel, NotificationTitles
 from models.users import Users
 from schemas.subscriptions import UnsubscribeRequest
 from services.payments import PaymentsService
 from services.plans import PlansService
 from services.webhook import WebhookService
 
+QUEUE_CREDITS_CHARGING = 'credits_charging'
+EMAIL_NOTIFICATIONS = 'email_notifications'
 router = APIRouter()
 
 
@@ -27,19 +32,75 @@ async def create_customer_session(price_id: str, payments_service: PaymentsServi
 @router.post("/update-subscription-webhook")
 async def update_payment_confirmation(request: fastRequest, webhook_service: WebhookService = Depends(get_webhook)):
     payload = await request.json()
-    return webhook_service.update_subscription_confirmation(payload=payload)
+    result_update_subscription = webhook_service.update_subscription_confirmation(payload=payload)
+    if result_update_subscription['status']:
+        user = result_update_subscription['user']
+        rabbitmq_connection = RabbitMQConnection()
+        connection = await rabbitmq_connection.connect()
+        try:
+            await publish_rabbitmq_message(
+                connection=connection,
+                queue_name=QUEUE_CREDITS_CHARGING,
+                message_body={
+                    'customer_id': user.customer_id,
+                    'plan_id': result_update_subscription['lead_credit_plan_id']
+                }
+            )
+        except:
+            logging.error('Failed to publish rabbitmq message')
+        finally:
+            await rabbitmq_connection.close()
+
+    return "OK"
 
 
 @router.post("/cancel-subscription-webhook")
 async def update_payment_confirmation(request: fastRequest, webhook_service: WebhookService = Depends(get_webhook)):
     payload = await request.json()
-    return webhook_service.cancel_subscription_confirmation(payload=payload)
+    result_update_subscription = webhook_service.cancel_subscription_confirmation(payload=payload)
+    if result_update_subscription['status'] and result_update_subscription['status'] == 'failed':
+        user = result_update_subscription['message_body']['user']
+        queue_name = f'sse_events_{str(user.id)}'
+        rabbitmq_connection = RabbitMQConnection()
+        connection = await rabbitmq_connection.connect()
+        try:
+            message_text = ('It looks like your payment didn’t go through. Kindly check your payment card, go to - '
+                            'billing')
+            await publish_rabbitmq_message(
+                connection=connection,
+                queue_name=queue_name,
+                message_body={'notification_text': message_text,
+                              'notification_id': result_update_subscription['message_body']['notification_id']}
+            )
+
+            await publish_rabbitmq_message(
+                connection=connection,
+                queue_name=EMAIL_NOTIFICATIONS,
+                message_body={
+                    'email': user.email,
+                    'full_name': result_update_subscription['message_body']['full_name'],
+                    'plan_name': result_update_subscription['message_body']['plan_name'],
+                    'date': result_update_subscription['message_body']['date'],
+                    'invoice_number': result_update_subscription['message_body']['invoice_number'],
+                    'invoice_date': result_update_subscription['message_body']['invoice_date'],
+                    'total': result_update_subscription['message_body']['total'],
+                    'link': result_update_subscription['message_body']['link']
+                }
+            )
+
+        except:
+            await rabbitmq_connection.close()
+        finally:
+            await rabbitmq_connection.close()
+
+    return "OK"
 
 
 @router.post("/update-payment-webhook")
 async def update_payment_confirmation(request: fastRequest, webhook_service: WebhookService = Depends(get_webhook)):
     payload = await request.json()
-    return webhook_service.create_payment_confirmation(payload=payload)
+    result_update_subscription = webhook_service.create_payment_confirmation(payload=payload)
+    return result_update_subscription
 
 
 @router.post("/cancel-plan")
@@ -53,6 +114,7 @@ def cancel_user_subscription(unsubscribe_request: UnsubscribeRequest,
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Access denied. Admins only."
             )
+
     return payments_service.cancel_user_subscription(user=user,
                                                      reason_unsubscribe=unsubscribe_request.reason_unsubscribe)
 
@@ -68,6 +130,7 @@ def upgrade_and_downgrade_user_subscription(price_id: str,
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Access denied. Admins only."
             )
+
     return payments_service.upgrade_and_downgrade_user_subscription(price_id=price_id, user=user)
 
 
@@ -81,6 +144,7 @@ def cancel_downgrade(payments_service: PaymentsService = Depends(get_payments_se
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Access denied. Admins only."
             )
+
     return payments_service.cancel_downgrade(user)
 
 
@@ -94,4 +158,5 @@ def buy_credits(credits_used: int, payments_service: PaymentsService = Depends(g
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Access denied. Admins only."
             )
+
     return payments_service.charge_user_for_extra_credits(credits_used, user)

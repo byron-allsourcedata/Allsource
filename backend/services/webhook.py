@@ -1,15 +1,18 @@
 import logging
 from datetime import datetime, timezone
 
+from enums import NotificationTitles
+from persistence.notification import NotificationPersistence
 from services.subscriptions import SubscriptionService
-from .stripe_service import save_payment_details_in_stripe
+from .stripe_service import save_payment_details_in_stripe, determine_plan_name_from_product_id
 
 logger = logging.getLogger(__name__)
 
 
 class WebhookService:
-    def __init__(self, subscription_service: SubscriptionService):
+    def __init__(self, subscription_service: SubscriptionService, notification_persistence: NotificationPersistence):
         self.subscription_service = subscription_service
+        self.notification_persistence = notification_persistence
 
     def update_subscription_confirmation(self, payload):
         stripe_request_created_timestamp = payload.get("created")
@@ -38,19 +41,30 @@ class WebhookService:
         self.subscription_service.create_subscription_transaction(user_id=user_data.id,
                                                                   stripe_payload=payload)
 
-        result_status = self.subscription_service.process_subscription(user=user_data, stripe_payload=data_object)
-        if result_status == 'active':
+        result = self.subscription_service.process_subscription(user=user_data, stripe_payload=data_object)
+        lead_credit_plan_id = None
+        if result['lead_credit_price']:
+            plan = self.subscription_service.get_plan_by_price(lead_credit_price=result['lead_credit_price'])
+            lead_credit_plan_id = plan.id
+        if result['status'] == 'active':
             saved_details_of_payment = save_payment_details_in_stripe(customer_id=customer_id)
             if not saved_details_of_payment:
                 logger.warning("set default card false")
-        return result_status
+        result = {
+            'status': result['status'],
+            'user': user_data,
+            'lead_credit_plan_id': lead_credit_plan_id if lead_credit_plan_id else None
+        }
+        return result
 
     def cancel_subscription_confirmation(self, payload):
+        message_body = {}
         stripe_request_created_timestamp = payload.get("created")
         stripe_request_created_at = datetime.fromtimestamp(stripe_request_created_timestamp, timezone.utc).replace(
             tzinfo=None)
         data_object = payload.get("data").get("object")
         customer_id = data_object.get("customer")
+        stripe_status = data_object.get("status")
         user_data = self.subscription_service.get_userid_by_customer(customer_id)
         if not user_data:
             return payload
@@ -65,8 +79,27 @@ class WebhookService:
         self.subscription_service.create_subscription_transaction(user_id=user_data.id,
                                                                   stripe_payload=payload)
 
-        result_status = self.subscription_service.process_subscription(user=user_data, stripe_payload=data_object)
-        return result_status
+        self.subscription_service.process_subscription(user=user_data, stripe_payload=data_object)
+        if stripe_status == 'open':
+            account_notification = self.notification_persistence.get_account_notification_by_title(
+                NotificationTitles.PAYMENT_FAILED.value)
+            save_account_notification = self.notification_persistence.save_account_notification(user_data.id, account_notification.id)
+            stripe_request_created_timestamp = data_object.get("created")
+            stripe_request_created_at = datetime.fromtimestamp(stripe_request_created_timestamp)
+            message_body['user'] = user_data
+            message_body['notification_id'] = save_account_notification.id
+            message_body['full_name'] = user_data.full_name
+            message_body['plan_name'] = determine_plan_name_from_product_id(data_object.get("plan").get("product"))
+            message_body['date'] = stripe_request_created_at
+            message_body['invoice_number'] = data_object.get("id")
+            message_body['invoice_date'] = data_object.get("amount_due").strftime('%Y-%m-%d %H:%M:%S')
+            message_body['total'] = data_object.get("amount_due")
+            message_body['link'] = data_object.get('hosted_invoice_url')
+
+        return {
+            'status': stripe_status,
+            'message_body': message_body
+        }
 
     def create_payment_confirmation(self, payload):
         data_object = payload.get("data").get("object")
@@ -87,8 +120,11 @@ class WebhookService:
         if not result_transaction:
             return payload
 
-        user_payment = self.subscription_service.create_payment_from_webhook(user_id=user_data.id,
+        result_status = self.subscription_service.create_payment_from_webhook(user_id=user_data.id,
                                                                              stripe_payload=payload,
                                                                              product_description=product_description,
                                                                              quantity=quantity)
-        return user_payment
+        return {
+            'status': result_status,
+            'user': user_data
+        }

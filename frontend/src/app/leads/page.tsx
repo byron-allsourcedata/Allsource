@@ -24,6 +24,7 @@ import Tooltip from '@mui/material/Tooltip';
 import CustomToolTip from '@/components/customToolTip';
 import CalendarPopup from '@/components/CustomCalendar'
 import CustomTablePagination from '@/components/CustomTablePagination';
+import UnlockButton from '@/components/UnlockButton';
 
 
 
@@ -353,23 +354,19 @@ const Leads: React.FC = () => {
             setStatus(response.data.status);
             let newRowsPerPageOptions: number[] = []; // Default options
             if (count <= 10) {
-                newRowsPerPageOptions = [5, 10]; 
+                newRowsPerPageOptions = [5, 10];
             } else if (count <= 50) {
-                newRowsPerPageOptions = [10, 20]; 
+                newRowsPerPageOptions = [10, 20];
             } else if (count <= 100) {
-                newRowsPerPageOptions = [10, 20, 50]; 
+                newRowsPerPageOptions = [10, 20, 50];
             } else if (count <= 300) {
-                newRowsPerPageOptions = [10, 20, 50, 100]; 
+                newRowsPerPageOptions = [10, 20, 50, 100];
             } else if (count <= 500) {
-                newRowsPerPageOptions = [10, 20, 50, 100, 300]; 
+                newRowsPerPageOptions = [10, 20, 50, 100, 300];
             } else {
-                newRowsPerPageOptions = [10, 20, 50, 100, 300, 500]; 
+                newRowsPerPageOptions = [10, 20, 50, 100, 300, 500];
             }
-            if (!newRowsPerPageOptions.includes(count)) {
-                newRowsPerPageOptions.push(count);
-                newRowsPerPageOptions.sort((a, b) => a - b); // Ensure the options remain sorted
-            }
-            
+
             setRowsPerPageOptions(newRowsPerPageOptions);
         } catch (error) {
             if (error instanceof AxiosError && error.response?.status === 403) {
@@ -633,7 +630,7 @@ const Leads: React.FC = () => {
     }, [appliedDates, orderBy, order, page, rowsPerPage, activeFilter, filterParams]);
 
     const handleDateLabelChange = (label: string) => {
-      };
+    };
 
 
     if (isLoading) {
@@ -885,6 +882,10 @@ const Leads: React.FC = () => {
         return text.length > maxLength ? `${text.slice(0, maxLength)}...` : text;
     };
 
+    const handleUnlock = () => {
+        router.push('settings?section=subscription')
+    }
+
     return (
         <>
             {loading && (
@@ -1005,9 +1006,9 @@ const Leads: React.FC = () => {
                                         border: '1px solid rgba(80, 82, 178, 1)',
                                         color: 'rgba(80, 82, 178, 1)',
                                         '& .MuiSvgIcon-root': {
-                                          color: 'rgba(80, 82, 178, 1)'
+                                            color: 'rgba(80, 82, 178, 1)'
                                         }
-                                      }
+                                    }
                                 }}
                                 onClick={handleDownload}
                             >
@@ -1037,9 +1038,9 @@ const Leads: React.FC = () => {
                                         border: '1px solid rgba(80, 82, 178, 1)',
                                         color: 'rgba(80, 82, 178, 1)',
                                         '& .MuiSvgIcon-root': {
-                                          color: 'rgba(80, 82, 178, 1)'
+                                            color: 'rgba(80, 82, 178, 1)'
                                         }
-                                      }
+                                    }
                                 }}
                             >
                                 <FilterListIcon fontSize='medium' sx={{ color: selectedFilters.length > 0 ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)' }} />
@@ -1086,9 +1087,9 @@ const Leads: React.FC = () => {
                                         border: '1px solid rgba(80, 82, 178, 1)',
                                         color: 'rgba(80, 82, 178, 1)',
                                         '& .MuiSvgIcon-root': {
-                                          color: 'rgba(80, 82, 178, 1)'
+                                            color: 'rgba(80, 82, 178, 1)'
                                         }
-                                      }
+                                    }
                                 }}
                             >
                                 <DateRangeIcon fontSize='medium' />
@@ -1124,7 +1125,7 @@ const Leads: React.FC = () => {
                     <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, mt: 2 }}>
                         {selectedFilters.length > 0 && (
                             <Chip
-                            className='second-sub-title'
+                                className='second-sub-title'
                                 label="Clear all"
                                 onClick={handleResetFilters}
                                 sx={{ color: '#5052B2 !important', backgroundColor: 'transparent', lineHeight: '20px !important' }}
@@ -1247,7 +1248,7 @@ const Leads: React.FC = () => {
                                         component={Paper}
                                         sx={{
                                             border: '1px solid rgba(235, 235, 235, 1)',
-                                            maxHeight: selectedFilters.length < 0 ? '70vh' : '67vh',
+                                            maxHeight: selectedFilters.length < 0 ? '74vh' : '67vh',
                                             overflowY: 'scroll'
                                         }}
                                     >
@@ -1255,15 +1256,15 @@ const Leads: React.FC = () => {
                                             <TableHead>
                                                 <TableRow>
                                                     {[
-                                                        { key: 'name', label: 'Name' },
+                                                        { key: 'name', label: 'Name', sortable: true },
                                                         { key: 'personal_email', label: 'Personal Email' },
                                                         { key: 'business_email', label: 'Business Email' },
                                                         { key: 'mobile_phone', label: 'Mobile phone' },
                                                         { key: 'first_visited_date', label: 'Visited date', sortable: true },
                                                         { key: 'funnel', label: 'Lead Status' },
                                                         { key: 'status', label: 'Visitor Type' },
-                                                        { key: 'average_time_sec', label: 'Average time on site' },
-                                                    ].map(({ key, label, sortable = true }) => (
+                                                        { key: 'average_time_sec', label: 'Average time on site', sortable: true },
+                                                    ].map(({ key, label, sortable = false }) => (
                                                         <TableCell
                                                             key={key}
                                                             sx={{
@@ -1274,7 +1275,7 @@ const Leads: React.FC = () => {
                                                                     zIndex: 99
                                                                 }),
                                                                 ...(key === 'average_time_sec' && {
-                                                                    "::after": { content: 'none'}
+                                                                    "::after": { content: 'none' }
                                                                 })
                                                             }}
                                                             onClick={sortable ? () => handleSortRequest(key) : undefined}
@@ -1322,39 +1323,52 @@ const Leads: React.FC = () => {
                                                                 handleOpenPopup(row);
 
                                                             }}>{row.first_name} {row.last_name}</TableCell>
-                                                        <TableCell
-                                                            sx={{ ...leadsStyles.table_array, position: 'relative' }}>
-                                                            {row.personal_emails ? (
-                                                                <Tooltip title={row.personal_emails.split(',')[0]}>
-                                                                    <span className="truncate-email">
-                                                                        {truncateText(row.personal_emails.split(',')[0], 24)}
-                                                                    </span>
-                                                                </Tooltip>
+                                                        <TableCell sx={{ ...leadsStyles.table_array, position: 'relative' }}>
+                                                            {row.is_active ? (
+                                                                row.personal_emails ? (
+                                                                    <Tooltip title={row.personal_emails.split(',')[0]}>
+                                                                        <span className="truncate-email">
+                                                                            {truncateText(row.personal_emails.split(',')[0], 24)}
+                                                                        </span>
+                                                                    </Tooltip>
+                                                                ) : (
+                                                                    <span className="truncate-email">--</span>
+                                                                )
                                                             ) : (
-                                                                <span className="truncate-email">--</span>
+                                                                <UnlockButton onClick={() => handleUnlock()} label="Unlock email" />
                                                             )}
                                                         </TableCell>
 
-                                                        <TableCell
-                                                            sx={{ ...leadsStyles.table_array, position: 'relative' }}>
-                                                            {row.business_email ? (
-                                                                <Tooltip title={row.business_email.split(',')[0]}>
-                                                                    <span className="truncate-email">
-                                                                        {truncateText(row.business_email.split(',')[0], 24)}
-                                                                    </span>
-                                                                </Tooltip>
+                                                        {/* Business Email Column */}
+                                                        <TableCell sx={{ ...leadsStyles.table_array, position: 'relative' }}>
+                                                            {row.is_active ? (
+                                                                row.business_email ? (
+                                                                    <Tooltip title={row.business_email.split(',')[0]}>
+                                                                        <span className="truncate-email">
+                                                                            {truncateText(row.business_email.split(',')[0], 24)}
+                                                                        </span>
+                                                                    </Tooltip>
+                                                                ) : (
+                                                                    <span className="truncate-email">--</span>
+                                                                )
                                                             ) : (
-                                                                <span className="truncate-email">--</span>
+                                                                <UnlockButton onClick={() => handleUnlock()} label="Unlock email" />
                                                             )}
                                                         </TableCell>
+
+                                                        {/* Mobile Phone Column */}
                                                         <TableCell sx={leadsStyles.table_array_phone}>
-                                                            {row.mobile_phone
-                                                                ? row.mobile_phone.split(',')[0]
-                                                                : row.personal_phone
-                                                                    ? row.personal_phone.split(',')[0]
-                                                                    : row.direct_number
-                                                                        ? row.direct_number.split(',')[0]
-                                                                        : '--'}
+                                                            {row.is_active ? (
+                                                                row.mobile_phone
+                                                                    ? row.mobile_phone.split(',')[0]
+                                                                    : row.personal_phone
+                                                                        ? row.personal_phone.split(',')[0]
+                                                                        : row.direct_number
+                                                                            ? row.direct_number.split(',')[0]
+                                                                            : '--'
+                                                            ) : (
+                                                                <UnlockButton onClick={() => handleUnlock()} label="Unlock mobile number" />
+                                                            )}
                                                         </TableCell>
                                                         <TableCell
                                                             sx={{ ...leadsStyles.table_array, position: 'relative' }}>{row.first_visited_date || '--'}</TableCell>
@@ -1403,7 +1417,7 @@ const Leads: React.FC = () => {
                                                             </Box>
                                                         </TableCell>
 
-                                                        <TableCell sx={{...leadsStyles.table_array, "::after": { content: 'none'}}}>
+                                                        <TableCell sx={{ ...leadsStyles.table_array, "::after": { content: 'none' } }}>
                                                             {row.average_time_sec ? formatTimeSpent(row.average_time_sec) : '--'}
                                                         </TableCell>
 
@@ -1412,7 +1426,7 @@ const Leads: React.FC = () => {
                                             </TableBody>
                                         </Table>
                                     </TableContainer>
-                                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', padding: '24px 0 0'  }}>
+                                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', padding: '24px 0 0' }}>
                                         <CustomTablePagination
                                             count={count_leads ?? 0}
                                             page={page}
@@ -1424,7 +1438,7 @@ const Leads: React.FC = () => {
                                     </Box>
                                 </Grid>
                             </Grid>
-                            
+
                         )}
                         {showSlider && <Slider />}
                     </Box>
@@ -1434,7 +1448,7 @@ const Leads: React.FC = () => {
                     <FilterPopup open={filterPopupOpen} onClose={handleFilterPopupClose} onApply={handleApplyFilters} />
                     <AudiencePopup open={audiencePopupOpen} onClose={handleAudiencePopupClose}
                         selectedLeads={Array.from(selectedRows)} />
-                        
+
                     <CalendarPopup
                         anchorEl={calendarAnchorEl}
                         open={isCalendarOpen}

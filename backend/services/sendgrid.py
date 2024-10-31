@@ -50,6 +50,8 @@ class SendgridHandler:
         message.template_id = template_id
         message.dynamic_template_data = {
             "Full_name": template_placeholder.get("full_name"),
+            "Plan_name": template_placeholder.get("plan_name"),
+            "Date": template_placeholder.get("date"),
             "Link": template_placeholder.get("link"),
             "Email": template_placeholder.get("email"),
             "Pixel_code": template_placeholder.get("pixel_code"),

@@ -7,10 +7,13 @@ from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token
 from sqlalchemy.orm import Session
 
-from enums import SignUpStatus, UserPaymentStatusEnum, LoginStatus, ResetPasswordEnum, \
-    VerifyToken, UserAuthorizationStatus, SendgridTemplate
-from models.users import User
+from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
+from enums import SignUpStatus, LoginStatus, ResetPasswordEnum, \
+    VerifyToken, UserAuthorizationStatus, SendgridTemplate, NotificationTitles
+from models.account_notification import AccountNotification
 from models.users import Users
+from models.users_account_notification import UserAccountNotification
+from persistence.plans_persistence import PlansPersistence
 from persistence.sendgrid_persistence import SendgridPersistence
 from persistence.user_persistence import UserPersistence
 from schemas.auth_google_token import AuthGoogleData
@@ -19,19 +22,24 @@ from services.payments_plans import PaymentsPlans
 from . import stripe_service
 from .jwt_service import get_password_hash, create_access_token, verify_password, decode_jwt_data
 from .sendgrid import SendgridHandler
+from .stripe_service import create_stripe_checkout_session
 from .subscriptions import SubscriptionService
 
+EMAIL_NOTIFICATIONS = 'email_notifications'
 logger = logging.getLogger(__name__)
 
 
 class UsersAuth:
     def __init__(self, db: Session, payments_service: PaymentsPlans, user_persistence_service: UserPersistence,
-                 send_grid_persistence_service: SendgridPersistence, subscription_service: SubscriptionService):
+                 send_grid_persistence_service: SendgridPersistence, subscription_service: SubscriptionService,
+                 plans_persistence: PlansPersistence
+                 ):
         self.db = db
         self.payments_service = payments_service
         self.user_persistence_service = user_persistence_service
         self.send_grid_persistence_service = send_grid_persistence_service
         self.subscription_service = subscription_service
+        self.plan_persistence = plans_persistence
 
     def get_utc_aware_date(self):
         return datetime.now(timezone.utc).replace(microsecond=0)
@@ -42,6 +50,8 @@ class UsersAuth:
                 subscription_plan_is_active = self.subscription_service.is_user_has_active_subscription(user.get('id'))
                 if subscription_plan_is_active:
                     return UserAuthorizationStatus.SUCCESS
+                if user.get('stripe_payment_url'):
+                    return UserAuthorizationStatus.PAYMENT_NEEDED
                 return UserAuthorizationStatus.NEED_CHOOSE_PLAN
             return UserAuthorizationStatus.FILL_COMPANY_DETAILS
         if user.get('is_email_confirmed'):
@@ -64,7 +74,45 @@ class UsersAuth:
             date += delta
         return date.isoformat()[:-6] + "Z"
 
-    def add_user(self, is_without_card, customer_id: str, user_form: dict):
+    async def send_member_notification(self, user_id, title, notification_id):
+        account_notification = self.db.query(AccountNotification).where(AccountNotification.title == title).first()
+        queue_name = f'sse_events_{str(user_id)}'
+        rabbitmq_connection = RabbitMQConnection()
+        connection = await rabbitmq_connection.connect()
+        try:
+            await publish_rabbitmq_message(
+                connection=connection,
+                queue_name=queue_name,
+                message_body={'notification_text': account_notification.text, 'notification_id': notification_id}
+            )
+        except:
+            await rabbitmq_connection.close()
+        finally:
+            await rabbitmq_connection.close()
+
+
+    def save_account_notification(self, user_id, title, params=None):
+        account_notification = self.db.query(AccountNotification).where(AccountNotification.title == title).first()
+        account_notification = UserAccountNotification(
+            user_id=user_id,
+            notification_id=account_notification.id,
+            params=str(params),
+
+        )
+        self.db.add(account_notification)
+        self.db.commit()
+        return account_notification.id
+
+    def add_user(self, is_without_card, customer_id: str, user_form: dict, spi: str):
+        stripe_payment_url = None
+        if spi:
+            trial_period = self.plan_persistence.get_plan_by_price_id(spi).trial_days
+            stripe_payment_url = create_stripe_checkout_session(
+                customer_id=customer_id,
+                line_items=[{"price": spi, "quantity": 1}],
+                mode="subscription",
+                trial_period=trial_period
+            )
         user_object = Users(
             email=user_form.get('email'),
             is_email_confirmed=user_form.get('is_email_confirmed', False),
@@ -75,7 +123,9 @@ class UsersAuth:
             last_login=self.get_utc_aware_date_for_mssql(),
             customer_id=customer_id,
             last_signed_in=datetime.now(),
-            added_on=datetime.now()
+            added_on=datetime.now(),
+            stripe_payment_url=stripe_payment_url.get('link') if stripe_payment_url else None
+
         )
         if not is_without_card:
             user_object.is_with_card = True
@@ -126,8 +176,11 @@ class UsersAuth:
             }
 
         customer_id = stripe_service.create_customer_google(google_payload)
-        user_object = self.add_user(is_without_card=is_without_card, customer_id=customer_id, user_form=google_payload)
+        user_object = self.add_user(is_without_card=is_without_card, customer_id=customer_id, user_form=google_payload,
+                                    spi=auth_google_data.spi)
         if teams_token:
+            notification_id = self.save_account_notification(self, user_object.id, NotificationTitles.TEAM_MEMBER_ADDED.value)
+            self.send_member_notification(owner_id, NotificationTitles.TEAM_MEMBER_ADDED.value, notification_id)
             self.user_persistence_service.update_teams_owner_id(user_id=user_object.id, teams_token=teams_token,
                                                                 owner_id=owner_id)
             token_info = {
@@ -279,8 +332,13 @@ class UsersAuth:
             "full_name": user_form.full_name,
             "password": user_form.password,
         }
-        user_object = self.add_user(is_without_card, customer_id, user_form=user_data)
+        if user_form.spi:
+            status = SignUpStatus.SUCCESS
+        user_object = self.add_user(is_without_card=is_without_card, customer_id=customer_id, user_form=user_data,
+                                    spi=user_form.spi)
         if teams_token:
+            notification_id = self.save_account_notification(self, user_object.id, NotificationTitles.TEAM_MEMBER_ADDED.value.value)
+            self.send_member_notification(owner_id, NotificationTitles.TEAM_MEMBER_ADDED.value, notification_id)
             self.user_persistence_service.update_teams_owner_id(user_id=user_object.id, teams_token=teams_token,
                                                                 owner_id=owner_id)
             token_info = {
@@ -289,7 +347,7 @@ class UsersAuth:
             }
         else:
             token_info = {
-                "id": user_object.id,
+                "id": user_object.id
             }
         token = create_access_token(token_info)
         logger.info("Token created")

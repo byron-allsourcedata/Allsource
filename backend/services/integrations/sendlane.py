@@ -1,141 +1,350 @@
+
+
+
+import asyncio
+from datetime import datetime, timedelta
+import logging
+import re
 from typing import List
-from schemas.integrations.sendlane import SendlaneCustomer, SendlaneList
-from schemas.integrations.integrations import IntegrationCredentials
-from persistence.integrations.integrations_persistence import IntegrationsPresistence
-from httpx import Client 
 from fastapi import HTTPException
+import httpx
+from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
+from models.integrations.integrations_users_sync import IntegrationUserSync
+from models.five_x_five_users import FiveXFiveUser
+from schemas.integrations.sendlane import SendlaneContact, SendlaneSender
+from schemas.integrations.integrations import DataMap, IntegrationCredentials, ListFromIntegration
+from enums import IntegrationsStatus
+from persistence.domains import UserDomainsPersistence
+from persistence.integrations.integrations_persistence import IntegrationsPresistence
+from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
+from persistence.leads_persistence import LeadsPersistence
+from models.integrations.users_domains_integrations import UserIntegration
 
+class SendlaneIntegrationService:
 
-class SendlaneIntegration:
+    def __init__(self, domain_persistence: UserDomainsPersistence, integrations_persistence: IntegrationsPresistence, leads_persistence: LeadsPersistence,
+                 sync_persistence: IntegrationsUserSyncPersistence):
+        self.domain_persistence = domain_persistence
+        self.integrations_persisntece = integrations_persistence
+        self.leads_persistence = leads_persistence
+        self.sync_persistence = sync_persistence
+        self.QUEUE_DATA_SYNC = 'data_sync_leads'
+        self.client = httpx.Client()
 
-    def __init__(self, integration_persistence: IntegrationsPresistence, client: Client):
-        self.integration_persistence = integration_persistence
-        self.client = client
-
-
-    def __get_credentials(self, user_id: int):
-        return self.integration_persistence.get_credentials_for_service(user_id, 'Sandlane')
+    def get_credentials(self, domain_id: int):
+        return self.integrations_persisntece.get_credentials_for_service(domain_id=domain_id, service_name='Sendlane')
     
     
-    def __get_customers(self, access_token: str):
-        response = self.client.get('https://api.sendlane.com/v2/contacts', headers={
-            'Authorization': f'Bearer {access_token}',
-            'Content-Type': 'application/json'
-        })
-        if response != 200:
-            raise HTTPException(status_code=400, detail={'status': 'error', 'detail': {
-                'message': 'Sandlane credentials invalid'
-            }})
-        return response.json().get('data')
-    
-    def __save_integration(self, access_token: str, user_id: int):
-        data = {'user_id': user_id, 'access_token': access_token, 'service_name': 'Sendlane'}
-        if self.integration_persistence.get_credentials_for_service(user_id, 'Shopify'):
-            raise HTTPException(status_code=409, detail={'status': 'error', 'detail': {
-                'message': 'You already have Sendlane integrations'
-            }})  
-        integration = self.integration_persistence.create_integration(data)
-        if not integration:
-            raise HTTPException(status_code=400, detail={'status': 'error', 'detail': {
-                'message': 'Save integration is failed'
-            }})
-        return integration
-    
-    def __save_customer(self, customer: SendlaneCustomer):
-        with self.integration_persistence as service:
-            service.sendlane.save_customer(customer)
-
-
-    def add_integration(self, user, domain, credentials: IntegrationCredentials):
-        customers = [self.__mapped_customer(customer) for customer in self.__get_customers(credentials.sendlane.access_token)]
-        integrataion = self.__save_integration(credentials.sendlane.access_token, domain.id)
-        # for customer in customers:
-        #     self.__save_customer(customer, user['id'])
-        return {
-            'status': 'Successfuly',
-            'detail': {
-                'id': integrataion.id,
-                'service_name': 'Sendlane'
+    def __handle_request(self, url: str, headers: dict = None, json: dict = None, data: dict = None, params: dict = None, api_key: str = None,  method: str = 'GET'):
+        if not headers:
+            headers = {
+                'Authorization': f'Bearer {api_key}',
+                'accept': 'application/json', 
+                'content-type': 'application/json'
             }
-        }        
+        url = f'https://api.sendlane.com/v2' + url
+        response = self.client.request(method, url, headers=headers, json=json, data=data, params=params)
 
-    def get_list(self, access_token: str):
-        response = self.client.get('https://api.sendlane.com/v2/lists', headers={
-            'Authorization': f'Bearer {access_token}',
-            'Content-Type': 'application/json'
-        })
-        return [self.__mapped_list(list) for list in response.get('data')]
+        if response.is_redirect:
+            redirect_url = response.headers.get('Location')
+            if redirect_url:
+                response = self.client.request(method, redirect_url, headers=headers, json=json, data=data, params=params)
+        return response
 
-    def __create_list(self, access_token: str, list_name: str):
-        data = {'name': list_name, 'sender_id': None} 
-        response = self.client.post('https://api.sendlane.com/v2/lists', headers={
-            'Authorization': f'Bearer {access_token}', 'Content-Type': 'application/json'
+
+    def __save_integrations(self, api_key: str, domain_id: int):
+        credential = self.get_credentials(domain_id)
+        if credential:
+            credential.access_token = api_key
+            credential.is_failed = False
+            credential.error_message = None
+            self.integrations_persisntece.db.commit()
+            return credential
+        integartions = self.integrations_persisntece.create_integration({
+            'domain_id': domain_id,
+            'access_token': api_key,
+            'service_name': 'Sendlane'
         })
-        if response.status_code != 201:
-            raise HTTPException(status_code=response.status_code, detail={'status': 'error', 'detail': {
-                'message': response.json().get('message')
-            }})
+        if not integartions:
+            raise HTTPException(status_code=409, detail={'status': IntegrationsStatus.CREATE_IS_FAILED.value})
+        return IntegrationsStatus.SUCCESS
+    
+
+    def __get_list(self, api_key):
+        response = self.__handle_request(url='/lists', api_key=api_key)
+        return response
+
+    def get_list(self, domain_id):
+        credential = self.get_credentials(domain_id)
+        if not credential:
+            return
+        lists = self.__get_list(credential.access_token)
+        if lists.status_code == 401:
+            credential.is_failed = True
+            credential.error_message = 'Invalid API Key'
+            self.integrations_persisntece.db.commit()
+            return
+        return [self.__mapped_list(list) for list in lists.json().get('data')]
+
+    def add_integration(self, credentials: IntegrationCredentials, domain, user):
+        lists = self.__get_list(credentials.sendlane.api_key)
+        if lists.status_code == 401:
+            raise HTTPException(status_code=400, detail={'status': IntegrationsStatus.CREDENTAILS_INVALID.value})
+        return self.__save_integrations(credentials.sendlane.api_key, domain_id=domain.id)
+
+    
+    def __get_sender(self, api_key):
+        response = self.__handle_request('/senders', api_key=api_key)
+        return response
+
+
+    def get_sender(self, domain_id):
+        credential = self.get_credentials(domain_id)
+        if not credential:
+            return
+        senders = self.__get_sender(credential.access_token)
+        if senders.status_code == 401:
+            credential.is_failed = True
+            credential.error_message = 'Invalid API Key'
+            self.integrations_persisntece.db.commit()
+            return
+        return [self.__mapped_sender(sender) for sender in senders.json().get('data')]
+
+    def create_list(self, list, domain_id: int):
+        credential = self.get_credentials(domain_id)
+        if not credential:
+            raise HTTPException(status_code=403, detail={'status': IntegrationsStatus.CREDENTIALS_NOT_FOUND})
+        json = {
+            'name': list.name,
+            'sender_id': list.sender_id
+        }
+        response = self.__handle_request('/lists', method='POST', api_key=credential.access_token, json=json)
+        if response == 401:
+            credential.is_failed = True
+            credential.error_message = 'Invalid API Key'
+            self.integrations_persisntece.db.commit()
+            return
         return self.__mapped_list(response.json().get('data'))
-    
-    def __add_customer_to_list(self, access_token: str, list_id: int, customers):
-        response = self.client.post(f'https://api.sendlane.com/v2/lists/{list_id}/contacts', headers={
-            'Authorizations': f'Bearer {access_token}', 'Content-Type': 'application/json'
-        }, data={
-            'contacts': [self.__mapped_customer_for_sendlane(customer) for customer in customers]
+ 
+    async def create_sync(self, leads_type: str, list_id: str, list_name: str, data_map: List[DataMap], domain_id: int, created_by: str, tags_id: str = None):
+        credentials = self.get_credentials(domain_id)
+        data_syncs = self.sync_persistence.get_filter_by(domain_id=domain_id)
+        for sync in data_syncs:
+            if sync.get('integration_id') == credentials.id and sync.get('leads_type') == leads_type:
+                return
+        sync = self.sync_persistence.create_sync({
+            'integration_id': credentials.id,
+            'list_id': list_id,
+            'list_name': list_name,
+            'domain_id': domain_id,
+            'leads_type': leads_type,
+            'data_map': data_map,
+            'created_by': created_by,
         })
+        message = {
+            'sync':  {
+                'id': sync.id,
+                "domain_id": sync.domain_id, 
+                "integration_id": sync.integration_id, 
+                "leads_type": sync.leads_type, 
+                "list_id": sync.list_id, 
+                'data_map': sync.data_map
+                },
+            'leads_type': leads_type,
+            'domain_id': domain_id
+        }
+        rabbitmq_connection = RabbitMQConnection()
+        connection = await rabbitmq_connection.connect()
+        channel = await connection.channel()
+        await channel.declare_queue(
+            name=self.QUEUE_DATA_SYNC,
+            durable=True
+        )
+        await publish_rabbitmq_message(
+            connection=connection,
+            queue_name=self.QUEUE_DATA_SYNC, 
+            message_body=message)
 
-    
-    def export_sync(self, domain, list_name: str = None, list_id: int = None, customers_ids: List[int] = None, filter_id: int = None):
-        credentials = self.__get_credentials(domain.id)
-        if not credentials:
-            raise HTTPException(status_code=400, detail={'status': 'error', 'detail': {
-                'message': 'Sendlane credentials invalid'
-            }})
-        if not list_id:
-            list = self.__create_list(credentials.access_token, list_name)
-            list_id = list.id
-        if not customers_ids:
-            if not filter_id:
-                raise HTTPException(status_code=400, detail={'status': 'error', 'detail': {'message': 'Filter is empty' } } )
-            customers_ids = self.leads_persistence.get_customer_by_filter_id(domain.id, filter_id) 
-        self.__add_customer_to_list(list_id, customers_ids)
-        return {'status': 'Success'}
-    
+    async def process_lead_sync(self, rabbitmq_connection, user_domain_id, behavior_type, lead_user, stage, next_try):
+        await publish_rabbitmq_message(rabbitmq_connection, self.QUEUE_DATA_SYNC,
+                                    {'domain_id': user_domain_id, 'leads_type': behavior_type, 'lead': {
+                                        'id': lead_user.id,
+                                        'five_x_five_user_id': lead_user.five_x_five_user_id
+                                    }, 'stage': stage, 'next_try': next_try})
 
-# -------------------------------MAPPED-SENDLANE-DATA------------------------------------ #
+    async def process_data_sync(self, message):
+        counter = 0
+        sync = None
+        try:
+            sync = IntegrationUserSync(**message.get('sync'))
+            logging.info("IntegrationUserSync created successfully.")
+        except Exception as e:
+            logging.error("Error creating IntegrationUserSync: %s", e)
 
-    def __mapped_customer(self, customer) -> SendlaneCustomer:
-        return SendlaneCustomer(
-            sendlane_user_id=customer['id'],
-            email=customer['email'],
-            first_name=customer['first_name'],
-            integration_customer=customer['integration_customer'],
-            last_name=customer['last_name'],
-            lifetime_value=customer['lifetime_value'],
-            lists=customer['lists'],
-            phone=customer['phone'],
-            sms_consent=customer['sms_consent'],
-            subcribed=customer['subcribed'],
-            suppressed=customer['suppressed'],
-            tags=customer['tags']
+        leads_type = message.get('leads_type')
+        domain_id = message.get('domain_id')
+        lead = message.get('lead', None)
+        if domain_id and lead:
+            lead = self.leads_persistence.get_leads_domain(domain_id=domain_id, five_x_five_user_id=lead.get('five_x_five_user_id'))[0]
+            if message.get('lead') and not lead:
+                return
+        stage = message.get('stage') if message.get('stage') else 1
+        next_try = message.get('next_try') if message.get('next_try') else None
+
+        rabbitmq_connection = RabbitMQConnection()
+        connection = await rabbitmq_connection.connect()
+        channel = await connection.channel()
+        await channel.declare_queue(
+            name=self.QUEUE_DATA_SYNC,
+            durable=True
+        )
+        logging.info("RabbitMQ queue declared.")
+
+        domains = self.domain_persistence.get_domain_by_filter(**{'id': domain_id} if domain_id else {})
+        logging.info(f"Retrieved domains: {[domain.id for domain in domains]}",)
+
+        for domain in domains:
+            credentials = self.get_credentials(domain.id)
+            if not credentials:
+                logging.warning("No credentials found for domain id %s.", domain.id)
+                return
+            
+            data_syncs_list = self.sync_persistence.get_data_sync_filter_by(
+                domain_id=domain.id,
+                integration_id=credentials.id,
+                is_active=True
+            )
+
+            leads = [lead] if lead else (
+                self.leads_persistence.get_leads_domain(domain.id, behavior_type=leads_type)
+                if leads_type and leads_type != 'allContacts' else
+                self.leads_persistence.get_leads_domain(domain.id)
+            )
+
+            for data_sync_item in data_syncs_list if not sync else [sync]:
+                if lead and lead.behavior_type != data_sync_item.leads_type and data_sync_item.leads_type not in ('allContacts', None):
+                    logging.warning("Lead behavior type mismatch: %s vs %s", lead.behavior_type, data_sync_item.leads_type)
+                    continue
+
+                data_map = data_sync_item.data_map if data_sync_item.data_map else None
+
+                for lead in leads:
+                    if stage > 3:
+                        logging.info("Stage limit reached. Exiting.")
+                        return
+                    
+                    if next_try and datetime.now() < datetime.fromisoformat(next_try):
+                        await asyncio.sleep(1)
+                        logging.info("Processing lead sync with next try: %s", next_try)
+                        await self.process_lead_sync(
+                            lead_user=lead,
+                            rabbitmq_connection=connection, 
+                            user_domain_id=domain.id, 
+                            behavior_type=lead.behavior_type, 
+                            stage=stage, 
+                            next_try=next_try  
+                        )
+                        continue
+                    profile = self.__create_contact(lead.five_x_five_user_id, credentials, data_sync_item.list_id)
+                    if not profile:
+                        data_sync_item.sync_status = False
+                        self.sync_persistence.db.commit()
+                        logging.error("Profile creation failed for lead: %s", lead.five_x_five_user_id)
+                        if stage != 3:
+                            next_try_str = (datetime.now() + timedelta(hours=3)).isoformat()
+                            await self.process_lead_sync(
+                                lead_user=lead,
+                                rabbitmq_connection=connection, 
+                                user_domain_id=domain.id, 
+                                behavior_type=lead.behavior_type, 
+                                stage=stage + 1, 
+                                next_try=next_try_str
+                            )
+                        continue
+                    data_sync_item.sync_status = True
+                    self.sync_persistence.db.commit()
+                    logging.info("Profile added successfully for lead: %s", lead.five_x_five_user_id)
+                    counter += 1
+                self.sync_persistence.update_sync({
+                    'last_sync_date': datetime.now()
+                },counter=counter, id=data_sync_item.id)
+                logging.info("Sync updated for item id: %s", data_sync_item.id)
+
+    def __create_contact(self, lead_id: int, credential: UserIntegration, list_id: int):
+        lead_data = self.leads_persistence.get_lead_data(lead_id)
+        try:
+            profile = self.__mapped_sendlane_contact(lead_data)
+        except: return
+        json = {
+            'contacts': [{**profile.model_dump()}]
+        }
+        respsonse = self.__handle_request(f'/lists/{list_id}/contacts', api_key=credential.access_token, json=json, method="POST")
+        print(respsonse.json())
+        if respsonse.status_code == 401:
+            credential.is_failed = True
+            credential.error_message = 'Invalid API Key'
+            self.integrations_persisntece.db.commit()
+            return
+        if respsonse.status_code == 202:
+            return respsonse
+
+    def __mapped_list(self, list):
+        return ListFromIntegration(
+            id=str(list.get('id')),
+            list_name=list.get('name')
         )
     
-    def __mapped_list(self, list) -> SendlaneList:
-        return SendlaneList(
-            id=list['id'],
-            name=list['name'],
-            description=list['description'],
-            status=list['status'],
-            created=list['created'],
-            sender_id=list['sender_id'],
-            flagged=list['flagged']
+    def __mapped_sender(self, sender):
+        return SendlaneSender(
+            id=str(sender.get('id')),
+            sender_name=sender.get('from_name')
         )
     
-    def __mapped_customer_for_sendlane(self, customer):
-        return {
-            "first_name": customer.first_name,
-            "last_name": customer.last_name,
-            "email": customer.business_email,
-            "phone": customer.mobile_phone,
-            }
-    
+
+    def validate_and_format_phone(self, phone_number: str) -> str:
+        if phone_number:
+            cleaned_phone_number = re.sub(r'\D', '', phone_number)  
+            logging.debug(f"Cleaned phone number: {cleaned_phone_number}") 
+            
+            if len(cleaned_phone_number) == 10: 
+                formatted_phone_number = '+1' + cleaned_phone_number 
+            elif len(cleaned_phone_number) == 11 and cleaned_phone_number.startswith('1'):
+                formatted_phone_number = '+' + cleaned_phone_number  
+            elif len(cleaned_phone_number) < 10:
+                logging.error("Phone number too short: {}".format(cleaned_phone_number))
+                return None  
+            else:
+                logging.error("Invalid phone number length: {}".format(cleaned_phone_number))
+                return None  
+
+            logging.debug(f"Formatted phone number: {formatted_phone_number}")  
+            return formatted_phone_number
+        return None
+
+
+    def __mapped_sendlane_contact(self, lead: FiveXFiveUser):
+        first_email = (
+            getattr(lead, 'business_email') or 
+            getattr(lead, 'personal_emails') or 
+            getattr(lead, 'programmatic_business_emails', None)
+        )
+        
+        first_phone = (
+            getattr(lead, 'mobile_phone') or 
+            getattr(lead, 'personal_phone') or 
+            getattr(lead, 'direct_number') or 
+            getattr(lead, 'company_phone', None)
+        )
+
+        if first_phone:
+            first_phone = first_phone.split(',')[-1]
+
+        if first_email:
+            first_email = first_email.split(',')[0]
+
+        return SendlaneContact(
+            email=first_email,
+            first_name = lead.first_name or "Unknown",
+            last_name=lead.last_name or "Unknown",
+            phone=self.validate_and_format_phone(first_phone)
+        )

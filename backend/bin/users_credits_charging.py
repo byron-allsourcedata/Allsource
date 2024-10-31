@@ -12,7 +12,11 @@ parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 
 from models.plans import SubscriptionPlan
-from config.rmq_connection import RabbitMQConnection
+from enums import NotificationTitles
+from models.account_notification import AccountNotification
+from models.users_account_notification import UserAccountNotification
+from models.leads_users import LeadUser
+from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 from sqlalchemy.orm import sessionmaker
 from models.users import Users
 from datetime import datetime, timezone
@@ -24,50 +28,121 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO)
 
 QUEUE_CREDITS_CHARGING = 'credits_charging'
-CREDITS = 'Additional_prospect_credits'
-PRICE_CREDIT = 0.49
+EMAIL_NOTIFICATIONS = 'email_notifications'
+QUANTITY = 100
+
+
+async def get_account_notification_by_title(session, title: str) -> str:
+    return session.query(AccountNotification).filter(AccountNotification.title == title).first()
+
+
+async def save_account_notification(session, user_id, account_notification_id, params=None):
+    account_notification = UserAccountNotification(
+        user_id=user_id,
+        notification_id=account_notification_id,
+        params=str(params)
+    )
+    session.add(account_notification)
+    session.commit()
+    return account_notification
 
 
 async def on_message_received(message, session):
     try:
         message_json = json.loads(message.body)
-        customer_id = message_json['customer_id']
-        credits = abs(message_json['credits'])
-        stripe_price_id = session.query(SubscriptionPlan.stripe_price_id).filter(
-            SubscriptionPlan.title == CREDITS).scalar()
-        result = purchase_product(customer_id, stripe_price_id, credits, 'leads_credits')
-        if result['success']:
-            stripe_payload = result['stripe_payload']
-            transaction_id = stripe_payload.get("id")
-            users_payments_transactions = session.query(UsersPaymentsTransactions).filter(
-                UsersPaymentsTransactions.transaction_id == transaction_id)
-            if not users_payments_transactions:
-                created_timestamp = stripe_payload.get("created")
-                created_at = datetime.fromtimestamp(created_timestamp, timezone.utc).replace(
-                    tzinfo=None) if created_timestamp else None
-                amount_credits = int(stripe_payload.get("amount") / 100 / PRICE_CREDIT)
-                status = stripe_payload.get("status")
-                if status == 'succeeded':
-                    user = session.query(Users).filter(Users.customer_id == customer_id).first()
-                    payment_transaction_obj = UsersPaymentsTransactions(
-                        user_id=user.id,
-                        transaction_id=transaction_id,
-                        created_at=datetime.now(timezone.utc).replace(tzinfo=None),
-                        stripe_request_created_at=created_at,
-                        status=status,
-                        amount_credits=amount_credits,
-                        type='leads_credits'
-                    )
-                    session.add(payment_transaction_obj)
-                    session.flush()
-                    user.leads_credits += credits
-                    session.commit()
-        else:
-            logging.error(f"excepted message. {result['error']}", exc_info=True)
-        await message.ack()
+        customer_id = message_json.get('customer_id')
+        plan_id = message_json.get('plan_id')
+        account_notification = await get_account_notification_by_title(session, NotificationTitles.PAYMENT_FAILED.value)
+        message_text = account_notification.text
+        subscription_plan = session.query(SubscriptionPlan).filter_by(id=plan_id).first()
+        user = session.query(Users).filter_by(customer_id=customer_id).first()
 
+        if not user or not subscription_plan:
+            logging.error("Invalid user or subscription plan", extra={'customer_id': customer_id, 'plan_id': plan_id})
+            await message.reject(requeue=True)
+            return
+
+        lead_users = (
+            session.query(LeadUser)
+            .filter_by(user_id=user.id, is_active=False)
+            .order_by(LeadUser.created_at)
+            .all()
+        )
+
+        lead_user_count = len(lead_users)
+        logging.info(f"lead_user_count: {lead_user_count}")
+        if lead_user_count > 0:
+            if user.leads_credits > 0:
+                logging.info(f"leads_credits > 0")
+                activate_count = min(user.leads_credits, lead_user_count)
+                for lead_user in lead_users[:activate_count]:
+                    lead_user.is_active = True
+                user.leads_credits -= activate_count
+                session.commit()
+                account_notification = await get_account_notification_by_title(session,
+                                                                               NotificationTitles.PAYMENT_SUCCESS.value)
+                message_text = account_notification.text
+            else:
+                if user.is_leads_auto_charging:
+                    logging.info(f"is_leads_auto_charging true")
+                    if lead_user_count >= QUANTITY:
+                        result = purchase_product(customer_id, subscription_plan.stripe_price_id, QUANTITY,
+                                                  'leads_credits')
+                        if result['success']:
+                            stripe_payload = result['stripe_payload']
+                            transaction_id = stripe_payload.get("id")
+                            if not session.query(UsersPaymentsTransactions).filter_by(
+                                    transaction_id=transaction_id).first():
+                                created_timestamp = stripe_payload.get("created")
+                                created_at = datetime.fromtimestamp(created_timestamp,
+                                                                    timezone.utc) if created_timestamp else None
+                                status = stripe_payload.get("status")
+                                logging.info(f"payment status {status}")
+                                if status == 'succeeded':
+                                    account_notification = await get_account_notification_by_title(session,
+                                                                                                   NotificationTitles.PAYMENT_SUCCESS.value)
+                                    message_text = account_notification.text
+
+                                    payment_transaction_obj = UsersPaymentsTransactions(
+                                        user_id=user.id,
+                                        transaction_id=transaction_id,
+                                        created_at=datetime.now(timezone.utc),
+                                        stripe_request_created_at=created_at,
+                                        status=status,
+                                        amount_credits=QUANTITY,
+                                        type='leads_credits'
+                                    )
+                                    session.add(payment_transaction_obj)
+                                    session.flush()
+                                    for lead_user in lead_users[:QUANTITY]:
+                                        lead_user.is_active = True
+                                    session.commit()
+                        else:
+                            logging.error(f"Purchase failed: {result['error']}", exc_info=True)
+
+        account_notification = await save_account_notification(session, user.id, account_notification.id)
+
+        queue_name = f'sse_events_{str(user.id)}'
+        rabbitmq_connection = RabbitMQConnection()
+        connection = await rabbitmq_connection.connect()
+        try:
+            await publish_rabbitmq_message(
+                connection=connection,
+                queue_name=queue_name,
+                message_body={'notification_text': message_text, 'notification_id': account_notification.id}
+            )
+        except:
+            await rabbitmq_connection.close()
+        finally:
+            await rabbitmq_connection.close()
+
+
+
+
+        await message.ack()
     except Exception as e:
-        logging.error("excepted message. error", exc_info=True)
+        logging.error("Error occurred while processing message.", exc_info=True)
+        session.rollback()
         await asyncio.sleep(5)
         await message.reject(requeue=True)
 
@@ -83,6 +158,14 @@ async def main():
         await channel.set_qos(prefetch_count=1)
         queue = await channel.declare_queue(
             name=QUEUE_CREDITS_CHARGING,
+            durable=True,
+            arguments={
+                'x-consumer-timeout': 3600000,
+            }
+        )
+
+        await channel.declare_queue(
+            name=EMAIL_NOTIFICATIONS,
             durable=True,
             arguments={
                 'x-consumer-timeout': 3600000,

@@ -30,11 +30,10 @@ import PixelInstallation from "@/components/PixelInstallation";
 import VerifyPixelIntegration from "@/components/VerifyPixelIntegration";
 import DataSyncList from "@/components/DataSyncList";
 import BCommerceConnect from "@/components/Bcommerce";
-import OmnisendConnect from "@/components/Omnisend";
+import OmnisendConnect from "@/components/OmnisendConnect";
 import MailchimpConnect from "@/components/MailchimpConnect";
 import RevenueTracking from "@/components/RevenueTracking";
-
-
+import SendlaneConnect from "@/components/SendlaneConnect";
 interface IntegrationBoxProps {
     image: string;
     handleClick?: () => void;
@@ -188,13 +187,19 @@ interface IntegrationsListProps {
     integrationsCredentials: IntegrationCredentials[];
     integrations: any[]
     changeTab?: (value: string) => void
+    handleSaveKlaviyo: (new_integration: any) => void
+    handleSaveOmnisend: (new_integration: any) => void
+    handleSaveMailchip: (new_integration: any) => void
+    handleSaveSendlane: (new_integration: any) => void
+    handleSaveShopify: (new_integration: any) => void
+    handleSaveMeta: (new_integration: any) => void
 }
 
 interface DataSyncIntegrationsProps {
     service_name: string | null
 }
 
-const UserIntegrationsList = ({ integrationsCredentials, changeTab = () => { }, integrations }: IntegrationsListProps) => {
+const UserIntegrationsList = ({ integrationsCredentials, changeTab = () => { }, integrations, handleSaveKlaviyo, handleSaveMailchip, handleSaveOmnisend, handleSaveSendlane, handleSaveShopify, handleSaveMeta }: IntegrationsListProps) => {
     const [activeService, setActiveService] = useState<string | null>(null);
     const [openAvalible, setOpenAvalible] = useState(false)
     const [openKlaviyoConnect, setOpenKlaviyoConnect] = useState(false)
@@ -203,6 +208,7 @@ const UserIntegrationsList = ({ integrationsCredentials, changeTab = () => { }, 
     const [openBigcommrceConnect, setOpenBigcommerceConnect] = useState(false)
     const [openOmnisendConnect, setOpenOmnisendConnect] = useState(false)
     const [openMailchinpConnect, setOpenMailchimpConnect] = useState(false)
+    const [openSendlaneConnect, setOpenSendlaneConnect] = useState(false)
 
     const handleActive = (service: string) => {
         setActiveService(service);
@@ -215,10 +221,7 @@ const UserIntegrationsList = ({ integrationsCredentials, changeTab = () => { }, 
         setOpenBigcommerceConnect(false)
         setOpenOmnisendConnect(false)
         setOpenMailchimpConnect(false)
-    }
-
-    const handleOnSave = () => {
-        
+        setOpenSendlaneConnect(false)
     }
 
     return (
@@ -290,13 +293,14 @@ const UserIntegrationsList = ({ integrationsCredentials, changeTab = () => { }, 
                     />
                 </Box>
             )}
-            {integrationsCredentials.some(integration => integration.service_name === "Mailchimp") && (
-                <Box onClick={() => handleActive('Mailchimp')}>
+            {integrationsCredentials.some(integration => integration.service_name === "Sendlane") && (
+                <Box onClick={() => handleActive('Sendlane')}>
                     <IntegrationBox
-                        image="/mailchimp-icon.svg"
-                        service_name="Mailchimp"
-                        active={activeService === 'Mailchimp'}
-                        handleClick={() => setOpenMailchimpConnect(true)}
+                        image="/sendlane-icon.svg"
+                        service_name="Sendlane"
+                        active={activeService === 'Sendlane'}
+                        handleClick={() => setOpenSendlaneConnect(true)}
+                        is_failed={integrationsCredentials?.find(integration => integration.service_name === 'Sendlane')?.is_failed}
                     />
                 </Box>
             )}
@@ -313,36 +317,18 @@ const UserIntegrationsList = ({ integrationsCredentials, changeTab = () => { }, 
         <KlaviyoIntegrationPopup 
             open={openKlaviyoConnect} 
             handleClose={handleClose}
-            onSave={handleOnSave}  
+            onSave={handleSaveKlaviyo}  
             initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'Klaviyo')?.access_token}
         />
         <MetaConnectButton 
             open={openMetaConnect} 
             onClose={handleClose} 
-            initAdId={integrationsCredentials?.find(integration => integration.service_name === 'Meta')?.ad_account_id} 
-        />
-        <AlivbleIntagrationsSlider 
-            isContactSync={false} 
-            open={openAvalible} 
-            onClose={() => setOpenAvalible(false)} 
-            integrations={integrations} 
-            integrationsCredentials={integrationsCredentials} 
-        />
-        <KlaviyoIntegrationPopup 
-            open={openKlaviyoConnect} 
-            handleClose={handleClose}
-            onSave={handleOnSave}  
-            initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'Klaviyo')?.access_token}
-        />
-        <MetaConnectButton 
-            open={openMetaConnect} 
-            onClose={handleClose} 
-            initAdId={integrationsCredentials?.find(integration => integration.service_name === 'Meta')?.ad_account_id} 
+            onSave={handleSaveMeta}
         />
         <ShopifySettings 
             open={openShopifyConnect} 
             handleClose={handleClose}
-            onSave={handleOnSave}  
+            onSave={() => { }}  
             initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'Shopify')?.access_token}
         />
         <BCommerceConnect 
@@ -351,8 +337,9 @@ const UserIntegrationsList = ({ integrationsCredentials, changeTab = () => { }, 
             initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'BigCommerce')?.access_token}
             initHashDomain={integrationsCredentials?.find(integration => integration.service_name === 'BigCommerce')?.shop_domain}
         />
-        <OmnisendConnect open={openOmnisendConnect} handleClose={handleClose} onSave={handleOnSave} />
-        <MailchimpConnect open={openMailchinpConnect} handleClose={handleClose} onSave={handleOnSave} initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'Mailchimp')?.access_token} />
+        <OmnisendConnect open={openOmnisendConnect} handleClose={handleClose} onSave={handleSaveOmnisend} initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'Omnisend')?.access_token}/>
+        <MailchimpConnect open={openMailchinpConnect} handleClose={handleClose} onSave={handleSaveMailchip} initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'Mailchimp')?.access_token} />
+        <SendlaneConnect open={openSendlaneConnect} handleClose={handleClose} onSave={handleSaveSendlane} initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'Sendlane')?.access_token}/>
         <AlivbleIntagrationsSlider 
             isContactSync={false} 
             open={openAvalible} 
@@ -368,7 +355,7 @@ const UserIntegrationsList = ({ integrationsCredentials, changeTab = () => { }, 
 };
 
 
-const IntegrationsAvailable = ({ integrationsCredentials: integrations }: IntegrationsListProps) => {
+const IntegrationsAvailable = ({ integrationsCredentials: integrations, handleSaveKlaviyo, handleSaveMailchip, handleSaveOmnisend, handleSaveSendlane, handleSaveShopify, handleSaveMeta }: IntegrationsListProps) => {
     const [search, setSearch] = useState<string>('');
     const [openMetaConnect, setOpenMetaConnect] = useState(false)
     const [openKlaviyoConnect, setOpenKlaviyoConnect] = useState(false)
@@ -376,6 +363,7 @@ const IntegrationsAvailable = ({ integrationsCredentials: integrations }: Integr
     const [openBigcommrceConnect, setOpenBigcommerceConnect] = useState(false)
     const [openOmnisendConnect, setOpenOmnisendConnect] = useState(false)
     const [openMailchinpConnect, setOpenmailchimpConnect] = useState(false)
+    const [openSendlaneConnect, setOpenSendlaneConnect] = useState(false)
 
     const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
         setSearch(event.target.value);
@@ -387,7 +375,8 @@ const IntegrationsAvailable = ({ integrationsCredentials: integrations }: Integr
         { image: 'meta-icon.svg', service_name: 'Meta' },
         { image: 'bigcommerce-icon.svg', service_name: 'BigCommerce' },
         { image: 'omnisend_icon_black.svg', service_name: 'Omnisend'}, 
-        { image: 'mailchimp-icon.svg', service_name: 'Mailchimp'}
+        { image: 'mailchimp-icon.svg', service_name: 'Mailchimp'},
+        { image: 'sendlane-icon.svg', service_name: 'Sendlane'}
     ];
 
     const filteredIntegrations = integrationsAvailable.filter(
@@ -403,9 +392,9 @@ const IntegrationsAvailable = ({ integrationsCredentials: integrations }: Integr
         setOpenBigcommerceConnect(false)
         setOpenOmnisendConnect(false)
         setOpenmailchimpConnect(false)
+        setOpenSendlaneConnect(false)
     }
 
-    const handleOnSave = () => {}
     return (
         <Box>
             <Box sx={{ width: '40%', }}>
@@ -442,6 +431,8 @@ const IntegrationsAvailable = ({ integrationsCredentials: integrations }: Integr
                           setOpenOmnisendConnect(true)
                         } else if(integrationAvailable.service_name === 'Mailchimp') {
                           setOpenmailchimpConnect(true)
+                        } else if(integrationAvailable.service_name === 'Sendlane') {
+                          setOpenSendlaneConnect(true)
                         }
                     }}>
                         <IntegrationBox
@@ -452,15 +443,17 @@ const IntegrationsAvailable = ({ integrationsCredentials: integrations }: Integr
                     </Box>
                 ))}
             </Box>
-            <KlaviyoIntegrationPopup open={openKlaviyoConnect} handleClose={handleClose} onSave={handleOnSave}/>
+            <KlaviyoIntegrationPopup open={openKlaviyoConnect} handleClose={handleClose} onSave={handleSaveKlaviyo}/>
             <MetaConnectButton 
                 open={openMetaConnect} 
-                onClose={handleClose} 
+                onClose={handleClose}
+                onSave={handleSaveMeta}
             />
-            <ShopifySettings open={openShopifyConnect} handleClose={handleClose} onSave={handleOnSave}/>
+            <ShopifySettings open={openShopifyConnect} handleClose={handleClose} onSave={handleSaveShopify}/>
             <BCommerceConnect open={openBigcommrceConnect} handleClose={handleClose} />
-            <OmnisendConnect open={openOmnisendConnect} handleClose={handleClose} onSave={handleOnSave} />
-            <MailchimpConnect open={openMailchinpConnect} handleClose={handleClose} onSave={handleOnSave} />
+            <OmnisendConnect open={openOmnisendConnect} handleClose={handleClose} onSave={handleSaveOmnisend} />
+            <MailchimpConnect open={openMailchinpConnect} handleClose={handleClose} onSave={handleSaveMailchip} />
+            <SendlaneConnect open={openSendlaneConnect} handleClose={handleClose} onSave={handleSaveSendlane} />
         </Box>
     );
 };
@@ -536,8 +529,20 @@ const PixelManagment = () => {
       );
       case "meta":
       return (
-          <Image src={"/meta-icon.svg"} alt="klaviyo" width={18} height={18} />
+          <Image src={"/meta-icon.svg"} alt="meta" width={18} height={18} />
       );
+      case 'omnisend':
+        return(
+          <Image src={"/somnisend_icon_black.svg"} alt="omnisend" width={18} height={18} />
+      );
+      case 'mailchimp':
+        return(
+          <Image src={"/mailchimp-icon.svg"} alt="mailchimp" width={18} height={18} />
+      )
+      case 'sendlane':
+        return(
+          <Image src={"/sendlane-icon.svg"} alt="sendlane" width={18} height={18} />
+      )
       default:
       return null;
   } }
@@ -953,8 +958,10 @@ const Integrations = () => {
     const router = useRouter();
     const [showSlider, setShowSlider] = useState(false);
     const [isLoading, setLoading] = useState(true)
+    const [activeTab, setActiveTab] = useState("1");
     const handleTabChange = (event: React.SyntheticEvent, newValue: string) => {
         setValue(newValue);
+        setActiveTab(newValue)
     };
 
     const installPixel = () => {
@@ -1008,6 +1015,77 @@ const Integrations = () => {
         fetchData();
     }, [value]);
     
+    const handleSaveSettingsOmnisend = (newIntegration: IntegrationCredentials) => {
+      setIntegrationsCredentials(prevIntegrations => {
+          if (prevIntegrations.some(integration => integration.service_name === 'Omnisend')) {
+              return prevIntegrations.map(integration =>
+                  integration.service_name === 'Omnisend' ? newIntegration : integration
+              );
+          } else {
+              return [...prevIntegrations, newIntegration];
+          }
+      });
+    };
+
+    const handleSaveSettingsMailchimp = (newIntegration: IntegrationCredentials) => {
+      setIntegrationsCredentials(prevIntegrations => {
+          if (prevIntegrations.some(integration => integration.service_name === 'Mailchimp')) {
+              return prevIntegrations.map(integration =>
+                  integration.service_name === 'Mailchimp' ? newIntegration : integration
+              );
+          } else {
+              return [...prevIntegrations, newIntegration];
+          }
+      });
+    };
+
+    const handleSaveSettingsKlaviyo = (newIntegration: IntegrationCredentials) => {
+      setIntegrationsCredentials(prevIntegrations => {
+          if (prevIntegrations.some(integration => integration.service_name === 'Klaviyo')) {
+              return prevIntegrations.map(integration =>
+                  integration.service_name === 'Klaviyo' ? newIntegration : integration
+              );
+          } else {
+              return [...prevIntegrations, newIntegration];
+          }
+      });
+    };
+
+    const handleSaveSettingsMeta = (newIntegration: IntegrationCredentials) => {
+      setIntegrationsCredentials(prevIntegrations => {
+          if (prevIntegrations.some(integration => integration.service_name === 'Meta')) {
+              return prevIntegrations.map(integration =>
+                  integration.service_name === 'Meta' ? newIntegration : integration
+              );
+          } else {
+              return [...prevIntegrations, newIntegration];
+          }
+      });
+    };
+
+    const handleSaveSettingsShopify = (newIntegration: IntegrationCredentials) => {
+      setIntegrationsCredentials(prevIntegrations => {
+          if (prevIntegrations.some(integration => integration.service_name === 'Shopify')) {
+              return prevIntegrations.map(integration =>
+                  integration.service_name === 'Shopify' ? newIntegration : integration
+              );
+          } else {
+              return [...prevIntegrations, newIntegration];
+          }
+      });
+    };
+    const handleSaveSettingsSendlane = (newIntegration: IntegrationCredentials) => {
+      setIntegrationsCredentials(prevIntegrations => {
+          if (prevIntegrations.some(integration => integration.service_name === 'Sendlane')) {
+              return prevIntegrations.map(integration =>
+                  integration.service_name === 'Sendlane' ? newIntegration : integration
+              );
+          } else {
+              return [...prevIntegrations, newIntegration];
+          }
+      });
+    };
+
 
     const changeTab = (value: string) => {
         setValue(value)
@@ -1021,6 +1099,18 @@ const Integrations = () => {
                     display: "flex",
                     flexDirection: "row",
                     alignItems: "center",
+                    position: 'fixed',
+                    top: '68px',
+                    right: '16px',
+                    left: '170px',
+                    background: '#fff',
+                    zIndex: '1200',
+                    paddingLeft: '20px',
+                    paddingRight: '24px',
+                    mx: '-24px',
+                    "@media (max-width: 900px)": { 
+                      left: '20px'
+                    },
                     "@media (max-width: 600px)": { mb: 2 },
                 }}>
                     {/* Title and Tooltip */}
@@ -1060,13 +1150,15 @@ const Integrations = () => {
                                 onChange={handleTabChange}
                             >
                                 <Tab label="Your Integrations" value="1" sx={{ ...integrationStyle.tabHeading }} />
-                                <Tab label="Available Integrations" value="2" sx={{ ...integrationStyle.tabHeading }} />
+                                <Tab label="Add an Integrations" value="2" sx={{ ...integrationStyle.tabHeading }} />
                                 <Tab label="Pixel Management" value="3" sx={{ ...integrationStyle.tabHeading }} />
                             </TabList>
                         </Box>
                     )}  
                 </Box>
-                {status !== 'PIXEL_INSTALLATION_NEEDED' && !isLoading && (
+                <Box sx={{ marginTop: '84px'
+                }}>
+                {status !== 'PIXEL_INSTALLATION_NEEDED' && !isLoading && activeTab === "3" && (
                 <Box sx={{
                     border: '1px solid #E4E4E4',
                     mt: 2.5
@@ -1105,18 +1197,33 @@ const Integrations = () => {
                             <UserIntegrationsList 
                                 integrationsCredentials={integrationsCredentials} 
                                 changeTab={changeTab} 
-                                integrations={integrations}/>
+                                integrations={integrations}
+                                handleSaveKlaviyo={handleSaveSettingsKlaviyo} 
+                                handleSaveMailchip={handleSaveSettingsMailchimp}
+                                handleSaveOmnisend={handleSaveSettingsOmnisend}
+                                handleSaveSendlane={handleSaveSettingsSendlane}
+                                handleSaveShopify={handleSaveSettingsShopify}
+                                handleSaveMeta={handleSaveSettingsMeta}
+                            />
                         </TabPanel>
                         <TabPanel value="2" sx={{ px: 0 }}>
                             <IntegrationsAvailable 
-                            integrationsCredentials={integrationsCredentials} 
-                            integrations={integrations}/>
+                              integrationsCredentials={integrationsCredentials} 
+                              integrations={integrations}
+                              handleSaveKlaviyo={handleSaveSettingsKlaviyo} 
+                              handleSaveMailchip={handleSaveSettingsMailchimp}
+                              handleSaveOmnisend={handleSaveSettingsOmnisend}
+                              handleSaveSendlane={handleSaveSettingsSendlane}
+                              handleSaveShopify={handleSaveSettingsShopify}
+                              handleSaveMeta={handleSaveSettingsMeta}
+                            />
                         </TabPanel>
                         <TabPanel value="3" sx={{ px: 0 }}>
                             <PixelManagment />
                         </TabPanel>
                     </>
                 ))}
+              </Box>
             </TabContext>
             {showSlider && <Slider/>}
         </>

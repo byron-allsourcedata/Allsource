@@ -21,6 +21,7 @@ import { useSlider } from '@/context/SliderContext';
 import { AxiosError } from 'axios';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 import Slider from "../components/Slider";
+import NotificationPopup from './NotificationPopup';
 
 const navigationmenuStyles = {
   mobileMenuHeader: {
@@ -28,7 +29,7 @@ const navigationmenuStyles = {
     top: 0,
     left: 0,
     right: 0,
-    zIndex: 1200,
+    zIndex: 1400,
     background: '#fff', 
     boxShadow: '0 0.25rem 0.25rem 0 rgba(47, 47, 47, 0.04)',
     borderBottom: '0.0625 solid #E4E4E4',
@@ -44,7 +45,7 @@ const navigationmenuStyles = {
     height: '100%',
     backgroundColor: '#fff',
     transition: 'left 0.3s ease-in-out',
-    zIndex: 1100,
+    zIndex: 1300,
     paddingTop: '4.5rem', // Adjust for the header height
   },
   activeItem: {
@@ -91,6 +92,7 @@ const NavigationMenu = () => {
   const email = userEmail || meData.email;
   const { setShowSlider } = useSlider();
   const [showBookSlider, setShowBookSlider] = useState(false);
+  const [notificationIconPopupOpen, setNotificationIconPopupOpen] = useState(false);
 
   const toggleDrawer = () => {
     setOpen(!open);
@@ -139,8 +141,16 @@ const NavigationMenu = () => {
     router.push("/signin");
   };
 
+  const handleNotificationIconPopupOpen = () => {
+    setNotificationIconPopupOpen(true);
+  };
+
+  const handleNotificationIconPopupClose = () => {
+    setNotificationIconPopupOpen(false);
+  }
+
   return (
-    <Box>
+    <Box sx={{ display: { xs: notificationIconPopupOpen ? 'none' : 'block' }  }}>
       {/* Header with Menu Icon and Fixed Position */}
       <Box sx={navigationmenuStyles.mobileMenuHeader}>
         {/* Conditional Icon (Menu or Close) */}
@@ -153,7 +163,7 @@ const NavigationMenu = () => {
 
         {/* Placeholder for Right Icon */}
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-        <IconButton>
+        <IconButton onClick={handleNotificationIconPopupOpen}>
           <NotificationsNoneIcon />
         </IconButton>
         <IconButton onClick={handleProfileMenuOpen}>
@@ -282,6 +292,7 @@ const NavigationMenu = () => {
         </List>
       </Box>
       {showBookSlider && <Slider />}
+      <NotificationPopup open={notificationIconPopupOpen} onClose={handleNotificationIconPopupClose}/>
     </Box>
   );
 };

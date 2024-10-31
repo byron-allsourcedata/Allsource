@@ -1,13 +1,17 @@
+from typing import Optional, List
+
 from fastapi import APIRouter, Depends, Query, HTTPException
 from fastapi.params import Header
 from typing_extensions import Annotated
 
 from dependencies import get_users_auth_service, get_users_email_verification_service, get_users_service, \
-    check_user_authorization
+    check_user_authorization, check_pixel_install_domain, check_user_authentication, get_notification_service
+from models.users_domains import UserDomains
 from schemas.auth_google_token import AuthGoogleData
 from schemas.users import UserSignUpForm, UserSignUpFormResponse, UserLoginFormResponse, UserLoginForm, UpdatePassword, \
     ResendVerificationEmailResponse, ResetPasswordForm, ResetPasswordResponse, UpdatePasswordResponse, \
-    CheckVerificationStatusResponse, VerifyTokenResponse
+    CheckVerificationStatusResponse, VerifyTokenResponse, DismissNotificationsRequest
+from services.notification import Notification
 from services.users import UsersService
 from services.users_auth import UsersAuth
 from services.users_email_verification import UsersEmailVerificationService
@@ -24,8 +28,21 @@ def get_me(user_service: UsersService = Depends(get_users_service)):
     }
 
 
+@router.get("/notification")
+async def get_notification(notification_service: Notification = Depends(get_notification_service),
+                           user=Depends(check_user_authentication)):
+    return notification_service.get_notification(user)
+
+
+@router.post("/notification/dismiss")
+async def get_notification(request: Optional[DismissNotificationsRequest] = None, notification_service: Notification = Depends(get_notification_service),
+                           user=Depends(check_user_authentication)):
+    return notification_service.dismiss(request, user)
+
+
 @router.get("/check-user-authorization")
-def check_user_authorization(user=Depends(check_user_authorization)):
+def check_user_authorization(user=Depends(check_user_authorization),
+                             domain: UserDomains = Depends(check_pixel_install_domain)):
     return {
         "status": 'SUCCESS'
     }
@@ -33,7 +50,6 @@ def check_user_authorization(user=Depends(check_user_authorization)):
 
 @router.post("/sign-up", response_model=UserSignUpFormResponse)
 async def create_user(user_form: UserSignUpForm, users_service: UsersAuth = Depends(get_users_auth_service)):
-    user_form.is_without_card = True
     user_data = users_service.create_account(user_form)
     if user_data.get('is_success'):
         return UserSignUpFormResponse(status=user_data.get('status'), token=user_data.get("token"))
@@ -54,7 +70,6 @@ async def login_user(user_form: UserLoginForm, users_service: UsersAuth = Depend
 
 @router.post("/sign-up-google", response_model=UserSignUpFormResponse)
 async def create_user_google(auth_google_token: AuthGoogleData, users: UsersAuth = Depends(get_users_auth_service)):
-    auth_google_token.is_without_card = True
     user_data = users.create_account_google(auth_google_token)
     return UserSignUpFormResponse(status=user_data.get('status'), token=user_data.get("token", None))
 

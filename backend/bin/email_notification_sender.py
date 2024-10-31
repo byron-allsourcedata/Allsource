@@ -1,0 +1,99 @@
+import asyncio
+import functools
+import json
+import logging
+import os
+import sys
+
+from models.account_notification import AccountNotification
+from models.sendgrid_template import SendgridTemplate
+
+current_dir = os.path.dirname(os.path.realpath(__file__))
+parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
+sys.path.append(parent_dir)
+
+from config.rmq_connection import RabbitMQConnection
+from dotenv import load_dotenv
+from enums import SendgridTemplate
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker, Session
+from services.sendgrid import SendgridHandler
+
+load_dotenv()
+logging.basicConfig(level=logging.INFO)
+
+EMAIL_NOTIFICATIONS = 'email_notifications'
+
+
+def get_template_by_alias(session, alias):
+    template = session.query(SendgridTemplate).filter(SendgridTemplate.alias == alias).first()
+    if template:
+        return template.template_id
+
+
+async def on_message_received(message, session):
+    try:
+        message_json = json.loads(message.body)
+        email = message_json.get('email')
+        full_name = message_json.get('full_name')
+        plan_name = message_json.get('plan_name')
+        date = message_json.get('date')
+        invoice_number = message_json.get('invoice_number')
+        invoice_date = message_json.get('invoice_date')
+        total = message_json.get('total')
+        link = message_json.get('link')
+
+        template_id = get_template_by_alias(session, SendgridTemplate.PAYMENT_FAILURE_NOTIFICATION.value)
+        if not template_id:
+            return {
+                'is_success': False,
+                'error': 'email template not found'
+            }
+
+        mail_object = SendgridHandler()
+        mail_object.send_sign_up_mail(
+            to_emails=email,
+            template_id=template_id,
+            template_placeholder={"full_name": full_name, 'plan_name': plan_name, 'date': date,
+                                  'invoice_number': invoice_number, 'invoice_date': invoice_date,
+                                  'total': total, 'link': link},
+        )
+        logging.info("Confirmation Email Sent")
+        await message.ack()
+    except Exception as e:
+        logging.error("Error occurred while processing message.", exc_info=True)
+        await asyncio.sleep(5)
+        await message.reject(requeue=True)
+
+
+async def main():
+    logging.info("Started")
+    rabbitmq_connection = None
+    try:
+        engine = create_engine(
+            f"postgresql://{os.getenv('DB_USERNAME')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}")
+        Session = sessionmaker(bind=engine)
+        session = Session()
+        rabbitmq_connection = RabbitMQConnection()
+        connection = await rabbitmq_connection.connect()
+        channel = await connection.channel()
+        await channel.set_qos(prefetch_count=1)
+        queue = await channel.declare_queue(
+            name=EMAIL_NOTIFICATIONS,
+            durable=True
+        )
+        await queue.consume(
+            functools.partial(on_message_received, session=session)
+        )
+        await asyncio.Future()
+    except Exception as err:
+        logging.error('Unhandled Exception:', exc_info=True)
+    finally:
+        if rabbitmq_connection:
+            logging.info("Closing RabbitMQ connection...")
+            await rabbitmq_connection.close()
+        logging.info("Shutting down...")
+
+
+if __name__ == "__main__":
+    asyncio.run(main())

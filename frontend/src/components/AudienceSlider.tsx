@@ -14,10 +14,12 @@ import KlaviyoIntegrationPopup from './KlaviyoIntegrationPopup';
 import MetaConnectButton from './MetaConnectButton';
 import AlivbleIntagrationsSlider from './AvalibleIntegrationsSlider';
 import BCommerceConnect from './Bcommerce';
-import OmnisendConnect from './Omnisend';
+import OmnisendConnect from './OmnisendConnect';
 import OnmisendDataSync from './OmnisendDataSync';
 import MailchimpConnect from './MailchimpConnect';
 import MailchimpDatasync from './MailchimpDatasync';
+import SendlaneConnect from './SendlaneConnect';
+import SendlaneDatasync from './SendlaneDatasync';
 
 interface AudiencePopupProps {
     open: boolean;
@@ -39,6 +41,7 @@ interface IntegrationsCredentials {
     data_center?: string
     service_name: string
     is_with_suppression?: boolean
+    is_failed?: boolean
 }
 
 interface Integrations {
@@ -68,7 +71,8 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
     const [omnisendIconPopupOpen, setOpenOmnisendIconPopupOpen] = useState(false)
     const [mailchimpIconPopupOpen, setOpenMailchimpIconPopup] = useState(false)
     const [openMailchimpConnect, setOpenmailchimpConnect] = useState(false)
-
+    const [openSendlaneIconPopupOpen, setOpenSendlaneIconPopupOpen] = useState(false)
+    const [openSendlaneConnect, setOpenSendlaneConnect] = useState(false)
     const fetchListItems = async () => {
         try {
             const response = await axiosInstance.get('/audience/list');
@@ -85,8 +89,10 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                 setIntegrations(response.data)
             }
         }
-        fetchData()
-    }, [])
+        if(open) {
+            fetchData()
+        }
+    }, [open])
 
     useEffect(() => {
         const fetchData = async() => {
@@ -99,8 +105,10 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
             
         }
         }
-        fetchData()
-    }, [])
+        if(open) {
+            fetchData()
+        }
+    }, [open])
 
     useEffect(() => {
         if (open) {
@@ -123,7 +131,6 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
     const handleOmnisendIconPopupOpenClose = () => {
         setOpenOmnisendConnect(false)
         setOpenOmnisendIconPopupOpen(false)
-        onClose()
     }
 
     const toggleFormVisibility = () => {
@@ -202,6 +209,15 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
         setKlaviyoIconPopupOpen(true);
     };
 
+    const handleOmnisendConnectOpen = () => {
+        setOpenOmnisendConnect(true)
+    }
+
+    const handleOmnisendConnectClose =() => {
+        setOpenOmnisendConnect(false)
+        handleOmnisendIconPopupOpen()
+    }
+
     const handleOmnisendIconPopupOpen = () => {
         setOpenOmnisendIconPopupOpen(true);
     };
@@ -210,8 +226,11 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
         setKlaviyoIconPopupOpen(false);
         setOpenOmnisendConnect(false)
         setPlusIconPopupOpen(false)
-        onClose()
     };
+
+    const handleOpenMailchimpConnect = () => {
+        setOpenmailchimpConnect(true)
+    }
 
     const handleMailchimpIconPopupIconOpen = () => {
         setOpenMailchimpIconPopup(true)
@@ -220,7 +239,6 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
     const handleMailchimpIconPopupIconClose = () => {
         setOpenMailchimpIconPopup(false)
         setPlusIconPopupOpen(false)
-        onClose()
     }
 
     const handleMetaIconPopupOpen = () => {
@@ -230,7 +248,6 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
     const handleMetaIconPopupClose = () => {
         setMetaIconPopupOpen(false);
         setPlusIconPopupOpen(false)
-        onClose()
     };
 
     const handleIntegrationSelect = (integration: string) => {
@@ -238,12 +255,82 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
         setIsExportDisabled(false); // Enable export button when an integration is selected
       };
 
-      const handleSaveSettings = (newIntegrations: IntegrationsCredentials) => {
+    const handleSaveSettingsKlaviyo = (newIntegrations: IntegrationsCredentials) => {
         setIntegrationsCredentials(prevIntegrations => [
             ...prevIntegrations, 
             newIntegrations
         ]);
         setKlaviyoIconPopupOpen(true)
+    }
+
+    const handleSaveSettingsMeta = (newIntegrations: IntegrationsCredentials) => {
+        setIntegrationsCredentials(prevIntegrations => [
+            ...prevIntegrations, 
+            newIntegrations
+        ]);
+        setKlaviyoIconPopupOpen(true)
+    }
+
+    const handleOpenMailchimpConnectClose = () => {
+        setOpenmailchimpConnect(false)
+    }
+
+
+
+    const handleSaveSettingsOmnisend = (newIntegration: IntegrationsCredentials) => {
+        setIntegrationsCredentials(prevIntegrations => {
+            if (prevIntegrations.some(integration => integration.service_name === 'Omnisend')) {
+                return prevIntegrations.map(integration =>
+                    integration.service_name === 'Omnisend' ? newIntegration : integration
+                );
+            } else {
+                return [...prevIntegrations, newIntegration];
+            }
+        });
+    };
+    const handleSaveSettingsMailchimp = (newIntegration: IntegrationsCredentials) => {
+        setIntegrationsCredentials(prevIntegrations => {
+            if (prevIntegrations.some(integration => integration.service_name === 'Mailchimp')) {
+                return prevIntegrations.map(integration =>
+                    integration.service_name === 'Mailchimp' ? newIntegration : integration
+                );
+            } else {
+                return [...prevIntegrations, newIntegration];
+            }
+        });
+    };
+
+    const handleSendlaneIconPopupOpen = () => {
+        setOpenSendlaneIconPopupOpen(true)
+    }
+
+    const handleSendlaneIconPopupClose = () => {
+        setOpenSendlaneIconPopupOpen(false)
+    }
+
+    const handleSendlaneConnectOpen = () => {
+        setOpenSendlaneConnect(true)
+    }
+
+    const handleSendlaneConnectClose = () => {
+        setOpenSendlaneConnect(false)
+    }
+
+
+    const handleSaveSettingsSendlane = (newIntegration: IntegrationsCredentials) => {
+        setIntegrationsCredentials(prevIntegrations => {
+            if (prevIntegrations.some(integration => integration.service_name === 'Sendlane')) {
+                return prevIntegrations.map(integration =>
+                    integration.service_name === 'Sendlane' ? newIntegration : integration
+                );
+            } else {
+                return [...prevIntegrations, newIntegration];
+            }
+        });
+    };
+    
+    const handleCreateKlaviyoOpen = () => {
+        setCreateKlaviyo(true)
     }
 
     const handleCloseMetaConnectApp = () => {
@@ -384,7 +471,10 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                             flexBasis: 'calc(50% - 8px)',
                                         },
                                     }}>
-                                        <ListItemButton onClick={handleKlaviyoIconPopupOpen} sx={{
+                                        <ListItemButton onClick={!integrationsCredentials.find(integration => integration.service_name === 'Klaviyo')?.is_failed
+                                                ? handleKlaviyoIconPopupOpen
+                                                : handleCreateKlaviyoOpen
+                                            } sx={{
                                             p: 0,
                                             flexDirection: 'column',
                                             px: 3,
@@ -419,7 +509,10 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                             flexBasis: 'calc(50% - 8px)',
                                         },
                                     }}>
-                                        <ListItemButton onClick={handleOmnisendIconPopupOpen} sx={{
+                                        <ListItemButton onClick={!integrationsCredentials.find(integration => integration.service_name === 'Omnisend')?.is_failed
+                                                ? handleOmnisendIconPopupOpen
+                                                : handleOmnisendConnectOpen
+                                            } sx={{
                                             p: 0,
                                             flexDirection: 'column',
                                             px: 3,
@@ -448,13 +541,16 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                     <ListItem sx={{
                                         p: 0,
                                         borderRadius: '4px',
-                                        border: selectedIntegration === 'Omnisend' ? '1px solid #5052B2' : '1px solid #e4e4e4',
+                                        border: selectedIntegration === 'Mailchimp' ? '1px solid #5052B2' : '1px solid #e4e4e4',
                                         width: 'auto',
                                         '@media (max-width:600px)': {
                                             flexBasis: 'calc(50% - 8px)',
                                         },
                                     }}>
-                                        <ListItemButton onClick={handleMailchimpIconPopupIconOpen} sx={{
+                                        <ListItemButton onClick={!integrationsCredentials.find(integration => integration.service_name === 'Mailchimp')?.is_failed
+                                                ? handleMailchimpIconPopupIconOpen
+                                                : handleOpenMailchimpConnect
+                                            } sx={{
                                             p: 0,
                                             flexDirection: 'column',
                                             px: 3,
@@ -468,6 +564,44 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                                 <Image src="/mailchimp-icon.svg" alt="Mailchimp" height={26} width={32} />
                                             </ListItemIcon>
                                             <ListItemText primary="Mailchimp" primaryTypographyProps={{
+                                                sx: {
+                                                    fontFamily: "Nunito Sans",
+                                                    fontSize: "14px",
+                                                    color: "#4a4a4a",
+                                                    fontWeight: "500",
+                                                    lineHeight: "20px",
+                                                },
+                                            }} />
+                                        </ListItemButton>
+                                    </ListItem>
+                                )}
+                                {integrationsCredentials.some(integration => integration.service_name === 'Sendlane') && (
+                                    <ListItem sx={{
+                                        p: 0,
+                                        borderRadius: '4px',
+                                        border: selectedIntegration === 'Sendlane' ? '1px solid #5052B2' : '1px solid #e4e4e4',
+                                        width: 'auto',
+                                        '@media (max-width:600px)': {
+                                            flexBasis: 'calc(50% - 8px)',
+                                        },
+                                    }}>
+                                        <ListItemButton onClick={!integrationsCredentials.find(integration => integration.service_name === 'Sendlane')?.is_failed
+                                                ? handleSendlaneIconPopupOpen
+                                                : handleSendlaneConnectOpen
+                                            } sx={{
+                                            p: 0,
+                                            flexDirection: 'column',
+                                            px: 3,
+                                            py: 1.5,
+                                            width: '102px',
+                                            height: '72px',
+                                            justifyContent: 'center',
+                                            backgroundColor: selectedIntegration === 'Mailchimp' ? 'rgba(80, 82, 178, 0.10)' : 'transparent',
+                                        }}>
+                                            <ListItemIcon sx={{ minWidth: 'auto' }}>
+                                                <Image src="/sendlane-icon.svg" alt="sendlane" height={26} width={32} />
+                                            </ListItemIcon>
+                                            <ListItemText primary="Sendlane" primaryTypographyProps={{
                                                 sx: {
                                                     fontFamily: "Nunito Sans",
                                                     fontSize: "14px",
@@ -542,16 +676,19 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
             <ConnectKlaviyo data = {null} open={klaviyoIconPopupOpen} onClose={handleKlaviyoIconPopupClose}/>
             <ConnectMeta data = {null} open={metaIconPopupOpen} onClose={handleMetaIconPopupClose} />
             <OnmisendDataSync open={omnisendIconPopupOpen} onClose={handleOmnisendIconPopupOpenClose} />
-            <KlaviyoIntegrationPopup open={createKlaviyo} handleClose={() => setCreateKlaviyo(false)} onSave={handleSaveSettings} />
-            <MetaConnectButton open={metaConnectApp} onClose={handleCloseMetaConnectApp}/>
+            <KlaviyoIntegrationPopup open={createKlaviyo} handleClose={() => setCreateKlaviyo(false)} onSave={handleSaveSettingsKlaviyo} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'Klaviyo')?.access_token}/>
+            <MetaConnectButton open={metaConnectApp} onClose={handleCloseMetaConnectApp} onSave={handleSaveSettingsMeta}/>
             <BCommerceConnect 
                     open={openBigcommrceConnect} 
                     handleClose={() => setOpenBigcommerceConnect(false)}
                     initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'BigCommerce')?.access_token}
                     initHashDomain={integrationsCredentials?.find(integration => integration.service_name === 'BigCommerce')?.shop_domain}
                 />
-            <OmnisendConnect open={openOmnisendConnect} handleClose={() => setOpenOmnisendConnect(false)} onSave={handleSaveSettings} />
+            <OmnisendConnect open={openOmnisendConnect} handleClose={() => setOpenOmnisendConnect(false)} onSave={handleSaveSettingsOmnisend} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'Omnisend')?.access_token} />
             <MailchimpDatasync data={null} open={mailchimpIconPopupOpen} onClose={handleMailchimpIconPopupIconClose} />
+            <MailchimpConnect onSave={handleSaveSettingsMailchimp} open={openMailchimpConnect} handleClose={handleOpenMailchimpConnectClose} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'Mailchimp')?.access_token}  />
+            <SendlaneConnect open={openSendlaneConnect} handleClose={handleSendlaneConnectClose} onSave={handleSaveSettingsSendlane} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'Sendlane')?.access_token} />
+            <SendlaneDatasync open={openSendlaneIconPopupOpen} onClose={handleSendlaneIconPopupClose} data={ null } />
         </>
     );
 };

@@ -33,7 +33,7 @@ class UsersService:
         return UpdatePasswordStatus.PASSWORD_UPDATED_SUCCESSFULLY
 
     def get_info_plan(self):
-        if not self.user.get('is_book_call_passed'):
+        if not self.user.get('is_book_call_passed') and not self.user.get('is_with_card'):
             return {
                 'is_trial_pending': True
             }
@@ -41,7 +41,8 @@ class UsersService:
             self.user.get('id'))
         if result['subscription']:
             return {
-                "is_trial": result['is_artificial_status'],
+                "is_artificial_status": result['is_artificial_status'],
+                "is_trial": result['subscription'].is_trial,
                 "plan_end": result['subscription'].plan_end,
             }
         return {

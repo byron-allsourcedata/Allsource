@@ -154,6 +154,7 @@ const CalendarPopup: React.FC<CalendarPopupProps> = ({ anchorEl, open, onClose, 
         setEndDateString('')
         setStartDateString('')
         onClose();
+        setShowDatePicker(false);
     }
 
     const isSameDay = (date1: Date, date2: Date) => {
@@ -183,6 +184,9 @@ const CalendarPopup: React.FC<CalendarPopupProps> = ({ anchorEl, open, onClose, 
 
     const handleCustomClick = () => {
         setShowDatePicker(true); // Show the date picker
+    };
+    const handleCustomGoBack = () => {
+        setShowDatePicker(false);
     };
 
     return (
@@ -225,7 +229,8 @@ const CalendarPopup: React.FC<CalendarPopupProps> = ({ anchorEl, open, onClose, 
                     <Box sx={{ padding: 2, display: 'flex', flexDirection: 'column', gap: 2, flexWrap: 'wrap', width: '100%', mb: 0, borderRight: '1px solid var(--Color-4, rgba(23, 22, 25, 0.04))',
                         "@media (max-width: 900px)": {
                             display: showDatePicker ? 'none' : 'flex',
-                            borderRight: 'none'
+                            borderRight: 'none',
+                            gap: '42px'
                         }
                         
                      }}>
@@ -311,7 +316,7 @@ const CalendarPopup: React.FC<CalendarPopupProps> = ({ anchorEl, open, onClose, 
                                     sx={{ width: '94px', height: '32px' }}
                                 />
                             </Box>
-
+                                
                         <Box
                         sx={{
                             padding: 2,
@@ -447,10 +452,23 @@ const CalendarPopup: React.FC<CalendarPopupProps> = ({ anchorEl, open, onClose, 
                             },
                             "@media (max-width: 900px)": {
                                 display: showDatePicker ? 'flex' : 'none',
-                                pl: 2
+                                pl: 2,
+                                gap: 2
                             }
                         }}
                         >
+                        <Box sx={{
+                            "@media (min-width: 901px)": {
+                                display: 'none'
+                            }
+                        }}>
+                            <Button variant="outlined" className='second-sub-title' onClick={handleCustomGoBack} sx={{ backgroundColor: 'rgba(255, 255, 255, 1)', color: 'rgba(80, 82, 178, 1) !important', textTransform: 'none',
+                                border: '1px solid rgba(80, 82, 178, 1)',
+                                padding: '6px 12px'
+                                }}>
+                                    Go back
+                            </Button>
+                        </Box>
                         <DatePicker
                             selected={startDate}
                             onChange={handleChange}

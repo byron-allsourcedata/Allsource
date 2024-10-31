@@ -23,10 +23,7 @@ class MailchimpCredentials(BaseModel):
 
 
 class MetaCredentials(BaseModel):
-    ad_account_id: str 
     access_token:str 
-    platform_user_id: str
-    full_name: str
 
 class SupperssionSet(BaseModel):
     suppression: bool
@@ -81,7 +78,9 @@ class SyncCreate(BaseModel):
 
 class CreateListOrTags(BaseModel):
     name: str
+    sender_id: Optional[str] = None
     description: Optional[str] = None
+    ad_account_id: Optional[str] = None
 
 class ContactSuppression(BaseModel):
     id: str
@@ -104,3 +103,6 @@ class OrderAPI(BaseModel):
 class ListFromIntegration(BaseModel):
     id: str
     list_name: str
+
+class ReqestList(BaseModel):
+    ad_account_id: Optional[str] = None

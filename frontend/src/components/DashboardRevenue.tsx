@@ -436,7 +436,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                     <Image src={'/dollar.svg'} alt={'dollar'} width={21} height={36.4} />
                 </Box>
                 <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-                    <Typography variant="h5" component='div' sx={{ display: 'flex', flexDirection: 'row', alignItems: 'end', fontWeight: '700', fontSize: '22px', fontFamily: 'Nunito Sans', lineHeight: '30.01px', color: 'rgba(32, 33, 36, 1)', gap: 1, '@media (max-width: 600px)': { flexDirection: 'column', alignItems: 'start' } }}>
+                    <Typography variant="h5" component='div' sx={{ display: 'flex', flexDirection: 'row', alignItems: 'end', fontWeight: '700', fontSize: '27px', fontFamily: 'Nunito Sans', lineHeight: '30.01px', color: 'rgba(32, 33, 36, 1)', gap: 1, '@media (max-width: 600px)': { flexDirection: 'column', alignItems: 'start' } }}>
                         ${lifetimeRevenue ? lifetimeRevenue.toLocaleString('en-US') : 0} <Typography component='span' sx={{ fontFamily: 'Nunito Sans', fontSize: '14px', pb: 0.5, fontWeight: 500, lineHeight: '19.6px', textAlign: 'left' }}>(Lifetime revenue)</Typography>
                     </Typography>
                     <Typography variant="h5" component='div' sx={{ display: 'flex', flexDirection: 'row', fontWeight: '700', alignItems: 'end', fontSize: '27px', fontFamily: 'Nunito Sans', lineHeight: '36.83px', color: 'rgba(0, 0, 0, 1)', gap: 1, '@media (max-width: 600px)': { flexDirection: 'column', alignItems: 'start' } }}>
