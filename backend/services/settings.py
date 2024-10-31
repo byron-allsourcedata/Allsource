@@ -49,6 +49,7 @@ class SettingsService:
                 'reset_password_sent_at': user_info.reset_password_sent_at,
                 'company_name': user_info.company_name,
                 'company_website': user_info.company_website,
+                'is_pass_exists': user_info.password is not None,
                 'company_website_visits': user_info.company_website_visits,
                 'is_email_confirmed': user_info.is_email_confirmed
             }
@@ -109,6 +110,13 @@ class SettingsService:
                 if not verify_password(account_details.change_password.current_password, user.get('password')):
                     return SettingStatus.INCORRECT_PASSWORD
                 changes['password'] = get_password_hash(account_details.change_password.new_password)
+                self.settings_persistence.set_reset_password_sent_now(user.get('id'))
+
+        if account_details.set_password:
+            if account_details.set_password.new_password:
+                if user.get('password'):
+                    return SettingStatus.INCORRECT_PASSWORD
+                changes['password'] = get_password_hash(account_details.set_password.new_password)
                 self.settings_persistence.set_reset_password_sent_now(user.get('id'))
 
         if changes:
@@ -268,7 +276,7 @@ class SettingsService:
                 'prospect_credits': 'Coming soon',
                 'overage': 'free' if user_subscription.lead_credit_price == -1 else user_subscription.lead_credit_price,
                 'next_billing_date': None,
-                'total_key': None,
+                total_key: None,
                 'active': True if user_subscription.status == 'active' else False,
             }
         elif subscription and user_subscription:

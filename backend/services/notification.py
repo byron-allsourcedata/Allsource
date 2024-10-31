@@ -37,5 +37,6 @@ class Notification:
 
         return result
 
-    def dismiss(self, notification_id):
-        return self.notification_persistence.dismiss(notification_id=notification_id)
+    def dismiss(self, request, user):
+        self.notification_persistence.dismiss(request=request, user_id=user.get('id'))
+        return 'SUCCESS'

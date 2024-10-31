@@ -122,6 +122,7 @@ class SendgridTemplate(Enum):
     CHANGE_EMAIL_TEMPLATE = 'change_email_template'
     TEAM_MEMBERS_TEMPLATE = 'team_members_template'
     PAYMENT_INVOICE_TEMPLATE = 'payment_invoice_template'
+    PAYMENT_FAILURE_NOTIFICATION = 'payment_failure_notification'
 
 
 class ResetPasswordEnum(Enum):
@@ -160,6 +161,7 @@ class NotificationTitles(Enum):
     CONTACT_LIMIT_APPROACHING = 'contact_limit_approaching'
     CHOOSE_PLAN = 'choose_plan'
     PAYMENT_SUCCESS = 'payment_success'
+    TEAM_MEMBER_ADDED = 'team_member_added'
 
 
 class IntegrationsStatus(Enum):

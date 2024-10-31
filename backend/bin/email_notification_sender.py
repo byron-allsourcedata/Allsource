@@ -14,6 +14,7 @@ sys.path.append(parent_dir)
 
 from config.rmq_connection import RabbitMQConnection
 from dotenv import load_dotenv
+from enums import SendgridTemplate
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from services.sendgrid import SendgridHandler
@@ -22,29 +23,40 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO)
 
 EMAIL_NOTIFICATIONS = 'email_notifications'
-TEMPLATE_ID = ''
+
+
+def get_template_by_alias(session, alias):
+    template = session.query(SendgridTemplate).filter(SendgridTemplate.alias == alias).first()
+    if template:
+        return template.template_id
 
 
 async def on_message_received(message, session):
     try:
         message_json = json.loads(message.body)
         email = message_json.get('email')
-        data = message_json.get('data')
+        full_name = message_json.get('full_name')
+        plan_name = message_json.get('plan_name')
+        date = message_json.get('date')
+        invoice_number = message_json.get('invoice_number')
+        invoice_date = message_json.get('invoice_date')
+        total = message_json.get('total')
+        link = message_json.get('link')
 
-        params = data['params'].split(', ') if data['params'] else []
+        template_id = get_template_by_alias(session, SendgridTemplate.PAYMENT_FAILURE_NOTIFICATION.value)
+        if not template_id:
+            return {
+                'is_success': False,
+                'error': 'email template not found'
+            }
 
-        try:
-            converted_params = [float(param) if '.' in param else int(param) for param in params]
-        except ValueError:
-            converted_params = []
-
-        description = session.query(SendgridTemplate.description).filter(SendgridTemplate.alias == data['sendgrid_alias']).scalar()
-        text = description.format(*converted_params) if converted_params else description
         mail_object = SendgridHandler()
         mail_object.send_sign_up_mail(
             to_emails=email,
-            template_id=TEMPLATE_ID,
-            template_placeholder={"text": text},
+            template_id=template_id,
+            template_placeholder={"full_name": full_name, 'plan_name': plan_name, 'date': date,
+                                  'invoice_number': invoice_number, 'invoice_date': invoice_date,
+                                  'total': total, 'link': link},
         )
         logging.info("Confirmation Email Sent")
         await message.ack()

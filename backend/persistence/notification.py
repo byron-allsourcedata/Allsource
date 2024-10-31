@@ -24,9 +24,19 @@ class NotificationPersistence:
         self.db.commit()
         return account_notification
 
-    def dismiss(self, notification_id):
-        self.db.query(UserAccountNotification).filter(UserAccountNotification.id == notification_id).update({UserAccountNotification.is_checked: True},
-                                                                synchronize_session=False)
+    def dismiss(self, request, user_id):
+        if request is None:
+            self.db.query(UserAccountNotification).filter(UserAccountNotification.user_id == user_id).update(
+                {UserAccountNotification.is_checked: True},
+                synchronize_session=False
+            )
+        else:
+            notification_ids = request.notification_ids
+            self.db.query(UserAccountNotification).filter(UserAccountNotification.id.in_(notification_ids)).update(
+                {UserAccountNotification.is_checked: True},
+                synchronize_session=False
+            )
+
         self.db.commit()
 
     def get_notifications_by_user_id(self, user_id: str):
