@@ -160,10 +160,10 @@ export const SettingsBilling: React.FC = () => {
         try {
             setIsLoading(true);
             const response = await axiosInterceptorInstance.get('/settings/billing-history', {
-                // params: {
-                //     page: page + 1, // сервер принимает 1 как первую страницу, а пагинация в React считает с 0
-                //     per_page: rowsPerPage,
-                // },
+                params: {
+                    page: page + 1, // сервер принимает 1 как первую страницу, а пагинация в React считает с 0
+                    per_page: rowsPerPage,
+                },
             });
             const { billing_history, count } = response.data;
             setBillingHistory(billing_history);
