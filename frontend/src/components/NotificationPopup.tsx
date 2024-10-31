@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { ReactNode, useEffect, useState } from "react";
 import { Drawer, Box, Typography, Link, IconButton, Divider } from "@mui/material";
 import CloseIcon from '@mui/icons-material/Close';
 import axiosInstance from "@/axios/axiosInterceptorInstance";
@@ -33,8 +33,8 @@ const NotificationPopup: React.FC<NotificationPopupProps> = ({ open, onClose }) 
                 const fetchData = async () => {
                     try {
                         const response = await axiosInstance.get("/notification");
-                        console.log(response.data)
                         setNotifications(response.data);
+                        const dismiss = axiosInstance.post("/notification/dismiss");
                     } catch (error) {
                         console.error(error);
                     } finally {
@@ -46,13 +46,41 @@ const NotificationPopup: React.FC<NotificationPopupProps> = ({ open, onClose }) 
         }
     }, [open]);
 
-    
+    const keywords: { word: string; link: string }[] = [
+        { word: "Enable Overage", link: "/settings?section=billing" },
+        { word: "billing", link: "/settings?section=billing" },
+        { word: "Enable", link: "/settings?section=billing" },
+        { word: "Upgrade", link: "/settings?section=subscription" },
+        { word: "Choose a plan", link: "/settings?section=subscription" }
+    ];
+
+    const transformTextToLinks = (text: string | null): JSX.Element => {
+        if (!text) {
+            return <span></span>;
+        }
+
+        const regex = new RegExp(`(${keywords.map(k => k.word).join('|')})`, 'g');
+
+        const parts = text.split(regex).map((part, index) => {
+            const keyword = keywords.find(k => k.word === part);
+            if (keyword) {
+                return (
+                    <Link key={index} className="paragraph" href={keyword.link} sx={{ textDecoration: 'none', color: 'rgba(20, 110, 246, 1) !important' }}>
+                        {part}
+                    </Link>
+                );
+            }
+            return part;
+        });
+        return <>{parts}</>;
+    };
 
     return (
         <Drawer
             anchor="right"
             open={open}
             onClose={onClose}
+            sx={{zIndex: 1400,}}
             PaperProps={{
                 sx: {
                     width: '620px',
@@ -66,7 +94,7 @@ const NotificationPopup: React.FC<NotificationPopupProps> = ({ open, onClose }) 
                 },
             }}
         >
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 3.5, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 2.8, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
                 <Typography variant="h6" className="first-sub-title" sx={{ textAlign: 'center' }}>
                     Notifications
                 </Typography>
@@ -99,7 +127,8 @@ const NotificationPopup: React.FC<NotificationPopupProps> = ({ open, onClose }) 
                     </Box>
                 ) : (
                     notifications.sort((a, b) => b.created_at - a.created_at).map((notification) => (
-                        <Box key={notification.id} sx={{ width: '100%', position: 'relative', padding: 2,
+                        <Box key={notification.id} sx={{
+                            width: '100%', position: 'relative', padding: 2,
                             display: 'flex',
                             flexDirection: 'column',
                             gap: 2,
@@ -107,11 +136,12 @@ const NotificationPopup: React.FC<NotificationPopupProps> = ({ open, onClose }) 
                             '&:last-child': {
                                 borderBottom: 'none'
                             }
-                         }}>
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                        }}>
+                            <Box sx={{
+                                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                                 position: 'relative',
-                                pl: notification.is_checked ? 2 : 0,
-                                '&:before': notification.is_checked == false ? {} : {
+                                pl: notification.is_checked == false ? 2 : 0,
+                                '&:before': notification.is_checked == true ? {} : {
                                     content: '""',
                                     width: '8px',
                                     height: '8px',
@@ -136,21 +166,17 @@ const NotificationPopup: React.FC<NotificationPopupProps> = ({ open, onClose }) 
                                     {dayjs.unix(notification.created_at).fromNow()}
                                 </Typography>
                             </Box>
-                            <Typography variant="body1" className='paragraph' sx={{ 
-                                lineHeight: '16px !important',
-                                color: '#5F6368 !important'
-                            }} >
-                            {notification.text} {/*Тут остальной текст*/}
-                                {' '}<Link
+                            <Typography
+                                key={notification.id}
+                                variant="body1"
+                                className="paragraph"
                                 sx={{
-                                    textDecoration: 'none',
-                                    color: '#146EF6 !important'
+                                    lineHeight: '16px !important',
+                                    color: '#5F6368 !important'
                                 }}
-                                href='/settings?section=subscription'
-                                >
-                                Choose Plan
-                                </Link>
-                                </Typography>
+                            >
+                                {transformTextToLinks(notification.text)}
+                            </Typography>
                         </Box>
                     ))
                 )}

@@ -153,6 +153,7 @@ const CalendarPopup: React.FC<CalendarPopupProps> = ({ anchorEl, open, onClose, 
         onDateLabelChange('');
         setEndDateString('')
         setStartDateString('')
+        onApply({ start: null, end: null });
         onClose();
         setShowDatePicker(false);
     }

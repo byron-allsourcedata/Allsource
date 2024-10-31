@@ -46,11 +46,9 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
     };
 
     const handleDownload = async () => {
-        console.log(lead.id)
         const requestBody = {
             leads_ids: lead.id ? [lead.id] : []
         };
-        console.log(requestBody)
         try {
             const response = await axiosInstance.post('/leads/download_leads', requestBody, {
                 responseType: 'blob'
