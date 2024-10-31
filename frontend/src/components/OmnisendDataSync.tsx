@@ -423,7 +423,7 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data
                     <Button
                         variant="contained"
                         onClick={handleSaveSync}
-                        disabled={!selectedRadioValue.trim()}
+                        disabled={!selectedRadioValue}
                         sx={{
                             backgroundColor: '#5052B2',
                             fontFamily: "Nunito Sans",
@@ -1324,7 +1324,12 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data
                         {/* Button based on selected tab */}
 
                     </Box>
-                    <Box sx={{ px: 2, py: 3.5, width: '100%', border: '1px solid #e4e4e4' }}>
+                    <Box sx={{ px: 2, py: 3.5, border: '1px solid #e4e4e4', position: 'fixed', bottom: 0, right: 0, background: '#fff', zIndex: '1',
+                        width: '620px',
+                        '@media (max-width: 600px)': {
+                                width: '100%',
+                        }
+                     }}>
                         <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
 
                             {getButton(value)}

@@ -31,16 +31,19 @@ import MailchimpDatasync from "./MailchimpDatasync";
 import OmnisendDataSync from "./OmnisendDataSync";
 import SendlaneDatasync from "./SendlaneDatasync";
 import CustomTablePagination from "./CustomTablePagination";
+
   
   interface DataSyncProps {
     service_name?: string | null
+    filters?: any
   } 
   
-  const DataSyncList = ({service_name}: DataSyncProps) => {
+  const DataSyncList = ({service_name, filters}: DataSyncProps) => {
     const [order, setOrder] = useState<"asc" | "desc" | undefined>(undefined);
     const [orderBy, setOrderBy] = useState<string | undefined>(undefined);
     const [isLoading, setIsLoading] = useState(true);
     const [data, setData] = useState<any[]>([]);
+    const [allData, setAllData] = useState<any[]>([])
     const [klaviyoIconPopupOpen, setKlaviyoIconPopupOpen] = useState(false);
     const [metaIconPopupOpen, setMetaIconPopupOpen] = useState(false);
     const [mailchimpIconPopupOpen, setMailchimpIconPopupOpen] = useState(false)
@@ -69,7 +72,7 @@ import CustomTablePagination from "./CustomTablePagination";
           params: params
         });
         const { length: count } = response.data;
-        setData(response.data);
+        setAllData(response.data);
         setTotalRows(count);
         let newRowsPerPageOptions: number[] = [];
         if (count <= 10) {
@@ -101,7 +104,34 @@ import CustomTablePagination from "./CustomTablePagination";
       handleIntegrationsSync();
     }, [service_name]);
   
-  
+    useEffect(() => {
+      if (allData.length !== 0) {
+        if (filters) {
+          const filterData = () => {
+            return Object.values(allData).filter(item => {
+              const lastSync = new Date(item.lastSync).getTime() / 1000;
+              const dateMatch =
+                (filters.from_date === null || filters.to_date === null) ||
+                (lastSync >= filters.from_date && lastSync <= filters.to_date);
+              const statusMatch =
+                filters.selectedStatus.length === 0 || 
+                (filters.selectedStatus.length === 1 && filters.selectedStatus.includes(item.dataSync ? "Enable" : "Disable"));
+              const platformMatch =
+                filters.selectedFunnels.length === 0 || 
+                filters.selectedFunnels.map((funnel: string) => funnel.toLowerCase())
+                .includes(item.platform.toLowerCase());;             
+
+              return dateMatch && statusMatch && platformMatch
+            });
+          };
+          setData(filterData());
+        } else {
+          setData(allData);
+        }
+      }
+    }, [filters, allData]);
+    
+
     const statusIcon = (status: boolean) => {
       if (status)
           return <CheckCircleIcon sx={{ color: "green", fontSize: "16px" }} />;
@@ -377,6 +407,10 @@ import CustomTablePagination from "./CustomTablePagination";
     if(service_name && data.length < 1) {
       return null
     }
+
+    const handleDeleteFilter = () => {
+
+    }
   
     return (
       <Box sx={datasyncStyle.mainContent}>
@@ -402,7 +436,7 @@ import CustomTablePagination from "./CustomTablePagination";
                       sortable: true,
                     },
                     { key: "platform", label: "Platform" },
-                    { key: "account_id", label: "Account ID" },
+                    // { key: "account_id", label: "Account ID" },
                     { key: "data_sync", label: "Data Sync" },
                     { key: "last_sync", label: "Last Sync" },
                     { key: "sync_status", label: "Sync Status" },
@@ -507,7 +541,7 @@ import CustomTablePagination from "./CustomTablePagination";
                         {platformIcon(row.platform)}
                       </Box>
                     </TableCell>
-                    <TableCell sx={datasyncStyle.table_array}>{row.accountId}</TableCell>
+                    {/* <TableCell sx={datasyncStyle.table_array}>{row.accountId}</TableCell> */}
                     <TableCell sx={datasyncStyle.table_array}>
                       <Box
                         sx={{
