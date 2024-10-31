@@ -8,6 +8,7 @@ from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.integrations.suppression import IntegrationsSuppressionPersistence
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
 from persistence.audience_persistence import AudiencePersistence
+from .attentive import AttentiveIntegrationsService
 from .shopify import ShopifyIntegrationService
 from .sendlane import SendlaneIntegrationService
 from .onimesend import OmnisendIntegrationService
@@ -92,7 +93,10 @@ class IntegrationService:
         self.sendlane = SendlaneIntegrationService(self.domain_persistence, 
                                                 self.integration_persistence,  
                                                 self.lead_persistence,
-                                                self.integrations_user_sync_persistence,)
+                                                self.integrations_user_sync_persistence)
+        self.attentive = AttentiveIntegrationsService(self.domain_persistence,
+                                                      self.integrations_user_sync_persistence
+                                                      )
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):

@@ -35,6 +35,7 @@ class IntegrationCredentials(BaseModel):
     bigcommerce: Optional[ShopifyOrBigcommerceCredentials] = None
     klaviyo: Optional[ApiKeyCredentials] = None
     mailchimp: Optional[ApiKeyCredentials] = None
+    attentive: Optional[ApiKeyCredentials] = None
     meta: Optional[MetaCredentials] = None
     sendlane: Optional[ApiKeyCredentials] = None
     omnisend: Optional[ApiKeyCredentials] = None
