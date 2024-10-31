@@ -200,7 +200,6 @@ async def bigcommerce_oauth_callback(code: str, state: str = Query(None),
             token_data = response.json()
             shop_hash = token_data.get('context').split('/')[1]
             access_token = token_data.get('access_token')
-
             with integration_service as service:
                 try:
                     service.bigcommerce.add_integration(
@@ -213,7 +212,9 @@ async def bigcommerce_oauth_callback(code: str, state: str = Query(None),
                     user=user,
                     domain=domain
                 )
-                except:  return RedirectResponse(url=f'{FRONTEND_REDIRECT_URI}?message=Failed')
+                except HTTPException as e:
+                    error_message = e.detail if isinstance(e.detail, str) else 'Failed'
+                    return RedirectResponse(url=f'{FRONTEND_REDIRECT_URI}?message={error_message}')
         return RedirectResponse(url=f'{FRONTEND_REDIRECT_URI}?message=Successfuly')
     else:
         return RedirectResponse(url=f'{FRONTEND_REDIRECT_URI}?message=Failed')

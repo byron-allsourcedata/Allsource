@@ -331,11 +331,14 @@ const UserIntegrationsList = ({ integrationsCredentials, changeTab = () => { }, 
             handleClose={handleClose}
             onSave={() => { }}  
             initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'Shopify')?.access_token}
+            initShopDomain={integrationsCredentials?.find(integration => integration.service_name === 'Shopify')?.shop_domain}
         />
         <BCommerceConnect 
             open={openBigcommrceConnect} 
             onClose={handleClose}
             onSave={() => { }}
+            initShopHash={integrationsCredentials?.find(integration => integration.service_name === 'BigCommerce')?.shop_domain}
+            error_message={integrationsCredentials?.find(integration => integration.service_name === 'BigCommerce')?.error_message}
         />
         <OmnisendConnect open={openOmnisendConnect} handleClose={handleClose} onSave={handleSaveOmnisend} initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'Omnisend')?.access_token}/>
         <MailchimpConnect open={openMailchinpConnect} handleClose={handleClose} onSave={handleSaveMailchip} initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'Mailchimp')?.access_token} />
@@ -348,7 +351,7 @@ const UserIntegrationsList = ({ integrationsCredentials, changeTab = () => { }, 
             integrationsCredentials={integrationsCredentials} 
         />
         <Box>
-            {(activeService && activeService != 'Shopify' && activeService != 'BigCommerce') && (<DataSyncList service_name={activeService} />)}
+            {(activeService && activeService != 'Shopify' && activeService != 'Bigcommerce') && (<DataSyncList service_name={activeService} />)}
         </Box>
         </>
     );
@@ -971,13 +974,16 @@ const Integrations = () => {
     };
     
     useEffect(() => {
-      
-      console.log('asdasd')
-        if (statusIntegrate == 'Successfuly') {
+        if(statusIntegrate) {
+          if (statusIntegrate == 'Successfuly') {
             showToast('Connect to Bigcommerce Successfuly');
-        } else if (statusIntegrate == 'Failed') {
-          showErrorToast('Connect to Bigcommerce Failed')
+          } else {
+            showErrorToast(`Connect to Bigcommerce Failed ${statusIntegrate && statusIntegrate != 'Failed' ? statusIntegrate : ''}`)
+          }
         }
+        const newSearchParams = new URLSearchParams(searchParams.toString());
+        newSearchParams.delete('message');
+        router.replace(`?${newSearchParams.toString()}`);
     }, [statusIntegrate])
 
     const centerContainerStyles = {

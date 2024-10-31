@@ -86,7 +86,7 @@ const shopifySettingsStyle = {
 }
 
 const ShopifySettings = ({ handleClose, open, onSave, initApiKey, initShopDomain}: ShopifyProps) => {
-    const [apiKey, setApiKey] = useState('');
+    const [apiKey, setApiKey] = useState(initApiKey || '');
     const [apiKeyError, setApiKeyError] = useState(false);
     const [shopDomain, setShopDomain] = useState(initShopDomain || '')
     const [shopDomainError, setShopDomainError] = useState('')

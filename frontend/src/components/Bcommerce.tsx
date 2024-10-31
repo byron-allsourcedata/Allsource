@@ -11,6 +11,8 @@ interface MetaConnectPopupProps {
     open: boolean
     onClose: () => void
     onSave: (new_integration: any) => void
+    error_message?: string
+    initShopHash? : string
 }
 
 
@@ -72,10 +74,9 @@ const metaStyles = {
       
 }
 
-const BCommerceConnect = ({open, onClose, onSave}: MetaConnectPopupProps) => {
+const BCommerceConnect = ({open, onClose, onSave, error_message, initShopHash}: MetaConnectPopupProps) => {
     const [shopHash, setShopHash] = useState('')
     const [loading, setLoading] = useState(false)
-    const appID = process.env.NEXT_PUBLIC_META_APP_ID
     
     const handleShopHashChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value
@@ -86,6 +87,13 @@ const BCommerceConnect = ({open, onClose, onSave}: MetaConnectPopupProps) => {
         const response = await axiosInstance.get('/integrations/bigcommerce/oauth', {params: {store_hash: shopHash}})
         window.location.href = response.data.url;
     }
+
+    useEffect(() => {
+        if (open && initShopHash) {
+            console.log(initShopHash)
+            setShopHash(initShopHash)
+        }
+    }, [initShopHash, open]);
 
     return (
         <Drawer
@@ -139,7 +147,7 @@ const BCommerceConnect = ({open, onClose, onSave}: MetaConnectPopupProps) => {
                     }
                  }}>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: '12px', p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)' }}>
-            <Image src='/bigcommerce-icon.svg' alt='meta-icon' height={36} width={36} />
+            <Image src='/bigcommerce-icon.svg' alt='bigcommerce-icon' height={36} width={36} />
             <Typography variant="h6" sx={{
             fontFamily: 'Nunito Sans',
             fontSize: '16px',
@@ -150,10 +158,35 @@ const BCommerceConnect = ({open, onClose, onSave}: MetaConnectPopupProps) => {
             }}>
             login to your Bigcommerce
             </Typography>
+            {error_message && (<Box display={'flex'} sx={{
+                alignItems: 'center',
+                justifyContent: 'space-between'
+            }}>
+            <Typography 
+            variant="h6" color={'#ff0000'} sx={{
+            fontFamily: 'Nunito Sans',
+            fontSize: '14px',
+            fontWeight: '600',
+            // color: '#202124',
+            marginTop: '12px',
+            lineHeight: 'normal'
+            }}>
+                {error_message}
+            </Typography>
+            <Link href="#" sx={{
+                fontFamily: 'Nunito Sans',
+                fontSize: '14px',
+                fontWeight: '600',
+                lineHeight: '20px',
+                color: '#5052b2',
+                textDecorationColor: '#5052b2'
+            }}>How to Fix</Link>
+            </Box>  )}
             <TextField
                 label="Shop Hash"
                 variant="outlined"
                 fullWidth
+                value={shopHash}
                 onChange={handleShopHashChange}
                 error={!!shopHash}
                 margin="normal"
