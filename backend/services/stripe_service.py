@@ -314,7 +314,6 @@ def create_stripe_checkout_session(customer_id: str,
 
 def get_billing_history_by_userid(customer_id, page, per_page):
     import math
-    starting_after = fetch_last_id_of_previous_page(customer_id, per_page, page) if page > 1 else None
 
     billing_history_invoices = stripe.Invoice.list(
         customer=customer_id,
