@@ -1081,7 +1081,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                                                     sx={{
                                                         '& input': {
                                                             caretColor: 'transparent', // Hide caret with transparent color
-                                                            fontFamily: "Nunito",
+                                                            fontFamily: "Nunito Sans",
                                                             fontSize: "14px",
                                                             color: "rgba(0, 0, 0, 0.89)",
                                                             fontWeight: "600",
@@ -1775,7 +1775,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                                             >
                                                 <Typography sx={{
                                                     marginRight: '0.5em',
-                                                    fontFamily: 'Nunito',
+                                                    fontFamily: 'Nunito Sans',
                                                     lineHeight: '22.4px',
                                                     fontSize: '16px',
                                                     textAlign: 'left',

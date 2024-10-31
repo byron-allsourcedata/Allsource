@@ -2,7 +2,7 @@ import { SxProps, Theme } from '@mui/system';
 
 export const accountStyles: { [key: string]: SxProps<Theme> } = {
   name: {
-    fontFamily: 'Nunito',
+    fontFamily: 'Nunito Sans',
     fontSize: '16px',
     fontWeight: '600',
     lineHeight: '19.1px',
@@ -22,14 +22,14 @@ export const accountStyles: { [key: string]: SxProps<Theme> } = {
     },
   },
   header_text: {
-    fontFamily: 'Nunito',
+    fontFamily: 'Nunito Sans',
     fontSize: '14px',
     fontWeight: '400',
     lineHeight: '19.1px',
     color: 'rgba(74, 74, 74, 1)',
   },
   text: {
-    fontFamily: 'Nunito',
+    fontFamily: 'Nunito Sans',
     fontSize: '14px',
     fontWeight: '400',
     lineHeight: '19.1px',
@@ -37,14 +37,14 @@ export const accountStyles: { [key: string]: SxProps<Theme> } = {
     width: '50%'
   },
   title_text: {
-    fontFamily: 'Nunito',
+    fontFamily: 'Nunito Sans',
     fontSize: '14px',
     fontWeight: '600',
     lineHeight: '19.1px',
     width: '50%',
   },
   title: {
-    fontFamily: 'Nunito',
+    fontFamily: 'Nunito Sans',
     fontSize: '18px',
     fontWeight: '700',
     lineHeight: '19.1px',
@@ -59,7 +59,7 @@ export const accountStyles: { [key: string]: SxProps<Theme> } = {
   headers_title: {
     textTransform: 'none',
     borderRadius: '0',
-    fontFamily: 'Nunito',
+    fontFamily: 'Nunito Sans',
     fontSize: '16px',
   },
   rows_pam: {

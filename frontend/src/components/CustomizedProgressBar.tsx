@@ -14,7 +14,7 @@ const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
 
 const PageWithLoader: React.FC = () => {
   return (
-        <Box sx={{ width: '100%', position: 'fixed', top: '4.25rem', left:'146px','@media (min-height: 900px)': { top:'4.25rem'} , '@media (max-width: 899px)': { left: 0, top:'4.5rem'}, }}>
+        <Box sx={{ width: '100%', position: 'fixed', top: '4.25rem', zIndex: 1300, left:'146px','@media (min-height: 900px)': { top:'4.25rem'} , '@media (max-width: 899px)': { left: 0, top:'4.5rem'}, }}>
           <BorderLinearProgress
             variant="indeterminate"
           />

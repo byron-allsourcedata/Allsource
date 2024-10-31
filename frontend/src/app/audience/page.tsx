@@ -362,7 +362,7 @@ const Audience: React.FC = () => {
                                     display: 'flex',
                                     padding: '4px 8px',
                                     borderRadius: '4px',
-                                    fontFamily: 'Nunito',
+                                    fontFamily: 'Nunito Sans',
                                     fontSize: '14px',
                                     fontWeight: '400',
                                     lineHeight: '19.6px',
@@ -838,7 +838,7 @@ const Audience: React.FC = () => {
                                     >
                                         <Typography sx={{
                                             marginRight: '0.5em',
-                                            fontFamily: 'Nunito',
+                                            fontFamily: 'Nunito Sans',
                                             lineHeight: '19.1px',
                                             fontSize: '16px',
                                             textAlign: 'left',
@@ -865,7 +865,7 @@ const Audience: React.FC = () => {
                                             onClick={installPixel}
                                             sx={{
                                                 backgroundColor: 'rgba(80, 82, 178, 1)',
-                                                fontFamily: "Nunito",
+                                                fontFamily: "Nunito Sans",
                                                 textTransform: 'none',
                                                 padding: '1em 3em',
                                                 fontSize: '16px',

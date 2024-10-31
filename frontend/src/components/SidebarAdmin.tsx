@@ -21,7 +21,7 @@ const sidebarStyles = {
     container: {
         width: '80%',
         flexShrink: 0,
-        fontFamily: 'Nunito',
+        fontFamily: 'Nunito Sans',
         fontSize: '14px',
         fontWeight: '500',
         backgroundColor: 'rgba(255, 255, 255, 1)',

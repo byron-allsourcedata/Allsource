@@ -64,7 +64,7 @@ const PlanSlider: React.FC<PopupProps> = ({ open, handleClose, handleChoosePlan 
         >
             <Box sx={{ ...style, ...(open ? openStyle : {}) }}>
                 <Box display="flex" justifyContent="space-between" sx={{ width: '100%', paddingBottom: '1em' }}>
-                    <Typography variant="h6" component="h2" className='first-sub-title' sx={{ fontFamily: 'Nunito', fontSize: '18px', fontWeight: '500', lineHeight: '27px', textAlign: 'left', color: 'rgba(28, 28, 28, 1)', '@media (max-width: 600px)': { fontSize: '14px', pt: 2, pl: 2 } }}>
+                    <Typography variant="h6" component="h2" className='first-sub-title' sx={{ fontFamily: 'Nunito Sans', fontSize: '18px', fontWeight: '500', lineHeight: '27px', textAlign: 'left', color: 'rgba(28, 28, 28, 1)', '@media (max-width: 600px)': { fontSize: '14px', pt: 2, pl: 2 } }}>
                         Your free trial expired
                     </Typography>
                     <IconButton onClick={handleClose}>
@@ -80,7 +80,7 @@ const PlanSlider: React.FC<PopupProps> = ({ open, handleClose, handleChoosePlan 
                 }}>
                     <img src="/slider-bookcall.png" alt="Setup" style={{ width: '40%', marginBottom: '3rem', marginTop: '1.9rem', }} />
                     <Typography variant="body1" gutterBottom className='second-sub-title' sx={{
-                        color: '#4A4A4A', textAlign: 'left', fontFamily: 'Nunito', fontWeight: '500', fontSize: '18px', lineHeight: '23.2px', marginBottom: '1.5rem',
+                        color: '#4A4A4A', textAlign: 'left', fontFamily: 'Nunito Sans', fontWeight: '500', fontSize: '18px', lineHeight: '23.2px', marginBottom: '1.5rem',
                         '@media (max-width: 600px)': { fontSize: '18px', lineHeight: '22px', marginBottom: '2em', mt: 2 },
                         '@media (min-width: 1500px)': { fontSize: '22px', lineHeight: '25.2px', marginBottom: '2em' }
                     }}>
@@ -139,7 +139,7 @@ const PlanSlider: React.FC<PopupProps> = ({ open, handleClose, handleChoosePlan 
                         </Box>
                         <Box sx={{ display: 'flex', justifyContent: 'start', pl: 4.5 }}>
                             <Typography className='table-data' sx={{
-                                color: 'rgba(74, 74, 74, 1)', fontFamily: 'Nunito', textAlign: 'left', fontWeight: '400', fontSize: '16px', lineHeight: '19.6px', marginBottom: '1em', '@media (max-width: 600px)': { fontSize: '14px', lineHeight: '18px', marginBottom: '1em' },
+                                color: 'rgba(74, 74, 74, 1)', fontFamily: 'Nunito Sans', textAlign: 'left', fontWeight: '400', fontSize: '16px', lineHeight: '19.6px', marginBottom: '1em', '@media (max-width: 600px)': { fontSize: '14px', lineHeight: '18px', marginBottom: '1em' },
                                 '@media (min-width: 1500px)': { fontSize: '18px', lineHeight: '19.6px', marginBottom: '4em', }
                             }}>
                                 With Maximiz, you can expect tangible results and significant improvements in your business metrics, backed by expert support every step of the way.

@@ -741,7 +741,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
                                           sx={{
                                             '& input': {
                                               caretColor: 'transparent', // Hide caret with transparent color
-                                              fontFamily: "Nunito",
+                                              fontFamily: "Nunito Sans",
                                             fontSize: "14px",
                                             color: "rgba(0, 0, 0, 0.89)",
                                             fontWeight: "600",
@@ -841,7 +841,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
                                                     sx={{
                                                         '& input': {
                                                             caretColor: 'transparent', // Hide caret with transparent color
-                                                            fontFamily: "Nunito",
+                                                            fontFamily: "Nunito Sans",
                                                             fontSize: "14px",
                                                             color: "rgba(0, 0, 0, 0.89)",
                                                             fontWeight: "600",

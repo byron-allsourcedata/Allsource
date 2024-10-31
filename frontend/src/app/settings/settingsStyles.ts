@@ -3,7 +3,7 @@ import { yellow, grey, red } from '@mui/material/colors';
 
 export const planStyles: { [key: string]: SxProps<Theme> } = {
   pageContainer: {
-    fontFamily: 'Nunito',
+    fontFamily: 'Nunito Sans',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
@@ -53,7 +53,7 @@ export const planStyles: { [key: string]: SxProps<Theme> } = {
     padding: '24px 24px',
     borderRadius: '0.5em',
     boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.1)',
-    fontFamily: "Nunito",
+    fontFamily: "Nunito Sans",
     fontSize: '40px',
     fontWeight: '700',
     color: 'rgba(74, 74, 74, 1)',
@@ -64,7 +64,7 @@ export const planStyles: { [key: string]: SxProps<Theme> } = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'start',
-    fontFamily: 'Nunito',
+    fontFamily: 'Nunito Sans',
     color: red[500],
     marginBottom: '2em',
   },
@@ -80,7 +80,7 @@ export const planStyles: { [key: string]: SxProps<Theme> } = {
   price: {
     fontWeight: 'bold',
     marginBottom: '2em',
-    fontFamily: 'Nunito',
+    fontFamily: 'Nunito Sans',
     fontSize: '40px',
     lineHeight: '54.56px',
   },
@@ -120,7 +120,7 @@ export const planStyles: { [key: string]: SxProps<Theme> } = {
   },
   buttonHeading: {
         textTransform: 'none',
-        padding: '0 0 10px 0',
+        padding: '0px 10px 4px',
         minWidth: 'auto',
         boxShadow: 'none',
         borderRadius: 0,
@@ -192,7 +192,7 @@ formInput: {
   },
   passwordValidationText: {
     '& .MuiTypography-root' : {
-      fontFamily: 'Nunito',
+      fontFamily: 'Nunito Sans',
       fontSize: '12px',
       fontWeight: '400',
       color: 'rgba(17, 17, 19, 0.60)',
@@ -200,7 +200,7 @@ formInput: {
   },
   passwordValidationTextSuccess: {
     '& .MuiTypography-root' : {
-      fontFamily: 'Nunito',
+      fontFamily: 'Nunito Sans',
       fontSize: '12px',
       fontWeight: '400',
       color: '#111113',

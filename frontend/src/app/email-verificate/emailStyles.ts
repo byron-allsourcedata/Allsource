@@ -84,7 +84,7 @@ export const emailStyles: { [key: string]: SxProps<Theme> } = {
     px: 2,
     fontWeight: 'regular',
     fontSize: '14px',
-    fontFamily: 'Nunito',
+    fontFamily: 'Nunito Sans',
   },
   text: {
     letterSpacing: '0.07px',

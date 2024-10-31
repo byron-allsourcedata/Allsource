@@ -321,7 +321,7 @@ const ShopifySettings = ({ handleClose, open, onSave, initApiKey, initShopDomain
                                 justifyContent:'flex-start'
                             }
                         }}}>
-                        <Tab label="Acess Token" value="1" sx={{...shopifySettingsStyle.tabHeading, cursor: 'pointer'}} />
+                        <Tab label="Access Token" value="1" sx={{...shopifySettingsStyle.tabHeading, cursor: 'pointer'}} />
                         </TabList>
                     </Box>
                     <TabPanel value="1" sx={{p: 0}}>

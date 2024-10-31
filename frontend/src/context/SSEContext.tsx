@@ -1,6 +1,7 @@
 "use client";
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { showErrorToast, showToast } from '@/components/ToastNotification';
+import CustomNotification from '@/components/CustomNotification';
 
 interface Data {
   num: number;
@@ -18,6 +19,7 @@ const SSEContext = createContext<SSEContextType | undefined>(undefined);
 
 export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
   const [data, setData] = useState<Data | null>(null);
+  const [latestNotification, setLatestNotification] = useState<{ id: number; text: string } | null>(null); // Состояние для хранения уведомления
 
   const url = process.env.NEXT_PUBLIC_API_BASE_URL;
 
@@ -37,6 +39,12 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
         const data = JSON.parse(event.data);
         if (data.status === "PIXEL_CODE_PARSE_FAILED") {
           showErrorToast("Could not find pixel code on your site")
+        }
+        else if(data.notification_id && data.notification_text) {
+          setLatestNotification({
+            id: data.notification_id,
+            text: data.notification_text,
+          });
         }
         else {
           showToast("Pixel code is installed successfully!");
@@ -65,6 +73,13 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
   return (
     <SSEContext.Provider value={{ data }}>
       {children}
+      {latestNotification && ( // Отображаем уведомление, если оно есть
+        <CustomNotification 
+          id={latestNotification.id} 
+          message={latestNotification.text} 
+          showDismiss={true} 
+        />
+      )}
     </SSEContext.Provider>
   );
 };

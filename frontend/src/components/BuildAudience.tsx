@@ -122,7 +122,7 @@ const BuildAudience: React.FC<BuildAudienceProps> = ({ open, onClose, onDataFetc
             }}
         >
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 2, borderBottom: '1px solid #e4e4e4' }}>
-                <Typography variant="h6" sx={{ textAlign: 'center', color: '#4A4A4A', fontFamily: 'Nunito', fontWeight: '600', fontSize: '22px', lineHeight: '25.2px' }}>
+                <Typography variant="h6" sx={{ textAlign: 'center', color: '#4A4A4A', fontFamily: 'Nunito Sans', fontWeight: '600', fontSize: '22px', lineHeight: '25.2px' }}>
                     Build an audience
                 </Typography>
                 <IconButton onClick={onClose}>
@@ -132,7 +132,7 @@ const BuildAudience: React.FC<BuildAudienceProps> = ({ open, onClose, onDataFetc
 
             <Box sx={{ width: '95%', mb: 2, border: '1px solid rgba(228, 228, 228, 1)', padding: '1em' }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-                    <Typography sx={{ flexGrow: 1, color: 'rgba(74, 74, 74, 1)', fontFamily: 'Nunito', fontWeight: '600', fontSize: '16px', lineHeight: '25.2px' }}>
+                    <Typography sx={{ flexGrow: 1, color: 'rgba(74, 74, 74, 1)', fontFamily: 'Nunito Sans', fontWeight: '600', fontSize: '16px', lineHeight: '25.2px' }}>
                         Location
                     </Typography>
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '8px', mb: 2 }}>
@@ -170,7 +170,7 @@ const BuildAudience: React.FC<BuildAudienceProps> = ({ open, onClose, onDataFetc
             {/* Profession Section */}
             <Box sx={{ width: '95%', mb: 2, border: '1px solid rgba(228, 228, 228, 1)', padding: '1em' }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-                    <Typography sx={{ flexGrow: 1, color: 'rgba(74, 74, 74, 1)', fontFamily: 'Nunito', fontWeight: '600', fontSize: '16px', lineHeight: '25.2px' }}>
+                    <Typography sx={{ flexGrow: 1, color: 'rgba(74, 74, 74, 1)', fontFamily: 'Nunito Sans', fontWeight: '600', fontSize: '16px', lineHeight: '25.2px' }}>
                         Profession
                     </Typography>
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '8px', mb: 2 }}>
@@ -208,7 +208,7 @@ const BuildAudience: React.FC<BuildAudienceProps> = ({ open, onClose, onDataFetc
             {/* Age Section */}
             <Box sx={{ width: '95%', mb: 2, border: '1px solid rgba(228, 228, 228, 1)', padding: '1em' }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-                    <Typography sx={{ flexGrow: 1, color: 'rgba(74, 74, 74, 1)', fontFamily: 'Nunito', fontWeight: '600', fontSize: '16px', lineHeight: '25.2px' }}>
+                    <Typography sx={{ flexGrow: 1, color: 'rgba(74, 74, 74, 1)', fontFamily: 'Nunito Sans', fontWeight: '600', fontSize: '16px', lineHeight: '25.2px' }}>
                         Age
                     </Typography>
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '8px', mb: 2 }}>
@@ -246,7 +246,7 @@ const BuildAudience: React.FC<BuildAudienceProps> = ({ open, onClose, onDataFetc
             {/* Gender Section */}
             <Box sx={{ width: '95%', mb: 2, border: '1px solid rgba(228, 228, 228, 1)', padding: '1em' }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-                    <Typography sx={{ flexGrow: 1, color: 'rgba(74, 74, 74, 1)', fontFamily: 'Nunito', fontWeight: '600', fontSize: '16px', lineHeight: '25.2px' }}>
+                    <Typography sx={{ flexGrow: 1, color: 'rgba(74, 74, 74, 1)', fontFamily: 'Nunito Sans', fontWeight: '600', fontSize: '16px', lineHeight: '25.2px' }}>
                         Gender
                     </Typography>
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '8px', mb: 2 }}>
@@ -284,7 +284,7 @@ const BuildAudience: React.FC<BuildAudienceProps> = ({ open, onClose, onDataFetc
             {/* Net Worth Section */}
             <Box sx={{ width: '95%', mb: 2, border: '1px solid rgba(228, 228, 228, 1)', padding: '1em' }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-                    <Typography sx={{ flexGrow: 1, color: 'rgba(74, 74, 74, 1)', fontFamily: 'Nunito', fontWeight: '600', fontSize: '16px', lineHeight: '25.2px' }}>
+                    <Typography sx={{ flexGrow: 1, color: 'rgba(74, 74, 74, 1)', fontFamily: 'Nunito Sans', fontWeight: '600', fontSize: '16px', lineHeight: '25.2px' }}>
                         Net Worth
                     </Typography>
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '8px', mb: 2 }}>
@@ -322,7 +322,7 @@ const BuildAudience: React.FC<BuildAudienceProps> = ({ open, onClose, onDataFetc
             {/* Interests Section */}
             <Box sx={{ width: '95%', mb: 2, border: '1px solid rgba(228, 228, 228, 1)', padding: '1em' }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-                    <Typography sx={{ flexGrow: 1, color: 'rgba(74, 74, 74, 1)', fontFamily: 'Nunito', fontWeight: '600', fontSize: '16px', lineHeight: '25.2px' }}>
+                    <Typography sx={{ flexGrow: 1, color: 'rgba(74, 74, 74, 1)', fontFamily: 'Nunito Sans', fontWeight: '600', fontSize: '16px', lineHeight: '25.2px' }}>
                         Interests
                     </Typography>
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '8px', mb: 2 }}>
@@ -359,7 +359,7 @@ const BuildAudience: React.FC<BuildAudienceProps> = ({ open, onClose, onDataFetc
 
             <Box sx={{ width: '95%', mb: 2, border: '1px solid rgba(228, 228, 228, 1)', padding: '1em' }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-                    <Typography sx={{ flexGrow: 1, color: 'rgba(74, 74, 74, 1)', fontFamily: 'Nunito', fontWeight: '600', fontSize: '16px', lineHeight: '25.2px' }}>
+                    <Typography sx={{ flexGrow: 1, color: 'rgba(74, 74, 74, 1)', fontFamily: 'Nunito Sans', fontWeight: '600', fontSize: '16px', lineHeight: '25.2px' }}>
                         Not in Existing Lists
                     </Typography>
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '8px', mb: 2 }}>

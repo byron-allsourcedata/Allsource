@@ -80,7 +80,7 @@ const CollectionRules: React.FC = () => {
             width: '100%',
             padding: 0,
             margin: '0 auto',
-            mb: 2,
+            mb: 1,
             color: 'rgba(32, 33, 36, 1)',
             border: '1px solid rgba(240, 240, 240, 1)',
             boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.2)',
@@ -134,8 +134,8 @@ const CollectionRules: React.FC = () => {
                             type="number"
                             value={pageViews}
                             onChange={handlePageViewsChange}
-                            InputProps={{ style: { color: 'rgba(17, 17, 19, 1)', fontFamily: 'Nunito', fontWeight: 400, fontSize: '14px' } }}
-                            InputLabelProps={{ style: { color: 'rgba(17, 17, 19, 0.6)', fontFamily: 'Nunito', fontWeight: 400, fontSize: '14px'}}}
+                            InputProps={{ style: { color: 'rgba(17, 17, 19, 1)', fontFamily: 'Nunito Sans', fontWeight: 400, fontSize: '14px' } }}
+                            InputLabelProps={{ style: { color: 'rgba(17, 17, 19, 0.6)', fontFamily: 'Nunito Sans', fontWeight: 400, fontSize: '14px'}}}
                             sx={{
                                 marginBottom: '40px',
                                 backgroundColor: '#fff',
@@ -186,8 +186,8 @@ const CollectionRules: React.FC = () => {
                             rows={2}
                             value={seconds}
                             onChange={handleSecondsChange}
-                            InputProps={{ style: { color: 'rgba(17, 17, 19, 1)', fontFamily: 'Nunito', fontWeight: 400, fontSize: '14px' } }}
-                            InputLabelProps={{ style: { color: 'rgba(17, 17, 19, 0.6)', fontFamily: 'Nunito', fontWeight: 400, fontSize: '14px', padding: 0 } }}
+                            InputProps={{ style: { color: 'rgba(17, 17, 19, 1)', fontFamily: 'Nunito Sans', fontWeight: 400, fontSize: '14px' } }}
+                            InputLabelProps={{ style: { color: 'rgba(17, 17, 19, 0.6)', fontFamily: 'Nunito Sans', fontWeight: 400, fontSize: '14px', padding: 0 } }}
                             sx={{
                                 marginBottom: '32px',
                                 backgroundColor: '#fff',

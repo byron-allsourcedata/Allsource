@@ -40,10 +40,12 @@ const CustomTablePagination: React.FC<CustomTablePaginationProps> = ({
 
   return (
     <Box display="flex" justifyContent="space-between" alignItems="center">
-      <Typography variant="body2" className='third-sub-title' sx={{
+      <Typography variant="body2" className='third-sub-title'sx={{
         lineHeight: '16px !important',
-        marginRight: '8px'
-      }}>Show rows:</Typography>
+        marginRight: '8px',
+        display: 'inline-block', // Меняет поведение на строчный блочный элемент
+        overflow: 'hidden', // Скрывает лишний текст
+    }}>Show rows:</Typography>
       
       <TablePagination
         component="div"
@@ -94,7 +96,7 @@ const CustomTablePagination: React.FC<CustomTablePaginationProps> = ({
               onClick={handleFirstPage}
               disabled={page === 0}
               aria-label="first page"
-              sx={{ padding: 0, marginRight: '16px' }}
+              sx={{ padding: 0, marginRight: '16px', "@media (max-width: 700px)": { marginRight: '8px' } }}
             >
               <FirstPageIcon />
             </IconButton>
@@ -103,7 +105,7 @@ const CustomTablePagination: React.FC<CustomTablePaginationProps> = ({
               onClick={handlePrevPage}
               disabled={page === 0}
               aria-label="previous page"
-              sx={{ padding: 0, marginRight: '16px' }}
+              sx={{ padding: 0, marginRight: '16px', "@media (max-width: 700px)": { marginRight: '8px' } }}
             >
               <ChevronLeft />
             </IconButton>
@@ -112,7 +114,7 @@ const CustomTablePagination: React.FC<CustomTablePaginationProps> = ({
               onClick={handleNextPage}
               disabled={page >= Math.ceil(count / rowsPerPage) - 1}
               aria-label="next page"
-              sx={{ padding: 0, marginRight: '16px' }}
+              sx={{ padding: 0, marginRight: '16px', "@media (max-width: 700px)": { marginRight: '8px' } }}
             >
               <ChevronRight />
             </IconButton>
