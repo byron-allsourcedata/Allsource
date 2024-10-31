@@ -95,7 +95,7 @@ interface SettingsAccountDetailsProps {
     accountDetails: {
         full_name: string;
         email_address: string;
-        pass_exists: boolean;
+        is_pass_exists: boolean;
         company_name: string;
         company_website: string;
         company_website_visits: string;
@@ -230,7 +230,7 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
 
         if (newPassword === confirmNewPassword) {
             let changePasswordData;
-            if (accountDetails.pass_exists){
+            if (accountDetails.is_pass_exists){
             changePasswordData = {
                 change_password: {
                     current_password: currentPassword,
@@ -747,7 +747,7 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
 
                                 <TextField sx={{...accontDetailsStyles.formField,
                                     maxWidth: '100%', 
-                                    display: accountDetails.pass_exists ? 'block':'none' 
+                                    display: accountDetails.is_pass_exists ? 'block':'none' 
                                 }}
                                     InputLabelProps={{ 
                                         className: "form-input-label",

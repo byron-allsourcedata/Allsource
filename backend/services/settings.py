@@ -49,7 +49,7 @@ class SettingsService:
                 'reset_password_sent_at': user_info.reset_password_sent_at,
                 'company_name': user_info.company_name,
                 'company_website': user_info.company_website,
-                'pass_exists': user_info.password is not None,
+                'is_pass_exists': user_info.password is not None,
                 'company_website_visits': user_info.company_website_visits,
                 'is_email_confirmed': user_info.is_email_confirmed
             }
