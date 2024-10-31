@@ -156,6 +156,7 @@ export const SettingsBilling: React.FC = () => {
         }
     };
 
+
     const fetchBillingHistoryData = async (page: number, rowsPerPage: number) => {
         try {
             setIsLoading(true);
@@ -179,7 +180,7 @@ export const SettingsBilling: React.FC = () => {
                 newRowsPerPageOptions = [10, 20, 50, 100];
             } else if (count <= 500) {
                 newRowsPerPageOptions = [10, 20, 50, 100, 300];
-            } else {
+            } else {    
                 newRowsPerPageOptions = [10, 20, 50, 100, 300, 500];
             }
             if (!newRowsPerPageOptions.includes(count)) {
@@ -194,6 +195,7 @@ export const SettingsBilling: React.FC = () => {
         }
     };
 
+    
     useEffect(() => {
         fetchCardData();
         fetchBillingHistoryData(page, rowsPerPage);
