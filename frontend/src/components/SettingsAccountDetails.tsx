@@ -243,7 +243,6 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
                     new_password: newPassword
                 }}}
 
-            console.log(changePasswordData)
             
             axiosInterceptorInstance.put('/settings/account-details', changePasswordData)
                 .then(response => {
