@@ -2,6 +2,7 @@ import { Box, Button, Drawer, IconButton, InputAdornment, List, ListItem, ListIt
 import Image from "next/image"
 import MetaConnectButton from "./MetaConnectButton"
 import KlaviyoIntegrationPopup from "./KlaviyoIntegrationPopup"
+import AttentiveIntegrationPopup from "./AttentiveIntegrationPopup"
 import { useState } from "react"
 import SearchIcon from '@mui/icons-material/Search';
 import CloseIcon from '@mui/icons-material/Close';
@@ -23,6 +24,7 @@ interface AvailableIntegrationsSliderProps {
 const AlivbleIntagrationsSlider = ({open, isContactSync = false, integrations, integrationsCredentials, onClose}: AvailableIntegrationsSliderProps) => {
     const [openMetaConnect, setOpenMetaConnect] = useState(false)
     const [openKlaviyoConnect, setOpenKlaviyoConnect] = useState(false)
+    const [openAttentiveConnect, setAttentiveConnect] = useState(false)
     const [openShopifuConnect, setOpenShopifyConnect] = useState(false)
     const [openBigcommrceConnect, setOpenBigcommerceConnect] = useState(false)
     const [openOmnisendConnect, setOpenOmnisendConnect] = useState(false)
@@ -33,6 +35,7 @@ const AlivbleIntagrationsSlider = ({open, isContactSync = false, integrations, i
         setOpenMetaConnect(false)
         setOpenKlaviyoConnect(false)
         setOpenShopifyConnect(false)
+        setAttentiveConnect(false)
         setOpenBigcommerceConnect(false)
         setOpenOmnisendConnect(false)
         setOpenSendlaneConnect(false)
@@ -186,6 +189,33 @@ const AlivbleIntagrationsSlider = ({open, isContactSync = false, integrations, i
                                         }}  />
                                     </ListItemButton>
                                 </ListItem> )}
+
+                            {/* Attentive */}
+                            {integrations.some(integration => integration.service_name === 'Attentive') && (
+                                !integrationsCredentials.some(integration => integration.service_name === 'Attentive') )&&(
+                                <ListItem sx={{p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',
+                                '@media (max-width:600px)': {
+                                    flexBasis: 'calc(50% - 8px)'
+                                }
+                            }}>
+                                <ListItemButton onClick={() => setAttentiveConnect(true)} sx={{p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center'}}>
+                                    <ListItemIcon sx={{minWidth: 'auto'}}>
+                                        <Image src="/attentive.svg" alt="Attentive" height={26} width={32} />
+                                    </ListItemIcon>
+                                    <ListItemText primary="Attentive" primaryTypographyProps={{
+                                        sx: {
+                                            fontFamily: "Nunito Sans",
+                                            fontSize: "14px",
+                                            color: "#4a4a4a",
+                                            fontWeight: "500",
+                                            lineHeight: "20px"
+                                        }
+                                    }}  />
+                                </ListItemButton>
+                            </ListItem> )}
+
+
+
                                 {integrations.some(integration => integration.service_name === 'Zepier') && (
                                     !integrationsCredentials.some(integration => integration.service_name === 'Zepier') )&&(
                                 <ListItem sx={{p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',
@@ -382,6 +412,7 @@ const AlivbleIntagrationsSlider = ({open, isContactSync = false, integrations, i
         </Drawer>
         <MetaConnectButton open={openMetaConnect} onClose={handleClose} onSave={() => { }}/>
         <KlaviyoIntegrationPopup open={openKlaviyoConnect} handleClose={handleClose} onSave={handleSave}/>
+        <AttentiveIntegrationPopup open={openAttentiveConnect} handleClose={handleClose} onSave={handleSave}/>
         <ShopifySettings open={openShopifuConnect} handleClose={handleClose} onSave={handleSave} />
         <BCommerceConnect 
                     open={openBigcommrceConnect} 
