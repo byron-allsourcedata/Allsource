@@ -195,8 +195,8 @@ def save_payment_details_in_stripe(customer_id):
                 customer=customer_id,
                 type="card",
             )
-            .data[0]
-            .get("id")
+                .data[0]
+                .get("id")
         )
 
         stripe.Customer.modify(
@@ -300,13 +300,13 @@ def get_billing_history_by_userid(customer_id, page, per_page):
 
     billing_history_invoices = stripe.Invoice.list(
         customer=customer_id,
-        limit=per_page,
+        limit=100,
         starting_after=starting_after
     )
 
     billing_history_charges = stripe.Charge.list(
         customer=customer_id,
-        limit=per_page,
+        limit=100,
         starting_after=starting_after
     )
 
@@ -314,13 +314,14 @@ def get_billing_history_by_userid(customer_id, page, per_page):
         charge for charge in billing_history_charges.data if charge.invoice is None
     ]
 
-    limit = min(len(billing_history_invoices.data), per_page)
+    # limit = min(len(billing_history_invoices.data), per_page)
 
-    billing_history = (billing_history_invoices.data[:limit] + non_subscription_charges)[
-                      :min(limit + len(non_subscription_charges), per_page)]
+    # billing_history = (billing_history_invoices.data[:limit] + non_subscription_charges)[
+    #                   :min(limit + len(non_subscription_charges), per_page)]
+    billing_history = billing_history_invoices.data + non_subscription_charges
 
     count = len(billing_history)
-    max_page = math.ceil(count / per_page) if per_page else 1
+    max_page = math.ceil(count / per_page)
     has_more = billing_history_invoices.has_more or (
             billing_history_charges.has_more and len(non_subscription_charges) < per_page)
 
