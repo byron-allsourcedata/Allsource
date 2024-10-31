@@ -89,18 +89,12 @@ const AttentiveIntegrationPopup = ({ handleClose, open, onSave, initApiKey}: Cre
     const [loading, setLoading] = useState(false)
     const [value, setValue] = useState<string>('1')
     const [checked, setChecked] = useState(false);
-    const [tab2Error, setTab2Error] = useState(false);
     const label = { inputProps: { 'aria-label': 'Switch demo' } };
-    const [selectedRadioValue, setSelectedRadioValue] = useState('');
-    const [isDropdownValid, setIsDropdownValid] = useState(false);
 
     useEffect(() => {
         setApiKey(initApiKey || '')
     }, [initApiKey])
 
-    const handleRadioChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setSelectedRadioValue(event.target.value);
-    };
 
     const handleSwitchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setChecked(event.target.checked);
@@ -157,13 +151,17 @@ const AttentiveIntegrationPopup = ({ handleClose, open, onSave, initApiKey}: Cre
     };
 
     const handleApiKeySave = async() => {
-        const response = await axiosInstance.post('/integrations/', {
-            attentive: {
-                api_key: apiKey
+        try {
+            const response = await axiosInstance.post('/integrations/', {
+                attentive: {
+                    api_key: apiKey
+                }
+            }, {params: {service_name: 'attentive'}})
+            if(response.status === 200) {
+                handleNextTab()
             }
-        }, {params: {service_name: 'attentive'}})
-        if(response.status === 200) {
-            handleNextTab()
+        } catch (error) {
+            
         }
     }
 
