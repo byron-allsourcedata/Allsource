@@ -43,6 +43,7 @@ class NotificationPersistence:
         return (self.db.query(
             AccountNotification.text,
             AccountNotification.sub_title,
+            AccountNotification.is_dismiss,
             UserAccountNotification.id,
             UserAccountNotification.created_at,
             UserAccountNotification.params,

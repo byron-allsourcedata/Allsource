@@ -187,7 +187,7 @@ export const ProgressSection: React.FC = () => {
             sx={{
               "@media (max-width: 1199px)": {
                 fontSize: "14px",
-                fontFamily: "Nunito",
+                fontFamily: "Nunito Sans",
                 color: "#000",
                 fontWeight: "400",
                 lineHeight: "normal",

@@ -136,7 +136,7 @@ const PixelInstallation: React.FC = () => {
       }
       }}>
       <Typography variant="h6" component="div" mb={1} className="first-sub-title" sx={{
-        fontFamily: 'Nunito',
+        fontFamily: 'Nunito Sans',
         fontWeight: '700',
         lineHeight: '21.82px',
         textAlign: 'left',
@@ -152,7 +152,7 @@ const PixelInstallation: React.FC = () => {
       </Typography>
       <Typography variant="body2" color="textSecondary" className="table-data" mb={2}
       sx={{
-        fontFamily: 'Nunito',
+        fontFamily: 'Nunito Sans',
         fontWeight: '500',
         color: 'rgba(128, 128, 128, 1)',
         fontSize: '12px',
@@ -258,7 +258,7 @@ const buttonGoogle = {
 
 const typographyStyles = {
   textTransform: 'none',
-  fontFamily: 'Nunito',
+  fontFamily: 'Nunito Sans',
   fontSize: '14px',
   fontWeight: '600',
   lineHeight: '19.6px',
@@ -276,7 +276,7 @@ const typographyStyles = {
 
 const typographyGoogle = {
   textTransform: 'none',
-  fontFamily: 'Nunito',
+  fontFamily: 'Nunito Sans',
   fontSize: '14px',
   fontWeight: '600',
   lineHeight: '19.6px',

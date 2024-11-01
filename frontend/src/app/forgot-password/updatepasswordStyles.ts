@@ -112,7 +112,7 @@ export const updatepasswordStyles: { [key: string]: SxProps<Theme> } = {
     resetPassword: {
         mt: 2,
         margin: '3em 0em 0em',
-        fontFamily: 'Nunito',
+        fontFamily: 'Nunito Sans',
         fontSize: '16px',
     },
     text: {

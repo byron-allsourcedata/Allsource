@@ -59,17 +59,20 @@ const Settings: React.FC = () => {
                 paddingRight: '24px',
                 mx: '-24px',
                 "@media (max-width: 900px)": { 
-                  left: '20px'
+                  left: '20px',
+                  flexDirection: 'column',
+                  alignItems: 'start'
                 },
                 '@media (max-width: 1199px)': {
                     paddingTop: '1rem'
                 }
             }}>
-                <Typography variant="h4" gutterBottom className='first-sub-title' sx={planStyles.title}>
-                    Settings
+                <Typography variant="h4" gutterBottom className='first-sub-title' sx={{...planStyles.title, gap:1, alignItems: 'center', justifyContent: 'center'}}>
+                    Settings <CustomTooltip title={"The Settings menu allows you to customise your user experience, manage your account preferences, and adjust notifications."} linkText="Learn more" linkUrl="https://maximiz.ai"/>
                 </Typography>
-                <CustomTooltip title={"The Settings menu allows you to customise your user experience, manage your account preferences, and adjust notifications."} linkText="Learn more" linkUrl="https://maximiz.ai"/>
-                <Box sx={{ display: 'flex', gap: 4.25, overflowX: 'auto', justifyContent: 'center', width:'86%', alignItems: 'center', }}>
+                <Box sx={{ display: 'flex', gap: 4.25, overflowX: 'auto', justifyContent: 'center', width:'86%', alignItems: 'center', "@media (max-width: 900px)": { 
+                  width: '100%', gap: 2.5,
+                }, }}>
                 <Button
                     className='tab-heading'
                     sx={planStyles.buttonHeading}
@@ -120,6 +123,9 @@ const Settings: React.FC = () => {
                 <Box sx={{ marginTop: '68px',
                  "@media (max-width: 900px)": {
                     marginTop: '52px'
+                    },
+                "@media (max-width: 600px)": {
+                    marginTop: '5rem'
                     },
                 }}>
                     {activeSection === 'accountDetails' && accountDetails && (

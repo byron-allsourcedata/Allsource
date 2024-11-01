@@ -166,7 +166,7 @@ const Reseller: React.FC = () => {
               size='large'
                 sx={{ marginRight: '4em',
                       backgroundColor: 'rgba(80, 82, 178, 1)',
-                      fontFamily: "Nunito", textTransform: 'none',
+                      fontFamily: "Nunito Sans", textTransform: 'none',
                       fontWeight: 'bold',
                       mt: 3 }}
               >

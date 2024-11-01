@@ -39,7 +39,7 @@ const maintext = {
 };
 
 const subtext = {
-  fontFamily: 'Nunito',
+  fontFamily: 'Nunito Sans',
   fontSize: '14px',
   fontWeight: '400',
   lineHeight: '16.8px',
@@ -121,7 +121,7 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode }) => {
             >
               <ContentCopyIcon />
             </IconButton>
-            <code style={{ color: 'rgba(95, 99, 104, 1)', fontSize: '12px', margin: 0, fontWeight: 400, fontFamily: 'Nunito', textWrap: 'nowrap' }}>{pixelCode?.trim()}</code>
+            <code style={{ color: 'rgba(95, 99, 104, 1)', fontSize: '12px', margin: 0, fontWeight: 400, fontFamily: 'Nunito Sans', textWrap: 'nowrap' }}>{pixelCode?.trim()}</code>
           </Box>
           <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', padding: '0.5em 0em 0em 0em', justifyContent: 'start' }}>
             <Image src='/2.svg' alt='2' width={28} height={28} />
@@ -192,7 +192,7 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode }) => {
                     textTransform: 'none',
                     background: '#fff',
                     color: 'rgba(80, 82, 178, 1)',
-                    fontFamily: 'Nunito',
+                    fontFamily: 'Nunito Sans',
                     padding: '0.65em 2em',
                     mr: 1,
                     '@media (max-width: 600px)': { padding: '0.5em 1.5em', mr: 0, ml: 0, left: 0 }

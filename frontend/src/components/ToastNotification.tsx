@@ -5,10 +5,10 @@ import { Typography } from '@mui/material';
 
 export const CustomToast = ({ message }: { message: string }) => (
   <div  style={{ color: 'green' }}>
-    <Typography style={{ fontWeight: '700', color: 'rgba(86, 153, 27, 1)', fontFamily: 'Nunito', fontSize: '16px' }}>
+    <Typography style={{ fontWeight: '700', color: 'rgba(86, 153, 27, 1)', fontFamily: 'Nunito Sans', fontSize: '16px' }}>
       Success
     </Typography>
-    <Typography variant="body2" sx={{ color: 'rgba(110, 193, 37, 1)', fontFamily: 'Nunito', fontWeight: '400', fontSize: '12px', }}>
+    <Typography variant="body2" sx={{ color: 'rgba(110, 193, 37, 1)', fontFamily: 'Nunito Sans', fontWeight: '400', fontSize: '12px', }}>
       {message}
     </Typography>
   </div>
@@ -27,10 +27,10 @@ export const CustomInfoToast = ({ message }: { message: string }) => (
 
 export const CustomErrorToast = ({ message }: { message: string }) => (
   <div style={{ color: 'rgba(255, 245, 245, 1)' }}>
-    <Typography style={{ fontWeight: '700', color: 'rgba(224, 49, 48, 1)', fontFamily: 'Nunito', fontSize: '16px' }}>
+    <Typography style={{ fontWeight: '700', color: 'rgba(224, 49, 48, 1)', fontFamily: 'Nunito Sans', fontSize: '16px' }}>
       Error
     </Typography>
-    <Typography variant="body2" sx={{ color: 'rgba(224, 49, 48, 1)', fontWeight: '400', fontFamily: 'Nunito', fontSize: '12px' }}>
+    <Typography variant="body2" sx={{ color: 'rgba(224, 49, 48, 1)', fontWeight: '400', fontFamily: 'Nunito Sans', fontSize: '12px' }}>
       {message}
     </Typography>
   </div>
@@ -46,7 +46,7 @@ export const showToast = (message: string, options: ToastOptions = {}) => {
     style: {
       background: '#EFFAE5',
       color: '#56991B',
-      fontFamily: 'Nunito',
+      fontFamily: 'Nunito Sans',
       fontSize: '16px',
       fontWeight: 'bold',
       padding: '8px 12px',
@@ -70,7 +70,7 @@ export const showErrorToast = (message: string, options: ToastOptions = {}) => {
     style: {
       background: '#FAE5E5',
       color: '#D8000C',
-      fontFamily: 'Nunito',
+      fontFamily: 'Nunito Sans',
       fontSize: '16px',
       fontWeight: 'bold',
       padding: '8px 12px',
@@ -91,7 +91,7 @@ export const showInfoToast = (message: string, options: ToastOptions = {}) => {
     closeOnClick: true,
     draggable: true,
     style: {
-      fontFamily: 'Nunito',
+      fontFamily: 'Nunito Sans',
       fontSize: '16px',
       fontWeight: 'bold'
     },

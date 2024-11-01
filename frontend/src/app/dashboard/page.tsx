@@ -52,7 +52,11 @@ const TabPanel: React.FC<TabPanelProps> = ({ children, value, index, ...other })
           '@media (min-width: 1600px)': {
             paddingLeft: '4.25rem',
             paddingRight: '4.25rem',
-          }
+          },
+          '@media (max-width: 600px)': {
+            paddingLeft: '0',
+            paddingRight: '0',
+          },
         }}>
           {children}
         </Box>}
@@ -126,7 +130,7 @@ const VerifyPixelIntegration: React.FC = () => {
         mb={2}
         className="first-sub-title"
         sx={{
-          fontFamily: "Nunito",
+          fontFamily: "Nunito Sans",
           fontWeight: "700",
           lineHeight: "normal",
           textAlign: "left",
@@ -279,7 +283,7 @@ const SupportSection: React.FC = () => {
           className="first-sub-title"
           sx={{
             padding: "0em 0em 1.5em 0.5em",
-            fontFamily: "Nunito",
+            fontFamily: "Nunito Sans",
             fontSize: "14px",
             fontWeight: "700",
             lineHeight: "19.1px",
@@ -493,7 +497,7 @@ const Dashboard: React.FC = () => {
             <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center',
                 py: 3,
                 position: 'fixed',
-                top: '68px',
+                top: '54px',
                 right: '16px',
                 left: '170px',
                 background: '#fff',
@@ -520,7 +524,7 @@ const Dashboard: React.FC = () => {
                 sx={{
                   ...dashboardStyles.title, '@media (max-width: 600px)': {
                     display: 'none'
-                  }
+                  },
                 }}
               >
                 Dashboard <CustomTooltip title={"Text about dashboard"} />

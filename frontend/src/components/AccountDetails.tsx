@@ -46,11 +46,9 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
     };
 
     const handleDownload = async () => {
-        console.log(lead.id)
         const requestBody = {
             leads_ids: lead.id ? [lead.id] : []
         };
-        console.log(requestBody)
         try {
             const response = await axiosInstance.post('/leads/download_leads', requestBody, {
                 responseType: 'blob'
@@ -116,7 +114,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
             >
                 <Box sx={{ width: '100%', boxSizing: 'border-box', display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 2, mt: '0.5em', borderBottom: '1px solid #e4e4e4', position: "sticky", top: 0, zIndex: 1400, backgroundColor: "#fff" }}>
                     <Box sx={{ display: 'flex', gap: 4 }}>
-                        <Typography sx={{ fontSize: '16px', fontFamily: 'Nunito', fontWeight: 700, lineHeight: '22.4px' }}>
+                        <Typography sx={{ fontSize: '16px', fontFamily: 'Nunito Sans', fontWeight: 700, lineHeight: '22.4px' }}>
                             Person Overview
                         </Typography>
                     </Box>

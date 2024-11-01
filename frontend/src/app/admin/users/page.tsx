@@ -318,7 +318,7 @@ const Users: React.FC = () => {
                             <Typography
                                 variant="h6"
                                 sx={{
-                                    fontFamily: 'Nunito',
+                                    fontFamily: 'Nunito Sans',
                                     fontSize: '14px',
                                     fontWeight: 600,
                                     lineHeight: '19.6px',
@@ -332,7 +332,7 @@ const Users: React.FC = () => {
                                 variant="body2"
                                 color="textSecondary"
                                 sx={{
-                                    fontFamily: 'Nunito',
+                                    fontFamily: 'Nunito Sans',
                                     fontSize: '14px',
                                     fontWeight: 600,
                                     lineHeight: '19.6px',
@@ -344,7 +344,7 @@ const Users: React.FC = () => {
                         </Box>
                         <MenuItem
                             sx={{
-                                fontFamily: 'Nunito',
+                                fontFamily: 'Nunito Sans',
                                 fontSize: '14px',
                                 fontWeight: 500,
                                 lineHeight: '19.6px',
@@ -355,7 +355,7 @@ const Users: React.FC = () => {
                         </MenuItem>
                         <MenuItem
                             sx={{
-                                fontFamily: 'Nunito',
+                                fontFamily: 'Nunito Sans',
                                 fontSize: '14px',
                                 fontWeight: 500,
                                 lineHeight: '19.6px',
