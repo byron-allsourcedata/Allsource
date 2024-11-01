@@ -70,7 +70,33 @@ class WebhookService:
             return payload
 
         platform_subscription_id = payload.get("data").get("object").get("id")
-        price_id = payload.get("data").get("object").get("plan").get("id")
+        plan = data_object.get("plan")
+        if plan is None:
+            if stripe_status == 'open' or stripe_status == 'past_due':
+                account_notification = self.notification_persistence.get_account_notification_by_title(
+                    NotificationTitles.PAYMENT_FAILED.value)
+                save_account_notification = self.notification_persistence.save_account_notification(user_data.id,
+                                                                                                    account_notification.id)
+                stripe_request_created_timestamp = data_object.get("created")
+                stripe_request_created_at = datetime.fromtimestamp(stripe_request_created_timestamp)
+                message_body['user'] = user_data
+                message_body['notification_id'] = save_account_notification.id
+                message_body['full_name'] = user_data.full_name
+                message_body['plan_name'] = determine_plan_name_from_product_id(
+                    data_object['lines']['data'][0]['plan']['product'])
+                message_body['date'] = stripe_request_created_at
+                message_body['invoice_number'] = data_object.get("id")
+                message_body['invoice_date'] = datetime.fromtimestamp(data_object.get("amount_due")).strftime(
+                    '%Y-%m-%d %H:%M:%S')
+                message_body['total'] = data_object.get("amount_due")
+                message_body['link'] = data_object.get('hosted_invoice_url')
+
+                return {
+                    'status': stripe_status,
+                    'message_body': message_body
+                }
+
+        price_id = plan.get("id")
 
         if self.subscription_service.check_duplicate_send(stripe_request_created_at, platform_subscription_id,
                                                           price_id):
@@ -80,21 +106,6 @@ class WebhookService:
                                                                   stripe_payload=payload)
 
         self.subscription_service.process_subscription(user=user_data, stripe_payload=data_object)
-        if stripe_status == 'open':
-            account_notification = self.notification_persistence.get_account_notification_by_title(
-                NotificationTitles.PAYMENT_FAILED.value)
-            save_account_notification = self.notification_persistence.save_account_notification(user_data.id, account_notification.id)
-            stripe_request_created_timestamp = data_object.get("created")
-            stripe_request_created_at = datetime.fromtimestamp(stripe_request_created_timestamp)
-            message_body['user'] = user_data
-            message_body['notification_id'] = save_account_notification.id
-            message_body['full_name'] = user_data.full_name
-            message_body['plan_name'] = determine_plan_name_from_product_id(data_object.get("plan").get("product"))
-            message_body['date'] = stripe_request_created_at
-            message_body['invoice_number'] = data_object.get("id")
-            message_body['invoice_date'] = data_object.get("amount_due").strftime('%Y-%m-%d %H:%M:%S')
-            message_body['total'] = data_object.get("amount_due")
-            message_body['link'] = data_object.get('hosted_invoice_url')
 
         return {
             'status': stripe_status,
@@ -121,9 +132,9 @@ class WebhookService:
             return payload
 
         result_status = self.subscription_service.create_payment_from_webhook(user_id=user_data.id,
-                                                                             stripe_payload=payload,
-                                                                             product_description=product_description,
-                                                                             quantity=quantity)
+                                                                              stripe_payload=payload,
+                                                                              product_description=product_description,
+                                                                              quantity=quantity)
         return {
             'status': result_status,
             'user': user_data
