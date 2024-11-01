@@ -3,7 +3,7 @@ import { Box, Grid, Typography, Button, Menu, MenuItem, Modal, Tab, Tabs } from 
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import React, { useState, useEffect, Suspense, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useUser } from "../../context/UserContext";
 import axiosInstance from "../../axios/axiosInterceptorInstance";
 import { AxiosError } from "axios";
@@ -393,7 +393,23 @@ const Dashboard: React.FC = () => {
   const [formattedDates, setFormattedDates] = useState<string>('');
   const [appliedDates, setAppliedDates] = useState<{ start: Date | null; end: Date | null }>({ start: null, end: null });
   const [selectedDateLabel, setSelectedDateLabel] = useState<string>('');
-
+  const searchParams = useSearchParams();
+  let statusIntegrate = searchParams.get('message');
+    useEffect(() => {
+      if(statusIntegrate) {
+        
+        if (statusIntegrate == 'Successfully') {
+          showToast('Connect to Bigcommerce Successfully. Pixel Installed');
+          statusIntegrate = null
+        } else {
+          showErrorToast(`Connect to Bigcommerce Failed ${statusIntegrate && statusIntegrate != 'Failed' ? statusIntegrate : ''}`)
+          statusIntegrate = null
+        }
+        const newSearchParams = new URLSearchParams(searchParams.toString());
+        newSearchParams.delete('message');
+        router.replace(`?${newSearchParams.toString()}`);
+      }
+    }, [statusIntegrate])
   const handleDateLabelChange = (label: string) => {
     setSelectedDateLabel(label);
   };
@@ -483,6 +499,8 @@ const Dashboard: React.FC = () => {
   if (isLoading) {
     return <CustomizedProgressBar />;
   }
+
+  
 
   return (
     <>
