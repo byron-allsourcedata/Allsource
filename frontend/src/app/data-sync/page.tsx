@@ -51,7 +51,7 @@ const centerContainerStyles = {
       maxWidth: '100%'
   }
 };
-import CustomTablePagination from "@/components/CustomTablePagination";
+import FilterDatasync from "@/components/FilterDatasync";
 
 interface DataSyncProps {
   service_name?: string
@@ -69,7 +69,20 @@ const DataSync = () => {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [totalRows, setTotalRows] = useState(0);
   const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [filterPopup, setFilterPopup] = useState(false)
+  const [filters, setFilters] = useState<any>()
+  const handleFilterPopupOpen = () => {
+    setFilterPopup(true)
+  }
+
+  const handleFilterPopupClose = () => {
+    setFilterPopup(false)
+  }
+
+  const onApply = (filter: any) => {
+    setFilters(filter)
+  }
 
   const handleSortRequest = (property: string) => {
     const isAsc = orderBy === property && order === "asc";
@@ -450,7 +463,7 @@ const DataSync = () => {
             </Typography>
           </Button>
           <Button
-            //onClick={handleFilterPopupOpen}
+            onClick={handleFilterPopupOpen}
             //aria-controls={dropdownOpen ? 'account-dropdown' : undefined}
             aria-haspopup="true"
             //aria-expanded={dropdownOpen ? 'true' : undefined}
@@ -548,11 +561,12 @@ const DataSync = () => {
             </Box>
           ) : !isLoading && (
             <>
-            <DataSyncList service_name={null} />
+            <DataSyncList service_name={null} filters={filters}/>
             </>)
           }
       </Box>
     </Box>
+    <FilterDatasync open={filterPopup} onClose={handleFilterPopupClose} onApply={onApply}/>
 
       </>
 

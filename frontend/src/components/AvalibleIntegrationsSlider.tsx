@@ -416,7 +416,8 @@ const AlivbleIntagrationsSlider = ({open, isContactSync = false, integrations, i
         <ShopifySettings open={openShopifuConnect} handleClose={handleClose} onSave={handleSave} />
         <BCommerceConnect 
                     open={openBigcommrceConnect} 
-                    handleClose={() => setOpenBigcommerceConnect(false)}
+                    onClose={() => setOpenBigcommerceConnect(false)}
+                    onSave={() => { }}
                 />
         <OmnisendConnect open={openOmnisendConnect} handleClose={() => setOpenOmnisendConnect(false)} onSave={() => { }} />
         <MailchimpConnect open={openMailchimpConnect} handleClose={() => setOpenMailchimpConnect(false)} onSave={() => { }} />

@@ -50,6 +50,7 @@ class BigcommerceIntegrationsService:
     def __get_store_info(self, store_hash: str, access_token: str):
         url = f'{store_hash}/v2/store'
         info = self.__handle_request(url, access_token=access_token)
+
         return self.__mapped_info(info.json())
     
 
@@ -75,6 +76,8 @@ class BigcommerceIntegrationsService:
         credentials = self.get_credentials(domain_id=domain.id)
         info = self.__get_store_info(store_hash=new_credentials.bigcommerce.shop_domain, 
                                      access_token=new_credentials.bigcommerce.access_token)
+        if not info:
+            raise HTTPException(status_code=409, detail=IntegrationCredentials.value)
         if info.domain.startswith('https://'):
             info.domain = f'{new_credentials.bigcommerce.shop_domain}'
         if not credentials and info.domain != domain.domain:
