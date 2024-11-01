@@ -1256,7 +1256,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                   textAlign: "center",
                   color: "rgba(80, 82, 178, 1)",
                   textTransform: "none",
-                  fontFamily: "Nunito",
+                  fontFamily: "Nunito Sans",
                   fontWeight: "600",
                   fontSize: "16px",
                   lineHeight: "22.4px",
@@ -1299,7 +1299,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                   sx={{
                     textAlign: "center",
                     color: "#4A4A4A",
-                    fontFamily: "Nunito",
+                    fontFamily: "Nunito Sans",
                     fontWeight: "600",
                     fontSize: "16px",
                     lineHeight: "22.4px",
@@ -1317,7 +1317,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                     justifyContent: "space-between", alignItems: "center"
                   }}>
                     <Typography variant="h6" sx={{
-                      fontFamily: 'Nunito',
+                      fontFamily: 'Nunito Sans',
                       color: '#3B3B3B',
                       fontSize: '16px',
                       fontWeight: '600',
@@ -1325,7 +1325,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                     }}>
                       {filter.name}
                     </Typography>
-                    <Typography variant="body2" sx={{ fontFamily: 'Nunito' }}>
+                    <Typography variant="body2" sx={{ fontFamily: 'Nunito Sans' }}>
                     </Typography>
                     <Box sx={{
                       display: "flex",
@@ -1374,7 +1374,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                     variant="h5"
                     sx={{
                       mb: 3,
-                      fontFamily: 'Nunito',
+                      fontFamily: 'Nunito Sans',
                       fontSize: '20px',
                       color: '#4a4a4a',
                       fontWeight: '600',
@@ -1409,7 +1409,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                   textAlign: "center",
                   color: isButtonDisabled ? "rgba(80, 82, 178, 0.5)" : "rgba(80, 82, 178, 1)",
                   textTransform: "none",
-                  fontFamily: "Nunito",
+                  fontFamily: "Nunito Sans",
                   fontWeight: "600",
                   fontSize: "16px",
                   lineHeight: "22.4px",
@@ -1433,7 +1433,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                   sx={{
                     textAlign: "center",
                     color: "rgba(59, 59, 59, 1)",
-                    fontFamily: "Nunito",
+                    fontFamily: "Nunito Sans",
                     fontWeight: "600",
                     fontSize: "14px",
                     lineHeight: "19.6px",
@@ -1480,7 +1480,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                     variant="contained"
                     sx={{
                       backgroundColor: "rgba(80, 82, 178, 1)",
-                      fontFamily: "Nunito",
+                      fontFamily: "Nunito Sans",
                       textTransform: "none",
                     }}
                     disabled={!filterName.trim()}
@@ -1559,7 +1559,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                       <ListItemText
                         primaryTypographyProps={{
                           sx: {
-                            fontFamily: 'Nunito',
+                            fontFamily: 'Nunito Sans',
                             fontSize: '12px',
                             fontWeight: 600,
                             lineHeight: '16.8px',
@@ -1717,7 +1717,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                         textWrap: "nowrap",
                         textAlign: "center",
                         borderRadius: "4px",
-                        fontFamily: "Nunito",
+                        fontFamily: "Nunito Sans",
                         opacity: 1,
                         display: "flex",
                         alignItems: "center",
@@ -2216,7 +2216,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                 <ListItem button key={index} onClick={() => handleSelectCity(city)}>
                   <ListItemText
                     primary={
-                      <span style={{ fontFamily: 'Nunito', fontSize: '13px', fontWeight: 600, lineHeight: '16.8px', textAlign: 'left', color: 'rgba(74, 74, 74, 1)' }}>
+                      <span style={{ fontFamily: 'Nunito Sans', fontSize: '13px', fontWeight: 600, lineHeight: '16.8px', textAlign: 'left', color: 'rgba(74, 74, 74, 1)' }}>
                         {city.city},{' '}
                         <span style={{ color: 'rgba(200, 202, 203, 1)' }}>
                           {city.state}
@@ -2273,7 +2273,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                 }}
               >
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 0 }}>
-                  <FormControlLabel sx={{ fontFamily: 'Nunito', fontWeight: 100 }}
+                  <FormControlLabel sx={{ fontFamily: 'Nunito Sans', fontWeight: 100 }}
                     control={
                       <Checkbox
                         checked={checkedFiltersPageVisits.page}
@@ -2289,7 +2289,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                     }
                     label={<Typography className='table-data' sx={{ color: checkedFiltersPageVisits.page ? "rgba(80, 82, 178, 1) !important" : "rgba(74, 74, 74, 1)" }}>1 page</Typography>}
                   />
-                  <FormControlLabel sx={{ fontFamily: 'Nunito', fontWeight: 100 }}
+                  <FormControlLabel sx={{ fontFamily: 'Nunito Sans', fontWeight: 100 }}
                     control={
                       <Checkbox
                         checked={checkedFiltersPageVisits.two_page}
@@ -2307,7 +2307,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                   />
                 </Box>
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 0 }}>
-                  <FormControlLabel sx={{ fontFamily: 'Nunito', fontWeight: 100 }}
+                  <FormControlLabel sx={{ fontFamily: 'Nunito Sans', fontWeight: 100 }}
                     control={
                       <Checkbox
                         checked={checkedFiltersPageVisits.three_page}
@@ -2323,7 +2323,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                     }
                     label={<Typography className='table-data' sx={{ color: checkedFiltersPageVisits.three_page ? "rgba(80, 82, 178, 1) !important" : "rgba(74, 74, 74, 1)" }}>3 pages</Typography>}
                   />
-                  <FormControlLabel sx={{ fontFamily: 'Nunito', fontWeight: 100 }}
+                  <FormControlLabel sx={{ fontFamily: 'Nunito Sans', fontWeight: 100 }}
                     control={
                       <Checkbox
                         checked={checkedFiltersPageVisits.more_three}
@@ -2533,7 +2533,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                       display: "flex",
                       color: "rgba(74, 74, 74, 1)",
                       alignItems: "center",
-                      fontFamily: "Nunito",
+                      fontFamily: "Nunito Sans",
                       fontWeight: "600",
                       fontSize: "16px",
                       lineHeight: "25.2px",

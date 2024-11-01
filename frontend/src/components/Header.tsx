@@ -1,7 +1,7 @@
 "use client";
 import { Box, Typography, Button, Menu, MenuItem, IconButton } from "@mui/material";
 import Image from "next/image";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "../context/UserContext";
 import TrialStatus from "./TrialLabel";
@@ -10,6 +10,9 @@ import NavigationMenu from "@/components/NavigationMenu";
 import { SliderProvider } from "../context/SliderContext";
 import { useTrial } from '../context/TrialProvider';
 import NotificationPopup from "./NotificationPopup";
+import axiosInstance from "@/axios/axiosInterceptorInstance";
+import NotificationsOutlinedIcon from '@mui/icons-material/NotificationsOutlined';
+import CustomNotification from "./CustomNotification";
 
 const headerStyles = {
   headers: {
@@ -47,6 +50,9 @@ const Header = () => {
   const email = userEmail || meData.email;
   const { resetTrialData } = useTrial();
   const [notificationIconPopupOpen, setNotificationIconPopupOpen] = useState(false);
+  const [hasNewNotifications, setHasNewNotifications] = useState<boolean>(false);
+  const [unreadCount, setUnreadCount] = useState<number>(0);
+  const [latestNotification, setLatestNotification] = useState<{ text: string; id: number } | null>(null);
   const handleSignOut = () => {
     localStorage.clear();
     sessionStorage.clear();
@@ -54,6 +60,36 @@ const Header = () => {
     resetTrialData();
     window.location.href = "/signin";
   };
+  useEffect(() => {
+    const accessToken = localStorage.getItem("token");
+    if (accessToken) {
+      const fetchData = async () => {
+        try {
+          const response = await axiosInstance.get("/notification");
+          const notifications = response.data;
+
+          const unreadNotifications = notifications.filter((notification: { is_checked: boolean }) => !notification.is_checked);
+
+          const hasNew = unreadNotifications.length > 0; // Проверяем, есть ли непрочитанные уведомления
+          setHasNewNotifications(hasNew);
+          setUnreadCount(unreadNotifications.length); // Устанавливаем количество непрочитанных уведомлений
+          
+          const newNotification = unreadNotifications.reduce((latest: { created_at: string | number | Date }, notification: { created_at: string | number | Date }) => {
+              return new Date(notification.created_at) > new Date(latest.created_at) ? notification : latest;
+          }, unreadNotifications[0]);
+
+
+          if (newNotification) {
+            setLatestNotification(newNotification);
+          }
+        } catch (error) {
+          console.error(error);
+        }
+      };
+
+      fetchData();
+    }
+  }, []);
   const handleProfileMenuClick = (
     event: React.MouseEvent<HTMLButtonElement>
   ) => {
@@ -73,6 +109,7 @@ const Header = () => {
 
   const handleNotificationIconPopupOpen = () => {
     setNotificationIconPopupOpen(true);
+    setHasNewNotifications(false);
   };
 
   const handleNotificationIconPopupClose = () => {
@@ -88,8 +125,8 @@ const Header = () => {
 
       <Box sx={{ ...headerStyles.headers, display: { xs: 'none', md: 'flex' } }}>
         <Box sx={headerStyles.logoContainer}>
-          <IconButton onClick={handleLogoClick} sx={{"&:hover": {backgroundColor: 'transparent'} }}>
-            <Image src="/logo.svg" alt="logo" height={30} width={50}  />
+          <IconButton onClick={handleLogoClick} sx={{ "&:hover": { backgroundColor: 'transparent' } }}>
+            <Image src="/logo.svg" alt="logo" height={30} width={50} />
           </IconButton>
           <DomainButton />
         </Box>
@@ -98,14 +135,34 @@ const Header = () => {
 
           <Button onClick={handleNotificationIconPopupOpen} sx={{
             minWidth: '32px',
-            padding: '8px',
+            padding: '6px',
             color: 'rgba(128, 128, 128, 1)',
             border: '1px solid rgba(184, 184, 184, 1)',
             borderRadius: '3.27px',
             marginRight: '1.5rem'
           }}
           >
-            <Image src={'/notification.svg'} alt="Person" width={18} height={18} />
+            <NotificationsOutlinedIcon sx={{
+                fontSize: '22px',
+                color: hasNewNotifications ? 'rgba(80, 82, 178, 1)' : 'inherit'
+            }}/>
+            {hasNewNotifications && (
+                <Box
+                    sx={{
+                        position: 'absolute',
+                        top: 5,
+                        right: 6.5,
+                        width: '8px',
+                        height: '8px',
+                        backgroundColor: 'rgba(248, 70, 75, 1)',
+                        borderRadius: '50%',
+                        '@media (max-width: 900px)': {
+                            top: -1,
+                            right: 1
+                        }
+                    }}
+                />
+            )}
           </Button>
 
           <Button
@@ -131,7 +188,7 @@ const Header = () => {
             MenuListProps={{
               "aria-labelledby": "profile-menu-button",
             }}
-            sx={{ 
+            sx={{
               mt: 0.5,
               ml: -1
             }}
@@ -140,12 +197,12 @@ const Header = () => {
               <Typography
                 variant="h6"
                 sx={{
-                  fontFamily: 'Nunito',
+                  fontFamily: 'Nunito Sans',
                   fontSize: '14px',
                   fontWeight: 600,
                   lineHeight: '19.6px',
                   color: 'rgba(0, 0, 0, 0.89)',
-                  mb:0.25
+                  mb: 0.25
                 }}
               >
                 {full_name}
@@ -154,7 +211,7 @@ const Header = () => {
                 variant="body2"
                 color="textSecondary"
                 sx={{
-                  fontFamily: 'Nunito',
+                  fontFamily: 'Nunito Sans',
                   fontSize: '14px',
                   fontWeight: 600,
                   lineHeight: '19.6px',
@@ -166,7 +223,7 @@ const Header = () => {
             </Box>
             <MenuItem
               sx={{
-                fontFamily: 'Nunito',
+                fontFamily: 'Nunito Sans',
                 fontSize: '14px',
                 fontWeight: 500,
                 lineHeight: '19.6px',
@@ -177,7 +234,7 @@ const Header = () => {
             </MenuItem>
             <MenuItem
               sx={{
-                fontFamily: 'Nunito',
+                fontFamily: 'Nunito Sans',
                 fontSize: '14px',
                 fontWeight: 500,
                 lineHeight: '19.6px',
@@ -189,6 +246,13 @@ const Header = () => {
           </Menu>
         </Box>
       </Box>
+      {latestNotification && (
+        <CustomNotification 
+          id={latestNotification.id} 
+          message={latestNotification.text} 
+          showDismiss={true} 
+        />
+      )}
       <NotificationPopup open={notificationIconPopupOpen} onClose={handleNotificationIconPopupClose}/>
     </>
   );

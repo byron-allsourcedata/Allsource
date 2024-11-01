@@ -69,7 +69,7 @@ const VerifyPixelIntegration: React.FC = () => {
           mb={2}
           className="first-sub-title"
           sx={{
-            fontFamily: "Nunito",
+            fontFamily: "Nunito Sans",
             fontWeight: "700",
             lineHeight: "normal",
             textAlign: "left",

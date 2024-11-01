@@ -102,7 +102,7 @@ const SalesOverTimeCard: React.FC<{ value: number }> = ({ value }) => (
 
 const Cards = ({ values }: { values: { totalContact: number, totalVisitors: number, viewProducts: number, totalAbandonedCart: number } }) => {
     return (
-        <Grid container spacing={3}>
+        <Grid container spacing={{xs: 1, sm: 1.5, md: 2, lg: 4}}>
           <Grid item xs={12} md={3}>
             <TotalLeadsCard value={values.totalContact} />
           </Grid>

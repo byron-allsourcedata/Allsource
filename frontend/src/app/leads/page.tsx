@@ -944,7 +944,7 @@ const Leads: React.FC = () => {
                         }}>
                         <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1 }}>
                             <Typography className='first-sub-title'>
-                                Resolved Contacts ({count_leads})
+                            Resolved Contacts {data.length === 0  ? '' : `(${count_leads})`}
                             </Typography>
                             <CustomToolTip title={status === 'PIXEL_INSTALLATION_NEEDED'
                                 ? 'Pixel installation is required.'
@@ -1094,7 +1094,7 @@ const Leads: React.FC = () => {
                             >
                                 <DateRangeIcon fontSize='medium' />
                                 <Typography variant="body1" sx={{
-                                    fontFamily: 'Nunito',
+                                    fontFamily: 'Nunito Sans',
                                     fontSize: '14px',
                                     fontWeight: '600',
                                     lineHeight: '19.6px',
@@ -1178,7 +1178,7 @@ const Leads: React.FC = () => {
                             <Box sx={centerContainerStyles}>
                                 <Typography variant="h5" className='first-sub-title' sx={{
                                     mb: 3,
-                                    fontFamily: "Nunito",
+                                    fontFamily: 'Nunito Sans',
                                     fontSize: "20px",
                                     color: "#4a4a4a",
                                     fontWeight: "600",
@@ -1190,7 +1190,7 @@ const Leads: React.FC = () => {
                                     height={250} width={300} />
                                 <Typography variant="body1" className='table-data' sx={{
                                     mt: 3,
-                                    fontFamily: "Nunito",
+                                    fontFamily: 'Nunito Sans',
                                     fontSize: "14px",
                                     color: "#808080",
                                     fontWeight: "600",
@@ -1220,7 +1220,7 @@ const Leads: React.FC = () => {
                             <Box sx={centerContainerStyles}>
                                 <Typography variant="h5" sx={{
                                     mb: 3,
-                                    fontFamily: "Nunito",
+                                    fontFamily: 'Nunito Sans',
                                     fontSize: "20px",
                                     color: "#4a4a4a",
                                     fontWeight: "600",
@@ -1232,7 +1232,7 @@ const Leads: React.FC = () => {
                                 <Typography variant="body1" color="textSecondary"
                                     sx={{
                                         mt: 3,
-                                        fontFamily: "Nunito",
+                                        fontFamily: 'Nunito Sans',
                                         fontSize: "14px",
                                         color: "#808080",
                                         fontWeight: "600",

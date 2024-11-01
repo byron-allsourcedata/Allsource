@@ -1,0 +1,95 @@
+from typing import List
+
+from fastapi import HTTPException
+from httpx import Client
+
+from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
+from enums import IntegrationsStatus
+from persistence.integrations.integrations_persistence import IntegrationsPresistence
+from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
+from schemas.integrations.integrations import IntegrationCredentials, DataMap
+
+
+class AttentiveIntegrationsService:
+
+    def __init__(self, integrations_persistence: IntegrationsPresistence,
+                 sync_persistence: IntegrationsUserSyncPersistence):
+        self.integrations_persistence = integrations_persistence
+        self.sync_persistence = sync_persistence
+        self.QUEUE_DATA_SYNC = 'data_sync_leads'
+        self.client = Client()
+
+    def save_integration(self, domain_id: int, api_key: str, user: dict):
+        credential = self.integrations_persistence.get_credentials_for_service(domain_id, 'Attentive')
+        if credential:
+            raise HTTPException(status_code=409, detail={'status': IntegrationsStatus.ALREADY_EXIST.value})
+        integrations = self.integrations_persistence.create_integration({
+            'domain_id': domain_id,
+            'access_token': api_key,
+            'user_id': user.get('id'),
+            'full_name': user.get('full_name'),
+            'service_name': 'Attentive'
+        })
+        if not integrations:
+            raise HTTPException(status_code=409, detail={'status': IntegrationsStatus.CREATE_IS_FAILED.value})
+        return integrations
+
+    def http_authentication(self, api_key):
+        response = self.client.get('https://api.attentivemobile.com/v1/me', headers={
+            'Authorization': f'Bearer {api_key}',
+            'Content-Type': 'application/json'
+        })
+        if response.status_code == 401:
+            return False
+        return True
+
+    def add_integration(self, credential: IntegrationCredentials, domain, user):
+        api_key = credential.attentive.api_key
+        try:
+            result_authentication = self.http_authentication(api_key=api_key)
+            if not result_authentication:
+                raise HTTPException(status_code=400, detail={"status": IntegrationsStatus.CREDENTAILS_INVALID.value})
+        except:
+            raise HTTPException(status_code=400, detail={'status': IntegrationsStatus.CREDENTAILS_INVALID.value})
+        integration = self.save_integration(domain_id=domain.id, api_key=api_key, user=user)
+        return integration
+
+    async def create_sync(self, leads_type: str, list_id: str, list_name: str, data_map: List[DataMap], domain_id: int,
+                          created_by: str, tags_id: str = None):
+        credentials = self.integrations_persistence.get_credentials_for_service(domain_id, 'Attentive')
+        data_syncs = self.sync_persistence.get_filter_by(domain_id=domain_id)
+        for sync in data_syncs:
+            if sync.get('integration_id') == credentials.id and sync.get('leads_type') == leads_type:
+                return
+        sync = self.sync_persistence.create_sync({
+            'integration_id': credentials.id,
+            'list_id': list_id,
+            'list_name': list_name,
+            'domain_id': domain_id,
+            'leads_type': leads_type,
+            'data_map': data_map,
+            'created_by': created_by,
+        })
+        message = {
+            'sync': {
+                'id': sync.id,
+                "domain_id": sync.domain_id,
+                "integration_id": sync.integration_id,
+                "leads_type": sync.leads_type,
+                "list_id": sync.list_id,
+                'data_map': sync.data_map
+            },
+            'leads_type': leads_type,
+            'domain_id': domain_id
+        }
+        rabbitmq_connection = RabbitMQConnection()
+        connection = await rabbitmq_connection.connect()
+        channel = await connection.channel()
+        await channel.declare_queue(
+            name=self.QUEUE_DATA_SYNC,
+            durable=True
+        )
+        await publish_rabbitmq_message(
+            connection=connection,
+            queue_name=self.QUEUE_DATA_SYNC,
+            message_body=message)

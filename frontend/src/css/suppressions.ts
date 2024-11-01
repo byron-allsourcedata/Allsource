@@ -17,12 +17,17 @@ export const suppressionsStyles: { [key: string]: SxProps<Theme> } = {
         padding: '1.5rem',
         "@media (max-width: 700px)": { padding: '16px' }
     },
+    suppressionContainer: {
+        width: '100%',
+        padding: '1.5rem',
+        "@media (max-width: 700px)": { padding: '8px' }
+    },
     title: {
         fontWeight: '600',
         lineHeight: '21.82px',
         marginBottom: '16px',
         fontSize: '1rem',
-        color: 'rgba(32, 33, 36, 1)'
+        color: 'rgba(32, 33, 36, 1)',
     },
     subtitle: {
         marginBottom: '1rem',
@@ -76,7 +81,7 @@ export const suppressionsStyles: { [key: string]: SxProps<Theme> } = {
         px: '36px',
         fontWeight: '400',
         fontSize: '12px',
-        fontFamily: 'Nunito',
+        fontFamily: 'Nunito Sans',
         color: '4a4a4a',
         lineHeight: '16px'
     },

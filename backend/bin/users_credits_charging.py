@@ -72,6 +72,8 @@ async def on_message_received(message, session):
         lead_user_count = len(lead_users)
         logging.info(f"lead_user_count: {lead_user_count}")
         if lead_user_count > 0:
+            logging.info(f"lead_user_count > 0")
+            logging.info(f"user.leads_credits = {user.leads_credits}")
             if user.leads_credits > 0:
                 logging.info(f"leads_credits > 0")
                 activate_count = min(user.leads_credits, lead_user_count)
@@ -120,25 +122,23 @@ async def on_message_received(message, session):
                         else:
                             logging.error(f"Purchase failed: {result['error']}", exc_info=True)
 
-        account_notification = await save_account_notification(session, user.id, account_notification.id)
+            account_notification = await save_account_notification(session, user.id, account_notification.id)
 
-        queue_name = f'sse_events_{str(user.id)}'
-        rabbitmq_connection = RabbitMQConnection()
-        connection = await rabbitmq_connection.connect()
-        try:
-            await publish_rabbitmq_message(
-                connection=connection,
-                queue_name=queue_name,
-                message_body={'notification_text': message_text, 'notification_id': account_notification.id}
-            )
-        except:
-            await rabbitmq_connection.close()
-        finally:
-            await rabbitmq_connection.close()
+            queue_name = f'sse_events_{str(user.id)}'
+            rabbitmq_connection = RabbitMQConnection()
+            connection = await rabbitmq_connection.connect()
+            try:
+                await publish_rabbitmq_message(
+                    connection=connection,
+                    queue_name=queue_name,
+                    message_body={'notification_text': message_text, 'notification_id': account_notification.id}
+                )
+            except:
+                await rabbitmq_connection.close()
+            finally:
+                await rabbitmq_connection.close()
 
-
-
-
+        logging.info(f"message ack")
         await message.ack()
     except Exception as e:
         logging.error("Error occurred while processing message.", exc_info=True)

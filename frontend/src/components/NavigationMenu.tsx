@@ -29,7 +29,7 @@ const navigationmenuStyles = {
     top: 0,
     left: 0,
     right: 0,
-    zIndex: 1400,
+    zIndex: 200,
     background: '#fff', 
     boxShadow: '0 0.25rem 0.25rem 0 rgba(47, 47, 47, 0.04)',
     borderBottom: '0.0625 solid #E4E4E4',
@@ -45,7 +45,7 @@ const navigationmenuStyles = {
     height: '100%',
     backgroundColor: '#fff',
     transition: 'left 0.3s ease-in-out',
-    zIndex: 1300,
+    zIndex: 100,
     paddingTop: '4.5rem', // Adjust for the header height
   },
   activeItem: {
@@ -69,7 +69,7 @@ const navigationmenuStyles = {
       }
     },
     '& span.MuiListItemText-primary': {
-      fontFamily: 'Nunito',
+      fontFamily: 'Nunito Sans',
       fontSize: '0.875rem',
       color: '#3b3b3b',
       fontWeight: '500',
@@ -106,6 +106,7 @@ const NavigationMenu = () => {
             setShowSlider(true);
         } else {
             router.push(route)
+            setOpen(false)
           }
         }
     catch (error) {

@@ -30,13 +30,13 @@ export const audienceStyles: { [key: string]: SxProps<Theme> } = {
   },
 
   table_array: {
-    fontFamily: 'Nunito', fontSize: '14px', borderRight: '1px solid rgba(235, 235, 235, 1)', fontWeight: '400',
+    fontFamily: 'Nunito Sans', fontSize: '14px', borderRight: '1px solid rgba(235, 235, 235, 1)', fontWeight: '400',
     lineHeight: '19.6px',
     textAlign: 'left',
     textWrap: 'nowrap'
   },
   table_array_status: {
-    fontFamily: 'Nunito', fontSize: '14px', border: '1px solid rgba(235, 235, 235, 1)', fontWeight: '400',
+    fontFamily: 'Nunito Sans', fontSize: '14px', border: '1px solid rgba(235, 235, 235, 1)', fontWeight: '400',
     lineHeight: '19.6px',
     textAlign: 'left',
     textWrap: 'nowrap',
@@ -44,13 +44,13 @@ export const audienceStyles: { [key: string]: SxProps<Theme> } = {
     color: 'rgba(20, 110, 246, 1)',
   },
   table_array_phone: {
-    fontFamily: 'Nunito', fontSize: '14px', borderRight: '1px solid rgba(235, 235, 235, 1)', fontWeight: '400',
+    fontFamily: 'Nunito Sans', fontSize: '14px', borderRight: '1px solid rgba(235, 235, 235, 1)', fontWeight: '400',
     lineHeight: '19.6px',
     textAlign: 'left',
     textWrap: 'wrap',
   },
   table_column: {
-    fontFamily: 'Nunito', fontSize: '14px', borderRight: '1px solid rgba(235, 235, 235, 1)', fontWeight: '700',
+    fontFamily: 'Nunito Sans', fontSize: '14px', borderRight: '1px solid rgba(235, 235, 235, 1)', fontWeight: '700',
     lineHeight: '19.6px',
     textAlign: 'left',
     textWrap: 'nowrap'
@@ -78,7 +78,7 @@ export const audienceStyles: { [key: string]: SxProps<Theme> } = {
     whiteSpace: 'nowrap',
     textAlign: 'start',
     marginTop: '1.5rem',
-    fontFamily: 'Nunito',
+    fontFamily: 'Nunito Sans',
   },
   logoContainer: {
     paddingLeft: '2.5em',
@@ -90,7 +90,7 @@ export const audienceStyles: { [key: string]: SxProps<Theme> } = {
     whiteSpace: 'nowrap',
     textAlign: 'start',
     padding: '1.5rem 0rem 0',
-    fontFamily: 'Nunito',
+    fontFamily: 'Nunito Sans',
     mr: '1em'
   },
   formContainer: {
@@ -118,7 +118,7 @@ export const audienceStyles: { [key: string]: SxProps<Theme> } = {
     width: '100%',
     maxWidth: '360px',
     padding: '220px 0px 24px',
-    fontFamily: 'Nunito',
+    fontFamily: 'Nunito Sans',
   },
   submitButton: {
     mt: 2,
@@ -133,6 +133,6 @@ export const audienceStyles: { [key: string]: SxProps<Theme> } = {
     textTransform: 'none',
     minHeight: '3rem',
     fontSize: '16px',
-    fontFamily: 'Nunito',
+    fontFamily: 'Nunito Sans',
   },
 };

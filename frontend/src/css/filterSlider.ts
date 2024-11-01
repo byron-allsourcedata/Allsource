@@ -55,7 +55,7 @@ export const filterStyles: { [key: string]: SxProps<Theme> } = {
         borderRadius: "50%",
     },
     collapse_font: {
-        fontFamily: 'Nunito',
+        fontFamily: 'Nunito Sans',
         color: 'rgba(74, 74, 74, 1)',
         fontSize: '12px',
         fontWeight: 600,
@@ -63,14 +63,14 @@ export const filterStyles: { [key: string]: SxProps<Theme> } = {
     },
     datetime_picker: {
         '& .MuiInputBase-input': {
-            fontFamily: 'Nunito',
+            fontFamily: 'Nunito Sans',
             fontSize: '14px',
             fontWeight: 400,
             lineHeight: '19.6px',
             textAlign: 'left',
         },
         '& .MuiInputLabel-root': {
-            fontFamily: 'Nunito',
+            fontFamily: 'Nunito Sans',
             fontSize: '14px',
             fontWeight: 400,
             lineHeight: '19.6px',

@@ -521,7 +521,7 @@ const DataSync = () => {
             <Box sx={centerContainerStyles} >
               <Typography variant="h5" className='first-sub-title' sx={{
                 mb: 3,
-                fontFamily: "Nunito",
+                fontFamily: "Nunito Sans",
                 fontSize: "20px",
                 color: "#4a4a4a",
                 fontWeight: "600",
@@ -533,7 +533,7 @@ const DataSync = () => {
                 height={250} width={300} />
               <Typography variant="body1" className='table-data' sx={{
                 mt: 3,
-                fontFamily: "Nunito",
+                fontFamily: "Nunito Sans",
                 fontSize: "14px",
                 color: "#808080",
                 fontWeight: "600",

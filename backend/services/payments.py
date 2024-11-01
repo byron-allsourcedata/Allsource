@@ -101,7 +101,7 @@ class PaymentsService:
 
     def create_customer_session(self, price_id: str, user):
         customer_id = self.plans_service.get_customer_id(user)
-        trial_period = None
+        trial_period = 0
         if not self.plan_persistence.get_user_subscription(user.get('id')):
             trial_period = self.plan_persistence.get_plan_by_price_id(price_id).trial_days
         if get_default_payment_method(customer_id):

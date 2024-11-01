@@ -156,14 +156,15 @@ export const SettingsBilling: React.FC = () => {
         }
     };
 
+
     const fetchBillingHistoryData = async (page: number, rowsPerPage: number) => {
         try {
             setIsLoading(true);
             const response = await axiosInterceptorInstance.get('/settings/billing-history', {
-                // params: {
-                //     page: page + 1, // сервер принимает 1 как первую страницу, а пагинация в React считает с 0
-                //     per_page: rowsPerPage,
-                // },
+                params: {
+                    page: page + 1, // сервер принимает 1 как первую страницу, а пагинация в React считает с 0
+                    per_page: rowsPerPage,
+                },
             });
             const { billing_history, count } = response.data;
             setBillingHistory(billing_history);
@@ -179,7 +180,7 @@ export const SettingsBilling: React.FC = () => {
                 newRowsPerPageOptions = [10, 20, 50, 100];
             } else if (count <= 500) {
                 newRowsPerPageOptions = [10, 20, 50, 100, 300];
-            } else {
+            } else {    
                 newRowsPerPageOptions = [10, 20, 50, 100, 300, 500];
             }
             if (!newRowsPerPageOptions.includes(count)) {
@@ -194,6 +195,7 @@ export const SettingsBilling: React.FC = () => {
         }
     };
 
+    
     useEffect(() => {
         fetchCardData();
         fetchBillingHistoryData(page, rowsPerPage);

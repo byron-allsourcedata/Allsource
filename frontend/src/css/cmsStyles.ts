@@ -3,7 +3,7 @@ import { SxProps, Theme } from '@mui/system';
 
 export const styles: { [key: string]: SxProps<Theme> } = {
   inputLabel: {
-    fontFamily: 'Nunito',
+    fontFamily: 'Nunito Sans',
     fontSize: '16px',
     lineHeight: 'normal',
     color: 'rgba(17, 17, 19, 0.60)',
