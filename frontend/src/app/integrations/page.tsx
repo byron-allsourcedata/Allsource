@@ -1007,8 +1007,8 @@ const Integrations = () => {
     
     useEffect(() => {
         if(statusIntegrate) {
-          if (statusIntegrate == 'Successfuly') {
-            showToast('Connect to Bigcommerce Successfuly');
+          if (statusIntegrate == 'Successfully') {
+            showToast('Connect to Bigcommerce Successfully');
           } else {
             showErrorToast(`Connect to Bigcommerce Failed ${statusIntegrate && statusIntegrate != 'Failed' ? statusIntegrate : ''}`)
           }

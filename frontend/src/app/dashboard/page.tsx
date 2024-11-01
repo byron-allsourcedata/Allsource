@@ -398,8 +398,8 @@ const Dashboard: React.FC = () => {
     useEffect(() => {
       if(statusIntegrate) {
         
-        if (statusIntegrate == 'Successfuly') {
-          showToast('Connect to Bigcommerce Successfuly. Pixel Installed');
+        if (statusIntegrate == 'Successfully') {
+          showToast('Connect to Bigcommerce Successfully. Pixel Installed');
           statusIntegrate = null
         } else {
           showErrorToast(`Connect to Bigcommerce Failed ${statusIntegrate && statusIntegrate != 'Failed' ? statusIntegrate : ''}`)
