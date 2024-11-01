@@ -6,5 +6,5 @@ class BigcommerceConfig(Base):
     client_id = os.getenv('BIGCOMMERCE_CLIENT_ID')
     client_secret = os.getenv('BIGCOMMERCE_CLIENT_SECRET')
     redirect_uri = os.getenv('BIGCOMMERCE_REDIRECT_URI')
-    frontend_redirect = os.getenv('BIGCOMMERCE_FRONTEND_REDIRECT')
-    frontend_dashboard_redirect = os.getenv('BIGCOMMERCE_FRONTEND_REDIRECT_URI_DASHBOARD')
+    frontend_redirect = f'{os.getenv("SITE_HOST_URL")}/{os.getenv("INTEGRATIONS_PART_URL")}'
+    frontend_dashboard_redirect = f'{os.getenv("SITE_HOST_URL")}/{os.getenv("DASHBOARD_PART_URL")}'
