@@ -113,11 +113,14 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
   const [headerTitle, setHeaderTitle] = useState<string>('Install on CMS');
   const [shop_domain, setDomain] = useState('');
   const [access_token, setAccessToken] = useState('');
+  const [storeHash, setstoreHash] = useState('')
+  const [storeHashError, setStoreHashError] = useState(false)
   const [errors, setErrors] = useState({
     access_token: "",
     shop_domain: "",
   });
 
+  
   useEffect(() => {
     const fetchCredentials = async () => {
       try {
@@ -147,6 +150,12 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
     showToast('Site ID copied to clipboard!');
   };
 
+  const handleStoreHashChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    setstoreHash(value)
+    setStoreHashError(!!value)
+  }
+
   const handleButtonClick = async (cms: string) => {
     setSelectedCMS(cms);
     setHeaderTitle(`Install with ${cms}`);
@@ -173,6 +182,10 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
     }
   };
 
+  const handleSubmitBigcommerce = async() => {
+    const response = await axiosInstance.get('/integrations/bigcommerce/oauth', {params: {store_hash: storeHash}})
+    window.location.href = response.data.url;
+  }
 
   const handleSubmit = async () => {
     const newErrors = {
@@ -353,7 +366,7 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
                       </Button>
                     </Box>
                   </>
-                ) : (
+                ) : ( selectedCMS === 'WordPress' ? (
                   <>
                     <Box sx={{ flex: 1, overflowY: 'auto', paddingBottom: '2em', }}>
                       <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', padding: '1em 0em 0em 0em', justifyContent: 'start' }}>
@@ -432,7 +445,60 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
                       </Button>
                     </Box>
                   </>
-                )}
+                ) : (
+                  <>
+                    <Box sx={{ flex: 1, overflowY: 'auto', paddingBottom: '1em', height: '100%' }}>
+                      <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', padding: 0, justifyContent: 'start' }}>
+                        <Image src='/1.svg' alt='1' width={28} height={28} />
+                        <Typography className='first-sub-title' sx={{ ...maintext, textAlign: 'left', padding: '1em 0em 1em 1em', fontWeight: '500' }}>Enter your Bigcommerce store hash in the designated field. This allows our system to identify your store.</Typography>
+                      </Box>
+                      <Box
+                        component="pre"
+                        sx={{ display: 'flex', width: '100%', justifyContent: 'center', margin: 0, pl: 1 }}
+                      >
+                        <TextField
+                          fullWidth
+                          label="Store Hash"
+                          variant="outlined"
+                          placeholder='Enter your Store Hash'
+                          margin="normal"
+                          value={storeHash}
+                          sx={styles.formField}
+                          onFocus={handleFocus}
+                          onBlur={handleBlur}
+                          error={storeHashError}
+                          InputProps={{ sx: styles.formInput }}
+                          onChange={handleStoreHashChange}
+                          InputLabelProps={{ sx: styles.inputLabel }}
+                        />
+                      </Box>
+                      <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'start' }}>
+                        <Image src='/2.svg' alt='2' width={28} height={28} />
+                        <Typography className='first-sub-title' sx={{ ...maintext, textAlign: 'left', padding: '2em 1em 1em', fontWeight: '500', '@media (max-width: 600px)': { padding: '1em' } }}>Once you have submitted the required information, our system will automatically install the script on your Bigcommerce store. You don’t need to take any further action.</Typography>
+                      </Box>
+                    </Box>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', maxHeight: '100%', padding: '0em 1em' }}>
+                      <Button
+                        fullWidth
+                        variant="contained"
+                        sx={{
+                          ...styles.submitButton,
+                          marginTop: 'auto',
+                          pointerEvents: !!storeHash ? "auto" : "none",
+                          backgroundColor: "rgba(80, 82, 178, 1)",
+                          "&.Mui-disabled": {
+                            backgroundColor: "rgba(80, 82, 178, 0.3)",
+                            color: "#fff",
+                          },
+                        }}
+                        onClick={handleSubmitBigcommerce}
+                        disabled={!storeHash}
+                      >
+                        Install Pixel
+                      </Button>
+                    </Box>
+                  </>
+                ))}
               </Box>
             </>
           ) : (
@@ -525,6 +591,44 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
                         height={38} />
                       <Typography className='second-sub-title' sx={{ ...typographyStyles, pt: 1.75 }}>
                         WordPress
+                      </Typography>
+                    </Button>
+                  </Grid>
+                  <Grid
+                    item
+                    xs={12}
+                    md={6}
+                    sx={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: '100%',
+                    }}
+                  >
+                    <Button
+                      variant="outlined"
+                      fullWidth
+                      onClick={() => handleButtonClick('Bigcommerce')}
+                      sx={{
+                        ...buttonStyles,
+                        '@media (max-width: 600px)': {
+                          width: '90%',
+                          display: 'flex',
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          justifyContent: 'start',
+                          gap: 1
+                        },
+                      }}
+                    >
+                      <Image
+                        src={'/bigcommerce-icon.svg'}
+                        alt="Install on CMS"
+                        width={38}
+                        height={38} />
+                      <Typography className='second-sub-title' sx={{ ...typographyStyles, pt: 1.75 }}>
+                        Bigcommerce
                       </Typography>
                     </Button>
                   </Grid>

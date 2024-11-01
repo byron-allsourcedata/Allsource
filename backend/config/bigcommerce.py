@@ -7,3 +7,4 @@ class BigcommerceConfig(Base):
     client_secret = os.getenv('BIGCOMMERCE_CLIENT_SECRET')
     redirect_uri = os.getenv('BIGCOMMERCE_REDIRECT_URI')
     frontend_redirect = os.getenv('BIGCOMMERCE_FRONTEND_REDIRECT')
+    frontend_dashboard_redirect = os.getenv('BIGCOMMERCE_FRONTEND_REDIRECT_URI_DASHBOARD')

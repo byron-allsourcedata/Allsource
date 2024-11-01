@@ -188,6 +188,7 @@ const PixelInstallation: React.FC = () => {
             <Box>
               <Image src={'/install_cms1.svg'} alt="Install on CMS" width={24} height={24} style={{marginRight:4}} />
               <Image src={'/install_cms2.svg'} alt="Install on CMS" width={24} height={24} />
+              <Image src={'/bigcommerce-icon.svg'} alt="Install on CMS" width={24} height={24} />
             </Box>
             <Typography className="second-sub-title" sx={{...typographyStyles, pt: '9px'}}>Install on CMS</Typography>
           </Button>

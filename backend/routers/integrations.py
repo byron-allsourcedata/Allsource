@@ -161,7 +161,7 @@ async def set_suppression(suppression_data: SupperssionSet, service_name: str = 
 
 
 @router.get("/bigcommerce/oauth")
-async def bigcommerce_redirect_login(store_hash: str = Query(...), user = Depends(check_user_authorization), domain = Depends(check_pixel_install_domain)):
+async def bigcommerce_redirect_login(store_hash: str = Query(...), is_pixel_install: bool = Query(False), user = Depends(check_user_authentication), domain = Depends(check_domain)):
     scope = ['store_v2_orders_read_only','store_v2_content','store_content_checkout', 'store_v2_information_read_only']
     params = {
         "client_id": BigcommerceConfig.client_id,
@@ -169,7 +169,7 @@ async def bigcommerce_redirect_login(store_hash: str = Query(...), user = Depend
         "context": f"stores/{store_hash}",
         "response_type": "code",
         "scope": ' '.join(scope),
-        'state': f'{user.get("id")}:{domain.id}'
+        'state': f'{user.get("id")}:{domain.id}:{is_pixel_install}'
     }
     query_string = urlencode(params)
     authorize_url = f"https://login.bigcommerce.com/oauth2/authorize?{query_string}"    
@@ -183,7 +183,8 @@ async def bigcommerce_oauth_callback(code: str, state: str = Query(None),
                                      user_persistence: UserPersistence = Depends(get_user_persistence_service),
                                      domain_persistence: UserDomainsPersistence = Depends(get_user_domain_persistence)):
     FRONTEND_REDIRECT_URI = BigcommerceConfig.frontend_redirect
-    user_id, domain_id = state.split(':')
+    FRONTEND_REDIRECT_URI_DASHBOARD = BigcommerceConfig.frontend_dashboard_redirect
+    user_id, domain_id, is_pixel_install = state.split(':')
     user = user_persistence.get_user_by_id(user_id)
     domain = domain_persistence.get_domain_by_filter(id=domain_id)[0]
     token_url = "https://login.bigcommerce.com/oauth2/token"
@@ -213,8 +214,14 @@ async def bigcommerce_oauth_callback(code: str, state: str = Query(None),
                     domain=domain
                 )
                 except HTTPException as e:
-                    error_message = e.detail if isinstance(e.detail, str) else 'Failed'
-                    return RedirectResponse(url=f'{FRONTEND_REDIRECT_URI}?message={error_message}')
-        return RedirectResponse(url=f'{FRONTEND_REDIRECT_URI}?message=Successfuly')
+                    if is_pixel_install:
+                        return RedirectResponse(url=f'{FRONTEND_REDIRECT_URI_DASHBOARD}?message=Successfuly')
+                    else:
+                        error_message = e.detail if isinstance(e.detail, str) else 'Failed'
+                        return RedirectResponse(url=f'{FRONTEND_REDIRECT_URI}?message={error_message}') 
+        if is_pixel_install:
+            return RedirectResponse(url=f'{FRONTEND_REDIRECT_URI_DASHBOARD}?message=Successfuly')
+        else:
+            return RedirectResponse(url=f'{FRONTEND_REDIRECT_URI}?message=Successfuly')
     else:
         return RedirectResponse(url=f'{FRONTEND_REDIRECT_URI}?message=Failed')
