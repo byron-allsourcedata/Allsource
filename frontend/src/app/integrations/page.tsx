@@ -1,7 +1,7 @@
 'use client';
 
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { integrationsStyle } from "./integrationsStyle";
 import axiosInstance from '../../axios/axiosInterceptorInstance';
 import { Box, Button, Typography, Tab, TextField, InputAdornment, Popover, IconButton, TableContainer, Table, Paper, TableHead, TableRow, TableCell, TableBody, Tooltip } from "@mui/material";
@@ -10,7 +10,7 @@ import CustomTooltip from "@/components/customToolTip";
 import TabContext from "@mui/lab/TabContext";
 import TabPanel from "@mui/lab/TabPanel";
 import TabList from "@mui/lab/TabList";
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import axios, { AxiosError } from "axios";
 import Slider from '../../components/Slider';
 import { SliderProvider } from "@/context/SliderContext";
@@ -35,6 +35,7 @@ import MailchimpConnect from "@/components/MailchimpConnect";
 import RevenueTracking from "@/components/RevenueTracking";
 import SendlaneConnect from "@/components/SendlaneConnect";
 import AttentiveIntegrationPopup from "@/components/AttentiveIntegrationPopup";
+
 interface IntegrationBoxProps {
     image: string;
     handleClick?: () => void;
@@ -351,12 +352,14 @@ const UserIntegrationsList = ({ integrationsCredentials, changeTab = () => { }, 
             handleClose={handleClose}
             onSave={() => { }}  
             initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'Shopify')?.access_token}
+            initShopDomain={integrationsCredentials?.find(integration => integration.service_name === 'Shopify')?.shop_domain}
         />
         <BCommerceConnect 
             open={openBigcommrceConnect} 
-            handleClose={handleClose}
-            initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'BigCommerce')?.access_token}
-            initHashDomain={integrationsCredentials?.find(integration => integration.service_name === 'BigCommerce')?.shop_domain}
+            onClose={handleClose}
+            onSave={() => { }}
+            initShopHash={integrationsCredentials?.find(integration => integration.service_name === 'BigCommerce')?.shop_domain}
+            error_message={integrationsCredentials?.find(integration => integration.service_name === 'BigCommerce')?.error_message}
         />
         <OmnisendConnect open={openOmnisendConnect} handleClose={handleClose} onSave={handleSaveOmnisend} initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'Omnisend')?.access_token}/>
         <MailchimpConnect open={openMailchinpConnect} handleClose={handleClose} onSave={handleSaveMailchip} initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'Mailchimp')?.access_token} />
@@ -370,7 +373,7 @@ const UserIntegrationsList = ({ integrationsCredentials, changeTab = () => { }, 
             integrationsCredentials={integrationsCredentials} 
         />
         <Box>
-            {(activeService && activeService != 'Shopify' && activeService != 'BigCommerce') && (<DataSyncList service_name={activeService} />)}
+            {(activeService && activeService != 'Shopify' && activeService != 'Bigcommerce') && (<DataSyncList service_name={activeService} />)}
         </Box>
         </>
     );
@@ -477,7 +480,7 @@ const IntegrationsAvailable = ({ integrationsCredentials: integrations, handleSa
                 onSave={handleSaveMeta}
             />
             <ShopifySettings open={openShopifyConnect} handleClose={handleClose} onSave={handleSaveShopify}/>
-            <BCommerceConnect open={openBigcommrceConnect} handleClose={handleClose} />
+            <BCommerceConnect open={openBigcommrceConnect} onClose={handleClose} onSave={() => { }}/>
             <OmnisendConnect open={openOmnisendConnect} handleClose={handleClose} onSave={handleSaveOmnisend} />
             <MailchimpConnect open={openMailchinpConnect} handleClose={handleClose} onSave={handleSaveMailchip} />
             <SendlaneConnect open={openSendlaneConnect} handleClose={handleClose} onSave={handleSaveSendlane} />
@@ -991,6 +994,8 @@ const Integrations = () => {
     const [showSlider, setShowSlider] = useState(false);
     const [isLoading, setLoading] = useState(true)
     const [activeTab, setActiveTab] = useState("1");
+    const searchParams = useSearchParams();
+    const statusIntegrate = searchParams.get('message');
     const handleTabChange = (event: React.SyntheticEvent, newValue: string) => {
         setValue(newValue);
         setActiveTab(newValue)
@@ -999,6 +1004,19 @@ const Integrations = () => {
     const installPixel = () => {
         router.push('/dashboard');
     };
+    
+    useEffect(() => {
+        if(statusIntegrate) {
+          if (statusIntegrate == 'Successfuly') {
+            showToast('Connect to Bigcommerce Successfuly');
+          } else {
+            showErrorToast(`Connect to Bigcommerce Failed ${statusIntegrate && statusIntegrate != 'Failed' ? statusIntegrate : ''}`)
+          }
+        }
+        const newSearchParams = new URLSearchParams(searchParams.toString());
+        newSearchParams.delete('message');
+        router.replace(`?${newSearchParams.toString()}`);
+    }, [statusIntegrate])
 
     const centerContainerStyles = {
         mt: 3,
@@ -1279,7 +1297,9 @@ const Integrations = () => {
 const IntegraitonsPage = () => {
     return (
         <SliderProvider>
-            <Integrations />
+          <Suspense fallback={<CustomizedProgressBar />}>
+              <Integrations />
+          </Suspense>
         </SliderProvider>
     )
 }

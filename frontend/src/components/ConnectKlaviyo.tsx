@@ -1793,7 +1793,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                         {/* Button based on selected tab */}
 
                     </Box>
-                    <Box sx={{ px: 2, py: 3.5, border: '1px solid #e4e4e4', position: 'fixed', bottom: 0, right: 0, background: '#fff',
+                    <Box sx={{ px: 2, py: 3.5, border: '1px solid #e4e4e4', position: 'fixed', bottom: 0, right: 0, background: '#fff', zIndex: '1',
                         width: '620px',
                         '@media (max-width: 600px)': {
                                 width: '100%',

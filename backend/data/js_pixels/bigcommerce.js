@@ -49,6 +49,35 @@
     }};
 }})(window, window.fetch);
 
+(function() {
+    let checkoutCompletedCalled = false;
+
+    function getCartPriceValue() {
+        const priceItemElement = document.querySelector('.cart-priceItem-value');
+        if (priceItemElement) {
+            const priceValue = priceItemElement.textContent.trim();
+            const numericValue = parseFloat(priceValue.replace(/[^0-9.-]+/g, ""));
+            return numericValue; 
+        }
+        return null; 
+    }
+
+    function checkoutHandler() {
+        if (!checkoutCompletedCalled) {
+            const totalPrice = getCartPriceValue(); 
+            if (totalPrice !== null) {
+                checkoutCompleted({ total_price: totalPrice });
+                checkoutCompletedCalled = true; 
+            }
+        }
+    }
+
+    setTimeout(checkoutHandler, 2000);
+})();
+
+
+
+
 function addToCart(item) { PixelSendFunction({action: 'product_added_to_cart', product: item}) }
 
 function viewedProduct(item) { PixelSendFunction({action: 'viewed_product', product: item}) }
