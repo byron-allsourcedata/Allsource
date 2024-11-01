@@ -393,6 +393,23 @@ const Dashboard: React.FC = () => {
   const [formattedDates, setFormattedDates] = useState<string>('');
   const [appliedDates, setAppliedDates] = useState<{ start: Date | null; end: Date | null }>({ start: null, end: null });
   const [selectedDateLabel, setSelectedDateLabel] = useState<string>('');
+  const searchParams = useSearchParams();
+  let statusIntegrate = searchParams.get('message');
+    useEffect(() => {
+      if(statusIntegrate) {
+        
+        if (statusIntegrate == 'Successfuly') {
+          showToast('Connect to Bigcommerce Successfuly. Pixel Installed');
+          statusIntegrate = null
+        } else {
+          showErrorToast(`Connect to Bigcommerce Failed ${statusIntegrate && statusIntegrate != 'Failed' ? statusIntegrate : ''}`)
+          statusIntegrate = null
+        }
+        const newSearchParams = new URLSearchParams(searchParams.toString());
+        newSearchParams.delete('message');
+        router.replace(`?${newSearchParams.toString()}`);
+      }
+    }, [statusIntegrate])
   const handleDateLabelChange = (label: string) => {
     setSelectedDateLabel(label);
   };
@@ -482,6 +499,8 @@ const Dashboard: React.FC = () => {
   if (isLoading) {
     return <CustomizedProgressBar />;
   }
+
+  
 
   return (
     <>
@@ -778,22 +797,6 @@ const Dashboard: React.FC = () => {
 };
 
 const DashboardPage: React.FC = () => {
-  const searchParams = useSearchParams();
-  const statusIntegrate = searchParams.get('message');
-  const router = useRouter()
-    useEffect(() => {
-      if(statusIntegrate) {
-        if (statusIntegrate == 'Successfuly') {
-          
-          showToast('Connect to Bigcommerce Successfuly. Pixel Installed');
-        } else {
-          showErrorToast(`Connect to Bigcommerce Failed ${statusIntegrate && statusIntegrate != 'Failed' ? statusIntegrate : ''}`)
-        }
-      }
-      const newSearchParams = new URLSearchParams(searchParams.toString());
-      newSearchParams.delete('message');
-      router.replace(`?${newSearchParams.toString()}`);
-    }, [statusIntegrate])
   return (
     <Suspense fallback={<CustomizedProgressBar />}>
       <SliderProvider>
