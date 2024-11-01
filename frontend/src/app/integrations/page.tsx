@@ -1,7 +1,7 @@
 'use client';
 
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { integrationsStyle } from "./integrationsStyle";
 import axiosInstance from '../../axios/axiosInterceptorInstance';
 import { Box, Button, Typography, Tab, TextField, InputAdornment, Popover, IconButton, TableContainer, Table, Paper, TableHead, TableRow, TableCell, TableBody, Tooltip } from "@mui/material";
@@ -1297,7 +1297,9 @@ const Integrations = () => {
 const IntegraitonsPage = () => {
     return (
         <SliderProvider>
-            <Integrations />
+          <Suspense fallback={<CustomizedProgressBar />}>
+              <Integrations />
+          </Suspense>
         </SliderProvider>
     )
 }
