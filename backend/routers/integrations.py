@@ -215,13 +215,13 @@ async def bigcommerce_oauth_callback(code: str, state: str = Query(None),
                 )
                 except HTTPException as e:
                     if is_pixel_install:
-                        return RedirectResponse(url=f'{FRONTEND_REDIRECT_URI_DASHBOARD}?message=Successfuly')
+                        return RedirectResponse(url=f'{FRONTEND_REDIRECT_URI_DASHBOARD}?message=Successfully')
                     else:
                         error_message = e.detail if isinstance(e.detail, str) else 'Failed'
                         return RedirectResponse(url=f'{FRONTEND_REDIRECT_URI}?message={error_message}') 
         if is_pixel_install:
-            return RedirectResponse(url=f'{FRONTEND_REDIRECT_URI_DASHBOARD}?message=Successfuly')
+            return RedirectResponse(url=f'{FRONTEND_REDIRECT_URI_DASHBOARD}?message=Successfully')
         else:
-            return RedirectResponse(url=f'{FRONTEND_REDIRECT_URI}?message=Successfuly')
+            return RedirectResponse(url=f'{FRONTEND_REDIRECT_URI}?message=Successfully')
     else:
         return RedirectResponse(url=f'{FRONTEND_REDIRECT_URI}?message=Failed')
