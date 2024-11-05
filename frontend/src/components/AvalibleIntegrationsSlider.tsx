@@ -19,9 +19,10 @@ interface AvailableIntegrationsSliderProps {
     integrationsCredentials: any[]
     open: boolean
     onClose: () => void
+    handleSaveSettings?: (new_integration: any) => void
 }
 
-const AlivbleIntagrationsSlider = ({open, isContactSync = false, integrations, integrationsCredentials, onClose}: AvailableIntegrationsSliderProps) => {
+const AlivbleIntagrationsSlider = ({open, isContactSync = false, integrations, integrationsCredentials, onClose, handleSaveSettings }: AvailableIntegrationsSliderProps) => {
     const [openMetaConnect, setOpenMetaConnect] = useState(false)
     const [openKlaviyoConnect, setOpenKlaviyoConnect] = useState(false)
     const [openAttentiveConnect, setAttentiveConnect] = useState(false)
@@ -30,7 +31,6 @@ const AlivbleIntagrationsSlider = ({open, isContactSync = false, integrations, i
     const [openOmnisendConnect, setOpenOmnisendConnect] = useState(false)
     const [openMailchimpConnect, setOpenMailchimpConnect] = useState(false)
     const [openSendlaneConnect, setOpenSendlaneConnect] = useState(false)
-
     const handleClose = () => {
         setOpenMetaConnect(false)
         setOpenKlaviyoConnect(false)
@@ -41,7 +41,11 @@ const AlivbleIntagrationsSlider = ({open, isContactSync = false, integrations, i
         setOpenSendlaneConnect(false)
     }
 
-    const handleSave = () => {}
+    const saveIntegration = (new_integration: any) => {
+        if(handleSaveSettings) {
+            handleSaveSettings(new_integration)
+        }
+    } 
 
     if(!open) return null
 
@@ -410,18 +414,17 @@ const AlivbleIntagrationsSlider = ({open, isContactSync = false, integrations, i
                     </Box>
                 </Box>
         </Drawer>
-        <MetaConnectButton open={openMetaConnect} onClose={handleClose} onSave={() => { }}/>
-        <KlaviyoIntegrationPopup open={openKlaviyoConnect} handleClose={handleClose} onSave={handleSave}/>
-        <AttentiveIntegrationPopup open={openAttentiveConnect} handleClose={handleClose} onSave={handleSave}/>
-        <ShopifySettings open={openShopifuConnect} handleClose={handleClose} onSave={handleSave} />
+        <MetaConnectButton open={openMetaConnect} onClose={handleClose} onSave={saveIntegration}/>
+        <KlaviyoIntegrationPopup open={openKlaviyoConnect} handleClose={handleClose} onSave={saveIntegration}/>
+        <AttentiveIntegrationPopup open={openAttentiveConnect} handleClose={handleClose} onSave={saveIntegration}/>
+        <ShopifySettings open={openShopifuConnect} handleClose={handleClose} onSave={saveIntegration} />
         <BCommerceConnect 
                     open={openBigcommrceConnect} 
                     onClose={() => setOpenBigcommerceConnect(false)}
-                    onSave={() => { }}
                 />
-        <OmnisendConnect open={openOmnisendConnect} handleClose={() => setOpenOmnisendConnect(false)} onSave={() => { }} />
-        <MailchimpConnect open={openMailchimpConnect} handleClose={() => setOpenMailchimpConnect(false)} onSave={() => { }} />
-        <SendlaneConnect open={openSendlaneConnect} handleClose={() => setOpenSendlaneConnect(false)} onSave={() => { }} />
+        <OmnisendConnect open={openOmnisendConnect} handleClose={() => setOpenOmnisendConnect(false)} onSave={saveIntegration} />
+        <MailchimpConnect open={openMailchimpConnect} handleClose={() => setOpenMailchimpConnect(false)} onSave={saveIntegration} />
+        <SendlaneConnect open={openSendlaneConnect} handleClose={() => setOpenSendlaneConnect(false)} onSave={saveIntegration} />
         </>
     )
 }

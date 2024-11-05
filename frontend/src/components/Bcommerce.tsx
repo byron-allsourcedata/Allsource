@@ -7,10 +7,9 @@ import { showToast } from "./ToastNotification";
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 
 
-interface MetaConnectPopupProps {
+interface BigcommerceConntectPopupProps {
     open: boolean
     onClose: () => void
-    onSave: (new_integration: any) => void
     error_message?: string
     initShopHash? : string
 }
@@ -74,7 +73,7 @@ const metaStyles = {
       
 }
 
-const BCommerceConnect = ({open, onClose, onSave, error_message, initShopHash}: MetaConnectPopupProps) => {
+const BCommerceConnect = ({open, onClose, error_message, initShopHash}: BigcommerceConntectPopupProps) => {
     const [shopHash, setShopHash] = useState('')
     const [loading, setLoading] = useState(false)
     

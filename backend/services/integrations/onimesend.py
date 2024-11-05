@@ -118,6 +118,7 @@ class OmnisendIntegrationService:
 
     async def process_data_sync(self, message):
         counter = 0
+        last_leads_sync = None
         sync = None
         try:
             sync = IntegrationUserSync(**message.get('sync'))
@@ -169,10 +170,13 @@ class OmnisendIntegrationService:
                 if lead and lead.behavior_type != data_sync_item.leads_type and data_sync_item.leads_type not in ('allContacts', None):
                     logging.warning("Lead behavior type mismatch: %s vs %s", lead.behavior_type, data_sync_item.leads_type)
                     continue
-
+                last_lead_sync_id = data_sync_item.last_lead_sync_id
                 data_map = data_sync_item.data_map if data_sync_item.data_map else None
-
+                if last_leads_sync:
+                    last_leads_sync = self.leads_persistence.get_lead_user_by_up_id(domain_id=domain.id, up_id=last_lead_sync_id)
                 for lead in leads:
+                    if last_leads_sync and lead.five_x_five_user_id < last_leads_sync.five_x_five_user_id:
+                        continue
                     if stage > 3:
                         logging.info("Stage limit reached. Exiting.")
                         return
@@ -190,7 +194,7 @@ class OmnisendIntegrationService:
                         )
                         continue
                     
-                    profile = self.__create_profile(lead.five_x_five_user_id, credentials, data_sync_item.list_id)
+                    profile = self.__create_profile(lead.five_x_five_user_id, credentials, data_sync_item.list_id, data_map)
                     if not profile:
                         data_sync_item.sync_status = False
                         self.sync_persistence.db.commit()
@@ -210,9 +214,11 @@ class OmnisendIntegrationService:
                     self.sync_persistence.db.commit()
                     logging.info("Profile added successfully for lead: %s", lead.five_x_five_user_id)
                     counter += 1
-                    self.sync_persistence.update_sync({
-                        'last_sync_date': datetime.now()
-                    }, id=data_sync_item.id)
+                    last_leads_sync = lead
+                self.sync_persistence.update_sync({
+                    'last_sync_date': datetime.now(),
+                    'last_lead_sync_id': self.leads_persistence.get_lead_data(last_leads_sync.five_x_five_user_id).up_id if counter > 0 else last_lead_sync_id
+                },counter=counter, id=data_sync_item.id)
                 logging.info("Sync updated for item id: %s", data_sync_item.id)
 
     def __create_profile(self, lead_id: int, credentials, data_map):

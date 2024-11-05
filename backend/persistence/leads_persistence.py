@@ -681,9 +681,9 @@ class LeadsPersistence:
         max_page = math.ceil(count / per_page) if per_page > 0 else 1
         return leads_data, count, max_page
 
-    def get_leads_users_by_lead_id(self, lead_id: int, user_id: int) -> LeadUser:
+    def get_leads_users_by_lead_id(self, lead_id: int, domain_id: int) -> LeadUser:
         return self.db.query(LeadUser).filter(LeadUser.five_x_five_user_id == lead_id,
-                                              LeadUser.domain_id == user_id).first()
+                                              LeadUser.domain_id == domain_id).first()
 
     def get_leads_user_filter_by_email(self, domain_id: int, email: str):
         return self.db.query(LeadUser).join(FiveXFiveUser, FiveXFiveUser.id == LeadUser.five_x_five_user_id).filter(
@@ -740,6 +740,7 @@ class LeadsPersistence:
         query = query.filter(or_(*filters))
         leads = query.all()
         return leads
+    
 
     def search_location(self, start_letter, dommain_id):
         query = (
@@ -762,3 +763,7 @@ class LeadsPersistence:
         )
         locations = query.all()
         return locations
+
+    def get_lead_user_by_up_id(self, domain_id, up_id):
+        return self.db.query(LeadUser).join(FiveXFiveUser, FiveXFiveUser.id == LeadUser.five_x_five_user_id).filter(FiveXFiveUser.up_id == up_id, LeadUser.domain_id == domain_id).first()
+    

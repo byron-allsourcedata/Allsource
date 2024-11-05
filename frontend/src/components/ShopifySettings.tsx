@@ -12,7 +12,7 @@ import { showToast } from "./ToastNotification";
 
 interface ShopifyProps {
     handleClose: () => void
-    onSave: (integration: IntegrationsCredentials) => void 
+    onSave: (integration: any) => void 
     open: boolean
     initApiKey?: string 
     initShopDomain?: string
@@ -183,7 +183,8 @@ const ShopifySettings = ({ handleClose, open, onSave, initApiKey, initShopDomain
                 }
             }, {params: {service_name: 'shopify'}})
             if(response.status === 200) {
-            showToast('Shopify Integrated')
+                showToast('Shopify Integrated')
+                onSave({service_name: 'Shopify', is_failed: false, shop_domain: shopDomain, access_token: apiKey})
             }
         }
         finally {
