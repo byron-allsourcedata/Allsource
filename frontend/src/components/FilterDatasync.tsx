@@ -23,6 +23,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
   const [selectedButton, setSelectedButton] = useState<string | null>(null);
   const [isVisitedDateOpen, setIsVisitedDateOpen] = useState(false);
   const [isLeadFunnel, setIsLeadFunnel] = useState(false);
+  const [isListType, setIsListType] = useState(false)
   const [isStatus, setIsStatus] = useState(false);
   const [isRecurringVisits, setIsRecurringVisits] = useState(false);
   const [region, setRegions] = useState("");
@@ -45,6 +46,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
   );
   const [regions, setTags] = useState<string[]>([]);
   const [selectedFunnels, setSelectedFunnels] = useState<string[]>([]);
+  const [selectedListType, setSelectedListType] = useState<string[]>([])
   const [selectedStatus, setSelectedStatus] = useState<string[]>([]);
   const [buttonFilters, setButtonFilters] = useState<ButtonFilters>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -75,6 +77,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
       toDate: number;
     };
     selectedFunnels: string[];
+    selectedListType: string[];
   } | null;
 
   const handleAddTag = (e: { key: string }) => {
@@ -110,6 +113,14 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
 
   const handleButtonLeadFunnelClick = (label: string) => {
     setSelectedFunnels((prev) =>
+      prev.includes(label)
+        ? prev.filter((item) => item !== label)
+        : [...prev, label]
+    );
+  };
+
+  const handleButtonListTypeClick = (label: string) => {
+    setSelectedListType((prev) =>
       prev.includes(label)
         ? prev.filter((item) => item !== label)
         : [...prev, label]
@@ -664,6 +675,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
       from_time: fromTime,     // Установленное значение времени начала
       to_time: toTime,         // Установленное значение времени окончания
       selectedFunnels: buttonFilters ? buttonFilters.selectedFunnels : selectedFunnels,
+      selectedListType: buttonFilters ? buttonFilters.selectedListType : selectedListType,
       button: buttonFilters ? buttonFilters.button : selectedButton,
       selectedStatus,
     };
@@ -892,6 +904,10 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
     return selectedFunnels.length > 0;
   };
 
+  const isListTypeActive = () => {
+    return selectedListType.length > 0
+  }
+
   // Status
   const isStatusFilterActive = () => {
     return selectedStatus.length > 0;
@@ -1076,7 +1092,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
     setIsLeadFunnel(false);
     setIsStatus(false);
     setIsRecurringVisits(false);
-
+    setIsListType(false)
     setCheckedFiltersPageVisits({
       page: false,
       two_page: false,
@@ -1118,7 +1134,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
     });
 
     setSelectedValues([]);
-
     // Сброс значений фильтров
     setRegions("");
     setSelectedDateRange(null);
@@ -1135,7 +1150,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
     setSelectedStatus([]);
     setButtonFilters(null);
     setSearchQuery("");
-
+    setSelectedListType([])
     sessionStorage.removeItem('filters')
   };
 
@@ -1336,6 +1351,91 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
               </Box>
             </Collapse>
 
+          </Box>
+          <Box
+            sx={filterStyles.main_filter_form}
+          >
+            <Box
+              sx={filterStyles.filter_form}
+              onClick={() => setIsListType(!isListType)}
+            >
+              <Box
+                sx={{
+                  ...filterStyles.active_filter_dote,
+                  visibility: isListTypeActive() ? "visible" : "hidden"
+                }}
+              />
+              <Image src="/people.svg" alt="calendar" width={18} height={18} />
+              <Typography
+                sx={{
+                  ...filterStyles.filter_name
+                }}
+              >
+                List Type
+              </Typography>
+              {selectedListType.map((label) => (
+                <CustomChip
+                  key={label}
+                  label={label}
+                  onDelete={() => handleButtonListTypeClick(label)}
+                />
+              ))}
+              <IconButton
+                onClick={() => setIsListType(!isListType)}
+                aria-label="toggle-content"
+              >
+                {isListType ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+              </IconButton>
+            </Box>
+            <Collapse in={isListType}>
+              <Box sx={{ display: "flex", width: '100%', flexWrap: 'wrap', gap: 1, pt: 2, pl: 2 }}>
+                {[
+                  "All Contact",
+                  "View Product",
+                  "Add To Cart",
+                  "Visitor"
+                ].map((label) => {
+                  const isSelected = selectedListType.includes(label);
+                  return (
+                    <Button
+                      key={label}
+                      className='second-sub-title'
+                      onClick={() => handleButtonListTypeClick(label)}
+                      sx={{
+                        width: "calc(25% - 8px)",
+                        height: "2em",
+                        textTransform: "none",
+                        gap: "0px",
+                        padding: '1em 2em',
+                        textWrap: "nowrap",
+                        textAlign: "center",
+                        borderRadius: "4px",
+                        fontFamily: "Nunito",
+                        opacity: 1,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        border: isSelected
+                        ? "1px solid rgba(80, 82, 178, 1)"
+                        : "1px solid rgba(220, 220, 239, 1)",
+                        color: isSelected
+                          ? "rgba(80, 82, 178, 1) !important"
+                          : "#5F6368 !important",
+                        backgroundColor: isSelected
+                          ? "rgba(237, 237, 247, 1)"
+                          : "rgba(255, 255, 255, 1)",
+                        lineHeight: '20px !important',
+                        '@media (max-width:600px)': {
+                          width: '48%'
+                        }
+                      }}
+                    >
+                      {label}
+                    </Button>
+                  );
+                })}
+              </Box>
+            </Collapse>
           </Box>
           {/* Lead status */}
           <Box

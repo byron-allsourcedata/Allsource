@@ -469,7 +469,7 @@ const DataSync = () => {
               textTransform: "none",
               //selectedFilters.length > 0 ? 'rgba(80, 82, 178, 1)' :
               color: "rgba(128, 128, 128, 1)",
-              border: filters.lenght > 0 ? '1px solid rgba(80, 82, 178, 1)' : "1px solid rgba(184, 184, 184, 1)",
+              border: filters?.lenght > 0 ? '1px solid rgba(80, 82, 178, 1)' : "1px solid rgba(184, 184, 184, 1)",
               borderRadius: "4px",
               padding: "8px",
               //opacity: status === "PIXEL_INSTALLATION_NEEDED" ? "0.5" : "1",
@@ -484,8 +484,7 @@ const DataSync = () => {
             <FilterListIcon
               fontSize="medium"
               sx={{
-                
-                color: filters.lenght > 0 ? 'rgba(80, 82, 178, 1)' : "rgba(128, 128, 128, 1)",
+                color: filters?.lenght > 0 ? 'rgba(80, 82, 178, 1)' : "rgba(128, 128, 128, 1)",
               }}
             />
           </Button>

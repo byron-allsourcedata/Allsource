@@ -109,20 +109,35 @@ import CustomTablePagination from "./CustomTablePagination";
       if (allData.length !== 0) {
         if (filters) {
           const filterData = () => {
+            const typeMapping: Record<string, string> = {
+              "All Contacts": "allContats",
+              "View Product": "viewed_product",
+              'Add To Cart': 'added_to_cart',
+              'Visitor': 'visitor'
+          };
             return Object.values(allData).filter(item => {
               const lastSync = new Date(item.lastSync).getTime() / 1000;
               const dateMatch =
                 (filters.from_date === null || filters.to_date === null) ||
                 (lastSync >= filters.from_date && lastSync <= filters.to_date);
               const statusMatch =
-                filters.selectedStatus.length === 0 || 
+                filters.selectedStatus.length !== 1 || 
                 (filters.selectedStatus.length === 1 && filters.selectedStatus.includes(item.dataSync ? "Enable" : "Disable"));
               const platformMatch =
                 filters.selectedFunnels.length === 0 || 
                 filters.selectedFunnels.map((funnel: string) => funnel.toLowerCase())
-                .includes(item.platform.toLowerCase());;             
+                .includes(item.platform.toLowerCase());         
+              
+              const itemType = item.type ? item.type.toLowerCase() : null;
+              
+              const listTypeMatch = 
+                  filters.selectedListType.length === 0 || 
+                  filters.selectedListType
+                      .map((funnel: any) => typeMapping[funnel]?.toLowerCase() || funnel.toLowerCase())
+                      .includes(itemType);
 
-              return dateMatch && statusMatch && platformMatch
+              
+              return dateMatch && statusMatch && platformMatch && listTypeMatch
             });
           };
           setData(filterData());
