@@ -450,7 +450,7 @@ import CustomTablePagination from "./CustomTablePagination";
 
     const listType = (listType: string) => {
       switch (listType) {
-        case 'allContact':
+        case 'allContacts':
             return 'All Contact';
         case 'viewed_product':
             return 'View Product';
