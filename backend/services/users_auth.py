@@ -75,7 +75,7 @@ class UsersAuth:
         return date.isoformat()[:-6] + "Z"
 
     async def send_member_notification(self, user_id, title, notification_id):
-        account_notification = self.db.query(AccountNotification).where(AccountNotification.title == title).first()
+        account_notification = self.db.query(AccountNotification).filter(AccountNotification.title == title).first()
         queue_name = f'sse_events_{str(user_id)}'
         rabbitmq_connection = RabbitMQConnection()
         connection = await rabbitmq_connection.connect()
@@ -92,7 +92,7 @@ class UsersAuth:
 
 
     def save_account_notification(self, user_id, title, params=None):
-        account_notification = self.db.query(AccountNotification).where(AccountNotification.title == title).first()
+        account_notification = self.db.query(AccountNotification).filter(AccountNotification.title == title).first()
         account_notification = UserAccountNotification(
             user_id=user_id,
             notification_id=account_notification.id,
@@ -179,8 +179,8 @@ class UsersAuth:
         user_object = self.add_user(is_without_card=is_without_card, customer_id=customer_id, user_form=google_payload,
                                     spi=auth_google_data.spi)
         if teams_token:
-            notification_id = self.save_account_notification(self, user_object.id, NotificationTitles.TEAM_MEMBER_ADDED.value)
-            self.send_member_notification(owner_id, NotificationTitles.TEAM_MEMBER_ADDED.value, notification_id)
+            notification_id = self.save_account_notification(user_object.id, NotificationTitles.TEAM_MEMBER_ADDED.value)
+            self.send_member_notification(user_id=owner_id, title=NotificationTitles.TEAM_MEMBER_ADDED.value, notification_id=notification_id)
             self.user_persistence_service.update_teams_owner_id(user_id=user_object.id, teams_token=teams_token,
                                                                 owner_id=owner_id)
             token_info = {
@@ -337,8 +337,8 @@ class UsersAuth:
         user_object = self.add_user(is_without_card=is_without_card, customer_id=customer_id, user_form=user_data,
                                     spi=user_form.spi)
         if teams_token:
-            notification_id = self.save_account_notification(self, user_object.id, NotificationTitles.TEAM_MEMBER_ADDED.value)
-            self.send_member_notification(owner_id, NotificationTitles.TEAM_MEMBER_ADDED.value, notification_id)
+            notification_id = self.save_account_notification(user_object.id, NotificationTitles.TEAM_MEMBER_ADDED.value)
+            self.send_member_notification(user_id=owner_id, title=NotificationTitles.TEAM_MEMBER_ADDED.value, notification_id=notification_id)
             self.user_persistence_service.update_teams_owner_id(user_id=user_object.id, teams_token=teams_token,
                                                                 owner_id=owner_id)
             token_info = {
