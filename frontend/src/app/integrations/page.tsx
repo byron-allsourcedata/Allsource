@@ -469,7 +469,16 @@ const IntegrationsAvailable = ({ integrationsCredentials: integrations, handleSa
                     variant="outlined"
                 />
             </Box>
-            <Box sx={{ display: 'flex', gap: 2 }}>
+            <Box sx={{ display: 'flex', gap: 2, 
+                "@media (max-width: 900px)": { 
+                  flexWrap: 'wrap',
+                  width: '100%',
+                },
+                "@media (max-width: 600px)": { 
+                  flexWrap: 'wrap',
+                  alignItems: 'start', 
+                  }
+             }}>
                 {filteredIntegrations.map((integrationAvailable) => (
                     <Box key={integrationAvailable.service_name}
                     onClick={() => {

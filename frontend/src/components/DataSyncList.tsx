@@ -109,20 +109,35 @@ import CustomTablePagination from "./CustomTablePagination";
       if (allData.length !== 0) {
         if (filters) {
           const filterData = () => {
+            const typeMapping: Record<string, string> = {
+              "All Contacts": "allContats",
+              "View Product": "viewed_product",
+              'Add To Cart': 'added_to_cart',
+              'Visitor': 'visitor'
+          };
             return Object.values(allData).filter(item => {
               const lastSync = new Date(item.lastSync).getTime() / 1000;
               const dateMatch =
                 (filters.from_date === null || filters.to_date === null) ||
                 (lastSync >= filters.from_date && lastSync <= filters.to_date);
               const statusMatch =
-                filters.selectedStatus.length === 0 || 
+                filters.selectedStatus.length !== 1 || 
                 (filters.selectedStatus.length === 1 && filters.selectedStatus.includes(item.dataSync ? "Enable" : "Disable"));
               const platformMatch =
                 filters.selectedFunnels.length === 0 || 
                 filters.selectedFunnels.map((funnel: string) => funnel.toLowerCase())
-                .includes(item.platform.toLowerCase());;             
+                .includes(item.platform.toLowerCase());         
+              
+              const itemType = item.type ? item.type.toLowerCase() : null;
+              
+              const listTypeMatch = 
+                  filters.selectedListType.length === 0 || 
+                  filters.selectedListType
+                      .map((funnel: any) => typeMapping[funnel]?.toLowerCase() || funnel.toLowerCase())
+                      .includes(itemType);
 
-              return dateMatch && statusMatch && platformMatch
+              
+              return dateMatch && statusMatch && platformMatch && listTypeMatch
             });
           };
           setData(filterData());
@@ -432,10 +447,26 @@ import CustomTablePagination from "./CustomTablePagination";
     const handleDeleteFilter = () => {
 
     }
+
+    const listType = (listType: string) => {
+      switch (listType) {
+        case 'allContact':
+            return 'All Contact';
+        case 'viewed_product':
+            return 'View Product';
+        case 'visitor':
+            return 'Visitor';
+        case 'added_to_cart':
+          return 'Add To Cart'
+        default:
+            return null;
+    }
+    
+    }
   
     return (
       <Box sx={datasyncStyle.mainContent}>
-        <Box sx={{ width: "100%", pl: 0.5, pt: 3, pr: 1, '@media(max-width: 600px)': {
+        <Box sx={{ width: "100%", pl: 0.5, pt: 3, pr: 1, '@media(max-width: 440px)': {
           marginTop: '16px', pr: 0, pl: 0
         } }}>
           <TableContainer
@@ -547,12 +578,12 @@ import CustomTablePagination from "./CustomTablePagination";
                         
                       }}
                     >
-                      {row.name}
+                      {row.name || "--"}
                     </TableCell>
-                    <TableCell sx={datasyncStyle.table_array}>{row.type}</TableCell>
-                    <TableCell sx={datasyncStyle.table_array}>{row.contacts}</TableCell>
-                    <TableCell sx={datasyncStyle.table_array}>{row.createdBy}</TableCell>
-                    <TableCell sx={datasyncStyle.table_array}>{row.createdDate}</TableCell>
+                    <TableCell sx={datasyncStyle.table_array}>{listType(row.type) || "--"}</TableCell>
+                    <TableCell sx={datasyncStyle.table_array}>{row.contacts || "--"}</TableCell>
+                    <TableCell sx={datasyncStyle.table_array}>{row.createdBy || "--"}</TableCell>
+                    <TableCell sx={datasyncStyle.table_array}>{row.createdDate || "--"}</TableCell>
                     <TableCell>
                       <Box
                         sx={{
@@ -563,7 +594,7 @@ import CustomTablePagination from "./CustomTablePagination";
                           textTransform: "capitalize",
                         }}
                       >
-                        {platformIcon(row.platform)}
+                        {platformIcon(row.platform) || "--"}
                       </Box>
                     </TableCell>
                     {/* <TableCell sx={datasyncStyle.table_array}>{row.accountId}</TableCell> */}
@@ -587,11 +618,11 @@ import CustomTablePagination from "./CustomTablePagination";
                             maxHeight: "1.25rem",
                           }}
                         >
-                          {formatFunnelText(row.dataSync)}
+                          {formatFunnelText(row.dataSync) || "--"}
                         </Typography>
                       </Box>
                     </TableCell>
-                    <TableCell sx={datasyncStyle.table_array}>{row.lastSync}</TableCell>
+                    <TableCell sx={datasyncStyle.table_array}>{row.lastSync || "--"}</TableCell>
                     <TableCell
                       sx={{ ...datasyncStyle.table_column, position: "relative" }}
                     >
@@ -603,7 +634,7 @@ import CustomTablePagination from "./CustomTablePagination";
                           justifyContent: "center",
                         }}
                       >
-                        {statusIcon(row.syncStatus)}
+                        {statusIcon(row.syncStatus) || "--"}
                       </Box>
                     </TableCell>
                     <TableCell sx={datasyncStyle.table_array}>
