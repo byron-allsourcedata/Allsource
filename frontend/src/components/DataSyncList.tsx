@@ -451,11 +451,11 @@ import CustomTablePagination from "./CustomTablePagination";
     const listType = (listType: string) => {
       switch (listType) {
         case 'allContacts':
-            return 'All Contact';
+            return 'All Contacts';
         case 'viewed_product':
             return 'View Product';
         case 'visitor':
-            return 'Visitor';
+            return 'Visitors';
         case 'added_to_cart':
           return 'Add To Cart'
         default:
