@@ -84,11 +84,7 @@ if __name__ == '__main__':
     rmq_connection = RabbitMQConnection()
     session = Session()
     try:
-        
-        
-        
-        with Session() as db_session: 
-            asyncio.run(consume(rmq_connection, session))
+        asyncio.run(consume(rmq_connection, session))
     except Exception as e:
         session.rollback()
         logging.error(f"An error occurred: {str(e)}")
