@@ -1152,7 +1152,7 @@ const Integrations = () => {
                     flexDirection: "row",
                     alignItems: "center",
                     position: 'fixed',
-                    top: hasNotification ? '6.25rem' : '3.55rem',
+                    top: hasNotification ? '8.05rem' : '5.4rem',
                     right: '16px',
                     left: '170px',
                     background: '#fff',
@@ -1177,7 +1177,7 @@ const Integrations = () => {
                       color: "#202124",
                     }}
                   >
-                            Integrations
+                        Integrations
                         </Typography>
                         <CustomTooltip
                             title={"Connect your favourite tools to automate tasks and ensure all your data is accessible in one place."}
@@ -1187,7 +1187,7 @@ const Integrations = () => {
                     </Box>
                     {/* Tabs */}
                     {status !== 'PIXEL_INSTALLATION_NEEDED' && !isLoading && (
-                        <Box sx={{ display: 'flex', alignItems: 'center', margin: '0 auto'}}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', margin: '0 auto', mt:1}}>
                             <TabList
                                 centered
                                 aria-label="Integrations Tabs"

@@ -385,7 +385,6 @@ const DataSync = () => {
           alignItems: "center",
           justifyContent: "space-between",
           width: "100%",
-          mt: 1,
           ml: 2,
           pr: 1.5,
           "@media (max-width: 440px)": { 
