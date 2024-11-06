@@ -1273,7 +1273,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                   ...filterStyles.filter_name
                 }}
               >
-                Visitor type
+                Sync type
               </Typography>
               {selectedStatus.map((mappedLabel) => {
                 const originalLabel = Object.keys(statusMapping).find(

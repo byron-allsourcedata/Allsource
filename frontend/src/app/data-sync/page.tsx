@@ -400,7 +400,8 @@ const DataSync = () => {
             flexDirection: "row",
             alignItems: "center",
             gap: 1,
-            "@media (max-width: 600px)": { mb: 2 },
+            "@media (max-width: 900px)": { mb: 2 },
+ 
           }}
         >
           <Typography
@@ -468,8 +469,7 @@ const DataSync = () => {
               textTransform: "none",
               //selectedFilters.length > 0 ? 'rgba(80, 82, 178, 1)' :
               color: "rgba(128, 128, 128, 1)",
-              //selectedFilters.length > 0 ? '1px solid rgba(80, 82, 178, 1)' :
-              border: "1px solid rgba(184, 184, 184, 1)",
+              border: filters.lenght > 0 ? '1px solid rgba(80, 82, 178, 1)' : "1px solid rgba(184, 184, 184, 1)",
               borderRadius: "4px",
               padding: "8px",
               //opacity: status === "PIXEL_INSTALLATION_NEEDED" ? "0.5" : "1",
@@ -484,32 +484,10 @@ const DataSync = () => {
             <FilterListIcon
               fontSize="medium"
               sx={{
-                //selectedFilters.length > 0 ? 'rgba(80, 82, 178, 1)' :
-                color: "rgba(128, 128, 128, 1)",
+                
+                color: filters.lenght > 0 ? 'rgba(80, 82, 178, 1)' : "rgba(128, 128, 128, 1)",
               }}
             />
-          </Button>
-          <Button
-            //onClick={handleFilterPopupOpen}
-            //aria-controls={dropdownOpen ? 'account-dropdown' : undefined}
-            aria-haspopup="true"
-            //aria-expanded={dropdownOpen ? 'true' : undefined}
-            sx={{
-              textTransform: "none",
-              //color: selectedFilters.length > 0 ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)',
-              border: "1px solid rgba(80, 82, 178, 1)",
-              borderRadius: "4px",
-              padding: "10px",
-              //opacity: status === "PIXEL_INSTALLATION_NEEDED" ? "0.5" : "1",
-              minWidth: "auto",
-              position: "relative",
-              "@media (max-width: 900px)": {
-                border: "none",
-                padding: 0,
-              },
-            }}
-          >
-            <Image src="/plane.svg" alt="plane" height={20} width={20} />
           </Button>
           <Button
             onClick={handleAudiencePopupOpen}
@@ -530,7 +508,7 @@ const DataSync = () => {
         </Button>
         </Box>
       </Box>
-      <Box sx={{ width: "100%", pl: 0.5, pt: 3, pr: 1 }}>
+      <Box sx={{ width: "100%", pl: 0.5, pt: 0, pr: 1, "@media (max-width: 440px)": {pt: 3}}}>
       {status === 'PIXEL_INSTALLATION_NEEDED' && !isLoading ? (
             <Box sx={centerContainerStyles} >
               <Typography variant="h5" className='first-sub-title' sx={{
