@@ -232,8 +232,10 @@ class MetaIntegrationsService:
         domain_id = message.get('domain_id')
         lead = message.get('lead', None)
         if domain_id and lead:
-            lead = self.leads_persistence.get_leads_domain(domain_id=domain_id, five_x_five_user_id=lead.get('five_x_five_user_id'))[0]
+            lead_user =  self.leads_persistence.get_leads_domain(domain_id=domain_id, five_x_five_user_id=lead.get('five_x_five_user_id'))
+            lead = lead_user[0] if lead_user else None
             if message.get('lead') and not lead:
+                logging.info(f'contact {lead.get("five_x_five_user_id")} not found')
                 return
         domains = self.domain_persistence.get_domain_by_filter(**{'id': domain_id} if domain_id else {})
         for domain in domains:
