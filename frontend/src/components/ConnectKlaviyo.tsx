@@ -565,7 +565,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                     <Button
                         variant="contained"
                         onClick={handleSaveSync}
-                        disabled={!selectedOption || !selectedRadioValue.trim()}
+                        disabled={!selectedOption || !selectedRadioValue}
                         sx={{
                             backgroundColor: '#5052B2',
                             fontFamily: "Nunito Sans",
@@ -1445,6 +1445,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                                                             sx: {
                                                                 '&.MuiOutlinedInput-root': {
                                                                     height: '36px',
+                                                                    width: '200px',
                                                                     '& .MuiOutlinedInput-input': {
                                                                         padding: '6.5px 8px',
                                                                         fontFamily: 'Roboto',
@@ -1528,6 +1529,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                                                             sx: {
                                                                 '&.MuiOutlinedInput-root': {
                                                                     height: '36px',
+                                                                    
                                                                     '& .MuiOutlinedInput-input': {
                                                                         padding: '6.5px 8px',
                                                                         fontFamily: 'Roboto',
@@ -1674,6 +1676,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                                                             sx: {
                                                                 '&.MuiOutlinedInput-root': {
                                                                     height: '36px',
+                                                                    width: '200px',
                                                                     '& .MuiOutlinedInput-input': {
                                                                         padding: '6.5px 8px',
                                                                         fontFamily: 'Roboto',

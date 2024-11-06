@@ -23,7 +23,7 @@ import SendlaneDatasync from './SendlaneDatasync';
 interface AudiencePopupProps {
     open: boolean;
     onClose: () => void;
-    selectedLeads: number[];
+    selectedLeads?: number[];
 }
 
 interface ListItem {

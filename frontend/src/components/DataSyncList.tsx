@@ -12,6 +12,7 @@ import {
   IconButton,
   Popover,
   Tooltip,
+  LinearProgress,
 } from "@mui/material";
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
@@ -392,7 +393,27 @@ import CustomTablePagination from "./CustomTablePagination";
     };
   
     if (isLoading) {
-      return <CustomizedProgressBar />;
+      return (
+        <Box
+            sx={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background: 'rgba(0, 0, 0, 0)',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                zIndex: 1400,
+                overflow: 'hidden'
+            }}
+        >
+        <Box sx={{width: '100%', top: 0, height: '100vh'}}>
+            <LinearProgress />
+        </Box>
+        </Box>
+    )
     }
   
     const formatFunnelText = (text: boolean) => {
@@ -414,7 +435,9 @@ import CustomTablePagination from "./CustomTablePagination";
   
     return (
       <Box sx={datasyncStyle.mainContent}>
-        <Box sx={{ width: "100%", pl: 0.5, pt: 3, pr: 1 }}>
+        <Box sx={{ width: "100%", pl: 0.5, pt: 3, pr: 1, '@media(max-width: 600px)': {
+          marginTop: '16px', pr: 0, pl: 0
+        } }}>
           <TableContainer
             component={Paper}
             sx={{
@@ -446,6 +469,7 @@ import CustomTablePagination from "./CustomTablePagination";
                       key={key}
                       sx={{
                         ...datasyncStyle.table_column,
+                        backgroundColor: '#fff',
                         position: "relative",
                         ...(key === "list_name" && {
                           position: "sticky",
@@ -508,7 +532,7 @@ import CustomTablePagination from "./CustomTablePagination";
                         backgroundColor: "rgba(247, 247, 247, 1)",
                         "& .sticky-cell": {
                           backgroundColor: "rgba(247, 247, 247, 1)",
-                        },
+                        }
                       },
                     }}
                   >
@@ -518,8 +542,9 @@ import CustomTablePagination from "./CustomTablePagination";
                         ...datasyncStyle.table_array,
                         position: "sticky",
                         left: "0",
-                        zIndex: 9,
-                        backgroundColor: "rgba(255, 255, 255, 1)",
+                        zIndex: 99,
+                        backgroundColor: "#fff",
+                        
                       }}
                     >
                       {row.name}

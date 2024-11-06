@@ -977,6 +977,7 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data
                                                             sx: {
                                                                 '&.MuiOutlinedInput-root': {
                                                                     height: '36px',
+                                                                    width: '200px',
                                                                     '& .MuiOutlinedInput-input': {
                                                                         padding: '6.5px 8px',
                                                                         fontFamily: 'Roboto',
@@ -1060,6 +1061,7 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data
                                                             sx: {
                                                                 '&.MuiOutlinedInput-root': {
                                                                     height: '36px',
+                                                                    width: '200px',
                                                                     '& .MuiOutlinedInput-input': {
                                                                         padding: '6.5px 8px',
                                                                         fontFamily: 'Roboto',
@@ -1206,6 +1208,7 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data
                                                             sx: {
                                                                 '&.MuiOutlinedInput-root': {
                                                                     height: '36px',
+                                                                    width: '200px',
                                                                     '& .MuiOutlinedInput-input': {
                                                                         padding: '6.5px 8px',
                                                                         fontFamily: 'Roboto',

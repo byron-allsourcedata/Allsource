@@ -106,6 +106,9 @@ const IntegrationBox = ({ image, handleClick, service_name, active, is_avalible,
                 '&:hover .edit-icon': {
                     opacity: 1
                 },
+                "@media (max-width: 900px)": { 
+                  width: '156px'
+                },
             }}>
               
                 {!is_avalible && (
@@ -147,7 +150,10 @@ const IntegrationBox = ({ image, handleClick, service_name, active, is_avalible,
                         height: '20px', 
                         '&:hover': {
                             backgroundColor: '#EDEEF7' 
-                        }
+                        },
+                        "@media (max-width: 900px)": { 
+                          opacity: 1
+                        },
                     }}>
                         <Image
                             src={'/pen.svg'}
@@ -160,7 +166,7 @@ const IntegrationBox = ({ image, handleClick, service_name, active, is_avalible,
                 )}
                 <Image src={image} width={32} height={32} alt={service_name} />
             </Box>
-            <Typography mt={0.5} fontSize={'0.9rem'} textAlign={'center'} fontFamily={'Nunito Sans'}>
+            <Typography mt={0.5} fontSize={'14px'} fontWeight={500} textAlign={'center'} fontFamily={'Nunito Sans'}>
                 {service_name}
             </Typography>
         </Box>
@@ -178,7 +184,11 @@ const IntegrationAdd = () => (
             justifyContent: 'center',
             alignItems: 'center',
             transition: '0.2s',
-            '&:hover': { boxShadow: '0 0 4px #00000040' }
+            '&:hover': { boxShadow: '0 0 4px #00000040' },
+            "@media (max-width: 900px)": { 
+                  width: '156px'
+                },
+
         }}>
             <Image src={'/add-square.svg'} width={44} height={44} alt={'add'} />
         </Box>
@@ -226,7 +236,16 @@ const UserIntegrationsList = ({ integrationsCredentials, changeTab = () => { }, 
 
     return (
         <>
-            <Box sx={{ display: 'flex', gap: 2 }}>
+            <Box sx={{ display: 'flex', gap: 2,
+                "@media (max-width: 900px)": { 
+                  flexWrap: 'wrap',
+                  width: '100%'
+                },
+                "@media (max-width: 600px)": { 
+                  flexWrap: 'wrap',
+                  alignItems: 'start', 
+                  } 
+             }}>
             {integrationsCredentials.some(integration => integration.service_name === "Shopify") && (
                 <Box onClick={() => handleActive('Shopify')}>
                     <IntegrationBox
@@ -319,12 +338,20 @@ const UserIntegrationsList = ({ integrationsCredentials, changeTab = () => { }, 
                 <IntegrationAdd />
             </Box>
         </Box>
-        {(activeService && activeService != 'Shopify') && (
-            <Box display={"flex"} sx={{alignItems: 'center', mt: 2, }}>
-            <Box sx={{backgroundColor: '#E4E4E4', padding: '3px', borderRadius: '50%'}} />
-            <Box sx={{backgroundColor: '#E4E4E4', border: '1px dashed #fff', width: '100%'}} />
-            <Box sx={{backgroundColor: '#E4E4E4', padding: '3px', borderRadius: '50%'}} />
-        </Box>)}
+        {(activeService && activeService != 'Shopify' && activeService != 'Bigcommerce') && (
+          <Box sx={{
+            '@media(max-width: 600px)': {
+              mb: 7
+            }
+          }}>
+            <Box display={"flex"} sx={{alignItems: 'center', mt: 2, mb: '16px'}}>
+              <Box sx={{backgroundColor: '#E4E4E4', padding: '3px', borderRadius: '50%'}} />
+              <Box sx={{backgroundColor: '#E4E4E4', border: '1px dashed #fff', width: '100%'}} />
+              <Box sx={{backgroundColor: '#E4E4E4', padding: '3px', borderRadius: '50%',}} />
+            </Box>
+            <Typography fontSize={'16px'} fontWeight={600} fontFamily={'Nunito Sans'}>{activeService} Sync Detail</Typography>
+          </Box>
+        )}
         <KlaviyoIntegrationPopup 
             open={openKlaviyoConnect} 
             handleClose={handleClose}
@@ -420,14 +447,18 @@ const IntegrationsAvailable = ({ integrationsCredentials: integrations, handleSa
 
     return (
         <Box>
-            <Box sx={{ width: '40%', }}>
+            <Box >
                 <TextField
                     fullWidth
                     placeholder="Search integrations"
                     value={search}
                     onChange={handleSearch}
                     id="outlined-start-adornment"
-                    sx={{ mb: 3.75}}
+                    sx={{ mb: 3.75,
+                      width: '572px',
+                      '@media(max-width: 900px)': {
+                      width: '100%'
+                    }}}
                     InputProps={{
                         startAdornment: (
                             <InputAdornment position="start">
@@ -508,44 +539,39 @@ const PixelManagment = () => {
       fetchData()
   }, [])
   
-  const statusIcon = (status: string) => {
-      switch (status) {
-        case "success":
-          return <CheckCircleIcon sx={{ color: "green", fontSize: "16px" }} />;
-        case "error":
-          return (
-            <Tooltip
-              title={"Please choose repair sync in action section."}
-              placement='bottom-end'
-              componentsProps={{
-                tooltip: {
-                  sx: {
-                    backgroundColor: "rgba(217, 217, 217, 1)",
-                    color: "rgba(128, 128, 128, 1)",
-                    fontFamily: "Roboto",
-                    fontWeight: "400",
-                    fontSize: "10px",
-                    boxShadow: "0px 4px 4px 0px rgba(0, 0, 0, 0.12)",
-                    border: "0.2px solid rgba(240, 240, 240, 1)",
-                    borderRadius: "4px",
-                    maxWidth: "100%",
-                    padding: "8px 10px",
-                  },
+  const statusIcon = (status: boolean) => {
+    if (status)
+        return <CheckCircleIcon sx={{ color: "green", fontSize: "16px" }} />;
+    else
+        return (
+          <Tooltip
+            title={"Please choose repair sync in action section."}
+            placement='bottom-end'
+            componentsProps={{
+              tooltip: {
+                sx: {
+                  backgroundColor: "rgba(217, 217, 217, 1)",
+                  color: "rgba(128, 128, 128, 1)",
+                  fontFamily: "Roboto",
+                  fontWeight: "400",
+                  fontSize: "10px",
+                  boxShadow: "0px 4px 4px 0px rgba(0, 0, 0, 0.12)",
+                  border: "0.2px solid rgba(240, 240, 240, 1)",
+                  borderRadius: "4px",
+                  maxWidth: "100%",
+                  padding: "8px 10px",
                 },
-              }}
-            >
-              <Image
-                src={"/danger-icon.svg"}
-                alt="klaviyo"
-                width={16}
-                height={16}
-              />
-            </Tooltip>
-          );
-        default:
-          return null;
-      }
-    };
+              },
+            }}
+          >
+            <Image
+              src={"/danger-icon.svg"}
+              alt="klaviyo"
+              width={16}
+              height={16}
+            />
+          </Tooltip>
+        );}
   
   const platformIcon = (platform: string) => {
   switch (platform) {
@@ -559,7 +585,7 @@ const PixelManagment = () => {
       );
       case 'omnisend':
         return(
-          <Image src={"/somnisend_icon_black.svg"} alt="omnisend" width={18} height={18} />
+          <Image src={"/omnisend_icon_black.svg"} alt="omnisend" width={18} height={18} />
       );
       case 'mailchimp':
         return(
@@ -703,7 +729,6 @@ const PixelManagment = () => {
                 <TableRow>
                   {[
                     { key: "platform", label: "Destination" },
-                    { key: "account_id", label: "Account ID" },
                     { key: "list_name", label: "List Name" },
                     { key: "data_sync", label: "Data Sync" },
                     { key: "sync_status", label: "Sync Status" },
@@ -780,9 +805,6 @@ const PixelManagment = () => {
                         
                       </Box>
                     </TableCell>                    
-                    <TableCell sx={integrationsStyle.table_array}>
-                      {row.accountId}
-                    </TableCell>
                     <TableCell
                       className="sticky-cell"
                       sx={{
@@ -1090,37 +1112,48 @@ const Integrations = () => {
         <>
             {isLoading && <CustomizedProgressBar />}
             <TabContext value={value}>
-                <Box sx={{
-                    mt: '1rem',
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  width: "100%",
+                  mt: 2,
+                  ml: 1,
+                  pr: 1.5,
+                  "@media (max-width: 600px)": {
+                    flexDirection: "column",
+                    display: "flex",
+                    alignItems: "flex-start",
+                    marginTop: '16px'
+                  },
+                  "@media (max-width: 440px)": {
+                    flexDirection: "column",
+                    justifyContent: "flex-start",
+                  },
+                }}
+              >
+                <Box
+                  sx={{
+                    flexShrink: 0,
                     display: "flex",
                     flexDirection: "row",
                     alignItems: "center",
-                    position: 'fixed',
-                    top: '68px',
-                    right: '16px',
-                    left: '170px',
-                    background: '#fff',
-                    zIndex: '1200',
-                    paddingLeft: '20px',
-                    paddingRight: '24px',
-                    mx: '-24px',
-                    "@media (max-width: 900px)": { 
-                      left: '20px'
-                    },
+                    gap: 1,
                     "@media (max-width: 600px)": { mb: 2 },
-                }}>
-                    {/* Title and Tooltip */}
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1}}>
-                        <Typography
-                            className="first-sub-title"
-                            sx={{
-                                fontFamily: "Nunito Sans",
-                                fontSize: "16px",
-                                lineHeight: "normal",
-                                fontWeight: 600,
-                                color: "#202124",
-                            }}
-                        >
+                  }}
+                >
+                  <Typography
+                    className="first-sub-title"
+                    sx={{
+                      fontFamily: "Nunito Sans",
+                      fontSize: "16px",
+                      lineHeight: "normal",
+                      fontWeight: 600,
+                      color: "#202124",
+                    }}
+                  >
                             Integrations
                         </Typography>
                         <CustomTooltip
@@ -1140,10 +1173,11 @@ const Integrations = () => {
                                     width: 'fit-content',
                                     "& .MuiTabs-flexContainer": {
                                         justifyContent: 'center',
-                                        "@media (max-width: 600px)": { gap: '16px' }
+                                        "@media (max-width: 600px)": { gap: '16px', justifyContent: 'start', variant:"scrollable" }
                                     }
                                 }}
                                 onChange={handleTabChange}
+                                variant="scrollable"
                             >
                                 <Tab label="Your Integrations" value="1" sx={{ ...integrationStyle.tabHeading }} />
                                 <Tab label="Add an Integrations" value="2" sx={{ ...integrationStyle.tabHeading }} />
@@ -1152,7 +1186,11 @@ const Integrations = () => {
                         </Box>
                     )}  
                 </Box>
-                <Box sx={{ marginTop: '84px'
+                <Box sx={{
+                '@media (max-width: 600px)':
+                  {
+
+                  }
                 }}>
                 {status !== 'PIXEL_INSTALLATION_NEEDED' && !isLoading && activeTab === "3" && (
                 <Box sx={{
