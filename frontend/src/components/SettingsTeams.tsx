@@ -114,7 +114,6 @@ export const SettingsTeams: React.FC = () => {
             setMemberLimit(data.member_limit)
             setMemberCount(data.member_count)
         } catch (error) {
-            console.error('Error fetching account details:', error);
         } finally {
             setIsLoading(false);
         }
@@ -139,7 +138,6 @@ export const SettingsTeams: React.FC = () => {
                 if (error.response && error.response.status === 403) {
                     showErrorToast('Access denied: You do not have permission to remove this member.');
                 } else {
-                    console.error('Error removing team member:', error);
                 }
             }
         } finally {
@@ -155,7 +153,6 @@ export const SettingsTeams: React.FC = () => {
             const data = response.data;
             setPendingInvitations(data)
         } catch (error) {
-            console.error('Error fetching account details:', error);
         } finally {
             setIsLoading(false);
         }
@@ -187,7 +184,6 @@ export const SettingsTeams: React.FC = () => {
                 if (error.response && error.response.status === 403) {
                     showErrorToast('Access denied: You do not have permission to send this invitation.');
                 } else {
-                    console.error('Error revoking invitation:', error);
                 }
             }
         } finally {
@@ -268,10 +264,8 @@ export const SettingsTeams: React.FC = () => {
                     if (err.response && err.response.status === 403) {
                         showErrorToast('Access denied: You do not have permission to send this invitation.');
                     } else {
-                        console.error('Error sending invitation:', err.message);
                     }
                 } else {
-                    console.error('Unexpected error:', err);
                 }
                 results.push(false);
             } finally {
@@ -303,7 +297,6 @@ export const SettingsTeams: React.FC = () => {
                 if (error.response && error.response.status === 403) {
                     showErrorToast('Access denied: You do not have permission to revoke this invitation.');
                 } else {
-                    console.error('Error revoking invitation:', error);
                 }
             }
         } finally {
@@ -340,7 +333,6 @@ export const SettingsTeams: React.FC = () => {
                 if (error.response && error.response.status === 403) {
                     showErrorToast('Access denied: You do not have permission to remove this member.');
                 } else {
-                    console.error('Error removing team member:', error);
                 }
             }
         } finally {
@@ -553,7 +545,7 @@ export const SettingsTeams: React.FC = () => {
                         }}>
                             {memberLimit === -1 ? 'unlimited' : `${memberCount}/${memberLimit} Member limit`}
                         </Typography>
-                        <CustomTooltip title={"Team Info"} linkText="Learn more" linkUrl="https://maximiz.ai" />
+                        <CustomTooltip title={"Invite team members for shared access and teamwork on projects."} linkText="Learn more" linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/settings/invite-a-team-member" />
                     </Box>
                     <Box sx={{ border: '1px dashed #5052B2', borderRadius: '4px' }}>
                         <Button onClick={handleInviteUsersPopupOpen}><Image src="/add-square.svg" alt="add-square" height={24} width={24} /></Button>

@@ -8,13 +8,10 @@ import LeadsIcon from '@mui/icons-material/People';
 import CategoryIcon from '@mui/icons-material/Category';
 import IntegrationsIcon from '@mui/icons-material/IntegrationInstructions';
 import FeaturedPlayListIcon from '@mui/icons-material/FeaturedPlayList';
-import AccountBoxIcon from '@mui/icons-material/AccountBox';
 import SettingsIcon from '@mui/icons-material/Settings';
 import Image from 'next/image';
 import { AxiosError } from 'axios';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
-import PageWithLoader from './FirstLevelLoader';
-import CustomizedProgressBar from '@/components/FirstLevelLoader'
 
 const sidebarStyles = {
     container: {
@@ -113,6 +110,24 @@ const sidebarStyles = {
     },
 };
 
+const containerStyles = (hasNotification: boolean) => ( {
+    container: {
+        width: '100%',
+        flexShrink: 0,
+        fontFamily: 'Nunito Sans',
+        fontSize: '14px',
+        fontWeight: '400',
+        backgroundColor: 'rgba(255, 255, 255, 1)',
+        borderRight: '1px solid rgba(228, 228, 228, 1)',
+        height: hasNotification ? 'calc(100vh - 6.85rem)' : 'calc(100vh - 4.25rem)',
+        maxWidth: '146px',
+        display: 'flex',
+        overflow: 'hidden',
+        flexDirection: 'column',
+        justifyContent: 'start',
+        position: 'relative'
+    }})
+
 interface ProgressSectionProps {
     meData: { percent_steps: number };
 }
@@ -160,9 +175,10 @@ const SetupSection: React.FC<ProgressSectionProps> = ({ meData }) => {
 interface SidebarProps {
     setShowSlider: Dispatch<SetStateAction<boolean>>;
     setLoading: Dispatch<SetStateAction<boolean>>;
+    hasNotification: boolean;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading }) => {
+const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading, hasNotification }) => {
     const [meData, setMeData] = useState({ percent_steps: 0 });
     useEffect(() => {
         if (typeof window !== "undefined") {
@@ -197,7 +213,6 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading }) => {
                     router.push(route);
                 }
             } else {
-                console.error("Error fetching data:", error);
             }
         }
         finally {
@@ -208,7 +223,7 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading }) => {
     const isActive = (path: string) => pathname === path;
 
     return (
-        <Box sx={sidebarStyles.container} >
+        <Box sx={containerStyles(hasNotification).container} >
             <List sx={sidebarStyles.menu}>
                 <ListItem button onClick={() => handleNavigation('/dashboard')} sx={isActive('/dashboard') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>

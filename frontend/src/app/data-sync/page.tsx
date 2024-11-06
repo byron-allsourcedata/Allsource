@@ -385,8 +385,7 @@ const DataSync = () => {
           alignItems: "center",
           justifyContent: "space-between",
           width: "100%",
-          mt: 2,
-          ml: 1,
+          ml: 2,
           pr: 1.5,
           "@media (max-width: 440px)": { 
             pt: 8,
@@ -417,9 +416,9 @@ const DataSync = () => {
             Data Sync
           </Typography>
           <CustomTooltip
-            title={"how data synch works and to customise your sync settings."}
+            title={"How data synch works and to customise your sync settings."}
             linkText="Learn more"
-            linkUrl="https://maximiz.ai"
+            linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/articles/data-sync"
           />
         </Box>
         <Box

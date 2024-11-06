@@ -3,6 +3,7 @@ import { Box, Typography, TextField, Button } from "@mui/material";
 import { useCallback, useEffect, useState } from "react";
 import { showToast } from "./ToastNotification";
 import CustomizedProgressBar from "./CustomizedProgressBar";
+import CustomTooltip from "./customToolTip";
 
 
 const CollectionRules: React.FC = () => {
@@ -87,9 +88,13 @@ const CollectionRules: React.FC = () => {
             "@media (max-width: 900px)": { padding: '0px' }
         }}>
             <Box sx={{ width: '100%', padding: '20px', "@media (max-width: 900px)": { padding: '16px' } }}>
-                <Typography className="main-text" sx={{ fontWeight: '600', lineHeight: '21.82px', marginBottom: '16px', fontSize: '1rem', color: 'rgba(32, 33, 36, 1)' }}>
-                    Collection Rules
-                </Typography>
+
+                <Box sx={{ display: 'flex', gap:1, marginBottom: '16px', alignItems: 'center' }}>
+                    <Typography className="main-text" sx={{ fontWeight: '600', lineHeight: '21.82px',  fontSize: '1rem', color: 'rgba(32, 33, 36, 1)' }}>
+                        Collection Rules
+                    </Typography>
+                    <CustomTooltip title={"Define rules to gather and organise data for more effective tracking and insights."} linkText="Learn more" linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/articles/collection-rules" />
+                </Box>
 
                 <Typography className="second-text" sx={{ marginBottom: '24px', fontWeight: 400, fontSize: '0.75rem', color: 'rgba(128, 128, 128, 1)' }}>
                     Create rules to automatically start a collection event.
@@ -135,7 +140,7 @@ const CollectionRules: React.FC = () => {
                             value={pageViews}
                             onChange={handlePageViewsChange}
                             InputProps={{ style: { color: 'rgba(17, 17, 19, 1)', fontFamily: 'Nunito Sans', fontWeight: 400, fontSize: '14px' } }}
-                            InputLabelProps={{ style: { color: 'rgba(17, 17, 19, 0.6)', fontFamily: 'Nunito Sans', fontWeight: 400, fontSize: '14px'}}}
+                            InputLabelProps={{ style: { color: 'rgba(17, 17, 19, 0.6)', fontFamily: 'Nunito Sans', fontWeight: 400, fontSize: '14px' } }}
                             sx={{
                                 marginBottom: '40px',
                                 backgroundColor: '#fff',

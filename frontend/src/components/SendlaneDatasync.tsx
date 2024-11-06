@@ -296,7 +296,6 @@ const SendlaneDatasync: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, d
         setIsShrunk(true);
         setIsDropdownOpen(prev => !prev);
         setAnchorEl(event.currentTarget);
-        console.log('handle CLICK PIDORAS')
         setShowCreateForm(false); // Reset form when menu opens
     };
 
@@ -312,7 +311,6 @@ const SendlaneDatasync: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, d
         setAnchorEl(null);
         setShowCreateForm(false);
         setIsDropdownOpen(false);
-        console.log('handle CLOSe PIDORAS')
         setNewListName(''); // Clear new list name when closing
     };
 

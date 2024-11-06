@@ -5,8 +5,7 @@ import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 
 const style = {
     buttonBlock: {
-        backdropFilter: 'blur(10px)', 
-        backgroundColor: 'rgba(80, 82, 178, 0.1)', 
+        backgroundColor: 'rgba(80, 82, 178, 0.1)',
         textTransform: 'none',
         "&:hover": {
           backgroundColor: 'rgba(80, 82, 178, 0.1)',

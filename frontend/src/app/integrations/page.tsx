@@ -35,6 +35,7 @@ import MailchimpConnect from "@/components/MailchimpConnect";
 import RevenueTracking from "@/components/RevenueTracking";
 import SendlaneConnect from "@/components/SendlaneConnect";
 import AttentiveIntegrationPopup from "@/components/AttentiveIntegrationPopup";
+import { useNotification } from "@/context/NotificationContext";
 
 interface IntegrationBoxProps {
     image: string;
@@ -1012,6 +1013,7 @@ const PixelManagment = () => {
 }
 
 const Integrations = () => {
+    const {hasNotification} = useNotification();
     const [value, setValue] = useState('1');
     const [integrationsCredentials, setIntegrationsCredentials] = useState<IntegrationCredentials[]>([]);
     const [integrations, setIntegrations] = useState<any[]>([])
@@ -1149,6 +1151,18 @@ const Integrations = () => {
                     display: "flex",
                     flexDirection: "row",
                     alignItems: "center",
+                    position: 'fixed',
+                    top: hasNotification ? '8.05rem' : '5.4rem',
+                    right: '16px',
+                    left: '170px',
+                    background: '#fff',
+                    zIndex: '1200',
+                    paddingLeft: '30px',
+                    paddingRight: '24px',
+                    mx: '-24px',
+                    "@media (max-width: 900px)": { 
+                      left: '20px'
+                    },
                     gap: 1,
                     "@media (max-width: 600px)": { mb: 2 },
                   }}
@@ -1163,17 +1177,17 @@ const Integrations = () => {
                       color: "#202124",
                     }}
                   >
-                            Integrations
+                        Integrations
                         </Typography>
                         <CustomTooltip
                             title={"Connect your favourite tools to automate tasks and ensure all your data is accessible in one place."}
                             linkText="Learn more"
-                            linkUrl="https://maximiz.ai"
+                            linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/integration"
                         />
                     </Box>
                     {/* Tabs */}
                     {status !== 'PIXEL_INSTALLATION_NEEDED' && !isLoading && (
-                        <Box sx={{ display: 'flex', alignItems: 'center', margin: '0 auto'}}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', margin: '0 auto', mt:1}}>
                             <TabList
                                 centered
                                 aria-label="Integrations Tabs"
@@ -1189,7 +1203,7 @@ const Integrations = () => {
                                 variant="scrollable"
                             >
                                 <Tab label="Your Integrations" value="1" sx={{ ...integrationStyle.tabHeading }} />
-                                <Tab label="Add an Integrations" value="2" sx={{ ...integrationStyle.tabHeading }} />
+                                <Tab label="Add an Integration" value="2" sx={{ ...integrationStyle.tabHeading }} />
                                 <Tab label="Pixel Management" value="3" sx={{ ...integrationStyle.tabHeading }} />
                             </TabList>
                         </Box>

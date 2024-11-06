@@ -11,12 +11,11 @@ export const SettingsApiDetails: React.FC = () => {
 
     const handleEdit = (id: string) => {
         // Handle the edit functionality
-        console.log('Edit API Key:', id);
     };
 
     const handleDelete = (id: string) => {
         // Handle the delete functionality
-        console.log('Delete API Key:', id);
+
     }; 
 
     return (

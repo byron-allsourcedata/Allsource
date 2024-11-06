@@ -69,7 +69,6 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode }) => {
         showToast('Successfully send email')
       })
       .catch(error => {
-        console.error('There was an error!', error);
       });
   };
 

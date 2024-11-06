@@ -25,8 +25,16 @@ import CustomToolTip from '@/components/customToolTip';
 import CalendarPopup from '@/components/CustomCalendar'
 import CustomTablePagination from '@/components/CustomTablePagination';
 import UnlockButton from '@/components/UnlockButton';
+import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 
-
+const style = {
+    buttonBlockText: {
+        display: 'flex',
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+    }
+}
 
 
 
@@ -935,8 +943,9 @@ const Leads: React.FC = () => {
                             flexDirection: 'row',
                             alignItems: 'center',
                             justifyContent: 'space-between',
-                            marginTop: '1rem',
+                            marginTop: '0.5rem',
                             flexWrap: 'wrap',
+                            pl: '0.5rem',
                             gap: '15px',
                             '@media (max-width: 900px)': {
                                 marginTop: '1.125rem'
@@ -944,12 +953,9 @@ const Leads: React.FC = () => {
                         }}>
                         <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1 }}>
                             <Typography className='first-sub-title'>
-                            Resolved Contacts {data.length === 0  ? '' : `(${count_leads})`}
+                                Resolved Contacts {data.length === 0 ? '' : `(${count_leads})`}
                             </Typography>
-                            <CustomToolTip title={status === 'PIXEL_INSTALLATION_NEEDED'
-                                ? 'Pixel installation is required.'
-                                : 'Contacts automatically sync across devices and platforms.'
-                            } />
+                            <CustomToolTip title={'Contacts automatically sync across devices and platforms.'} linkText='Learn more' linkUrl='https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/contacts' />
                         </Box>
                         <Box sx={{
                             display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '15px',

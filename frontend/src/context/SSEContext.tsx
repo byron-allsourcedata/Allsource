@@ -9,6 +9,7 @@ interface Data {
 
 interface SSEContextType {
   data: Data | null;
+  newNotification: boolean;
 }
 
 interface SSEProviderProps {
@@ -19,9 +20,14 @@ const SSEContext = createContext<SSEContextType | undefined>(undefined);
 
 export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
   const [data, setData] = useState<Data | null>(null);
-  const [latestNotification, setLatestNotification] = useState<{ id: number; text: string } | null>(null); // Состояние для хранения уведомления
+  const [newNotification, setNewNotifications] = useState(false);
+  const [latestNotification, setLatestNotification] = useState<{ id: number; text: string } | null>(null);
 
   const url = process.env.NEXT_PUBLIC_API_BASE_URL;
+  const handleNotificationDismiss = () => {
+    setNewNotifications(false);
+    setLatestNotification(null);
+  };
 
   if (!url) {
     throw new Error("NEXT_PUBLIC_API_BASE_URL is not defined");
@@ -30,7 +36,6 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
-      console.error('Token not found');
       return;
     }
     const evtSource = new EventSource(`${url}event-source?token=${token}`);
@@ -45,6 +50,7 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
             id: data.notification_id,
             text: data.notification_text,
           });
+          setNewNotifications(true)
         }
         else {
           showToast("Pixel code is installed successfully!");
@@ -61,7 +67,6 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
     };
 
     evtSource.onerror = (error) => {
-      console.error('EventSource failed:', error);
       evtSource.close();
     };
 
@@ -71,13 +76,14 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
   }, [url]);
 
   return (
-    <SSEContext.Provider value={{ data }}>
+    <SSEContext.Provider value={{ data, newNotification }}>
       {children}
-      {latestNotification && ( // Отображаем уведомление, если оно есть
+      {latestNotification && (
         <CustomNotification 
           id={latestNotification.id} 
           message={latestNotification.text} 
-          showDismiss={true} 
+          showDismiss={true}
+          onDismiss={handleNotificationDismiss} 
         />
       )}
     </SSEContext.Provider>
