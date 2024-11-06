@@ -52,6 +52,7 @@ const centerContainerStyles = {
   }
 };
 import FilterDatasync from "@/components/FilterDatasync";
+import AudiencePopup from "@/components/AudienceSlider";
 
 interface DataSyncProps {
   service_name?: string
@@ -72,10 +73,18 @@ const DataSync = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [filterPopup, setFilterPopup] = useState(false)
   const [filters, setFilters] = useState<any>()
+  const [openCreateDataSyncPopup, setOpenCreateDataSyncPopup] = useState(false)
   const handleFilterPopupOpen = () => {
     setFilterPopup(true)
   }
 
+  const handleAudiencePopupOpen = () => {
+    setOpenCreateDataSyncPopup(true)
+  }
+
+  const handleAudiencePopupClose = () => {
+    setOpenCreateDataSyncPopup(false)
+  }
   const handleFilterPopupClose = () => {
     setFilterPopup(false)
   }
@@ -379,15 +388,8 @@ const DataSync = () => {
           mt: 1,
           ml: 2,
           pr: 1.5,
-          "@media (max-width: 600px)": {
-            flexDirection: "column",
-            display: "flex",
-            alignItems: "flex-start",
-          },
-          "@media (max-width: 440px)": {
-            flexDirection: "column",
+          "@media (max-width: 440px)": { 
             pt: 8,
-            justifyContent: "flex-start",
           },
         }}
       >
@@ -398,7 +400,8 @@ const DataSync = () => {
             flexDirection: "row",
             alignItems: "center",
             gap: 1,
-            "@media (max-width: 600px)": { mb: 2 },
+            "@media (max-width: 900px)": { mb: 2 },
+ 
           }}
         >
           <Typography
@@ -424,44 +427,39 @@ const DataSync = () => {
             display: "flex",
             flexDirection: "row",
             alignItems: "center",
+            mb: 2,
             gap: "15px",
             "@media (max-width: 900px)": {
-              gap: "8px",
+              gap: "8px", 
             },
           }}
         >
-          <Button
-            // onClick={handleAudiencePopupOpen}
-            aria-haspopup="true"
-            disabled={true}
-            sx={{
-              textTransform: "none",
-              //color: status === 'PIXEL_INSTALLATION_NEEDED' ? 'rgba(128, 128, 128, 1)' : 'rgba(80, 82, 178, 1)',
-              border: "1px solid rgba(80, 82, 178, 0.4)",
-              borderRadius: "4px",
-              padding: "9px 16px",
-              opacity: "0.4",
-              minWidth: "auto",
-              "@media (max-width: 900px)": {
-                display: "none",
-              },
-            }}
-          >
-            <Typography
-              sx={{
-                fontFamily: "Nunito Sans",
-                fontWeight: "normal",
-                marginRight: "0.5em",
-                padding: 0.2,
-                fontSize: "14px !important",
-                textAlign: "left",
-                opacity: 0.4,
-                color: "#5052B2 !important",
-              }}
+            <Button
+                onClick={handleAudiencePopupOpen}
+                aria-haspopup="true"
+                disabled={status === 'PIXEL_INSTALLATION_NEEDED'}
+                sx={{
+                    textTransform: 'none',
+                    color: status === 'PIXEL_INSTALLATION_NEEDED' ? 'rgba(128, 128, 128, 1)' : 'rgba(80, 82, 178, 1)',
+                    border: '1px solid rgba(80, 82, 178, 1)',
+                    borderRadius: '4px',
+                    padding: '9px 16px',
+                    opacity: status === 'PIXEL_INSTALLATION_NEEDED' ? '0.4' : '1',
+                    minWidth: 'auto',
+                    '@media (max-width: 900px)': {
+                        display: 'none'
+                    }
+                }}
             >
-              Prospect
-            </Typography>
-          </Button>
+                <Typography className='second-sub-title' sx={{
+                    marginRight: '0.5em',
+                    padding: 0.2,
+                    textAlign: 'left',
+                    color: '#5052B2 !important'
+                }}>
+                    Create Contact Sync
+                </Typography>
+            </Button>
           <Button
             onClick={handleFilterPopupOpen}
             //aria-controls={dropdownOpen ? 'account-dropdown' : undefined}
@@ -471,8 +469,7 @@ const DataSync = () => {
               textTransform: "none",
               //selectedFilters.length > 0 ? 'rgba(80, 82, 178, 1)' :
               color: "rgba(128, 128, 128, 1)",
-              //selectedFilters.length > 0 ? '1px solid rgba(80, 82, 178, 1)' :
-              border: "1px solid rgba(184, 184, 184, 1)",
+              border: filters?.lenght > 0 ? '1px solid rgba(80, 82, 178, 1)' : "1px solid rgba(184, 184, 184, 1)",
               borderRadius: "4px",
               padding: "8px",
               //opacity: status === "PIXEL_INSTALLATION_NEEDED" ? "0.5" : "1",
@@ -487,36 +484,30 @@ const DataSync = () => {
             <FilterListIcon
               fontSize="medium"
               sx={{
-                //selectedFilters.length > 0 ? 'rgba(80, 82, 178, 1)' :
-                color: "rgba(128, 128, 128, 1)",
+                color: filters?.lenght > 0 ? 'rgba(80, 82, 178, 1)' : "rgba(128, 128, 128, 1)",
               }}
             />
           </Button>
           <Button
-            //onClick={handleFilterPopupOpen}
-            //aria-controls={dropdownOpen ? 'account-dropdown' : undefined}
+            onClick={handleAudiencePopupOpen}
             aria-haspopup="true"
-            //aria-expanded={dropdownOpen ? 'true' : undefined}
             sx={{
-              textTransform: "none",
-              //color: selectedFilters.length > 0 ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)',
-              border: "1px solid rgba(80, 82, 178, 1)",
-              borderRadius: "4px",
-              padding: "10px",
-              //opacity: status === "PIXEL_INSTALLATION_NEEDED" ? "0.5" : "1",
-              minWidth: "auto",
-              position: "relative",
-              "@media (max-width: 900px)": {
-                border: "none",
-                padding: 0,
-              },
+                textTransform: 'none',
+                color: 'rgba(80, 82, 178, 1)',
+                borderRadius: '4px',
+                padding: '0',
+                border: 'none',
+                minWidth: 'auto',
+                '@media (min-width: 901px)': {
+                    display: 'none'
+                }
             }}
-          >
-            <Image src="/plane.svg" alt="plane" height={20} width={20} />
-          </Button>
+        >
+            <Image src='/add.svg' alt='logo' height={24} width={24} />
+        </Button>
         </Box>
       </Box>
-      <Box sx={{ width: "100%", pl: 0.5, pt: 3, pr: 1 }}>
+      <Box sx={{ width: "100%", pl: 0.5, pt: 0, pr: 1, "@media (max-width: 440px)": {pt: 3}}}>
       {status === 'PIXEL_INSTALLATION_NEEDED' && !isLoading ? (
             <Box sx={centerContainerStyles} >
               <Typography variant="h5" className='first-sub-title' sx={{
@@ -567,7 +558,7 @@ const DataSync = () => {
       </Box>
     </Box>
     <FilterDatasync open={filterPopup} onClose={handleFilterPopupClose} onApply={onApply}/>
-
+    <AudiencePopup open={openCreateDataSyncPopup} onClose={handleAudiencePopupClose} />
       </>
 
   );

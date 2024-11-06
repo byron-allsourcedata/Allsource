@@ -4,6 +4,7 @@ import json
 import logging
 import os
 import sys
+import traceback
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
@@ -53,10 +54,10 @@ async def process_data_sync(message_body, session):
     )
     with integration_service as service:
         await service.klaviyo.process_data_sync(message_body)
-        service.meta.process_data_sync(message_body)
-        await service.omnisend.process_data_sync(message_body)
-        await service.mailchimp.process_data_sync(message_body)
-        await service.sendlane.process_data_sync(message_body)
+        # service.meta.process_data_sync(message_body)
+        # await service.omnisend.process_data_sync(message_body)
+        # await service.mailchimp.process_data_sync(message_body)
+        # await service.sendlane.process_data_sync(message_body)
 
 async def consume(rmq_connection: RabbitMQConnection, db_session):
     connection = await rmq_connection.connect()
@@ -80,8 +81,14 @@ if __name__ == '__main__':
         f"postgresql://{os.getenv('DB_USERNAME')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}"
     )
     Session = sessionmaker(bind=engine)
-    
     rmq_connection = RabbitMQConnection()
-    
-    with Session() as db_session: 
-        asyncio.run(consume(rmq_connection, db_session))
+    session = Session()
+    try:
+        asyncio.run(consume(rmq_connection, session))
+    except Exception as e:
+        session.rollback()
+        logging.error(f"An error occurred: {str(e)}")
+        traceback.print_exc()
+    finally:
+        session.close()
+        logging.info("Connection to the database closed")

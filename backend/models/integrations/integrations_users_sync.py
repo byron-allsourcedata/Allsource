@@ -16,6 +16,7 @@ class IntegrationUserSync(Base):
     list_name = Column(VARCHAR)
     data_map = Column(JSON)
     sync_status = Column(Boolean, default=True)
-    no_of_contacts = Column(Integer, nullable=False, default=1)
+    no_of_contacts = Column(Integer, nullable=False, default=0)
     created_by = Column(VARCHAR, nullable=False)
+    last_lead_sync_id = Column(VARCHAR(64))
 

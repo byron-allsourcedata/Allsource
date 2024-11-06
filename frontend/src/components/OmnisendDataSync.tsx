@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Drawer, Box, Typography, IconButton, TextField, Divider, FormGroup, FormControlLabel, FormControl, FormLabel, Radio, Collapse, Checkbox, Button, List, ListItem, Link, Tab, Tooltip, Switch, RadioGroup, InputLabel, MenuItem, Select, Dialog, DialogActions, DialogContent, DialogTitle, Popover, Menu, SelectChangeEvent, ListItemText, ClickAwayListener, InputAdornment, Grid } from '@mui/material';
+import { Drawer, Box, Typography, IconButton, TextField, Divider, FormGroup, FormControlLabel, FormControl, FormLabel, Radio, Collapse, Checkbox, Button, List, ListItem, Link, Tab, Tooltip, Switch, RadioGroup, InputLabel, MenuItem, Select, Dialog, DialogActions, DialogContent, DialogTitle, Popover, Menu, SelectChangeEvent, ListItemText, ClickAwayListener, InputAdornment, Grid, LinearProgress } from '@mui/material';
 import TabContext from '@mui/lab/TabContext';
 import TabList from '@mui/lab/TabList';
 import TabPanel from '@mui/lab/TabPanel';
@@ -567,7 +567,27 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data
 
     return (
         <>
-        {loading && <CustomizedProgressBar />}
+        {loading && (
+            <Box
+                sx={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    background: 'rgba(0, 0, 0, 0.2)',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    zIndex: 1400,
+                    overflow: 'hidden'
+                }}
+            >
+            <Box sx={{width: '100%', top: 0, height: '100vh'}}>
+                <LinearProgress />
+            </Box>
+            </Box>
+        )}
         <Drawer
             anchor="right"
             open={open}
@@ -957,6 +977,7 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data
                                                             sx: {
                                                                 '&.MuiOutlinedInput-root': {
                                                                     height: '36px',
+                                                                    width: '200px',
                                                                     '& .MuiOutlinedInput-input': {
                                                                         padding: '6.5px 8px',
                                                                         fontFamily: 'Roboto',
@@ -1040,6 +1061,7 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data
                                                             sx: {
                                                                 '&.MuiOutlinedInput-root': {
                                                                     height: '36px',
+                                                                    width: '200px',
                                                                     '& .MuiOutlinedInput-input': {
                                                                         padding: '6.5px 8px',
                                                                         fontFamily: 'Roboto',
@@ -1186,6 +1208,7 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data
                                                             sx: {
                                                                 '&.MuiOutlinedInput-root': {
                                                                     height: '36px',
+                                                                    width: '200px',
                                                                     '& .MuiOutlinedInput-input': {
                                                                         padding: '6.5px 8px',
                                                                         fontFamily: 'Roboto',

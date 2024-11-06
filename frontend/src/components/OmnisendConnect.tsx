@@ -2,12 +2,13 @@ import React from "react";
 import TabContext from "@mui/lab/TabContext";
 import TabList from "@mui/lab/TabList";
 import TabPanel from "@mui/lab/TabPanel";
-import { Box, List, ListItem, TextField, Tooltip, Typography, Drawer, Backdrop, Link, IconButton, Button, RadioGroup, FormControl, FormControlLabel, Radio, FormLabel, Divider, Tab, Switch } from "@mui/material";
+import { Box, List, ListItem, TextField, Tooltip, Typography, Drawer, Backdrop, Link, IconButton, Button, RadioGroup, FormControl, FormControlLabel, Radio, FormLabel, Divider, Tab, Switch, LinearProgress } from "@mui/material";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import CustomizedProgressBar from "./CustomizedProgressBar";
 import CloseIcon from '@mui/icons-material/Close';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
+import { showToast } from "./ToastNotification";
 
 interface CreateOmnisendProps {
     handleClose: () => void
@@ -163,7 +164,8 @@ const OmnisendConnect = ({ handleClose, open, onSave, initApiKey}: CreateOmnisen
             }
         }, {params: {service_name: 'omnisend'}})
         if(response.status === 200) {
-            onSave({service_name: 'Omnisend', is_failed: false})
+            showToast('Integration Omnisend Successfully')
+            onSave({service_name: 'Omnisend', is_failed: false, acess_token: apiKey})
             handleNextTab()
         }
     }
@@ -257,7 +259,27 @@ const OmnisendConnect = ({ handleClose, open, onSave, initApiKey}: CreateOmnisen
 
     return ( 
         <>
-        {loading && <CustomizedProgressBar />}
+        {loading && (
+            <Box
+                sx={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    background: 'rgba(0, 0, 0, 0.2)',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    zIndex: 1400,
+                    overflow: 'hidden'
+                }}
+            >
+            <Box sx={{width: '100%', top: 0, height: '100vh'}}>
+                <LinearProgress />
+            </Box>
+            </Box>
+        )}
         <Drawer
             anchor="right"
             open={open}

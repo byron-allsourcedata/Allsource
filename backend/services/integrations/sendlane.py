@@ -124,6 +124,8 @@ class SendlaneIntegrationService:
             credential.error_message = 'Invalid API Key'
             self.integrations_persisntece.db.commit()
             return
+        if response.status_code == 422:
+            raise HTTPException(status_code=422, detail={'status': response.json().get('message')})
         return self.__mapped_list(response.json().get('data'))
  
     async def create_sync(self, leads_type: str, list_id: str, list_name: str, data_map: List[DataMap], domain_id: int, created_by: str, tags_id: str = None):
@@ -174,6 +176,7 @@ class SendlaneIntegrationService:
 
     async def process_data_sync(self, message):
         counter = 0
+        last_leads_sync = None 
         sync = None
         try:
             sync = IntegrationUserSync(**message.get('sync'))
@@ -185,8 +188,10 @@ class SendlaneIntegrationService:
         domain_id = message.get('domain_id')
         lead = message.get('lead', None)
         if domain_id and lead:
-            lead = self.leads_persistence.get_leads_domain(domain_id=domain_id, five_x_five_user_id=lead.get('five_x_five_user_id'))[0]
+            lead_user =  self.leads_persistence.get_leads_domain(domain_id=domain_id, five_x_five_user_id=lead.get('five_x_five_user_id'))
+            lead = lead_user[0] if lead_user else None
             if message.get('lead') and not lead:
+                logging.info(f'contact {lead.get("five_x_five_user_id")} not found')
                 return
         stage = message.get('stage') if message.get('stage') else 1
         next_try = message.get('next_try') if message.get('next_try') else None
@@ -226,9 +231,12 @@ class SendlaneIntegrationService:
                     logging.warning("Lead behavior type mismatch: %s vs %s", lead.behavior_type, data_sync_item.leads_type)
                     continue
 
-                data_map = data_sync_item.data_map if data_sync_item.data_map else None
-
+                last_lead_sync_id = data_sync_item.last_lead_sync_id
+                if last_lead_sync_id:
+                    last_leads_sync = self.leads_persistence.get_lead_user_by_up_id(domain_id=domain.id, up_id=last_lead_sync_id)
                 for lead in leads:
+                    if last_leads_sync and lead.five_x_five_user_id < last_leads_sync.id:
+                        continue
                     if stage > 3:
                         logging.info("Stage limit reached. Exiting.")
                         return
@@ -265,8 +273,10 @@ class SendlaneIntegrationService:
                     self.sync_persistence.db.commit()
                     logging.info("Profile added successfully for lead: %s", lead.five_x_five_user_id)
                     counter += 1
+                    last_leads_sync = lead
                 self.sync_persistence.update_sync({
-                    'last_sync_date': datetime.now()
+                    'last_sync_date': datetime.now(),
+                    'last_lead_sync_id': self.leads_persistence.get_lead_data(last_leads_sync.five_x_five_user_id).up_id if counter > 0 else last_lead_sync_id
                 },counter=counter, id=data_sync_item.id)
                 logging.info("Sync updated for item id: %s", data_sync_item.id)
 

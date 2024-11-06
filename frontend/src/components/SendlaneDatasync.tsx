@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Drawer, Box, Typography, IconButton, TextField, Divider, FormGroup, FormControlLabel, FormControl, FormLabel, Radio, Collapse, Checkbox, Button, List, ListItem, Link, Tab, Tooltip, Switch, RadioGroup, InputLabel, MenuItem, Select, Dialog, DialogActions, DialogContent, DialogTitle, Popover, Menu, SelectChangeEvent, ListItemText, ClickAwayListener, InputAdornment, Grid } from '@mui/material';
+import { Drawer, Box, Typography, IconButton, TextField, Divider, FormGroup, FormControlLabel, FormControl, FormLabel, Radio, Collapse, Checkbox, Button, List, ListItem, Link, Tab, Tooltip, Switch, RadioGroup, InputLabel, MenuItem, Select, Dialog, DialogActions, DialogContent, DialogTitle, Popover, Menu, SelectChangeEvent, ListItemText, ClickAwayListener, InputAdornment, Grid, LinearProgress } from '@mui/material';
 import TabContext from '@mui/lab/TabContext';
 import TabList from '@mui/lab/TabList';
 import TabPanel from '@mui/lab/TabPanel';
@@ -9,6 +9,7 @@ import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { showErrorToast, showToast } from './ToastNotification';
 import CustomizedProgressBar from './CustomizedProgressBar';
 import { stringify } from 'querystring';
+import { AxiosError } from 'axios';
 
 interface Integrations {
     id: number
@@ -66,6 +67,7 @@ const SendlaneDatasync: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, d
     const [maplistNameError, setMapListNameError] = useState(false);
     const [klaviyoList, setKlaviyoList] = useState<KlaviyoList[]>([])
     const [senders, setSenders] = useState<any[]>([])
+    const [listNameErrorMessage, setListNameErrorMessage] = useState('')
     const [optionSender, setOptionSender] = useState<any>(null)
     const [customFieldsList, setCustomFieldsList] = useState([{ type: 'Gender', value: 'gender' },
     { type: 'Company Name', value: 'company_name' },
@@ -208,28 +210,31 @@ const SendlaneDatasync: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, d
             getSendlaneList()
             getSender()
         }
-        setLoading(false)
     }, [open])
 
     const createNewList = async () => {
         try {
-        const newListResponse = await axiosInstance.post('/integrations/sync/list/', {
-            name: selectedOption?.list_name,
-            sender_id: optionSender?.id
-        }, {
-            params: {
-                service_name: 'sendlane'
+            setLoading(true)
+            const newListResponse = await axiosInstance.post('/integrations/sync/list/', {
+                name: selectedOption?.list_name,
+                sender_id: optionSender?.id
+            }, {
+                params: {
+                    service_name: 'sendlane'
+                }
+            });
+    
+            if (newListResponse.status !== 201) {
+                throw new Error('Failed to create a new tags');
             }
-        });
-
-        if (newListResponse.status !== 201) {
-            throw new Error('Failed to create a new tags')
+    
+            return newListResponse.data;
         }
-
-        return newListResponse.data;
-    } catch (error) {
+        finally {
+            setLoading(false)
+        }
     }
-    };
+    
 
 
     const handleSaveSync = async () => {
@@ -262,6 +267,7 @@ const SendlaneDatasync: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, d
                     showToast('Data sync updated successfully');
                 }
             } else {
+                if(!list) { return }
                 const response = await axiosInstance.post('/data-sync/sync', {
                     list_id: list?.id,
                     list_name: list?.list_name,
@@ -662,7 +668,18 @@ const SendlaneDatasync: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, d
         return true;
     };
 
-
+    const handleNewListChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value
+        if (klaviyoList.some(list => list.list_name === value)) {
+            setListNameError(true)
+            setListNameErrorMessage('List name must be unique')
+        }
+        setNewListName(value)
+        if (!value) {
+            setListNameError(true)
+            setListNameErrorMessage('List name is required')
+        }
+    }
 
     const handleNextTab = async () => {
 
@@ -698,7 +715,27 @@ const SendlaneDatasync: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, d
 
     return (
         <>
-        {loading && <CustomizedProgressBar />}
+        {loading && (
+            <Box
+                sx={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    background: 'rgba(0, 0, 0, 0.2)',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    zIndex: 1400,
+                    overflow: 'hidden'
+                }}
+            >
+            <Box sx={{width: '100%', top: 0, height: '100vh'}}>
+                <LinearProgress />
+            </Box>
+            </Box>
+        )}
         <Drawer
             anchor="right"
             open={open}
@@ -1144,12 +1181,12 @@ const SendlaneDatasync: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, d
                                                                         label="List Name"
                                                                         variant="outlined"
                                                                         value={newListName}
-                                                                        onChange={(e) => setNewListName(e.target.value)}
+                                                                        onChange={handleNewListChange}
                                                                         size="small"
                                                                         fullWidth
                                                                         onKeyDown={(e) => e.stopPropagation()}
                                                                         error={listNameError}
-                                                                        helperText={listNameError ? 'List Name is required' : ''}
+                                                                        helperText={listNameErrorMessage}
                                                                         InputLabelProps={{
                                                                             sx: {
                                                                                 fontFamily: 'Nunito Sans',

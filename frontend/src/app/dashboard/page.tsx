@@ -26,6 +26,7 @@ import { DateRangeIcon } from "@mui/x-date-pickers/icons";
 import CalendarPopup from "@/components/CustomCalendar";
 import dayjs from "dayjs";
 import { useNotification } from '../../context/NotificationContext';
+import RevenueTracking from "@/components/RevenueTracking";
 
 
 
@@ -774,6 +775,7 @@ const Dashboard: React.FC = () => {
             <ProgressSection />
             <PixelInstallation />
             <VerifyPixelIntegration />
+            <RevenueTracking />asdasd
           </Grid>
           <Grid item xs={12} lg={8} sx={{ display: { xs: 'none', md: 'block' }, overflow: 'hidden' }}>
             <Typography
@@ -790,6 +792,7 @@ const Dashboard: React.FC = () => {
             </Typography>
             <PixelInstallation />
             <VerifyPixelIntegration />
+            <RevenueTracking />
           </Grid>
           <Grid item xs={12} lg={4} sx={{ display: { xs: 'none', md: 'block' } }}>
             <ProgressSection />
