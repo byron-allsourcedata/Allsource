@@ -8,23 +8,15 @@ import { useEffect, useState } from "react";
 import CustomizedProgressBar from "./CustomizedProgressBar";
 import CloseIcon from '@mui/icons-material/Close';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
+import { showToast } from "./ToastNotification";
 
 interface CreateAttentiveProps {
     handleClose: () => void
-    onSave: (integration: IntegrationsCredentials) => void 
+    onSave: (integration: any) => void 
     open: boolean
     initApiKey?: string 
 }
 
-interface IntegrationsCredentials {
-    id: number
-    access_token: string
-    ad_account_id: string
-    shop_domain: string
-    data_center: string
-    service_name: string
-    is_with_suppression: boolean
-}
 
 const attentiveStyles = {
     tabHeading: {
@@ -158,6 +150,12 @@ const AttentiveIntegrationPopup = ({ handleClose, open, onSave, initApiKey}: Cre
                 }
             }, {params: {service_name: 'attentive'}})
             if(response.status === 200) {
+                showToast('Integration Attentive Successfully')
+                onSave({
+                    service_name: 'Attentive',
+                    is_failed: false,
+                    access_token: apiKey
+                })
                 handleNextTab()
             }
         } catch (error) {

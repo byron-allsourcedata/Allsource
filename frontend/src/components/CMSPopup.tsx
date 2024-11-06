@@ -514,6 +514,9 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
                   padding: '2em 0em 0em 0em',
                   justifyContent: 'start',
                   gap: 3,
+                  '@media (max-width: 900px)': {
+                    flexDirection: 'column',
+                  },
                   '@media (max-width: 600px)': {
                     flexDirection: 'column',
                   },
@@ -603,7 +606,7 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
                       flexDirection: 'column',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      width: '100%',
+                      width: '100%', 
                     }}
                   >
                     <Button

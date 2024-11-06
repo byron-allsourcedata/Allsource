@@ -222,9 +222,9 @@ const NavigationMenu = () => {
             <ListItemIcon><PeopleIcon /></ListItemIcon>
             <ListItemText primary="Contacts" />
           </ListItem>
-          <ListItem button onClick={() => handleNavigation('/audience')}
+          <ListItem button onClick={() => handleNavigation('/data-sync')}
           sx={{
-            ...(isActive('/audience') ? navigationmenuStyles.activeItem : {}),
+            ...(isActive('/data-sync') ? navigationmenuStyles.activeItem : {}),
             ...navigationmenuStyles.mobileDrawerList
             }}>
               <ListItemIcon>

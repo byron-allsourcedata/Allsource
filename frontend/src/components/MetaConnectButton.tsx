@@ -10,7 +10,7 @@ import axiosInstance from '@/axios/axiosInterceptorInstance';
 interface MetaConnectPopupProps {
     open: boolean
     onClose: () => void
-    onSave: (new_integration: any) => void
+    onSave: (integration: any) => void 
 }
 
 declare global {

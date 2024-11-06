@@ -2,6 +2,7 @@
 
 import hashlib
 import json
+import logging
 import random
 from schemas.integrations.meta import AdAccountScheme
 from models.five_x_five_users import FiveXFiveUser
@@ -191,6 +192,7 @@ class MetaIntegrationsService:
             'integration_id': credentials.id,
             'list_id': list_id,
             'list_name': list_name,
+            'leads_type': leads_type,
             'domain_id': domain_id,
             'data_map': [data.model_dump_json() for data in data_map] if data_map else None,
             'created_by': created_by
@@ -221,6 +223,7 @@ class MetaIntegrationsService:
         
     def process_data_sync(self, message):
         counter = 0
+        last_leads_sync = None
         sync = None
         try:
             sync = IntegrationUserSync(**message.get('sync'))
@@ -250,11 +253,25 @@ class MetaIntegrationsService:
                 leads = self.leads_persistence.get_leads_domain(domain.id, behavior_type=leads_type)
             for data_sync_item in data_syncs_list if not sync else [sync]:
                 session_id = random.getrandbits(64)
+                last_lead_sync_id = data_sync_item.last_lead_sync_id
+                if last_lead_sync_id:
+                    last_leads_sync = self.leads_persistence.get_lead_user_by_up_id(domain_id=domain.id, up_id=last_lead_sync_id)
                 for lead in leads:
+                    if last_leads_sync and lead.five_x_five_user_id < last_leads_sync.five_x_five_user_id:
+                        continue
+                    if lead and lead.behavior_type != data_sync_item.leads_type and data_sync_item.leads_type not in ('allContacts', None):
+                        logging.warning("Lead behavior type mismatch: %s vs %s", lead.behavior_type, data_sync_item.leads_type)
+                        continue
                     profile = self.__create_user(session_id, lead.five_x_five_user_id, data_sync_item.list_id, credentials.access_token)
+                    if profile.get('type') and profile.get('type') == 'OAuthException':
+                        credentials.is_failed = True
+                        credentials.error_message = 'Login failed'
+                        self.integrations_persisntece.db.commit()
                     counter += 1
+                    last_leads_sync = lead
                 self.sync_persistence.update_sync({
-                    'last_sync_date': datetime.now()
+                    'last_sync_date': datetime.now(),
+                    'last_lead_sync_id': self.leads_persistence.get_lead_data(last_leads_sync.five_x_five_user_id).up_id if counter > 0 else last_lead_sync_id
                 },counter=counter, id=data_sync_item.id)
 
 
@@ -281,6 +298,7 @@ class MetaIntegrationsService:
             'payload': payload,
             'app_id': APP_ID
             })
+        return response.json()
 
     def __mapped_meta_user(self, lead: FiveXFiveUser):
         first_email = (

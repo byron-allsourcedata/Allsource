@@ -18,4 +18,5 @@ class IntegrationUserSync(Base):
     sync_status = Column(Boolean, default=True)
     no_of_contacts = Column(Integer, nullable=False, default=1)
     created_by = Column(VARCHAR, nullable=False)
+    last_lead_sync_id = Column(VARCHAR(64))
 
