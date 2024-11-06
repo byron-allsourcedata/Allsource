@@ -144,8 +144,7 @@ const PlanCard: React.FC<{ plan: any; activePlanTitle: string; onChoose: (stripe
                         <Typography variant="body1" className='second-sub-title' sx={{ display: 'flex', gap: '8px', alignItems: 'center', lineHeight: '20px !important', letterSpacing: '0.07px' }}>
                             {feature.title}
                             {feature.hint && (
-                                <CustomTooltip title={feature.hint} linkText="" linkUrl="" />
-
+                                <CustomTooltip title='How overage works.' linkText="Learn more" linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/settings/enable-overage" />
                             )}
                         </Typography>
                     </Box>

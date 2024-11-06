@@ -150,7 +150,6 @@ export const SettingsBilling: React.FC = () => {
             setPlanContactsCollected(response.data.usages_credits.plan_leads_credits)
             setProspectData(response.data.usages_credits.prospect_credits);
         } catch (error) {
-            console.error('Error fetching data:', error);
         } finally {
             setIsLoading(false);
         }
@@ -180,7 +179,7 @@ export const SettingsBilling: React.FC = () => {
                 newRowsPerPageOptions = [10, 20, 50, 100];
             } else if (count <= 500) {
                 newRowsPerPageOptions = [10, 20, 50, 100, 300];
-            } else {    
+            } else {
                 newRowsPerPageOptions = [10, 20, 50, 100, 300, 500];
             }
             if (!newRowsPerPageOptions.includes(count)) {
@@ -189,13 +188,12 @@ export const SettingsBilling: React.FC = () => {
             }
             setRowsPerPageOptions(newRowsPerPageOptions); // Update the options
         } catch (error) {
-            console.error('Error fetching data:', error);
         } finally {
             setIsLoading(false);
         }
     };
 
-    
+
     useEffect(() => {
         fetchCardData();
         fetchBillingHistoryData(page, rowsPerPage);
@@ -294,8 +292,6 @@ export const SettingsBilling: React.FC = () => {
             if (axios.isAxiosError(error)) {
                 if (error.response && error.response.status === 403) {
                     showErrorToast('Access denied: You do not have permission to remove this member.');
-                } else {
-                    console.error('Error removing team member:', error);
                 }
             }
         } finally {
@@ -335,8 +331,6 @@ export const SettingsBilling: React.FC = () => {
             if (axios.isAxiosError(error)) {
                 if (error.response && error.response.status === 403) {
                     showErrorToast('Access denied: You do not have permission to remove this member.');
-                } else {
-                    console.error('Error removing team member:', error);
                 }
             }
         } finally {
@@ -373,8 +367,6 @@ export const SettingsBilling: React.FC = () => {
             if (axios.isAxiosError(error)) {
                 if (error.response && error.response.status === 403) {
                     showErrorToast('Access denied: You do not have permission to remove this member.');
-                } else {
-                    console.error('Error removing team member:', error);
                 }
             }
         } finally {
@@ -437,8 +429,6 @@ export const SettingsBilling: React.FC = () => {
             if (axios.isAxiosError(error)) {
                 if (error.response && error.response.status === 403) {
                     showErrorToast('Access denied: You do not have permission to remove this member.');
-                } else {
-                    console.error('Error removing team member:', error);
                 }
             }
         } finally {
@@ -458,8 +448,6 @@ export const SettingsBilling: React.FC = () => {
             if (axios.isAxiosError(error)) {
                 if (error.response && error.response.status === 403) {
                     showErrorToast('Access denied: You do not have permission to remove this member.');
-                } else {
-                    console.error('Error removing team member:', error);
                 }
             }
         }
@@ -579,25 +567,13 @@ export const SettingsBilling: React.FC = () => {
                 <Grid item xs={12} md={6} sx={{ padding: '0px' }}>
                     <Box sx={{ border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)', p: 3, height: '100%' }}>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 2 }}>
-                            <Typography className="first-sub-title">
-                                Card Details
-                            </Typography>
-                            <Button
-                                aria-haspopup="true"
-                                sx={{
-                                    textTransform: 'none',
-                                    borderRadius: '4px',
-                                    padding: '0px',
-                                    border: 'none',
-                                    minWidth: 'auto',
-                                    '@media (min-width: 601px)': {
-                                        display: 'none'
-                                    }
-                                }}
-                            >
-                                <Image src='/add.svg' alt='logo' height={24} width={24} />
-                            </Button>
 
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <Typography className="first-sub-title">
+                                    Card Details
+                                </Typography>
+                                <CustomTooltip title={"View detailed information about your card, including balance, transactions, and expiration date."} linkText="Learn more" linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/settings/add-the-credit-card" />
+                            </Box>
                             <Box sx={{
                                 border: '1px dashed #5052B2',
                                 borderRadius: '4px',
@@ -606,9 +582,6 @@ export const SettingsBilling: React.FC = () => {
                                 display: 'flex',
                                 justifyContent: 'center',
                                 alignItems: 'center',
-                                '@media (max-width: 600px)': {
-                                    display: 'none'
-                                }
                             }}>
                                 <Button onClick={handleOpen} sx={{ padding: 2 }}>
                                     <Image src="/add-square.svg" alt="add-square" height={24} width={24} />
@@ -1319,7 +1292,7 @@ export const SettingsBilling: React.FC = () => {
                     <Typography variant="h6" className='first-sub-title' sx={{
                         lineHeight: '22px !important'
                     }}>Billing History</Typography>
-                    <CustomTooltip title={"Billing History"} linkText="Learn more" linkUrl="https://maximiz.ai" />
+                    <CustomTooltip title={"You can download the billing history and share it with your teammates."} linkText="Learn more" linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/settings/how-to-download-the-billing-invoice" />
                 </Box>
                 <TableContainer sx={{
                     border: '1px solid #EBEBEB',

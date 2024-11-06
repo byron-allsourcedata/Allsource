@@ -8,9 +8,10 @@ interface CustomNotificationProps {
     id: number;
     message: string;
     showDismiss: boolean;
+    onDismiss: () => void;
 }
 
-const CustomNotification: React.FC<CustomNotificationProps> = ({ id, message, showDismiss }) => {
+const CustomNotification: React.FC<CustomNotificationProps> = ({ id, message, showDismiss, onDismiss }) => {
     const [show, setShow] = useState(true)
     const handleDismiss = () => {
         try {
@@ -18,10 +19,11 @@ const CustomNotification: React.FC<CustomNotificationProps> = ({ id, message, sh
                 notification_ids: [id]
             });
             setShow(false);
+            onDismiss();
         } catch (error) {
         }
     }
-    
+
     const keywords: { word: string; link: string }[] = [
         { word: "Enable Overage", link: "/settings?section=billing" },
         { word: "billing", link: "/settings?section=billing" },
@@ -41,7 +43,7 @@ const CustomNotification: React.FC<CustomNotificationProps> = ({ id, message, sh
             const keyword = keywords.find(k => k.word === part);
             if (keyword) {
                 return (
-                    <Link key={index} className="paragraph" href={keyword.link} sx={{ textDecoration: 'none', color: 'rgba(20, 110, 246, 1) !important' }}>
+                    <Link key={index} className="second-sub-title" href={keyword.link} sx={{ textDecoration: 'none', color: 'rgba(20, 110, 246, 1) !important' }}>
                         {part}
                     </Link>
                 );
@@ -55,23 +57,23 @@ const CustomNotification: React.FC<CustomNotificationProps> = ({ id, message, sh
         <Box
             sx={{
                 display: 'flex',
-                top: '2.75rem',
+                top: '4.25rem',
                 position: 'fixed',
                 alignItems: 'center',
                 border: '1px solid rgba(248, 70, 75, 1)',
-                borderRadius: '4px',
-                padding: '0.5rem 1.5rem',
+                borderRadius: '6px',
+                padding: '1.25rem 1.5rem',
                 width: 'calc(100% - 20px)',
-                margin: '10px 0',
                 marginLeft: '10px',
                 height: '34px',
                 zIndex: 1200,
+                '@media (max-width: 600px)': { display: 'none'},
                 backgroundColor: '#fff',
             }}
         >
             <Image src="/danger-icon.svg" alt="Danger Icon"  width={20} height={20} />
             
-            <Typography variant="body1" className='second-sub-title' sx={{ marginLeft: '8px', flexGrow: 1 }}>
+            <Typography variant="body1" className='second-sub-title' sx={{ marginLeft: '8px', flexGrow: 1,  }}>
                 {transformTextToLinks(message)}
             </Typography>
 

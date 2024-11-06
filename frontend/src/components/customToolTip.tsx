@@ -12,8 +12,8 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({ title, linkText, linkUrl 
   return (
     <Tooltip
       title={
-        <Box sx={{ backgroundColor: '#fff', margin:0, padding: 0, maxWidth: '400px', display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
-          <Typography className='table-data' component='div'  sx={{ fontSize: '12px !important',  }}>
+        <Box sx={{ backgroundColor: '#fff', margin:0, padding: 0, display: 'flex', flexDirection: 'row', alignItems: 'center', }}>
+          <Typography className='table-data' component='div'  sx={{ fontSize: '12px !important',}}>
             {title}
             {linkText && linkUrl && (
             <Typography className='table-heading' component='span' sx={{ pl:1, color: 'rgba(80, 82, 178, 1) !important', whiteSpace: 'nowrap', fontSize: '13px !important', overflow: 'hidden', textOverflow: 'ellipsis' }}>
@@ -34,7 +34,9 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({ title, linkText, linkUrl 
             boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.12)', 
             border:' 0.2px solid rgba(255, 255, 255, 1)',
             borderRadius: '4px',
-            maxWidth: '100%',
+            maxHeight: '100%',
+            maxWidth: '500px',
+            minWidth: '200px',
             padding: '11px 10px',
           },
         },

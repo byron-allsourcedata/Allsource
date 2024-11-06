@@ -1,4 +1,4 @@
-import { Box, Typography, TextField, Button, Switch, Chip, InputAdornment, Divider, Tooltip, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, IconButton, DialogActions, DialogContent, DialogContentText, Popover, MenuItem, Select, SelectChangeEvent, } from "@mui/material";
+import { Box, Typography, TextField, Button, Switch, Chip, InputAdornment, Divider, Tooltip, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, IconButton, DialogActions, DialogContent, DialogContentText, Popover, MenuItem, Select, SelectChangeEvent, OutlinedInput, FormControl, InputLabel, } from "@mui/material";
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { suppressionsStyles } from "@/css/suppressions";
@@ -16,6 +16,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import CustomTablePagination from '@/components/CustomTablePagination';
+import CustomTooltip from "./customToolTip";
 
 const isValidUrlOrPath = (input: string): boolean => {
     const fullUrlRegex = /^(https?:\/\/)?([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(:\d{1,5})?(\/.*)?$/;
@@ -55,7 +56,7 @@ const SuppressionRules: React.FC = () => {
         setDays(event.target.value);
     };
 
-    const daysOptions: (string | number)[] = Array.from({ length: 12 }, (_, i) => (i + 1) * 30); // Значения от 30 до 360
+    const daysOptions: (string | number)[] = Array.from({ length: 12 }, (_, i) => (i + 1) * 30);
     daysOptions.push('Eternal');
     const label = { inputProps: { 'aria-label': 'Switch demo' } };
 
@@ -85,7 +86,6 @@ const SuppressionRules: React.FC = () => {
             setLoading(true)
             const response = await axiosInstance.post('/suppressions/collecting-contacts');
         } catch (error) {
-            console.error('Error occurred while updating switch status:', error);
         } finally {
             setLoading(false)
         }
@@ -109,7 +109,6 @@ const SuppressionRules: React.FC = () => {
                 showToast('URLs successfully processed!');
             }
         } catch (error) {
-            console.error("Error while sending URLs:", error);
             showErrorToast('An error occurred while sending URLs.');
         }
         finally {
@@ -125,7 +124,6 @@ const SuppressionRules: React.FC = () => {
             setLoading(true)
             const response = await axiosInstance.post('/suppressions/certain-activation');
         } catch (error) {
-            console.error('Error occurred while updating switch status:', error);
         } finally {
             setLoading(false)
         }
@@ -133,22 +131,7 @@ const SuppressionRules: React.FC = () => {
 
 
     /// URL with Param suppressions
-    const [inputValueParam, setInputValueParam] = useState('');
     const [chipDataParam, setChipDataParam] = useState<string[]>([]);
-
-    const handleKeyDownUrlParameters = (event: React.KeyboardEvent<HTMLDivElement>) => {
-        if (event.key === 'Enter' && inputValueParam.trim()) {
-            event.preventDefault(); // Prevent newline in contentEditable
-            if (!chipDataParam.includes(inputValueParam.trim())) {
-                setChipDataParam((prevChips) => [...prevChips, inputValueParam.trim()]);
-                setInputValueParam(''); // Clear input after adding chip
-            }
-        }
-    };
-
-    const handleDeleteParam = (chipToDelete: string) => {
-        setChipDataParam((prevChips) => prevChips.filter((chip) => chip !== chipToDelete));
-    };
 
     const handleSubmitUrlParam = async () => {
         try {
@@ -174,7 +157,6 @@ const SuppressionRules: React.FC = () => {
             setLoading(true)
             const response = await axiosInstance.post('/suppressions/based-activation');
         } catch (error) {
-            console.error('Error occurred while updating switch status:', error);
         } finally {
             setLoading(false)
         }
@@ -182,22 +164,7 @@ const SuppressionRules: React.FC = () => {
 
 
     /// Email Suppressions
-    const [inputValueEmail, setInputValueEmail] = useState('');
     const [chipDataEmail, setChipDataEmail] = useState<string[]>([]);
-
-    const handleDeleteEmail = (chipToDelete: string) => {
-        setChipDataEmail((prevChips) => prevChips.filter((chip) => chip !== chipToDelete));
-    };
-
-    const handleKeyDownEmail = (event: React.KeyboardEvent<HTMLDivElement>) => {
-        if (event.key === 'Enter' && inputValueEmail.trim()) {
-            event.preventDefault(); // Prevent newline in contentEditable
-            if (!chipDataParam.includes(inputValueEmail.trim())) {
-                setChipDataEmail((prevChips) => [...prevChips, inputValueEmail.trim()]);
-                setInputValueEmail(''); // Clear input after adding chip
-            }
-        }
-    };
 
     const handleSubmitEmail = async () => {
         try {
@@ -212,7 +179,6 @@ const SuppressionRules: React.FC = () => {
                 showToast('Emails successfully processed!');
             }
         } catch (error) {
-            console.error("Error while sending URLs:", error);
             showErrorToast('An error occurred while sending URLs.');
         } finally {
             setLoading(false)
@@ -366,7 +332,7 @@ const SuppressionRules: React.FC = () => {
     const handlePageChange = (event: React.MouseEvent<HTMLButtonElement> | null, newPage: number) => {
         setPage(newPage);
     };
-    
+
 
     const handleRowsPerPageChange = (event: React.ChangeEvent<{ value: unknown }>) => {
         setRowsPerPage(parseInt(event.target.value as string, 10));
@@ -477,12 +443,20 @@ const SuppressionRules: React.FC = () => {
                 )}
                 <Box sx={suppressionsStyles.box}>
                     <Box sx={suppressionsStyles.container}>
-                        <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', "@media (max-width:700px)": {
-                                    flexDirection: 'column', mb: 2
-                                } }}>
-                            <Typography className="main-text" sx={suppressionsStyles.title}>
-                                Suppression Rules
-                            </Typography>
+                        <Box sx={{
+                            display: 'flex', flexDirection: 'row', justifyContent: 'space-between', "@media (max-width:700px)": {
+                                flexDirection: 'column', mb: 2
+                            }
+                        }}>
+
+                            <Box sx={{ display: 'flex', gap:1, }}>
+                                <Typography className="main-text" sx={suppressionsStyles.title}>
+                                    Suppression Rules
+                                </Typography>
+                                <Box sx={{pt:0.25}}>
+                                <CustomTooltip title={"Set rules to exclude specific contacts or data from campaigns to improve targeting."} linkText="Learn more" linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/articles/suppression-rules" />
+                                </Box>
+                            </Box>
 
                             <Box sx={{
                                 background: 'rgba(239, 239, 239, 1)', border: '1px solid #efefef', borderRadius: '4px', p: 1, maxWidth: '43%', "@media (max-width:700px)": {
@@ -537,47 +511,62 @@ const SuppressionRules: React.FC = () => {
                                 </Box>
                             </Box>
                             <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', gap: 0, width: '100%', alignItems: 'center', '@media (max-width: 700px)': { flexDirection: 'column', alignItems: 'end' } }}>
-                                <Select
-                                    value={days}
-                                    onChange={handleDaysChange}
-                                    displayEmpty
+                                <FormControl
                                     sx={{
                                         marginBottom: '32px',
-                                        backgroundColor: '#fff',
-                                        borderRadius: '4px',
                                         width: '69%',
-                                        height: '48px',
-                                        "@media (max-width: 700px)": { width: '100%', height: '48px' },
-                                        fontFamily: 'Nunito Sans',
-                                        fontSize: '14px',
-                                        fontWeight: 400,
-                                        color: 'rgba(17, 17, 19, 1)',
+                                        "@media (max-width: 700px)": { width: '100%' }
                                     }}
-                                    MenuProps={{
-                                        PaperProps: { style: { maxHeight: 200 } }
-                                    }}
-                                    IconComponent={(props) => (
-                                        days === '' ? 
-                                            <KeyboardArrowDownIcon {...props} sx={{ color: 'rgba(74, 74, 74, 1)' }} /> : 
-                                            <KeyboardArrowUpIcon {...props} sx={{ color: 'rgba(74, 74, 74, 1)' }} />
-                                    )}
                                 >
-                                    {daysOptions.map((option, index) => (
-                                        <MenuItem
-                                            key={index}
-                                            value={typeof option === 'number' ? option.toString() : option}
-                                            sx={{
-                                                fontFamily: 'Nunito Sans',
-                                                fontWeight: 500,
-                                                fontSize: '14px',
-                                                lineHeight: '19.6px',
-                                                '&:hover': { backgroundColor: 'rgba(80, 82, 178, 0.1)' },
-                                            }}
-                                        >
-                                            {typeof option === 'number' ? `${option} days` : 'Eternal'}
-                                        </MenuItem>
-                                    ))}
-                                </Select>
+                                    <InputLabel
+                                        sx={{
+                                            fontFamily: 'Roboto',
+                                            fontSize: '14px',
+                                            color: 'rgba(74, 74, 74, 1)',  // Цвет текста
+                                        }}
+                                    >
+                                        Select
+                                    </InputLabel>
+                                    <Select
+                                        value={days}
+                                        onChange={handleDaysChange}
+                                        label="Select"
+                                        sx={{
+                                            backgroundColor: '#fff',
+                                            borderRadius: '4px',
+                                            height: '48px',
+                                            fontFamily: 'Nunito Sans',
+                                            fontSize: '14px',
+                                            fontWeight: 400,
+                                            color: 'rgba(17, 17, 19, 1)',
+                                        }}
+                                        MenuProps={{
+                                            PaperProps: { style: { maxHeight: 200 } }
+                                        }}
+                                        IconComponent={(props) => (
+                                            days === '' ?
+                                                <KeyboardArrowDownIcon {...props} sx={{ color: 'rgba(74, 74, 74, 1)' }} /> :
+                                                <KeyboardArrowUpIcon {...props} sx={{ color: 'rgba(74, 74, 74, 1)' }} />
+                                        )}
+                                    >
+                                        {daysOptions.map((option, index) => (
+                                            <MenuItem
+                                                key={index}
+                                                value={typeof option === 'number' ? option.toString() : option}
+                                                sx={{
+                                                    fontFamily: 'Nunito Sans',
+                                                    fontWeight: 500,
+                                                    fontSize: '14px',
+                                                    lineHeight: '19.6px',
+                                                    '&:hover': { backgroundColor: 'rgba(80, 82, 178, 0.1)' },
+                                                }}
+                                            >
+                                                {typeof option === 'number' ? `${option} days` : 'Eternal'}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormControl>
+
                                 <Box sx={{ padding: 0 }}>
                                     <Button variant="outlined" onClick={handleSubmitDaysContacts} sx={{
                                         backgroundColor: '#fff',
@@ -615,7 +604,7 @@ const SuppressionRules: React.FC = () => {
                                 <Box position="relative" display="inline-block" sx={{
                                     "@media (max-width:700px)": {
                                         pl: 2,
-                                        mb:2
+                                        mb: 2
                                     }
                                 }}>
                                     <Switch
@@ -676,7 +665,7 @@ const SuppressionRules: React.FC = () => {
                                                     fontFamily: 'Roboto',
                                                     fontSize: '12px',
                                                     color: '#fff',
-                                                    paddingLeft:3,
+                                                    paddingLeft: 3,
                                                     fontWeight: '400',
                                                     marginLeft: '6px',
                                                     opacity: !checked ? 1 : 0,
@@ -724,7 +713,7 @@ const SuppressionRules: React.FC = () => {
                                 <Box position="relative" display="inline-block" sx={{
                                     "@media (max-width:700px)": {
                                         pl: 2,
-                                        mb:2
+                                        mb: 2
                                     }
                                 }}>
                                     <Switch
@@ -785,7 +774,7 @@ const SuppressionRules: React.FC = () => {
                                                     fontFamily: 'Roboto',
                                                     fontSize: '12px',
                                                     color: '#fff',
-                                                    paddingLeft:3,
+                                                    paddingLeft: 3,
                                                     fontWeight: '400',
                                                     marginLeft: '6px',
                                                     opacity: !checked ? 1 : 0,
@@ -882,7 +871,7 @@ const SuppressionRules: React.FC = () => {
                                 <Box position="relative" display="inline-block" sx={{
                                     "@media (max-width:700px)": {
                                         pl: 2,
-                                        mb:2
+                                        mb: 2
                                     }
                                 }}>
                                     <Switch
@@ -943,7 +932,7 @@ const SuppressionRules: React.FC = () => {
                                                     fontFamily: 'Roboto',
                                                     fontSize: '12px',
                                                     color: '#fff',
-                                                    paddingLeft:3,
+                                                    paddingLeft: 3,
                                                     fontWeight: '400',
                                                     marginLeft: '6px',
                                                     opacity: !checked ? 1 : 0,
@@ -1119,6 +1108,7 @@ const SuppressionRules: React.FC = () => {
                                         <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2, alignItems: 'center' }}>
                                             <input
                                                 type="file"
+                                                accept=".csv"
                                                 ref={fileInputRef}
                                                 style={{ display: 'none' }}
                                                 onChange={handleFileUpload}
@@ -1209,7 +1199,7 @@ const SuppressionRules: React.FC = () => {
                 </Box>
                 <Divider sx={{ pt: '1.5rem' }} />
 
-                <Box sx={{ ...suppressionsStyles.suppressionContainer, paddingLeft: 0, pr:0 }}>
+                <Box sx={{ ...suppressionsStyles.suppressionContainer, paddingLeft: 0, pr: 0 }}>
                     <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '0.5rem', mb: '1.25rem' }}>
                         <Typography className="main-text" sx={{ ...suppressionsStyles.title, mb: 0 }}>
                             Suppression list
@@ -1361,14 +1351,14 @@ const SuppressionRules: React.FC = () => {
                                 </TableBody>
                             </Table>
                         </TableContainer>
-                        <Box sx={{display: 'flex', justifyContent: 'end'}}>
-                        <CustomTablePagination
-                            count={totalCount}
-                            page={page}
-                            rowsPerPage={rowsPerPage}
-                            onPageChange={handlePageChange}
-                            onRowsPerPageChange={handleRowsPerPageChange}
-                        />
+                        <Box sx={{ display: 'flex', justifyContent: 'end' }}>
+                            <CustomTablePagination
+                                count={totalCount}
+                                page={page}
+                                rowsPerPage={rowsPerPage}
+                                onPageChange={handlePageChange}
+                                onRowsPerPageChange={handleRowsPerPageChange}
+                            />
                         </Box>
                     </Box>
 

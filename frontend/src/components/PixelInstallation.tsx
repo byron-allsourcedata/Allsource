@@ -4,11 +4,12 @@ import Image from "next/image";
 import axiosInterceptorInstance from "../axios/axiosInterceptorInstance";
 import { AxiosError } from "axios";
 import { useSlider } from '../context/SliderContext';
-import React, {useEffect, useState} from "react";
+import React, { useEffect, useState } from "react";
 import ManualPopup from '../components/ManualPopup';
 import GoogleTagPopup from '../components/GoogleTagPopup';
 import CRMPopup from "./CMSPopup";
 import CustomizedProgressBar from "./CustomizedProgressBar";
+import CustomTooltip from "./customToolTip";
 
 
 
@@ -34,10 +35,8 @@ const PixelInstallation: React.FC = () => {
           setShowSlider(true);
         } else {
           sessionStorage.setItem('is_slider_opened', 'false');
-          setShowSlider(false); 
+          setShowSlider(false);
         }
-      } else {
-        console.error('Error fetching data:', error);
       }
     }
     finally {
@@ -59,8 +58,6 @@ const PixelInstallation: React.FC = () => {
           sessionStorage.setItem('is_slider_opened', 'false');
           setShowSlider(false);
         }
-      } else {
-        console.error('Error fetching data:', error);
       }
     }
     finally {
@@ -83,7 +80,6 @@ const PixelInstallation: React.FC = () => {
         try {
           setGoogleOpen(true);
         } catch (error) {
-          console.error('Error handling redirect:', error);
         }
       }
     };
@@ -113,8 +109,6 @@ const PixelInstallation: React.FC = () => {
           sessionStorage.setItem('is_slider_opened', 'false');
           setShowSlider(false);
         }
-      } else {
-        console.error('Error fetching data:', error);
       }
     }
     finally {
@@ -129,12 +123,12 @@ const PixelInstallation: React.FC = () => {
       borderRadius: '8px',
       backgroundColor: 'rgba(247, 247, 247, 1)',
       boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
-      marginBottom: '2rem' ,
+      marginBottom: '2rem',
       '@media (max-width: 1199px)': {
         padding: '1.5rem 1rem',
-        marginBottom: '1.5rem' ,
+        marginBottom: '1.5rem',
       }
-      }}>
+    }}>
       <Typography variant="h6" component="div" mb={1} className="first-sub-title" sx={{
         fontFamily: 'Nunito Sans',
         fontWeight: '700',
@@ -146,71 +140,81 @@ const PixelInstallation: React.FC = () => {
           fontSize: '1rem',
           lineHeight: 'normal',
           marginBottom: '0.25rem'
-      }
-        }}>
+        }
+      }}>
         1. Pixel Installation
       </Typography>
       <Typography variant="body2" color="textSecondary" className="table-data" mb={2}
-      sx={{
-        fontFamily: 'Nunito Sans',
-        fontWeight: '500',
-        color: 'rgba(128, 128, 128, 1)',
-        fontSize: '12px',
-        '@media (max-width: 1199px)': {
-          fontSize: '0.875rem',
-          lineHeight: 'normal',
-        }
+        sx={{
+          fontFamily: 'Nunito Sans',
+          fontWeight: '500',
+          color: 'rgba(128, 128, 128, 1)',
+          fontSize: '12px',
+          '@media (max-width: 1199px)': {
+            fontSize: '0.875rem',
+            lineHeight: 'normal',
+          }
         }}
       >
         Select how you would like to install the pixel
       </Typography>
       <Grid container md={12}>
-        <Box sx={{ display: 'flex', flexDirection: 'row', width: '100%',gap: 1, '@media (max-width: 899px)': {
-          flexDirection: 'column'
-        } }}>
-        <Grid item xs={12} md={4}>
-          <Button variant="outlined" fullWidth onClick={installManually} sx={buttonStyles}>
-            <Image src={'/install_manually.svg'} alt="Install Manually" width={32} height={32}
-            />
-            <Typography className="second-sub-title" sx={typographyStyles}>Install Manually</Typography>
-          </Button>
-          <ManualPopup open={openmanually} handleClose={handleManualClose} pixelCode={pixelCode} />
-        </Grid>
-        <Grid item xs={12} md={4}>
-          <Button variant="outlined" fullWidth onClick={installGoogleTag} sx={buttonGoogle}>
-            <Image src={'/install_gtm.svg'} alt="Install on Google Tag Manager" width={32} height={32} />
-            <Typography className="second-sub-title" sx={typographyGoogle}>Install on Google Tag Manager</Typography>
-          </Button>
-          <GoogleTagPopup open={opengoogle} handleClose={handleGoogleClose}/>
-        </Grid>
-        <Grid item xs={12} md={4}>
-          <Button variant="outlined" fullWidth onClick={installCMS} sx={buttonStyles}>
-            <Box>
-              <Image src={'/install_cms1.svg'} alt="Install on CMS" width={24} height={24} style={{marginRight:4}} />
-              <Image src={'/install_cms2.svg'} alt="Install on CMS" width={24} height={24} />
-              <Image src={'/bigcommerce-icon.svg'} alt="Install on CMS" width={24} height={24} />
-            </Box>
-            <Typography className="second-sub-title" sx={{...typographyStyles, pt: '9px'}}>Install on CMS</Typography>
-          </Button>
-          <CRMPopup open={opencrm} handleClose={handleCRMClose} pixelCode={cmsData.manual || ''}  pixel_client_id={cmsData.pixel_client_id || ''} />
-        </Grid>
+        <Box sx={{
+          display: 'flex', flexDirection: 'row', width: '100%', gap: 1, '@media (max-width: 899px)': {
+            flexDirection: 'column'
+          }
+        }}>
+          <Grid item xs={12} md={4}>
+            <Button variant="outlined" fullWidth onClick={installManually} sx={buttonStyles}>
+              <Box sx={{ display: 'flex', width: '100%', justifyContent: 'space-between', alignItems: 'space-between', flexDirection: 'row' }}>
+                <Image src={'/install_manually.svg'} alt="Install Manually" width={32} height={32} />
+                <CustomTooltip title={"Manually install to have full control over setup and configuration."} linkText="Learn more" linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2/how-do-i-install-maximiz-pixel-on-my-website" />
+              </Box>
+              <Typography className="second-sub-title" sx={typographyStyles}>Install Manually</Typography>
+            </Button>
+            <ManualPopup open={openmanually} handleClose={handleManualClose} pixelCode={pixelCode} />
+          </Grid>
+          <Grid item xs={12} md={4}>
+            <Button variant="outlined" fullWidth onClick={installGoogleTag} sx={buttonGoogle}>
+              <Box sx={{ display: 'flex', width: '100%', justifyContent: 'space-between', alignItems: 'space-between', flexDirection: 'row' }}>
+                <Image src={'/install_gtm.svg'} alt="Install on Google Tag Manager" width={32} height={32} />
+                <CustomTooltip title={"Quickly integrate using Google Tag Manager for seamless setup."} linkText="Learn more" linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2/how-do-i-install-my-pixel-on-google-tag" />
+              </Box>
+              <Typography className="second-sub-title" sx={typographyGoogle}>Install on Google Tag Manager</Typography>
+            </Button>
+            <GoogleTagPopup open={opengoogle} handleClose={handleGoogleClose} />
+          </Grid>
+          <Grid item xs={12} md={4}>
+            <Button variant="outlined" fullWidth onClick={installCMS} sx={buttonStyles}>
+              <Box sx={{ display: 'flex', width: '100%', justifyContent: 'space-between', alignItems: 'space-between', flexDirection: 'row' }}>
+                <Box>
+                  <Image src={'/install_cms1.svg'} alt="Install on CMS" width={24} height={24} style={{ marginRight: 4 }} />
+                  <Image src={'/install_cms2.svg'} alt="Install on CMS" width={24} height={24} />
+                  <Image src={'/bigcommerce-icon.svg'} alt="Install on CMS" width={24} height={24} />
+                </Box>
+                <CustomTooltip title={"Install easily on your CMS for a streamlined integration experience."} linkText="Learn more" linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2/how-do-i-install-maximiz-pixel-on-shopify-store" />
+              </Box>
+              <Typography className="second-sub-title" sx={{ ...typographyStyles, pt: '9px' }}>Install on CMS</Typography>
+            </Button>
+            <CRMPopup open={opencrm} handleClose={handleCRMClose} pixelCode={cmsData.manual || ''} pixel_client_id={cmsData.pixel_client_id || ''} />
+          </Grid>
         </Box>
       </Grid>
       {isLoading && (
-            <Box sx={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: '100%',
-              height: '100%',
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              zIndex: 1,
-            }}>
-              <CustomizedProgressBar />
-            </Box>
-          )}
+        <Box sx={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 1,
+        }}>
+          <CustomizedProgressBar />
+        </Box>
+      )}
     </Box>
   );
 };
@@ -227,13 +231,13 @@ const buttonStyles = {
   width: '100%',
   '@media (max-width: 1199px)': {
     maxHeight: '82px',
-    },
+  },
   '& img': {
     '@media (max-width: 1199px)': {
       width: '24px',
       height: '24px'
     }
-  } 
+  }
 };
 
 const buttonGoogle = {
@@ -241,13 +245,13 @@ const buttonGoogle = {
   display: "flex",
   flexDirection: 'column',
   alignItems: 'self-start',
-  padding: '0.875rem', 
+  padding: '0.875rem',
   borderColor: 'rgba(228, 228, 228, 1)',
   border: '1px solid rgba(228, 228, 228, 1)',
   width: '100%',
   '@media (max-width: 1199px)': {
     maxHeight: '82px',
-    },
+  },
   '& img': {
     '@media (max-width: 1199px)': {
       width: '24px',
@@ -271,7 +275,7 @@ const typographyStyles = {
     paddingBottom: 0
   },
   '@media (max-width: 1300px)': {
-    fontSize:'13px'
+    fontSize: '13px'
   }
 };
 
@@ -288,7 +292,7 @@ const typographyGoogle = {
     paddingTop: '0.5rem'
   },
   '@media (max-width: 1300px)': {
-    fontSize:'13px'
+    fontSize: '13px'
   }
 };
 

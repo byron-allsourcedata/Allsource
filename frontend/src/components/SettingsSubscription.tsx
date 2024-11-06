@@ -54,7 +54,8 @@ const subscriptionStyles = {
         '@media (max-width: 600px)': {
             paddingLeft: '22px',
             paddingRight: '22px',
-            fontSize: '18px !important'
+            fontSize: '18px !important',
+            width: '50%',
         }
     },
     saveHeading: {
@@ -176,7 +177,6 @@ export const SettingsSubscription: React.FC = () => {
                 const period_plans = response.data.stripe_plans.filter((plan: any) => plan.interval === interval);
                 setPlans(period_plans);
             } catch (error) {
-                console.error('Error fetching data:', error);
             } finally {
                 setIsLoading(false);
             }
@@ -187,7 +187,6 @@ export const SettingsSubscription: React.FC = () => {
 
     const handleBuyCredits = () => {
         // Логика для покупки кредитов
-        console.log('Buy Credits clicked');
     };
 
     const handleChoosePlan = async (stripePriceId: string) => {
@@ -229,7 +228,6 @@ export const SettingsSubscription: React.FC = () => {
                         const period_plans = response.data.stripe_plans.filter((plan: any) => plan.interval === interval);
                         setPlans(period_plans);
                     } catch (error) {
-                        console.error('Error fetching data:', error);
                     } finally {
                         setIsLoading(false);
                     }
@@ -242,8 +240,6 @@ export const SettingsSubscription: React.FC = () => {
             if (axios.isAxiosError(error)) {
                 if (error.response && error.response.status === 403) {
                     showErrorToast('Access denied: You do not have permission to remove this member.');
-                } else {
-                    console.error('Error removing team member:', error);
                 }
             }
         } finally {
@@ -356,14 +352,15 @@ export const SettingsSubscription: React.FC = () => {
                         justifyContent: 'start'
                     }
                 }}>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
                         {/* Tabs for Monthly and Yearly */}
                         <Tabs value={tabValue} onChange={handleTabChange} sx={{
                             border: '1px solid #808080',
                             borderRadius: '4px',
                             '& .MuiTabs-indicator': {
                                 background: 'none'
-                            }
+                            },
+                            '@media (max-width: 600px)': {width: '100%'}
                         }}>
                             <Tab className='first-sub-title' sx={subscriptionStyles.plantabHeading}
                                 label="Monthly" />
@@ -675,7 +672,7 @@ export const SettingsSubscription: React.FC = () => {
                 onClose={handleCustomPlanPopupClose}
                 PaperProps={{
                     sx: {
-                        width: '620px',
+                        width: '640px',
                         position: 'fixed',
                         zIndex: 1301,
                         top: 0,
@@ -688,9 +685,14 @@ export const SettingsSubscription: React.FC = () => {
             >
 
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 3.5, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
+                    
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', mb: 3 }}>
                     <Typography variant="h6" className='first-sub-title' sx={{ textAlign: 'center' }}>
                         Custom plan
                     </Typography>
+                    <CustomTooltip title={"You can download the billing history and share it with your teammates."} linkText="Learn more" linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/settings/get-custom-subscription-plan" />
+                </Box>
+
                     <IconButton onClick={handleCustomPlanPopupClose} sx={{ p: 0 }}>
                         <CloseIcon sx={{ width: '20px', height: '20px' }} />
                     </IconButton>

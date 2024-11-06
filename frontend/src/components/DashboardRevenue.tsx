@@ -1,5 +1,5 @@
 import axiosInstance from "@/axios/axiosInterceptorInstance";
-import { Box, Checkbox, Divider, ListItemText, MenuItem, Select, SelectChangeEvent, Typography } from "@mui/material";
+import { Box, Checkbox, Divider, ListItemText, MenuItem, Select, SelectChangeEvent, Typography, IconButton } from "@mui/material";
 import { useState, useEffect } from "react";
 import CustomizedProgressBar from "./CustomizedProgressBar";
 import axiosInterceptorInstance from "@/axios/axiosInterceptorInstance";
@@ -13,26 +13,15 @@ import Stack from '@mui/material/Stack';
 import { LineChart } from '@mui/x-charts/LineChart';
 import { PieChart } from '@mui/x-charts/PieChart';
 import { useMediaQuery } from '@mui/material';
+import { BarChart } from '@mui/x-charts/BarChart';
+import { ShowChart, BarChart as IconBarChart } from "@mui/icons-material";
+import { margin } from "@mui/system";
 
 
 const CustomIcon = () => (
     <Image src="/arrow_down.svg" alt="arrow down" width={16} height={16} />
 );
 
-function getDaysInMonth(month: number, year: number) {
-    const date = new Date(year, month, 0);
-    const monthName = date.toLocaleDateString('en-US', {
-        month: 'short',
-    });
-    const daysInMonth = date.getDate();
-    const days = [];
-    let i = 1;
-    while (days.length < daysInMonth) {
-        days.push(`${monthName} ${i}`);
-        i += 1;
-    }
-    return days;
-}
 
 interface AppliedDates {
     start: Date | null;
@@ -41,6 +30,7 @@ interface AppliedDates {
 
 const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
     const [lifetimeRevenue, setLifetimeRevenue] = useState(0);
+    const [chartType, setChartType] = useState<'line' | 'bar'>('line');
     const [ROI, setROI] = useState(0);
     const [loading, setLoading] = useState(true)
     const [values, setValues] = useState({
@@ -94,6 +84,10 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
             ...prev,
             [seriesId]: !prev[seriesId],
         }));
+    };
+
+    const toggleChartType = (type: 'line' | 'bar') => {
+        setChartType(type);
     };
 
     useEffect(() => {
@@ -457,7 +451,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                     <CardContent>
                         <Stack sx={{ justifyContent: 'space-between', flexDirection: 'row', '@media (max-width: 900px)': { flexDirection: 'column', justifyContent: 'center', alignItems: 'start' } }}>
                             <Stack
-                                direction="row"
+                                direction="column"
                                 sx={{
                                     alignContent: { xs: 'center', sm: 'flex-start' },
                                     alignItems: 'center',
@@ -479,6 +473,44 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                     width: '100%'
                                 }}
                             >
+                                <Stack
+                            direction="row"
+                            sx={{
+                                alignContent: { xs: 'center', sm: 'flex-start' },
+                                alignItems: 'center',
+                                gap: 2,
+                                
+                            }}
+                        >
+                            <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1.5, ml: 3 }}>
+                                <IconButton
+                                    onClick={() => toggleChartType('line')}
+                                    sx={{
+                                        width: '16px',
+                                        ml: 5,
+                                        height: '16px',
+                                        borderRadius: '4px', // Квадратная форма
+                                        border: `1.5px solid ${chartType === 'line' ? 'rgba(80, 82, 178, 1)' : 'rgba(115, 115, 115, 1)'}`,
+                                        color: chartType === 'line' ? 'rgba(80, 82, 178, 1)' : 'rgba(115, 115, 115, 1)',
+                                    }}
+                                >
+                                    <ShowChart sx={{ fontSize: '16px' }} />
+                                </IconButton>
+
+                                <IconButton
+                                    onClick={() => toggleChartType('bar')}
+                                    sx={{
+                                        width: '16px',
+                                        height: '16px',
+                                        borderRadius: '4px', // Квадратная форма
+                                        border: `1.5px solid ${chartType === 'bar' ? 'rgba(80, 82, 178, 1)' : 'rgba(115, 115, 115, 1)'}`,
+                                        color: chartType === 'bar' ? 'rgba(80, 82, 178, 1)' : 'rgba(115, 115, 115, 1)',
+                                    }}
+                                >
+                                    <IconBarChart sx={{ fontSize: '16px' }} />
+                                </IconButton>
+                            </Box>
+                        </Stack>
                                 {Object.keys(visibleSeries).map((seriesId, index) => (
                                     <Chip
                                         key={seriesId}
@@ -612,7 +644,8 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                 }}
                             />
                         </Box> :
-                <LineChart
+                    (chartType === 'line' ? (
+                        <LineChart
                     colors={filteredSeriescolor.map(s => colorMapping[s.id as keyof typeof colorMapping])}
                     xAxis={[{
                         scaleType: 'point',
@@ -635,8 +668,34 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                     grid={{ horizontal: true }}
                     sx={{ border: 'none' }}
                     slotProps={{ legend: { hidden: true } }}
-                />}
+                />
+                    ) : (
+                        <BarChart
+                            height={350}
+                            colors={filteredSeriescolor.map(s => colorMapping[s.id as keyof typeof colorMapping])}
+                            xAxis={[{ scaleType: 'band', data: formattedData }]}
+                            yAxis={[
+                                {
+                                    valueFormatter: (value) => {
+                                        if (value >= 1000 && value < 1000000) {
+                                            return `${(value / 1000).toFixed(0)}k`; // Formats 10,000 as 10k
+                                        } else if (value >= 1000000) {
+                                            return `${(value / 1000000).toFixed(1)}M`; // Formats 1,000,000 as 1.0M
+                                        } else {
+                                            return value.toString(); // Return smaller numbers without formatting
+                                        }
+                                        },
+                                }
+                            ]}
+                            series={filteredSeries} 
+                            grid={{ horizontal: true }}
+                            margin={{ left: 50, right: 20, top: 20, bottom: 20 }}
+                            borderRadius={3}
+                            slotProps={{
+                                legend: { hidden: true },
+                            }} />
 
+                    )) }
                     </CardContent>
                 </Card>
             </Box>
@@ -670,7 +729,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                             </Box>
                             <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'start', width: '100%' }}>
                                 <Typography component='div' sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', fontWeight: '700', fontSize: '22px', justifyContent: 'flex-end', mt: 1, fontFamily: 'Nunito Sans', lineHeight: '30.01px', color: 'rgba(32, 33, 36, 1)', '@media (max-width: 900px)': { flexDirection: 'row', alignItems: 'center', gap: 2 } }}>
-                                    ${values.viewProducts ? values.viewProducts : 0} <Typography component='span' sx={{ fontFamily: 'Nunito Sans', fontSize: '14px', pb: 0.5, fontWeight: 500, lineHeight: '19.6px', textAlign: 'left', '@media (max-width: 900px)': { pt: 0.5 } }}>View Products</Typography>
+                                    ${values.viewProducts ? values.viewProducts.toLocaleString() : 0} <Typography component='span' sx={{ fontFamily: 'Nunito Sans', fontSize: '14px', pb: 0.5, fontWeight: 500, lineHeight: '19.6px', textAlign: 'left', '@media (max-width: 900px)': { pt: 0.5 } }}>View Products</Typography>
                                 </Typography>
                             </Box>
                         </Box>
@@ -787,7 +846,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                             </Box>
                             <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'start', width: '100%' }}>
                                 <Typography component='div' sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', fontWeight: '700', fontSize: '22px', justifyContent: 'flex-end', mt: 1, fontFamily: 'Nunito Sans', lineHeight: '30.01px', color: 'rgba(32, 33, 36, 1)', '@media (max-width: 900px)': { flexDirection: 'row', alignItems: 'center', gap: 2 } }}>
-                                    ${values.totalAbandonedCart ? values.totalAbandonedCart : 0} <Typography component='span' sx={{ fontFamily: 'Nunito Sans', fontSize: '14px', pb: 0.5, fontWeight: 500, lineHeight: '19.6px', textAlign: 'left' }}>Abandoned Cart</Typography>
+                                    ${values.totalAbandonedCart ? values.totalAbandonedCart.toLocaleString() : 0} <Typography component='span' sx={{ fontFamily: 'Nunito Sans', fontSize: '14px', pb: 0.5, fontWeight: 500, lineHeight: '19.6px', textAlign: 'left' }}>Abandoned Cart</Typography>
                                 </Typography>
                             </Box>
                         </Box>
@@ -901,7 +960,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                             </Box>
                             <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'start', width: '100%' }}>
                                 <Typography component='div' sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', fontWeight: '700', fontSize: '22px', justifyContent: 'flex-end', mt: 1, fontFamily: 'Nunito Sans', lineHeight: '30.01px', color: 'rgba(32, 33, 36, 1)', '@media (max-width: 900px)': { flexDirection: 'row', alignItems: 'center', gap: 2 } }}>
-                                    ${values.totalVisitors ? values.totalVisitors : 0} <Typography component='span' sx={{ fontFamily: 'Nunito Sans', fontSize: '14px', pb: 0.5, fontWeight: 500, lineHeight: '19.6px', textAlign: 'left' }}>Total Visitors</Typography>
+                                    ${values.totalVisitors ? values.totalVisitors.toLocaleString() : 0} <Typography component='span' sx={{ fontFamily: 'Nunito Sans', fontSize: '14px', pb: 0.5, fontWeight: 500, lineHeight: '19.6px', textAlign: 'left' }}>Total Visitors</Typography>
                                 </Typography>
                             </Box>
                         </Box>

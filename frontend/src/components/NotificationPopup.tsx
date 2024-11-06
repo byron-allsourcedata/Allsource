@@ -36,7 +36,6 @@ const NotificationPopup: React.FC<NotificationPopupProps> = ({ open, onClose }) 
                         setNotifications(response.data);
                         const dismiss = axiosInstance.post("/notification/dismiss");
                     } catch (error) {
-                        console.error(error);
                     } finally {
                         setLoading(false);
                     }

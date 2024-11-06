@@ -1,5 +1,5 @@
 import axiosInstance from "@/axios/axiosInterceptorInstance";
-import { Box, Typography, TextField, Button, Card, CardContent, IconButton, Stack, SelectChangeEvent, Chip, MenuItem, Select } from "@mui/material";
+import { Box, Typography, TextField, Button, Card, CardContent, IconButton, Stack, SelectChangeEvent, Chip, MenuItem, Select, useMediaQuery } from "@mui/material";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { showToast } from "./ToastNotification";
 import Image from "next/image";
@@ -8,6 +8,7 @@ import { ShowChart, BarChart as IconBarChart } from "@mui/icons-material";
 import { LineChart } from '@mui/x-charts/LineChart';
 import { BarChart } from '@mui/x-charts/BarChart';
 import StatsCard from "./StatCardContact";
+import dayjs from "dayjs";
 
 
 const CustomIcon = () => (
@@ -33,6 +34,12 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates }) => 
         viewProducts: 0,
         totalAbandonedCart: 0,
     });
+
+    const isLargeScreen = useMediaQuery('(min-width:1200px)');
+    const isMediumScreen = useMediaQuery('(min-width:768px)');
+    const isMobile = useMediaQuery('(max-width: 380px)');
+
+    const mainchartSize = isLargeScreen ? 450 : isMediumScreen ? 300 : isMobile ? 200 : 260;
 
     const previousDates = useRef<AppliedDates>({ start: null, end: null });
 
@@ -71,7 +78,7 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates }) => 
                 setSeries([
                     {
                         id: 'contacts',
-                        label: 'Total Revenue',
+                        label: 'Total Contacts',
                         data: revenueData,
                         curve: 'linear',
                         stack: 'total',
@@ -157,6 +164,7 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates }) => 
     });
 
     const handleChipClick = (seriesId: keyof VisibleSeries) => {
+        console.log(formattedData)
         setVisibleSeries((prev) => ({
             ...prev,
             [seriesId]: !prev[seriesId],
@@ -257,12 +265,88 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates }) => 
     const [data, setDays] = useState<string[]>([]);
     const formattedData = data.map(dateStr => {
         return new Date(dateStr).toLocaleDateString('en-US', {
+            year: 'numeric',
             month: 'short',
             day: 'numeric',
         });
     });
     const filteredSeries = series.filter((s) => visibleSeries[s.id as keyof VisibleSeries]) as [];
     const filteredSeriescolor = series.filter((s) => visibleSeries[s.id as keyof VisibleSeries]);
+
+    interface Series {
+        id: string;
+        label: string;
+        data: number[];
+        curve?: string;
+        stack?: string;
+        showMark?: boolean;
+        area?: boolean;
+        stackOrder?: string;
+    }
+
+    interface AggregatedResult {
+        aggregatedData: string[];
+        aggregatedSeries: Series[];
+    }
+    function aggregateData(
+        formattedData: string[],
+        series: Series[],
+        period: number
+    ): AggregatedResult {
+        let aggregatedData: string[] = [];
+        let aggregatedSeries: Series[] = [];
+    
+        if (period < 2) {
+            // Агрегирование по неделям
+            const weeklyData: Record<string, Record<string, number[]>> = {};
+            
+            formattedData.forEach((date, index) => {
+                const weekStart = dayjs(date).startOf('week').format('MMM DD');
+                if (!weeklyData[weekStart]) weeklyData[weekStart] = {};
+    
+                series.forEach((s) => {
+                    if (!weeklyData[weekStart][s.id]) weeklyData[weekStart][s.id] = [];
+                    weeklyData[weekStart][s.id].push(s.data[index]);
+                });
+            });
+    
+            aggregatedData = Object.keys(weeklyData);
+            aggregatedSeries = series.map((s) => ({
+                ...s,
+                data: aggregatedData.map((week) => {
+                    const weekData = weeklyData[week][s.id];
+                    return weekData ? (weekData[weekData.length - 1] - weekData[0]) : 0;
+                }),
+            }));
+        } else {
+            // Агрегирование по месяцам
+            const monthlyData: Record<string, Record<string, number[]>> = {};
+            
+            formattedData.forEach((date, index) => {
+                const month = dayjs(date).format('MMM YYYY');
+                if (!monthlyData[month]) monthlyData[month] = {};
+    
+                series.forEach((s) => {
+                    if (!monthlyData[month][s.id]) monthlyData[month][s.id] = [];
+                    monthlyData[month][s.id].push(s.data[index]);
+                });
+            });
+    
+            aggregatedData = Object.keys(monthlyData);
+            aggregatedSeries = series.map((s) => ({
+                ...s,
+                data: aggregatedData.map((month) => {
+                    const monthData = monthlyData[month][s.id];
+                    return monthData ? (monthData[monthData.length - 1] - monthData[0]) : 0;
+                }),
+            }));
+        }
+    
+        return { aggregatedData, aggregatedSeries };
+    }
+
+    const periodInMonths = dayjs(formattedData[formattedData.length - 1]).diff(dayjs(formattedData[0]), 'month');
+    const { aggregatedData, aggregatedSeries } = aggregateData(formattedData, series, periodInMonths);
 
     return (
         <>
@@ -286,9 +370,9 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates }) => 
                                     onClick={() => toggleChartType('line')}
                                     sx={{
                                         width: '16px',
-                                        ml: 5,
+                                        ml: 6.25,
                                         height: '16px',
-                                        borderRadius: '4px', // Квадратная форма
+                                        borderRadius: '4px',
                                         border: `1.5px solid ${chartType === 'line' ? 'rgba(80, 82, 178, 1)' : 'rgba(115, 115, 115, 1)'}`,
                                         color: chartType === 'line' ? 'rgba(80, 82, 178, 1)' : 'rgba(115, 115, 115, 1)',
                                     }}
@@ -301,7 +385,7 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates }) => 
                                     sx={{
                                         width: '16px',
                                         height: '16px',
-                                        borderRadius: '4px', // Квадратная форма
+                                        borderRadius: '4px',
                                         border: `1.5px solid ${chartType === 'bar' ? 'rgba(80, 82, 178, 1)' : 'rgba(115, 115, 115, 1)'}`,
                                         color: chartType === 'bar' ? 'rgba(80, 82, 178, 1)' : 'rgba(115, 115, 115, 1)',
                                     }}
@@ -468,7 +552,7 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates }) => 
                                 }
                             ]}
                             series={filteredSeries}
-                            height={250}
+                            height={mainchartSize}
                             margin={{ left: 50, right: 20, top: 20, bottom: 20 }}
                             grid={{ horizontal: true }}
                             sx={{
@@ -484,7 +568,7 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates }) => 
                         <BarChart
                             height={350}
                             colors={filteredSeriescolor.map(s => colorMapping[s.id as keyof typeof colorMapping])}
-                            xAxis={[{ scaleType: 'band', data: formattedData }]}
+                            xAxis={[{ scaleType: 'band', data: aggregatedData }]}
                             yAxis={[
                                 {
                                     valueFormatter: (value) => {
@@ -498,7 +582,7 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates }) => 
                                         },
                                 }
                             ]}
-                            series={series.map((s) => ({ data: s.data, label: s.label }))} // Здесь важна правильная структура данных для отображения рядом
+                            series={aggregatedSeries.map((s) => ({ data: s.data, label: s.label }))}
                             grid={{ horizontal: true }}
                             margin={{ left: 50, right: 20, top: 20, bottom: 20 }}
                             borderRadius={3}

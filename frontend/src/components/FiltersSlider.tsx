@@ -1218,7 +1218,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
           sx: {
             width: "40%",
             position: "fixed",
-            zIndex: 1301,
+            zIndex: 2602,
             top: 0,
             bottom: 0,
             "@media (max-width: 600px)": {
@@ -1236,7 +1236,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
             borderBottom: "1px solid #e4e4e4",
             position: "sticky",
             top: 0,
-            zIndex: 1400,
+            zIndex: 9900,
             backgroundColor: "#fff",
           }}
         >
