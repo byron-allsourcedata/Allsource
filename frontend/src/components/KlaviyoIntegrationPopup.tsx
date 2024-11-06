@@ -300,7 +300,7 @@ const KlaviyoIntegrationPopup = ({ handleClose, open, onSave, initApiKey}: Creat
                     Connect to Klaviyo
                 </Typography>
                 <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
-                    <Link href="#" sx={{
+                    <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/integrate-klaviyo-to-maximiz" sx={{
                         fontFamily: 'Nunito Sans',
                         fontSize: '14px',
                         fontWeight: '600',

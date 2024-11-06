@@ -50,7 +50,6 @@ const GoogleTagPopup: React.FC<PopupProps> = ({open, handleClose}) => {
                     setSession({token: accessToken});
                     fetchAccounts(accessToken);
                 } catch (error) {
-                    console.error('Error handling redirect:', error);
                 } finally {
                     const newUrl = window.location.pathname;
                     window.history.replaceState({}, document.title, newUrl);
@@ -69,7 +68,6 @@ const GoogleTagPopup: React.FC<PopupProps> = ({open, handleClose}) => {
             );
             return response.data.trigger || [];
         } catch (error) {
-            console.error('Error fetching triggers:', error);
             throw error;
         }
     };
@@ -94,7 +92,6 @@ const GoogleTagPopup: React.FC<PopupProps> = ({open, handleClose}) => {
             );
             return response.data.triggerId;
         } catch (error) {
-            console.error('Error creating All Pages trigger:', error);
             throw error;
         }
     };
@@ -109,7 +106,6 @@ const GoogleTagPopup: React.FC<PopupProps> = ({open, handleClose}) => {
                     );
                     setContainers(response.data.container || []);
                 } catch (error) {
-                    console.error('Error fetching containers:', error);
                 }
             }
         };
@@ -127,7 +123,6 @@ const GoogleTagPopup: React.FC<PopupProps> = ({open, handleClose}) => {
                     );
                     setWorkspaces(response.data.workspace || []);
                 } catch (error) {
-                    console.error('Error fetching workspaces:', error);
                 }
             }
         };
@@ -142,7 +137,6 @@ const GoogleTagPopup: React.FC<PopupProps> = ({open, handleClose}) => {
             });
             setAccounts(response.data.account || []);
         } catch (error) {
-            console.error('Error fetching accounts:', error);
         }
     };
 
@@ -165,13 +159,8 @@ const GoogleTagPopup: React.FC<PopupProps> = ({open, handleClose}) => {
 
         } catch (error) {
             if (axios.isAxiosError(error)) {
-                console.error('Error updating tag with trigger:', error.message);
-                console.error('Response Data:', error.response?.data);
-                console.error('Response Status:', error.response?.status);
             } else {
-                console.error('Unexpected error:', error);
                 if (error instanceof Error) {
-                    console.error('Error message:', error.message);
                 }
             }
             throw new Error('Failed to update tag with trigger.');
@@ -224,13 +213,8 @@ const GoogleTagPopup: React.FC<PopupProps> = ({open, handleClose}) => {
             handleClose();
         } catch (error) {
             if (axios.isAxiosError(error)) {
-                console.error('Error creating and sending tag:', error.message);
-                console.error('Response Data:', error.response?.data);
-                console.error('Response Status:', error.response?.status);
             } else {
-                console.error('Unexpected error:', error);
                 if (error instanceof Error) {
-                    console.error('Error message:', error.message);
                 }
             }
             showErrorToast('Failed to create and send tag.')
@@ -251,7 +235,6 @@ const GoogleTagPopup: React.FC<PopupProps> = ({open, handleClose}) => {
             });
             return response.data;
         } catch (error) {
-            console.error('Error exchanging code for token:', error);
             throw error;
         }
     };
@@ -266,7 +249,6 @@ const GoogleTagPopup: React.FC<PopupProps> = ({open, handleClose}) => {
                 showErrorToast('Account data not available')
             }
         } catch (error) {
-            console.error('Error during Google login:', error);
             showErrorToast('Failed to log in.')
         }
     };

@@ -106,8 +106,6 @@ const AddDomainPopup = ({ open, handleClose, handleSave }: AddDomainProps) => {
             setShowSlider(false);
           }
         }
-      } else {
-        console.error("Error fetching data:", error);
       }
     }
   };
@@ -228,7 +226,6 @@ const DomainButton: React.FC = () => {
           }
         }
       } catch (error) {
-        console.error('Error fetching domains:', error);
       }
       finally {
         setLoading(false)

@@ -70,7 +70,6 @@ export const InviteUsersPopup: React.FC<InviteUsersPopupProps> = ({ open, onClos
             onClose();
         } else {
             // Optionally, handle validation errors
-            console.log("Please enter emails and a role");
         }
     };
 

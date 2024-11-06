@@ -96,8 +96,6 @@ export const ProgressSection: React.FC = () => {
           sessionStorage.setItem("is_slider_opened", "false");
           setShowSlider(false);
         }
-      } else {
-        console.error("Error fetching data:", error);
       }
     }
     finally {

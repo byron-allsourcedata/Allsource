@@ -25,6 +25,7 @@ import CustomTooltip from "@/components/customToolTip";
 import { DateRangeIcon } from "@mui/x-date-pickers/icons";
 import CalendarPopup from "@/components/CustomCalendar";
 import dayjs from "dayjs";
+import { useNotification } from '../../context/NotificationContext';
 
 
 
@@ -126,7 +127,6 @@ const VerifyPixelIntegration: React.FC = () => {
     >
       <Typography
         variant="h6"
-        component="div"
         mb={2}
         className="first-sub-title"
         sx={{
@@ -144,7 +144,7 @@ const VerifyPixelIntegration: React.FC = () => {
           }
         }}
       >
-        2. Verify pixel integration on your website
+        2. Verify pixel integration on your website <CustomTooltip title={"Check if your pixel is correctly integrated to ensure accurate tracking and data collection."} linkText="Learn more" linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/articles/how-to-test-the-pixel-code-installation" />
       </Typography>
       <Box display="flex" alignItems="center" justifyContent="space-between" sx={{
         '@media (max-width: 600px)': {
@@ -381,6 +381,7 @@ const SupportSection: React.FC = () => {
 
 const Dashboard: React.FC = () => {
   const router = useRouter();
+  const { hasNotification } = useNotification();
   const [dataRevenue, setDataRevenue] = useState<any>(null);
   const [dataContact, setDataContact] = useState<any>(null);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -515,12 +516,12 @@ const Dashboard: React.FC = () => {
             <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center',
                 py: 3,
                 position: 'fixed',
-                top: '54px',
+                top: hasNotification ? '5.85rem' : '3.25rem',
                 right: '16px',
                 left: '170px',
                 background: '#fff',
                 zIndex: '1',
-                paddingLeft: '60px',
+                paddingLeft: '30px',
                 paddingRight: '65px',
                 '@media (min-width: 1600px)': {
                   paddingLeft: '85px',
@@ -677,17 +678,26 @@ const Dashboard: React.FC = () => {
                   sx={{
                     textTransform: 'none',
                     color: 'rgba(128, 128, 128, 1)',
-                    border: '1.5px solid rgba(80, 82, 178, 1)',
+                    border: '1.5px solid rgba(184, 184, 184, 1)',
                     borderRadius: '4px',
                     padding: '8px',
                     minWidth: 'auto',
                     '@media (max-width: 900px)': {
                       border: 'none',
                       padding: 0
+                    },
+                    '&:hover': {
+                      border: '1.5px solid rgba(80, 82, 178, 1)',
+                      '& .MuiSvgIcon-root': {
+                        color: 'rgba(80, 82, 178, 1)'
+                      }
                     }
                   }}
                 >
-                  <DateRangeIcon fontSize='medium' sx={{ color: 'rgba(80, 82, 178, 1)' }} />
+                  <DateRangeIcon 
+                    fontSize="medium" 
+                    sx={{ color: 'rgba(184, 184, 184, 1)' }}
+                  />
                   <Typography variant="body1" sx={{
                     fontFamily: 'Roboto',
                     fontSize: '14px',
@@ -754,7 +764,7 @@ const Dashboard: React.FC = () => {
               className="heading-text"
               sx={dashboardStyles.title}
             >
-              Let’s Get Started!
+              Let&apos;s Get Started!
             </Typography>
             <Typography
               className="table-data" sx={dashboardStyles.description}>
@@ -772,7 +782,7 @@ const Dashboard: React.FC = () => {
               className="heading-text"
               sx={dashboardStyles.title}
             >
-              Let’s Get Started!
+              Let’s Get Started! <CustomTooltip title={"Boost engagement and reduce cart abandonment with personalized messages tailored for your visitors."} linkText="Learn more" linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai" />
             </Typography>
             <Typography className="table-data" sx={dashboardStyles.description} mb={4}>
               Install our pixel on your website to start capturing anonymous

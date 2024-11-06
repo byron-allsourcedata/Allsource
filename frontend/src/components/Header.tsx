@@ -10,9 +10,10 @@ import NavigationMenu from "@/components/NavigationMenu";
 import { SliderProvider } from "../context/SliderContext";
 import { useTrial } from '../context/TrialProvider';
 import NotificationPopup from "./NotificationPopup";
-import axiosInstance from "@/axios/axiosInterceptorInstance";
 import NotificationsOutlinedIcon from '@mui/icons-material/NotificationsOutlined';
-import CustomNotification from "./CustomNotification";
+import { useSSE } from "../context/SSEContext";
+import QuestionMarkOutlinedIcon from '@mui/icons-material/QuestionMarkOutlined';
+import PersonIcon from '@mui/icons-material/Person';
 
 const headerStyles = {
   headers: {
@@ -39,8 +40,14 @@ const headerStyles = {
 }
 
 
-const Header = () => {
+interface HeaderProps {
+  NewRequestNotification: boolean;
+}
+
+const Header: React.FC<HeaderProps> = ({ NewRequestNotification }) => {
+  const [hasNotification, setHasNotification] = useState(NewRequestNotification);
   const router = useRouter();
+  const { newNotification } = useSSE();
   const { full_name: userFullName, email: userEmail, resetUserData, } = useUser();
   const meItem = typeof window !== "undefined" ? sessionStorage.getItem("me") : null;
   const meData = meItem ? JSON.parse(meItem) : { full_name: '', email: '' };
@@ -52,7 +59,6 @@ const Header = () => {
   const [notificationIconPopupOpen, setNotificationIconPopupOpen] = useState(false);
   const [hasNewNotifications, setHasNewNotifications] = useState<boolean>(false);
   const [unreadCount, setUnreadCount] = useState<number>(0);
-  const [latestNotification, setLatestNotification] = useState<{ text: string; id: number } | null>(null);
   const handleSignOut = () => {
     localStorage.clear();
     sessionStorage.clear();
@@ -60,36 +66,20 @@ const Header = () => {
     resetTrialData();
     window.location.href = "/signin";
   };
+
+  const handleSupportButton = () => {
+    window.location.href = 'https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai'
+  }
+
   useEffect(() => {
-    const accessToken = localStorage.getItem("token");
-    if (accessToken) {
-      const fetchData = async () => {
-        try {
-          const response = await axiosInstance.get("/notification");
-          const notifications = response.data;
+    setHasNotification(NewRequestNotification);
+  }, [NewRequestNotification]);
 
-          const unreadNotifications = notifications.filter((notification: { is_checked: boolean }) => !notification.is_checked);
-
-          const hasNew = unreadNotifications.length > 0; // Проверяем, есть ли непрочитанные уведомления
-          setHasNewNotifications(hasNew);
-          setUnreadCount(unreadNotifications.length); // Устанавливаем количество непрочитанных уведомлений
-          
-          const newNotification = unreadNotifications.reduce((latest: { created_at: string | number | Date }, notification: { created_at: string | number | Date }) => {
-              return new Date(notification.created_at) > new Date(latest.created_at) ? notification : latest;
-          }, unreadNotifications[0]);
-
-
-          if (newNotification) {
-            setLatestNotification(newNotification);
-          }
-        } catch (error) {
-          console.error(error);
-        }
-      };
-
-      fetchData();
+  useEffect(() => {
+    if (newNotification) {
+      setHasNewNotifications(true);
     }
-  }, []);
+  }, [newNotification]);
   const handleProfileMenuClick = (
     event: React.MouseEvent<HTMLButtonElement>
   ) => {
@@ -114,6 +104,7 @@ const Header = () => {
 
   const handleNotificationIconPopupClose = () => {
     setNotificationIconPopupOpen(false);
+    setHasNotification(false);
   }
   return (
     <>
@@ -137,32 +128,58 @@ const Header = () => {
             minWidth: '32px',
             padding: '6px',
             color: 'rgba(128, 128, 128, 1)',
-            border: '1px solid rgba(184, 184, 184, 1)',
+            border: (hasNewNotifications || hasNotification) ? '1px solid rgba(80, 82, 178, 1)' : '1px solid rgba(184, 184, 184, 1)',
             borderRadius: '3.27px',
-            marginRight: '1.5rem'
+            marginRight: '1.5rem',
+            '&:hover': {
+              border: '1px solid rgba(80, 82, 178, 1)',
+              '& .MuiSvgIcon-root': {
+                color: 'rgba(80, 82, 178, 1)'
+              }
+            }
           }}
           >
             <NotificationsOutlinedIcon sx={{
-                fontSize: '22px',
-                color: hasNewNotifications ? 'rgba(80, 82, 178, 1)' : 'inherit'
-            }}/>
-            {hasNewNotifications && (
-                <Box
-                    sx={{
-                        position: 'absolute',
-                        top: 5,
-                        right: 6.5,
-                        width: '8px',
-                        height: '8px',
-                        backgroundColor: 'rgba(248, 70, 75, 1)',
-                        borderRadius: '50%',
-                        '@media (max-width: 900px)': {
-                            top: -1,
-                            right: 1
-                        }
-                    }}
-                />
+              fontSize: '22px',
+              color: (hasNewNotifications || hasNotification) ? 'rgba(80, 82, 178, 1)' : 'inherit'
+            }} />
+            {(hasNewNotifications || hasNotification) && (
+              <Box
+                sx={{
+                  position: 'absolute',
+                  top: 5,
+                  right: 6.5,
+                  width: '8px',
+                  height: '8px',
+                  backgroundColor: 'rgba(248, 70, 75, 1)',
+                  borderRadius: '50%',
+                  '@media (max-width: 900px)': {
+                    top: -1,
+                    right: 1
+                  }
+                }}
+              />
             )}
+          </Button>
+
+          <Button onClick={handleSupportButton} sx={{
+            minWidth: '32px',
+            padding: '6px',
+            color: 'rgba(128, 128, 128, 1)',
+            border: '1px solid rgba(184, 184, 184, 1)',
+            borderRadius: '3.27px',
+            marginRight: '1.5rem',
+            '&:hover': {
+              border: '1px solid rgba(80, 82, 178, 1)',
+              '& .MuiSvgIcon-root': {
+                color: 'rgba(80, 82, 178, 1)'
+              }
+            }
+          }}
+          >
+            <QuestionMarkOutlinedIcon sx={{
+              fontSize: '22px',
+            }} />
           </Button>
 
           <Button
@@ -172,13 +189,19 @@ const Header = () => {
             onClick={handleProfileMenuClick}
             sx={{
               minWidth: '32px',
-              padding: '8px',
+              padding: '6px',
               color: 'rgba(128, 128, 128, 1)',
               border: '1px solid rgba(184, 184, 184, 1)',
-              borderRadius: '3.27px'
+              borderRadius: '3.27px',
+              '&:hover': {
+              border: '1px solid rgba(80, 82, 178, 1)',
+              '& .MuiSvgIcon-root': {
+                color: 'rgba(80, 82, 178, 1)'
+              }
+            }
             }}
           >
-            <Image src={'/Person.svg'} alt="Person" width={18} height={18} />
+            <PersonIcon sx={{fontSize: '22px'}} />
           </Button>
           <Menu
             id="profile-menu"
@@ -246,14 +269,7 @@ const Header = () => {
           </Menu>
         </Box>
       </Box>
-      {latestNotification && (
-        <CustomNotification 
-          id={latestNotification.id} 
-          message={latestNotification.text} 
-          showDismiss={true} 
-        />
-      )}
-      <NotificationPopup open={notificationIconPopupOpen} onClose={handleNotificationIconPopupClose}/>
+      <NotificationPopup open={notificationIconPopupOpen} onClose={handleNotificationIconPopupClose} />
     </>
   );
 };

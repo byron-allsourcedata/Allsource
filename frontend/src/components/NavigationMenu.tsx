@@ -120,8 +120,6 @@ const NavigationMenu = () => {
                 setShowBookSlider(false);
                 router.push(route)
             }
-        } else {
-            console.error("Error fetching data:", error);
         }
     }
 };

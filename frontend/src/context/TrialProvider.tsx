@@ -46,7 +46,6 @@ export const TrialProvider: React.FC<TrialProviderProps> = ({ children }) => {
           setDaysDifference(daysDifferences);
         }
       } catch (error) {
-        console.error('Failed to parse sessionStorage item "me":', error);
       }
     }
   }, [trial]);

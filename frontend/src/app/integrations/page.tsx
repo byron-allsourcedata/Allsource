@@ -35,6 +35,7 @@ import MailchimpConnect from "@/components/MailchimpConnect";
 import RevenueTracking from "@/components/RevenueTracking";
 import SendlaneConnect from "@/components/SendlaneConnect";
 import AttentiveIntegrationPopup from "@/components/AttentiveIntegrationPopup";
+import { useNotification } from "@/context/NotificationContext";
 
 interface IntegrationBoxProps {
     image: string;
@@ -986,6 +987,7 @@ const PixelManagment = () => {
 }
 
 const Integrations = () => {
+    const {hasNotification} = useNotification();
     const [value, setValue] = useState('1');
     const [integrationsCredentials, setIntegrationsCredentials] = useState<IntegrationCredentials[]>([]);
     const [integrations, setIntegrations] = useState<any[]>([])
@@ -1162,12 +1164,12 @@ const Integrations = () => {
                     flexDirection: "row",
                     alignItems: "center",
                     position: 'fixed',
-                    top: '68px',
+                    top: hasNotification ? '6.25rem' : '3.55rem',
                     right: '16px',
                     left: '170px',
                     background: '#fff',
                     zIndex: '1200',
-                    paddingLeft: '20px',
+                    paddingLeft: '30px',
                     paddingRight: '24px',
                     mx: '-24px',
                     "@media (max-width: 900px)": { 
@@ -1192,7 +1194,7 @@ const Integrations = () => {
                         <CustomTooltip
                             title={"Connect your favourite tools to automate tasks and ensure all your data is accessible in one place."}
                             linkText="Learn more"
-                            linkUrl="https://maximiz.ai"
+                            linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/integration"
                         />
                     </Box>
                     {/* Tabs */}
@@ -1212,7 +1214,7 @@ const Integrations = () => {
                                 onChange={handleTabChange}
                             >
                                 <Tab label="Your Integrations" value="1" sx={{ ...integrationStyle.tabHeading }} />
-                                <Tab label="Add an Integrations" value="2" sx={{ ...integrationStyle.tabHeading }} />
+                                <Tab label="Add an Integration" value="2" sx={{ ...integrationStyle.tabHeading }} />
                                 <Tab label="Pixel Management" value="3" sx={{ ...integrationStyle.tabHeading }} />
                             </TabList>
                         </Box>

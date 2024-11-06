@@ -246,8 +246,6 @@ import CustomTablePagination from "./CustomTablePagination";
         if (axios.isAxiosError(error)) {
           if (error.response && error.response.status === 403) {
             showErrorToast('Access denied: You do not have permission to remove this member.');
-          } else {
-            console.error('Error removing team member:', error);
           }
         }
       } finally {
@@ -270,7 +268,6 @@ import CustomTablePagination from "./CustomTablePagination";
         );      
         }
       } catch (error) {
-        console.error('Error fetching leads:', error);
       }
     };
   
@@ -287,7 +284,6 @@ import CustomTablePagination from "./CustomTablePagination";
         );      
         }
       } catch (error) {
-        console.error('Error fetching leads:', error);
       }
     };
 
@@ -304,7 +300,6 @@ import CustomTablePagination from "./CustomTablePagination";
         );
       }
     } catch (error) {
-      console.error('Error fetching leads:', error);
     }
   }
 
@@ -321,7 +316,6 @@ import CustomTablePagination from "./CustomTablePagination";
         );      
         }
       } catch (error) {
-        console.error('Error fetching leads:', error);
       }
     }
   
@@ -375,8 +369,6 @@ import CustomTablePagination from "./CustomTablePagination";
         if (axios.isAxiosError(error)) {
           if (error.response && error.response.status === 403) {
             showErrorToast('Access denied: You do not have permission to remove this member.');
-          } else {
-            console.error('Error removing team member:', error);
           }
         }
       } finally {
@@ -387,7 +379,6 @@ import CustomTablePagination from "./CustomTablePagination";
     };
   
     const handleRepairSync = () => {
-      console.log(`Repairing sync for id: ${selectedId}`);
       handleClose();
     };
   

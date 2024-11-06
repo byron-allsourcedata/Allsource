@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation";
 import { AxiosError } from "axios";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import Image from "next/image";
+import { useNotification } from '../../context/NotificationContext';
 
 const centerContainerStyles = {
     display: 'flex',
@@ -55,6 +56,7 @@ const TabPanel: React.FC<TabPanelProps> = ({ children, value, index, ...other })
 };
 
 const Suppressions: React.FC = () => {
+    const { hasNotification } = useNotification();
     const router = useRouter();
     const [tabIndex, setTabIndex] = useState(0);
     const handleTabChange = (event: React.SyntheticEvent, newIndex: number) => {
@@ -79,7 +81,6 @@ const Suppressions: React.FC = () => {
                 if (error.response.data.status === 'PIXEL_INSTALLATION_NEEDED') {
                     setStatus(error.response.data.status);
                 }
-                console.log(error.response)
             } else {
                 console.error('Error fetching data:', error);
             }
@@ -98,10 +99,10 @@ const Suppressions: React.FC = () => {
 
     return (
         <Box sx={suppressionsStyle.mainContent}>
-            <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', position: 'fixed', top: '4.25rem', pt:'8px', pb:'16px', left: '9.1rem', pl: '3.75rem', zIndex: 1200, backgroundColor: '#fff', justifyContent: 'space-between', width: '100%', ml: 0,"@media (max-width: 900px)": { left: 0 },  "@media (max-width: 600px)": { flexDirection: 'column', pl: '1.5rem', display: 'flex', alignItems: 'flex-start' }, "@media (max-width: 440px)": { flexDirection: 'column', pt: 0, justifyContent: 'flex-start' } }}>
+            <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', position: 'fixed', top: hasNotification ? '7.05rem' : '4.5rem', pt:'8px', pb:'16px', left: '9.1rem', pl: '2rem', zIndex: 1200, backgroundColor: '#fff', justifyContent: 'space-between', width: '100%', ml: 0,"@media (max-width: 900px)": { left: 0 },  "@media (max-width: 600px)": { flexDirection: 'column', pl: '1.5rem', display: 'flex', alignItems: 'flex-start' }, "@media (max-width: 440px)": { flexDirection: 'column', pt: 0, justifyContent: 'flex-start' } }}>
                 <Box sx={{ flexShrink: 0, display: 'flex', flexDirection: 'row', alignItems: 'center', width: '10%', gap: 1, "@media (max-width: 600px)": { mb: 2 } }}>
                     <Typography className="first-sub-title">Suppressions</Typography>
-                    <CustomTooltip title={"Suppressions help manage and filter out contacts or data points that should not receive communications or updates."} linkText="Learn more" linkUrl="https://maximiz.ai" />
+                    <CustomTooltip title={"Suppressions help manage and filter out contacts or data points that should not receive communications or updates."} linkText="Learn more" linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/suppression" />
                 </Box>
 
                 <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center', width: '90%', pr: '20%', alignItems: 'center', "@media (max-width: 900px)": { pr: 0 }, "@media (max-width: 600px)": { width: '97%', pr: '0' } }}>

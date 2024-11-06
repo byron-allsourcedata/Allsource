@@ -650,7 +650,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
                     Connect to Meta
                 </Typography>
                 <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
-                    <Link href="#" className="main-text" sx={{
+                    <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/sync-contacts-to-meta" className="main-text" sx={{
                         fontSize: '14px',
                         fontWeight: '600',
                         lineHeight: '20px',

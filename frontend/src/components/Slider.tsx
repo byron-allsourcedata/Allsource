@@ -49,7 +49,6 @@ const Slider: React.FC<SliderProps> = ({ setShowSliders }) => {
         setPrefillData(null);
       }
     } catch (error) {
-      console.error('Error fetching prefill data:', error);
       setPrefillData(null);
     } finally {
       setIsPrefillLoaded(true);
@@ -88,7 +87,6 @@ const Slider: React.FC<SliderProps> = ({ setShowSliders }) => {
           });
           response;
         } catch (error) {
-          console.error(error);
         }
         handleClose();
         showToast('You have successfully signed up for a call');
