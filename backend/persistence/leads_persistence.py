@@ -479,7 +479,8 @@ class LeadsPersistence:
             .outerjoin(recurring_visits_subquery, recurring_visits_subquery.c.lead_id == LeadUser.id)
             .filter(LeadUser.domain_id == domain_id, LeadUser.is_active == True)
             .group_by(
-                FiveXFiveUser.id
+                FiveXFiveUser.id,
+                LeadsVisits.start_date
             )
         )
         query = query.order_by(desc(LeadsVisits.start_date))
