@@ -119,8 +119,10 @@ async def main():
     try:
         while True:
             await process_files(sts_client=sts_client, session=session)
+            session.close()
             logging.info('Sleeping for 10 minutes...')
             time.sleep(60 * 10)
+            session = Session()
     except Exception as e:
         session.rollback()
         logging.error(f"An error occurred: {str(e)}")
