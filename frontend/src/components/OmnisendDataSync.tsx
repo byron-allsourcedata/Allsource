@@ -652,135 +652,16 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data
                                 justifyContent:'flex-start'
                             }
                         }}} onChange={handleChangeTab}>
-                        <Tab label="Suppression Sync" value="1" className='tab-heading' sx={klaviyoStyles.tabHeading} />
+                        <Tab label="Sync Filter" value="1" className='tab-heading' sx={klaviyoStyles.tabHeading} />
                         {/* <Tab label="Contact Sync" value="2" className='tab-heading' sx={klaviyoStyles.tabHeading} /> */}
                         <Tab label="Map data" value="2" className='tab-heading' sx={klaviyoStyles.tabHeading} />
                         </TabList>
                     </Box>
                     <TabPanel value="1" sx={{ p: 0 }}>
                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                            <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)', display: 'flex', flexDirection:'column', gap: '16px' }}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <Image src='/omnisend_icon_black.svg' alt='klaviyo' height={26} width={32} />
-                                    <Typography variant="h6" className='first-sub-title'>Eliminate Redundancy: Stop Paying for Contacts You Already Own</Typography>
-                                </Box>
-                                <Typography variant="subtitle1" className='paragraph' sx={{
-                                        lineHeight: '20px',
-                                        letterSpacing: '0.06px'
-                                    }}>Sync your current list to avoid collecting contacts you already possess.
-                                    Newly added contacts in Omnisend will be automatically suppressed each day.</Typography>
-                                
-
-                                        <Box sx={{ display: 'flex', gap: '32px', alignItems: 'center' }}>
-                                            <Typography variant="subtitle1" className='paragraph'>
-                                                Enable Automatic Contact Suppression
-                                            </Typography>
-
-                                            {/* Switch Control with Yes/No Labels */}
-                                            <Box position="relative" display="inline-block">
-                                                <Switch
-                                                    {...label}
-                                                    checked={checked}
-                                                    onChange={handleSwitchChange}
-                                                    sx={{
-                                                        width: 54, // Increase width to fit "Yes" and "No"
-                                                        height: 24,
-                                                        padding: 0,
-                                                        '& .MuiSwitch-switchBase': {
-                                                            padding: 0,
-                                                            top: '2px',
-                                                            left: '3px',
-                                                            '&.Mui-checked': {
-                                                                left: 0,
-                                                                transform: 'translateX(32px)', // Adjust for larger width
-                                                                color: '#fff',
-                                                                '&+.MuiSwitch-track': {
-                                                                    backgroundColor: checked ? '#5052b2' : '#7b7b7b',
-                                                                    opacity: checked ? '1' : '1',
-                                                                }
-                                                            },
-                                                        },
-                                                        '& .MuiSwitch-thumb': {
-                                                            width: 20,
-                                                            height: 20,
-                                                        },
-                                                        '& .MuiSwitch-track': {
-                                                            borderRadius: 20 / 2,
-                                                            backgroundColor: checked ? '#5052b2' : '#7b7b7b',
-                                                            opacity: checked ? '1' : '1',
-                                                            '& .MuiSwitch-track.Mui-checked': {
-                                                                backgroundColor: checked ? '#5052b2' : '#7b7b7b',
-                                                                opacity: checked ? '1' : '1',
-                                                            }
-                                                        },
-                                                    }}
-                                                />
-                                                <Box sx={{
-                                                    position: "absolute",
-                                                    top: "50%",
-                                                    left: "0px",
-                                                    width: "100%",
-                                                    display: "flex",
-                                                    justifyContent: "space-between",
-                                                    alignItems: "center",
-                                                    transform: "translateY(-50%)",
-                                                    pointerEvents: "none"
-                                                }}>
-                                                    {/* Conditional Rendering of Text */}
-                                                    {!checked && (
-                                                        <Typography
-                                                            variant="caption"
-                                                            sx={{
-                                                                fontFamily: 'Roboto',
-                                                                fontSize: '12px',
-                                                                color: '#fff',
-                                                                fontWeight: '400',
-                                                                marginRight: '8px',
-                                                                lineHeight: 'normal',
-                                                                width: '100%',
-                                                                textAlign: 'right',
-                                                            }}
-                                                        >
-                                                            No
-                                                        </Typography>
-                                                    )}
-
-                                                    {checked && (
-                                                        <Typography
-                                                            variant="caption"
-                                                            sx={{
-                                                                fontFamily: 'Roboto',
-                                                                fontSize: '12px',
-                                                                color: '#fff',
-                                                                fontWeight: '400',
-                                                                marginLeft: '6px',
-                                                                lineHeight: 'normal'
-                                                            }}
-                                                        >
-                                                            Yes
-                                                        </Typography>
-                                                    )}
-                                                </Box>
-                                            </Box>
-                                        </Box>
-
-
-
-
-                                    </Box>
-                                    <Box sx={{ background: '#efefef', borderRadius: '4px', px: 1.5, py: 1 }}>
-                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            <Image src='/info-circle.svg' alt='info-circle' height={20} width={20} />
-                                            <Typography variant="subtitle1" className='paragraph' sx={{
-                                                lineHeight: '20px'
-                                            }}>By performing this action, all your Klaviyo contacts will be added to your Grow suppression list, and new contacts will be imported daily around 6pm EST.</Typography>
-                                        </Box>
-                                    </Box>
-                                    <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                                        <Typography variant="h6" className='first-sub-title'>Sync Type</Typography>
-                                        <Typography variant="subtitle1" className='paragraph'>Synchronise data gathered from this moment onward in real-time.</Typography>
-
-                                        <FormControl sx={{ gap: '16px' }} error={tab2Error}>
+                            <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                            <Typography variant="subtitle1" className='paragraph'>Synchronise all data in real-time from this moment forward for seamless integration and continuous updates.</Typography>
+                            <FormControl sx={{ gap: '16px' }} error={tab2Error}>
                                             <FormLabel id="contact-type-radio-buttons-group-label" className='first-sub-title' sx={{
                                                 '&.Mui-focused': {
                                                     color: '#000',
@@ -788,7 +669,6 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data
                                                 }
                                             }}>Filter by Contact type</FormLabel>
                                             <RadioGroup
-                                                row
                                                 aria-labelledby="contact-type-radio-buttons-group-label"
                                                 name="contact-type-row-radio-buttons-group"
                                                 value={selectedRadioValue}
@@ -881,7 +761,7 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data
                                                     '&.Mui-checked': {
                                                         color: '#5052b2', // checked color
                                                     }
-                                                }} />} label="Add to cart"
+                                                }} />} label="Abandoned cart"
                                                     componentsProps={{
                                                         typography: {
                                                             sx: {

@@ -98,7 +98,7 @@ async def delete_integration(service_name: str = Query(...),
                 detail="Access denied. Admins and standard only."
             )
     try:
-        integration_service.delete_integration(service_name, user)
+        integration_service.delete_integration(service_name, domain)
         return {'message': 'Successfuly'}
     except:
         raise HTTPException(status_code=400)

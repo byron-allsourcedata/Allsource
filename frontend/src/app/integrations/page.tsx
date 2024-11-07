@@ -4,7 +4,7 @@
 import React, { useState, useEffect, Suspense } from "react";
 import { integrationsStyle } from "./integrationsStyle";
 import axiosInstance from '../../axios/axiosInterceptorInstance';
-import { Box, Button, Typography, Tab, TextField, InputAdornment, Popover, IconButton, TableContainer, Table, Paper, TableHead, TableRow, TableCell, TableBody, Tooltip } from "@mui/material";
+import { Box, Button, Typography, Tab, TextField, InputAdornment, Popover, IconButton, TableContainer, Table, Paper, TableHead, TableRow, TableCell, TableBody, Tooltip, Drawer, Backdrop, LinearProgress } from "@mui/material";
 import Image from "next/image";
 import CustomTooltip from "@/components/customToolTip";
 import TabContext from "@mui/lab/TabContext";
@@ -36,15 +36,20 @@ import RevenueTracking from "@/components/RevenueTracking";
 import SendlaneConnect from "@/components/SendlaneConnect";
 import AttentiveIntegrationPopup from "@/components/AttentiveIntegrationPopup";
 import { useNotification } from "@/context/NotificationContext";
+import MoreVertIcon from '@mui/icons-material/MoreVert';
+import CloseIcon from '@mui/icons-material/Close';
+
 
 interface IntegrationBoxProps {
     image: string;
     handleClick?: () => void;
+    handleDelete?: () => void;
     service_name: string;
     active?: boolean;
     is_avalible?: boolean
     error_message?: string
     is_failed?: boolean
+    is_integrated?: boolean 
 }
 
 interface IntegrationCredentials {
@@ -81,7 +86,31 @@ const integrationStyle = {
 };
 
 
-const IntegrationBox = ({ image, handleClick, service_name, active, is_avalible, is_failed, error_message }: IntegrationBoxProps) => {
+const IntegrationBox = ({ image, handleClick, handleDelete, service_name, active, is_avalible, is_failed, is_integrated = false }: IntegrationBoxProps) => {
+
+    const [anchorEl, setAnchorEl] = useState(null);
+    const openPopover = Boolean(anchorEl);
+    const handleOpen = (event: any) => {
+        setAnchorEl(event.currentTarget);
+    };
+
+    const handleClickEdit = () => {
+      handleClose();  
+      if (handleClick) { 
+        handleClick(); 
+      }
+    }
+
+    const handleClickDelete = () => {
+      handleClose()
+      if(handleDelete) {
+        handleDelete()
+      }
+    }
+
+    const handleClose = () => {
+        setAnchorEl(null);
+    };
 
     return (
         <Box sx={{
@@ -91,18 +120,22 @@ const IntegrationBox = ({ image, handleClick, service_name, active, is_avalible,
             cursor: 'pointer'
         }}>
             <Box sx={{
-                backgroundColor: active ? 'rgba(80, 82, 178, 0.1)' : 'transparent',
+                backgroundColor: is_integrated ? 'rgba(0, 0, 0, 0.04)' : active
+                ? 'rgba(80, 82, 178, 0.1)'
+                : 'transparent',
                 border: active ? '1px solid #5052B2' : '1px solid #E4E4E4',
                 position: 'relative',
                 display: 'flex',
                 borderRadius: '4px',
+                cursor: 'pointer',
                 width: '8rem',
                 height: '8rem',
+                filter: is_integrated ? 'grayscale(1)' : 'none',
                 justifyContent: 'center',
                 alignItems: 'center',
                 transition: '0.2s',
                 '&:hover': {
-                    boxShadow: '0 0 4px #00000040'
+                    boxShadow: is_integrated ? 'none' : '0 0 4px #00000040'
                 },
                 '&:hover .edit-icon': {
                     opacity: 1
@@ -135,12 +168,12 @@ const IntegrationBox = ({ image, handleClick, service_name, active, is_avalible,
                   <Typography fontSize={'12px'} fontFamily={'Nunito Sans'} color={'#4E0110'} fontWeight={600}>Failed</Typography>
                 </>
               ) }</Box>
-                    <Box className="edit-icon" onClick={handleClick} sx={{
+                    <Box className="edit-icon" onClick={handleOpen} sx={{
                         position: 'absolute',
                         top: '0%',
                         right: '0%',
                         margin: '8px 8.4px 0 0',
-                        opacity: 0,  
+                        opacity: openPopover ? 1 : 0,  
                         transition: 'opacity 0.2s',
                         cursor: 'pointer',
                         display: 'flex',
@@ -156,12 +189,9 @@ const IntegrationBox = ({ image, handleClick, service_name, active, is_avalible,
                           opacity: 1
                         },
                     }}>
-                        <Image
-                            src={'/pen.svg'}
-                            width={9.6}
-                            height={9.6}
-                            alt={'edit'}
-                        />
+                        <MoreVertIcon sx={{
+                          height: '20px'
+                        }}/>
                     </Box>
                     </Box>
                 )}
@@ -170,7 +200,65 @@ const IntegrationBox = ({ image, handleClick, service_name, active, is_avalible,
             <Typography mt={0.5} fontSize={'14px'} fontWeight={500} textAlign={'center'} fontFamily={'Nunito Sans'}>
                 {service_name}
             </Typography>
+            <Popover
+              open={openPopover}
+              anchorEl={anchorEl}
+              onClose={handleClose}
+              anchorOrigin={{
+                vertical: "bottom",
+                horizontal: "left",
+              }}
+          >
+            <Box
+              sx={{
+                p: 1,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "flex-start",
+                width: "100%",
+                maxWidth: "160px",
+              }}
+            >
+              <Button
+                sx={{
+                  justifyContent: "flex-start",
+                  width: "100%",
+                  textTransform: "none",
+                  fontFamily: "Nunito Sans",
+                  fontSize: "14px",
+                  color: "rgba(32, 33, 36, 1)",
+                  fontWeight: 600,
+                  ":hover": {
+                    color: "rgba(80, 82, 178, 1)",
+                    backgroundColor: "background: rgba(80, 82, 178, 0.1)",
+                  },
+                }}
+                onClick={handleClickEdit}
+              >
+                Edit
+              </Button>
+              <Button
+                sx={{
+                  justifyContent: "flex-start",
+                  width: "100%",
+                  textTransform: "none",
+                  fontFamily: "Nunito Sans",
+                  fontSize: "14px",
+                  color: "rgba(32, 33, 36, 1)",
+                  fontWeight: 600,
+                  ":hover": {
+                    color: "rgba(80, 82, 178, 1)",
+                    backgroundColor: "background: rgba(80, 82, 178, 0.1)",
+                  },
+                }}
+                onClick={handleClickDelete}
+              >
+                Delete
+              </Button>
+            </Box>
+          </Popover>
         </Box>
+        
     );
 };
 
@@ -196,11 +284,154 @@ const IntegrationAdd = () => (
     </Box>
 );
 
+interface DeletePopupProps {
+  service_name: string | null
+  open: boolean
+  handleDelete: () => void
+  onClose: () => void
+}
+
+const DeleteIntegrationPopup = ({service_name, open, handleDelete, onClose}: DeletePopupProps ) => {
+  const [loading, setLoading] = useState(false)
+
+  const handleDeleteClick = async() => {
+    setLoading(true)
+    await handleDelete()
+    setLoading(false)
+    onClose()
+  }
+
+  if (!open) return null;
+
+  return (
+    <>
+    {loading && (
+            <Box
+                sx={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    background: 'rgba(0, 0, 0, 0.2)',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    zIndex: 1400,
+                    overflow: 'hidden'
+                }}
+            >
+            <Box sx={{width: '100%', top: 0, height: '100vh'}}>
+                <LinearProgress />
+            </Box>
+            </Box>
+        )}
+      <Backdrop open={open} onClick={onClose} sx={{ zIndex: 1200, color: '#fff', bgcolor: 'rgba(0, 0, 0, 0.1)' }} />
+      <Drawer
+        anchor="right"
+        open={open}
+        onClose={onClose}
+        variant="persistent"
+        PaperProps={{
+          sx: {
+            width: '620px',
+            position: 'fixed',
+            zIndex: 1300,
+            top: 0,
+            bottom: 0,
+            display: 'flex',
+            flexDirection: 'column', // Flex-контейнер для колонок
+            height: '100vh', // Высота на весь экран
+            '@media (max-width: 600px)': {
+              width: '100%',
+            },
+          },
+        }}
+      >
+
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', p: '24px', borderBottom: '1px solid rgba(0, 0, 0, 0.1)', }}>
+          <Typography variant='h3' fontSize={'1rem'}>Confirm Deletion {service_name}</Typography>
+          <CloseIcon sx={{ cursor: 'pointer' }} onClick={onClose} />
+        </Box>
+        
+        
+        <Box sx={{ flexGrow: 1 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+            <Image src='/Inbox cleanup-rafiki 1.svg' alt='cleanup' width={535} height={356.67} />
+          </Box>
+
+          <Typography
+            variant='h6'
+            textAlign='center'
+            fontFamily='Nunito Sans'
+            fontWeight={500}
+            fontSize='14px'
+            sx={{
+              width: '100%',
+              textAlign: 'center',
+              whiteSpace: 'pre-line',
+              userSelect: 'text',
+              p: 4
+            }}
+          >
+            Are you sure you want to delete the {service_name} integration? This action will remove all 
+            associated lists and disconnect {service_name} from your account.
+          </Typography>
+        </Box>
+        <Box sx={{
+          display: 'flex', 
+          justifyContent: 'flex-end', 
+          marginBottom: '20px',
+          position: 'absolute',
+          bottom: 0,
+          width: '100%',
+          backgroundColor: 'white',
+          pt: '24px', borderTop: '1px solid rgba(0, 0, 0, 0.1)', 
+        }}>
+          <Button
+            sx={{
+              border: '1px #5052B2 solid',
+              color: '#5052B2',
+              '&:hover': {
+                border: '1px #5052B2 solid',
+              }
+            }}
+            variant='outlined'
+            onClick={onClose}
+          >
+            <Typography padding={'0.5rem 1rem'} fontSize={'0.8rem'}>Cancel</Typography>
+          </Button>
+          <Button
+            sx={{
+              margin: '0 16px',
+              fontFamily: 'Nunito Sans',
+              background: '#5052B2',
+              '&:hover': {
+                backgroundColor: '#5052B2',
+              },
+              "&.Mui-disabled": {
+                backgroundColor: "rgba(80, 82, 178, 0.6)",
+                color: "#fff",
+              },
+            }}
+            variant='contained'
+            onClick={handleDeleteClick} 
+          >
+            <Typography padding={'0.5rem 2rem'} fontSize={'0.8rem'}>Confirm</Typography>
+          </Button>
+        </Box>
+      </Drawer>
+    </>
+  );
+};
+
+
 interface IntegrationsListProps {
     integrationsCredentials: IntegrationCredentials[];
     integrations: any[]
     changeTab?: (value: string) => void
     handleSaveSettings: (new_integration: any) => void
+    handleDeleteSettings?: (serviceName: string) => void
     
 }
 
@@ -208,7 +439,7 @@ interface DataSyncIntegrationsProps {
     service_name: string | null
 }
 
-const UserIntegrationsList = ({ integrationsCredentials, changeTab = () => { }, integrations, handleSaveSettings }: IntegrationsListProps) => {
+const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSaveSettings, handleDeleteSettings }: IntegrationsListProps) => {
     const [activeService, setActiveService] = useState<string | null>(null);
     const [openAvalible, setOpenAvalible] = useState(false)
     const [openKlaviyoConnect, setOpenKlaviyoConnect] = useState(false)
@@ -219,7 +450,7 @@ const UserIntegrationsList = ({ integrationsCredentials, changeTab = () => { }, 
     const [openMailchinpConnect, setOpenMailchimpConnect] = useState(false)
     const [openSendlaneConnect, setOpenSendlaneConnect] = useState(false)
     const [OpenAttentiveConnect, setOpenAttentiveConnect] = useState(false)
-
+    const [openDeletePopup, setOpenDeletePopup] = useState(false)
     const handleActive = (service: string) => {
         setActiveService(service);
     };
@@ -234,6 +465,36 @@ const UserIntegrationsList = ({ integrationsCredentials, changeTab = () => { }, 
         setOpenSendlaneConnect(false)
         setOpenAttentiveConnect(false)
     }
+
+    const handleDeleteOpen = () => {
+      setOpenDeletePopup(true)
+    }
+
+    const handleDeleteClose = () => {
+      setOpenDeletePopup(false)
+    }
+
+    const handleDelete = async () => {
+      try {
+
+        const response = await axiosInstance.delete('/integrations/', {
+          params: {
+            service_name: activeService,
+          },
+        });
+    
+        if (response.status === 200) {
+          showToast(`Remove ${activeService} Successfully`)
+          if (handleDeleteSettings && activeService) {
+            handleDeleteSettings(activeService)
+            setActiveService(null)
+          }
+        }
+      } catch (error) {
+        showErrorToast(`Remove ${activeService} failed`)
+      } 
+    };
+    
 
     return (
         <>
@@ -254,6 +515,7 @@ const UserIntegrationsList = ({ integrationsCredentials, changeTab = () => { }, 
                         service_name="Shopify"
                         active={activeService === 'Shopify'}
                         handleClick={() => setOpenShopifyConnect(true)}
+                        handleDelete={handleDeleteOpen}
                         is_failed={integrationsCredentials?.find(integration => integration.service_name === 'Shopify')?.is_failed}
                     />
                 </Box>
@@ -265,6 +527,7 @@ const UserIntegrationsList = ({ integrationsCredentials, changeTab = () => { }, 
                         service_name="Klaviyo"
                         active={activeService === 'Klaviyo'}
                         handleClick={() => setOpenKlaviyoConnect(true)}
+                        handleDelete={handleDeleteOpen}
                         is_failed={integrationsCredentials?.find(integration => integration.service_name === 'Klaviyo')?.is_failed}
                     />
                 </Box>
@@ -276,18 +539,20 @@ const UserIntegrationsList = ({ integrationsCredentials, changeTab = () => { }, 
                         service_name="Meta"
                         active={activeService === 'Meta'}
                         handleClick={() => setOpenMetaConnect(true)}
+                        handleDelete={handleDeleteOpen}
                         is_failed={integrationsCredentials?.find(integration => integration.service_name === 'Meta')?.is_failed}
                     />
                 </Box>
             )}
-            {integrationsCredentials.some(integration => integration.service_name === "BigCommerce") && (
+            {integrationsCredentials.some(integration => integration.service_name === "Bigcommerce") && (
                 <Box onClick={() => handleActive('Bigcommerce')}>
                     <IntegrationBox
                         image="/bigcommerce-icon.svg"
                         service_name="Bigcommerce"
                         active={activeService === 'Bigcommerce'}
                         handleClick={() => setOpenBigcommerceConnect(true)}
-                        is_failed={integrationsCredentials?.find(integration => integration.service_name === 'BigCommerce')?.is_failed}
+                        handleDelete={handleDeleteOpen}
+                        is_failed={integrationsCredentials?.find(integration => integration.service_name === 'Bigcommerce')?.is_failed}
                     />
                 </Box>
             )}
@@ -298,6 +563,7 @@ const UserIntegrationsList = ({ integrationsCredentials, changeTab = () => { }, 
                         service_name="Omnisend"
                         active={activeService === 'Omnisend'}
                         handleClick={() => setOpenOmnisendConnect(true)}
+                        handleDelete={handleDeleteOpen}
                         is_failed={integrationsCredentials?.find(integration => integration.service_name === 'Omnisend')?.is_failed}
                     />
                 </Box>
@@ -309,6 +575,7 @@ const UserIntegrationsList = ({ integrationsCredentials, changeTab = () => { }, 
                         service_name="Mailchimp"
                         active={activeService === 'Mailchimp'}
                         handleClick={() => setOpenMailchimpConnect(true)}
+                        handleDelete={handleDeleteOpen}
                         is_failed={integrationsCredentials?.find(integration => integration.service_name === 'Mailchimp')?.is_failed}
                     />
                 </Box>
@@ -320,6 +587,7 @@ const UserIntegrationsList = ({ integrationsCredentials, changeTab = () => { }, 
                         service_name="Sendlane"
                         active={activeService === 'Sendlane'}
                         handleClick={() => setOpenSendlaneConnect(true)}
+                        handleDelete={handleDeleteOpen}
                         is_failed={integrationsCredentials?.find(integration => integration.service_name === 'Sendlane')?.is_failed}
                     />
                 </Box>
@@ -331,6 +599,7 @@ const UserIntegrationsList = ({ integrationsCredentials, changeTab = () => { }, 
                         service_name="Attentive"
                         active={activeService === 'Attentive'}
                         handleClick={() => setOpenAttentiveConnect(true)}
+                        handleDelete={handleDeleteOpen}
                         is_failed={integrationsCredentials?.find(integration => integration.service_name === 'Attentive')?.is_failed}
                     />
                 </Box>
@@ -380,8 +649,8 @@ const UserIntegrationsList = ({ integrationsCredentials, changeTab = () => { }, 
         <BCommerceConnect 
             open={openBigcommrceConnect} 
             onClose={handleClose}
-            initShopHash={integrationsCredentials?.find(integration => integration.service_name === 'BigCommerce')?.shop_domain}
-            error_message={integrationsCredentials?.find(integration => integration.service_name === 'BigCommerce')?.error_message}
+            initShopHash={integrationsCredentials?.find(integration => integration.service_name === 'Bigcommerce')?.shop_domain}
+            error_message={integrationsCredentials?.find(integration => integration.service_name === 'Bigcommerce')?.error_message}
         />
         <OmnisendConnect open={openOmnisendConnect} handleClose={handleClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'Omnisend')?.access_token}/>
         <MailchimpConnect open={openMailchinpConnect} handleClose={handleClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'Mailchimp')?.access_token} />
@@ -398,12 +667,14 @@ const UserIntegrationsList = ({ integrationsCredentials, changeTab = () => { }, 
         <Box>
             {(activeService && activeService != 'Shopify' && activeService != 'Bigcommerce') && (<DataSyncList service_name={activeService} />)}
         </Box>
+
+        <DeleteIntegrationPopup open={openDeletePopup} onClose={handleDeleteClose} service_name={activeService} handleDelete={handleDelete}/>
         </>
     );
 };
 
 
-const IntegrationsAvailable = ({ integrationsCredentials: integrations, handleSaveSettings }: IntegrationsListProps) => {
+const IntegrationsAvailable = ({ integrationsCredentials, integrations, handleSaveSettings }: IntegrationsListProps) => {
     const [search, setSearch] = useState<string>('');
     const [openMetaConnect, setOpenMetaConnect] = useState(false)
     const [openKlaviyoConnect, setOpenKlaviyoConnect] = useState(false)
@@ -422,18 +693,13 @@ const IntegrationsAvailable = ({ integrationsCredentials: integrations, handleSa
         { image: 'shopify-icon.svg', service_name: 'Shopify' },
         { image: 'klaviyo.svg', service_name: 'Klaviyo' },
         { image: 'meta-icon.svg', service_name: 'Meta' },
-        { image: 'bigcommerce-icon.svg', service_name: 'BigCommerce' },
+        { image: 'bigcommerce-icon.svg', service_name: 'Bigcommerce' },
         { image: 'omnisend_icon_black.svg', service_name: 'Omnisend'}, 
         { image: 'mailchimp-icon.svg', service_name: 'Mailchimp'},
         { image: 'sendlane-icon.svg', service_name: 'Sendlane'},
         { image: 'attentive.svg', service_name: 'Attentive'}
     ];
 
-    const filteredIntegrations = integrationsAvailable.filter(
-        (integrationAvailable) =>
-            integrationAvailable.service_name.toLowerCase().includes(search.toLowerCase()) &&
-            !integrations.some(integration => integration.service_name === integrationAvailable.service_name)
-    );
 
     const handleClose = () => {
         setOpenMetaConnect(false)
@@ -445,6 +711,38 @@ const IntegrationsAvailable = ({ integrationsCredentials: integrations, handleSa
         setOpenSendlaneConnect(false)
         setOpenAttentiveConnect(false)
     }
+
+    const handleAddIntegration = (service_name: string) => {
+      const isIntegrated = integrationsCredentials.some(integration_cred => integration_cred.service_name === service_name);
+      if(isIntegrated) {
+        showErrorToast(`Already integrated to integrate a different ${service_name} account, please remove the current ${service_name} integration first from your integration.`)
+        return
+      }
+      switch (service_name) {
+        case 'Klaviyo':
+            setOpenKlaviyoConnect(true);
+            break;
+        case 'Attentive':
+            setOpenAttentiveConnect(true);
+            break;
+        case 'Shopify':
+            setOpenShopifyConnect(true);
+            break;
+        case 'Bigcommerce':
+            setOpenBigcommerceConnect(true);
+            break;
+        case 'Omnisend':
+            setOpenOmnisendConnect(true);
+            break;
+        case 'Mailchimp':
+            setOpenmailchimpConnect(true);
+            break;
+        case 'Sendlane':
+            setOpenSendlaneConnect(true);
+            break;
+        default:
+            break;
+      }} 
 
     return (
         <Box>
@@ -480,34 +778,21 @@ const IntegrationsAvailable = ({ integrationsCredentials: integrations, handleSa
                   alignItems: 'start', 
                   }
              }}>
-                {filteredIntegrations.map((integrationAvailable) => (
-                    <Box key={integrationAvailable.service_name}
-                    onClick={() => {
-                        if (integrationAvailable.service_name === 'Meta') {
-                          setOpenMetaConnect(true);
-                        } else if (integrationAvailable.service_name === 'Klaviyo') {
-                          setOpenKlaviyoConnect(true);
-                        } else if(integrationAvailable.service_name === 'Shopify') {
-                          setOpenShopifyConnect(true)
-                        } else if(integrationAvailable.service_name === 'BigCommerce') {
-                          setOpenBigcommerceConnect(true)
-                        } else if(integrationAvailable.service_name === 'Omnisend') {
-                          setOpenOmnisendConnect(true)
-                        } else if(integrationAvailable.service_name === 'Mailchimp') {
-                          setOpenmailchimpConnect(true)
-                        } else if(integrationAvailable.service_name === 'Sendlane') {
-                          setOpenSendlaneConnect(true)
-                        } else if(integrationAvailable.service_name === 'Attentive') {
-                          setOpenAttentiveConnect(true)
-                        }
-                    }}>
-                        <IntegrationBox
-                            image={integrationAvailable.image}
-                            service_name={integrationAvailable.service_name}
-                            is_avalible={true}
-                        />
-                    </Box>
-                ))}
+                {integrations.map((integartion: any) => {
+                  const isIntegrated = integrationsCredentials.some(integration_cred => integration_cred.service_name === integartion.service_name);
+                  const imageSrc = integrationsAvailable.find(img => img.service_name === integartion.service_name)?.image || '';
+    
+                  return (
+                      <Box key={integartion.service_name} onClick={() => handleAddIntegration(integartion.service_name)}>
+                          <IntegrationBox
+                              image={imageSrc}
+                              service_name={integartion.service_name}
+                              is_avalible={true}
+                              is_integrated={isIntegrated}
+                          />
+                      </Box>
+                  );
+              })}
             </Box>
             <KlaviyoIntegrationPopup open={openKlaviyoConnect} handleClose={handleClose} onSave={handleSaveSettings}/>
             <MetaConnectButton 
@@ -1116,6 +1401,12 @@ const Integrations = () => {
           }
       });
   };
+
+  const handleDeleteSettings = (serviceName: string) => {
+    setIntegrationsCredentials(prevIntegrations => {
+        return prevIntegrations.filter(integration => integration.service_name !== serviceName);
+    });
+};
     const changeTab = (value: string) => {
         setValue(value)
     }
@@ -1156,7 +1447,7 @@ const Integrations = () => {
                     right: '16px',
                     left: '170px',
                     background: '#fff',
-                    zIndex: '1200',
+                    zIndex: '99',
                     paddingLeft: '30px',
                     paddingRight: '24px',
                     mx: '-24px',
@@ -1256,6 +1547,7 @@ const Integrations = () => {
                                 changeTab={changeTab} 
                                 integrations={integrations}
                                 handleSaveSettings={handleSaveSettings}
+                                handleDeleteSettings={handleDeleteSettings}
                             />
                         </TabPanel>
                         <TabPanel value="2" sx={{ px: 0 }}>

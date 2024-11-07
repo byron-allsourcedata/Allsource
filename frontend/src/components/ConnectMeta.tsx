@@ -733,7 +733,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
                             }
                         }}} onChange={handleChangeTab}>
                         
-                        <Tab label="Contact type" value="1" className='tab-heading' sx={{...metaStyles.tabHeading}} />
+                        <Tab label="Sync Filter" value="1" className='tab-heading' sx={{...metaStyles.tabHeading}} />
                         <Tab label="Contact sync" value="2" className='tab-heading' sx={{...metaStyles.tabHeading}} />
                         <Tab label="Map data" value="3" className='tab-heading' sx={{...metaStyles.tabHeading}} />
                         </TabList>
@@ -746,9 +746,8 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
                     <TabPanel value="1" sx={{ p: 0 }}>
                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                             <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                                <Typography variant="h6" className='first-sub-title'>Sync Type</Typography>
-                                <Typography variant="subtitle1" className='paragraph'>Synchronise data gathered from this moment onward in real-time.</Typography>
-
+                            <Typography variant="subtitle1" className='paragraph'>Synchronise all data in real-time from this moment forward for seamless integration and continuous updates.</Typography>
+                                        
                                 <FormControl sx={{ gap: '16px' }} error={tab2Error}>
                                     <FormLabel id="contact-type-radio-buttons-group-label" className='first-sub-title' sx={{
                                         '&.Mui-focused': {
@@ -757,7 +756,6 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
                                         }
                                     }}>Filter by Contact type</FormLabel>
                                     <RadioGroup
-                                        row
                                         aria-labelledby="contact-type-radio-buttons-group-label"
                                         name="contact-type-row-radio-buttons-group"
                                         value={selectedRadioValue}
@@ -850,7 +848,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
                                             '&.Mui-checked': {
                                                 color: '#5052b2', // checked color
                                             }
-                                        }} />} label="Add to cart"
+                                        }} />} label="Abandoned cart"
                                             componentsProps={{
                                                 typography: {
                                                     sx: {

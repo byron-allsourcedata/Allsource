@@ -18,8 +18,8 @@ from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 class OmnisendIntegrationService:
 
     def __init__(self, leads_persistence: LeadsPersistence, sync_persistence: IntegrationsUserSyncPersistence,
-                 integration_persistence: IntegrationsPresistence, domain_persistence: UserDomainsPersistence):
-        self.client = httpx.Client()
+                 integration_persistence: IntegrationsPresistence, domain_persistence: UserDomainsPersistence, client: httpx.Client):
+        self.client = client
         self.leads_persistence = leads_persistence
         self.sync_persistence = sync_persistence
         self.integration_persistence = integration_persistence
@@ -107,6 +107,7 @@ class OmnisendIntegrationService:
             connection=connection,
             queue_name=self.QUEUE_DATA_SYNC, 
             message_body=message)
+        
     
 
     async def process_lead_sync(self, rabbitmq_connection, user_domain_id, behavior_type, lead_user, stage, next_try):
@@ -120,12 +121,13 @@ class OmnisendIntegrationService:
         counter = 0
         last_leads_sync = None
         sync = None
-        try:
+        if message.get('sync'):
             sync = IntegrationUserSync(**message.get('sync'))
-            logging.info("IntegrationUserSync created successfully.")
-        except Exception as e:
-            logging.error("Error creating IntegrationUserSync: %s", e)
-
+            if sync:
+                serarch_sync = self.sync_persistence.get_integration_by_sync_id(sync_id=sync.id)
+                if serarch_sync and serarch_sync.service_name != 'Klaviyo':
+                    logging.info(f'Sync {sync.id} Klaviyo not matched')
+                    return
         leads_type = message.get('leads_type')
         domain_id = message.get('domain_id')
         lead = message.get('lead', None)
@@ -140,88 +142,89 @@ class OmnisendIntegrationService:
 
         rabbitmq_connection = RabbitMQConnection()
         connection = await rabbitmq_connection.connect()
-        channel = await connection.channel()
-        await channel.declare_queue(
-            name=self.QUEUE_DATA_SYNC,
-            durable=True
-        )
-        logging.info("RabbitMQ queue declared.")
-
-        domains = self.domain_persistence.get_domain_by_filter(**{'id': domain_id} if domain_id else {})
-        logging.info(f"Retrieved domains: {[domain.id for domain in domains]}",)
-
-        for domain in domains:
-            credentials = self.get_credentials(domain.id)
-            if not credentials:
-                logging.warning("No credentials found for domain id %s.", domain.id)
-                return
-            
-            data_syncs_list = self.sync_persistence.get_data_sync_filter_by(
-                domain_id=domain.id,
-                integration_id=credentials.id,
-                is_active=True
+        async with connection:
+            channel = await connection.channel()
+            await channel.declare_queue(
+                name=self.QUEUE_DATA_SYNC,
+                durable=True
             )
+            logging.info("RabbitMQ queue declared.")
 
-            leads = [lead] if lead else (
-                self.leads_persistence.get_leads_domain(domain.id, behavior_type=leads_type)
-                if leads_type and leads_type != 'allContacts' else
-                self.leads_persistence.get_leads_domain(domain.id)
-            )
+            domains = self.domain_persistence.get_domain_by_filter(**{'id': domain_id} if domain_id else {})
+            logging.info(f"Retrieved domains: {[domain.id for domain in domains]}",)
 
-            for data_sync_item in data_syncs_list if not sync else [sync]:
-                if lead and lead.behavior_type != data_sync_item.leads_type and data_sync_item.leads_type not in ('allContacts', None):
-                    logging.warning("Lead behavior type mismatch: %s vs %s", lead.behavior_type, data_sync_item.leads_type)
-                    continue
-                last_lead_sync_id = data_sync_item.last_lead_sync_id
-                data_map = data_sync_item.data_map if data_sync_item.data_map else None
-                if last_leads_sync:
-                    last_leads_sync = self.leads_persistence.get_lead_user_by_up_id(domain_id=domain.id, up_id=last_lead_sync_id)
-                for lead in leads:
-                    if last_leads_sync and lead.five_x_five_user_id < last_leads_sync.five_x_five_user_id:
+            for domain in domains:
+                credentials = self.get_credentials(domain.id)
+                if not credentials:
+                    logging.warning("No credentials found for domain id %s.", domain.id)
+                    return
+                
+                data_syncs_list = self.sync_persistence.get_data_sync_filter_by(
+                    domain_id=domain.id,
+                    integration_id=credentials.id,
+                    is_active=True
+                )
+
+                leads = [lead] if lead else (
+                    self.leads_persistence.get_leads_domain(domain.id, behavior_type=leads_type)
+                    if leads_type and leads_type != 'allContacts' else
+                    self.leads_persistence.get_leads_domain(domain.id)
+                )
+
+                for data_sync_item in data_syncs_list if not sync else [sync]:
+                    if lead and lead.behavior_type != data_sync_item.leads_type and data_sync_item.leads_type not in ('allContacts', None):
+                        logging.warning("Lead behavior type mismatch: %s vs %s", lead.behavior_type, data_sync_item.leads_type)
                         continue
-                    if stage > 3:
-                        logging.info("Stage limit reached. Exiting.")
-                        return
-                    
-                    if next_try and datetime.now() < datetime.fromisoformat(next_try):
-                        await asyncio.sleep(1)
-                        logging.info("Processing lead sync with next try: %s", next_try)
-                        await self.process_lead_sync(
-                            lead_user=lead,
-                            rabbitmq_connection=connection, 
-                            user_domain_id=domain.id, 
-                            behavior_type=lead.behavior_type, 
-                            stage=stage, 
-                            next_try=next_try  
-                        )
-                        continue
-                    
-                    profile = self.__create_profile(lead.five_x_five_user_id, credentials, data_sync_item.list_id, data_map)
-                    if not profile:
-                        data_sync_item.sync_status = False
-                        self.sync_persistence.db.commit()
-                        logging.error("Profile creation failed for lead: %s", lead.five_x_five_user_id)
-                        if stage != 3:
-                            next_try_str = (datetime.now() + timedelta(hours=3)).isoformat()
+                    last_lead_sync_id = data_sync_item.last_lead_sync_id
+                    data_map = data_sync_item.data_map if data_sync_item.data_map else None
+                    if last_leads_sync:
+                        last_leads_sync = self.leads_persistence.get_lead_user_by_up_id(domain_id=domain.id, up_id=last_lead_sync_id)
+                    for lead in leads:
+                        if last_leads_sync and lead.five_x_five_user_id < last_leads_sync.five_x_five_user_id:
+                            continue
+                        if stage > 3:
+                            logging.info("Stage limit reached. Exiting.")
+                            return
+                        
+                        if next_try and datetime.now() < datetime.fromisoformat(next_try):
+                            await asyncio.sleep(1)
+                            logging.info("Processing lead sync with next try: %s", next_try)
                             await self.process_lead_sync(
                                 lead_user=lead,
                                 rabbitmq_connection=connection, 
                                 user_domain_id=domain.id, 
                                 behavior_type=lead.behavior_type, 
-                                stage=stage + 1, 
-                                next_try=next_try_str
+                                stage=stage, 
+                                next_try=next_try  
                             )
-                        continue
-                    data_sync_item.sync_status = True
-                    self.sync_persistence.db.commit()
-                    logging.info("Profile added successfully for lead: %s", lead.five_x_five_user_id)
-                    counter += 1
-                    last_leads_sync = lead
-                self.sync_persistence.update_sync({
-                    'last_sync_date': datetime.now(),
-                    'last_lead_sync_id': self.leads_persistence.get_lead_data(last_leads_sync.five_x_five_user_id).up_id if counter > 0 else last_lead_sync_id
-                },counter=counter, id=data_sync_item.id)
-                logging.info("Sync updated for item id: %s", data_sync_item.id)
+                            continue
+                        
+                        profile = self.__create_profile(lead.five_x_five_user_id, credentials, data_sync_item.list_id, data_map)
+                        if not profile:
+                            data_sync_item.sync_status = False
+                            self.sync_persistence.db.commit()
+                            logging.error("Profile creation failed for lead: %s", lead.five_x_five_user_id)
+                            if stage != 3:
+                                next_try_str = (datetime.now() + timedelta(hours=3)).isoformat()
+                                await self.process_lead_sync(
+                                    lead_user=lead,
+                                    rabbitmq_connection=connection, 
+                                    user_domain_id=domain.id, 
+                                    behavior_type=lead.behavior_type, 
+                                    stage=stage + 1, 
+                                    next_try=next_try_str
+                                )
+                            continue
+                        data_sync_item.sync_status = True
+                        self.sync_persistence.db.commit()
+                        logging.info("Profile added successfully for lead: %s", lead.five_x_five_user_id)
+                        counter += 1
+                        last_leads_sync = lead
+                    self.sync_persistence.update_sync({
+                        'last_sync_date': datetime.now(),
+                        'last_lead_sync_id': self.leads_persistence.get_lead_data(last_leads_sync.five_x_five_user_id).up_id if counter > 0 else last_lead_sync_id
+                    },counter=counter, id=data_sync_item.id)
+                    logging.info("Sync updated for item id: %s", data_sync_item.id)
 
     def __create_profile(self, lead_id: int, credentials, data_map):
         lead_data = self.leads_persistence.get_lead_data(lead_id)

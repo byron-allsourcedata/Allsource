@@ -245,6 +245,24 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                 return [...prevIntegrations, newIntegration];
             }
         });
+        const service = newIntegration.service_name
+        switch (service){
+            case 'Meta': 
+                handleMetaIconPopupOpen()
+                break
+            case 'Klaviyo':
+                handleKlaviyoIconPopupOpen()
+                break
+            case 'Mailchimp':
+                handleMailchimpIconPopupIconOpen()
+                break
+            case 'Omnisend':
+                handleOmnisendIconPopupOpen()
+                break
+            case 'Sendlane':
+                handleSendlaneIconPopupOpen()
+                break
+        }
     };
 
     const handleSendlaneIconPopupOpen = () => {
