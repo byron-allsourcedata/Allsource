@@ -18,6 +18,7 @@ import { useUser } from "../../context/UserContext";
 import axiosInterceptorInstance from "../../axios/axiosInterceptorInstance";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
+import PersonIcon from '@mui/icons-material/Person';
 
 const AccountSetup = () => {
   const [organizationName, setOrganizationName] = useState("");
@@ -115,10 +116,6 @@ const AccountSetup = () => {
     setAnchorEl(null);
   };
 
-  const handleSettingsClick = () => {
-    handleProfileMenuClose();
-    router.push("/settings");
-  };
 
   const handleSignOut = () => {
     localStorage.clear();
@@ -226,9 +223,9 @@ const AccountSetup = () => {
 
       switch (response.data.status) {
         case "SUCCESS":
-          if (response.data.stripe_payment_url){
+          if (response.data.stripe_payment_url) {
             router.push(`${response.data.stripe_payment_url}`)
-          }else{
+          } else {
             router.push("/dashboard");
           }
           break;
@@ -351,23 +348,26 @@ const AccountSetup = () => {
             aria-expanded={open ? "true" : undefined}
             onClick={handleProfileMenuClick}
             sx={{
-              minWidth: "32px",
-              padding: "8px",
-              color: "rgba(128, 128, 128, 1)",
-              border: "1px solid rgba(184, 184, 184, 1)",
-              borderRadius: "3.27px",
-              position: "relative",
-              display: "none",
-              right: 0,
-              "@media (max-width: 600px)": {
-                display: "flex",
-                mr: 2,
-                mb: 2,
-                position: "inherit",
+              display: 'none',
+              minWidth: '32px',
+              padding: '6px',
+              mr: 3,
+              mb: '1.125rem',
+              color: 'rgba(128, 128, 128, 1)',
+              border: '1px solid rgba(184, 184, 184, 1)',
+              borderRadius: '3.27px',
+              '&:hover': {
+                border: '1px solid rgba(80, 82, 178, 1)',
+                '& .MuiSvgIcon-root': {
+                  color: 'rgba(80, 82, 178, 1)'
+                }
               },
+              "@media (max-width: 600px)": {
+              display: 'flex'
+            },
             }}
           >
-            <Image src={"/Person.svg"} alt="Person" width={18} height={18} />
+            <PersonIcon sx={{ fontSize: '22px' }} />
           </Button>
           <Menu
             id="profile-menu"
@@ -377,15 +377,50 @@ const AccountSetup = () => {
             MenuListProps={{
               "aria-labelledby": "profile-menu-button",
             }}
+            sx={{
+              mt: 0.5,
+              ml: -1
+            }}
           >
-            <Box sx={{ p: 2 }}>
-              <Typography variant="h6">{fullName}</Typography>
-              <Typography variant="body2" color="textSecondary">
+            <Box sx={{ paddingTop: 1, paddingLeft: 2, paddingRight: 2, paddingBottom: 1 }}>
+              <Typography
+                variant="h6"
+                sx={{
+                  fontFamily: 'Nunito Sans',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  lineHeight: '19.6px',
+                  color: 'rgba(0, 0, 0, 0.89)',
+                  mb: 0.25
+                }}
+              >
+                {fullName}
+              </Typography>
+              <Typography
+                variant="body2"
+                color="textSecondary"
+                sx={{
+                  fontFamily: 'Nunito Sans',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  lineHeight: '19.6px',
+                  color: 'rgba(0, 0, 0, 0.89)',
+                }}
+              >
                 {email}
               </Typography>
             </Box>
-            <MenuItem onClick={handleSettingsClick}>Settings</MenuItem>
-            <MenuItem onClick={handleSignOut}>Sign Out</MenuItem>
+            <MenuItem
+              sx={{
+                fontFamily: 'Nunito Sans',
+                fontSize: '14px',
+                fontWeight: 500,
+                lineHeight: '19.6px',
+              }}
+              onClick={handleSignOut}
+            >
+              Sign Out
+            </MenuItem>
           </Menu>
         </Box>
         <Box sx={{ ...styles.nav, position: "relative" }}>
@@ -443,7 +478,7 @@ const AccountSetup = () => {
             }}
           >
             <Tab
-            className="tab-heading"
+              className="tab-heading"
               label="Create Account"
               sx={{
                 textTransform: "none",
@@ -461,8 +496,8 @@ const AccountSetup = () => {
                   color: "#F45745",
                 },
                 "@media (max-width: 400px)": {
-                marginLeft: 0
-              },
+                  marginLeft: 0
+                },
               }}
             />
             <Tab
@@ -492,17 +527,25 @@ const AccountSetup = () => {
           aria-expanded={open ? "true" : undefined}
           onClick={handleProfileMenuClick}
           sx={{
-            minWidth: "32px",
-            padding: "8px",
-            color: "rgba(128, 128, 128, 1)",
-            border: "1px solid rgba(184, 184, 184, 1)",
-            borderRadius: "3.27px",
-            marginRight: 3,
-            mb: 1,
-            "@media (max-width: 600px)": { display: "none" },
+            minWidth: '32px',
+            padding: '6px',
+            mr: '1.5rem',
+            mb: '1.125rem',
+            color: 'rgba(128, 128, 128, 1)',
+            border: '1px solid rgba(184, 184, 184, 1)',
+            borderRadius: '3.27px',
+            '&:hover': {
+              border: '1px solid rgba(80, 82, 178, 1)',
+              '& .MuiSvgIcon-root': {
+                color: 'rgba(80, 82, 178, 1)'
+              }
+            },
+            "@media (max-width: 600px)": {
+              display: 'none'
+            },
           }}
         >
-          <Image src={"/Person.svg"} alt="Person" width={18} height={18} />
+          <PersonIcon sx={{ fontSize: '22px' }} />
         </Button>
         <Menu
           id="profile-menu"
@@ -512,15 +555,50 @@ const AccountSetup = () => {
           MenuListProps={{
             "aria-labelledby": "profile-menu-button",
           }}
+          sx={{
+            mt: 0.5,
+            ml: -1
+          }}
         >
-          <Box sx={{ p: 2 }}>
-            <Typography variant="h6">{fullName}</Typography>
-            <Typography variant="body2" color="textSecondary">
+          <Box sx={{ paddingTop: 1, paddingLeft: 2, paddingRight: 2, paddingBottom: 1 }}>
+            <Typography
+              variant="h6"
+              sx={{
+                fontFamily: 'Nunito Sans',
+                fontSize: '14px',
+                fontWeight: 600,
+                lineHeight: '19.6px',
+                color: 'rgba(0, 0, 0, 0.89)',
+                mb: 0.25
+              }}
+            >
+              {fullName}
+            </Typography>
+            <Typography
+              variant="body2"
+              color="textSecondary"
+              sx={{
+                fontFamily: 'Nunito Sans',
+                fontSize: '14px',
+                fontWeight: 600,
+                lineHeight: '19.6px',
+                color: 'rgba(0, 0, 0, 0.89)',
+              }}
+            >
               {email}
             </Typography>
           </Box>
-          <MenuItem onClick={handleSettingsClick}>Settings</MenuItem>
-          <MenuItem onClick={handleSignOut}>Sign Out</MenuItem>
+          <MenuItem
+            sx={{
+              fontFamily: 'Nunito Sans',
+              fontSize: '14px',
+              fontWeight: 500,
+              lineHeight: '19.6px',
+            }}
+            onClick={handleSignOut}
+          >
+            Sign Out
+          </MenuItem>
         </Menu>
       </Box>
       <Box sx={styles.formContainer}>
@@ -559,7 +637,7 @@ const AccountSetup = () => {
                 onChange={(e) => setOrganizationName(e.target.value)}
                 error={!!errors.organizationName}
                 helperText={errors.organizationName}
-                InputLabelProps={{ 
+                InputLabelProps={{
                   sx: styles.inputLabel,
                   className: "form-input-label"
                 }}
@@ -573,7 +651,7 @@ const AccountSetup = () => {
                 variant="outlined"
                 placeholder={isFocused ? "example.com" : ""}
                 sx={styles.formField}
-                InputLabelProps={{ 
+                InputLabelProps={{
                   sx: styles.inputLabel,
                   className: "form-input-label"
                 }}

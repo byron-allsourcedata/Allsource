@@ -22,6 +22,8 @@ import { AxiosError } from 'axios';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 import Slider from "../components/Slider";
 import NotificationPopup from './NotificationPopup';
+import DomainButtonSelect from './NavigationDomainButton';
+import DnsIcon from '@mui/icons-material/Dns';
 
 const navigationmenuStyles = {
   mobileMenuHeader: {
@@ -30,13 +32,13 @@ const navigationmenuStyles = {
     left: 0,
     right: 0,
     zIndex: 200,
-    background: '#fff', 
+    background: '#fff',
     boxShadow: '0 0.25rem 0.25rem 0 rgba(47, 47, 47, 0.04)',
     borderBottom: '0.0625 solid #E4E4E4',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: '1rem' 
+    padding: '1rem'
   },
   mobileDrawerMenu: {
     position: 'fixed',
@@ -64,7 +66,27 @@ const navigationmenuStyles = {
       color: '#525252',
       paddingRight: '4px',
       '& svg': {
-        width: '1.25rem', 
+        width: '1.25rem',
+        height: '1.25rem'
+      }
+    },
+    '& span.MuiListItemText-primary': {
+      fontFamily: 'Nunito Sans',
+      fontSize: '0.875rem',
+      color: '#3b3b3b',
+      fontWeight: '500',
+      lineHeight: 'normal',
+      letterSpacing: '-0.0175rem'
+    },
+  },
+  mobileDomainList: {
+    borderBottom: '1px solid #ebebeb',
+    '& .MuiListItemIcon-root': {
+      minWidth: 'auto',
+      color: '#525252',
+      paddingRight: '4px',
+      '& svg': {
+        width: '1.25rem',
         height: '1.25rem'
       }
     },
@@ -100,31 +122,31 @@ const NavigationMenu = () => {
 
   const handleNavigation = async (route: string) => {
     try {
-        const response = await axiosInstance.get('/check-user-authorization');
-        if (response.data.status === "NEED_BOOK_CALL") {
-            sessionStorage?.setItem("is_slider_opened", "true");
-            setShowSlider(true);
-        } else {
-            router.push(route)
-            setOpen(false)
-          }
-        }
-    catch (error) {
-        if (error instanceof AxiosError && error.response?.status === 403) {
-            if (error.response.data.status === "NEED_BOOK_CALL") {
-                sessionStorage?.setItem("is_slider_opened", "true");
-                setShowSlider(true);
-                setShowBookSlider(true);
-            } else {
-                setShowSlider(false);
-                setShowBookSlider(false);
-                router.push(route)
-            }
-        }
+      const response = await axiosInstance.get('/check-user-authorization');
+      if (response.data.status === "NEED_BOOK_CALL") {
+        sessionStorage?.setItem("is_slider_opened", "true");
+        setShowSlider(true);
+      } else {
+        router.push(route)
+        setOpen(false)
+      }
     }
-};
+    catch (error) {
+      if (error instanceof AxiosError && error.response?.status === 403) {
+        if (error.response.data.status === "NEED_BOOK_CALL") {
+          sessionStorage?.setItem("is_slider_opened", "true");
+          setShowSlider(true);
+          setShowBookSlider(true);
+        } else {
+          setShowSlider(false);
+          setShowBookSlider(false);
+          router.push(route)
+        }
+      }
+    }
+  };
 
-  const isActive = (path: string) => pathname === path;  
+  const isActive = (path: string) => pathname === path;
 
   const handleProfileMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -149,7 +171,7 @@ const NavigationMenu = () => {
   }
 
   return (
-    <Box sx={{ display: { xs: notificationIconPopupOpen ? 'none' : 'block' }  }}>
+    <Box sx={{ display: { xs: notificationIconPopupOpen ? 'none' : 'block' } }}>
       {/* Header with Menu Icon and Fixed Position */}
       <Box sx={navigationmenuStyles.mobileMenuHeader}>
         {/* Conditional Icon (Menu or Close) */}
@@ -158,21 +180,21 @@ const NavigationMenu = () => {
         </IconButton>
 
         {/* Centered Logo (Adjust src to your logo) */}
-          <Image src="/logo.svg" alt="logo" height={20} width={32} />
+        <Image src="/logo.svg" alt="logo" height={20} width={32} />
 
         {/* Placeholder for Right Icon */}
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-        <IconButton onClick={handleNotificationIconPopupOpen}>
-          <NotificationsNoneIcon />
-        </IconButton>
-        <IconButton onClick={handleProfileMenuOpen}>
-          <PersonIcon />
-        </IconButton>
+          <IconButton onClick={handleNotificationIconPopupOpen}>
+            <NotificationsNoneIcon />
+          </IconButton>
+          <IconButton onClick={handleProfileMenuOpen}>
+            <PersonIcon />
+          </IconButton>
         </Box>
       </Box>
 
-       {/* Profile Menu */}
-       <Menu
+      {/* Profile Menu */}
+      <Menu
         anchorEl={anchorEl}
         open={Boolean(anchorEl)}
         onClose={handleProfileMenuClose}
@@ -184,7 +206,7 @@ const NavigationMenu = () => {
           vertical: 'top',
           horizontal: 'right',
         }}
-        sx= {{top: '46px'}}
+        sx={{ top: '46px' }}
       >
         <Box sx={{ p: 2 }}>
           <Typography variant="h6">{full_name}</Typography>
@@ -202,33 +224,44 @@ const NavigationMenu = () => {
       <Box sx={navigationmenuStyles.mobileDrawerMenu} style={{
         left: open ? 0 : '-100%'
       }}>
-        <List>
-          <ListItem button onClick={() => handleNavigation('/dashboard')} 
-          sx={{
-            ...(isActive('/dashboard') ? navigationmenuStyles.activeItem : {}),
-            ...navigationmenuStyles.mobileDrawerList
-          }}>
+        <List sx={{paddingTop: 0}}>
+
+
+          <ListItem
+            sx={{
+              ...navigationmenuStyles.mobileDomainList,
+              padding: 0,
+            }}>
+            <DomainButtonSelect />
+          </ListItem>
+
+
+          <ListItem button onClick={() => handleNavigation('/dashboard')}
+            sx={{
+              ...(isActive('/dashboard') ? navigationmenuStyles.activeItem : {}),
+              ...navigationmenuStyles.mobileDrawerList
+            }}>
             <ListItemIcon><DashboardIcon /></ListItemIcon>
             <ListItemText
-            primary="Dashboard" />
+              primary="Dashboard" />
           </ListItem>
           <ListItem button onClick={() => handleNavigation('/leads')}
-          sx={{
-            ...(isActive('/leads') ? navigationmenuStyles.activeItem : {}),
-            ...navigationmenuStyles.mobileDrawerList
-          }}>
+            sx={{
+              ...(isActive('/leads') ? navigationmenuStyles.activeItem : {}),
+              ...navigationmenuStyles.mobileDrawerList
+            }}>
             <ListItemIcon><PeopleIcon /></ListItemIcon>
             <ListItemText primary="Contacts" />
           </ListItem>
           <ListItem button onClick={() => handleNavigation('/data-sync')}
-          sx={{
-            ...(isActive('/data-sync') ? navigationmenuStyles.activeItem : {}),
-            ...navigationmenuStyles.mobileDrawerList
+            sx={{
+              ...(isActive('/data-sync') ? navigationmenuStyles.activeItem : {}),
+              ...navigationmenuStyles.mobileDrawerList
             }}>
-              <ListItemIcon>
-                  <CategoryIcon />
-              </ListItemIcon>
-              <ListItemText primary="Data Sync" />
+            <ListItemIcon>
+              <CategoryIcon />
+            </ListItemIcon>
+            <ListItemText primary="Data Sync" />
           </ListItem>
           {/* <ListItem button onClick={() => handleNavigation('/prospect')}
           sx={{
@@ -241,9 +274,9 @@ const NavigationMenu = () => {
               <ListItemText primary="Prospect" />
           </ListItem> */}
           <ListItem button onClick={() => handleNavigation('/integrations')}
-          sx={{
-            ...(isActive('/integrations') ? navigationmenuStyles.activeItem : {}),
-            ...navigationmenuStyles.mobileDrawerList
+            sx={{
+              ...(isActive('/integrations') ? navigationmenuStyles.activeItem : {}),
+              ...navigationmenuStyles.mobileDrawerList
             }}>
             <ListItemIcon><IntegrationIcon /></ListItemIcon>
             <ListItemText primary="Integrations" />
@@ -257,9 +290,9 @@ const NavigationMenu = () => {
             <ListItemText primary="Analytics" />
           </ListItem> */}
           <ListItem button onClick={() => handleNavigation('/suppressions')}
-          sx={{
-            ...(isActive('/suppressions') ? navigationmenuStyles.activeItem : {}),
-            ...navigationmenuStyles.mobileDrawerList
+            sx={{
+              ...(isActive('/suppressions') ? navigationmenuStyles.activeItem : {}),
+              ...navigationmenuStyles.mobileDrawerList
             }}>
             <ListItemIcon><FeaturedPlayListIcon /></ListItemIcon>
             <ListItemText primary="Suppressions" />
@@ -284,14 +317,14 @@ const NavigationMenu = () => {
             sx={{
               ...(isActive('/settings') ? navigationmenuStyles.activeItem : {}),
               ...navigationmenuStyles.mobileDrawerList
-              }}>
-            <ListItemIcon><SettingsIcon /></ListItemIcon>
+            }}>
+            <ListItemIcon><DnsIcon /></ListItemIcon>
             <ListItemText primary="Settings" />
           </ListItem>
         </List>
       </Box>
       {showBookSlider && <Slider />}
-      <NotificationPopup open={notificationIconPopupOpen} onClose={handleNotificationIconPopupClose}/>
+      <NotificationPopup open={notificationIconPopupOpen} onClose={handleNotificationIconPopupClose} />
     </Box>
   );
 };

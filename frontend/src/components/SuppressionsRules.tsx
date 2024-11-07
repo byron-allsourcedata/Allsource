@@ -538,10 +538,11 @@ const SuppressionRules: React.FC = () => {
                                             fontFamily: 'Nunito Sans',
                                             fontSize: '14px',
                                             fontWeight: 400,
+                                            zIndex: 0,
                                             color: 'rgba(17, 17, 19, 1)',
                                         }}
                                         MenuProps={{
-                                            PaperProps: { style: { maxHeight: 200 } }
+                                            PaperProps: { style: { maxHeight: 200, zIndex: 100 } }
                                         }}
                                         IconComponent={(props) => (
                                             days === '' ?

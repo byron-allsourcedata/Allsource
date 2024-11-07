@@ -1,4 +1,4 @@
-import { SxProps, Theme } from '@mui/system';
+import { SxProps, Theme } from "@mui/system";
 
 export const accountStyles: { [key: string]: SxProps<Theme> } = {
   name: {
@@ -34,14 +34,17 @@ export const accountStyles: { [key: string]: SxProps<Theme> } = {
     fontWeight: '400',
     lineHeight: '19.1px',
     color: 'rgba(74, 74, 74, 1)',
-    width: '50%'
+    flex: 1,
+    wordWrap: 'break-word',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
   },
   title_text: {
     fontFamily: 'Nunito Sans',
     fontSize: '14px',
     fontWeight: '600',
     lineHeight: '19.1px',
-    width: '50%',
+    flex: 1,
   },
   title: {
     fontFamily: 'Nunito Sans',
@@ -50,11 +53,13 @@ export const accountStyles: { [key: string]: SxProps<Theme> } = {
     lineHeight: '19.1px',
     color: 'rgba(74, 74, 74, 1)',
     display: 'flex',
+    pt:0.5,
     flexDirection: 'row',
     gap: 1,
-    pb: 1,
+    pb: 1.5,
     borderBottom: '1px solid rgba(240, 240, 240, 1)',
-    paddingLeft: 3
+    paddingLeft: 3,
+    '@media (max-width:600px)': {pt:1, pl:1.5}
   },
   headers_title: {
     textTransform: 'none',
@@ -66,12 +71,13 @@ export const accountStyles: { [key: string]: SxProps<Theme> } = {
     display: 'flex',
     flexDirection: 'row',
     width: '100%',
-    justifyContent: 'self-start',
-    alignContent: 'start',
+    justifyContent: 'flex-start',
+    alignItems: 'flex-start',
     paddingLeft: 3,
     paddingRight: 3,
     borderBottom: '1px solid rgba(240, 240, 240, 1)',
-    pb: 1
+    pb: 1,
+    '@media (max-width:600px)': {pl:1.5, pr: 1.5}
   },
   box_param: {
     mt: 2,
@@ -86,6 +92,7 @@ export const accountStyles: { [key: string]: SxProps<Theme> } = {
     '@media (max-width: 600px)': {
       padding: '8px',
       width: '100%',
+      maxWidth: '93%',
     },
   }
 };

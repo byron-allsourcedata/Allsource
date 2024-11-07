@@ -530,11 +530,12 @@ const Dashboard: React.FC = () => {
                 },
                 mx: '-24px',
                 "@media (max-width: 900px)": { 
-                  left: '20px'
+                  left: '10px',
                 },
                 "@media (max-width: 600px)": { 
                   flexDirection: 'column',
                   alignItems: 'start', 
+                  paddingRight: 3,
                   } 
                 }}>
               <Typography

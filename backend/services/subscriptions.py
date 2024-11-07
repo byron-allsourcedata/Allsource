@@ -237,7 +237,7 @@ class SubscriptionService:
             user_id=user_id,
             updated_at=created_at.isoformat() + "Z",
             created_at=created_at.isoformat() + "Z",
-            members_limit=members_limit - 1,
+            members_limit=members_limit,
             status=status,
             plan_id=plan.id,
             is_trial=True

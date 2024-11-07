@@ -2,6 +2,7 @@ import { Accordion, AccordionDetails, AccordionSummary, Box, Button, Grid, Link,
 import ArrowForwardIosSharpIcon  from '@mui/icons-material/ExpandMore';
 import { useState } from "react";
 import ManualPopup from "./ManualPopup";
+import CustomTooltip from "./customToolTip";
 
 const buttonStyles = {
     backgroundColor: '#fff',
@@ -55,7 +56,7 @@ const RevenueTracking = () => {
           marginBottom: '0.25rem'
       }
         }}>
-        3. Track Revenue
+        3. Track Revenue <CustomTooltip title="Monitor your revenue to gain insights into sales performance and optimize strategies." linkText="Learn more" linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started" />
       </Typography>
       <Typography variant="body2" color="textSecondary" className="table-data" mb={2}
       sx={{

@@ -9,6 +9,7 @@ import axiosInterceptorInstance from '@/axios/axiosInterceptorInstance';
 import { emailStyles } from './emailStyles';
 import { showErrorToast, showToast } from '@/components/ToastNotification';
 import { useUser } from '../../context/UserContext';
+import PersonIcon from '@mui/icons-material/Person';
 
 const EmailVerificate: React.FC = () => {
   const [canResend, setCanResend] = useState(true);
@@ -135,14 +136,19 @@ const EmailVerificate: React.FC = () => {
           onClick={handleProfileMenuClick}
           sx={{
             minWidth: '32px',
-            padding: '8px',
+            padding: '6px',
             color: 'rgba(128, 128, 128, 1)',
             border: '1px solid rgba(184, 184, 184, 1)',
             borderRadius: '3.27px',
-            marginRight: 2
+            '&:hover': {
+              border: '1px solid rgba(80, 82, 178, 1)',
+              '& .MuiSvgIcon-root': {
+                color: 'rgba(80, 82, 178, 1)'
+              }
+            }
           }}
         >
-          <Image src={'/Person.svg'} alt="Person" width={18} height={18} />
+          <PersonIcon sx={{ fontSize: '22px' }} />
         </Button>
         <Menu
           id="profile-menu"
@@ -152,15 +158,51 @@ const EmailVerificate: React.FC = () => {
           MenuListProps={{
             "aria-labelledby": "profile-menu-button",
           }}
+          sx={{
+            mt: 0.5,
+            ml: -1
+          }}
         >
-          <Box sx={{ p: 2 }}>
-            <Typography variant="h6">{full_name}</Typography>
-            <Typography variant="body2" color="textSecondary">
+          <Box sx={{ paddingTop: 1, paddingLeft: 2, paddingRight: 2, paddingBottom: 1 }}>
+            <Typography
+              variant="h6"
+              sx={{
+                fontFamily: 'Nunito Sans',
+                fontSize: '14px',
+                fontWeight: 600,
+                lineHeight: '19.6px',
+                color: 'rgba(0, 0, 0, 0.89)',
+                mb: 0.25
+              }}
+            >
+              {full_name}
+            </Typography>
+            <Typography
+              variant="body2"
+              color="textSecondary"
+              sx={{
+                fontFamily: 'Nunito Sans',
+                fontSize: '14px',
+                fontWeight: 600,
+                lineHeight: '19.6px',
+                color: 'rgba(0, 0, 0, 0.89)',
+              }}
+            >
               {email}
             </Typography>
           </Box>
-          <MenuItem onClick={handleSettingsClick}>Settings</MenuItem>
-          <MenuItem onClick={handleSignOut}>Sign Out</MenuItem>
+
+          <MenuItem
+            sx={{
+              fontFamily: 'Nunito Sans',
+              fontSize: '14px',
+              fontWeight: 500,
+              lineHeight: '19.6px',
+            }}
+            onClick={handleSignOut}
+          >
+            Sign Out
+          </MenuItem>
         </Menu>
       </Box>
 

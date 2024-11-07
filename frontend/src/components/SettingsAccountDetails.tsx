@@ -701,7 +701,7 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
                         <Typography variant="h6" className='first-sub-title' sx={{
                             color: '#4a4a4a !important',
                             lineHeight: '22px !important'
-                        }}>Password</Typography>
+                        }}>Password <CustomTooltip title="Set a new password to better protect your account." linkText="Learn more" linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/settings/change-password" /></Typography>
                         <Typography variant="body2" className='third-sub-title' sx={{
                             lineHeight: '16px !important',
                             color: 'rgba(17, 17, 19, 0.60) !important'
@@ -715,7 +715,7 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
                         '@media (max-width: 600px)': {
                             display: 'none'
                         }
-                    }}>Password</Typography>
+                    }}>Password <CustomTooltip title="Set a new password to better protect your account." linkText="Learn more" linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/settings/change-password" /></Typography>
                     <Box sx={{ display: 'flex', gap: 2, justifyContent: 'space-between', alignItems: 'center', maxWidth: '78%' }}>
                         <Button className='hyperlink-red' variant="contained" color="secondary" onClick={handleChangePasswordPopupOpen}
                             sx={{

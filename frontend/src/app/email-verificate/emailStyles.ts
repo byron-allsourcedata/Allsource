@@ -32,6 +32,7 @@ export const emailStyles: { [key: string]: SxProps<Theme> } = {
     marginTop: '10px',
     justifyContent: 'space-between',
     alignItems: 'center',
+    paddingRight: '1.5rem',
     maxHeight: '16vh',
     width: '100%',
     color: 'rgba(244, 87, 69, 1)',

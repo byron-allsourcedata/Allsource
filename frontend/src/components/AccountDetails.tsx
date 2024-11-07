@@ -132,7 +132,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                     padding: '16px',
                     boxSizing: 'border-box',
                     '@media (max-width: 600px)': {
-                        padding: '8px',
+                        padding: '8px 0px',
                         width: '100%',
                     },
                 }}>
@@ -350,7 +350,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                 Business email:
                             </Typography>
                             <Typography sx={{ ...accountStyles.text }}>
-                                {lead.business_email || '--'}
+                            {lead.business_email || '--'}
                             </Typography>
                         </Box>
 
@@ -363,8 +363,8 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                             </Typography>
                         </Box>
 
-                        <Box sx={accountStyles.rows_pam}>
-                            <Typography sx={{ ...accountStyles.title_text }}>
+                        <Box sx={{...accountStyles.rows_pam, borderBottom: 'none'}}>
+                            <Typography sx={{ ...accountStyles.title_text, }}>
                                 Personal LinkedIn url:
                             </Typography>
                             {lead.linkedin_url ? (
@@ -418,7 +418,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                             </Typography>
                         </Box>
 
-                        <Box sx={accountStyles.rows_pam}>
+                        <Box sx={{...accountStyles.rows_pam, borderBottom: 'none'}}>
                             <Typography sx={{ ...accountStyles.title_text }}>
                                 Children:
                             </Typography>
@@ -564,7 +564,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                             </Typography>
                         </Box>
 
-                        <Box sx={accountStyles.rows_pam}>
+                        <Box sx={{...accountStyles.rows_pam, borderBottom: 'none'}}>
                             <Typography sx={{ ...accountStyles.title_text }}>
                                 Company Zipcode:
                             </Typography>
@@ -617,7 +617,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                             </Typography>
                         </Box>
 
-                        <Box sx={accountStyles.rows_pam}>
+                        <Box sx={{...accountStyles.rows_pam, borderBottom: 'none'}}>
                             <Typography sx={{ ...accountStyles.title_text }}>
                                 Primary industry
                             </Typography>
@@ -643,7 +643,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                             </Typography>
                         </Box>
 
-                        <Box sx={accountStyles.rows_pam}>
+                        <Box sx={{...accountStyles.rows_pam, borderBottom: 'none'}}>
                             <Typography sx={{ ...accountStyles.title_text }}>
                                 Company LinkedIn url
                             </Typography>

@@ -456,29 +456,21 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                     alignContent: { xs: 'center', sm: 'flex-start' },
                                     alignItems: 'center',
                                     gap: 1,
+                                    '@media (max-width: 900px)': { display: 'flex', width: '100%',flexDirection: 'row', justifyContent: 'space-between !important', alignItems: 'space-between' }
                                 }}
                             >
                                 <Typography component="div" className="second-sub-title" sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', fontWeight: '600 !important', fontFamily: 'Nunito Sans', fontSize: '16px', lineHeight: '19.1px !important', textWrap: 'nowrap', textAlign: 'left', gap: 1, '@media (max-width: 900px)': { flexDirection: 'row', width: '100%', textWrap: 'nowrap' } }}>
                                     Total Revenue <Typography component="span" sx={{ fontFamily: 'Nunito Sans', color: 'rgba(74, 74, 74, 1)', fontSize: '22px', fontWeight: 600, lineHeight: '30.01px', textAlign: 'left' }}>${lifetimeRevenue ? lifetimeRevenue.toLocaleString('en-US') : 0}</Typography>
                                 </Typography>
-                            </Stack>
-                            <Stack
-                                direction="row"
-                                sx={{
-                                    alignContent: { xs: 'center', sm: 'flex-start' },
-                                    alignItems: 'center',
-                                    gap: 1,
-                                    justifyContent: 'end',
-                                    direction: 'column',
-                                    width: '100%'
-                                }}
-                            >
                                 <Stack
                             direction="row"
                             sx={{
-                                alignContent: { xs: 'center', sm: 'flex-start' },
-                                alignItems: 'center',
+                                alignContent: { xs: 'end', sm: 'end' },
+                                alignItems: 'end',
+                                justifyContent: 'end',
                                 gap: 2,
+                                display: 'none',
+                                '@media (max-width: 900px)': { display: 'flex'}
                                 
                             }}
                         >
@@ -511,6 +503,57 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                 </IconButton>
                             </Box>
                         </Stack>
+                            </Stack>
+                            <Stack
+                                direction="row"
+                                sx={{
+                                    alignContent: { xs: 'center', sm: 'flex-start' },
+                                    alignItems: 'center',
+                                    gap: 1,
+                                    justifyContent: 'end',
+                                    direction: 'column',
+                                    width: '100%'
+                                }}
+                            >
+                                <Stack
+                                    direction="row"
+                                    sx={{
+                                        alignContent: { xs: 'center', sm: 'flex-start' },
+                                        alignItems: 'center',
+                                        gap: 2,
+                                        "@media (max-width: 900px)": {display: 'none'}
+
+                                    }}
+                                >
+                                    <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1.5, ml: 3 }}>
+                                        <IconButton
+                                            onClick={() => toggleChartType('line')}
+                                            sx={{
+                                                width: '16px',
+                                                ml: 5,
+                                                height: '16px',
+                                                borderRadius: '4px', // Квадратная форма
+                                                border: `1.5px solid ${chartType === 'line' ? 'rgba(80, 82, 178, 1)' : 'rgba(115, 115, 115, 1)'}`,
+                                                color: chartType === 'line' ? 'rgba(80, 82, 178, 1)' : 'rgba(115, 115, 115, 1)',
+                                            }}
+                                        >
+                                            <ShowChart sx={{ fontSize: '16px' }} />
+                                        </IconButton>
+
+                                        <IconButton
+                                            onClick={() => toggleChartType('bar')}
+                                            sx={{
+                                                width: '16px',
+                                                height: '16px',
+                                                borderRadius: '4px', // Квадратная форма
+                                                border: `1.5px solid ${chartType === 'bar' ? 'rgba(80, 82, 178, 1)' : 'rgba(115, 115, 115, 1)'}`,
+                                                color: chartType === 'bar' ? 'rgba(80, 82, 178, 1)' : 'rgba(115, 115, 115, 1)',
+                                            }}
+                                        >
+                                            <IconBarChart sx={{ fontSize: '16px' }} />
+                                        </IconButton>
+                                    </Box>
+                                </Stack>
                                 {Object.keys(visibleSeries).map((seriesId, index) => (
                                     <Chip
                                         key={seriesId}
@@ -644,58 +687,58 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                 }}
                             />
                         </Box> :
-                    (chartType === 'line' ? (
-                        <LineChart
-                    colors={filteredSeriescolor.map(s => colorMapping[s.id as keyof typeof colorMapping])}
-                    xAxis={[{
-                        scaleType: 'point',
-                        data: formattedData,
-                    }]}
-                    yAxis={[{
-                        valueFormatter: (value) => {
-                            if (value >= 1000 && value < 1000000) {
-                                return `$${(value / 1000).toFixed(0)}k`;
-                            } else if (value >= 1000000) {
-                                return `$${(value / 1000000).toFixed(1)}M`;
-                            } else {
-                                return value.toString();
-                            }
-                        },
-                    }]}
-                    series={filteredSeries}
-                    height={mainchartSize} // Занимает 100% от контейнера
-                    margin={{ left: 70, right: 20, top: 20, bottom: 20 }}
-                    grid={{ horizontal: true }}
-                    sx={{ border: 'none' }}
-                    slotProps={{ legend: { hidden: true } }}
-                />
-                    ) : (
-                        <BarChart
-                            height={350}
-                            colors={filteredSeriescolor.map(s => colorMapping[s.id as keyof typeof colorMapping])}
-                            xAxis={[{ scaleType: 'band', data: formattedData }]}
-                            yAxis={[
-                                {
-                                    valueFormatter: (value) => {
-                                        if (value >= 1000 && value < 1000000) {
-                                            return `${(value / 1000).toFixed(0)}k`; // Formats 10,000 as 10k
-                                        } else if (value >= 1000000) {
-                                            return `${(value / 1000000).toFixed(1)}M`; // Formats 1,000,000 as 1.0M
-                                        } else {
-                                            return value.toString(); // Return smaller numbers without formatting
-                                        }
+                            (chartType === 'line' ? (
+                                <LineChart
+                                    colors={filteredSeriescolor.map(s => colorMapping[s.id as keyof typeof colorMapping])}
+                                    xAxis={[{
+                                        scaleType: 'point',
+                                        data: formattedData,
+                                    }]}
+                                    yAxis={[{
+                                        valueFormatter: (value) => {
+                                            if (value >= 1000 && value < 1000000) {
+                                                return `$${(value / 1000).toFixed(0)}k`;
+                                            } else if (value >= 1000000) {
+                                                return `$${(value / 1000000).toFixed(1)}M`;
+                                            } else {
+                                                return value.toString();
+                                            }
                                         },
-                                }
-                            ]}
-                            series={filteredSeries} 
-                            grid={{ horizontal: true }}
-                            margin={{ left: 50, right: 20, top: 20, bottom: 20 }}
-                            borderRadius={3}
-                            slotProps={{
-                                legend: { hidden: true },
-                            }} />
+                                    }]}
+                                    series={filteredSeries}
+                                    height={mainchartSize} // Занимает 100% от контейнера
+                                    margin={{ left: 70, right: 20, top: 20, bottom: 20 }}
+                                    grid={{ horizontal: true }}
+                                    sx={{ border: 'none' }}
+                                    slotProps={{ legend: { hidden: true } }}
+                                />
+                            ) : (
+                                <BarChart
+                                    height={mainchartSize}
+                                    colors={filteredSeriescolor.map(s => colorMapping[s.id as keyof typeof colorMapping])}
+                                    xAxis={[{ scaleType: 'band', data: formattedData }]}
+                                    yAxis={[
+                                        {
+                                            valueFormatter: (value) => {
+                                                if (value >= 1000 && value < 1000000) {
+                                                    return `${(value / 1000).toFixed(0)}k`; // Formats 10,000 as 10k
+                                                } else if (value >= 1000000) {
+                                                    return `${(value / 1000000).toFixed(1)}M`; // Formats 1,000,000 as 1.0M
+                                                } else {
+                                                    return value.toString(); // Return smaller numbers without formatting
+                                                }
+                                            },
+                                        }
+                                    ]}
+                                    series={filteredSeries}
+                                    grid={{ horizontal: true }}
+                                    margin={{ left: 50, right: 20, top: 20, bottom: 20 }}
+                                    borderRadius={3}
+                                    slotProps={{
+                                        legend: { hidden: true },
+                                    }} />
 
-                    )) }
+                            ))}
                     </CardContent>
                 </Card>
             </Box>
@@ -794,13 +837,13 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                         {
                                             valueFormatter: (value) => {
                                                 if (value >= 1000 && value < 1000000) {
-                                                  return `$${(value / 1000).toFixed(0)}k`; // Formats 10,000 as 10k
+                                                    return `$${(value / 1000).toFixed(0)}k`; // Formats 10,000 as 10k
                                                 } else if (value >= 1000000) {
-                                                  return `$${(value / 1000000).toFixed(1)}M`; // Formats 1,000,000 as 1.0M
+                                                    return `$${(value / 1000000).toFixed(1)}M`; // Formats 1,000,000 as 1.0M
                                                 } else {
-                                                  return value.toString(); // Return smaller numbers without formatting
+                                                    return value.toString(); // Return smaller numbers without formatting
                                                 }
-                                              },
+                                            },
                                         }
                                     ]}
                                     series={viewedProductSeries}
@@ -905,18 +948,18 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                         colors={['rgba(128, 201, 64, 1)']}
                                         xAxis={[{ scaleType: 'point', data: formattedData }]}
                                         yAxis={[
-                                        {
-                                            valueFormatter: (value) => {
-                                                if (value >= 1000 && value < 1000000) {
-                                                  return `$${(value / 1000).toFixed(0)}k`; // Formats 10,000 as 10k
-                                                } else if (value >= 1000000) {
-                                                  return `$${(value / 1000000).toFixed(1)}M`; // Formats 1,000,000 as 1.0M
-                                                } else {
-                                                  return value.toString(); // Return smaller numbers without formatting
-                                                }
-                                              },
-                                        }
-                                    ]}
+                                            {
+                                                valueFormatter: (value) => {
+                                                    if (value >= 1000 && value < 1000000) {
+                                                        return `$${(value / 1000).toFixed(0)}k`; // Formats 10,000 as 10k
+                                                    } else if (value >= 1000000) {
+                                                        return `$${(value / 1000000).toFixed(1)}M`; // Formats 1,000,000 as 1.0M
+                                                    } else {
+                                                        return value.toString(); // Return smaller numbers without formatting
+                                                    }
+                                                },
+                                            }
+                                        ]}
                                         series={addToCartSeries}
                                         height={250}
                                         margin={{ left: 50, right: 20, top: 20, bottom: 20 }}
@@ -1019,18 +1062,18 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                         colors={['rgba(124, 125, 197, 1)']}
                                         xAxis={[{ scaleType: 'point', data: formattedData, }]}
                                         yAxis={[
-                                        {
-                                            valueFormatter: (value) => {
-                                                if (value >= 1000 && value < 1000000) {
-                                                  return `$${(value / 1000).toFixed(0)}k`; // Formats 10,000 as 10k
-                                                } else if (value >= 1000000) {
-                                                  return `$${(value / 1000000).toFixed(1)}M`; // Formats 1,000,000 as 1.0M
-                                                } else {
-                                                  return value.toString(); // Return smaller numbers without formatting
-                                                }
-                                              },
-                                        }
-                                    ]}
+                                            {
+                                                valueFormatter: (value) => {
+                                                    if (value >= 1000 && value < 1000000) {
+                                                        return `$${(value / 1000).toFixed(0)}k`; // Formats 10,000 as 10k
+                                                    } else if (value >= 1000000) {
+                                                        return `$${(value / 1000000).toFixed(1)}M`; // Formats 1,000,000 as 1.0M
+                                                    } else {
+                                                        return value.toString(); // Return smaller numbers without formatting
+                                                    }
+                                                },
+                                            }
+                                        ]}
                                         series={visitorSeries}
                                         height={250}
                                         margin={{ left: 50, right: 20, top: 20, bottom: 20 }}
@@ -1082,68 +1125,69 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                             sx={{ display: 'flex', flexDirection: 'row', gap: '0px', flexGrow: 1, justifyContent: 'center', width: '100%' }}
                         >
                             <CardContent sx={{ flexGrow: 1 }}>
-                                <Box className='third-sub-title' sx={{ display: 'flex', alignItems: 'start', justifyContent: 'center', width: '100%',
+                                <Box className='third-sub-title' sx={{
+                                    display: 'flex', alignItems: 'start', justifyContent: 'center', width: '100%',
                                     '@media (max-width: 460px)': {
                                         fontSize: '8px !important'
                                     }
-                                 }}>
+                                }}>
                                     {loading ? <Box
-                                    sx={{
-                                        position: 'relative',
-                                        background: 'rgba(255, 255, 255, 0.8)',
-                                        display: 'flex',
-                                        justifyContent: 'center',
-                                        alignItems: 'center',
-                                        zIndex: 1000,
-                                        overflow: 'hidden'
-                                    }}
-                                >
-                                    <Box
                                         sx={{
-                                            border: '8px solid #f3f3f3',
-                                            borderTop: '8px solid #4285f4',
-                                            borderRadius: '50%',
-                                            width: '40px',
-                                            height: '40px',
-                                            animation: 'spin 1s linear infinite',
-                                            '@keyframes spin': {
-                                                '0%': { transform: 'rotate(0deg)' },
-                                                '100%': { transform: 'rotate(360deg)' },
-                                            },
-                                        }}
-                                    />
-                                </Box> :
-                                    <PieChart
-                                        colors={country_color}
-                                        margin={{
-                                            left: 100,
-                                            right: 40,
-                                            top: 80,
-                                            bottom: 80,
-                                        }}
-                                        series={[
-                                            {
-                                                type: 'pie',
-                                                arcLabel: (item) => {
-                                                    const percentage = ((item.value / totalValue) * 100).toFixed(2);
-                                                    return `${percentage}%`;
-                                                },
-                                                arcLabelMinAngle: 35,
-                                                data: dataChart,
-                                                innerRadius: chartSize * 0.17,
-                                                outerRadius: chartSize * 0.3,
-                                                paddingAngle: 0,
-                                                highlightScope: { faded: 'global', highlighted: 'item' },
-                                            },
-                                        ]}
-                                        height={isMobile ? 200 : 260}
-                                        width={isMobile ? 200 : 260}
-                                        
-                                        slotProps={{
-                                            legend: { hidden: true },
+                                            position: 'relative',
+                                            background: 'rgba(255, 255, 255, 0.8)',
+                                            display: 'flex',
+                                            justifyContent: 'center',
+                                            alignItems: 'center',
+                                            zIndex: 1000,
+                                            overflow: 'hidden'
                                         }}
                                     >
-                                    </PieChart>}
+                                        <Box
+                                            sx={{
+                                                border: '8px solid #f3f3f3',
+                                                borderTop: '8px solid #4285f4',
+                                                borderRadius: '50%',
+                                                width: '40px',
+                                                height: '40px',
+                                                animation: 'spin 1s linear infinite',
+                                                '@keyframes spin': {
+                                                    '0%': { transform: 'rotate(0deg)' },
+                                                    '100%': { transform: 'rotate(360deg)' },
+                                                },
+                                            }}
+                                        />
+                                    </Box> :
+                                        <PieChart
+                                            colors={country_color}
+                                            margin={{
+                                                left: 100,
+                                                right: 40,
+                                                top: 80,
+                                                bottom: 80,
+                                            }}
+                                            series={[
+                                                {
+                                                    type: 'pie',
+                                                    arcLabel: (item) => {
+                                                        const percentage = ((item.value / totalValue) * 100).toFixed(2);
+                                                        return `${percentage}%`;
+                                                    },
+                                                    arcLabelMinAngle: 35,
+                                                    data: dataChart,
+                                                    innerRadius: chartSize * 0.17,
+                                                    outerRadius: chartSize * 0.3,
+                                                    paddingAngle: 0,
+                                                    highlightScope: { faded: 'global', highlighted: 'item' },
+                                                },
+                                            ]}
+                                            height={isMobile ? 200 : 260}
+                                            width={isMobile ? 200 : 260}
+
+                                            slotProps={{
+                                                legend: { hidden: true },
+                                            }}
+                                        >
+                                        </PieChart>}
                                 </Box>
                             </CardContent>
 
@@ -1155,30 +1199,31 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                         sx={{ alignItems: 'start', gap: 2, pb: 2 }}
                                     >
                                         <Stack sx={{ gap: 1, flexGrow: 1 }}>
-                                        {!loading && (
-                                            <Stack
-                                                direction="row"
-                                                sx={{
-                                                    justifyContent: 'space-between',
-                                                    alignItems: 'center',
-                                                    gap: 2,
-                                                }}
-                                            >
-                                                <Typography variant="body2" className="paragraph" sx={{ lineHeight: '11.72px !important', color: 'rgba(32, 33, 36, 1) !important', textAlign: 'left', display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 0.5,
-                                                    '@media (max-width: 460px)': {
-                                                        fontSize: '10px !important'
-                                                    }
-                                                 }}>
-                                                    <Box
-                                                        sx={{
-                                                            width: 12,
-                                                            height: 12,
-                                                            borderRadius: '50%',
-                                                            backgroundColor: type.color,
-                                                        }}
-                                                    /> {type.name}
-                                                </Typography>
-                                            </Stack>)}
+                                            {!loading && (
+                                                <Stack
+                                                    direction="row"
+                                                    sx={{
+                                                        justifyContent: 'space-between',
+                                                        alignItems: 'center',
+                                                        gap: 2,
+                                                    }}
+                                                >
+                                                    <Typography variant="body2" className="paragraph" sx={{
+                                                        lineHeight: '11.72px !important', color: 'rgba(32, 33, 36, 1) !important', textAlign: 'left', display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 0.5,
+                                                        '@media (max-width: 460px)': {
+                                                            fontSize: '10px !important'
+                                                        }
+                                                    }}>
+                                                        <Box
+                                                            sx={{
+                                                                width: 12,
+                                                                height: 12,
+                                                                borderRadius: '50%',
+                                                                backgroundColor: type.color,
+                                                            }}
+                                                        /> {type.name}
+                                                    </Typography>
+                                                </Stack>)}
                                         </Stack>
                                     </Stack>
                                 ))}

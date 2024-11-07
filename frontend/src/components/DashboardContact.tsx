@@ -164,11 +164,11 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates }) => 
     });
 
     const handleChipClick = (seriesId: keyof VisibleSeries) => {
-        console.log(formattedData)
         setVisibleSeries((prev) => ({
             ...prev,
             [seriesId]: !prev[seriesId],
         }));
+        console.log(filteredSeries)
     };
 
     const options = [
@@ -346,7 +346,7 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates }) => 
     }
 
     const periodInMonths = dayjs(formattedData[formattedData.length - 1]).diff(dayjs(formattedData[0]), 'month');
-    const { aggregatedData, aggregatedSeries } = aggregateData(formattedData, series, periodInMonths);
+    const { aggregatedData, aggregatedSeries } = aggregateData(formattedData, filteredSeries, periodInMonths);
 
     return (
         <>
