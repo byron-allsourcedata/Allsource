@@ -127,7 +127,7 @@ const IntegrationBox = ({ image, handleClick, handleDelete, service_name, active
                 position: 'relative',
                 display: 'flex',
                 borderRadius: '4px',
-                cursor: 'pointer',
+                cursor: is_integrated ? 'default' : 'pointer',
                 width: '8rem',
                 height: '8rem',
                 filter: is_integrated ? 'grayscale(1)' : 'none',
