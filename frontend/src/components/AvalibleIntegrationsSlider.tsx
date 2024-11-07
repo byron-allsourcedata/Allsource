@@ -358,10 +358,10 @@ const AlivbleIntagrationsSlider = ({open, isContactSync = false, integrations, i
                                         }}  />
                                     </ListItemButton>
                                 </ListItem> )}
-                                {integrations.some(integration => integration.service_name === 'BigCommerce') &&
+                                {integrations.some(integration => integration.service_name === 'Bigcommerce') &&
                                     !integrationsCredentials.some(integration =>  
                                         integration.service_name === 'Shopify' || 
-                                        integration.service_name === 'BigCommerce' ||
+                                        integration.service_name === 'Bigcommerce' ||
                                         integration.service_name === 'WordPress'
                                     ) && 
                                     !isContactSync && (
@@ -372,7 +372,7 @@ const AlivbleIntagrationsSlider = ({open, isContactSync = false, integrations, i
                                     }}>
                                         <ListItemButton onClick={() => setOpenBigcommerceConnect(true)} sx={{p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center'}}>
                                         <ListItemIcon sx={{minWidth: 'auto'}}>    
-                                            <Image src="/bigcommerce-icon.svg" alt="BigCommerce" height={24} width={24} />
+                                            <Image src="/bigcommerce-icon.svg" alt="Bigcommerce" height={24} width={24} />
                                         </ListItemIcon>
                                         <ListItemText primary="BCommerce" primaryTypographyProps={{
                                                 sx: {

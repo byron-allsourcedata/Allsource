@@ -32,13 +32,13 @@ class MetaIntegrationsService:
    
 
     def __init__(self, domain_persistence: UserDomainsPersistence, integrations_persistence: IntegrationsPresistence, leads_persistence: LeadsPersistence,
-                sync_persistence: IntegrationsUserSyncPersistence):
+                sync_persistence: IntegrationsUserSyncPersistence, client: httpx.Client):
         self.domain_persistence = domain_persistence
         self.integrations_persisntece = integrations_persistence
         self.leads_persistence = leads_persistence
         self.sync_persistence = sync_persistence
         self.QUEUE_DATA_SYNC = 'data_sync_leads'
-        self.client = httpx.Client()
+        self.client = client
         
     def __handle_request(self, method: str, url: str, headers: dict = None, json: dict = None, data: dict = None, params: dict = None, api_key: str = None):
         if not headers:
@@ -225,9 +225,13 @@ class MetaIntegrationsService:
         counter = 0
         last_leads_sync = None
         sync = None
-        try:
+        if message.get('sync'):
             sync = IntegrationUserSync(**message.get('sync'))
-        except: pass
+            if sync:
+                serarch_sync = self.sync_persistence.get_integration_by_sync_id(sync_id=sync.id)
+                if serarch_sync and serarch_sync.service_name != 'Klaviyo':
+                    logging.info(f'Sync {sync.id} Klaviyo not matched')
+                    return
         leads_type = message.get('leads_type')
         domain_id = message.get('domain_id')
         lead = message.get('lead', None)

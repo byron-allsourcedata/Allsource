@@ -20,15 +20,15 @@ class BigcommerceIntegrationsService:
     def __init__(self, integrations_persistence: IntegrationsPresistence, 
                  leads_persistence: LeadsPersistence, 
                  leads_order_persistence: LeadOrdersPersistence,
-                 aws_service: AWSService):
+                 aws_service: AWSService, client: Client):
         self.integrations_persistence = integrations_persistence
         self.lead_persistence = leads_persistence
         self.AWS = aws_service
         self.lead_orders_persistence = leads_order_persistence
-        self.client = Client()
+        self.client = client
 
     def get_credentials(self, domain_id: int):
-        integration = self.integrations_persistence.get_credentials_for_service(domain_id, 'BigCommerce')
+        integration = self.integrations_persistence.get_credentials_for_service(domain_id, 'Bigcommerce')
         return integration
 
     def __handle_request(self, url: str, method: str = 'GET', headers: dict = None, json: dict = None, data: dict = None, params: dict = None, access_token: str = None):
@@ -65,7 +65,7 @@ class BigcommerceIntegrationsService:
             'domain_id': domain_id,
             'shop_domain': store_hash,
             'access_token': access_token,
-            'service_name': 'BigCommerce'
+            'service_name': 'Bigcommerce'
         })
         if not integration:
             raise HTTPException(status_code=409, detail={'status': IntegrationsStatus.CREATE_IS_FAILED.value})
@@ -113,8 +113,8 @@ class BigcommerceIntegrationsService:
         }
 
         script_event_data = {
-            "name": "BigCommerce Pixel Script",
-            "description": "Script for BigCommerce pixel tracking",
+            "name": "Bigcommerce Pixel Script",
+            "description": "Script for Bigcommerce pixel tracking",
             "src": script_event_url, 
             "auto_uninstall": True,
             "load_method": "default",

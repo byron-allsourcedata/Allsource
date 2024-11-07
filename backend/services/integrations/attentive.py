@@ -13,11 +13,11 @@ from schemas.integrations.integrations import IntegrationCredentials, DataMap
 class AttentiveIntegrationsService:
 
     def __init__(self, integrations_persistence: IntegrationsPresistence,
-                 sync_persistence: IntegrationsUserSyncPersistence):
+                 sync_persistence: IntegrationsUserSyncPersistence, client: Client):
         self.integrations_persistence = integrations_persistence
         self.sync_persistence = sync_persistence
         self.QUEUE_DATA_SYNC = 'data_sync_leads'
-        self.client = Client()
+        self.client = client
 
     def save_integration(self, domain_id: int, api_key: str, user: dict):
         credential = self.integrations_persistence.get_credentials_for_service(domain_id, 'Attentive')

@@ -113,3 +113,6 @@ class IntegrationsUserSyncPersistence:
         update = self.db.query(IntegrationUserSync).filter_by(**filter_by).update(update_data) 
         self.db.commit()
         return update
+
+    def get_integration_by_sync_id(self, sync_id: int):
+        return self.db.query(UserIntegration).join(IntegrationUserSync, IntegrationUserSync.integration_id == UserIntegration.id).filter(IntegrationUserSync.id == sync_id).first()

@@ -39,8 +39,8 @@ class IntegrationService:
     def get_user_service_credentials(self, domain_id):
         return self.integration_persistence.get_integration_by_user(domain_id)
 
-    def delete_integration(self, serivce_name: str, user):
-        self.integration_persistence.delete_integration(user['id'], serivce_name)
+    def delete_integration(self, service_name: str, domain):
+        self.integration_persistence.delete_integration(domain.id, service_name)
 
     def get_sync_domain(self, domain_id: int, service_name: str = None, integrations_users_sync_id: int = None):
         return self.integrations_user_sync_persistence.get_filter_by(domain_id=domain_id, service_name=service_name, integrations_users_sync_id=integrations_users_sync_id)
@@ -71,32 +71,35 @@ class IntegrationService:
         self.bigcommerce = BigcommerceIntegrationsService(self.integration_persistence, 
                                                           self.lead_persistence, 
                                                           self.lead_orders_persistence,
-                                                          self.aws_service
+                                                          self.aws_service, self.client
                                                           )
         self.klaviyo = KlaviyoIntegrationsService(self.domain_persistence, 
                                                 self.integration_persistence,  
                                                 self.lead_persistence,
-                                                self.integrations_user_sync_persistence,)
+                                                self.integrations_user_sync_persistence, self.client)
         self.meta = MetaIntegrationsService(self.domain_persistence, 
                                                 self.integration_persistence,  
                                                 self.lead_persistence,
-                                                self.integrations_user_sync_persistence,)
+                                                self.integrations_user_sync_persistence, self.client)
         self.omnisend = OmnisendIntegrationService(leads_persistence=self.lead_persistence,
                                                    sync_persistence=self.integrations_user_sync_persistence,
                                                    integration_persistence=self.integration_persistence,
-                                                   domain_persistence=self.domain_persistence
+                                                   domain_persistence=self.domain_persistence, 
+                                                   client=self.client
                                                    )
         self.mailchimp = MailchimpIntegrationsService(self.domain_persistence, 
                                                 self.integration_persistence,  
                                                 self.lead_persistence,
-                                                self.integrations_user_sync_persistence)
+                                                self.integrations_user_sync_persistence,
+                                                )
         self.sendlane = SendlaneIntegrationService(self.domain_persistence, 
                                                 self.integration_persistence,  
                                                 self.lead_persistence,
-                                                self.integrations_user_sync_persistence)
+                                                self.integrations_user_sync_persistence,
+                                                self.client)
         self.attentive = AttentiveIntegrationsService(self.domain_persistence,
-                                                      self.integrations_user_sync_persistence
-                                                      )
+                                                      self.integrations_user_sync_persistence,
+                                                      self.client)
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
