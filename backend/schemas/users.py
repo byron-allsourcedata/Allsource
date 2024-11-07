@@ -11,7 +11,7 @@ class UserSignUpForm(BaseModel):
     full_name: str = Field(...)
     email: str = Field(...)
     password: str = Field(...)
-    is_without_card: bool = Field(...)
+    is_without_card: bool = Field(default=True)
     teams_token: Optional[str] = None
     spi: Optional[str] = None
 

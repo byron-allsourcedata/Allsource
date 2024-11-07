@@ -16,14 +16,14 @@ import CustomizedProgressBar from '@/components/CustomizedProgressBar';
 const Signup: React.FC = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const isWithoutCard = searchParams.get('is_without_card') === 'true';
+  const isWithoutCard = searchParams.get('is_without_card') === 'false';
 
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const user_teams_mail = searchParams.get('user_teams_mail');
   const teams_token = searchParams.get('token');
   const spi = searchParams.get('spi');
-  const [formValues, setFormValues] = useState({ full_name: '', email: user_teams_mail, password: '', is_without_card: isWithoutCard ? 'true' : 'false', termsAccepted: false, teams_token: teams_token, spi: spi });
+  const [formValues, setFormValues] = useState({ full_name: '', email: user_teams_mail, password: '', is_without_card: !isWithoutCard, termsAccepted: false, teams_token: teams_token, spi: spi });
   const [formSubmitted, setFormSubmitted] = useState(false);
 
 
@@ -253,7 +253,8 @@ const Signup: React.FC = () => {
                 const response = await axiosInstance.post('/sign-up-google', {
                   token: credentialResponse.credential,
                   ...(spi && { spi }),
-                  ...(teams_token && { teams_token })
+                  ...(teams_token && { teams_token }),
+                  ...{is_without_card : !isWithoutCard}
                 });
 
                 const responseData = response.data;
