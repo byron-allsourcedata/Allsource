@@ -373,6 +373,13 @@ class UsersAuth:
                 'status': SignUpStatus.NEED_CONFIRM_EMAIL,
                 'token': token
             }
+        
+        if not is_without_card:
+            return {
+                'is_success': True,
+                'status': SignUpStatus.FILL_COMPANY_DETAILS,
+                'token': token
+            }
 
         logger.info("Token created")
         return {

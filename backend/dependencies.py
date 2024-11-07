@@ -189,6 +189,20 @@ def check_user_authorization_without_pixel(Authorization: Annotated[str, Header(
         )
     return user
 
+def check_user_setting_access(Authorization: Annotated[str, Header()],
+                                           user_persistence_service: UserPersistence = Depends(
+                                               get_user_persistence_service),
+                                           users_auth_service: UsersAuth = Depends(
+                                               get_users_auth_service)) -> Token:
+    user = check_user_authentication(Authorization, user_persistence_service)
+    auth_status = get_user_authorization_status(user, users_auth_service)
+    if auth_status != UserAuthorizationStatus.SUCCESS and auth_status != UserAuthorizationStatus.NEED_CHOOSE_PLAN and auth_status != UserAuthorizationStatus.PIXEL_INSTALLATION_NEEDED:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={'status': auth_status.value}
+        )
+    return user
+
 
 def check_user_authentication(Authorization: Annotated[str, Header()],
                               user_persistence_service: UserPersistence = Depends(
