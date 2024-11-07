@@ -29,8 +29,6 @@ APP_ID = MetaConfig.app_piblic
 
 class MetaIntegrationsService:
 
-   
-
     def __init__(self, domain_persistence: UserDomainsPersistence, integrations_persistence: IntegrationsPresistence, leads_persistence: LeadsPersistence,
                 sync_persistence: IntegrationsUserSyncPersistence, client: httpx.Client):
         self.domain_persistence = domain_persistence
@@ -46,7 +44,6 @@ class MetaIntegrationsService:
                 'accept': 'application/json', 
                 'content-type': 'application/json'
             }
-
         response = self.client.request(method, url, headers=headers, json=json, data=data, params=params)
 
         if response.is_redirect:
@@ -220,6 +217,7 @@ class MetaIntegrationsService:
             connection=connection,
             queue_name=self.QUEUE_DATA_SYNC, 
             message_body=message)
+        rabbitmq_connection.close()
         
     def process_data_sync(self, message):
         counter = 0
@@ -229,8 +227,8 @@ class MetaIntegrationsService:
             sync = IntegrationUserSync(**message.get('sync'))
             if sync:
                 serarch_sync = self.sync_persistence.get_integration_by_sync_id(sync_id=sync.id)
-                if serarch_sync and serarch_sync.service_name != 'Klaviyo':
-                    logging.info(f'Sync {sync.id} Klaviyo not matched')
+                if not serarch_sync or serarch_sync.service_name != 'Meta':
+                    logging.info(f'Sync {sync.id} Meta not matched')
                     return
         leads_type = message.get('leads_type')
         domain_id = message.get('domain_id')
@@ -263,7 +261,7 @@ class MetaIntegrationsService:
                 if last_lead_sync_id:
                     last_leads_sync = self.leads_persistence.get_lead_user_by_up_id(domain_id=domain.id, up_id=last_lead_sync_id)
                 for lead in leads:
-                    if last_leads_sync and lead.five_x_five_user_id < last_leads_sync.five_x_five_user_id:
+                    if not sync and last_leads_sync and lead.five_x_five_user_id < last_leads_sync.five_x_five_user_id:
                         continue
                     if lead and lead.behavior_type != data_sync_item.leads_type and data_sync_item.leads_type not in ('allContacts', None):
                         logging.warning("Lead behavior type mismatch: %s vs %s", lead.behavior_type, data_sync_item.leads_type)

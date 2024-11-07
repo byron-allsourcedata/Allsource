@@ -243,14 +243,23 @@ class KlaviyoIntegrationsService:
         await publish_rabbitmq_message(
             connection=connection,
             queue_name=self.QUEUE_DATA_SYNC, 
-            message_body=message)        
+            message_body=message)      
+        await rabbitmq_connection.close()  
 
-    async def process_lead_sync(self, rabbitmq_connection, user_domain_id, behavior_type, lead_user, stage, next_try):
+    async def process_lead_sync(self, user_domain_id, behavior_type, lead_user, stage, next_try):
+        rabbitmq_connection = RabbitMQConnection()
+        connection = await rabbitmq_connection.connect()
+        channel = await connection.channel()
+        await channel.declare_queue(
+            name=self.QUEUE_DATA_SYNC,
+            durable=True
+        )
         await publish_rabbitmq_message(rabbitmq_connection, self.QUEUE_DATA_SYNC,
                                     {'domain_id': user_domain_id, 'leads_type': behavior_type, 'lead': {
                                         'id': lead_user.id,
                                         'five_x_five_user_id': lead_user.five_x_five_user_id
                                     }, 'stage': stage, 'next_try': next_try})
+        rabbitmq_connection.close()
 
 
     async def process_data_sync(self, message):
@@ -261,7 +270,7 @@ class KlaviyoIntegrationsService:
             sync = IntegrationUserSync(**message.get('sync'))
             if sync:
                 serarch_sync = self.sync_persistence.get_integration_by_sync_id(sync_id=sync.id)
-                if serarch_sync and serarch_sync.service_name != 'Klaviyo':
+                if not serarch_sync or serarch_sync.service_name != 'Klaviyo':
                     logging.info(f'Sync {sync.id} Klaviyo not matched')
                     return
         leads_type = message.get('leads_type')
@@ -276,105 +285,96 @@ class KlaviyoIntegrationsService:
         stage = message.get('stage') if message.get('stage') else 1
         next_try = message.get('next_try') if message.get('next_try') else None
 
-        rabbitmq_connection = RabbitMQConnection()
-        connection = await rabbitmq_connection.connect()
-        async with connection:
-            channel = await connection.channel()
-            await channel.declare_queue(
-                name=self.QUEUE_DATA_SYNC,
-                durable=True
+        
+        logging.info("RabbitMQ queue declared.")
+
+        domains = self.domain_persistence.get_domain_by_filter(**{'id': domain_id} if domain_id else {})
+        logging.info(f"Retrieved domains: {[domain.id for domain in domains]}",)
+
+        for domain in domains:
+            logging.info('start')
+            credentials = self.get_credentials(domain.id)
+            if not credentials:
+                logging.warning("No credentials found for domain id %s.", domain.id)
+                return
+            
+            data_syncs_list = self.sync_persistence.get_data_sync_filter_by(
+                domain_id=domain.id,
+                integration_id=credentials.id,
+                is_active=True
             )
-            logging.info("RabbitMQ queue declared.")
 
-            domains = self.domain_persistence.get_domain_by_filter(**{'id': domain_id} if domain_id else {})
-            logging.info(f"Retrieved domains: {[domain.id for domain in domains]}",)
+            leads = [lead] if lead else (
+                self.leads_persistence.get_leads_domain(domain.id, behavior_type=leads_type)
+                if leads_type and leads_type != 'allContacts' else
+                self.leads_persistence.get_leads_domain(domain.id)
+            )
 
-            for domain in domains:
-                logging.info('start')
-                credentials = self.get_credentials(domain.id)
-                if not credentials:
-                    logging.warning("No credentials found for domain id %s.", domain.id)
-                    return
-                
-                data_syncs_list = self.sync_persistence.get_data_sync_filter_by(
-                    domain_id=domain.id,
-                    integration_id=credentials.id,
-                    is_active=True
-                )
-
-                leads = [lead] if lead else (
-                    self.leads_persistence.get_leads_domain(domain.id, behavior_type=leads_type)
-                    if leads_type and leads_type != 'allContacts' else
-                    self.leads_persistence.get_leads_domain(domain.id)
-                )
-
-                for data_sync_item in data_syncs_list if not sync else [sync]:
-                    if lead and lead.behavior_type != data_sync_item.leads_type and data_sync_item.leads_type not in ('allContacts', None):
-                        logging.warning("Lead behavior type mismatch: %s vs %s", lead.behavior_type, data_sync_item.leads_type)
+            for data_sync_item in data_syncs_list if not sync else [sync]:
+                if lead and lead.behavior_type != data_sync_item.leads_type and data_sync_item.leads_type not in ('allContacts', None):
+                    logging.warning("Lead behavior type mismatch: %s vs %s", lead.behavior_type, data_sync_item.leads_type)
+                    continue
+                data_map = data_sync_item.data_map if data_sync_item.data_map else None
+                last_lead_sync_id = data_sync_item.last_lead_sync_id
+                if last_lead_sync_id:
+                    last_leads_sync = self.leads_persistence.get_lead_user_by_up_id(domain_id=domain.id, up_id=last_lead_sync_id)
+                for lead in leads:
+                    if not sync and last_leads_sync and lead.five_x_five_user_id < last_leads_sync.five_x_five_user_id:
+                        logging.info(f'lead {lead.five_x_five_user_id} already sync')
                         continue
-                    data_map = data_sync_item.data_map if data_sync_item.data_map else None
-                    last_lead_sync_id = data_sync_item.last_lead_sync_id
-                    if last_lead_sync_id:
-                        last_leads_sync = self.leads_persistence.get_lead_user_by_up_id(domain_id=domain.id, up_id=last_lead_sync_id)
-                    for lead in leads:
-                        if not sync and last_leads_sync and lead.five_x_five_user_id < last_leads_sync.five_x_five_user_id:
-                            logging.info(f'lead {lead.five_x_five_user_id} already sync')
-                            continue
-                        if stage > 3:
-                            logging.info("Stage limit reached. Exiting.")
-                            return
-                        
-                        if next_try and datetime.now() < datetime.fromisoformat(next_try):
-                            await asyncio.sleep(1)
-                            logging.info("Processing lead sync with next try: %s", next_try)
-                            await self.process_lead_sync(
-                                lead_user=lead,
-                                rabbitmq_connection=connection, 
-                                user_domain_id=domain.id, 
-                                behavior_type=lead.behavior_type, 
-                                stage=stage, 
-                                next_try=next_try  
-                            )
-                            continue
-                        
-                        profile = self.__create_profile(lead.five_x_five_user_id, credentials.access_token, data_map)
+                    if stage > 3:
+                        logging.info("Stage limit reached. Exiting.")
+                        return
+                    
+                    if next_try and datetime.now() < datetime.fromisoformat(next_try):
+                        await asyncio.sleep(1)
+                        logging.info("Processing lead sync with next try: %s", next_try)
+                        await self.process_lead_sync(
+                            lead_user=lead,
+                            user_domain_id=domain.id, 
+                            behavior_type=lead.behavior_type, 
+                            stage=stage, 
+                            next_try=next_try  
+                        )
+                        continue
+                    
+                    profile = self.__create_profile(lead.five_x_five_user_id, credentials.access_token, data_map)
 
-                        if not profile:
-                            self.sync_persistence.db.query(IntegrationUserSync).filter(IntegrationUserSync.id == data_sync_item.id).update({
-                            'sync_status': False
-                            })
-                            self.sync_persistence.db.commit()
-                            logging.error("Profile creation failed for lead: %s", lead.five_x_five_user_id)
-                            if stage != 3:
-                                next_try_str = (datetime.now() + timedelta(hours=3)).isoformat()
-                                await self.process_lead_sync(
-                                    lead_user=lead,
-                                    rabbitmq_connection=connection, 
-                                    user_domain_id=domain.id, 
-                                    behavior_type=lead.behavior_type, 
-                                    stage=stage + 1, 
-                                    next_try=next_try_str
-                                )
-                            continue
-                        list_response = self.__add_profile_to_list(data_sync_item.list_id, profile.get('id'), credentials.access_token)
-                        if list_response.status_code == 404:
-                            data_sync_item.sync_status = False
-                            self.integrations_persisntece.db.commit()
-                            continue
-                        data_sync_item.sync_status = True
-                        self.integrations_persisntece.db.commit()
-                        logging.info("Profile added successfully for lead: %s", lead.five_x_five_user_id)
+                    if not profile:
                         self.sync_persistence.db.query(IntegrationUserSync).filter(IntegrationUserSync.id == data_sync_item.id).update({
-                            'sync_status': True
+                        'sync_status': False
                         })
                         self.sync_persistence.db.commit()
-                        counter += 1
-                        last_leads_sync = lead
-                    self.sync_persistence.update_sync({
-                        'last_sync_date': datetime.now(),
-                        'last_lead_sync_id': self.leads_persistence.get_lead_data(last_leads_sync.five_x_five_user_id).up_id if counter > 0 else last_lead_sync_id
-                    },counter=counter, id=data_sync_item.id)
-                    logging.info("Sync updated for item id: %s", data_sync_item.id)
+                        logging.error("Profile creation failed for lead: %s", lead.five_x_five_user_id)
+                        if stage != 3:
+                            next_try_str = (datetime.now() + timedelta(hours=3)).isoformat()
+                            await self.process_lead_sync(
+                                lead_user=lead,
+                                user_domain_id=domain.id, 
+                                behavior_type=lead.behavior_type, 
+                                stage=stage + 1, 
+                                next_try=next_try_str
+                            )
+                        continue
+                    list_response = self.__add_profile_to_list(data_sync_item.list_id, profile.get('id'), credentials.access_token)
+                    if list_response.status_code == 404:
+                        data_sync_item.sync_status = False
+                        self.integrations_persisntece.db.commit()
+                        continue
+                    data_sync_item.sync_status = True
+                    self.integrations_persisntece.db.commit()
+                    logging.info("Profile added successfully for lead: %s", lead.five_x_five_user_id)
+                    self.sync_persistence.db.query(IntegrationUserSync).filter(IntegrationUserSync.id == data_sync_item.id).update({
+                        'sync_status': True
+                    })
+                    self.sync_persistence.db.commit()
+                    counter += 1
+                    last_leads_sync = lead
+                self.sync_persistence.update_sync({
+                    'last_sync_date': datetime.now(),
+                    'last_lead_sync_id': self.leads_persistence.get_lead_data(last_leads_sync.five_x_five_user_id).up_id if counter > 0 else last_lead_sync_id
+                },counter=counter, id=data_sync_item.id)
+                logging.info("Sync updated for item id: %s", data_sync_item.id)
 
 
     def validate_and_format_phone(self, phone_number: str) -> str:

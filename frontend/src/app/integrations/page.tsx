@@ -740,6 +740,8 @@ const IntegrationsAvailable = ({ integrationsCredentials, integrations, handleSa
         case 'Sendlane':
             setOpenSendlaneConnect(true);
             break;
+        case 'Meta':
+            setOpenMetaConnect(true)
         default:
             break;
       }} 

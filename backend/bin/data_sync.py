@@ -5,6 +5,8 @@ import logging
 import os
 import sys
 import traceback
+
+import httpx
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
@@ -39,12 +41,11 @@ async def on_message_received(message: IncomingMessage, integration_service):
 
 
 async def process_data_sync(message_body, integration_service: IntegrationService):
-    with integration_service as service:
-        await service.klaviyo.process_data_sync(message_body)
-        service.meta.process_data_sync(message_body)
-        await service.omnisend.process_data_sync(message_body)
-        await service.mailchimp.process_data_sync(message_body)
-        await service.sendlane.process_data_sync(message_body)
+    await integration_service.klaviyo.process_data_sync(message_body)
+    integration_service.meta.process_data_sync(message_body)
+    await integration_service.omnisend.process_data_sync(message_body)
+    await integration_service.mailchimp.process_data_sync(message_body)
+    await integration_service.sendlane.process_data_sync(message_body)
 
 async def main():
     logging.info("Started")
@@ -75,10 +76,11 @@ async def main():
                 domain_persistence=UserDomainsPersistence(db_session),
                 suppression_persistence=SuppressionPersistence(db_session)
             )
-        await queue.consume(
-            functools.partial(on_message_received, integration_service=integration_service)
-        )
-        await asyncio.Future()
+        with integration_service as service:
+            await queue.consume(
+                functools.partial(on_message_received, integration_service=service)
+            )
+            await asyncio.Future()
     except Exception as err:
         logging.error('Unhandled Exception:', exc_info=True)
     finally:
