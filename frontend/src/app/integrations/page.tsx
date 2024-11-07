@@ -1454,7 +1454,11 @@ const Integrations = () => {
                     paddingRight: '24px',
                     mx: '-24px',
                     "@media (max-width: 900px)": { 
-                      left: '20px'
+                      left: 'unset',
+                      p: 0,
+                      position: 'unset',
+                      top: 'unset',
+                      margin: 'unset'
                     },
                     gap: 1,
                     "@media (max-width: 600px)": { mb: 2 },

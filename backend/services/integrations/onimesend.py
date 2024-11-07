@@ -197,7 +197,7 @@ class OmnisendIntegrationService:
                         )
                         continue
                     
-                    profile = self.__create_profile(lead.five_x_five_user_id, credentials, data_sync_item.list_id, data_map)
+                    profile = self.__create_profile(lead.five_x_five_user_id, credentials, data_map)
                     if not profile:
                         data_sync_item.sync_status = False
                         self.sync_persistence.db.commit()
