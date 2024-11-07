@@ -167,12 +167,20 @@ class SendlaneIntegrationService:
             queue_name=self.QUEUE_DATA_SYNC, 
             message_body=message)
 
-    async def process_lead_sync(self, rabbitmq_connection, user_domain_id, behavior_type, lead_user, stage, next_try):
-        await publish_rabbitmq_message(rabbitmq_connection, self.QUEUE_DATA_SYNC,
+    async def process_lead_sync(self, user_domain_id, behavior_type, lead_user, stage, next_try):
+        rabbitmq_connection = RabbitMQConnection()
+        connection = await rabbitmq_connection.connect()
+        channel = await connection.channel()
+        await channel.declare_queue(
+            name=self.QUEUE_DATA_SYNC,
+            durable=True
+        )
+        await publish_rabbitmq_message(connection, self.QUEUE_DATA_SYNC,
                                     {'domain_id': user_domain_id, 'leads_type': behavior_type, 'lead': {
                                         'id': lead_user.id,
                                         'five_x_five_user_id': lead_user.five_x_five_user_id
                                     }, 'stage': stage, 'next_try': next_try})
+        await rabbitmq_connection.close()
 
     async def process_data_sync(self, message):
         counter = 0

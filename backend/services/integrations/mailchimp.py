@@ -135,7 +135,7 @@ class MailchimpIntegrationsService:
             name=self.QUEUE_DATA_SYNC,
             durable=True
         )
-        await publish_rabbitmq_message(rabbitmq_connection, self.QUEUE_DATA_SYNC,
+        await publish_rabbitmq_message(connection, self.QUEUE_DATA_SYNC,
                                     {'domain_id': user_domain_id, 'leads_type': behavior_type, 'lead': {
                                         'id': lead_user.id,
                                         'five_x_five_user_id': lead_user.five_x_five_user_id
