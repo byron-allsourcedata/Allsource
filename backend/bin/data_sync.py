@@ -31,7 +31,6 @@ async def on_message_received(message: IncomingMessage, integration_service):
         await process_data_sync(message_body, integration_service)
         await message.ack()
         logging.info(f"Processed message: {message_body}")
-        await message.ack()
     except Exception as e:
         logging.error("excepted message. error", exc_info=True)
         await asyncio.sleep(5)
