@@ -229,15 +229,13 @@ class SubscriptionService:
         plan = self.plans_persistence.get_free_trail_plan()
         status = 'active'
         created_at = datetime.strptime(get_utc_aware_date_for_postgres(), '%Y-%m-%dT%H:%M:%SZ')
-        domains_limit, integrations_limit, leads_credits, prospect_credits, members_limit, lead_credit_price = self.plans_persistence.get_plan_limit_by_id(
-            plan_id=plan.id)
         add_subscription_obj = Subscription(
-            domains_limit=domains_limit,
-            integrations_limit=integrations_limit,
+            domains_limit=plan.domains_limit,
+            integrations_limit=plan.integrations_limit,
             user_id=user_id,
             updated_at=created_at.isoformat() + "Z",
             created_at=created_at.isoformat() + "Z",
-            members_limit=members_limit,
+            members_limit=plan.members_limit,
             status=status,
             plan_id=plan.id,
             is_trial=True
@@ -245,8 +243,8 @@ class SubscriptionService:
         self.db.add(add_subscription_obj)
         self.db.flush()
         self.db.query(User).filter(User.id == user_id).update({User.activate_steps_percent: 50,
-                                                               User.leads_credits: leads_credits,
-                                                               User.prospect_credits: prospect_credits,
+                                                               User.leads_credits: plan.leads_credits,
+                                                               User.prospect_credits: plan.prospect_credits,
                                                                User.current_subscription_id: add_subscription_obj.id
                                                                },
                                                               synchronize_session=False)
@@ -327,9 +325,13 @@ class SubscriptionService:
                 UserSubscriptions.platform_subscription_id == platform_subscription_id,
                 UserSubscriptions.price_id == price_id).first()
             price_id = stripe_payload['items']['data'][0]['plan']['id']
-            plan_id = self.plans_persistence.get_plan_by_price_id(price_id)
-            domains_limit, integrations_limit, leads_credits, prospect_credits, members_limit, lead_credit_price = self.plans_persistence.get_plan_limit_by_id(
-                plan_id=plan_id)
+            plan = self.plans_persistence.get_plan_by_price_id(price_id)
+            domains_limit = plan.domains_limit
+            integrations_limit = plan.integrations_limit
+            leads_credits = plan.leads_credits
+            prospect_credits = plan.prospect_credits
+            members_limit = plan.members_limit
+            lead_credit_price = plan.lead_credit_price
             result['lead_credit_price'] = lead_credit_price
             if user_subscription is not None and user_subscription.status == 'active':
                 if canceled_at:
@@ -353,7 +355,7 @@ class SubscriptionService:
                     plan_end=end_date,
                     domains_limit=domains_limit,
                     integrations_limit=integrations_limit,
-                    plan_id=plan_id,
+                    plan_id=plan.id,
                     members_limit=members_limit,
                     status=status,
                     created_at=datetime.now(timezone.utc).replace(tzinfo=None),

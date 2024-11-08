@@ -26,12 +26,6 @@ class PlansPersistence:
             return subscription.is_trial
         return None
 
-    def get_plan_by_price_id(self, price_id):
-        plan = self.db.query(SubscriptionPlan).filter(SubscriptionPlan.stripe_price_id == price_id).first()
-        if plan:
-            return plan.id
-        else:
-            return None
     def get_plan_by_title(self, title: str, interval: str):
         plan = self.db.query(SubscriptionPlan).filter(SubscriptionPlan.title == title,
                                                       SubscriptionPlan.interval == interval).first()
@@ -40,8 +34,8 @@ class PlansPersistence:
         else:
             return None
 
-    def get_plan_limit_by_id(self, plan_id: int):
-        plan = self.db.query(SubscriptionPlan).filter(SubscriptionPlan.id == plan_id).first()
+    def get_plan_limit_by_id(self, price_id: int):
+        plan = self.db.query(SubscriptionPlan).filter(SubscriptionPlan.stripe_price_id == price_id).first()
         domains_limit = plan.domains_limit
         integrations_limit = plan.integrations_limit
         leads_credits = plan.leads_credits
