@@ -20,7 +20,7 @@ class UserDomainsService:
     def create(self, user, domain: str):
         plan_info = self.subscription_service.get_user_subscription((user.get('id')))
         if self.domain_persistence.count_domain(
-                user.get('id')) >= plan_info.domains_limit or plan_info == self.UNLIMITED:
+                user.get('id')) >= plan_info.domains_limit or plan_info.domains_limit == self.UNLIMITED:
             raise HTTPException(status_code=403, detail={'status': SubscriptionStatus.NEED_UPGRADE_PLAN.value})
         new_domain = self.domain_persistence.create_domain(user.get('id'), {'domain': normalize_url(domain)})
         return self.domain_mapped(new_domain)
