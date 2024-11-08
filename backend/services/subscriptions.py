@@ -326,9 +326,7 @@ class SubscriptionService:
             user_subscription = self.db.query(UserSubscriptions).where(
                 UserSubscriptions.platform_subscription_id == platform_subscription_id,
                 UserSubscriptions.price_id == price_id).first()
-            plan_type = determine_plan_name_from_product_id(stripe_payload.get("plan").get("product"))
-            interval = stripe_payload.get("plan").get("interval")
-            plan_id = self.plans_persistence.get_plan_by_title(plan_type, interval)
+            plan_id = stripe_payload['items']['data'][0]['plan']['id']
             domains_limit, integrations_limit, leads_credits, prospect_credits, members_limit, lead_credit_price = self.plans_persistence.get_plan_limit_by_id(
                 plan_id=plan_id)
             result['lead_credit_price'] = lead_credit_price
