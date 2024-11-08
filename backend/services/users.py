@@ -49,7 +49,7 @@ class UsersService:
             "is_trial_pending": True
         }
 
-    def get_my_info(self):
+    def get_my_info(self, domain):
         if self.user.get('team_member'):
             team_member = self.user.get('team_member')
             return {
@@ -60,7 +60,7 @@ class UsersService:
         return {
             "email": self.user.get('email'),
             "full_name": self.user.get('full_name'),
-            "activate_percent": self.user.get('activate_steps_percent'),
+            "activate_percent": 75 if domain and domain.is_pixel_installed else self.user.get('activate_steps_percent') ,
         }
 
     def get_calendly_info(self):

@@ -133,6 +133,11 @@ interface ProgressSectionProps {
 }
 
 const SetupSection: React.FC<ProgressSectionProps> = ({ meData }) => {
+
+    if(meData.percent_steps > 50){
+        return null
+    }
+
     return (
         <Box sx={sidebarStyles.setupSection}>
             <Box display="flex" alignItems="center" mb={2}>
@@ -181,13 +186,20 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading, hasNotification }) => {
     const [meData, setMeData] = useState({ percent_steps: 0 });
     useEffect(() => {
-        if (typeof window !== "undefined") {
-            const meItem = sessionStorage.getItem("me");
-            if (meItem) {
-                setMeData(JSON.parse(meItem));
-            }
-        }
-    }, []);
+        const loadMeData = () => {
+          const meItem = sessionStorage.getItem("me");
+          if (meItem) {
+            setMeData(JSON.parse(meItem));
+          }
+        };
+        loadMeData();
+        const intervalId = setInterval(() => {
+          loadMeData();  
+        }, 1000); 
+        return () => {
+          clearInterval(intervalId);
+        };
+      }, []); 
     const router = useRouter();
     const pathname = usePathname();
     const [showBookSlider, setShowBookSlider] = useState(false);
