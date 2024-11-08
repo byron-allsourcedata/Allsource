@@ -1,10 +1,11 @@
 import axiosInterceptorInstance from '../axios/axiosInterceptorInstance';
-
+import axiosInstance from '../axios/axiosInterceptorInstance'
 export const fetchUserData = async () => {
   try {
     const accessToken = localStorage.getItem("token");
-    if (accessToken) {
-      const response = await axiosInterceptorInstance.get('/me');
+    const currentDomain = sessionStorage.getItem('current_domain');
+    if (accessToken && currentDomain) {
+      const response = await axiosInterceptorInstance.get('/me', {headers: {CurrentDomain: currentDomain}});
       const responseData = response.data;
 
 

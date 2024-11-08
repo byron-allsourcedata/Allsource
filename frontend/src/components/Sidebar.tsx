@@ -287,7 +287,7 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading, hasNotific
                 right: '0',
                 width: '100%'
             }}>
-                <SetupSection meData={meData ? meData : { percent_steps: 0 }} />
+                {meData && meData.percent_steps < 75 && (<SetupSection meData={meData ? meData : { percent_steps: 0 }} />) }
                 <Box sx={sidebarStyles.settings}>
                     <ListItem button onClick={() => handleNavigation('settings?section=accountDetails')} sx={isActive('/settings') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
                         <ListItemIcon sx={sidebarStyles.listItemIcon}>

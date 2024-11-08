@@ -9,11 +9,14 @@ import { useRouter } from 'next/navigation';
 
 const TrialStatus: React.FC = () => {
   const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [currentDomain, setCurrentDomain] = useState<string | null>(null);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const token = localStorage.getItem("token");
+      const currentDomain = sessionStorage.getItem('current_domain');
       setAccessToken(token);
+      setCurrentDomain(currentDomain)
     }
   }, []);
 
@@ -22,6 +25,7 @@ const TrialStatus: React.FC = () => {
       url: `${process.env.NEXT_PUBLIC_API_BASE_URL}me`,
       headers: {
         Authorization: `Bearer ${accessToken}`,
+        CurrentDomain: currentDomain
       },
       method: 'GET',
     },

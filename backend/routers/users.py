@@ -5,7 +5,7 @@ from fastapi.params import Header
 from typing_extensions import Annotated
 
 from dependencies import get_users_auth_service, get_users_email_verification_service, get_users_service, \
-    check_user_authorization, check_pixel_install_domain, check_user_authentication, get_notification_service
+    check_user_authorization, check_pixel_install_domain, check_user_authentication, get_notification_service, check_domain
 from models.users_domains import UserDomains
 from schemas.auth_google_token import AuthGoogleData
 from schemas.users import UserSignUpForm, UserSignUpFormResponse, UserLoginFormResponse, UserLoginForm, UpdatePassword, \
@@ -20,10 +20,10 @@ router = APIRouter()
 
 
 @router.get("/me")
-def get_me(user_service: UsersService = Depends(get_users_service)):
+def get_me(user_service: UsersService = Depends(get_users_service), domain = Depends(check_domain)):
     plan = user_service.get_info_plan()
     return {
-        "user_info": user_service.get_my_info(),
+        "user_info": user_service.get_my_info(domain),
         "user_plan": plan
     }
 

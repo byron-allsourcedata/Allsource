@@ -39,6 +39,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   useEffect(() => {
     const token = localStorage.getItem('token');
     const storedMe = sessionStorage.getItem('me');
+    const currentDomain = sessionStorage.getItem('current_domain');
     
     if (storedMe) {
       const storedData = JSON.parse(storedMe);
@@ -75,7 +76,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       }
 
       setHasFetched(true);
-    } else if (token && !hasFetched) {
+    } else if (token && currentDomain && !hasFetched) {
       fetchUserData().then(userData => {
         if (userData) {
           setEmail(userData.email);
