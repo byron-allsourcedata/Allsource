@@ -26,6 +26,12 @@ class PlansPersistence:
             return subscription.is_trial
         return None
 
+    def get_plan_by_price_id(self, price_id):
+        plan = self.db.query(SubscriptionPlan).filter(SubscriptionPlan.stripe_price_id == price_id).first()
+        if plan:
+            return plan.id
+        else:
+            return None
     def get_plan_by_title(self, title: str, interval: str):
         plan = self.db.query(SubscriptionPlan).filter(SubscriptionPlan.title == title,
                                                       SubscriptionPlan.interval == interval).first()
