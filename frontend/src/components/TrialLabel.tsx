@@ -100,12 +100,6 @@ const TrialStatus: React.FC = () => {
       setTextColor('rgba(95, 99, 104, 1)');
       setIconColor('rgba(95, 99, 104, 1)');
     }
-    else if (trial_status) {
-      setStatusText('Trial Activated');
-      setBackgroundColor('rgba(253, 242, 202, 1)');
-      setTextColor('rgba(148, 120, 21, 1)');
-      setIconColor('rgba(148, 120, 21, 1)');
-    }
     else if (is_artificial_status) {
       if (plan_days !== undefined && plan_days <= 5 && plan_days >= 0) {
         setStatusText(`${plan_days} days Free Trial left`);
@@ -128,7 +122,14 @@ const TrialStatus: React.FC = () => {
         setTextColor('rgba(148, 120, 21, 1)');
         setIconColor('rgba(148, 120, 21, 1)');
       }
-    } else {
+    } 
+    else if (trial_status) {
+      setStatusText('Trial Activated');
+      setBackgroundColor('rgba(253, 242, 202, 1)');
+      setTextColor('rgba(148, 120, 21, 1)');
+      setIconColor('rgba(148, 120, 21, 1)');
+    }
+    else {
       if (plan_days < 0 && check_active !== null) {
         setStatusText('Subscription Expired');
         setBackgroundColor('rgba(246, 202, 204, 1)');
@@ -136,6 +137,7 @@ const TrialStatus: React.FC = () => {
         setIconColor('rgba(103, 12, 14, 1)');
       }
     }
+    
   };
 
   const handleOpenSlider = () => {
