@@ -70,7 +70,7 @@ const TabPanel: React.FC<TabPanelProps> = ({ children, value, index, ...other })
 const VerifyPixelIntegration: React.FC = () => {
 
   const [inputValue, setInputValue] = useState<string>("");
-  const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL
+  const apiUrl = process.env.NEXT_PUBLIC_API_DOMAIN
   useEffect(() => {
     const storedValue = sessionStorage.getItem('current_domain');
     if (storedValue !== null) {
@@ -81,7 +81,7 @@ const VerifyPixelIntegration: React.FC = () => {
 
   const handleButtonClick = () => {
     let url = inputValue.trim();
-    
+
     if (url) {
       if (!/^https?:\/\//i.test(url)) {
         url = "http://" + url;
