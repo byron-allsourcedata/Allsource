@@ -133,6 +133,11 @@ interface ProgressSectionProps {
 }
 
 const SetupSection: React.FC<ProgressSectionProps> = ({ meData }) => {
+
+    if(meData.percent_steps > 50){
+        return null
+    }
+
     return (
         <Box sx={sidebarStyles.setupSection}>
             <Box display="flex" alignItems="center" mb={2}>
