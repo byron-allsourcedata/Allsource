@@ -432,7 +432,7 @@ const AccountSetup = () => {
             sx={{
               position: "absolute",
               left: -120,
-              top: 5,
+              top: 7,
               marginRight: 2,
               visibility: activeTab === 1 ? 'visible' : 'hidden',
               color: "#202124 !important",
