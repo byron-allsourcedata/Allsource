@@ -70,7 +70,7 @@ const TabPanel: React.FC<TabPanelProps> = ({ children, value, index, ...other })
 const VerifyPixelIntegration: React.FC = () => {
 
   const [inputValue, setInputValue] = useState<string>("");
-
+  const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL
   useEffect(() => {
     const storedValue = sessionStorage.getItem('current_domain');
     if (storedValue !== null) {
@@ -81,7 +81,7 @@ const VerifyPixelIntegration: React.FC = () => {
 
   const handleButtonClick = () => {
     let url = inputValue.trim();
-
+    
     if (url) {
       if (!/^https?:\/\//i.test(url)) {
         url = "http://" + url;
@@ -101,7 +101,7 @@ const VerifyPixelIntegration: React.FC = () => {
         });
 
       const hasQuery = url.includes("?");
-      const newUrl = url + (hasQuery ? "&" : "?") + "vge=true" + "&api=https://api-dev.maximiz.ai";
+      const newUrl = url + (hasQuery ? "&" : "?") + "vge=true" + `&api=${apiUrl}`;
       window.open(newUrl, "_blank");
     }
   };
