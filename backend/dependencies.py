@@ -1,5 +1,6 @@
 import logging
 from datetime import datetime
+from typing import Optional
 
 from fastapi import Depends, Header, HTTPException, status
 from jose import jwt, JWTError
@@ -236,11 +237,13 @@ def get_notification_persistence(db: Session = Depends(get_db)):
 
 
 def check_domain(
-        CurrentDomain: Annotated[str, Header()],
+        CurrentDomain: Optional[str] = Header(None),
         user=Depends(check_user_authentication),
         domain_persistence: UserDomainsPersistence = Depends(get_user_domain_persistence)
 ) -> UserDomains:
     current_domain = domain_persistence.get_domain_by_user(user.get('id'), domain_substr=CurrentDomain)
+    if not CurrentDomain:
+        return None
     if not current_domain or len(current_domain) == 0:
         raise HTTPException(status_code=404, detail={'status': "DOMAIN_NOT_FOUND"})
     return current_domain[0]

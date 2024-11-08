@@ -60,7 +60,7 @@ class UsersService:
         return {
             "email": self.user.get('email'),
             "full_name": self.user.get('full_name'),
-            "activate_percent": '75%' if domain.is_pixel_installed else self.user.get('activate_steps_percent') ,
+            "activate_percent": 75 if domain and domain.is_pixel_installed else self.user.get('activate_steps_percent') ,
         }
 
     def get_calendly_info(self):

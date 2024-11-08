@@ -186,13 +186,20 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading, hasNotification }) => {
     const [meData, setMeData] = useState({ percent_steps: 0 });
     useEffect(() => {
-        if (typeof window !== "undefined") {
-            const meItem = sessionStorage.getItem("me");
-            if (meItem) {
-                setMeData(JSON.parse(meItem));
-            }
-        }
-    }, []);
+        const loadMeData = () => {
+          const meItem = sessionStorage.getItem("me");
+          if (meItem) {
+            setMeData(JSON.parse(meItem));
+          }
+        };
+        loadMeData();
+        const intervalId = setInterval(() => {
+          loadMeData();  
+        }, 1000); 
+        return () => {
+          clearInterval(intervalId);
+        };
+      }, []); 
     const router = useRouter();
     const pathname = usePathname();
     const [showBookSlider, setShowBookSlider] = useState(false);
@@ -292,7 +299,7 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading, hasNotific
                 right: '0',
                 width: '100%'
             }}>
-                {meData && meData.percent_steps < 75 && (<SetupSection meData={meData ? meData : { percent_steps: 0 }} />) }
+                <SetupSection meData={meData ? meData : { percent_steps: 0 }} />
                 <Box sx={sidebarStyles.settings}>
                     <ListItem button onClick={() => handleNavigation('settings?section=accountDetails')} sx={isActive('/settings') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
                         <ListItemIcon sx={sidebarStyles.listItemIcon}>

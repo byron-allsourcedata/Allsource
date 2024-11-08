@@ -237,6 +237,7 @@ const DomainButton: React.FC = () => {
   const handleSetDomain = (domain: string) => {
     sessionStorage.setItem('current_domain', domain);
     setCurrentDomain(domain.replace('https://', ''));
+    sessionStorage.removeItem('me')
     window.location.reload();
   };
 
