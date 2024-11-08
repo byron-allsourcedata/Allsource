@@ -293,9 +293,10 @@ const AccountSetup = () => {
 
   const ranges = [
     { min: 1, max: 10, label: "1-10" },
-    { min: 11, max: 50, label: "51-100" },
-    { min: 51, max: 100, label: "101-250" },
-    { min: 101, max: 500, label: "250-500" },
+    { min: 11, max: 50, label: "11-50" },
+    { min: 51, max: 100, label: "51-100" },
+    { min: 101, max: 250, label: "101-250"},
+    { min: 251, max: 500, label: "251-500" },
     { min: 501, max: Infinity, label: ">1k" },
   ];
   const roles = [
