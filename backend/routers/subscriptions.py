@@ -33,7 +33,7 @@ async def create_customer_session(price_id: str, payments_service: PaymentsServi
 async def update_payment_confirmation(request: fastRequest, webhook_service: WebhookService = Depends(get_webhook)):
     payload = await request.json()
     result_update_subscription = webhook_service.update_subscription_confirmation(payload=payload)
-    if result_update_subscription['status']:
+    if result_update_subscription.get('status'):
         user = result_update_subscription['user']
         rabbitmq_connection = RabbitMQConnection()
         connection = await rabbitmq_connection.connect()
