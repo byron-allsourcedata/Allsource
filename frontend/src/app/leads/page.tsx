@@ -958,7 +958,7 @@ const Leads: React.FC = () => {
                             <CustomToolTip title={'Contacts automatically sync across devices and platforms.'} linkText='Learn more' linkUrl='https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/contacts' />
                         </Box>
                         <Box sx={{
-                            display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '15px',
+                            display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '15px', pt:'4px',
                             '@media (max-width: 900px)': {
                                 gap: '8px'
                             }

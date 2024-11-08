@@ -11,7 +11,6 @@ export const signupStyles: { [key: string]: SxProps<Theme> } = {
     justifyContent: 'center',
     minHeight: '100vh',
     marginTop: '-80px',
-
     '@media (max-width: 440px)': {
         marginTop: '-60px',
         padding: '0',

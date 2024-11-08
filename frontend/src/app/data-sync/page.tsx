@@ -426,7 +426,8 @@ const DataSync = () => {
             display: "flex",
             flexDirection: "row",
             alignItems: "center",
-            mb: 2,
+            justifyContent: 'end',
+            mt: 2.05,
             gap: "15px",
             "@media (max-width: 900px)": {
               gap: "8px", 
