@@ -147,13 +147,17 @@ const AddDomainPopup = ({ open, handleClose, handleSave }: AddDomainProps) => {
         sx={{
           marginBottom: '1.5em',
           maxHeight: '56px',
-          '& .MuiInputBase-root': {
-            maxHeight: '48px',
-          },
-          '&.Mui-focused': {
-            color: '#0000FF',
-          },
           '& .MuiOutlinedInput-root': {
+            maxHeight: '48px',
+            '& fieldset': {
+              borderColor: 'rgba(107, 107, 107, 1)',
+            },
+            '&:hover fieldset': {
+              borderColor: 'rgba(107, 107, 107, 1)',
+            },
+            '&.Mui-focused fieldset': {
+              borderColor: 'rgba(107, 107, 107, 1)',
+            },
             paddingTop: '13px',
             paddingBottom: '13px',
           },
@@ -161,7 +165,7 @@ const AddDomainPopup = ({ open, handleClose, handleSave }: AddDomainProps) => {
             top: '-5px',
           },
           '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-            borderColor: '#0000FF',
+            borderColor: 'rgba(107, 107, 107, 1)',
           },
         }}
         placeholder={isFocused ? "example.com" : ""}
@@ -182,7 +186,16 @@ const AddDomainPopup = ({ open, handleClose, handleSave }: AddDomainProps) => {
           ),
         }} />
       <Box sx={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }}>
-        <Button color='primary' variant='outlined' onClick={handleSubmit}>Save</Button>
+        <Button className='hyperlink-red' onClick={handleSubmit} sx={{
+          borderRadius: '4px',
+          border: '1px solid #5052b2',
+          boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
+          color: '#5052b2 !important',
+          textTransform: 'none',
+          padding: '6px 24px'
+        }}>
+          Save
+        </Button>
       </Box>
       <UpgradePlanPopup open={upgradePlanPopup} limitName={'domain'} handleClose={() => setUpgradePlanPopup(false)} />
       {showSlider && <Slider />}
@@ -300,7 +313,7 @@ const DomainButton: React.FC = () => {
         sx={{ '& .MuiMenu-list': { padding: '2px' } }}
       >
         <MenuItem onClick={() => setDomainPopup(true)}>
-        <Typography className='second-sub-title' sx={{color: '#5052B2 !important'}}> + Add Domain</Typography>
+          <Typography className='second-sub-title' sx={{ color: '#5052B2 !important' }}> + Add new domain</Typography>
         </MenuItem>
         <AddDomainPopup
           open={showDomainPopup}
@@ -314,15 +327,15 @@ const DomainButton: React.FC = () => {
           <MenuItem key={domain.id} onClick={() => {
             handleSetDomain(domain.domain);
           }}
-          sx={{
-            '&:hover .delete-icon': {
-              opacity: 1,
-            },
-            '& .delete-icon': {
-              opacity: 0, 
-              transition: 'opacity 0.3s ease',
-            },
-          }}>
+            sx={{
+              '&:hover .delete-icon': {
+                opacity: 1,
+              },
+              '& .delete-icon': {
+                opacity: 0,
+                transition: 'opacity 0.3s ease',
+              },
+            }}>
             <Box sx={{
               display: 'flex',
               justifyContent: 'space-between',

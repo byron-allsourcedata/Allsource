@@ -34,13 +34,10 @@ interface HoverImageProps {
   onClick: () => void
 }
 
-const HoverableImage = ({ srcDefault, srcHover, alt, onClick }: HoverImageProps) => {
-  const [isHovered, setIsHovered] = useState(false);
+const HoverableImage = ({ srcDefault, alt, onClick }: HoverImageProps) => {
 
   return (
     <Button
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
       onClick={(e) => {
         e.stopPropagation();
         onClick();
@@ -56,7 +53,7 @@ const HoverableImage = ({ srcDefault, srcHover, alt, onClick }: HoverImageProps)
         height={20}
         width={20}
         alt={alt}
-        src={isHovered ? srcHover : srcDefault}
+        src={srcDefault}
         style={{
           transition: 'opacity 0.3s ease',
           cursor: 'pointer',
@@ -182,7 +179,16 @@ const AddDomainPopup = ({ open, handleClose, handleSave }: AddDomainProps) => {
           ),
         }} />
       <Box sx={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }}>
-        <Button color='primary' variant='outlined' onClick={handleSubmit}>Save</Button>
+      <Button className='hyperlink-red' onClick={handleSubmit} sx={{
+          borderRadius: '4px',
+          border: '1px solid #5052b2',
+          boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
+          color: '#5052b2 !important',
+          textTransform: 'none',
+          padding: '6px 24px'
+        }}>
+          Save
+        </Button>
       </Box>
       <UpgradePlanPopup open={upgradePlanPopup} limitName={'domain'} handleClose={() => setUpgradePlanPopup(false)} />
       {showSlider && <Slider />}
@@ -319,15 +325,7 @@ const DomainButton: React.FC = () => {
           <MenuItem key={domain.id} onClick={() => {
             handleSetDomain(domain.domain);
           }}
-          sx={{
-            '&:hover .delete-icon': {
-              opacity: 1,
-            },
-            '& .delete-icon': {
-              opacity: 0, 
-              transition: 'opacity 0.3s ease',
-            },
-          }}>
+          >
             <Box sx={{
               display: 'flex',
               justifyContent: 'space-between',

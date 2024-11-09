@@ -1226,6 +1226,13 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
             },
           },
         }}
+        slotProps={{
+          backdrop: {
+            sx: {
+              backgroundColor: 'rgba(0, 0, 0, 0.1)'
+            }
+          }
+        }}
       >
         <Box
           sx={{
@@ -1616,7 +1623,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
               </IconButton>
             </Box>
             <Collapse in={isStatus}>
-              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, pt: 2, pl: 2 }}>
+              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, pt: 1, pl: 2, pb:0.75 }}>
                 {["New", "Returning"].map((label) => {
                   const mappedStatus = statusMapping[label];
                   const isSelected = selectedStatus.includes(mappedStatus);
@@ -1695,7 +1702,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
               </IconButton>
             </Box>
             <Collapse in={isLeadFunnel}>
-              <Box sx={{ display: "flex", width: '100%', flexWrap: 'wrap', gap: 1, pt: 2, pl: 2 }}>
+              <Box sx={{ display: "flex", width: '100%', flexWrap: 'wrap', gap: 1, pt: 1, pl: 2, pb:0.75 }}>
                 {[
                   "Abandoned cart",
                   "View Product",

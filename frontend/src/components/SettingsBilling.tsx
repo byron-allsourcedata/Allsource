@@ -19,7 +19,7 @@ type CardBrand = 'visa' | 'mastercard' | 'americanexpress' | 'discover';
 
 const cardBrandImages: Record<CardBrand, string> = {
     visa: '/visa-icon.svg',
-    mastercard: '',
+    mastercard: '/mastercard-icon.svg',
     americanexpress: '/american-express.svg',
     discover: ''
 };
