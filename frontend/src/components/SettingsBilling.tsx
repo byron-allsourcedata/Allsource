@@ -21,7 +21,7 @@ const cardBrandImages: Record<CardBrand, string> = {
     visa: '/visa-icon.svg',
     mastercard: '/mastercard-icon.svg',
     americanexpress: '/american-express.svg',
-    discover: ''
+    discover: '/discover-icon.svg'
 };
 
 const billingStyles = {
