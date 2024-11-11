@@ -435,10 +435,6 @@ import CustomTablePagination from "./CustomTablePagination";
       return null
     }
 
-    const handleDeleteFilter = () => {
-
-    }
-
     const listType = (listType: string) => {
       switch (listType) {
         case 'allContacts':
@@ -456,6 +452,18 @@ import CustomTablePagination from "./CustomTablePagination";
     }
   
     return (
+      <>
+      {service_name && <>
+        <Box display={"flex"} sx={{ alignItems: 'center', mt: 2, mb: '16px' }}>
+        <Box sx={{ backgroundColor: '#E4E4E4', padding: '3px', borderRadius: '50%' }} />
+        <Box sx={{ backgroundColor: '#E4E4E4', border: '1px dashed #fff', width: '100%' }} />
+        <Box sx={{ backgroundColor: '#E4E4E4', padding: '3px', borderRadius: '50%' }} />
+      </Box>
+      <Typography fontSize={'16px'} fontWeight={600} fontFamily={'Nunito Sans'}>
+        {service_name} Sync Detail
+      </Typography>
+        </>
+      }
       <Box sx={datasyncStyle.mainContent}>
         <Box sx={{ width: "100%", pl: 0.5, pt: 3, pr: 1, '@media(max-width: 440px)': {
           marginTop: '16px', pr: 0, pl: 0
@@ -778,7 +786,7 @@ import CustomTablePagination from "./CustomTablePagination";
         <OmnisendDataSync open={omnisendIconPopupOpen} onClose={handleOmnisendIconPopupClose} data={data.find(item => item.id === selectedId)} />
         <SendlaneDatasync open={sendlaneIconPopupOpen} onClose={handleSendlaneIconPopupClose} data={data.find(item => item.id === selectedId)} />
       </Box>
-  
+      </>
     );
   };
 

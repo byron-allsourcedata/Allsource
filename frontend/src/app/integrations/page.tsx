@@ -1,7 +1,7 @@
 'use client';
 
 
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useState, useEffect, Suspense, useRef } from "react";
 import { integrationsStyle } from "./integrationsStyle";
 import axiosInstance from '../../axios/axiosInterceptorInstance';
 import { Box, Button, Typography, Tab, TextField, InputAdornment, Popover, IconButton, TableContainer, Table, Paper, TableHead, TableRow, TableCell, TableBody, Tooltip, Drawer, Backdrop, LinearProgress } from "@mui/material";
@@ -15,13 +15,9 @@ import axios, { AxiosError } from "axios";
 import Slider from '../../components/Slider';
 import { SliderProvider } from "@/context/SliderContext";
 import MetaConnectButton from "@/components/MetaConnectButton";
-import ConnectKlaviyo from "@/components/ConnectKlaviyo";
 import KlaviyoIntegrationPopup from "@/components/KlaviyoIntegrationPopup";
-import FilterListIcon from "@mui/icons-material/FilterList";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CustomizedProgressBar from '@/components/CustomizedProgressBar';
-import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
-import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import axiosInterceptorInstance from '@/axios/axiosInterceptorInstance';
 import { showErrorToast, showToast } from "@/components/ToastNotification";
 import AlivbleIntagrationsSlider from "@/components/AvalibleIntegrationsSlider";
@@ -64,207 +60,261 @@ interface IntegrationCredentials {
 
 const integrationStyle = {
     tabHeading: {
-        fontFamily: 'Nunito Sans',
-        fontSize: '14px',
-        color: '#707071',
-        fontWeight: '500',
-        lineHeight: '20px',
         textTransform: 'none',
-        cursor: 'pointer',
-        padding: 0,
+        padding: '4px 10px',
+        pb: '10px',
+        flexGrow: 0,
+        // marginRight: '3em',
+        minHeight: 'auto',
+        // width: '100%',
         minWidth: 'auto',
-        px: 2,
-        '@media (max-width: 600px)': {
-            alignItems: 'flex-start',
-            p: 0
-        },
+        fontSize: '14px',
+        fontWeight: 700,
+        lineHeight: '19.1px',
+        textAlign: 'left',
+        mr: 2,
         '&.Mui-selected': {
-            color: '#5052b2',
-            fontWeight: '700'
-        }
+            color: 'rgba(80, 82, 178, 1)'
+        },
+        "@media (max-width: 600px)": {
+          flexGrow: 1,
+            mr: 0, borderRadius: '4px', '&.Mui-selected': {
+                backgroundColor: 'rgba(249, 249, 253, 1)',
+                border: '1px solid rgba(220, 220, 239, 1)'
+            },}
     },
 };
 
 
 const IntegrationBox = ({ image, handleClick, handleDelete, service_name, active, is_avalible, is_failed, is_integrated = false }: IntegrationBoxProps) => {
+  const [anchorEl, setAnchorEl] = useState(null);
+  const openPopover = Boolean(anchorEl);
+  const [isHovered, setIsHovered] = useState(false); 
+  const [openToolTip, setOpenTooltip] = useState(false);
+  const tooltipRef = useRef<HTMLDivElement | null>(null);
 
-    const [anchorEl, setAnchorEl] = useState(null);
-    const openPopover = Boolean(anchorEl);
-    const handleOpen = (event: any) => {
-        setAnchorEl(event.currentTarget);
-    };
-
-    const handleClickEdit = () => {
-      handleClose();  
-      if (handleClick) { 
-        handleClick(); 
-      }
+  const openToolTipClick = () => {
+    const isMobile = window.matchMedia('(max-width:900px)').matches; 
+    if (isMobile && is_integrated) {
+      setOpenTooltip(true);
     }
+  };
 
-    const handleClickDelete = () => {
-      handleClose()
-      if(handleDelete) {
-        handleDelete()
-      }
+  const handleClickOutside = (event: MouseEvent) => {
+    if (tooltipRef.current && !tooltipRef.current.contains(event.target as Node)) {
+      setOpenTooltip(false);
     }
+  };
 
-    const handleClose = () => {
-        setAnchorEl(null);
+  useEffect(() => {
+    document.addEventListener('click', handleClickOutside);
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
     };
+  }, []);
 
-    return (
-        <Box sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            cursor: 'pointer'
-        }}>
-            <Box sx={{
-                backgroundColor: is_integrated ? 'rgba(0, 0, 0, 0.04)' : active
-                ? 'rgba(80, 82, 178, 0.1)'
-                : 'transparent',
-                border: active ? '1px solid #5052B2' : '1px solid #E4E4E4',
-                position: 'relative',
-                display: 'flex',
-                borderRadius: '4px',
-                cursor: is_integrated ? 'default' : 'pointer',
-                width: '8rem',
-                height: '8rem',
-                filter: is_integrated ? 'grayscale(1)' : 'none',
-                justifyContent: 'center',
-                alignItems: 'center',
-                transition: '0.2s',
-                '&:hover': {
-                    boxShadow: is_integrated ? 'none' : '0 0 4px #00000040'
+
+  const handleOpen = (event: any) => {
+      setAnchorEl(event.currentTarget);
+  };
+
+  const handleClickEdit = () => {
+    handleClose();
+    if (handleClick) {
+      handleClick();
+    }
+  };
+
+  const handleClickDelete = () => {
+    handleClose();
+    if (handleDelete) {
+      handleDelete();
+    }
+  };
+
+  const handleClose = () => {
+      setAnchorEl(null);
+  };
+  
+
+  return (
+      <Box sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          cursor: 'pointer',
+          zIndex: 98
+      }}>
+          <Tooltip 
+          open={openToolTip || isHovered}  
+          ref={tooltipRef}
+          onMouseEnter={() => setIsHovered(true)} 
+          onMouseLeave={() => setIsHovered(false)}
+          onClick={openToolTipClick}  
+            componentsProps={{
+                tooltip: {
+                  sx: {
+                    backgroundColor: '#f5f5f5',
+                    color: '#000',
+                    boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.12)', 
+                    border:' 0.2px rgba(0, 0, 0, 0.04)',
+                    borderRadius: '4px',
+                    maxHeight: '100%',
+                    whiteSpace: 'normal', 
+                    minWidth: '200px',
+                    zIndex: 99,
+                    padding: '11px 10px', 
+                    fontSize: '12px !important',
+                    fontFamily: 'Nunito Sans',
+                    
+                  },
                 },
-                '&:hover .edit-icon': {
-                    opacity: 1
-                },
-                "@media (max-width: 900px)": { 
-                  width: '156px'
-                },
-            }}>
-              
-                {!is_avalible && (
-                  <Box sx={{
-                    display: 'flex',
-                    justifyContent: 'center'
-                  }}>
-                  <Box onClick={handleClick} sx={{
-                position: 'absolute',
-                top: '0%',
-                left: '0%',
-                margin: '8px 0 0 8px',
-                transition: 'opacity 0.2s',
-                cursor: 'pointer',
-                display: 'flex',
-                background: !is_failed ? '#EAF8DD' : '#FCDBDC' ,
-                height: '20px',
-                padding: '2px 8px 1px 8px',
-                // p: 1,
-                borderRadius: '4px'
-              }}>{!is_failed ? ( <Typography fontSize={'12px'} fontFamily={'Nunito Sans'} color={'#2B5B00'} fontWeight={600}>Integrated</Typography> ) : (
-                <>
-                  <Typography fontSize={'12px'} fontFamily={'Nunito Sans'} color={'#4E0110'} fontWeight={600}>Failed</Typography>
-                </>
-              ) }</Box>
-                    <Box className="edit-icon" onClick={handleOpen} sx={{
-                        position: 'absolute',
-                        top: '0%',
-                        right: '0%',
-                        margin: '8px 8.4px 0 0',
-                        opacity: openPopover ? 1 : 0,  
-                        transition: 'opacity 0.2s',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        borderRadius: '50%',
-                        width: '20px', 
-                        height: '20px', 
-                        '&:hover': {
-                            backgroundColor: '#EDEEF7' 
-                        },
-                        "@media (max-width: 900px)": { 
-                          opacity: 1
-                        },
-                    }}>
-                        <MoreVertIcon sx={{
-                          height: '20px'
-                        }}/>
-                    </Box>
-                    </Box>
-                )}
-                <Image src={image} width={32} height={32} alt={service_name} />
-            </Box>
-            <Typography mt={0.5} fontSize={'14px'} fontWeight={500} textAlign={'center'} fontFamily={'Nunito Sans'}>
-                {service_name}
-            </Typography>
-            <Popover
+              }} 
+            title={is_integrated ? `A ${service_name} account is already integrated. To connect a different account, please remove the existing ${service_name} integration first from Your integration.` : ""}>
+              <Box sx={{
+                  backgroundColor: is_integrated ? 'rgba(0, 0, 0, 0.04)' : active
+                      ? 'rgba(80, 82, 178, 0.1)'
+                      : 'transparent',
+                  border: active ? '1px solid #5052B2' : '1px solid #E4E4E4',
+                  position: 'relative',
+                  display: 'flex',
+                  borderRadius: '4px',
+                  cursor: is_integrated ? 'default' : 'pointer',
+                  width: '8rem',
+                  height: '8rem',
+                  zIndex: 98,
+                  filter: is_integrated ? 'grayscale(1)' : 'none',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  transition: '0.2s',
+                  '&:hover': {
+                      boxShadow: is_integrated ? 'none' : '0 0 4px #00000040'
+                  },
+                  '&:hover .edit-icon': {
+                      opacity: 1
+                  },
+                  "@media (max-width: 900px)": {
+                      width: '156px'
+                  },
+              }}>
+                  {!is_avalible && (
+                      <Box sx={{
+                          display: 'flex',
+                          justifyContent: 'center'
+                      }}>
+                          <Box onClick={handleClick} sx={{
+                              position: 'absolute',
+                              top: '0%',
+                              left: '0%',
+                              margin: '8px 0 0 8px',
+                              transition: 'opacity 0.2s',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              background: !is_failed ? '#EAF8DD' : '#FCDBDC',
+                              height: '20px',
+                              padding: '2px 8px 1px 8px',
+                              borderRadius: '4px'
+                          }}>
+                              {!is_failed ? (
+                                  <Typography fontSize={'12px'} fontFamily={'Nunito Sans'} color={'#2B5B00'} fontWeight={600}>Integrated</Typography>
+                              ) : (
+                                  <Typography fontSize={'12px'} fontFamily={'Nunito Sans'} color={'#4E0110'} fontWeight={600}>Failed</Typography>
+                              )}
+                          </Box>
+                          <Box className="edit-icon" onClick={handleOpen} sx={{
+                              position: 'absolute',
+                              top: '0%',
+                              right: '0%',
+                              margin: '8px 8.4px 0 0',
+                              opacity: openPopover ? 1 : 0,
+                              transition: 'opacity 0.2s',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              borderRadius: '50%',
+                              width: '20px',
+                              height: '20px',
+                              '&:hover': {
+                                  backgroundColor: '#EDEEF7'
+                              },
+                              "@media (max-width: 900px)": {
+                                  opacity: 1
+                              },
+                          }}>
+                              <MoreVertIcon sx={{ height: '20px' }} />
+                          </Box>
+                      </Box>
+                  )}
+                  <Image src={image} width={32} height={32} alt={service_name} />
+              </Box>
+          </Tooltip>
+          <Typography mt={0.5} fontSize={'14px'} fontWeight={500} textAlign={'center'} fontFamily={'Nunito Sans'}>
+              {service_name}
+          </Typography>
+          <Popover
               open={openPopover}
               anchorEl={anchorEl}
               onClose={handleClose}
               anchorOrigin={{
-                vertical: "bottom",
-                horizontal: "left",
+                  vertical: "bottom",
+                  horizontal: "left",
               }}
           >
-            <Box
-              sx={{
-                p: 1,
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "flex-start",
-                width: "100%",
-                maxWidth: "160px",
-              }}
-            >
-              <Button
-                sx={{
-                  justifyContent: "flex-start",
-                  width: "100%",
-                  textTransform: "none",
-                  fontFamily: "Nunito Sans",
-                  fontSize: "14px",
-                  color: "rgba(32, 33, 36, 1)",
-                  fontWeight: 600,
-                  ":hover": {
-                    color: "rgba(80, 82, 178, 1)",
-                    backgroundColor: "background: rgba(80, 82, 178, 0.1)",
-                  },
-                }}
-                onClick={handleClickEdit}
+              <Box
+                  sx={{
+                      p: 1,
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "flex-start",
+                      width: "100%",
+                      maxWidth: "160px",
+                  }}
               >
-                Edit
-              </Button>
-              <Button
-                sx={{
-                  justifyContent: "flex-start",
-                  width: "100%",
-                  textTransform: "none",
-                  fontFamily: "Nunito Sans",
-                  fontSize: "14px",
-                  color: "rgba(32, 33, 36, 1)",
-                  fontWeight: 600,
-                  ":hover": {
-                    color: "rgba(80, 82, 178, 1)",
-                    backgroundColor: "background: rgba(80, 82, 178, 0.1)",
-                  },
-                }}
-                onClick={handleClickDelete}
-              >
-                Delete
-              </Button>
-            </Box>
+                  <Button
+                      sx={{
+                          justifyContent: "flex-start",
+                          width: "100%",
+                          textTransform: "none",
+                          fontFamily: "Nunito Sans",
+                          fontSize: "14px",
+                          color: "rgba(32, 33, 36, 1)",
+                          fontWeight: 600,
+                          ":hover": {
+                              color: "rgba(80, 82, 178, 1)",
+                              backgroundColor: "rgba(80, 82, 178, 0.1)",
+                          },
+                      }}
+                      onClick={handleClickEdit}
+                  >
+                      Edit
+                  </Button>
+                  <Button
+                      sx={{
+                          justifyContent: "flex-start",
+                          width: "100%",
+                          textTransform: "none",
+                          fontFamily: "Nunito Sans",
+                          fontSize: "14px",
+                          color: "rgba(32, 33, 36, 1)",
+                          fontWeight: 600,
+                          ":hover": {
+                              color: "rgba(80, 82, 178, 1)",
+                              backgroundColor: "rgba(80, 82, 178, 0.1)",
+                          },
+                      }}
+                      onClick={handleClickDelete}
+                  >
+                      Delete
+                  </Button>
+              </Box>
           </Popover>
-        </Box>
-        
-    );
+      </Box>
+  );
 };
 
 const IntegrationAdd = () => (
-    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer' }}>
-        <Box sx={{
+          <Box sx={{
             border: '1px dashed #5052B2',
             display: 'flex',
             borderRadius: '4px',
@@ -276,12 +326,10 @@ const IntegrationAdd = () => (
             '&:hover': { boxShadow: '0 0 4px #00000040' },
             "@media (max-width: 900px)": { 
                   width: '156px'
-                },
-
+            },
         }}>
             <Image src={'/add-square.svg'} width={44} height={44} alt={'add'} />
         </Box>
-    </Box>
 );
 
 interface DeletePopupProps {
@@ -498,16 +546,11 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
 
     return (
         <>
-            <Box sx={{ display: 'flex', gap: 2,
-                "@media (max-width: 900px)": { 
-                  flexWrap: 'wrap',
-                  width: '100%'
-                },
-                "@media (max-width: 600px)": { 
-                  flexWrap: 'wrap',
-                  alignItems: 'start', 
-                  } 
-             }}>
+          <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap',
+              "@media (max-width: 900px)": { 
+                justifyContent: 'center',
+                } 
+            }}>
             {integrationsCredentials.some(integration => integration.service_name === "Shopify") && (
                 <Box onClick={() => handleActive('Shopify')}>
                     <IntegrationBox
@@ -605,23 +648,9 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
                 </Box>
             )}
             <Box onClick={() => setOpenAvalible(true)}>
-                <IntegrationAdd />
+              <IntegrationAdd />
             </Box>
-        </Box>
-        {(activeService && activeService != 'Shopify' && activeService != 'Bigcommerce') && (
-          <Box sx={{
-            '@media(max-width: 600px)': {
-              mb: 7
-            }
-          }}>
-            <Box display={"flex"} sx={{alignItems: 'center', mt: 2, mb: '16px'}}>
-              <Box sx={{backgroundColor: '#E4E4E4', padding: '3px', borderRadius: '50%'}} />
-              <Box sx={{backgroundColor: '#E4E4E4', border: '1px dashed #fff', width: '100%'}} />
-              <Box sx={{backgroundColor: '#E4E4E4', padding: '3px', borderRadius: '50%',}} />
-            </Box>
-            <Typography fontSize={'16px'} fontWeight={600} fontFamily={'Nunito Sans'}>{activeService} Sync Detail</Typography>
           </Box>
-        )}
         <KlaviyoIntegrationPopup 
             open={openKlaviyoConnect} 
             handleClose={handleClose}
@@ -665,7 +694,7 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
             handleSaveSettings={handleSaveSettings}
         />
         <Box>
-            {(activeService && activeService != 'Shopify' && activeService != 'Bigcommerce') && (<DataSyncList service_name={activeService} />)}
+            {(activeService && activeService != 'Shopify' && activeService != 'Bigcommerce') && (<DataSyncList key={activeService} service_name={activeService} />)}
         </Box>
 
         <DeleteIntegrationPopup open={openDeletePopup} onClose={handleDeleteClose} service_name={activeService} handleDelete={handleDelete}/>
@@ -674,7 +703,7 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
 };
 
 
-const IntegrationsAvailable = ({ integrationsCredentials, integrations, handleSaveSettings }: IntegrationsListProps) => {
+const IntegrationsAvaliable = ({ integrationsCredentials, integrations, handleSaveSettings }: IntegrationsListProps) => {
     const [search, setSearch] = useState<string>('');
     const [openMetaConnect, setOpenMetaConnect] = useState(false)
     const [openKlaviyoConnect, setOpenKlaviyoConnect] = useState(false)
@@ -684,7 +713,6 @@ const IntegrationsAvailable = ({ integrationsCredentials, integrations, handleSa
     const [openMailchinpConnect, setOpenmailchimpConnect] = useState(false)
     const [openSendlaneConnect, setOpenSendlaneConnect] = useState(false)
     const [openAttentiveConnect, setOpenAttentiveConnect] = useState(false)
-
     const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
         setSearch(event.target.value);
     };
@@ -700,7 +728,6 @@ const IntegrationsAvailable = ({ integrationsCredentials, integrations, handleSa
         { image: 'attentive.svg', service_name: 'Attentive'}
     ];
 
-
     const handleClose = () => {
         setOpenMetaConnect(false)
         setOpenKlaviyoConnect(false)
@@ -715,7 +742,6 @@ const IntegrationsAvailable = ({ integrationsCredentials, integrations, handleSa
     const handleAddIntegration = (service_name: string) => {
       const isIntegrated = integrationsCredentials.some(integration_cred => integration_cred.service_name === service_name);
       if(isIntegrated) {
-        showErrorToast(`Already integrated to integrate a different ${service_name} account, please remove the current ${service_name} integration first from your integration.`)
         return
       }
       switch (service_name) {
@@ -748,7 +774,7 @@ const IntegrationsAvailable = ({ integrationsCredentials, integrations, handleSa
 
     return (
         <Box>
-            <Box >
+            <Box>
                 <TextField
                     fullWidth
                     placeholder="Search integrations"
@@ -771,26 +797,27 @@ const IntegrationsAvailable = ({ integrationsCredentials, integrations, handleSa
                 />
             </Box>
             <Box sx={{ display: 'flex', gap: 2, 
-                "@media (max-width: 900px)": { 
-                  flexWrap: 'wrap',
-                  width: '100%',
-                },
-                "@media (max-width: 600px)": { 
-                  flexWrap: 'wrap',
-                  alignItems: 'start', 
-                  }
+              flexWrap: 'wrap',
+              width: '100%',
+              "@media (max-width: 600px)": { 
+                alignItems: 'start', 
+                justifyContent: 'center'
+                }
              }}>
-                {integrations.map((integartion: any) => {
-                  const isIntegrated = integrationsCredentials.some(integration_cred => integration_cred.service_name === integartion.service_name);
-                  const imageSrc = integrationsAvailable.find(img => img.service_name === integartion.service_name)?.image || '';
-    
+                {integrations.map((integration: any) => {
+                  const isIntegrated = integrationsCredentials.some(integration_cred => integration_cred.service_name === integration.service_name);
+                  const imageSrc = integrationsAvailable.find(img => img.service_name === integration.service_name)?.image || '';
                   return (
-                      <Box key={integartion.service_name} onClick={() => handleAddIntegration(integartion.service_name)}>
+                      <Box key={integration.service_name} 
+                      onClick={() => {
+                        handleAddIntegration(integration.service_name);
+                      }}>
                           <IntegrationBox
                               image={imageSrc}
-                              service_name={integartion.service_name}
+                              service_name={integration.service_name}
                               is_avalible={true}
                               is_integrated={isIntegrated}
+                              // isTooltipOpen={integration.service_name === openToolTip}
                           />
                       </Box>
                   );
@@ -971,12 +998,17 @@ const PixelManagment = () => {
           aria-label="Integrations Tabs"
           TabIndicatorProps={{ sx: { backgroundColor: "#5052b2" } }}
           sx={{
-              width: 'fit-content',
-              "& .MuiTabs-flexContainer": {
-                  justifyContent: 'center',
-                  "@media (max-width: 600px)": { gap: '16px' }
-              }
-          }}
+            textTransform: 'none',
+            minHeight: 0,
+            '& .MuiTabs-indicator': {
+                backgroundColor: 'rgba(80, 82, 178, 1)',
+                height: '1.4px',
+            },
+            "@media (max-width: 600px)": {
+                border: '1px solid rgba(228, 228, 228, 1)', borderRadius: '4px', width: '100%', '& .MuiTabs-indicator': {
+                    height: '0',
+                },
+            }}}
           onChange={handleTabChange}
       >
         <Tab label="Connections" value="1" sx={{ ...integrationStyle.tabHeading }} />
@@ -1040,6 +1072,7 @@ const PixelManagment = () => {
                           position: "sticky",
                           left: 0,
                           zIndex: 99,
+                          backgroundColor: "#fff",
                         }),
                         ...(key === "suppression" && {
                           "::after": {
@@ -1061,7 +1094,23 @@ const PixelManagment = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {data.map((row, index) => (
+              {data.length === 0 ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={11} 
+                    sx={{
+                      ...integrationsStyle.table_array,
+                      textAlign: 'center',
+                      paddingTop: '18px',
+                      paddingBottom: '18px',
+                      zIndex: 8
+                    }}
+                  >
+                    No data synchronization available
+                  </TableCell>
+                </TableRow>
+              )
+                : data.map((row, index) => (
                   <TableRow
                     key={row.id}
                     sx={{
@@ -1109,7 +1158,7 @@ const PixelManagment = () => {
                         position: "sticky",
                         left: "0",
                         zIndex: 9,
-                        backgroundColor: "rgba(255, 255, 255, 1)",
+                        backgroundColor: "#fff",
                       }}
                     >
                       {row.name}
@@ -1452,6 +1501,7 @@ const Integrations = () => {
                     zIndex: '99',
                     paddingLeft: '30px',
                     paddingRight: '24px',
+                    width: '10%',
                     mx: '-24px',
                     "@media (max-width: 900px)": { 
                       left: 'unset',
@@ -1484,24 +1534,100 @@ const Integrations = () => {
                     </Box>
                     {/* Tabs */}
                     {status !== 'PIXEL_INSTALLATION_NEEDED' && !isLoading && (
-                        <Box sx={{ display: 'flex', alignItems: 'center', margin: '0 auto', mt:1}}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', margin: '0 auto'}}>
                             <TabList
                                 centered
                                 aria-label="Integrations Tabs"
                                 TabIndicatorProps={{ sx: { backgroundColor: "#5052b2" } }}
                                 sx={{
-                                    width: 'fit-content',
-                                    "& .MuiTabs-flexContainer": {
-                                        justifyContent: 'center',
-                                        "@media (max-width: 600px)": { gap: '16px', justifyContent: 'start', variant:"scrollable" }
-                                    }
-                                }}
+                                  textTransform: 'none',
+                                  minHeight: 0,
+                                  '& .MuiTabs-indicator': {
+                                      backgroundColor: 'rgba(80, 82, 178, 1)',
+                                      height: '1.4px',
+                                  },
+                                  "@media (max-width: 600px)": {
+                                      border: '1px solid rgba(228, 228, 228, 1)', borderRadius: '4px', width: '100%', '& .MuiTabs-indicator': {
+                                          height: '0',
+                                      },
+                                  }
+                              }}
                                 onChange={handleTabChange}
                                 variant="scrollable"
                             >
-                                <Tab label="Your Integrations" value="1" sx={{ ...integrationStyle.tabHeading }} />
-                                <Tab label="Add an Integration" value="2" sx={{ ...integrationStyle.tabHeading }} />
-                                <Tab label="Pixel Management" value="3" sx={{ ...integrationStyle.tabHeading }} />
+                                <Tab value="1" label="Your Integrations" className="main-text"
+                                  sx={{
+                                      textTransform: 'none',
+                                      padding: '4px 10px',
+                                      pb: '10px',
+                                      flexGrow: 1,
+                                      marginRight: '3em',
+                                      minHeight: 'auto',
+                                      minWidth: 'auto',
+                                      fontSize: '14px',
+                                      fontWeight: 700,
+                                      lineHeight: '19.1px',
+                                      textAlign: 'left',
+                                      mr: 2,
+                                      '&.Mui-selected': {
+                                          color: 'rgba(80, 82, 178, 1)'
+                                      },
+                                      "@media (max-width: 600px)": {
+                                          mr: 0, borderRadius: '4px', '&.Mui-selected': {
+                                              backgroundColor: 'rgba(249, 249, 253, 1)',
+                                              border: '1px solid rgba(220, 220, 239, 1)'
+                                          },
+                                      }
+                                  }}
+                                />
+                                <Tab label="Add an Integration" value="2" className="main-text"
+                                  sx={{
+                                      textTransform: 'none',
+                                      padding: '4px 10px',
+                                      pb: '10px',
+                                      flexGrow: 1,
+                                      marginRight: '3em',
+                                      minHeight: 'auto',
+                                      minWidth: 'auto',
+                                      fontSize: '14px',
+                                      fontWeight: 700,
+                                      lineHeight: '19.1px',
+                                      textAlign: 'left',
+                                      mr: 2,
+                                      '&.Mui-selected': {
+                                          color: 'rgba(80, 82, 178, 1)'
+                                      },
+                                      "@media (max-width: 600px)": {
+                                          mr: 0, borderRadius: '4px', '&.Mui-selected': {
+                                              backgroundColor: 'rgba(249, 249, 253, 1)',
+                                              border: '1px solid rgba(220, 220, 239, 1)'
+                                          },
+                                      }
+                                  }} />
+                                <Tab label="Pixel Management" value="3" className="main-text"
+                                  sx={{
+                                      textTransform: 'none',
+                                      padding: '4px 10px',
+                                      pb: '10px',
+                                      flexGrow: 1,
+                                      marginRight: '3em',
+                                      minHeight: 'auto',
+                                      minWidth: 'auto',
+                                      fontSize: '14px',
+                                      fontWeight: 700,
+                                      lineHeight: '19.1px',
+                                      textAlign: 'left',
+                                      mr: 2,
+                                      '&.Mui-selected': {
+                                          color: 'rgba(80, 82, 178, 1)'
+                                      },
+                                      "@media (max-width: 600px)": {
+                                          mr: 0, borderRadius: '4px', '&.Mui-selected': {
+                                              backgroundColor: 'rgba(249, 249, 253, 1)',
+                                              border: '1px solid rgba(220, 220, 239, 1)'
+                                          },
+                                      }
+                                  }} />
                             </TabList>
                         </Box>
                     )}  
@@ -1557,7 +1683,7 @@ const Integrations = () => {
                             />
                         </TabPanel>
                         <TabPanel value="2" sx={{ px: 0 }}>
-                            <IntegrationsAvailable 
+                            <IntegrationsAvaliable 
                               integrationsCredentials={integrationsCredentials} 
                               integrations={integrations}
                               handleSaveSettings={handleSaveSettings }
