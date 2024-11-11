@@ -4,7 +4,7 @@
 import React, { useState, useEffect, Suspense, useRef } from "react";
 import { integrationsStyle } from "./integrationsStyle";
 import axiosInstance from '../../axios/axiosInterceptorInstance';
-import { Box, Button, Typography, Tab, TextField, InputAdornment, Popover, IconButton, TableContainer, Table, Paper, TableHead, TableRow, TableCell, TableBody, Tooltip, Drawer, Backdrop, LinearProgress, useMediaQuery } from "@mui/material";
+import { Box, Button, Typography, Tab, TextField, InputAdornment, Popover, IconButton, TableContainer, Table, Paper, TableHead, TableRow, TableCell, TableBody, Tooltip, Drawer, Backdrop, LinearProgress } from "@mui/material";
 import Image from "next/image";
 import CustomTooltip from "@/components/customToolTip";
 import TabContext from "@mui/lab/TabContext";
@@ -15,13 +15,9 @@ import axios, { AxiosError } from "axios";
 import Slider from '../../components/Slider';
 import { SliderProvider } from "@/context/SliderContext";
 import MetaConnectButton from "@/components/MetaConnectButton";
-import ConnectKlaviyo from "@/components/ConnectKlaviyo";
 import KlaviyoIntegrationPopup from "@/components/KlaviyoIntegrationPopup";
-import FilterListIcon from "@mui/icons-material/FilterList";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CustomizedProgressBar from '@/components/CustomizedProgressBar';
-import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
-import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import axiosInterceptorInstance from '@/axios/axiosInterceptorInstance';
 import { showErrorToast, showToast } from "@/components/ToastNotification";
 import AlivbleIntagrationsSlider from "@/components/AvalibleIntegrationsSlider";
@@ -38,7 +34,6 @@ import AttentiveIntegrationPopup from "@/components/AttentiveIntegrationPopup";
 import { useNotification } from "@/context/NotificationContext";
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import CloseIcon from '@mui/icons-material/Close';
-import { width } from "@mui/system";
 
 
 interface IntegrationBoxProps {
