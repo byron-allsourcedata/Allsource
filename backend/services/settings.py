@@ -270,7 +270,7 @@ class SettingsService:
         plan_name = f"{current_plan.title} {'yearly' if current_plan.interval == 'year' else ''}".strip()
         if subscription is None and user_subscription:
             subscription_details = {
-                'billing_cycle': f"{user_subscription.plan_start.strftime('%b %d, %Y')} to {user_subscription.plan_end.strftime('%b %d, %Y')}" if user_subscription.plan_start else None,
+                'billing_cycle': 'Free trial',
                 'plan_name': plan_name,
                 'domains': f"{user_limit_domain}/{plan_limit_domain}",
                 'prospect_credits': 'Coming soon',
@@ -280,6 +280,7 @@ class SettingsService:
                 'active': True if user_subscription.status == 'active' else False,
             }
         elif subscription and user_subscription:
+            billing_cycle = f"{user_subscription.plan_start.strftime('%b %d, %Y')} to {user_subscription.plan_end.strftime('%b %d, %Y')}" if user_subscription.plan_start else None
             plan = subscription['items']['data'][0]['plan']
             is_active = subscription.get('status') == 'active' or subscription.get('status') == 'trialing'
             if user_subscription.downgrade_price_id:
@@ -291,7 +292,7 @@ class SettingsService:
             else:
                 total_price = f"${plan['amount'] / 100:,.0f}"
             subscription_details = {
-                'billing_cycle': f"{user_subscription.plan_start.strftime('%b %d, %Y')} to {user_subscription.plan_end.strftime('%b %d, %Y')}" if user_subscription.plan_start else None,
+                'billing_cycle': billing_cycle,
                 'plan_name': plan_name,
                 'domains': f"{user_limit_domain}/{plan_limit_domain}",
                 'prospect_credits': 'Coming soon',
@@ -330,12 +331,14 @@ class SettingsService:
 
     def extract_billing_history(self, customer_id, page, per_page):
         result = []
-        billing_history, count, max_page, has_more = get_billing_history_by_userid(customer_id=customer_id, page=page,
+        billing_history, count, max_page = get_billing_history_by_userid(customer_id=customer_id, page=page,
                                                                                    per_page=per_page)
 
         for billing_data in billing_history:
             billing_hash = {}
             if isinstance(billing_data, stripe.Invoice):
+                if billing_data.subtotal <= 0:
+                    continue
                 line_items = billing_data.lines.data
                 billing_hash['date'] = self.timestamp_to_date(line_items[0].period.start)
                 billing_hash['invoice_id'] = billing_data.id
@@ -344,6 +347,8 @@ class SettingsService:
                 billing_hash['status'] = self.map_status(billing_data.status)
 
             elif isinstance(billing_data, stripe.Charge):
+                if billing_data.amount <= 0:
+                    continue
                 billing_hash['date'] = self.timestamp_to_date(billing_data.created)
                 billing_hash['invoice_id'] = billing_data.invoice
                 billing_hash['pricing_plan'] = "Overage"

@@ -1,3 +1,4 @@
+import math
 from typing import List
 
 import stripe
@@ -194,8 +195,8 @@ def save_payment_details_in_stripe(customer_id):
                 customer=customer_id,
                 type="card",
             )
-                .data[0]
-                .get("id")
+            .data[0]
+            .get("id")
         )
 
         stripe.Customer.modify(
@@ -313,30 +314,25 @@ def create_stripe_checkout_session(customer_id: str,
 
 
 def get_billing_history_by_userid(customer_id, page, per_page):
-    import math
-
-    billing_history_invoices = stripe.Invoice.list(
-        customer=customer_id,
-        limit=100,
-    )
-
-    billing_history_charges = stripe.Charge.list(
-        customer=customer_id,
-        limit=100,
-    )
-
+    billing_history_invoices = []
+    billing_history_charges = []
+    invoice_params = {
+        'customer': customer_id,
+        'limit': per_page,
+    }
+    invoices = stripe.Invoice.list(**invoice_params)
+    billing_history_invoices.extend(invoices.data)
+    charge_params = {
+        'customer': customer_id,
+        'limit': per_page,
+    }
+    charges = stripe.Charge.list(**charge_params)
+    billing_history_charges.extend(charges.data)
     non_subscription_charges = [
-        charge for charge in billing_history_charges.data if charge.invoice is None
+        charge for charge in billing_history_charges if charge.invoice is None
     ]
-
-    billing_history = billing_history_invoices.data + non_subscription_charges
-
+    billing_history = billing_history_invoices + non_subscription_charges
     count = len(billing_history)
-
-    billing_history = billing_history[(page - 1) * per_page:min(page * per_page, len(billing_history))]
-
     max_page = math.ceil(count / per_page)
-    has_more = billing_history_invoices.has_more or (
-            billing_history_charges.has_more and len(non_subscription_charges) < per_page)
-
-    return billing_history, count, max_page, has_more
+    billing_history = billing_history[(page - 1) * per_page:min(page * per_page, count)]
+    return billing_history, count, max_page

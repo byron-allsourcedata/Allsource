@@ -247,7 +247,7 @@ def check_certain_urls(page, suppression_rule):
 
 
 def check_activate_based_urls(page, suppression_rule):
-    if suppression_rule.is_based_activation and suppression_rule.activate_certain_urls:
+    if suppression_rule.is_based_activation and suppression_rule.activate_based_urls:
         parsed_url = urlparse(page)
         query_params = parse_qs(parsed_url.query)
         activate_based_urls = suppression_rule.activate_based_urls.split(', ')

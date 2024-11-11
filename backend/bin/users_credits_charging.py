@@ -4,6 +4,7 @@ import json
 import logging
 import os
 import sys
+from collections import defaultdict
 
 from sqlalchemy import create_engine
 
@@ -12,6 +13,7 @@ parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 
 from models.plans import SubscriptionPlan
+from models.users_domains import UserDomains
 from enums import NotificationTitles
 from models.account_notification import AccountNotification
 from models.users_account_notification import UserAccountNotification
@@ -77,13 +79,12 @@ async def on_message_received(message, session):
             if user.leads_credits > 0:
                 logging.info(f"leads_credits > 0")
                 activate_count = min(user.leads_credits, lead_user_count)
-                for lead_user in lead_users[:activate_count]:
-                    lead_user.is_active = True
+                session.query(LeadUser).filter(
+                    LeadUser.id.in_([user.id for user in lead_users[:activate_count]])) \
+                    .update({"is_active": True}, synchronize_session=False)
+
                 user.leads_credits -= activate_count
                 session.commit()
-                account_notification = await get_account_notification_by_title(session,
-                                                                               NotificationTitles.PAYMENT_SUCCESS.value)
-                message_text = account_notification.text
             else:
                 if user.is_leads_auto_charging:
                     logging.info(f"is_leads_auto_charging true")
@@ -101,42 +102,50 @@ async def on_message_received(message, session):
                                 status = stripe_payload.get("status")
                                 logging.info(f"payment status {status}")
                                 if status == 'succeeded':
-                                    account_notification = await get_account_notification_by_title(session,
-                                                                                                   NotificationTitles.PAYMENT_SUCCESS.value)
-                                    message_text = account_notification.text
-
-                                    payment_transaction_obj = UsersPaymentsTransactions(
-                                        user_id=user.id,
-                                        transaction_id=transaction_id,
-                                        created_at=datetime.now(timezone.utc),
-                                        stripe_request_created_at=created_at,
-                                        status=status,
-                                        amount_credits=QUANTITY,
-                                        type='leads_credits'
-                                    )
-                                    session.add(payment_transaction_obj)
-                                    session.flush()
+                                    grouped_users = defaultdict(list)
                                     for lead_user in lead_users[:QUANTITY]:
-                                        lead_user.is_active = True
+                                        grouped_users[lead_user.domain_id].append(lead_user)
+                                    transaction_counter = 1
+                                    for domain_id, users in grouped_users.items():
+                                        transaction_id_with_iteration = f"{transaction_id}_{transaction_counter}"
+                                        payment_transaction_obj = UsersPaymentsTransactions(
+                                            user_id=user.id,
+                                            transaction_id=transaction_id_with_iteration,
+                                            created_at=datetime.now(timezone.utc),
+                                            stripe_request_created_at=created_at,
+                                            status=status,
+                                            amount_credits=QUANTITY // len(grouped_users),
+                                            type='buy_leads',
+                                            domain_id=domain_id
+                                        )
+                                        session.add(payment_transaction_obj)
+                                        session.flush()
+                                        transaction_counter += 1
+
+                                    session.query(LeadUser).filter(
+                                        LeadUser.id.in_([user.id for user in lead_users[:QUANTITY]])) \
+                                        .update({"is_active": True}, synchronize_session=False)
                                     session.commit()
                         else:
                             logging.error(f"Purchase failed: {result['error']}", exc_info=True)
 
-            account_notification = await save_account_notification(session, user.id, account_notification.id)
+                        account_notification = await save_account_notification(session, user.id,
+                                                                               account_notification.id)
 
-            queue_name = f'sse_events_{str(user.id)}'
-            rabbitmq_connection = RabbitMQConnection()
-            connection = await rabbitmq_connection.connect()
-            try:
-                await publish_rabbitmq_message(
-                    connection=connection,
-                    queue_name=queue_name,
-                    message_body={'notification_text': message_text, 'notification_id': account_notification.id}
-                )
-            except:
-                await rabbitmq_connection.close()
-            finally:
-                await rabbitmq_connection.close()
+                        queue_name = f'sse_events_{str(user.id)}'
+                        rabbitmq_connection = RabbitMQConnection()
+                        connection = await rabbitmq_connection.connect()
+                        try:
+                            await publish_rabbitmq_message(
+                                connection=connection,
+                                queue_name=queue_name,
+                                message_body={'notification_text': message_text,
+                                              'notification_id': account_notification.id}
+                            )
+                        except:
+                            await rabbitmq_connection.close()
+                        finally:
+                            await rabbitmq_connection.close()
 
         logging.info(f"message ack")
         await message.ack()
