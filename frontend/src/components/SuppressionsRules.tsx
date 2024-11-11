@@ -510,7 +510,7 @@ const SuppressionRules: React.FC = () => {
                                     </Typography>
                                 </Box>
                             </Box>
-                            <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', gap: 0, width: '100%', alignItems: 'center', '@media (max-width: 700px)': { flexDirection: 'column', alignItems: 'end' } }}>
+                            <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', gap: 0, width: '100%', alignItems: 'center', '@media (max-width: 700px)': { flexDirection: 'column', alignItems: 'start' } }}>
                                 <FormControl
                                     sx={{
                                         marginBottom: '32px',
@@ -813,7 +813,7 @@ const SuppressionRules: React.FC = () => {
                                 gap: 2,
                                 width: '100%',
                                 alignItems: 'flex-end',
-                                '@media (max-width: 700px)': { flexDirection: 'column', alignItems: 'end' }
+                                '@media (max-width: 700px)': { flexDirection: 'column', alignItems: 'start' }
                             }}>
                                 <TagsInput
                                     value={chipData}
@@ -964,7 +964,7 @@ const SuppressionRules: React.FC = () => {
                                 </Box>
                             </Box>
 
-                            <Box sx={{ display: checkedUrlParameters ? 'flex' : 'none', flexDirection: 'row', justifyContent: 'space-between', gap: 2, width: '100%', alignItems: 'end', '@media (max-width: 700px)': { flexDirection: 'column', alignItems: 'end' } }}>
+                            <Box sx={{ display: checkedUrlParameters ? 'flex' : 'none', flexDirection: 'row', justifyContent: 'space-between', gap: 2, width: '100%', alignItems: 'end', '@media (max-width: 700px)': { flexDirection: 'column', alignItems: 'start' } }}>
                                 <TagsInput
                                     value={chipDataParam}
                                     onChange={setChipDataParam}
@@ -1008,7 +1008,7 @@ const SuppressionRules: React.FC = () => {
                             You can add multiple emails.
                         </Typography>
 
-                        <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2, width: '100%', justifyContent: 'space-between', alignItems: 'end', '@media (max-width: 700px)': { flexDirection: 'column', justifyContent: 'flex-end' } }}>
+                        <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2, width: '100%', justifyContent: 'space-between', alignItems: 'end', '@media (max-width: 700px)': { flexDirection: 'column', alignItems: 'start' } }}>
                             <TagsInput
                                 value={chipDataEmail}
                                 onChange={(newTags) => {

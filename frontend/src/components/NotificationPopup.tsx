@@ -1,10 +1,9 @@
 import React, { ReactNode, useEffect, useState } from "react";
-import { Drawer, Box, Typography, Link, IconButton, Divider } from "@mui/material";
+import { Dialog, Box, Typography, Link, IconButton, Divider, Popover } from "@mui/material";
 import CloseIcon from '@mui/icons-material/Close';
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
-
 
 dayjs.extend(relativeTime);
 
@@ -19,22 +18,23 @@ interface Notification {
 interface NotificationPopupProps {
     open: boolean;
     onClose: () => void;
+    anchorEl: HTMLElement | null;
 }
 
-const NotificationPopup: React.FC<NotificationPopupProps> = ({ open, onClose }) => {
+const NotificationPopup: React.FC<NotificationPopupProps> = ({ open, onClose, anchorEl }) => {
     const [loading, setLoading] = useState(false);
     const [notifications, setNotifications] = useState<Notification[]>([]);
 
     useEffect(() => {
-        if (open) {
-            setLoading(true);
             const accessToken = localStorage.getItem("token");
             if (accessToken) {
                 const fetchData = async () => {
                     try {
                         const response = await axiosInstance.get("/notification");
                         setNotifications(response.data);
-                        const dismiss = axiosInstance.post("/notification/dismiss");
+                        if (open) {
+                            const dismiss = axiosInstance.post("/notification/dismiss");
+                        }
                     } catch (error) {
                     } finally {
                         setLoading(false);
@@ -42,10 +42,9 @@ const NotificationPopup: React.FC<NotificationPopupProps> = ({ open, onClose }) 
                 };
                 fetchData();
             }
-        }
     }, [open]);
 
-    const keywords: { word: string; link: string }[] = [
+    const keywords = [
         { word: "Enable Overage", link: "/settings?section=billing" },
         { word: "billing", link: "/settings?section=billing" },
         { word: "Enable", link: "/settings?section=billing" },
@@ -54,17 +53,14 @@ const NotificationPopup: React.FC<NotificationPopupProps> = ({ open, onClose }) 
     ];
 
     const transformTextToLinks = (text: string | null): JSX.Element => {
-        if (!text) {
-            return <span></span>;
-        }
+        if (!text) return <span></span>;
 
         const regex = new RegExp(`(${keywords.map(k => k.word).join('|')})`, 'g');
-
         const parts = text.split(regex).map((part, index) => {
             const keyword = keywords.find(k => k.word === part);
             if (keyword) {
                 return (
-                    <Link key={index} className="paragraph" href={keyword.link} sx={{ textDecoration: 'none', color: 'rgba(20, 110, 246, 1) !important' }}>
+                    <Link key={index} href={keyword.link} sx={{ textDecoration: 'none', color: 'rgba(20, 110, 246, 1) !important' }}>
                         {part}
                     </Link>
                 );
@@ -75,46 +71,51 @@ const NotificationPopup: React.FC<NotificationPopupProps> = ({ open, onClose }) 
     };
 
     return (
-        <Drawer
-            anchor="right"
+        <Popover
             open={open}
             onClose={onClose}
-            sx={{zIndex: 1400,}}
+            sx={{ zIndex: 1400 }}
+            anchorEl={anchorEl}
+            anchorOrigin={{
+                vertical: 'bottom',
+                horizontal: 'center',
+            }}
+            transformOrigin={{
+                vertical: 'top',
+                horizontal: 'center',
+            }}
             PaperProps={{
                 sx: {
-                    width: '620px',
-                    position: 'fixed',
-                    zIndex: 1301,
-                    top: 0,
-                    bottom: 0,
-                    '@media (max-width: 900px)': {
-                        width: '100%'
+                    width: '364px',
+                    height: '530px',
+                    overflow: 'scroll',
+                    overflowX: 'hidden',
+                    boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)',
+                    ml: -16,
+                    "@media (max-width: 600px)": {
+                        mt: 2,
+                        ml: -2,
+                        width: '24rem',
+                        height: '530px',
+                    },
+                    "@media (max-width: 400px)": {
+                        mt: 2,
+                        ml: -0,
+                        width: '24rem',
+                        height: '33rem',
                     }
                 },
             }}
         >
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 2.8, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
+            <Box sx={{ display: 'flex', position: 'sticky', top:0, backgroundColor: '#fff', zIndex: 1400, justifyContent: 'space-between', alignItems: 'center', padding: 3, pl: 1.5, borderBottom: '1px solid rgba(247, 247, 247, 1)' }}>
                 <Typography variant="h6" className="first-sub-title" sx={{ textAlign: 'center' }}>
                     Notifications
                 </Typography>
-                <IconButton onClick={onClose} sx={{ p: 0 }}>
-                    <CloseIcon sx={{ width: '20px', height: '20px' }} />
-                </IconButton>
             </Box>
             <Divider />
-            <Box sx={{ margin: '16px 24px 24px 24px', border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)' }}>
+            <Box sx={{ margin: '2px', overflowY: 'auto' }}>
                 {loading ? (
-                    <Box
-                        sx={{
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            width: '100%',
-                            height: '100%',
-                            minHeight: '85vh'
-                        }}
-                    >
-                        {/* Spinner */}
+                    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
                         <Box sx={{
                             border: '8px solid #f3f3f3',
                             borderTop: '8px solid #3498db',
@@ -127,33 +128,25 @@ const NotificationPopup: React.FC<NotificationPopupProps> = ({ open, onClose }) 
                 ) : (
                     notifications.sort((a, b) => b.created_at - a.created_at).map((notification) => (
                         <Box key={notification.id} sx={{
-                            width: '100%', position: 'relative', padding: 2,
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: 2,
+                            padding: 1.25,
                             borderBottom: '1px solid #E8E9EB',
-                            '&:last-child': {
-                                borderBottom: 'none'
-                            }
+                            position: 'relative',
+                            pl: notification.is_checked === false ? 2 : 1.25,
+                            '&:before': notification.is_checked === false ? {
+                                content: '""',
+                                width: '8px',
+                                height: '8px',
+                                borderRadius: '50%',
+                                backgroundColor: '#5052B2',
+                                position: 'absolute',
+                                left: 4,
+                                top: '15px',
+                            } : {}
                         }}>
-                            <Box sx={{
-                                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                                position: 'relative',
-                                pl: notification.is_checked == false ? 2 : 0,
-                                '&:before': notification.is_checked == true ? {} : {
-                                    content: '""',
-                                    width: '8px',
-                                    height: '8px',
-                                    borderRadius: '50%',
-                                    background: '#5052B2',
-                                    position: 'absolute',
-                                    left: 0,
-                                    top: '6px',
-                                }
-                            }}>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <Typography variant="h6" className="second-sub-title" sx={{
                                     fontWeight: '500 !important',
-                                    lineHeight: '20px !important'
+                                    lineHeight: '20px !important',
                                 }}>
                                     {notification.sub_title}
                                 </Typography>
@@ -180,7 +173,7 @@ const NotificationPopup: React.FC<NotificationPopupProps> = ({ open, onClose }) 
                     ))
                 )}
             </Box>
-        </Drawer>
+        </Popover>
     );
 }
 

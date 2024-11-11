@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Box, colors, IconButton, List, ListItem, ListItemIcon, ListItemText, Menu, MenuItem, Typography } from '@mui/material';
 import { useRouter, usePathname } from 'next/navigation';
 import MenuIcon from '@mui/icons-material/Menu';
@@ -24,6 +24,7 @@ import Slider from "../components/Slider";
 import NotificationPopup from './NotificationPopup';
 import DomainButtonSelect from './NavigationDomainButton';
 import DnsIcon from '@mui/icons-material/Dns';
+import QuestionMarkOutlinedIcon from '@mui/icons-material/QuestionMarkOutlined';
 
 const navigationmenuStyles = {
   mobileMenuHeader: {
@@ -105,6 +106,7 @@ const navigationmenuStyles = {
 const NavigationMenu = () => {
   const [open, setOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [anchorElNotificate, setAnchorElNotificate] = useState<null | HTMLElement>(null);
   const router = useRouter();
   const pathname = usePathname();
   const { full_name: userFullName, email: userEmail } = useUser();
@@ -115,6 +117,8 @@ const NavigationMenu = () => {
   const { setShowSlider } = useSlider();
   const [showBookSlider, setShowBookSlider] = useState(false);
   const [notificationIconPopupOpen, setNotificationIconPopupOpen] = useState(false);
+  const [popupPosition, setPopupPosition] = useState({ top: 0, left: 0 });
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
   const toggleDrawer = () => {
     setOpen(!open);
@@ -162,30 +166,41 @@ const NavigationMenu = () => {
     router.push("/signin");
   };
 
-  const handleNotificationIconPopupOpen = () => {
+  const handleNotificationIconPopupOpen = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setAnchorElNotificate(event.currentTarget)
     setNotificationIconPopupOpen(true);
-  };
+  }
+
+  const handleSupportButton = () => {
+    window.location.href = 'https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai'
+  }
 
   const handleNotificationIconPopupClose = () => {
     setNotificationIconPopupOpen(false);
   }
 
   return (
-    <Box sx={{ display: { xs: notificationIconPopupOpen ? 'none' : 'block' } }}>
+    <Box>
       {/* Header with Menu Icon and Fixed Position */}
       <Box sx={navigationmenuStyles.mobileMenuHeader}>
         {/* Conditional Icon (Menu or Close) */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap:0.5 }}>
         <IconButton onClick={toggleDrawer}>
           {open ? <CloseIcon /> : <MenuIcon />}
         </IconButton>
 
         {/* Centered Logo (Adjust src to your logo) */}
         <Image src="/logo.svg" alt="logo" height={20} width={32} />
+        </Box>
+
 
         {/* Placeholder for Right Icon */}
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <IconButton onClick={handleNotificationIconPopupOpen}>
+          <IconButton ref={buttonRef} onClick={handleNotificationIconPopupOpen}>
             <NotificationsNoneIcon />
+          </IconButton>
+          <IconButton onClick={handleSupportButton}>
+            <QuestionMarkOutlinedIcon />
           </IconButton>
           <IconButton onClick={handleProfileMenuOpen}>
             <PersonIcon />
@@ -208,23 +223,63 @@ const NavigationMenu = () => {
         }}
         sx={{ top: '46px' }}
       >
-        <Box sx={{ p: 2 }}>
-          <Typography variant="h6">{full_name}</Typography>
-          <Typography variant="body2" color="textSecondary">
+        <Box sx={{ paddingTop: 1, paddingLeft: 2, paddingRight: 2, paddingBottom: 1 }}>
+          <Typography
+            variant="h6"
+            sx={{
+              fontFamily: 'Nunito Sans',
+              fontSize: '14px',
+              fontWeight: 600,
+              lineHeight: '19.6px',
+              color: 'rgba(0, 0, 0, 0.89)',
+              mb: 0.25
+            }}
+          >
+            {full_name}
+          </Typography>
+          <Typography
+            variant="body2"
+            color="textSecondary"
+            sx={{
+              fontFamily: 'Nunito Sans',
+              fontSize: '14px',
+              fontWeight: 600,
+              lineHeight: '19.6px',
+              color: 'rgba(0, 0, 0, 0.89)',
+            }}
+          >
             {email}
           </Typography>
         </Box>
-        <MenuItem onClick={() => handleNavigation('/settings')}>
+        <MenuItem
+          sx={{
+            fontFamily: 'Nunito Sans',
+            fontSize: '14px',
+            fontWeight: 500,
+            lineHeight: '19.6px',
+          }}
+          onClick={() => handleNavigation('/settings')}
+        >
           Settings
         </MenuItem>
-        <MenuItem onClick={handleSignOut}>Sign Out</MenuItem>
+        <MenuItem
+          sx={{
+            fontFamily: 'Nunito Sans',
+            fontSize: '14px',
+            fontWeight: 500,
+            lineHeight: '19.6px',
+          }}
+          onClick={handleSignOut}
+        >
+          Sign Out
+        </MenuItem>
       </Menu>
 
       {/* Full-Width Drawer Menu */}
       <Box sx={navigationmenuStyles.mobileDrawerMenu} style={{
         left: open ? 0 : '-100%'
       }}>
-        <List sx={{paddingTop: 0}}>
+        <List sx={{ paddingTop: 0 }}>
 
 
           <ListItem
@@ -324,7 +379,7 @@ const NavigationMenu = () => {
         </List>
       </Box>
       {showBookSlider && <Slider />}
-      <NotificationPopup open={notificationIconPopupOpen} onClose={handleNotificationIconPopupClose} />
+      <NotificationPopup open={notificationIconPopupOpen} onClose={handleNotificationIconPopupClose} anchorEl={anchorElNotificate} />
     </Box>
   );
 };

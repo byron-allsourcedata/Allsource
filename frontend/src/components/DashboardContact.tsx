@@ -362,35 +362,38 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates }) => 
                                 alignContent: { xs: 'center', sm: 'flex-start' },
                                 alignItems: 'center',
                                 gap: 2,
-                                
+                                '@media (max-width: 600px)': {width: '100%', justifyContent: 'flex-end', display: 'flex', alignItems: 'flex-end'} 
                             }}
                         >
-                            <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1.5 }}>
+                            <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1.5,  }}>
                                 <IconButton
                                     onClick={() => toggleChartType('line')}
                                     sx={{
-                                        width: '16px',
+                                        width: '20px',
                                         ml: 6.25,
-                                        height: '16px',
+                                        height: '20px',
                                         borderRadius: '4px',
                                         border: `1.5px solid ${chartType === 'line' ? 'rgba(80, 82, 178, 1)' : 'rgba(115, 115, 115, 1)'}`,
                                         color: chartType === 'line' ? 'rgba(80, 82, 178, 1)' : 'rgba(115, 115, 115, 1)',
+                                        '@media (max-width: 600px)': {
+                                            ml:2
+                                        }
                                     }}
                                 >
-                                    <ShowChart sx={{ fontSize: '16px' }} />
+                                    <ShowChart sx={{ fontSize: '20px' }} />
                                 </IconButton>
 
                                 <IconButton
                                     onClick={() => toggleChartType('bar')}
                                     sx={{
-                                        width: '16px',
-                                        height: '16px',
+                                        width: '20px',
+                                        height: '20px',
                                         borderRadius: '4px',
                                         border: `1.5px solid ${chartType === 'bar' ? 'rgba(80, 82, 178, 1)' : 'rgba(115, 115, 115, 1)'}`,
                                         color: chartType === 'bar' ? 'rgba(80, 82, 178, 1)' : 'rgba(115, 115, 115, 1)',
                                     }}
                                 >
-                                    <IconBarChart sx={{ fontSize: '16px' }} />
+                                    <IconBarChart sx={{ fontSize: '20px' }} />
                                 </IconButton>
                             </Box>
                         </Stack>
@@ -441,7 +444,7 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates }) => 
                                     variant={visibleSeries[seriesId as keyof VisibleSeries] ? 'filled' : 'outlined'} />
                             ))}
 
-                            <Box sx={{ '@media (min-width: 900px)': { display: 'none' }, width: '100%', mt: 1, mb: 1 }}>
+                            <Box sx={{ '@media (min-width: 900px)': { display: 'none' }, width: '100%', mt: 1, mb: 1, ml:2 }}>
                                 <Select
                                     multiple
                                     value={selectedGraphs}
@@ -537,7 +540,7 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates }) => 
                     (chartType === 'line' ? (
                         <LineChart
                             colors={filteredSeriescolor.map(s => colorMapping[s.id as keyof typeof colorMapping])}
-                            xAxis={[{ scaleType: 'point', data: formattedData }]}
+                            xAxis={[{ scaleType: 'point', data: formattedData, disableTicks: true, disableLine: true, min: 1 }]}
                             yAxis={[
                                 {
                                     valueFormatter: (value) => {
@@ -549,6 +552,9 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates }) => 
                                             return value.toString(); // Return smaller numbers without formatting
                                         }
                                         },
+                                        disableTicks: true, 
+                                        disableLine: true, 
+                                        min: 1
                                 }
                             ]}
                             series={filteredSeries}
@@ -568,7 +574,7 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates }) => 
                         <BarChart
                             height={350}
                             colors={filteredSeriescolor.map(s => colorMapping[s.id as keyof typeof colorMapping])}
-                            xAxis={[{ scaleType: 'band', data: aggregatedData }]}
+                            xAxis={[{ scaleType: 'band', data: aggregatedData, disableTicks: true, disableLine: true, min: 1 }]}
                             yAxis={[
                                 {
                                     valueFormatter: (value) => {
@@ -580,6 +586,9 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates }) => 
                                             return value.toString(); // Return smaller numbers without formatting
                                         }
                                         },
+                                        disableTicks: true, 
+                                        disableLine: true, 
+                                        min: 1
                                 }
                             ]}
                             series={aggregatedSeries.map((s) => ({ data: s.data, label: s.label }))}

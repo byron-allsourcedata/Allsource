@@ -478,28 +478,28 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                 <IconButton
                                     onClick={() => toggleChartType('line')}
                                     sx={{
-                                        width: '16px',
+                                        width: '20px',
                                         ml: 5,
-                                        height: '16px',
+                                        height: '20px',
                                         borderRadius: '4px', // Квадратная форма
                                         border: `1.5px solid ${chartType === 'line' ? 'rgba(80, 82, 178, 1)' : 'rgba(115, 115, 115, 1)'}`,
                                         color: chartType === 'line' ? 'rgba(80, 82, 178, 1)' : 'rgba(115, 115, 115, 1)',
                                     }}
                                 >
-                                    <ShowChart sx={{ fontSize: '16px' }} />
+                                    <ShowChart sx={{ fontSize: '20px' }} />
                                 </IconButton>
 
                                 <IconButton
                                     onClick={() => toggleChartType('bar')}
                                     sx={{
-                                        width: '16px',
-                                        height: '16px',
+                                        width: '20px',
+                                        height: '20px',
                                         borderRadius: '4px', // Квадратная форма
                                         border: `1.5px solid ${chartType === 'bar' ? 'rgba(80, 82, 178, 1)' : 'rgba(115, 115, 115, 1)'}`,
                                         color: chartType === 'bar' ? 'rgba(80, 82, 178, 1)' : 'rgba(115, 115, 115, 1)',
                                     }}
                                 >
-                                    <IconBarChart sx={{ fontSize: '16px' }} />
+                                    <IconBarChart sx={{ fontSize: '20px' }} />
                                 </IconButton>
                             </Box>
                         </Stack>
@@ -693,6 +693,8 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                     xAxis={[{
                                         scaleType: 'point',
                                         data: formattedData,
+                                        disableTicks: true,
+                                        disableLine: true
                                     }]}
                                     yAxis={[{
                                         valueFormatter: (value) => {
@@ -704,10 +706,13 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                                 return value.toString();
                                             }
                                         },
+                                        disableTicks: true,
+                                        disableLine: true,
+                                        min: 1,
                                     }]}
                                     series={filteredSeries}
-                                    height={mainchartSize} // Занимает 100% от контейнера
-                                    margin={{ left: 70, right: 20, top: 20, bottom: 20 }}
+                                    height={mainchartSize}
+                                    margin={{ left: 35, right: 20, top: 20, bottom: 20 }}
                                     grid={{ horizontal: true }}
                                     sx={{ border: 'none' }}
                                     slotProps={{ legend: { hidden: true } }}
@@ -793,7 +798,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                     }
                                 }}
                             />
-                            <Typography component='div' sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', fontWeight: '600', fontSize: '12px', justifyContent: 'flex-end', fontFamily: 'Nunito Sans', lineHeight: '16.08px', color: 'rgba(74, 74, 74, 1)', '@media (max-width: 900px)': { alignItems: 'end' } }}>
+                            <Typography component='div' sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', fontWeight: '600', fontSize: '12px', justifyContent: 'flex-end', fontFamily: 'Nunito Sans', lineHeight: '16.08px', color: 'rgba(74, 74, 74, 1)', '@media (max-width: 900px)': { alignItems: 'start' } }}>
                                 Total Orders <Typography component='span' sx={{ fontFamily: 'Nunito Sans', fontSize: '16px', fontWeight: 700, lineHeight: '21.82px', color: 'rgba(32, 33, 36, 1)', textAlign: 'left' }}>{total_orders.averageViewProducts ? total_orders.averageViewProducts : 0}</Typography>
                             </Typography>
                         </Box>
@@ -832,6 +837,9 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                     xAxis={[{
                                         scaleType: 'point',
                                         data: formattedData,
+                                        disableTicks: true, 
+                                        disableLine: true,
+                                        min: 1
                                     }]}
                                     yAxis={[
                                         {
@@ -844,11 +852,14 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                                     return value.toString(); // Return smaller numbers without formatting
                                                 }
                                             },
-                                        }
+                                            disableTicks: true,
+                                            disableLine: true,
+                                            min: 1,
+                                        },
                                     ]}
                                     series={viewedProductSeries}
                                     height={250}
-                                    margin={{ left: 50, right: 20, top: 20, bottom: 20 }}
+                                    margin={{ left: 40, right: 20, top: 20, bottom: 20 }}
                                     grid={{ horizontal: true }}
                                     sx={{
                                         border: 'none',
@@ -910,7 +921,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                     }
                                 }}
                             />
-                            <Typography component='div' sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', fontWeight: '600', fontSize: '12px', justifyContent: 'flex-end', fontFamily: 'Nunito Sans', lineHeight: '16.08px', color: 'rgba(74, 74, 74, 1)', '@media (max-width: 900px)': { alignItems: 'end' } }}>
+                            <Typography component='div' sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', fontWeight: '600', fontSize: '12px', justifyContent: 'flex-end', fontFamily: 'Nunito Sans', lineHeight: '16.08px', color: 'rgba(74, 74, 74, 1)', '@media (max-width: 900px)': { alignItems: 'start' } }}>
                                 Total Orders <Typography component='span' sx={{ fontFamily: 'Nunito Sans', fontSize: '16px', fontWeight: 700, lineHeight: '21.82px', color: 'rgba(32, 33, 36, 1)', textAlign: 'left' }}>{total_orders.averageAddToCart ? total_orders.averageAddToCart : 0}</Typography>
                             </Typography>
                         </Box>
@@ -946,7 +957,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                 </Box> :
                                     <LineChart
                                         colors={['rgba(128, 201, 64, 1)']}
-                                        xAxis={[{ scaleType: 'point', data: formattedData }]}
+                                        xAxis={[{ scaleType: 'point', data: formattedData, disableTicks: true, disableLine: true, min: 1 }]}
                                         yAxis={[
                                             {
                                                 valueFormatter: (value) => {
@@ -958,6 +969,9 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                                         return value.toString(); // Return smaller numbers without formatting
                                                     }
                                                 },
+                                                disableTicks: true,
+                                                disableLine: true,
+                                                min: 1,
                                             }
                                         ]}
                                         series={addToCartSeries}
@@ -1024,7 +1038,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                     }
                                 }}
                             />
-                            <Typography component='div' sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', fontWeight: '600', fontSize: '12px', justifyContent: 'flex-end', fontFamily: 'Nunito Sans', lineHeight: '16.08px', color: 'rgba(74, 74, 74, 1)', '@media (max-width: 900px)': { alignItems: 'end' } }}>
+                            <Typography component='div' sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', fontWeight: '600', fontSize: '12px', justifyContent: 'flex-end', fontFamily: 'Nunito Sans', lineHeight: '16.08px', color: 'rgba(74, 74, 74, 1)', '@media (max-width: 900px)': { alignItems: 'start' } }}>
                                 Total Orders <Typography component='span' sx={{ fontFamily: 'Nunito Sans', fontSize: '16px', fontWeight: 700, lineHeight: '21.82px', color: 'rgba(32, 33, 36, 1)', textAlign: 'left' }}>{total_orders.averageVisitors ? total_orders.averageVisitors : 0}</Typography>
                             </Typography>
                         </Box>
@@ -1060,7 +1074,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                 </Box> :
                                     <LineChart
                                         colors={['rgba(124, 125, 197, 1)']}
-                                        xAxis={[{ scaleType: 'point', data: formattedData, }]}
+                                        xAxis={[{ scaleType: 'point', data: formattedData, disableTicks: true, disableLine: true, min: 1 }]}
                                         yAxis={[
                                             {
                                                 valueFormatter: (value) => {
@@ -1072,6 +1086,9 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                                         return value.toString(); // Return smaller numbers without formatting
                                                     }
                                                 },
+                                                disableTicks: true,
+                                                disableLine: true,
+                                                min: 1,
                                             }
                                         ]}
                                         series={visitorSeries}
@@ -1160,8 +1177,8 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                         <PieChart
                                             colors={country_color}
                                             margin={{
-                                                left: 100,
-                                                right: 40,
+                                                left: 10,
+                                                right: 20,
                                                 top: 80,
                                                 bottom: 80,
                                             }}
@@ -1180,8 +1197,8 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                                     highlightScope: { faded: 'global', highlighted: 'item' },
                                                 },
                                             ]}
-                                            height={isMobile ? 200 : 260}
-                                            width={isMobile ? 200 : 260}
+                                            height={isMobile ? 230 : 260}
+                                            width={isMobile ? 230 : 260}
 
                                             slotProps={{
                                                 legend: { hidden: true },
@@ -1191,7 +1208,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                 </Box>
                             </CardContent>
 
-                            <Stack sx={{ padding: 2, display: 'flex', alignItems: 'start', justifyContent: 'center' }}>
+                            <Stack sx={{ padding: 2, mr:8, display: 'flex', alignItems: 'start', justifyContent: 'center' }}>
                                 {distribution.map((type, index) => (
                                     <Stack
                                         key={index}
@@ -1209,7 +1226,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                                     }}
                                                 >
                                                     <Typography variant="body2" className="paragraph" sx={{
-                                                        lineHeight: '11.72px !important', color: 'rgba(32, 33, 36, 1) !important', textAlign: 'left', display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 0.5,
+                                                        lineHeight: '11.72px !important', color: 'rgba(32, 33, 36, 1) !important', textWrap: 'nowrap',  textAlign: 'left', display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 0.5,
                                                         '@media (max-width: 460px)': {
                                                             fontSize: '10px !important'
                                                         }

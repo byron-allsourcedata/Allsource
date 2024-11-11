@@ -1,7 +1,7 @@
 "use client";
 import { Box, Typography, Button, Menu, MenuItem, IconButton } from "@mui/material";
 import Image from "next/image";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "../context/UserContext";
 import TrialStatus from "./TrialLabel";
@@ -52,13 +52,15 @@ const Header: React.FC<HeaderProps> = ({ NewRequestNotification }) => {
   const meItem = typeof window !== "undefined" ? sessionStorage.getItem("me") : null;
   const meData = meItem ? JSON.parse(meItem) : { full_name: '', email: '' };
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [anchorElNotificate, setAnchorElNotificate] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
   const full_name = userFullName || meData.full_name;
   const email = userEmail || meData.email;
   const { resetTrialData } = useTrial();
   const [notificationIconPopupOpen, setNotificationIconPopupOpen] = useState(false);
   const [hasNewNotifications, setHasNewNotifications] = useState<boolean>(false);
-  const [unreadCount, setUnreadCount] = useState<number>(0);
+  const [popupPosition, setPopupPosition] = useState({ top: 0, left: 0 });
+  const buttonRef = useRef<HTMLButtonElement>(null);
   const handleSignOut = () => {
     localStorage.clear();
     sessionStorage.clear();
@@ -97,13 +99,15 @@ const Header: React.FC<HeaderProps> = ({ NewRequestNotification }) => {
     router.push("/dashboard");
   };
 
-  const handleNotificationIconPopupOpen = () => {
+  const handleNotificationIconPopupOpen = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setAnchorElNotificate(event.currentTarget);
     setNotificationIconPopupOpen(true);
     setHasNewNotifications(false);
   };
 
   const handleNotificationIconPopupClose = () => {
     setNotificationIconPopupOpen(false);
+    setAnchorEl(null);
     setHasNotification(false);
   }
   return (
@@ -124,7 +128,10 @@ const Header: React.FC<HeaderProps> = ({ NewRequestNotification }) => {
         <Box sx={{ display: "flex", alignItems: "center" }}>
           <TrialStatus />
 
-          <Button onClick={handleNotificationIconPopupOpen} sx={{
+          <Button 
+            onClick={handleNotificationIconPopupOpen}
+            ref={buttonRef} 
+            sx={{
             minWidth: '32px',
             padding: '6px',
             color: 'rgba(128, 128, 128, 1)',
@@ -269,7 +276,7 @@ const Header: React.FC<HeaderProps> = ({ NewRequestNotification }) => {
           </Menu>
         </Box>
       </Box>
-      <NotificationPopup open={notificationIconPopupOpen} onClose={handleNotificationIconPopupClose} />
+      <NotificationPopup open={notificationIconPopupOpen} onClose={handleNotificationIconPopupClose} anchorEl={anchorElNotificate} />
     </>
   );
 };

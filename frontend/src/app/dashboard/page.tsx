@@ -383,10 +383,6 @@ const SupportSection: React.FC = () => {
 const Dashboard: React.FC = () => {
   const router = useRouter();
   const { hasNotification } = useNotification();
-  const [dataRevenue, setDataRevenue] = useState<any>(null);
-  const [dataContact, setDataContact] = useState<any>(null);
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [dropdownEl, setDropdownEl] = useState<null | HTMLElement>(null);
   const [showSlider, setShowSlider] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [showCharts, setShowCharts] = useState(false);
@@ -429,7 +425,7 @@ const Dashboard: React.FC = () => {
     const { start, end } = dates;
     if (start && end) {
       const formattedStart = dayjs(start).format('MMM D');
-      const formattedEnd = dayjs(end).format('D, YYYY');
+      const formattedEnd = dayjs(end).format('MMM D, YYYY');
 
       setFormattedDates(`${formattedStart} - ${formattedEnd}`);
     } else if (start) {
@@ -525,12 +521,13 @@ const Dashboard: React.FC = () => {
                 paddingLeft: '30px',
                 paddingRight: '65px',
                 '@media (min-width: 1600px)': {
-                  paddingLeft: '85px',
+                  paddingLeft: '30px',
                   paddingRight: '90px',
                 },
                 mx: '-24px',
                 "@media (max-width: 900px)": { 
                   left: '10px',
+                  paddingRight: '90px',
                 },
                 "@media (max-width: 600px)": { 
                   flexDirection: 'column',
@@ -679,8 +676,8 @@ const Dashboard: React.FC = () => {
                   onClick={handleCalendarClick}
                   sx={{
                     textTransform: 'none',
-                    color: 'rgba(128, 128, 128, 1)',
-                    border: '1.5px solid rgba(184, 184, 184, 1)',
+                    color: formattedDates ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)',
+                    border: formattedDates ? '1.5px solid rgba(80, 82, 178, 1)' : '1.5px solid rgba(184, 184, 184, 1)',
                     borderRadius: '4px',
                     padding: '8px',
                     minWidth: 'auto',
@@ -698,12 +695,12 @@ const Dashboard: React.FC = () => {
                 >
                   <DateRangeIcon 
                     fontSize="medium" 
-                    sx={{ color: 'rgba(184, 184, 184, 1)' }}
+                    sx={{ color: formattedDates ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)' }}
                   />
                   <Typography variant="body1" sx={{
                     fontFamily: 'Roboto',
                     fontSize: '14px',
-                    fontWeight: '600',
+                    fontWeight: '400',
                     color: 'rgba(32, 33, 36, 1)',
                     lineHeight: '19.6px',
                     textAlign: 'left'
