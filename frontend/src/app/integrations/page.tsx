@@ -319,8 +319,7 @@ const IntegrationBox = ({ image, handleClick, handleDelete, service_name, active
 };
 
 const IntegrationAdd = () => (
-    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer' }}>
-        <Box sx={{
+          <Box sx={{
             border: '1px dashed #5052B2',
             display: 'flex',
             borderRadius: '4px',
@@ -332,12 +331,10 @@ const IntegrationAdd = () => (
             '&:hover': { boxShadow: '0 0 4px #00000040' },
             "@media (max-width: 900px)": { 
                   width: '156px'
-                },
-
+            },
         }}>
             <Image src={'/add-square.svg'} width={44} height={44} alt={'add'} />
         </Box>
-    </Box>
 );
 
 interface DeletePopupProps {
@@ -554,16 +551,11 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
 
     return (
         <>
-            <Box sx={{ display: 'flex', gap: 2,
-                "@media (max-width: 900px)": { 
-                  flexWrap: 'wrap',
-                  width: '100%'
-                },
-                "@media (max-width: 600px)": { 
-                  flexWrap: 'wrap',
-                  alignItems: 'start', 
-                  } 
-             }}>
+          <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap',
+              "@media (max-width: 900px)": { 
+                justifyContent: 'center',
+                } 
+            }}>
             {integrationsCredentials.some(integration => integration.service_name === "Shopify") && (
                 <Box onClick={() => handleActive('Shopify')}>
                     <IntegrationBox
@@ -661,9 +653,9 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
                 </Box>
             )}
             <Box onClick={() => setOpenAvalible(true)}>
-                <IntegrationAdd />
+              <IntegrationAdd />
             </Box>
-        </Box>
+          </Box>
         <KlaviyoIntegrationPopup 
             open={openKlaviyoConnect} 
             handleClose={handleClose}
@@ -787,7 +779,7 @@ const IntegrationsAvaliable = ({ integrationsCredentials, integrations, handleSa
 
     return (
         <Box>
-            <Box >
+            <Box>
                 <TextField
                     fullWidth
                     placeholder="Search integrations"
@@ -814,6 +806,7 @@ const IntegrationsAvaliable = ({ integrationsCredentials, integrations, handleSa
               width: '100%',
               "@media (max-width: 600px)": { 
                 alignItems: 'start', 
+                justifyContent: 'center'
                 }
              }}>
                 {integrations.map((integration: any) => {
