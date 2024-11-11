@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 from dateutil.relativedelta import relativedelta
 from sqlalchemy.orm import Session
@@ -312,6 +312,7 @@ class SubscriptionService:
         end_date_timestamp = stripe_payload.get("current_period_end")
         start_date = datetime.fromtimestamp(start_date_timestamp, timezone.utc).replace(tzinfo=None)
         end_date = datetime.fromtimestamp(end_date_timestamp, timezone.utc).replace(tzinfo=None)
+
         stripe_status = stripe_payload.get("status")
         if stripe_status in ["active", "succeeded", "trialing"]:
             status = "active"
@@ -319,6 +320,19 @@ class SubscriptionService:
             status = "inactive"
         else:
             status = "canceled"
+
+        plan = stripe_payload['items']['data'][0]['plan']
+        interval = plan['interval']
+        interval_count = plan['interval_count']
+        actual_start_date = start_date
+        actual_end_date = end_date
+        if stripe_status == 'trialing':
+            actual_start_date = end_date
+            if interval == 'month':
+                actual_end_date = actual_start_date + relativedelta(months=+interval_count)
+            elif interval == 'year':
+                actual_end_date = actual_start_date + relativedelta(years=+interval_count)
+
 
         if status == 'active':
             user_subscription = self.db.query(UserSubscriptions).where(
@@ -351,8 +365,8 @@ class SubscriptionService:
                     {"status": "inactive", "updated_at": datetime.now(timezone.utc).replace(tzinfo=None)})
                 self.db.flush()
                 new_subscription = UserSubscriptions(
-                    plan_start=start_date,
-                    plan_end=end_date,
+                    plan_start=actual_start_date,
+                    plan_end=actual_end_date,
                     domains_limit=domains_limit,
                     integrations_limit=integrations_limit,
                     plan_id=plan.id,
