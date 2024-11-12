@@ -64,7 +64,15 @@ const TrialStatus: React.FC = () => {
   }, [data]);
 
   const calculateDaysDifference = (endDate: string) => {
-    const currentDate = new Date();
+    const currentDateTime = new Date();
+    const currentDate = new Date(
+      currentDateTime.getUTCFullYear(),
+      currentDateTime.getUTCMonth(),
+      currentDateTime.getUTCDate(),
+      currentDateTime.getUTCHours(),
+      currentDateTime.getUTCMinutes(),
+      currentDateTime.getUTCSeconds()
+    );
     const endDateObj = new Date(endDate);
 
     if (isNaN(endDateObj.getTime())) {
@@ -127,12 +135,6 @@ const TrialStatus: React.FC = () => {
         setIconColor('rgba(148, 120, 21, 1)');
       }
     } 
-    else if (trial_status) {
-      setStatusText('Trial Activated');
-      setBackgroundColor('rgba(253, 242, 202, 1)');
-      setTextColor('rgba(148, 120, 21, 1)');
-      setIconColor('rgba(148, 120, 21, 1)');
-    }
     else {
       if (plan_days < 0 && check_active !== null) {
         setStatusText('Subscription Expired');
