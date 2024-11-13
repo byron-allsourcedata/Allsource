@@ -8,6 +8,7 @@ class DailyDataItem(BaseModel):
     visitors: int
     view_products: int
     abandoned_cart: int
+    converted_sale: int
 
 
 class TotalCounts(BaseModel):
@@ -15,6 +16,7 @@ class TotalCounts(BaseModel):
     total_visitors: int
     total_view_products: int
     total_abandoned_cart: int
+    total_converted_sale: int
 
 
 class ContactResponse(BaseModel):

@@ -347,10 +347,11 @@ class LeadsPersistence:
             self.db.query(
                 LeadsVisits.start_date,
                 LeadUser.behavior_type,
+                LeadUser.is_converted_sales,
                 func.count(LeadUser.id).label('lead_count')
             )
             .join(LeadsVisits, LeadsVisits.id == LeadUser.first_visit_id)
-            .group_by(LeadsVisits.start_date, LeadUser.behavior_type)
+            .group_by(LeadsVisits.start_date, LeadUser.behavior_type, LeadUser.is_converted_sales)
             .filter(LeadUser.domain_id == domain_id)
         )
 
