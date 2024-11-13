@@ -723,6 +723,7 @@ async def main():
             session.close()
             logging.info('Sleeping for 10 minutes...')
             time.sleep(60 * 10)
+            Session = sessionmaker(bind=engine)
             session = Session()
     except Exception as e:
         session.rollback()
