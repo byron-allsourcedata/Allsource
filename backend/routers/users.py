@@ -10,7 +10,7 @@ from models.users_domains import UserDomains
 from schemas.auth_google_token import AuthGoogleData
 from schemas.users import UserSignUpForm, UserSignUpFormResponse, UserLoginFormResponse, UserLoginForm, UpdatePassword, \
     ResendVerificationEmailResponse, ResetPasswordForm, ResetPasswordResponse, UpdatePasswordResponse, \
-    CheckVerificationStatusResponse, VerifyTokenResponse, DismissNotificationsRequest
+    CheckVerificationStatusResponse, VerifyTokenResponse, DismissNotificationsRequest, DeleteNotificationRequest
 from services.notification import Notification
 from services.users import UsersService
 from services.users_auth import UsersAuth
@@ -32,6 +32,12 @@ def get_me(user_service: UsersService = Depends(get_users_service), domain = Dep
 async def get_notification(notification_service: Notification = Depends(get_notification_service),
                            user=Depends(check_user_authentication)):
     return notification_service.get_notification(user)
+
+
+@router.delete("/notification/delete")
+async def get_notification(request: DeleteNotificationRequest, notification_service: Notification = Depends(get_notification_service),
+                           user=Depends(check_user_authentication)):
+    return notification_service.delete_notification(request, user)
 
 
 @router.post("/notification/dismiss")

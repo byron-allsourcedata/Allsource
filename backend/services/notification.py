@@ -37,6 +37,10 @@ class Notification:
 
         return result
 
+    def delete_notification(self, request, user: dict):
+        self.notification_persistence.delete_notification_by_id(request.notification_id, user_id=user.get('id'))
+        return "SUCCESS"
+
     def dismiss(self, request, user):
         self.notification_persistence.dismiss(request=request, user_id=user.get('id'))
         return 'SUCCESS'

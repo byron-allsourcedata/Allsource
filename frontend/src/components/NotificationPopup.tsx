@@ -4,6 +4,8 @@ import CloseIcon from '@mui/icons-material/Close';
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
+import { motion, AnimatePresence } from "framer-motion";
+import { showErrorToast } from "./ToastNotification";
 
 dayjs.extend(relativeTime);
 
@@ -26,22 +28,22 @@ const NotificationPopup: React.FC<NotificationPopupProps> = ({ open, onClose, an
     const [notifications, setNotifications] = useState<Notification[]>([]);
 
     useEffect(() => {
-            const accessToken = localStorage.getItem("token");
-            if (accessToken) {
-                const fetchData = async () => {
-                    try {
-                        const response = await axiosInstance.get("/notification");
-                        setNotifications(response.data);
-                        if (open) {
-                            const dismiss = axiosInstance.post("/notification/dismiss");
-                        }
-                    } catch (error) {
-                    } finally {
-                        setLoading(false);
+        const accessToken = localStorage.getItem("token");
+        if (accessToken) {
+            const fetchData = async () => {
+                try {
+                    const response = await axiosInstance.get("/notification");
+                    setNotifications(response.data);
+                    if (open) {
+                        const dismiss = axiosInstance.post("/notification/dismiss");
                     }
-                };
-                fetchData();
-            }
+                } catch (error) {
+                } finally {
+                    setLoading(false);
+                }
+            };
+            fetchData();
+        }
     }, [open]);
 
     const keywords = [
@@ -68,6 +70,19 @@ const NotificationPopup: React.FC<NotificationPopupProps> = ({ open, onClose, an
             return part;
         });
         return <>{parts}</>;
+    };
+
+    const handleDeleteNotification = async (notificationId: number) => {
+        try {
+            setNotifications((prevNotifications) =>
+                prevNotifications.filter((n) => n.id !== notificationId)
+            );
+            await axiosInstance.delete('/notification/delete', {
+                data: { notification_id: notificationId },
+            });
+        } catch (error) {
+            showErrorToast('Fail on delete notification. Please try delete later')
+        }
     };
 
     return (
@@ -107,7 +122,7 @@ const NotificationPopup: React.FC<NotificationPopupProps> = ({ open, onClose, an
                 },
             }}
         >
-            <Box sx={{ display: 'flex', position: 'sticky', top:0, backgroundColor: '#fff', zIndex: 1400, justifyContent: 'space-between', alignItems: 'center', padding: 3, pl: 1.5, borderBottom: '1px solid rgba(247, 247, 247, 1)' }}>
+            <Box sx={{ display: 'flex', position: 'sticky', top: 0, backgroundColor: '#fff', zIndex: 1400, justifyContent: 'space-between', alignItems: 'center', padding: 3, pl: 1.5, borderBottom: '1px solid rgba(247, 247, 247, 1)' }}>
                 <Typography variant="h6" className="first-sub-title" sx={{ textAlign: 'center' }}>
                     Notifications
                 </Typography>
@@ -126,9 +141,20 @@ const NotificationPopup: React.FC<NotificationPopupProps> = ({ open, onClose, an
                         }} />
                     </Box>
                 ) : (
-                    notifications.sort((a, b) => b.created_at - a.created_at).map((notification) => (
+                    <AnimatePresence>
+                    {notifications.sort((a, b) => b.created_at - a.created_at).map((notification) => (
+                        <motion.div
+                        key={notification.id}
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.3 }}
+                    >
                         <Box key={notification.id} sx={{
                             padding: 1.25,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: 2,
                             borderBottom: '1px solid #E8E9EB',
                             position: 'relative',
                             pl: notification.is_checked === false ? 2 : 1.25,
@@ -141,7 +167,10 @@ const NotificationPopup: React.FC<NotificationPopupProps> = ({ open, onClose, an
                                 position: 'absolute',
                                 left: 4,
                                 top: '15px',
-                            } : {}
+                            } : {},
+                            '&:hover .delete-icon': {
+                            opacity: 1,
+                        }
                         }}>
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <Typography variant="h6" className="second-sub-title" sx={{
@@ -150,13 +179,17 @@ const NotificationPopup: React.FC<NotificationPopupProps> = ({ open, onClose, an
                                 }}>
                                     {notification.sub_title}
                                 </Typography>
-                                <Typography variant="body1" className='paragraph' sx={{
-                                    fontWeight: '500 !important',
-                                    lineHeight: '16px !important',
-                                    color: '#5F6368 !important'
-                                }} >
-                                    {dayjs.unix(notification.created_at).fromNow()}
-                                </Typography>
+                                <IconButton
+                                    className="delete-icon"
+                                    sx={{
+                                        opacity: 0,
+                                        transition: 'opacity 0.3s',
+                                    }}
+                                    onClick={() => handleDeleteNotification(notification.id)}
+                                    size="small"
+                                >
+                                    <CloseIcon fontSize="small" />
+                                </IconButton>
                             </Box>
                             <Typography
                                 key={notification.id}
@@ -170,7 +203,9 @@ const NotificationPopup: React.FC<NotificationPopupProps> = ({ open, onClose, an
                                 {transformTextToLinks(notification.text)}
                             </Typography>
                         </Box>
-                    ))
+                        </motion.div>
+                        ))
+                }</AnimatePresence>
                 )}
             </Box>
         </Popover>
