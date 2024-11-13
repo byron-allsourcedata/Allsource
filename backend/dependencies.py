@@ -415,3 +415,12 @@ def get_integration_service(db: Session = Depends(get_db),
                               aws_service,
                               domain_persistence,
                               suppression_persitence)
+
+
+def check_api_key(maximiz_api_key = Header(None), domain_persistence: UserDomainsPersistence = Depends(get_user_domain_persistence)):
+    if maximiz_api_key:
+        domains = domain_persistence.get_domain_by_filter(api_key=maximiz_api_key)
+        if domains:
+            return domains[0]
+        raise HTTPException(status_code=404, detail={'status': 'Domain Not Found'})
+    raise HTTPException(status_code=401, detail={'status': 'Invalid API Key'})

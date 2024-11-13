@@ -1,10 +1,12 @@
+from datetime import datetime, timedelta
 from urllib.parse import urlencode
-from fastapi import APIRouter, Depends, Query, HTTPException, Request, status
+from fastapi import APIRouter, Depends, Header, Query, HTTPException, Request, status
 from fastapi.responses import RedirectResponse
 from enums import UserAuthorizationStatus
 from dependencies import get_integration_service, IntegrationService, IntegrationsPresistence, \
-    get_user_integrations_presistence, \
-    check_user_authorization, check_domain, check_pixel_install_domain, check_user_authentication, get_user_persistence_service, UserPersistence, get_user_domain_persistence, UserDomainsPersistence
+            get_user_integrations_presistence, check_user_authorization, check_domain, \
+            check_pixel_install_domain, check_user_authentication, get_user_persistence_service, \
+            UserPersistence, get_user_domain_persistence, UserDomainsPersistence, check_api_key, LeadsService, get_leads_persistence
 from schemas.integrations.integrations import *
 from enums import TeamAccessLevel
 import httpx
@@ -156,10 +158,6 @@ async def set_suppression(suppression_data: SupperssionSet, service_name: str = 
         return service.set_supperssions(suppression_data.suppression, domain.id)
 
 
-
-
-
-
 @router.get("/bigcommerce/oauth")
 async def bigcommerce_redirect_login(store_hash: str = Query(...), is_pixel_install: bool = Query(False), user = Depends(check_user_authentication), domain = Depends(check_domain)):
     scope = ['store_v2_orders_read_only','store_v2_content','store_content_checkout', 'store_v2_information_read_only']
@@ -177,12 +175,13 @@ async def bigcommerce_redirect_login(store_hash: str = Query(...), is_pixel_inst
         'url': authorize_url
     }
 
+FRONTEND_REDIRECT_URI = BigcommerceConfig.frontend_redirect
+
 @router.get("/bigcommerce/oauth/callback")
 async def bigcommerce_oauth_callback(code: str, state: str = Query(None), 
                                      integration_service: IntegrationService = Depends(get_integration_service), 
                                      user_persistence: UserPersistence = Depends(get_user_persistence_service),
                                      domain_persistence: UserDomainsPersistence = Depends(get_user_domain_persistence)):
-    FRONTEND_REDIRECT_URI = BigcommerceConfig.frontend_redirect
     FRONTEND_REDIRECT_URI_DASHBOARD = BigcommerceConfig.frontend_dashboard_redirect
     user_id, domain_id, is_pixel_install = state.split(':')
     user = user_persistence.get_user_by_id(user_id)
@@ -225,3 +224,13 @@ async def bigcommerce_oauth_callback(code: str, state: str = Query(None),
             return RedirectResponse(url=f'{FRONTEND_REDIRECT_URI}?message=Successfully')
     else:
         return RedirectResponse(url=f'{FRONTEND_REDIRECT_URI}?message=Failed')
+    
+
+@router.get('/zapier')
+async def test(maximiz_api_key: str = Header(...)):
+    return {'api_key': maximiz_api_key}
+
+@router.get('/zapier/leads')
+async def get_leads_into_zapier(domain = Depends(check_api_key), integrations_service: IntegrationService = Depends(get_integration_service)):
+    with integrations_service as service:
+        return service.zapier.get_leads_last_time(domain.id)

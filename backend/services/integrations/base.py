@@ -16,7 +16,7 @@ from .meta import MetaIntegrationsService
 from .mailchimp import MailchimpIntegrationsService
 from .klaviyo import KlaviyoIntegrationsService
 from .bigcommerce import BigcommerceIntegrationsService
-
+from .zapier import ZapierIntegrationService
 
 class IntegrationService:
 
@@ -100,6 +100,7 @@ class IntegrationService:
         self.attentive = AttentiveIntegrationsService(self.domain_persistence,
                                                       self.integrations_user_sync_persistence,
                                                       self.client)
+        self.zapier = ZapierIntegrationService(self.lead_persistence, self.domain_persistence)
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):

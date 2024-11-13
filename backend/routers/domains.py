@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends, Response, Request, status
 from fastapi.responses import JSONResponse
-from dependencies import get_domain_service, check_user_authentication, UserDomainsService
+from dependencies import get_domain_service, check_user_authentication, UserDomainsService, check_pixel_install_domain
 from schemas.domains import DomainScheme
 from urllib.parse import unquote
 from enums import TeamAccessLevel
@@ -49,3 +49,20 @@ def delete_domain(domain_id: int, domain_service: UserDomainsService = Depends(g
             )
     domain_service.delete_domain(user.get('id'), domain_id)
     return {'status': "SUCCESS"}
+
+
+@router.get('/api_key')
+def get_api_key_domain(domain = Depends(check_pixel_install_domain), 
+                       user = Depends(check_user_authentication), 
+                       domain_service: UserDomainsService = Depends(get_domain_service)):
+    if user.get('team_member'):
+        team_member = user.get('team_member')
+        if team_member.get('team_access_level') not in {TeamAccessLevel.ADMIN.value, TeamAccessLevel.OWNER.value}:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied. Admins and owner only."
+            )
+    return domain_service.get_api_key(domain.id)
+
+        
+    

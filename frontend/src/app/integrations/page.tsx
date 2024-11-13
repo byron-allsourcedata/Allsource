@@ -34,6 +34,7 @@ import AttentiveIntegrationPopup from "@/components/AttentiveIntegrationPopup";
 import { useNotification } from "@/context/NotificationContext";
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import CloseIcon from '@mui/icons-material/Close';
+import ApiKeySlider from "@/components/ApiKeySlider";
 
 
 interface IntegrationBoxProps {
@@ -64,9 +65,7 @@ const integrationStyle = {
         padding: '4px 10px',
         pb: '10px',
         flexGrow: 0,
-        // marginRight: '3em',
         minHeight: 'auto',
-        // width: '100%',
         minWidth: 'auto',
         fontSize: '14px',
         fontWeight: 700,
@@ -92,6 +91,10 @@ const IntegrationBox = ({ image, handleClick, handleDelete, service_name, active
   const [isHovered, setIsHovered] = useState(false); 
   const [openToolTip, setOpenTooltip] = useState(false);
   const tooltipRef = useRef<HTMLDivElement | null>(null);
+
+  const altImageIntegration = [
+    'Cordial'
+  ]
 
   const openToolTipClick = () => {
     const isMobile = window.matchMedia('(max-width:900px)').matches; 
@@ -246,7 +249,7 @@ const IntegrationBox = ({ image, handleClick, handleDelete, service_name, active
                           </Box>
                       </Box>
                   )}
-                  <Image src={image} width={32} height={32} alt={service_name} />
+                  <Image src={image} width={altImageIntegration.some(int => int == service_name) ? 100 : 32 } height={32} alt={service_name} />
               </Box>
           </Tooltip>
           <Typography mt={0.5} fontSize={'14px'} fontWeight={500} textAlign={'center'} fontFamily={'Nunito Sans'}>
@@ -725,7 +728,9 @@ const IntegrationsAvaliable = ({ integrationsCredentials, integrations, handleSa
         { image: 'omnisend_icon_black.svg', service_name: 'Omnisend'}, 
         { image: 'mailchimp-icon.svg', service_name: 'Mailchimp'},
         { image: 'sendlane-icon.svg', service_name: 'Sendlane'},
-        { image: 'attentive.svg', service_name: 'Attentive'}
+        { image: 'attentive.svg', service_name: 'Attentive'},
+        { image: 'listrak.svg', service_name: 'Listark'},
+        { image: 'cordial.svg', service_name: 'Cordial'}
     ];
 
     const handleClose = () => {
@@ -1068,7 +1073,7 @@ const PixelManagment = () => {
                       sx={{
                         ...integrationsStyle.table_column,
                         position: "relative",
-                        ...(key === "list_name" && {
+                        ...(key === "platform" && {
                           position: "sticky",
                           left: 0,
                           zIndex: 99,
@@ -1139,6 +1144,8 @@ const PixelManagment = () => {
                           borderRadius: "2px",
                           justifyContent: "center",
                           textTransform: "capitalize",
+                          zIndex: 9,
+                          backgroundColor: "#fff"
                         }}
                       >
                         {platformIcon(row.platform)}
@@ -1155,9 +1162,7 @@ const PixelManagment = () => {
                       className="sticky-cell"
                       sx={{
                         ...integrationsStyle.table_array,
-                        position: "sticky",
                         left: "0",
-                        zIndex: 9,
                         backgroundColor: "#fff",
                       }}
                     >
@@ -1697,6 +1702,7 @@ const Integrations = () => {
               </Box>
             </TabContext>
             {showSlider && <Slider/>}
+            <ApiKeySlider open={true} handlePopupClose={() => { }}/>
         </>
     );
 };
