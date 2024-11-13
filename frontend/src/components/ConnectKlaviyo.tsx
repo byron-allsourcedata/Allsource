@@ -794,14 +794,13 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                                 justifyContent:'flex-start'
                             }
                         }}} onChange={handleChangeTab}>
-                        <Tab label="Sync Filter" value="1" className='tab-heading' sx={klaviyoStyles.tabHeading} />
-                        <Tab label="Contact Sync" value="2" className='tab-heading' sx={klaviyoStyles.tabHeading} />
-                        <Tab label="Map data" value="3" className='tab-heading' sx={klaviyoStyles.tabHeading} />
+                            <Tab label="Sync Filter" value="1" className='tab-heading' sx={klaviyoStyles.tabHeading} />
+                            <Tab label="Contact Sync" value="2" className='tab-heading' sx={klaviyoStyles.tabHeading} />
+                            <Tab label="Map data" value="3" className='tab-heading' sx={klaviyoStyles.tabHeading} />
                         </TabList>
                     </Box>
                     <TabPanel value="1" sx={{ p: 0 }}>
                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                           
                                     <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
                                     <Typography variant="subtitle1" className='paragraph'>Synchronise all data in real-time from this moment forward for seamless integration and continuous updates.</Typography>
                                     <FormControl sx={{ gap: '16px',  }} error={tab2Error}>

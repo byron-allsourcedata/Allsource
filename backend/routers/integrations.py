@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from urllib.parse import urlencode
-from fastapi import APIRouter, Depends, Header, Query, HTTPException, Request, status
+from fastapi import APIRouter, Depends, Header, Query, HTTPException, Request, status, Body
 from fastapi.responses import RedirectResponse
 from enums import UserAuthorizationStatus
 from dependencies import get_integration_service, IntegrationService, IntegrationsPresistence, \
@@ -8,6 +8,7 @@ from dependencies import get_integration_service, IntegrationService, Integratio
             check_pixel_install_domain, check_user_authentication, get_user_persistence_service, \
             UserPersistence, get_user_domain_persistence, UserDomainsPersistence, check_api_key, LeadsService, get_leads_persistence
 from schemas.integrations.integrations import *
+from schemas.integrations.zapier import ZapierHookConnect
 from enums import TeamAccessLevel
 import httpx
 from config.bigcommerce import BigcommerceConfig
@@ -227,10 +228,92 @@ async def bigcommerce_oauth_callback(code: str, state: str = Query(None),
     
 
 @router.get('/zapier')
-async def test(maximiz_api_key: str = Header(...)):
-    return {'api_key': maximiz_api_key}
+async def auth(domain = Depends(check_api_key), integration_service: IntegrationService = Depends(get_integration_service)):
+    with integration_service as service:
+        return service.zapier.add_integrations(domain)
+     
 
 @router.get('/zapier/leads')
 async def get_leads_into_zapier(domain = Depends(check_api_key), integrations_service: IntegrationService = Depends(get_integration_service)):
     with integrations_service as service:
         return service.zapier.get_leads_last_time(domain.id)
+    
+
+@router.post('/zapier/webhook', status_code=201)
+async def subscribe_zapier_webhook(hook_data = Body(...), leads_type: str = Query(...), domain = Depends(check_api_key), integrations_service: IntegrationService = Depends(get_integration_service)):
+    with integrations_service as service:
+        return await service.zapier.create_data_sync(domain_id=domain.id, leads_type=leads_type, hook_url=hook_data.get('hookUrl')) 
+
+@router.delete('/zapier/webhook/{sync_id}')
+async def unsubscribe_zapier_webhook(sync_id: int, domain = Depends(check_api_key), integrations_service: IntegrationService = Depends(get_integration_service)):
+    return integrations_service.delete_sync_domain(domain_id=domain.id, list_id=sync_id)
+
+@router.get('/zapier/webhook')
+async def get_dont_import_leads(domain = Depends(check_api_key)):
+    return [{
+  "id": 1,
+  "up_id": "12345",
+  "cc_id": "67890",
+  "first_name": "John",
+  "programmatic_business_emails": "john.doe@company.com",
+  "mobile_phone": "+1234567890",
+  "direct_number": "+0987654321",
+  "gender": "Male",
+  "personal_phone": "+1122334455",
+  "business_email": "johndoe@company.com",
+  "personal_emails": "johndoe@gmail.com, johnny.doe@yahoo.com",
+  "last_name": "Doe",
+  "personal_city": "New York",
+  "personal_state": "NY",
+  "company_name": "Doe Industries",
+  "company_domain": "doeindustries.com",
+  "company_phone": "+1234567890",
+  "company_sic": "1234",
+  "company_address": "123 Industry Blvd",
+  "company_city": "New York",
+  "company_state": "NY",
+  "company_zip": "10001",
+  "company_linkedin_url": "https://www.linkedin.com/company/doeindustries",
+  "company_revenue": "1000000",
+  "company_employee_count": "150",
+  "net_worth": "5000000",
+  "job_title": "CEO",
+  "last_updated": "2024-11-13T12:00:00Z",
+  "personal_emails_last_seen": "2024-11-10T14:30:00Z",
+  "company_last_updated": "2024-11-11T09:00:00Z",
+  "job_title_last_updated": "2024-11-12T10:00:00Z",
+  "first_name_id": 101,
+  "last_name_id": 102,
+  "age_min": 30,
+  "age_max": 45,
+  "additional_personal_emails": "john.doe@hotmail.com",
+  "linkedin_url": "https://www.linkedin.com/in/johndoe",
+  "personal_address": "456 Elm St",
+  "personal_address_2": "Apt 12B",
+  "personal_zip": "10002",
+  "personal_zip4": "10002-1234",
+  "professional_zip": "10001",
+  "married": "Yes",
+  "children": "2",
+  "income_range": "$100,000 - $150,000",
+  "homeowner": "Yes",
+  "seniority_level": "Executive",
+  "department": "Management",
+  "professional_address": "789 Corporate Dr",
+  "professional_address_2": "Suite 100",
+  "professional_city": "San Francisco",
+  "professional_state": "CA",
+  "professional_zip4": "94105-1234",
+  "primary_industry": "Technology",
+  "business_email_validation_status": "Valid",
+  "business_email_last_seen": "2024-11-13T12:00:00Z",
+  "personal_emails_validation_status": "Valid",
+  "work_history": "CEO at Doe Industries, CTO at TechCorp",
+  "education_history": "BS in Computer Science from MIT",
+  "company_description": "Doe Industries is a leading provider of innovative tech solutions.",
+  "related_domains": "doeindustries.com, doeindustries.org",
+  "social_connections": "500+ connections on LinkedIn",
+  "dpv_code": "12345"
+}
+,]
+    

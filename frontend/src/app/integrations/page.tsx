@@ -34,7 +34,7 @@ import AttentiveIntegrationPopup from "@/components/AttentiveIntegrationPopup";
 import { useNotification } from "@/context/NotificationContext";
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import CloseIcon from '@mui/icons-material/Close';
-import ApiKeySlider from "@/components/ApiKeySlider";
+import ZapierConnectPopup from "@/components/ZapierConnectPopup";
 
 
 interface IntegrationBoxProps {
@@ -501,6 +501,7 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
     const [openMailchinpConnect, setOpenMailchimpConnect] = useState(false)
     const [openSendlaneConnect, setOpenSendlaneConnect] = useState(false)
     const [OpenAttentiveConnect, setOpenAttentiveConnect] = useState(false)
+    const [openZapierConnect, setOpenZapierConnect] = useState(false)
     const [openDeletePopup, setOpenDeletePopup] = useState(false)
     const handleActive = (service: string) => {
         setActiveService(service);
@@ -515,6 +516,7 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
         setOpenMailchimpConnect(false)
         setOpenSendlaneConnect(false)
         setOpenAttentiveConnect(false)
+        setOpenZapierConnect(false)
     }
 
     const handleDeleteOpen = () => {
@@ -650,6 +652,18 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
                     />
                 </Box>
             )}
+            {integrationsCredentials.some(integration => integration.service_name === "Zapier") && (
+                <Box onClick={() => handleActive('Attentive')}>
+                    <IntegrationBox
+                        image="/zapier-icon.svg"
+                        service_name="Zapier"
+                        active={activeService === 'Zapier'}
+                        handleClick={() => setOpenZapierConnect(true)}
+                        handleDelete={handleDeleteOpen}
+                        is_failed={integrationsCredentials?.find(integration => integration.service_name === 'Zapier')?.is_failed}
+                    />
+                </Box>
+            )}
             <Box onClick={() => setOpenAvalible(true)}>
               <IntegrationAdd />
             </Box>
@@ -688,6 +702,7 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
         <MailchimpConnect open={openMailchinpConnect} handleClose={handleClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'Mailchimp')?.access_token} />
         <SendlaneConnect open={openSendlaneConnect} handleClose={handleClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'Sendlane')?.access_token}/>
         <AttentiveIntegrationPopup open={OpenAttentiveConnect} handleClose={handleClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'Attentive')?.access_token}/>
+        <ZapierConnectPopup open={openZapierConnect} handlePopupClose={handleClose} />
         <AlivbleIntagrationsSlider 
             isContactSync={false} 
             open={openAvalible} 
@@ -716,6 +731,8 @@ const IntegrationsAvaliable = ({ integrationsCredentials, integrations, handleSa
     const [openMailchinpConnect, setOpenmailchimpConnect] = useState(false)
     const [openSendlaneConnect, setOpenSendlaneConnect] = useState(false)
     const [openAttentiveConnect, setOpenAttentiveConnect] = useState(false)
+    const [openZapierConnect, setOpenZapierConnect] = useState(false)
+
     const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
         setSearch(event.target.value);
     };
@@ -730,7 +747,8 @@ const IntegrationsAvaliable = ({ integrationsCredentials, integrations, handleSa
         { image: 'sendlane-icon.svg', service_name: 'Sendlane'},
         { image: 'attentive.svg', service_name: 'Attentive'},
         { image: 'listrak.svg', service_name: 'Listark'},
-        { image: 'cordial.svg', service_name: 'Cordial'}
+        { image: 'cordial.svg', service_name: 'Cordial'},
+        { image: 'zapier-icon .svg', service_name: 'Zapier'}
     ];
 
     const handleClose = () => {
@@ -742,6 +760,7 @@ const IntegrationsAvaliable = ({ integrationsCredentials, integrations, handleSa
         setOpenmailchimpConnect(false)
         setOpenSendlaneConnect(false)
         setOpenAttentiveConnect(false)
+        setOpenZapierConnect(false)
     }
 
     const handleAddIntegration = (service_name: string) => {
@@ -773,6 +792,8 @@ const IntegrationsAvaliable = ({ integrationsCredentials, integrations, handleSa
             break;
         case 'Meta':
             setOpenMetaConnect(true)
+        case 'Zapier':
+          setOpenZapierConnect(true)
         default:
             break;
       }} 
@@ -840,6 +861,7 @@ const IntegrationsAvaliable = ({ integrationsCredentials, integrations, handleSa
             <MailchimpConnect open={openMailchinpConnect} handleClose={handleClose} onSave={handleSaveSettings} />
             <SendlaneConnect open={openSendlaneConnect} handleClose={handleClose} onSave={handleSaveSettings} />
             <AttentiveIntegrationPopup open={openAttentiveConnect} handleClose={handleClose} onSave={handleSaveSettings} />
+            <ZapierConnectPopup open={openZapierConnect} handlePopupClose={handleClose}/>
         </Box>
     );
 };
@@ -1702,7 +1724,6 @@ const Integrations = () => {
               </Box>
             </TabContext>
             {showSlider && <Slider/>}
-            <ApiKeySlider open={true} handlePopupClose={() => { }}/>
         </>
     );
 };

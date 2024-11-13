@@ -100,7 +100,7 @@ class IntegrationService:
         self.attentive = AttentiveIntegrationsService(self.domain_persistence,
                                                       self.integrations_user_sync_persistence,
                                                       self.client)
-        self.zapier = ZapierIntegrationService(self.lead_persistence, self.domain_persistence)
+        self.zapier = ZapierIntegrationService(self.lead_persistence, self.domain_persistence, self.integrations_user_sync_persistence, self.integration_persistence, self.client)
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
