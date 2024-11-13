@@ -161,7 +161,7 @@ class MailchimpIntegrationsService:
             lead_user =  self.leads_persistence.get_leads_domain(domain_id=domain_id, five_x_five_user_id=lead.get('five_x_five_user_id'))
             lead = lead_user[0] if lead_user else None
             if message.get('lead') and not lead:
-                logging.info(f'contact {lead.get("five_x_five_user_id")} not found')
+                logging.info(f'Contact {message.get("lead").get("five_x_five_user_id") if message.get("lead") else None} in domain id {domain_id} not found')
                 return
         stage = message.get('stage') if message.get('stage') else 1
         next_try = message.get('next_try') if message.get('next_try') else None

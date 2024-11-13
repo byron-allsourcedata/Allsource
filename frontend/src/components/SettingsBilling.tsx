@@ -15,13 +15,14 @@ import DownloadIcon from '@mui/icons-material/Download';
 import TelegramIcon from '@mui/icons-material/Telegram';
 import CustomTablePagination from './CustomTablePagination';
 
-type CardBrand = 'visa' | 'mastercard' | 'americanexpress' | 'discover';
+type CardBrand = 'visa' | 'mastercard' | 'amex' | 'discover' | 'unionpay';
 
 const cardBrandImages: Record<CardBrand, string> = {
     visa: '/visa-icon.svg',
     mastercard: '/mastercard-icon.svg',
-    americanexpress: '/american-express.svg',
-    discover: '/discover-icon.svg'
+    amex: '/american-express.svg',
+    discover: '/discover-icon.svg',
+    unionpay: '/unionpay-icon.svg'
 };
 
 const billingStyles = {

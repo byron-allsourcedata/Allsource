@@ -89,21 +89,20 @@ async def process_files(sts_client, session):
     bucket = s3.Bucket(BUCKET_NAME)
 
     try:
-        while True:
-            try:
-                with open(LAST_PROCESSED_FILE_PATH, "r") as file:
-                    last_processed_file = file.read().strip()
-            except FileNotFoundError:
-                last_processed_file = None
+        try:
+            with open(LAST_PROCESSED_FILE_PATH, "r") as file:
+                last_processed_file = file.read().strip()
+        except FileNotFoundError:
+            last_processed_file = None
 
-            if last_processed_file:
-                files = bucket.objects.filter(Prefix=FILES_PATH, Marker=last_processed_file)
-            else:
-                files = bucket.objects.filter(Prefix=FILES_PATH)
+        if last_processed_file:
+            files = bucket.objects.filter(Prefix=FILES_PATH, Marker=last_processed_file)
+        else:
+            files = bucket.objects.filter(Prefix=FILES_PATH)
 
-            for file in files:
-                await process_file(bucket, file.key, session)
-                update_last_processed_file(file.key)
+        for file in files:
+            await process_file(bucket, file.key, session)
+            update_last_processed_file(file.key)
     except StopIteration:
         pass
 
@@ -122,6 +121,7 @@ async def main():
             session.close()
             logging.info('Sleeping for 10 minutes...')
             time.sleep(60 * 10)
+            Session = sessionmaker(bind=engine)
             session = Session()
     except Exception as e:
         session.rollback()
