@@ -142,70 +142,78 @@ const NotificationPopup: React.FC<NotificationPopupProps> = ({ open, onClose, an
                     </Box>
                 ) : (
                     <AnimatePresence>
-                    {notifications.sort((a, b) => b.created_at - a.created_at).map((notification) => (
-                        <motion.div
-                        key={notification.id}
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                        transition={{ duration: 0.3 }}
-                    >
-                        <Box key={notification.id} sx={{
-                            padding: 1.25,
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: 2,
-                            borderBottom: '1px solid #E8E9EB',
-                            position: 'relative',
-                            pl: notification.is_checked === false ? 2 : 1.25,
-                            '&:before': notification.is_checked === false ? {
-                                content: '""',
-                                width: '8px',
-                                height: '8px',
-                                borderRadius: '50%',
-                                backgroundColor: '#5052B2',
-                                position: 'absolute',
-                                left: 4,
-                                top: '15px',
-                            } : {},
-                            '&:hover .delete-icon': {
-                            opacity: 1,
-                        }
-                        }}>
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <Typography variant="h6" className="second-sub-title" sx={{
-                                    fontWeight: '500 !important',
-                                    lineHeight: '20px !important',
-                                }}>
-                                    {notification.sub_title}
-                                </Typography>
-                                <IconButton
-                                    className="delete-icon"
-                                    sx={{
-                                        opacity: 0,
-                                        transition: 'opacity 0.3s',
-                                    }}
-                                    onClick={() => handleDeleteNotification(notification.id)}
-                                    size="small"
-                                >
-                                    <CloseIcon fontSize="small" />
-                                </IconButton>
-                            </Box>
-                            <Typography
+                        {notifications.sort((a, b) => b.created_at - a.created_at).map((notification) => (
+                            <motion.div
                                 key={notification.id}
-                                variant="body1"
-                                className="paragraph"
-                                sx={{
-                                    lineHeight: '16px !important',
-                                    color: '#5F6368 !important'
-                                }}
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: "auto" }}
+                                exit={{ opacity: 0, height: 0 }}
+                                transition={{ duration: 0.3 }}
                             >
-                                {transformTextToLinks(notification.text)}
-                            </Typography>
-                        </Box>
-                        </motion.div>
+                                <Box key={notification.id} sx={{
+                                    padding: 1.25,
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    gap: 2,
+                                    borderBottom: '1px solid #E8E9EB',
+                                    position: 'relative',
+                                    pl: notification.is_checked === false ? 2 : 1.25,
+                                    '&:before': notification.is_checked === false ? {
+                                        content: '""',
+                                        width: '8px',
+                                        height: '8px',
+                                        borderRadius: '50%',
+                                        backgroundColor: '#5052B2',
+                                        position: 'absolute',
+                                        left: 4,
+                                        top: '15px',
+                                    } : {},
+                                    '&:hover .delete-icon': {
+                                        opacity: 1,
+                                    },
+                                    "@media (max-width: 600px)": {
+                                        '&:hover .delete-icon': {
+                                            opacity: 1,
+                                        }
+                                    }
+                                }}>
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <Typography variant="h6" className="second-sub-title" sx={{
+                                            fontWeight: '500 !important',
+                                            lineHeight: '20px !important',
+                                        }}>
+                                            {notification.sub_title}
+                                        </Typography>
+                                        <IconButton
+                                            className="delete-icon"
+                                            sx={{
+                                                opacity: 0,
+                                                transition: 'opacity 0.3s',
+                                                "@media (max-width: 600px)": {
+                                                    opacity: 1
+                                                }
+                                            }}
+                                            onClick={() => handleDeleteNotification(notification.id)}
+                                            size="small"
+                                        >
+                                            <CloseIcon fontSize="small" />
+                                        </IconButton>
+                                    </Box>
+                                    <Typography
+                                        key={notification.id}
+                                        variant="body1"
+                                        className="paragraph"
+                                        sx={{
+                                            lineHeight: '16px !important',
+                                            color: '#5F6368 !important'
+                                        }}
+                                    >
+                                        {transformTextToLinks(notification.text)}
+                                    </Typography>
+                                </Box>
+                            </motion.div>
                         ))
-                }</AnimatePresence>
+                        }</AnimatePresence>
                 )}
             </Box>
         </Popover>
