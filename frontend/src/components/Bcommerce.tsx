@@ -76,6 +76,7 @@ const metaStyles = {
 const BCommerceConnect = ({open, onClose, error_message, initShopHash}: BigcommerceConntectPopupProps) => {
     const [shopHash, setShopHash] = useState('')
     const [loading, setLoading] = useState(false)
+    const [externalStoreHash, setExternalStoreHash] = useState<any[]>([])
     
     const handleShopHashChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value
@@ -83,9 +84,39 @@ const BCommerceConnect = ({open, onClose, error_message, initShopHash}: Bigcomme
     }
 
     const handleClick = async() => {
-        const response = await axiosInstance.get('/integrations/bigcommerce/oauth', {params: {store_hash: shopHash}})
-        window.location.href = response.data.url;
+        if(externalStoreHash.some(eai => eai.store_hash == shopHash))
+        {
+            const response = await axiosInstance.post('/integrations/', {
+                bigcommerce: {
+                    shop_domain: shopHash
+                }
+            }, {
+                params: {
+                    service_name: 'bigcommerce'
+                }
+            })
+        }
+        else {
+            const response = await axiosInstance.get('/integrations/bigcommerce/oauth', {params: {store_hash: shopHash}})
+            window.location.href = response.data.url;
+        }
     }
+
+    useEffect(() => {
+        if(open && !initShopHash) {
+            const fetchData = async() => {
+                const response = await axiosInstance.get('/integrations/eai', {
+                    params: {
+                        platform: 'Bigcommerce'
+                    }
+                })
+                if(response.status == 200) {
+                    setExternalStoreHash(response.data)
+                }
+            }
+            fetchData()
+        }
+    }, [open, initShopHash])
 
     useEffect(() => {
         if (open && initShopHash) {

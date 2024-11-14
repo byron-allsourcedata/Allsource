@@ -153,6 +153,7 @@ class ZapierIntegrationService:
                     last_leads_sync = self.leads_persistence.get_lead_user_by_up_id(domain_id=domain.id, up_id=last_lead_sync_id)
                 for lead in leads:
                     if last_leads_sync and lead.five_x_five_user_id < last_leads_sync.five_x_five_user_id:
+                        logging.info(f'lead {lead.five_x_five_user_id} already sync')
                         continue
                     if stage > 3:
                         logging.info("Stage limit reached. Exiting.")
@@ -194,6 +195,7 @@ class ZapierIntegrationService:
                     'last_lead_sync_id': self.leads_persistence.get_lead_data(last_leads_sync.five_x_five_user_id).up_id if counter > 0 else last_lead_sync_id
                 },counter=counter, id=data_sync_item.id)
                 logging.info("Sync updated for item id: %s", data_sync_item.id)
+                counter = 0
 
     def __create_profile(self, lead_id: int, sync: IntegrationUserSync):
         lead_data = self.leads_persistence.get_lead_data(lead_id)

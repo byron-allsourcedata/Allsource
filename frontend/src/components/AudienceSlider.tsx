@@ -19,6 +19,7 @@ import MailchimpConnect from './MailchimpConnect';
 import MailchimpDatasync from './MailchimpDatasync';
 import SendlaneConnect from './SendlaneConnect';
 import SendlaneDatasync from './SendlaneDatasync';
+import ZapierDataSync from './ZapierDataSync';
 
 interface AudiencePopupProps {
     open: boolean;
@@ -72,6 +73,8 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
     const [openMailchimpConnect, setOpenmailchimpConnect] = useState(false)
     const [openSendlaneIconPopupOpen, setOpenSendlaneIconPopupOpen] = useState(false)
     const [openSendlaneConnect, setOpenSendlaneConnect] = useState(false)
+    const [openZapierDataSync, setOpenZapierDataSync] = useState(false)
+    const [openZapierConnect, setOpenZapierConnect] = useState(false)
     const fetchListItems = async () => {
         try {
             const response = await axiosInstance.get('/audience/list');
@@ -287,6 +290,22 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
 
     const handleCreateKlaviyoClose = () => {
         setCreateKlaviyo(false)
+    }
+
+    const handleOpenZapierDataSync = () => {
+        setOpenZapierDataSync(true)
+    }
+
+    const handleOpenZapierConnect = () => {
+        setOpenZapierConnect(true)
+    }
+
+    const handleCloseZapierConnect = () => {
+        setOpenZapierConnect(false)
+    }
+
+    const handleCloseZapierDataSync = () => {
+        setOpenZapierDataSync(false)
     }
 
     const handleCloseMetaConnectApp = () => {
@@ -517,12 +536,50 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                             width: '102px',
                                             height: '72px',
                                             justifyContent: 'center',
-                                            backgroundColor: selectedIntegration === 'Mailchimp' ? 'rgba(80, 82, 178, 0.10)' : 'transparent',
+                                            backgroundColor: selectedIntegration === 'Sendlane' ? 'rgba(80, 82, 178, 0.10)' : 'transparent',
                                         }}>
                                             <ListItemIcon sx={{ minWidth: 'auto' }}>
                                                 <Image src="/sendlane-icon.svg" alt="sendlane" height={26} width={32} />
                                             </ListItemIcon>
                                             <ListItemText primary="Sendlane" primaryTypographyProps={{
+                                                sx: {
+                                                    fontFamily: "Nunito Sans",
+                                                    fontSize: "14px",
+                                                    color: "#4a4a4a",
+                                                    fontWeight: "500",
+                                                    lineHeight: "20px",
+                                                },
+                                            }} />
+                                        </ListItemButton>
+                                    </ListItem>
+                                )}
+                                {integrationsCredentials.some(integration => integration.service_name === 'Zapier') && (
+                                    <ListItem sx={{
+                                        p: 0,
+                                        borderRadius: '4px',
+                                        border: selectedIntegration === 'Sendlane' ? '1px solid #5052B2' : '1px solid #e4e4e4',
+                                        width: 'auto',
+                                        '@media (max-width:600px)': {
+                                            flexBasis: 'calc(50% - 8px)',
+                                        },
+                                    }}>
+                                        <ListItemButton onClick={!integrationsCredentials.find(integration => integration.service_name === 'Zapier')?.is_failed
+                                                ? handleOpenZapierDataSync
+                                                : handleOpenZapierConnect
+                                            } sx={{
+                                            p: 0,
+                                            flexDirection: 'column',
+                                            px: 3,
+                                            py: 1.5,
+                                            width: '102px',
+                                            height: '72px',
+                                            justifyContent: 'center',
+                                            backgroundColor: selectedIntegration === 'Zapier' ? 'rgba(80, 82, 178, 0.10)' : 'transparent',
+                                        }}>
+                                            <ListItemIcon sx={{ minWidth: 'auto' }}>
+                                                <Image src="/zapier-icon.svg" alt="zapier" height={26} width={26} />
+                                            </ListItemIcon>
+                                            <ListItemText primary="Zapier" primaryTypographyProps={{
                                                 sx: {
                                                     fontFamily: "Nunito Sans",
                                                     fontSize: "14px",
@@ -571,6 +628,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
             <OnmisendDataSync open={omnisendIconPopupOpen} onClose={handleOmnisendIconPopupOpenClose} data={ null } />
             <SendlaneDatasync open={openSendlaneIconPopupOpen} onClose={handleSendlaneIconPopupClose} data={ null } />
             <MailchimpDatasync open={mailchimpIconPopupOpen} onClose={handleMailchimpIconPopupIconClose} data={ null } />
+            <ZapierDataSync open={openZapierDataSync} handleClose={handleCloseZapierDataSync} />
 
             {/* Add Integration */}
             <AlivbleIntagrationsSlider open={plusIconPopupOpen} onClose={handlePlusIconPopupClose} isContactSync={true} integrations={integrations} integrationsCredentials={integrationsCredentials} handleSaveSettings={handleSaveSettings}/>
