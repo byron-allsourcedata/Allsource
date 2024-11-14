@@ -223,17 +223,6 @@ const Leads: React.FC = () => {
     const handleChangeRowsPerPage = (event: React.ChangeEvent<{ value: unknown }>) => {
         setRowsPerPage(parseInt(event.target.value as string, 10));
         setPage(0);
-        fetchData({
-            sortBy: orderBy,
-            sortOrder: order,
-            page: 0,
-            rowsPerPage: parseInt(event.target.value as string, 10),
-            activeFilter,
-            appliedDates: {
-                start: filterParams.from_date ? dayjs.unix(filterParams.from_date).toDate() : null,
-                end: filterParams.to_date ? dayjs.unix(filterParams.to_date).toDate() : null,
-            }
-        });
     };
 
 
@@ -852,17 +841,6 @@ const Leads: React.FC = () => {
 
     const handleChangePage = (event: unknown, newPage: number) => {
         setPage(newPage);
-        fetchData({
-            sortBy: orderBy,
-            sortOrder: order,
-            page: newPage,
-            rowsPerPage,
-            activeFilter,
-            appliedDates: {
-                start: filterParams.from_date ? dayjs.unix(filterParams.from_date).toDate() : null,
-                end: filterParams.to_date ? dayjs.unix(filterParams.to_date).toDate() : null,
-            }
-        });
     };
 
     const formatTimeSpent = (seconds: number): string => {
