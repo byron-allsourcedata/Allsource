@@ -172,7 +172,7 @@ const NavigationMenu = () => {
   }
 
   const handleSupportButton = () => {
-    window.location.href = 'https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai'
+    window.open('https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai', '_blank');
   }
 
   const handleNotificationIconPopupClose = () => {

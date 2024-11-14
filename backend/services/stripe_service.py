@@ -2,11 +2,14 @@ import math
 from typing import List
 
 import stripe
+import logging
 
 from config.stripe import StripeConfig
 from schemas.users import UserSignUpForm
 
 stripe.api_key = StripeConfig.api_key
+
+logging.getLogger("stripe").setLevel(logging.WARNING)
 
 
 def create_customer(user: UserSignUpForm):

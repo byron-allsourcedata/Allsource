@@ -49,9 +49,9 @@ const StatCard: React.FC<StatCardProps> = ({ value, title, icon, imageUrl, bgCol
       </Box>
       <Box sx={{display: 'flex', flexDirection: 'column', alignItems: 'start', justifyContent: 'start'}}>
         <Typography variant="h5" sx={{ fontWeight: '700', fontSize: '22px', fontFamily: 'Nunito Sans', lineHeight: '30.01px', color: 'rgba(32, 33, 36, 1)'}}>
-          {value.toLocaleString()} {/* Formats the number with commas */}
+          {value?.toLocaleString()} 
         </Typography>
-        <Typography variant="body1" sx={{ fontFamily: 'Nunito Sans', fontSize: '14px', fontWeight: '500', lineHeight: '19.6px', textAlign: 'left', color: 'rgba(74, 74, 74, 1)' }}>
+        <Typography variant="body1" sx={{ fontFamily: 'Nunito Sans', fontSize: '14px', fontWeight: '500', lineHeight: '19.6px', textAlign: 'left', color: 'rgba(74, 74, 74, 1)', wordWrap: 'break-word', overflow: 'hidden', textOverflow: 'ellipsis'  }}>
           {title}
         </Typography>
       </Box>
@@ -90,7 +90,7 @@ const DemographicsCard: React.FC<{ value: number }> = ({ value }) => (
   />
 );
 
-const SalesOverTimeCard: React.FC<{ value: number }> = ({ value }) => (
+const AbandonedCart: React.FC<{ value: number }> = ({ value }) => (
   <StatCard
     value={value}
     title="Abandoned Cart"
@@ -100,20 +100,33 @@ const SalesOverTimeCard: React.FC<{ value: number }> = ({ value }) => (
   />
 );
 
-const Cards = ({ values }: { values: { totalContact: number, totalVisitors: number, viewProducts: number, totalAbandonedCart: number } }) => {
+const SalesOverTimeCard: React.FC<{ value: number }> = ({ value }) => (
+  <StatCard
+    value={value}
+    title="Converted Sale"
+    imageUrl='/converted-sales.svg'
+    textColor="rgba(74, 74, 74, 1)"
+    borderColor="rgba(234, 242, 251, 1)"
+  />
+);
+
+const Cards = ({ values }: { values: { totalContact: number, totalVisitors: number, viewProducts: number, totalAbandonedCart: number, totalConvertedSale: number } }) => {
     return (
-        <Grid container spacing={{xs: 1, sm: 1.5, md: 2, lg: 4}}>
-          <Grid item xs={12} md={3}>
+        <Grid container spacing={{xs: 1, sm: 2, md: 2, lg: 2}}>
+          <Grid item xs={12} md={2.4}>
             <TotalLeadsCard value={values.totalContact} />
           </Grid>
-          <Grid item xs={12} md={3}>
+          <Grid item xs={12} md={2.4}>
             <NewCustomersCard value={values.totalVisitors} />
           </Grid>
-          <Grid item xs={12} md={3}>
+          <Grid item xs={12} md={2.4}>
             <DemographicsCard value={values.viewProducts} />
           </Grid>
-          <Grid item xs={12} md={3}>
-            <SalesOverTimeCard value={values.totalAbandonedCart} />
+          <Grid item xs={12} md={2.4}>
+            <AbandonedCart value={values.totalAbandonedCart} />
+          </Grid>
+          <Grid item xs={12} md={2.4}>
+            <SalesOverTimeCard value={values.totalConvertedSale} />
           </Grid>
         </Grid>
       );
