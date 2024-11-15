@@ -377,7 +377,7 @@ const DeleteIntegrationPopup = ({service_name, open, handleDelete, onClose}: Del
             </Box>
             </Box>
         )}
-      <Backdrop open={open} onClick={onClose} sx={{ zIndex: 1200, color: '#fff', bgcolor: 'rgba(0, 0, 0, 0.1)' }} />
+      <Backdrop open={open} onClick={onClose} sx={{ zIndex: 1300, color: '#fff', bgcolor: 'rgba(0, 0, 0, 0.1)' }} />
       <Drawer
         anchor="right"
         open={open}
@@ -653,7 +653,7 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
                 </Box>
             )}
             {integrationsCredentials.some(integration => integration.service_name === "Zapier") && (
-                <Box onClick={() => handleActive('Attentive')}>
+                <Box onClick={() => handleActive('Zapier')}>
                     <IntegrationBox
                         image="/zapier-icon.svg"
                         service_name="Zapier"

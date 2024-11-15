@@ -1,14 +1,13 @@
 from datetime import datetime, timedelta
 from urllib.parse import urlencode
-from fastapi import APIRouter, Depends, Header, Query, HTTPException, Request, status, Body
-from fastapi.responses import RedirectResponse, HTMLResponse
+from fastapi import APIRouter, Depends, Query, HTTPException, status, Body
+from fastapi.responses import RedirectResponse
 from enums import UserAuthorizationStatus
 from dependencies import get_integration_service, IntegrationService, IntegrationsPresistence, \
             get_user_integrations_presistence, check_user_authorization, check_domain, \
             check_pixel_install_domain, check_user_authentication, get_user_persistence_service, \
-            UserPersistence, get_user_domain_persistence, UserDomainsPersistence, check_api_key, LeadsService, get_leads_persistence
+            UserPersistence, get_user_domain_persistence, UserDomainsPersistence, check_api_key
 from schemas.integrations.integrations import *
-from schemas.integrations.zapier import ZapierHookConnect
 from enums import TeamAccessLevel
 import httpx
 from config.bigcommerce import BigcommerceConfig
@@ -197,11 +196,12 @@ async def bigcommerce_oauth_callback(code: str, state: str = Query(None), integr
             except:
                 return RedirectResponse(f'{url}?message=Failed')
         with integration_service as service:
-            return service.bigcommerce.add_external_apps_install(new_credentials=IntegrationCredentials(
+            eai = service.bigcommerce.add_external_apps_install(new_credentials=IntegrationCredentials(
                         bigcommerce=ShopifyOrBigcommerceCredentials(
                             shop_domain=shop_hash,
                             access_token=access_token
                         )))
+            return RedirectResponse(BigcommerceConfig.external_app_installed)
 
 @router.get('/eai')
 async def get_eais_platform(platform: str = Query(...), integration_service: IntegrationService = Depends(get_integration_service), user = Depends(check_user_authorization)):
@@ -219,7 +219,7 @@ async def subscribe_zapier_webhook(hook_data = Body(...), domain = Depends(check
     with integrations_service as service:
         return await service.zapier.create_data_sync(domain_id=domain.id, leads_type=hook_data.get('leads_type'), hook_url=hook_data.get('hookUrl')) 
 
-@router.delete('/zapier/webhook/')
+@router.delete('/zapier/webhook')
 async def unsubscribe_zapier_webhook(sync_data = Body(...), domain = Depends(check_api_key), integrations_service: IntegrationService = Depends(get_integration_service)):
     return integrations_service.delete_sync_domain(domain_id=domain.id, list_id=sync_data.get('sync_id'))
 
@@ -289,6 +289,5 @@ async def get_dont_import_leads(domain = Depends(check_api_key)):
   "related_domains": "doeindustries.com, doeindustries.org",
   "social_connections": "500+ connections on LinkedIn",
   "dpv_code": "12345"
-}
-,]
+}]
     

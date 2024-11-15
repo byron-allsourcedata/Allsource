@@ -106,13 +106,13 @@ const ZapierConnectPopup = ({open, handlePopupClose}: ApIkeyPopup) => {
         const windowParams = `width=${width},height=${height},top=${top},left=${left},resizable=yes,scrollbars=yes`;
     
         const authWindow = window.open(
-            'https://zapier.com/engine/auth/start/App215493CLIAPI@1.0.0/',
+            'https://zapier.com/engine/auth/start/App215646CLIAPI@1.0.0/',
             'ZapierAuthWindow', 
             windowParams
         );
     
         if (authWindow) 
-            authWindow.location.href = 'https://zapier.com/engine/auth/start/App215493CLIAPI@1.0.0/';
+            authWindow.location.href = 'https://zapier.com/engine/auth/start/App215646CLIAPI@1.0.0/';
 
     }
 

@@ -152,7 +152,7 @@ class ZapierIntegrationService:
                 if last_leads_sync:
                     last_leads_sync = self.leads_persistence.get_lead_user_by_up_id(domain_id=domain.id, up_id=last_lead_sync_id)
                 for lead in leads:
-                    if last_leads_sync and lead.five_x_five_user_id < last_leads_sync.five_x_five_user_id:
+                    if not message.get('sync') and last_leads_sync and lead.five_x_five_user_id < last_leads_sync.five_x_five_user_id:
                         logging.info(f'lead {lead.five_x_five_user_id} already sync')
                         continue
                     if stage > 3:
@@ -199,16 +199,16 @@ class ZapierIntegrationService:
 
     def __create_profile(self, lead_id: int, sync: IntegrationUserSync):
         lead_data = self.leads_persistence.get_lead_data(lead_id)
-        try:
-            response = self.client.post(url=sync.hook_url, json=self.__mapped_lead(lead_data))
-            if response.status_code != 200:
-                logging.error("Error response: %s", response.text)
-                if response.status_code in (403, 401):
-                    sync.sync_status = False
-                    self.integration_persistence.db.commit()
-                    return
-                return response
-        except: return
+        # try:
+        response = self.client.post(url=sync.hook_url, json=self.__mapped_lead(lead_data))
+        if response.status_code != 200:
+            logging.error("Error response: %s", response.text)
+            if response.status_code in (403, 401):
+                sync.sync_status = False
+                self.integration_persistence.db.commit()
+                return
+            return response
+        # except: return
         return response.json()
     
     def __mapped_leads_type(self, lead_type):
@@ -227,6 +227,14 @@ class ZapierIntegrationService:
     from datetime import datetime
 
     def __mapped_lead(self, lead):
+        try: 
+            work_history = ','.join(lead.work_history)
+        except: 
+            work_history = lead.work_history
+        try:
+            education_history = ','.join(lead.education_history)
+        except:
+            education_history = lead.education_history
         lead_dict = {
             "id": lead.id,
             "up_id": lead.up_id,
@@ -285,8 +293,8 @@ class ZapierIntegrationService:
             "business_email_validation_status": lead.business_email_validation_status,
             "business_email_last_seen": lead.business_email_last_seen.isoformat() if isinstance(lead.business_email_last_seen, datetime) else lead.business_email_last_seen,
             "personal_emails_validation_status": lead.personal_emails_validation_status,
-            "work_history": lead.work_history,
-            "education_history": lead.education_history,
+            "work_history": work_history,
+            "education_history": education_history,
             "company_description": lead.company_description,
             "related_domains": lead.related_domains,
             "social_connections": lead.social_connections,
