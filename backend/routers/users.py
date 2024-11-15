@@ -19,12 +19,16 @@ from services.users_email_verification import UsersEmailVerificationService
 router = APIRouter()
 
 
+
+
 @router.get("/me")
 def get_me(user_service: UsersService = Depends(get_users_service), domain = Depends(check_domain)):
     plan = user_service.get_info_plan()
+    domains = user_service.get_domains()
     return {
         "user_info": user_service.get_my_info(domain),
-        "user_plan": plan
+        "user_plan": plan,
+        "user_domains": domains
     }
 
 

@@ -216,27 +216,31 @@ const DomainButton: React.FC = () => {
   };
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true)
-        if (!localStorage.getItem('token')) { return }
-        const response = await axiosInstance.get('domains/');
-        if (response.status === 200) {
-          setDomains(response.data);
+    const fetchData = () => {
+      setLoading(true);
+      const storedMe = sessionStorage.getItem('me');
+      if (storedMe) {
+        const parsedMe = JSON.parse(storedMe);
+        const parsedDomains = parsedMe.domains || [];
+        if (parsedDomains.length > 0) {
+          setDomains(parsedDomains);
           const savedDomain = sessionStorage.getItem('current_domain');
           if (savedDomain) {
             setCurrentDomain(savedDomain.replace('https://', ''));
-          } else if (response.data.length > 0) {
-            setCurrentDomain(response.data[0].domain.replace('https://', ''));
-            sessionStorage.setItem('current_domain', response.data[0].domain);
+          } else {
+            const firstDomain = parsedDomains[0].domain.replace('https://', '');
+            setCurrentDomain(firstDomain);
+            sessionStorage.setItem('current_domain', parsedDomains[0].domain);
           }
+        } else {
+          console.log('No domains found in parsed "me" data');
         }
-      } catch (error) {
+      } else {
+        console.log('No "me" data found in sessionStorage');
       }
-      finally {
-        setLoading(false)
-      }
+      setLoading(false);  
     };
+
     fetchData();
   }, []);
 

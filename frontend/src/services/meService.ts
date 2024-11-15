@@ -28,7 +28,7 @@ export const fetchUserData = async () => {
         if (responseData.user_info && responseData.user_plan) {
           const userInfo = responseData.user_info;
           const userPlan = responseData.user_plan;
-
+          const domains = responseData.user_domains;
           sessionStorage.setItem('me', JSON.stringify({
             email: userInfo.email,
             full_name: userInfo.full_name,
@@ -36,7 +36,8 @@ export const fetchUserData = async () => {
             trial: userPlan.is_trial,
             plan_end: userPlan.plan_end,
             percent_steps: userInfo.activate_percent,
-            is_trial_pending: userPlan.is_trial_pending
+            is_trial_pending: userPlan.is_trial_pending,
+            domains: domains
           }));
 
           return {
@@ -51,7 +52,7 @@ export const fetchUserData = async () => {
         }
       }
     }
-    return null; 
+    return null;
   } catch (error) {
     console.error('Error fetching data:', error);
     return null;

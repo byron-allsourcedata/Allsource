@@ -185,21 +185,16 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading, hasNotification }) => {
     const [meData, setMeData] = useState({ percent_steps: 0 });
+
+    const meItem = sessionStorage.getItem("me");
     useEffect(() => {
         const loadMeData = () => {
-          const meItem = sessionStorage.getItem("me");
           if (meItem) {
             setMeData(JSON.parse(meItem));
           }
         };
         loadMeData();
-        const intervalId = setInterval(() => {
-          loadMeData();  
-        }, 1000); 
-        return () => {
-          clearInterval(intervalId);
-        };
-      }, []); 
+      }, [meItem]); 
     const router = useRouter();
     const pathname = usePathname();
     const [showBookSlider, setShowBookSlider] = useState(false);

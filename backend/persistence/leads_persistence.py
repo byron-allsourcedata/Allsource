@@ -227,6 +227,7 @@ class LeadsPersistence:
                         .join(LeadsUsersAddedToCart, LeadsUsersAddedToCart.lead_user_id == LeadUser.id)
                         .outerjoin(LeadsUsersOrdered, LeadsUsersOrdered.lead_user_id == LeadUser.id)
                         .where(
+                            LeadUser.behavior_type == "product_added_to_cart",
                             LeadsUsersAddedToCart.added_at.isnot(None),
                             or_(
                                 LeadsUsersAddedToCart.added_at > LeadsUsersOrdered.ordered_at,
