@@ -58,7 +58,7 @@ async def update_payment_confirmation(request: fastRequest, webhook_service: Web
 async def update_payment_confirmation(request: fastRequest, webhook_service: WebhookService = Depends(get_webhook)):
     payload = await request.json()
     result_update_subscription = webhook_service.cancel_subscription_confirmation(payload=payload)
-    if result_update_subscription['status'] and result_update_subscription['status'] == 'failed':
+    if result_update_subscription.get('status') and result_update_subscription['status'] == 'failed':
         user = result_update_subscription['message_body']['user']
         queue_name = f'sse_events_{str(user.id)}'
         rabbitmq_connection = RabbitMQConnection()
