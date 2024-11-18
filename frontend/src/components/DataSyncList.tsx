@@ -205,6 +205,10 @@ import CustomTablePagination from "./CustomTablePagination";
            return (
            <Image src={'/sendlane-icon.svg'} alt='mailchimp' width={18} height={18} />
           )
+          case 'zapier':
+            return (
+              <Image src={'/zapier-icon.svg'} alt='zapier' width={18} height={18} />
+            )
         default:
           return null;
       }

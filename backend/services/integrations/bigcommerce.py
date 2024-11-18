@@ -13,19 +13,21 @@ from httpx import Client
 from fastapi import HTTPException
 from datetime import datetime, timedelta
 from persistence.leads_order_persistence import LeadOrdersPersistence
-
+from persistence.integrations.external_apps_installations import ExternalAppsInstallationsPersistence
 
 class BigcommerceIntegrationsService:
 
     def __init__(self, integrations_persistence: IntegrationsPresistence, 
                  leads_persistence: LeadsPersistence, 
                  leads_order_persistence: LeadOrdersPersistence,
-                 aws_service: AWSService, client: Client):
+                 aws_service: AWSService, client: Client,
+                 epi_persistence: ExternalAppsInstallationsPersistence):
         self.integrations_persistence = integrations_persistence
         self.lead_persistence = leads_persistence
         self.AWS = aws_service
         self.lead_orders_persistence = leads_order_persistence
         self.client = client
+        self.eai_persistence = epi_persistence
 
     def get_credentials(self, domain_id: int):
         integration = self.integrations_persistence.get_credentials_for_service(domain_id, 'Bigcommerce')
@@ -50,7 +52,6 @@ class BigcommerceIntegrationsService:
     def __get_store_info(self, store_hash: str, access_token: str):
         url = f'{store_hash}/v2/store'
         info = self.__handle_request(url, access_token=access_token)
-
         return self.__mapped_info(info.json())
     
 
@@ -72,7 +73,41 @@ class BigcommerceIntegrationsService:
         return integration
     
 
+    def add_external_apps_install(self, new_credentials: IntegrationCredentials):
+        try:
+            epi =self.eai_persistence.create_epi({
+                'platform': 'Bigcommerce',
+                'store_hash': new_credentials.bigcommerce.shop_domain,
+                'access_token': new_credentials.bigcommerce.access_token
+            })
+            if not epi:
+                raise HTTPException(status_code=400, detail={'status': IntegrationsStatus.CREATE_IS_FAILED.value})
+            return epi
+        except:
+            raise HTTPException(status_code=400, detail={'status': IntegrationsStatus.CREATE_IS_FAILED.value})
+        
     def add_integration(self, new_credentials: IntegrationCredentials, domain, user):
+        eai = self.eai_persistence.get_epi_by_filter_one(platform='Bigcommerce', store_hash=new_credentials.bigcommerce.shop_domain)
+        if not eai:
+            raise HTTPException(status_code=400, detail={'status': IntegrationsStatus.CREATE_IS_FAILED.value})
+        credentials = self.get_credentials(domain_id=domain.id)
+        info = self.__get_store_info(store_hash=eai.store_hash, 
+                                     access_token=eai.access_token)
+        if not info:
+            raise HTTPException(status_code=409, detail=IntegrationsStatus.NOT_MATCHED_EARLIER.value)
+        if info.domain.startswith('https://'):
+            info.domain = info.domain.replace('https://', '')
+        if not credentials and info.domain != domain.domain:
+            raise HTTPException(status_code=400, detail=IntegrationsStatus.NOT_MATCHED_EARLIER.value)
+        integration = self.__save_integrations(store_hash=eai.store_hash, 
+                                 access_token=eai.access_token, domain_id=domain.id)
+        self.__set_pixel(user, domain, shop_domain=integration.shop_domain, access_token=integration.access_token)
+        if not integration:
+            raise HTTPException(status_code=409, detail=IntegrationsStatus.CREATE_IS_FAILED.value)
+        return integration
+        
+
+    def add_integration_with_app(self, new_credentials: IntegrationCredentials, domain, user):
         credentials = self.get_credentials(domain_id=domain.id)
         info = self.__get_store_info(store_hash=new_credentials.bigcommerce.shop_domain, 
                                      access_token=new_credentials.bigcommerce.access_token)

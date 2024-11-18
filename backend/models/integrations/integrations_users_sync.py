@@ -19,4 +19,5 @@ class IntegrationUserSync(Base):
     no_of_contacts = Column(Integer, nullable=False, default=0)
     created_by = Column(VARCHAR, nullable=False)
     last_lead_sync_id = Column(VARCHAR(64))
+    hook_url = Column(VARCHAR)
 
