@@ -243,7 +243,7 @@ def check_domain(
         user=Depends(check_user_authentication),
         domain_persistence: UserDomainsPersistence = Depends(get_user_domain_persistence)
 ) -> UserDomains:
-    current_domain = domain_persistence.get_domain_by_user(user.get('id'), domain_substr=CurrentDomain)
+    current_domain = domain_persistence.get_domains_by_user(user.get('id'), domain_substr=CurrentDomain)
     if not CurrentDomain:
         return None
     if not current_domain or len(current_domain) == 0:
@@ -262,10 +262,10 @@ def get_users_service(user=Depends(check_user_authentication),
                       user_persistence: UserPersistence = Depends(get_user_persistence_service),
                       plan_persistence: PlansPersistence = Depends(get_plans_persistence),
                       subscription_service: SubscriptionService = Depends(get_subscription_service),
+                      domain_persistence: UserDomainsPersistence = Depends(get_user_domain_persistence)
                       ):
     return UsersService(user=user, user_persistence_service=user_persistence, plan_persistence=plan_persistence,
-                        subscription_service=subscription_service)
-
+                        subscription_service=subscription_service, domain_persistence=domain_persistence)
 
 def get_notification_service(notification_persistence: NotificationPersistence = Depends(get_notification_persistence),
                              subscription_service: SubscriptionService = Depends(get_subscription_service),

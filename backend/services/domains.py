@@ -27,7 +27,7 @@ class UserDomainsService:
         return self.domain_mapped(new_domain)
 
     def get_domains(self, user_id: int, **filter_by):
-        domains = self.domain_persistence.get_domain_by_user(user_id)
+        domains = self.domain_persistence.get_domains_by_user(user_id)
         sorted_domains = sorted(domains, key=lambda x: x.created_at)
         return [
             self.domain_mapped(domain)
