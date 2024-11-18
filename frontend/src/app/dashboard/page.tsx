@@ -511,9 +511,10 @@ const Dashboard: React.FC = () => {
             }}
           >
             <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center',
-                py: 3,
+                pt: hasNotification ? 6.25 : 3,
+                pb: 0.75,
                 position: 'fixed',
-                top: hasNotification ? '5.85rem' : '3.25rem',
+                top: hasNotification ? '3.95rem' : '3.25rem',
                 right: '16px',
                 left: '170px',
                 background: '#fff',
@@ -590,7 +591,7 @@ const Dashboard: React.FC = () => {
               <Box sx={{
                 flexGrow: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', '@media (max-width: 600px)': {
                   width: '100%',
-                  mt: 2
+                  mt: hasNotification ? 1 : 2
                 }
               }}>
                 <Tabs

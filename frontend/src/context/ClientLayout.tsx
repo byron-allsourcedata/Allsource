@@ -124,6 +124,10 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
             '@media (max-width: 899px)': {
               padding: '0 16px 32px',
               marginLeft: 0,
+            },
+            '@media (max-width: 599px)': {
+              padding: '0 16px 16px',
+              marginLeft: 0,
             }
           }}>
             {showSlider && (

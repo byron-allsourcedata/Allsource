@@ -78,7 +78,7 @@ const ConfirmDeleteDomain = ({ open, handleClose, domain, handleDelete }: Props)
   return (
 
           <>
-    <Backdrop open={open} onClick={handleClose} sx={{ zIndex: 1200, color: '#fff', bgcolor: 'rgba(0, 0, 0, 0.1)' }} />
+    <Backdrop open={open} onClick={handleClose} sx={{ zIndex: 1300, color: '#fff', bgcolor: 'rgba(0, 0, 0, 0.1)' }} />
     <Drawer
       anchor="right"
       open={open}
@@ -88,7 +88,7 @@ const ConfirmDeleteDomain = ({ open, handleClose, domain, handleDelete }: Props)
         sx: {
           width: '45%',
           position: 'fixed',
-          zIndex: 1300,
+          zIndex: 1400,
           top: 0,
           bottom: 0,
           '@media (max-width: 600px)': {
