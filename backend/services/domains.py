@@ -1,5 +1,5 @@
 from fastapi import HTTPException
-
+import uuid
 from enums import SubscriptionStatus
 from persistence.domains import UserDomainsPersistence, UserDomains
 from persistence.plans_persistence import PlansPersistence
@@ -27,7 +27,7 @@ class UserDomainsService:
         return self.domain_mapped(new_domain)
 
     def get_domains(self, user_id: int, **filter_by):
-        domains = self.domain_persistence.get_domain_by_user(user_id)
+        domains = self.domain_persistence.get_domains_by_user(user_id)
         sorted_domains = sorted(domains, key=lambda x: x.created_at)
         return [
             self.domain_mapped(domain)
@@ -47,3 +47,18 @@ class UserDomainsService:
         if self.domain_persistence.count_domain(user_id) == 1:
             raise HTTPException(status_code=409, detail={'status': 'LAST_DOMAIN'})
         return self.domain_persistence.delete_domain(user_id, domain_id)
+
+    def __create_api_key(self, domain: UserDomains):
+        api_key = f'maximiz-{uuid.uuid4().hex}'
+        domain.api_key = api_key
+        self.domain_persistence.db.commit()
+        return api_key
+
+    def get_api_key(self, domain_id):
+        domains = self.domain_persistence.get_domain_by_filter(id=domain_id)
+        if not domains:
+            raise HTTPException(status_code=404, detail={'status': 'Domain not found'})
+        api_key = domains[0].api_key
+        if not api_key:
+            api_key = self.__create_api_key(domains[0])
+        return api_key

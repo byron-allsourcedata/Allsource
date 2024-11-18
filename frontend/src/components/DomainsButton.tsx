@@ -11,6 +11,7 @@ import Slider from '../components/Slider';
 import Image from 'next/image';
 import ConfirmDeleteDomain from './DeleteDomain';
 import CustomizedProgressBar from './FirstLevelLoader';
+import { useUser } from '@/context/UserContext';
 
 interface Domain {
   id: number;
@@ -213,6 +214,18 @@ const DomainButton: React.FC = () => {
   const [deleteDomain, setDeleteDomain] = useState<Domain | null>(null);
   const [loading, setLoading] = useState(false);
   const [upgradePlanPopup, setUpgradePlanPopup] = useState(false);
+  useEffect(() => {
+    if(domains.length === 0 || !currentDomain) {
+      setLoading(true);
+      setDomains(sessionStorage.getItem('me') ? JSON.parse(sessionStorage.getItem('me') || '').domains : [])
+      setCurrentDomain(sessionStorage.getItem('current_domain') || '');
+    }
+    else {
+      setLoading(false)
+    }
+  }, [domains, currentDomain])
+
+
 
   const handleDropdownClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     setDropdownEl(event.currentTarget);
@@ -222,30 +235,6 @@ const DomainButton: React.FC = () => {
     setDropdownEl(null);
   };
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true)
-        if (!localStorage.getItem('token')) { return }
-        const response = await axiosInstance.get('domains/');
-        if (response.status === 200) {
-          setDomains(response.data);
-          const savedDomain = sessionStorage.getItem('current_domain');
-          if (savedDomain) {
-            setCurrentDomain(savedDomain.replace('https://', ''));
-          } else if (response.data.length > 0) {
-            setCurrentDomain(response.data[0].domain.replace('https://', ''));
-            sessionStorage.setItem('current_domain', response.data[0].domain);
-          }
-        }
-      } catch (error) {
-      }
-      finally {
-        setLoading(false)
-      }
-    };
-    fetchData();
-  }, []);
 
   const handleSetDomain = (domain: string) => {
     sessionStorage.setItem('current_domain', domain);

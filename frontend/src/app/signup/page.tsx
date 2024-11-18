@@ -11,6 +11,7 @@ import { signupStyles } from './signupStyles';
 import { showErrorToast } from '../../components/ToastNotification';
 import { GoogleLogin } from '@react-oauth/google';
 import { fetchUserData } from '@/services/meService';
+import { useUser } from '@/context/UserContext';
 import CustomizedProgressBar from '@/components/CustomizedProgressBar';
 
 const Signup: React.FC = () => {

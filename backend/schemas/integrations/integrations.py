@@ -6,6 +6,8 @@ class ShopifyOrBigcommerceCredentials(BaseModel):
     shop_domain: str
     access_token: str
 
+class ExternalAppInstalled(BaseModel):
+    shop_domain: str
 
 class WoocommerceCredentials(BaseModel):
     url: str
@@ -32,7 +34,7 @@ class SupperssionSet(BaseModel):
 class IntegrationCredentials(BaseModel):
     shopify: Optional[ShopifyOrBigcommerceCredentials] = None
     woocommerce: Optional[WoocommerceCredentials] = None
-    bigcommerce: Optional[ShopifyOrBigcommerceCredentials] = None
+    bigcommerce: Optional[ShopifyOrBigcommerceCredentials | ExternalAppInstalled] = None
     klaviyo: Optional[ApiKeyCredentials] = None
     mailchimp: Optional[ApiKeyCredentials] = None
     attentive: Optional[ApiKeyCredentials] = None
