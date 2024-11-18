@@ -11,6 +11,7 @@ import Slider from '../components/Slider';
 import Image from 'next/image';
 import ConfirmDeleteDomain from './DeleteDomain';
 import CustomizedProgressBar from './FirstLevelLoader';
+import { useUser } from '@/context/UserContext';
 
 interface Domain {
   id: number;
@@ -222,29 +223,24 @@ const DomainButton: React.FC = () => {
     setDropdownEl(null);
   };
 
-  useEffect(() => {
-    const fetchData = () => {
-      setLoading(true);
-      
-      if (storedMe) {
-        const parsedMe = JSON.parse(storedMe);
-        const parsedDomains = parsedMe.domains || [];
-        if (parsedDomains.length > 0) {
-          setDomains(parsedDomains);
-          const savedDomain = sessionStorage.getItem('current_domain');
-          if (savedDomain) {
-            setCurrentDomain(savedDomain.replace('https://', ''));
-          } else {
-            const firstDomain = parsedDomains[0].domain.replace('https://', '');
-            setCurrentDomain(firstDomain);
-            sessionStorage.setItem('current_domain', parsedDomains[0].domain);
-          }
+  useEffect(() => {    
+    if (storedMe) {
+      const parsedMe = JSON.parse(storedMe);
+      const parsedDomains = parsedMe.domains || [];
+      if (parsedDomains.length > 0) {
+        setDomains(parsedDomains);
+        const savedDomain = sessionStorage.getItem('current_domain');
+        if (savedDomain) {
+          setCurrentDomain(savedDomain.replace('https://', ''));
+        } else {
+          const firstDomain = parsedDomains[0].domain.replace('https://', '');
+          setCurrentDomain(firstDomain);
+          sessionStorage.setItem('current_domain', parsedDomains[0].domain);
         }
       }
-      setLoading(false);  
-    };
-    fetchData();
+    }
   }, [storedMe]);
+
 
   const handleSetDomain = (domain: string) => {
     sessionStorage.setItem('current_domain', domain);

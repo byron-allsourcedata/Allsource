@@ -12,6 +12,7 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import Image from 'next/image';
 import { AxiosError } from 'axios';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
+import { useUser } from '@/context/UserContext';
 
 const sidebarStyles = {
     container: {
@@ -129,12 +130,11 @@ const containerStyles = (hasNotification: boolean) => ( {
     }})
 
 interface ProgressSectionProps {
-    meData: { percent_steps: number };
+    percent_steps: number;
 }
 
-const SetupSection: React.FC<ProgressSectionProps> = ({ meData }) => {
-
-    if(meData.percent_steps > 50){
+const SetupSection: React.FC<ProgressSectionProps> = ({ percent_steps }) => {
+    if(percent_steps > 50){
         return null
     }
 
@@ -154,7 +154,7 @@ const SetupSection: React.FC<ProgressSectionProps> = ({ meData }) => {
             </Box>
             <LinearProgress
                 variant="determinate"
-                value={meData.percent_steps ? meData.percent_steps : 0}
+                value={percent_steps ? percent_steps : 0}
                 sx={{
                     height: '8px',
                     borderRadius: '4px',
@@ -170,7 +170,7 @@ const SetupSection: React.FC<ProgressSectionProps> = ({ meData }) => {
                 color: 'rgba(120, 120, 120, 1)',
                 fontSize: '0.625rem'
             }}>
-                {meData.percent_steps ? meData.percent_steps : 0}% complete
+                {percent_steps ? percent_steps : 0}% complete
             </Typography>
         </Box>
     )
@@ -184,17 +184,7 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading, hasNotification }) => {
-    const [meData, setMeData] = useState({ percent_steps: 0 });
-
-    const meItem = sessionStorage.getItem("me");
-    useEffect(() => {
-        const loadMeData = () => {
-          if (meItem) {
-            setMeData(JSON.parse(meItem));
-          }
-        };
-        loadMeData();
-      }, [meItem]); 
+    const { percent_steps: userPercentSteps } = useUser();
     const router = useRouter();
     const pathname = usePathname();
     const [showBookSlider, setShowBookSlider] = useState(false);
@@ -294,7 +284,7 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading, hasNotific
                 right: '0',
                 width: '100%'
             }}>
-                <SetupSection meData={meData ? meData : { percent_steps: 0 }} />
+                <SetupSection percent_steps={userPercentSteps ? userPercentSteps : 0 } />
                 <Box sx={sidebarStyles.settings}>
                     <ListItem button onClick={() => handleNavigation('settings?section=accountDetails')} sx={isActive('/settings') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
                         <ListItemIcon sx={sidebarStyles.listItemIcon}>

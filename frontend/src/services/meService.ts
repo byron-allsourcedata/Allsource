@@ -47,7 +47,8 @@ export const fetchUserData = async () => {
             trial: userPlan.is_trial,
             days_left: userPlan.plan_end,
             percent_steps: userInfo.percent_steps,
-            is_trial_pending: userPlan.is_trial_pending
+            is_trial_pending: userPlan.is_trial_pending,
+            domains: domains
           };
         }
       }

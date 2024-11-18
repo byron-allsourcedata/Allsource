@@ -10,14 +10,13 @@ import { useRouter } from 'next/navigation';
 const TrialStatus: React.FC = () => {
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [currentDomain, setCurrentDomain] = useState<string | null>(null);
-
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const token = localStorage.getItem("token");
       const currentDomain = sessionStorage.getItem('current_domain');
       setAccessToken(token);
       setCurrentDomain(currentDomain)
-    }
+    } 
   }, []);
 
   const [{ data, loading }, refetch] = useAxios(
@@ -26,10 +25,11 @@ const TrialStatus: React.FC = () => {
       headers: {
         Authorization: `Bearer ${accessToken}`,
         CurrentDomain: currentDomain
+        
       },
       method: 'GET',
     },
-    { manual: !accessToken }
+    { manual: true }
   );
 
   useEffect(() => {
@@ -37,6 +37,24 @@ const TrialStatus: React.FC = () => {
       refetch();
     }
   }, [accessToken]);
+
+  useEffect(() => {
+    if (data?.user_info && data?.user_plan) {
+      const userInfo = data.user_info;
+      const userPlan = data.user_plan;
+      const domains = data.user_domains;
+      sessionStorage.setItem('me', JSON.stringify({
+        email: userInfo.email,
+        full_name: userInfo.full_name,
+        company_website: userInfo.company_website,
+        trial: userPlan.is_trial,
+        plan_end: userPlan.plan_end,
+        percent_steps: userInfo.activate_percent,
+        is_trial_pending: userPlan.is_trial_pending,
+        domains: domains
+      }));
+    }
+  }, [data]);
 
   const [statusText, setStatusText] = useState('');
   const [backgroundColor, setBackgroundColor] = useState('');

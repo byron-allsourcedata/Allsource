@@ -10,6 +10,7 @@ interface UserContextType {
   percent_steps: number | 0;
   isTrialPending: boolean | false;
   resetUserData: () => void;
+  domains: any[]
 }
 
 interface UserProviderProps {
@@ -26,7 +27,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   const [daysDifference, setDaysDifference] = useState<number | null>(null);
   const [percent_steps, setPercent] = useState<number | 0>(0);
   const [isTrialPending, setIsTrialPending] = useState<boolean>(false);
-
+  const [domains, setDomans] = useState<[]>([]);
     const resetUserData = () => {
       setEmail(null);
       setFullName(null);
@@ -34,64 +35,65 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       setDaysDifference(null);
       setPercent(0);
       setHasFetched(false);
+      setDomans([]);
     };
 
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    const storedMe = sessionStorage.getItem('me');
-    const currentDomain = sessionStorage.getItem('current_domain');
+    useEffect(() => {
+      const token = localStorage.getItem('token');
+      const storedMe = sessionStorage.getItem('me');
+      const currentDomain = sessionStorage.getItem('current_domain');
+      
+      if (storedMe) {
+        const storedData = JSON.parse(storedMe);
+        setEmail(storedData.email);
+        setFullName(storedData.full_name);
+        setWebsite(storedData.company_website);
+        setPercent(storedData.percent_steps);
+        setIsTrialPending(storedData.is_trial_pending);
+        setDomans(storedData.domains);
     
-    if (storedMe) {
-      const storedData = JSON.parse(storedMe);
-      setEmail(storedData.email);
-      setFullName(storedData.full_name);
-      setWebsite(storedData.company_website);
-      setPercent(storedData.percent_steps)
-      setIsTrialPending(storedData.is_trial_pending);
-
-      const endDate = new Date(storedData.plan_end);
-      if (storedData.plan_end == null) {
-        setDaysDifference(null);
-      } else {
-        const currentDate = new Date();
-
-        // Calculate the difference in days
-        let timeDifference = endDate.getTime() - currentDate.getTime();
-
-        if (timeDifference < currentDate.getTime()) {
-          fetchUserData().then(userData => {
-            if (userData) {
-              setEmail(userData.email);
-              setFullName(userData.full_name);
-              setWebsite(userData.company_website);
-              setPercent(userData.percent_steps)
-              setIsTrialPending(userData.is_trial_pending);
-            }
-          });
-          timeDifference = (new Date(storedData.plan_end).getTime()) - currentDate.getTime();
+        const endDate = new Date(storedData.plan_end);
+        if (storedData.plan_end == null) {
+          setDaysDifference(null);
+        } else {
+          const currentDate = new Date();
+          let timeDifference = endDate.getTime() - currentDate.getTime();
+    
+          if (timeDifference < 0) {
+            fetchUserData().then(userData => {
+              if (userData) {
+                setEmail(userData.email);
+                setFullName(userData.full_name);
+                setWebsite(userData.company_website);
+                setPercent(userData.percent_steps);
+                setIsTrialPending(userData.is_trial_pending);
+                setDomans(userData.domains);
+              }
+            });
+            timeDifference = endDate.getTime() - currentDate.getTime(); // пересчитываем разницу
+          }
+    
+          const daysDifference = Math.ceil((timeDifference - 3600000) / (1000 * 60 * 60 * 24));
+          setDaysDifference(daysDifference);
         }
-        const daysDifference = Math.ceil((timeDifference - 3600000) / (1000 * 60 * 60 * 24));
-
-        setDaysDifference(daysDifference);
+      } else if (token && currentDomain && !hasFetched) {
+        fetchUserData().then(userData => {
+          if (userData) {
+            setEmail(userData.email);
+            setFullName(userData.full_name);
+            setWebsite(userData.company_website);
+            setPercent(userData.percent_steps);
+            setIsTrialPending(userData.is_trial_pending);
+            setDomans(userData.domains);
+          }
+          setHasFetched(true); // Устанавливаем hasFetched после выполнения запроса
+        });
       }
-
-      setHasFetched(true);
-    } else if (token && currentDomain && !hasFetched) {
-      fetchUserData().then(userData => {
-        if (userData) {
-          setEmail(userData.email);
-          setFullName(userData.full_name);
-          setWebsite(userData.company_website);
-          setPercent(userData.percent_steps)
-          setIsTrialPending(userData.is_trial_pending);
-        }
-        setHasFetched(true);
-      });
-    }
-  }, [hasFetched]);
+    }, [hasFetched]);
+    
 
   return (
-    <UserContext.Provider value={{ email, full_name, website, daysDifference, percent_steps, isTrialPending, resetUserData }}>
+    <UserContext.Provider value={{ email, full_name, website, daysDifference, percent_steps, isTrialPending, resetUserData, domains }}>
       {children}
     </UserContext.Provider>
   );
