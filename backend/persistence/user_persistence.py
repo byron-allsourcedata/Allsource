@@ -54,8 +54,6 @@ class UserPersistence:
             if teams_invitation.status == TeamsInvitationStatus.PENDING.value:
                 result['success'] = True
                 result['team_owner_id'] = teams_invitation.team_owner_id
-            else:
-                result['error'] = SignUpStatus.INCORRECT_STATUS
         else:
             result['error'] = SignUpStatus.TEAM_INVITATION_INVALID
         return result

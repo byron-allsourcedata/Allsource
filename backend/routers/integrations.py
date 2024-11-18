@@ -1,10 +1,13 @@
+from datetime import datetime, timedelta
+import json
 from urllib.parse import urlencode
-from fastapi import APIRouter, Depends, Query, HTTPException, Request, status
+from fastapi import APIRouter, Depends, Query, HTTPException, status, Body
 from fastapi.responses import RedirectResponse
 from enums import UserAuthorizationStatus
 from dependencies import get_integration_service, IntegrationService, IntegrationsPresistence, \
-    get_user_integrations_presistence, \
-    check_user_authorization, check_domain, check_pixel_install_domain, check_user_authentication, get_user_persistence_service, UserPersistence, get_user_domain_persistence, UserDomainsPersistence
+            get_user_integrations_presistence, check_user_authorization, check_domain, \
+            check_pixel_install_domain, check_user_authentication, get_user_persistence_service, \
+            UserPersistence, get_user_domain_persistence, UserDomainsPersistence, check_api_key
 from schemas.integrations.integrations import *
 from enums import TeamAccessLevel
 import httpx
@@ -42,24 +45,6 @@ async def get_credential_service(platform: str,
     with integration_service as service:
         service = getattr(service, platform.lower())
         return service.get_credentials(domain.id)
-
-
-@router.post('/export/')
-async def export(export_query: ExportLeads, service_name: str = Query(...),
-                 integrations_service: IntegrationService = Depends(get_integration_service),
-                 user=Depends(check_user_authorization), domain=Depends(check_pixel_install_domain)):
-    if user.get('team_member'):
-        team_member = user.get('team_member')
-        if team_member.get('team_access_level') not in {TeamAccessLevel.ADMIN.value, TeamAccessLevel.OWNER.value,
-                                                        TeamAccessLevel.STANDARD.value}:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Access denied. Admins and standard only."
-            )
-    with integrations_service as service:
-        service = getattr(service, service_name)
-        service.export_leads(export_query.list_name, user['id'])
-        return {'message': 'Successfuly'}
 
 
 @router.post('/', status_code=200)
@@ -156,10 +141,6 @@ async def set_suppression(suppression_data: SupperssionSet, service_name: str = 
         return service.set_supperssions(suppression_data.suppression, domain.id)
 
 
-
-
-
-
 @router.get("/bigcommerce/oauth")
 async def bigcommerce_redirect_login(store_hash: str = Query(...), is_pixel_install: bool = Query(False), user = Depends(check_user_authentication), domain = Depends(check_domain)):
     scope = ['store_v2_orders_read_only','store_v2_content','store_content_checkout', 'store_v2_information_read_only']
@@ -177,51 +158,74 @@ async def bigcommerce_redirect_login(store_hash: str = Query(...), is_pixel_inst
         'url': authorize_url
     }
 
-@router.get("/bigcommerce/oauth/callback")
-async def bigcommerce_oauth_callback(code: str, state: str = Query(None), 
-                                     integration_service: IntegrationService = Depends(get_integration_service), 
-                                     user_persistence: UserPersistence = Depends(get_user_persistence_service),
-                                     domain_persistence: UserDomainsPersistence = Depends(get_user_domain_persistence)):
-    FRONTEND_REDIRECT_URI = BigcommerceConfig.frontend_redirect
-    FRONTEND_REDIRECT_URI_DASHBOARD = BigcommerceConfig.frontend_dashboard_redirect
-    user_id, domain_id, is_pixel_install = state.split(':')
-    user = user_persistence.get_user_by_id(user_id)
-    domain = domain_persistence.get_domain_by_filter(id=domain_id)[0]
-    token_url = "https://login.bigcommerce.com/oauth2/token"
+@router.get('/bigcommerce/oauth/callback')
+async def bigcommerce_oauth_callback(code: str, state: str = Query(None), integration_service: IntegrationService = Depends(get_integration_service),
+                                     user_persistence: UserPersistence = Depends(get_user_persistence_service), domain_persistence: UserDomainsPersistence = Depends(get_user_domain_persistence)):
+    status_oauth = False
     payload = {
-        "client_id": BigcommerceConfig.client_id,
-        "client_secret": BigcommerceConfig.client_secret,
-        "code": code,
-        "redirect_uri": BigcommerceConfig.redirect_uri,
-        "grant_type": "authorization_code"
+        'client_id': BigcommerceConfig.client_id,
+        'client_secret': BigcommerceConfig.client_secret,
+        'code': code,
+        'redirect_uri': BigcommerceConfig.redirect_uri,
+        'grant_type': 'authorization_code'
     }
-    response =  httpx.Client().post(token_url, data=payload)
-    if response.status_code == 200:
-        with integration_service as service:
-            token_data = response.json()
-            shop_hash = token_data.get('context').split('/')[1]
-            access_token = token_data.get('access_token')
-            with integration_service as service:
-                try:
-                    service.bigcommerce.add_integration(
-                    new_credentials=IntegrationCredentials(
+    with httpx.Client() as client:
+        response = client.post(BigcommerceConfig.token_url, data=payload)
+        if response.status_code == 200:
+            status_oauth = True
+            shop_hash = response.json().get('context').split('/')[1]
+            access_token = response.json().get('access_token')
+    user_id, domain_id, is_pixell_install = state.split(':') if state else None, None, None
+    if status_oauth:
+        if state:
+            url = BigcommerceConfig.frontend_dashboard_redirect if is_pixell_install else BigcommerceConfig.frontend_redirect
+            user = user_persistence.get_user_by_id(user_id)
+            domain = domain_persistence.get_domain_by_filter(id=domain_id)
+            domain = domain[0] if domain else None
+            if not domain:
+                return RedirectResponse(f'{url}?message=Failed')
+            try:
+                with integration_service as service:
+                    service.bigcommerce.add_integration_with_app(new_credentials=IntegrationCredentials(
                         bigcommerce=ShopifyOrBigcommerceCredentials(
                             shop_domain=shop_hash,
                             access_token=access_token
                         )
-                    ),
-                    user=user,
-                    domain=domain
-                )
-                except HTTPException as e:
-                    if is_pixel_install:
-                        return RedirectResponse(url=f'{FRONTEND_REDIRECT_URI_DASHBOARD}?message=Successfully')
-                    else:
-                        error_message = e.detail if isinstance(e.detail, str) else 'Failed'
-                        return RedirectResponse(url=f'{FRONTEND_REDIRECT_URI}?message={error_message}') 
-        if is_pixel_install:
-            return RedirectResponse(url=f'{FRONTEND_REDIRECT_URI_DASHBOARD}?message=Successfully')
-        else:
-            return RedirectResponse(url=f'{FRONTEND_REDIRECT_URI}?message=Successfully')
-    else:
-        return RedirectResponse(url=f'{FRONTEND_REDIRECT_URI}?message=Failed')
+                    ), domain=domain, user=user)
+                return RedirectResponse(f'{url}?message=Successfully')
+            except:
+                return RedirectResponse(f'{url}?message=Failed')
+        with integration_service as service:
+            eai = service.bigcommerce.add_external_apps_install(new_credentials=IntegrationCredentials(
+                        bigcommerce=ShopifyOrBigcommerceCredentials(
+                            shop_domain=shop_hash,
+                            access_token=access_token
+                        )))
+            return RedirectResponse(BigcommerceConfig.external_app_installed)
+
+@router.get('/eai')
+async def get_eais_platform(platform: str = Query(...), integration_service: IntegrationService = Depends(get_integration_service), user = Depends(check_user_authorization)):
+    return integration_service.get_external(platform)
+    
+
+@router.get('/zapier')
+async def auth(domain = Depends(check_api_key), integration_service: IntegrationService = Depends(get_integration_service)):
+    with integration_service as service:
+        return service.zapier.add_integrations(domain)
+    
+
+@router.post('/zapier/webhook', status_code=201)
+async def subscribe_zapier_webhook(hook_data = Body(...), domain = Depends(check_api_key), integrations_service: IntegrationService = Depends(get_integration_service)):
+    with integrations_service as service:
+        return await service.zapier.create_data_sync(domain_id=domain.id, leads_type=hook_data.get('leads_type'), hook_url=hook_data.get('hookUrl')) 
+
+@router.delete('/zapier/webhook')
+async def unsubscribe_zapier_webhook(sync_data = Body(...), domain = Depends(check_api_key), integrations_service: IntegrationService = Depends(get_integration_service)):
+    return integrations_service.delete_sync_domain(domain_id=domain.id, list_id=sync_data.get('sync_id'))
+
+@router.get('/zapier/webhook')
+async def get_dont_import_leads(domain = Depends(check_api_key)):
+    with open('../backend/data/integrations/example_lead.json', 'r') as file:
+        example_lead = file.read()
+        return json.loads(example_lead)
+    

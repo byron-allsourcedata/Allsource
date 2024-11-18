@@ -34,6 +34,7 @@ import AttentiveIntegrationPopup from "@/components/AttentiveIntegrationPopup";
 import { useNotification } from "@/context/NotificationContext";
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import CloseIcon from '@mui/icons-material/Close';
+import ZapierConnectPopup from "@/components/ZapierConnectPopup";
 
 
 interface IntegrationBoxProps {
@@ -64,9 +65,7 @@ const integrationStyle = {
         padding: '4px 10px',
         pb: '10px',
         flexGrow: 0,
-        // marginRight: '3em',
         minHeight: 'auto',
-        // width: '100%',
         minWidth: 'auto',
         fontSize: '14px',
         fontWeight: 700,
@@ -92,6 +91,10 @@ const IntegrationBox = ({ image, handleClick, handleDelete, service_name, active
   const [isHovered, setIsHovered] = useState(false); 
   const [openToolTip, setOpenTooltip] = useState(false);
   const tooltipRef = useRef<HTMLDivElement | null>(null);
+
+  const altImageIntegration = [
+    'Cordial'
+  ]
 
   const openToolTipClick = () => {
     const isMobile = window.matchMedia('(max-width:900px)').matches; 
@@ -246,7 +249,7 @@ const IntegrationBox = ({ image, handleClick, handleDelete, service_name, active
                           </Box>
                       </Box>
                   )}
-                  <Image src={image} width={32} height={32} alt={service_name} />
+                  <Image src={image} width={altImageIntegration.some(int => int == service_name) ? 100 : 32 } height={32} alt={service_name} />
               </Box>
           </Tooltip>
           <Typography mt={0.5} fontSize={'14px'} fontWeight={500} textAlign={'center'} fontFamily={'Nunito Sans'}>
@@ -374,7 +377,7 @@ const DeleteIntegrationPopup = ({service_name, open, handleDelete, onClose}: Del
             </Box>
             </Box>
         )}
-      <Backdrop open={open} onClick={onClose} sx={{ zIndex: 1200, color: '#fff', bgcolor: 'rgba(0, 0, 0, 0.1)' }} />
+      <Backdrop open={open} onClick={onClose} sx={{ zIndex: 1300, color: '#fff', bgcolor: 'rgba(0, 0, 0, 0.1)' }} />
       <Drawer
         anchor="right"
         open={open}
@@ -498,6 +501,7 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
     const [openMailchinpConnect, setOpenMailchimpConnect] = useState(false)
     const [openSendlaneConnect, setOpenSendlaneConnect] = useState(false)
     const [OpenAttentiveConnect, setOpenAttentiveConnect] = useState(false)
+    const [openZapierConnect, setOpenZapierConnect] = useState(false)
     const [openDeletePopup, setOpenDeletePopup] = useState(false)
     const handleActive = (service: string) => {
         setActiveService(service);
@@ -512,6 +516,7 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
         setOpenMailchimpConnect(false)
         setOpenSendlaneConnect(false)
         setOpenAttentiveConnect(false)
+        setOpenZapierConnect(false)
     }
 
     const handleDeleteOpen = () => {
@@ -647,6 +652,18 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
                     />
                 </Box>
             )}
+            {integrationsCredentials.some(integration => integration.service_name === "Zapier") && (
+                <Box onClick={() => handleActive('Zapier')}>
+                    <IntegrationBox
+                        image="/zapier-icon.svg"
+                        service_name="Zapier"
+                        active={activeService === 'Zapier'}
+                        handleClick={() => setOpenZapierConnect(true)}
+                        handleDelete={handleDeleteOpen}
+                        is_failed={integrationsCredentials?.find(integration => integration.service_name === 'Zapier')?.is_failed}
+                    />
+                </Box>
+            )}
             <Box onClick={() => setOpenAvalible(true)}>
               <IntegrationAdd />
             </Box>
@@ -685,6 +702,7 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
         <MailchimpConnect open={openMailchinpConnect} handleClose={handleClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'Mailchimp')?.access_token} />
         <SendlaneConnect open={openSendlaneConnect} handleClose={handleClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'Sendlane')?.access_token}/>
         <AttentiveIntegrationPopup open={OpenAttentiveConnect} handleClose={handleClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'Attentive')?.access_token}/>
+        <ZapierConnectPopup open={openZapierConnect} handlePopupClose={handleClose} />
         <AlivbleIntagrationsSlider 
             isContactSync={false} 
             open={openAvalible} 
@@ -713,6 +731,8 @@ const IntegrationsAvaliable = ({ integrationsCredentials, integrations, handleSa
     const [openMailchinpConnect, setOpenmailchimpConnect] = useState(false)
     const [openSendlaneConnect, setOpenSendlaneConnect] = useState(false)
     const [openAttentiveConnect, setOpenAttentiveConnect] = useState(false)
+    const [openZapierConnect, setOpenZapierConnect] = useState(false)
+
     const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
         setSearch(event.target.value);
     };
@@ -725,7 +745,10 @@ const IntegrationsAvaliable = ({ integrationsCredentials, integrations, handleSa
         { image: 'omnisend_icon_black.svg', service_name: 'Omnisend'}, 
         { image: 'mailchimp-icon.svg', service_name: 'Mailchimp'},
         { image: 'sendlane-icon.svg', service_name: 'Sendlane'},
-        { image: 'attentive.svg', service_name: 'Attentive'}
+        { image: 'attentive.svg', service_name: 'Attentive'},
+        { image: 'listrak.svg', service_name: 'Listark'},
+        { image: 'cordial.svg', service_name: 'Cordial'},
+        { image: 'zapier-icon.svg', service_name: 'Zapier'}
     ];
 
     const handleClose = () => {
@@ -737,6 +760,7 @@ const IntegrationsAvaliable = ({ integrationsCredentials, integrations, handleSa
         setOpenmailchimpConnect(false)
         setOpenSendlaneConnect(false)
         setOpenAttentiveConnect(false)
+        setOpenZapierConnect(false)
     }
 
     const handleAddIntegration = (service_name: string) => {
@@ -768,6 +792,8 @@ const IntegrationsAvaliable = ({ integrationsCredentials, integrations, handleSa
             break;
         case 'Meta':
             setOpenMetaConnect(true)
+        case 'Zapier':
+          setOpenZapierConnect(true)
         default:
             break;
       }} 
@@ -835,6 +861,7 @@ const IntegrationsAvaliable = ({ integrationsCredentials, integrations, handleSa
             <MailchimpConnect open={openMailchinpConnect} handleClose={handleClose} onSave={handleSaveSettings} />
             <SendlaneConnect open={openSendlaneConnect} handleClose={handleClose} onSave={handleSaveSettings} />
             <AttentiveIntegrationPopup open={openAttentiveConnect} handleClose={handleClose} onSave={handleSaveSettings} />
+            <ZapierConnectPopup open={openZapierConnect} handlePopupClose={handleClose}/>
         </Box>
     );
 };
@@ -1068,7 +1095,7 @@ const PixelManagment = () => {
                       sx={{
                         ...integrationsStyle.table_column,
                         position: "relative",
-                        ...(key === "list_name" && {
+                        ...(key === "platform" && {
                           position: "sticky",
                           left: 0,
                           zIndex: 99,
@@ -1139,6 +1166,8 @@ const PixelManagment = () => {
                           borderRadius: "2px",
                           justifyContent: "center",
                           textTransform: "capitalize",
+                          zIndex: 9,
+                          backgroundColor: "#fff"
                         }}
                       >
                         {platformIcon(row.platform)}
@@ -1155,9 +1184,7 @@ const PixelManagment = () => {
                       className="sticky-cell"
                       sx={{
                         ...integrationsStyle.table_array,
-                        position: "sticky",
                         left: "0",
-                        zIndex: 9,
                         backgroundColor: "#fff",
                       }}
                     >

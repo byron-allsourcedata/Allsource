@@ -6,11 +6,14 @@ from persistence.user_persistence import UserPersistence
 from models.users import Users
 from persistence.plans_persistence import PlansPersistence
 from schemas.users import UpdatePassword
+from schemas.domains import DomainResponse
 from services.jwt_service import get_password_hash
 import requests
 from dotenv import load_dotenv
-
+from persistence.domains import UserDomainsPersistence
 from services.subscriptions import SubscriptionService
+from persistence.domains import UserDomainsPersistence, UserDomains
+
 
 logger = logging.getLogger(__name__)
 load_dotenv()
@@ -18,11 +21,12 @@ load_dotenv()
 
 class UsersService:
     def __init__(self, user, user_persistence_service: UserPersistence, plan_persistence: PlansPersistence,
-                 subscription_service: SubscriptionService):
+                 subscription_service: SubscriptionService, domain_persistence: UserDomainsPersistence):
         self.user = user
         self.user_persistence_service = user_persistence_service
         self.plan_persistence = plan_persistence
         self.subscription_service = subscription_service
+        self.domain_persistence = domain_persistence
 
     def update_password(self, update_data: UpdatePassword):
         if update_data.password != update_data.confirm_password:
@@ -50,18 +54,44 @@ class UsersService:
         }
 
     def get_my_info(self, domain):
+        percent = self.user.get('activate_steps_percent')
+        domains = self.domain_persistence.get_domains_by_user(self.user.get('id'))
+        if domain and domain.is_pixel_installed:
+            percent = 75
+        else:
+            percent = 75 if domains[0].is_pixel_installed else percent
         if self.user.get('team_member'):
             team_member = self.user.get('team_member')
+            
             return {
                 "email": team_member.get('email'),
                 "full_name": team_member.get('full_name'),
-                "activate_percent": team_member.get('activate_steps_percent'),
+                "activate_percent": percent if percent > 50 else team_member.get('activate_steps_percent'),
+                "domains": domains
             }
         return {
             "email": self.user.get('email'),
             "full_name": self.user.get('full_name'),
-            "activate_percent": 75 if domain and domain.is_pixel_installed else self.user.get('activate_steps_percent') ,
+            "activate_percent": percent,
+            "domains": domains
         }
+
+    def get_domains(self):
+        domains = self.domain_persistence.get_domains_by_user(self.user.get('id'))
+        sorted_domains = sorted(domains, key=lambda x: x.created_at)
+        return [
+            self.domain_mapped(domain)
+            for i, domain in enumerate(sorted_domains)
+        ]
+
+    def domain_mapped(self, domain: UserDomains):
+        return DomainResponse(
+            id=domain.id,
+            domain=domain.domain,
+            data_provider_id=domain.data_provider_id,
+            is_pixel_installed=domain.is_pixel_installed,
+            enable=domain.is_enable
+        ).model_dump()
 
     def get_calendly_info(self):
         try:

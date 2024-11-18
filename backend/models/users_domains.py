@@ -15,3 +15,4 @@ class UserDomains(Base):
     is_pixel_installed = Column(BOOLEAN, default=False)
     is_enable = Column(BOOLEAN, default=True, nullable=False)
     created_at = Column(TIMESTAMP, nullable=False, default=datetime.utcnow)
+    api_key = Column(VARCHAR, unique=True, nullable=True)

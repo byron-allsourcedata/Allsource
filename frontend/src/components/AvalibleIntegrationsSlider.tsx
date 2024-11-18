@@ -11,6 +11,7 @@ import BCommerceConnect from "./Bcommerce"
 import OmnisendConnect from "./OmnisendConnect"
 import MailchimpConnect from "./MailchimpConnect"
 import SendlaneConnect from "./SendlaneConnect"
+import ZapierConnectPopup from "./ZapierConnectPopup"
 
 
 interface AvailableIntegrationsSliderProps {
@@ -31,6 +32,7 @@ const AlivbleIntagrationsSlider = ({open, isContactSync = false, integrations, i
     const [openOmnisendConnect, setOpenOmnisendConnect] = useState(false)
     const [openMailchimpConnect, setOpenMailchimpConnect] = useState(false)
     const [openSendlaneConnect, setOpenSendlaneConnect] = useState(false)
+    const [openZapierConnect, setOPenZapierComnect] = useState(false)
     const handleClose = () => {
         setOpenMetaConnect(false)
         setOpenKlaviyoConnect(false)
@@ -39,6 +41,7 @@ const AlivbleIntagrationsSlider = ({open, isContactSync = false, integrations, i
         setOpenBigcommerceConnect(false)
         setOpenOmnisendConnect(false)
         setOpenSendlaneConnect(false)
+        setOPenZapierComnect(false)
     }
 
     const saveIntegration = (new_integration: any) => {
@@ -409,6 +412,29 @@ const AlivbleIntagrationsSlider = ({open, isContactSync = false, integrations, i
                                         </ListItemButton>
                                     </ListItem>
                                 )}
+                                {integrations.some(integration => integration.service_name === 'Zapier') && (
+                                    !integrationsCredentials.some(integration => integration.service_name === 'Zapier') )&&(
+                                    <ListItem sx={{p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',
+                                        '@media (max-width:600px)': {
+                                            flexBasis: 'calc(50% - 8px)'
+                                        }
+                                    }}>
+                                        <ListItemButton onClick={() => setOPenZapierComnect(true)} sx={{p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center'}}>
+                                        <ListItemIcon sx={{minWidth: 'auto'}}>    
+                                            <Image src="/zapier-icon.svg" alt="zapier" height={24} width={24} />
+                                        </ListItemIcon>
+                                        <ListItemText primary="Zapier" primaryTypographyProps={{
+                                                sx: {
+                                                    fontFamily: "Nunito Sans",
+                                                    fontSize: "14px",
+                                                    color: "#4a4a4a",
+                                                    fontWeight: "500",
+                                                    lineHeight: "20px"
+                                                }
+                                            }} />
+                                        </ListItemButton>
+                                    </ListItem>
+                                )}
                             </List>
                         </Box>
                     </Box>
@@ -425,6 +451,7 @@ const AlivbleIntagrationsSlider = ({open, isContactSync = false, integrations, i
         <OmnisendConnect open={openOmnisendConnect} handleClose={() => setOpenOmnisendConnect(false)} onSave={saveIntegration} />
         <MailchimpConnect open={openMailchimpConnect} handleClose={() => setOpenMailchimpConnect(false)} onSave={saveIntegration} />
         <SendlaneConnect open={openSendlaneConnect} handleClose={() => setOpenSendlaneConnect(false)} onSave={saveIntegration} />
+        <ZapierConnectPopup open={openZapierConnect} handlePopupClose={handleClose} />
         </>
     )
 }

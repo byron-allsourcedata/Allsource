@@ -783,6 +783,33 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data
                                                         }
                                                     }}
                                                 />
+                                                <FormControlLabel value="coverted_sales" control={<Radio sx={{
+                                                    color: '#e4e4e4',
+                                                    '&.Mui-checked': {
+                                                        color: '#5052b2', // checked color
+                                                    }
+                                                }} />} label="Converted Sales"
+                                                    componentsProps={{
+                                                        typography: {
+                                                            sx: {
+                                                                fontFamily: 'Nunito Sans',
+                                                                fontSize: '14px',
+                                                                fontWeight: '500',
+                                                                color: '#000',
+                                                                lineHeight: 'normal',
+                                                                opacity: selectedRadioValue === 'addToCart' ? 1 : 0.43,
+                                                                '@media (max-width:440px)': {
+                                                                    fontSize: '12px'
+                                                                }
+                                                            },
+                                                        },
+                                                    }}
+                                                    sx={{
+                                                        '@media (max-width:600px)': {
+                                                            flexBasis: 'calc(50% - 8px)'
+                                                        }
+                                                    }}
+                                                />
                                             </RadioGroup>
                                         </FormControl>
                                     </Box>

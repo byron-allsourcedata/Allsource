@@ -20,7 +20,7 @@ from config.rmq_connection import RabbitMQConnection
 from services.integrations.base import IntegrationService
 from dependencies import (IntegrationsPresistence, LeadsPersistence, AudiencePersistence, 
                           LeadOrdersPersistence, IntegrationsUserSyncPersistence, 
-                          AWSService, UserDomainsPersistence, SuppressionPersistence)
+                          AWSService, UserDomainsPersistence, SuppressionPersistence, ExternalAppsInstallationsPersistence)
 
 logging.basicConfig(level=logging.INFO)
 
@@ -46,6 +46,7 @@ async def process_data_sync(message_body, integration_service: IntegrationServic
     await integration_service.omnisend.process_data_sync(message_body)
     await integration_service.mailchimp.process_data_sync(message_body)
     await integration_service.sendlane.process_data_sync(message_body)
+    await integration_service.zapier.process_data_sync(message_body)
 
 async def main():
     logging.info("Started")
@@ -68,13 +69,14 @@ async def main():
         integration_service = IntegrationService(
                 db=db_session,
                 integration_persistence=IntegrationsPresistence(db_session),
-                lead_persistence=LeadsPersistence(db_session),
+                lead_persistence=LeadsPersistence(db_session), 
                 audience_persistence=AudiencePersistence(db_session),
                 lead_orders_persistence=LeadOrdersPersistence(db_session),
                 integrations_user_sync_persistence=IntegrationsUserSyncPersistence(db_session),
                 aws_service=AWSService(get_s3_client()),
                 domain_persistence=UserDomainsPersistence(db_session),
-                suppression_persistence=SuppressionPersistence(db_session)
+                suppression_persistence=SuppressionPersistence(db_session),
+                epi_persistence=ExternalAppsInstallationsPersistence(db_session)
             )
         with integration_service as service:
             await queue.consume(
