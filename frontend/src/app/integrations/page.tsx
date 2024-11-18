@@ -1502,15 +1502,22 @@ const Integrations = () => {
                   mt: 2,
                   ml: 1,
                   pr: 1.5,
+                  "@media (max-width: 900px)": {
+                    flexDirection: "column",
+                    display: "flex",
+                    alignItems: "flex-start",
+                    marginTop: hasNotification ? '36px' : '16px'
+                  },
                   "@media (max-width: 600px)": {
                     flexDirection: "column",
                     display: "flex",
                     alignItems: "flex-start",
-                    marginTop: '16px'
+                    marginTop: hasNotification ? '36px' : '16px'
                   },
                   "@media (max-width: 440px)": {
                     flexDirection: "column",
                     justifyContent: "flex-start",
+                    marginTop: hasNotification ? '44px' : '16px'
                   },
                 }}
               >
@@ -1524,7 +1531,6 @@ const Integrations = () => {
                     top: hasNotification ? '8.05rem' : '5.4rem',
                     right: '16px',
                     left: '170px',
-                    background: '#fff',
                     zIndex: '99',
                     paddingLeft: '30px',
                     paddingRight: '24px',
@@ -1538,7 +1544,7 @@ const Integrations = () => {
                       margin: 'unset'
                     },
                     gap: 1,
-                    "@media (max-width: 600px)": { mb: 2 },
+                    "@media (max-width: 600px)": { mb: 2, width: '100%' },
                   }}
                 >
                   <Typography

@@ -43,7 +43,7 @@ const CustomNotification: React.FC<CustomNotificationProps> = ({ id, message, sh
             const keyword = keywords.find(k => k.word === part);
             if (keyword) {
                 return (
-                    <Link key={index} className="second-sub-title" href={keyword.link} sx={{ textDecoration: 'none', color: 'rgba(20, 110, 246, 1) !important' }}>
+                    <Link key={index} className="second-sub-title" href={keyword.link} sx={{ textDecoration: 'none', color: 'rgba(20, 110, 246, 1) !important', '@media (max-width: 600px)': { fontSize: '11px !important'}, }}>
                         {part}
                     </Link>
                 );
@@ -65,15 +65,16 @@ const CustomNotification: React.FC<CustomNotificationProps> = ({ id, message, sh
                 padding: '1.25rem 1.5rem',
                 width: 'calc(100% - 20px)',
                 marginLeft: '10px',
-                height: '34px',
+                maxHeight: '34px',
                 zIndex: 1200,
-                '@media (max-width: 600px)': { display: 'none'},
+                '@media (max-width: 900px)': { top: '4.75rem', zIndex: 60,},
+                '@media (max-width: 600px)': { padding: '0.25rem 0.5rem', top: '4.75rem', maxHeight: '56px'},
                 backgroundColor: '#fff',
             }}
         >
             <Image src="/danger-icon.svg" alt="Danger Icon"  width={20} height={20} />
             
-            <Typography variant="body1" className='second-sub-title' sx={{ marginLeft: '8px', flexGrow: 1,  }}>
+            <Typography variant="body1" className='second-sub-title' sx={{ marginLeft: '8px', flexGrow: 1, '@media (max-width: 600px)': { fontSize: '10px !important'},  }}>
                 {transformTextToLinks(message)}
             </Typography>
 
@@ -84,6 +85,7 @@ const CustomNotification: React.FC<CustomNotificationProps> = ({ id, message, sh
                     sx={{
                         color: 'rgba(80, 82, 178, 1) !important',
                         textTransform: 'none',
+                        '@media (max-width: 600px)': { fontSize: '12px !important'},
                     }}
                 >
                     Dismiss

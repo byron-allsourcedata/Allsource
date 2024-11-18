@@ -470,7 +470,7 @@ const SuppressionRules: React.FC = () => {
                                         color: 'rgba(95, 99, 104, 1)',
                                         lineHeight: '20px',
                                         fontFamily: 'Nunito Sans',
-                                    }}>Contact suppressed till now - 1k</Typography>
+                                    }}>Contacts suppressed till now - 1k</Typography>
                                 </Box>
                             </Box>
                         </Box>
@@ -1222,7 +1222,7 @@ const SuppressionRules: React.FC = () => {
                                             sx={{
                                                 ...suppressionsStyles.tableColumn,
                                                 zIndex: 9,
-                                                cursor: 'pointer', position: 'sticky', backgroundColor: '#fff'
+                                                cursor: 'pointer', position: 'sticky', backgroundColor: '#fff', left:0
                                             }}>List name</TableCell>
                                         <TableCell className='table-heading' sx={suppressionsStyles.tableColumn}>Date</TableCell>
                                         <TableCell className='table-heading' sx={suppressionsStyles.tableColumn}>Total</TableCell>
@@ -1253,7 +1253,11 @@ const SuppressionRules: React.FC = () => {
                                             }}>
                                                 <TableCell className='sticky-cell table-data' sx={{
                                                     ...suppressionsStyles.tableBodyColumn,
-                                                    cursor: 'pointer'
+                                                    cursor: 'pointer',
+                                                    position: 'sticky',
+                                                    left: 0, 
+                                                    zIndex: 1,
+                                                    backgroundColor: '#fff',
                                                 }}>
                                                     {suppression.list_name}
                                                 </TableCell>

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Box, colors, IconButton, List, ListItem, ListItemIcon, ListItemText, Menu, MenuItem, Typography } from '@mui/material';
 import { useRouter, usePathname } from 'next/navigation';
 import MenuIcon from '@mui/icons-material/Menu';
@@ -103,7 +103,13 @@ const navigationmenuStyles = {
 
 };
 
-const NavigationMenu = () => {
+interface NavigationProps {
+  NewRequestNotification: boolean;
+}
+
+
+const NavigationMenu: React.FC<NavigationProps> = ({ NewRequestNotification }) => {
+  const [hasNotification, setHasNotification] = useState(NewRequestNotification);
   const [open, setOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [anchorElNotificate, setAnchorElNotificate] = useState<null | HTMLElement>(null);
@@ -117,7 +123,6 @@ const NavigationMenu = () => {
   const { setShowSlider } = useSlider();
   const [showBookSlider, setShowBookSlider] = useState(false);
   const [notificationIconPopupOpen, setNotificationIconPopupOpen] = useState(false);
-  const [popupPosition, setPopupPosition] = useState({ top: 0, left: 0 });
   const buttonRef = useRef<HTMLButtonElement>(null);
 
   const toggleDrawer = () => {
@@ -177,7 +182,12 @@ const NavigationMenu = () => {
 
   const handleNotificationIconPopupClose = () => {
     setNotificationIconPopupOpen(false);
+    setHasNotification(false);
   }
+
+  useEffect(() => {
+    setHasNotification(NewRequestNotification);
+  }, [NewRequestNotification]);
 
   return (
     <Box>
@@ -197,7 +207,21 @@ const NavigationMenu = () => {
         {/* Placeholder for Right Icon */}
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <IconButton ref={buttonRef} onClick={handleNotificationIconPopupOpen}>
-            <NotificationsNoneIcon />
+          {hasNotification && (
+              <Box
+                sx={{
+                  position: 'fixed',
+                  top: 20,
+                  right: 100,
+                  width: '8px',
+                  height: '8px',
+                  backgroundColor: 'rgba(248, 70, 75, 1)',
+                  borderRadius: '50%',
+
+                }}
+              />
+            )}
+            <NotificationsNoneIcon sx={{color: hasNotification ? 'rgba(80, 82, 178, 1)' : ''}} />
           </IconButton>
           <IconButton onClick={handleSupportButton}>
             <QuestionMarkOutlinedIcon />

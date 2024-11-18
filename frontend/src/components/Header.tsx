@@ -113,7 +113,7 @@ const Header: React.FC<HeaderProps> = ({ NewRequestNotification }) => {
   return (
     <>
       <Box sx={{ display: { md: 'none' } }}>
-        <SliderProvider><NavigationMenu /></SliderProvider>
+        <SliderProvider><NavigationMenu NewRequestNotification={hasNewNotifications || hasNewNotifications} /></SliderProvider>
       </Box>
 
 
