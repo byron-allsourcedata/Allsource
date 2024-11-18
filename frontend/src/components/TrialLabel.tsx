@@ -24,12 +24,11 @@ const TrialStatus: React.FC = () => {
       url: `${process.env.NEXT_PUBLIC_API_BASE_URL}me`,
       headers: {
         Authorization: `Bearer ${accessToken}`,
-        CurrentDomain: currentDomain
-        
+        CurrentDomain: currentDomain ? currentDomain : null
       },
       method: 'GET',
     },
-    { manual: true }
+    {manual: true}  
   );
 
   useEffect(() => {
@@ -39,7 +38,7 @@ const TrialStatus: React.FC = () => {
   }, [accessToken]);
 
   useEffect(() => {
-    if (data?.user_info && data?.user_plan) {
+    if (data?.user_info && data?.user_plan && data?.user_domains.length > 0) {
       const userInfo = data.user_info;
       const userPlan = data.user_plan;
       const domains = data.user_domains;

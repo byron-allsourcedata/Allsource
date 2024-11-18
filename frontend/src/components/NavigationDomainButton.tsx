@@ -236,7 +236,6 @@ const DomainButton: React.FC = () => {
       }
       setLoading(false);
     };
-  
     fetchData();
   }, []);
   

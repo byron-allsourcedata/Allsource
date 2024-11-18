@@ -41,8 +41,6 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     useEffect(() => {
       const token = localStorage.getItem('token');
       const storedMe = sessionStorage.getItem('me');
-      const currentDomain = sessionStorage.getItem('current_domain');
-      
       if (storedMe) {
         const storedData = JSON.parse(storedMe);
         setEmail(storedData.email);
@@ -70,13 +68,13 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
                 setDomans(userData.domains);
               }
             });
-            timeDifference = endDate.getTime() - currentDate.getTime(); // пересчитываем разницу
+            timeDifference = endDate.getTime() - currentDate.getTime(); 
           }
     
           const daysDifference = Math.ceil((timeDifference - 3600000) / (1000 * 60 * 60 * 24));
           setDaysDifference(daysDifference);
         }
-      } else if (token && currentDomain && !hasFetched) {
+      } else if (token && !hasFetched) {
         fetchUserData().then(userData => {
           if (userData) {
             setEmail(userData.email);
@@ -86,10 +84,10 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
             setIsTrialPending(userData.is_trial_pending);
             setDomans(userData.domains);
           }
-          setHasFetched(true); // Устанавливаем hasFetched после выполнения запроса
+          setHasFetched(true);
         });
       }
-    }, [hasFetched]);
+    }, [hasFetched, window?.sessionStorage.getItem('me')]);
     
 
   return (

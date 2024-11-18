@@ -54,18 +54,26 @@ class UsersService:
         }
 
     def get_my_info(self, domain):
+        percent = self.user.get('activate_steps_percent')
+        domains = self.domain_persistence.get_domain_by_user(self.user.get('id'))
+        if domain and domain.is_pixel_installed:
+            percent = 75
+        else:
+            percent = 75 if domains[0].is_pixel_installed else percent
         if self.user.get('team_member'):
             team_member = self.user.get('team_member')
+            
             return {
                 "email": team_member.get('email'),
                 "full_name": team_member.get('full_name'),
-                "activate_percent": team_member.get('activate_steps_percent'),
-                "domains": domain_persistence.get_domain_by_user(team_member.get('user_id'))
+                "activate_percent": percent if percent > 50 else team_member.get('activate_steps_percent'),
+                "domains": domains
             }
         return {
             "email": self.user.get('email'),
             "full_name": self.user.get('full_name'),
-            "activate_percent": 75 if domain and domain.is_pixel_installed else self.user.get('activate_steps_percent') ,
+            "activate_percent": percent,
+            "domains": domains
         }
 
     def get_domains(self):

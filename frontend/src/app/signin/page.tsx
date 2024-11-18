@@ -60,6 +60,7 @@ const Signup: React.FC = () => {
 
   const get_me = async () => {
     const userData = await fetchUserData();
+    console.log(userData)
   };
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {

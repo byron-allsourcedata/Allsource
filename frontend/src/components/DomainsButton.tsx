@@ -214,13 +214,19 @@ const DomainButton: React.FC = () => {
   const [deleteDomain, setDeleteDomain] = useState<Domain | null>(null);
   const [loading, setLoading] = useState(false);
   const [upgradePlanPopup, setUpgradePlanPopup] = useState(false);
-  const [storedMe, setStoreMe] = useState<any | null>(null)
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const storedMe = localStorage.getItem("me");
-      setStoreMe(storedMe)
-    } 
-  }, []);
+    if(domains.length === 0 || !currentDomain) {
+      setLoading(true);
+      setDomains(sessionStorage.getItem('me') ? JSON.parse(sessionStorage.getItem('me') || '').domains : [])
+      setCurrentDomain(sessionStorage.getItem('current_domain') || '');
+    }
+    else {
+      setLoading(false)
+    }
+  }, [domains, currentDomain])
+
+
+
   const handleDropdownClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     setDropdownEl(event.currentTarget);
   };
@@ -228,24 +234,6 @@ const DomainButton: React.FC = () => {
   const handleDropdownClose = () => {
     setDropdownEl(null);
   };
-
-  useEffect(() => {    
-    if (storedMe) {
-      const parsedMe = JSON.parse(storedMe);
-      const parsedDomains = parsedMe.domains || [];
-      if (parsedDomains.length > 0) {
-        setDomains(parsedDomains);
-        const savedDomain = sessionStorage.getItem('current_domain');
-        if (savedDomain) {
-          setCurrentDomain(savedDomain.replace('https://', ''));
-        } else {
-          const firstDomain = parsedDomains[0].domain.replace('https://', '');
-          setCurrentDomain(firstDomain);
-          sessionStorage.setItem('current_domain', parsedDomains[0].domain);
-        }
-      }
-    }
-  }, [storedMe]);
 
 
   const handleSetDomain = (domain: string) => {
