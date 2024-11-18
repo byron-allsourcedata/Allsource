@@ -232,17 +232,14 @@ const DomainButton: React.FC = () => {
             setCurrentDomain(firstDomain);
             sessionStorage.setItem('current_domain', parsedDomains[0].domain);
           }
-        } else {
-          console.log('No domains found in parsed "me" data');
         }
-      } else {
-        console.log('No "me" data found in sessionStorage');
       }
-      setLoading(false);  
+      setLoading(false);
     };
-
+  
     fetchData();
   }, []);
+  
 
   const handleSetDomain = (domain: string) => {
     sessionStorage.setItem('current_domain', domain);
