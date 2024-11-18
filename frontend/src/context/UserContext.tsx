@@ -87,7 +87,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
           setHasFetched(true);
         });
       }
-    }, [hasFetched, window?.sessionStorage.getItem('me')]);
+    }, [hasFetched]);
     
 
   return (
