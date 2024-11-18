@@ -55,7 +55,7 @@ class UsersService:
 
     def get_my_info(self, domain):
         percent = self.user.get('activate_steps_percent')
-        domains = self.domain_persistence.get_domain_by_user(self.user.get('id'))
+        domains = self.domain_persistence.get_domains_by_user(self.user.get('id'))
         if domain and domain.is_pixel_installed:
             percent = 75
         else:
@@ -77,7 +77,7 @@ class UsersService:
         }
 
     def get_domains(self):
-        domains = self.domain_persistence.get_domain_by_user(self.user.get('id'))
+        domains = self.domain_persistence.get_domains_by_user(self.user.get('id'))
         sorted_domains = sorted(domains, key=lambda x: x.created_at)
         return [
             self.domain_mapped(domain)

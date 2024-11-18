@@ -241,7 +241,7 @@ def check_domain(
         user=Depends(check_user_authentication),
         domain_persistence: UserDomainsPersistence = Depends(get_user_domain_persistence)
 ) -> UserDomains:
-    current_domain = domain_persistence.get_domain_by_user(user.get('id'), domain_substr=CurrentDomain)
+    current_domain = domain_persistence.get_domains_by_user(user.get('id'), domain_substr=CurrentDomain)
     if not CurrentDomain:
         return None
     if not current_domain or len(current_domain) == 0:
