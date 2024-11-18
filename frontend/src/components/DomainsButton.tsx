@@ -214,7 +214,13 @@ const DomainButton: React.FC = () => {
   const [deleteDomain, setDeleteDomain] = useState<Domain | null>(null);
   const [loading, setLoading] = useState(false);
   const [upgradePlanPopup, setUpgradePlanPopup] = useState(false);
-  const storedMe = sessionStorage.getItem('me');
+  const [storedMe, setStoreMe] = useState<any | null>(null)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedMe = localStorage.getItem("me");
+      setStoreMe(storedMe)
+    } 
+  }, []);
   const handleDropdownClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     setDropdownEl(event.currentTarget);
   };
