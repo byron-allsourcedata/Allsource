@@ -41,11 +41,11 @@ async def on_message_received(message: IncomingMessage, integration_service):
 
 
 async def process_data_sync(message_body, integration_service: IntegrationService):
-    # await integration_service.klaviyo.process_data_sync(message_body)
-    # integration_service.meta.process_data_sync(message_body)
-    # await integration_service.omnisend.process_data_sync(message_body)
-    # await integration_service.mailchimp.process_data_sync(message_body)
-    # await integration_service.sendlane.process_data_sync(message_body)
+    await integration_service.klaviyo.process_data_sync(message_body)
+    integration_service.meta.process_data_sync(message_body)
+    await integration_service.omnisend.process_data_sync(message_body)
+    await integration_service.mailchimp.process_data_sync(message_body)
+    await integration_service.sendlane.process_data_sync(message_body)
     await integration_service.zapier.process_data_sync(message_body)
 
 async def main():
