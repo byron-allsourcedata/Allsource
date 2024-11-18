@@ -10,7 +10,7 @@ from typing_extensions import Annotated
 from config.auth import AuthConfig
 from config.aws import get_s3_client
 from config.database import SessionLocal
-from enums import UserAuthorizationStatus
+from enums import DomainStatus, UserAuthorizationStatus
 from exceptions import InvalidToken
 from models.users import Users as User
 from persistence.audience_persistence import AudiencePersistence
@@ -427,5 +427,5 @@ def check_api_key(maximiz_api_key = Header(None), domain_persistence: UserDomain
         domains = domain_persistence.get_domain_by_filter(api_key=maximiz_api_key)
         if domains:
             return domains[0]
-        raise HTTPException(status_code=404, detail={'status': 'Domain Not Found'})
-    raise HTTPException(status_code=401, detail={'status': 'Invalid API Key'})
+        raise HTTPException(status_code=404, detail={'status': DomainStatus.DOMAIN_NOT_FOUND.value})
+    raise HTTPException(status_code=401, detail={'status': UserAuthorizationStatus.INVALID_API_KEY.value})

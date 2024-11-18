@@ -120,7 +120,6 @@ const BCommerceConnect = ({open, onClose, error_message, initShopHash}: Bigcomme
 
     useEffect(() => {
         if (open && initShopHash) {
-            console.log(initShopHash)
             setShopHash(initShopHash)
         }
     }, [initShopHash, open]);

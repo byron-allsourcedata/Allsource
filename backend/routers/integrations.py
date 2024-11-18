@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+import json
 from urllib.parse import urlencode
 from fastapi import APIRouter, Depends, Query, HTTPException, status, Body
 from fastapi.responses import RedirectResponse
@@ -168,7 +169,6 @@ async def bigcommerce_oauth_callback(code: str, state: str = Query(None), integr
         'redirect_uri': BigcommerceConfig.redirect_uri,
         'grant_type': 'authorization_code'
     }
-    print(payload)
     with httpx.Client() as client:
         response = client.post(BigcommerceConfig.token_url, data=payload)
         if response.status_code == 200:
@@ -225,69 +225,7 @@ async def unsubscribe_zapier_webhook(sync_data = Body(...), domain = Depends(che
 
 @router.get('/zapier/webhook')
 async def get_dont_import_leads(domain = Depends(check_api_key)):
-    return [{
-  "id": 1,
-  "up_id": "12345",
-  "cc_id": "67890",
-  "first_name": "John",
-  "programmatic_business_emails": "john.doe@company.com",
-  "mobile_phone": "+1234567890",
-  "direct_number": "+0987654321",
-  "gender": "Male",
-  "personal_phone": "+1122334455",
-  "business_email": "johndoe@company.com",
-  "personal_emails": "johndoe@gmail.com, johnny.doe@yahoo.com",
-  "last_name": "Doe",
-  "personal_city": "New York",
-  "personal_state": "NY",
-  "company_name": "Doe Industries",
-  "company_domain": "doeindustries.com",
-  "company_phone": "+1234567890",
-  "company_sic": "1234",
-  "company_address": "123 Industry Blvd",
-  "company_city": "New York",
-  "company_state": "NY",
-  "company_zip": "10001",
-  "company_linkedin_url": "https://www.linkedin.com/company/doeindustries",
-  "company_revenue": "1000000",
-  "company_employee_count": "150",
-  "net_worth": "5000000",
-  "job_title": "CEO",
-  "last_updated": "2024-11-13T12:00:00Z",
-  "personal_emails_last_seen": "2024-11-10T14:30:00Z",
-  "company_last_updated": "2024-11-11T09:00:00Z",
-  "job_title_last_updated": "2024-11-12T10:00:00Z",
-  "first_name_id": 101,
-  "last_name_id": 102,
-  "age_min": 30,
-  "age_max": 45,
-  "additional_personal_emails": "john.doe@hotmail.com",
-  "linkedin_url": "https://www.linkedin.com/in/johndoe",
-  "personal_address": "456 Elm St",
-  "personal_address_2": "Apt 12B",
-  "personal_zip": "10002",
-  "personal_zip4": "10002-1234",
-  "professional_zip": "10001",
-  "married": "Yes",
-  "children": "2",
-  "income_range": "$100,000 - $150,000",
-  "homeowner": "Yes",
-  "seniority_level": "Executive",
-  "department": "Management",
-  "professional_address": "789 Corporate Dr",
-  "professional_address_2": "Suite 100",
-  "professional_city": "San Francisco",
-  "professional_state": "CA",
-  "professional_zip4": "94105-1234",
-  "primary_industry": "Technology",
-  "business_email_validation_status": "Valid",
-  "business_email_last_seen": "2024-11-13T12:00:00Z",
-  "personal_emails_validation_status": "Valid",
-  "work_history": "CEO at Doe Industries, CTO at TechCorp",
-  "education_history": "BS in Computer Science from MIT",
-  "company_description": "Doe Industries is a leading provider of innovative tech solutions.",
-  "related_domains": "doeindustries.com, doeindustries.org",
-  "social_connections": "500+ connections on LinkedIn",
-  "dpv_code": "12345"
-}]
+    with open('../backend/data/integrations/example_lead.json', 'r') as file:
+        example_lead = file.read()
+        return json.loads(example_lead)
     
