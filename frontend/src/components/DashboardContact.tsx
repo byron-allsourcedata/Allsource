@@ -33,6 +33,7 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates }) => 
         totalVisitors: 0,
         viewProducts: 0,
         totalAbandonedCart: 0,
+        totalConvertedSale: 0,
     });
 
     const isLargeScreen = useMediaQuery('(min-width:1200px)');
@@ -59,12 +60,13 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates }) => 
                     response = await axiosInstance.get("/dashboard/contact");
                 }
 
-                const { total_contacts_collected, total_visitors, total_view_products, total_abandoned_cart } = response.data.total_counts;
+                const { total_contacts_collected, total_visitors, total_view_products, total_abandoned_cart, total_converted_sale } = response.data.total_counts;
                 setValues({
                     totalContact: total_contacts_collected,
                     totalVisitors: total_visitors,
                     viewProducts: total_view_products,
                     totalAbandonedCart: total_abandoned_cart,
+                    totalConvertedSale: total_converted_sale,
                 });
                 const { daily_data } = response.data;
                 const days = Object.keys(daily_data).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
@@ -74,6 +76,7 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates }) => 
                 const visitorsData = days.map((day) => daily_data[day].visitors || 0);
                 const viewedProductData = days.map((day) => daily_data[day].view_products || 0);
                 const abandonedCartData = days.map((day) => daily_data[day].abandoned_cart || 0);
+                const convertedSaleData = days.map((day) => daily_data[day].converted_sale || 0);
 
                 setSeries([
                     {
@@ -116,6 +119,16 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates }) => 
                         area: false,
                         stackOrder: 'ascending',
                     },
+                    {
+                        id: 'converted_sale',
+                        label: 'Converted Sale',
+                        data: convertedSaleData,
+                        curve: 'linear',
+                        stack: 'total',
+                        showMark: false,
+                        area: false,
+                        stackOrder: 'ascending',
+                    },
                 ]);
                 setDays(days);
             } catch (error) {
@@ -139,7 +152,8 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates }) => 
         'rgba(244, 87, 69, 1)',
         'rgba(80, 82, 178, 1)',
         'rgba(224, 176, 5, 1)',
-        'rgba(144, 190, 109, 1)'
+        'rgba(144, 190, 109, 1)',
+        'rgba(5, 115, 234, 1)',
     ];
 
     const colorMapping = {
@@ -147,6 +161,7 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates }) => 
         visitors: 'rgba(80, 82, 178, 1)',
         viewed_product: 'rgba(224, 176, 5, 1)',
         abandoned_cart: 'rgba(144, 190, 109, 1)',
+        converted_sale: 'rgba(5, 115, 234, 1)',
     };
 
     type VisibleSeries = {
@@ -154,6 +169,7 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates }) => 
         visitors: boolean;
         viewed_product: boolean;
         abandoned_cart: boolean;
+        converted_sale: boolean;
     };
 
     const [visibleSeries, setVisibleSeries] = useState<VisibleSeries>({
@@ -161,6 +177,7 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates }) => 
         visitors: true,
         viewed_product: true,
         abandoned_cart: true,
+        converted_sale: true,
     });
 
     const handleChipClick = (seriesId: keyof VisibleSeries) => {
@@ -168,7 +185,6 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates }) => 
             ...prev,
             [seriesId]: !prev[seriesId],
         }));
-        console.log(filteredSeries)
     };
 
     const options = [
@@ -176,6 +192,7 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates }) => 
         { id: 'visitors', label: 'Total Visitors', color: 'rgba(80, 82, 178, 1)' },
         { id: 'viewed_product', label: 'View Products', color: 'rgba(224, 176, 5, 1)' },
         { id: 'abandoned_cart', label: 'Abandoned cart', color: 'rgba(144, 190, 109, 1)' },
+        { id: 'converted_sale', label: 'Converted Sale', color: 'rgba(5, 115, 234, 1)'}
     ];
 
     const selectedGraphs = options
@@ -260,6 +277,16 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates }) => 
             stackOrder: 'ascending',
             data: [0],
         },
+        {
+            id: 'converted_sale' as keyof typeof colorMapping,
+            label: 'Converted Sale',
+            curve: 'linear',
+            stack: 'total',
+            showMark: false,
+            area: false,
+            stackOrder: 'ascending',
+            data: [0],
+        },
     ].filter((s) => visibleSeries[s.id as keyof VisibleSeries]));
 
     const [data, setDays] = useState<string[]>([]);
@@ -297,9 +324,8 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates }) => 
         let aggregatedSeries: Series[] = [];
     
         if (period < 2) {
-            // Агрегирование по неделям
             const weeklyData: Record<string, Record<string, number[]>> = {};
-            
+    
             formattedData.forEach((date, index) => {
                 const weekStart = dayjs(date).startOf('week').format('MMM DD');
                 if (!weeklyData[weekStart]) weeklyData[weekStart] = {};
@@ -319,7 +345,6 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates }) => 
                 }),
             }));
         } else {
-            // Агрегирование по месяцам
             const monthlyData: Record<string, Record<string, number[]>> = {};
             
             formattedData.forEach((date, index) => {

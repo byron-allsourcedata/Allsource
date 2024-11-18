@@ -20,6 +20,10 @@ class DismissNotificationsRequest(BaseModel):
     notification_ids: Optional[List[int]] = None
 
 
+class DeleteNotificationRequest(BaseModel):
+    notification_id: int = Field(...)
+
+
 class UserSignUpFormResponse(BaseModel):
     status: SignUpStatus
     token: Optional[str] = None

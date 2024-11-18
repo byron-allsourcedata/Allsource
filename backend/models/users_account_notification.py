@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, BOOLEAN, TEXT, DateTime
+from sqlalchemy import Column, Integer, BOOLEAN, TEXT, DateTime, Index
 from sqlalchemy.sql import func
 from .base import Base
 
@@ -12,3 +12,7 @@ class UserAccountNotification(Base):
     params = Column(TEXT, nullable=False)
     is_checked = Column(BOOLEAN, nullable=False, default=False)
     created_at = Column(DateTime(timezone=True), nullable=False, default=func.now())
+
+    __table_args__ = (
+        Index('user_notification', 'user_id', 'id'),
+    )
