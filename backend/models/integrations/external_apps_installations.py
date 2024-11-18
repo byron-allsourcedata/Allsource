@@ -3,7 +3,7 @@ from datetime import datetime
 from models.base import Base
 
 class ExternalAppsInstall(Base):
-    __tablename__ = 'external_apps_install'
+    __tablename__ = 'external_apps_installations'
 
     
     id = Column(Integer, primary_key=True, autoincrement=True)

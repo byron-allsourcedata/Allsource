@@ -13,7 +13,7 @@ from httpx import Client
 from fastapi import HTTPException
 from datetime import datetime, timedelta
 from persistence.leads_order_persistence import LeadOrdersPersistence
-from persistence.integrations.external_apps_install import ExternalAppsInstallPersistence
+from persistence.integrations.external_apps_installations import ExternalAppsInstallationsPersistence
 
 class BigcommerceIntegrationsService:
 
@@ -21,7 +21,7 @@ class BigcommerceIntegrationsService:
                  leads_persistence: LeadsPersistence, 
                  leads_order_persistence: LeadOrdersPersistence,
                  aws_service: AWSService, client: Client,
-                 epi_persistence: ExternalAppsInstallPersistence):
+                 epi_persistence: ExternalAppsInstallationsPersistence):
         self.integrations_persistence = integrations_persistence
         self.lead_persistence = leads_persistence
         self.AWS = aws_service

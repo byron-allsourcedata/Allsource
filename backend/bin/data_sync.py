@@ -20,7 +20,7 @@ from config.rmq_connection import RabbitMQConnection
 from services.integrations.base import IntegrationService
 from dependencies import (IntegrationsPresistence, LeadsPersistence, AudiencePersistence, 
                           LeadOrdersPersistence, IntegrationsUserSyncPersistence, 
-                          AWSService, UserDomainsPersistence, SuppressionPersistence, ExternalAppsInstallPersistence)
+                          AWSService, UserDomainsPersistence, SuppressionPersistence, ExternalAppsInstallationsPersistence)
 
 logging.basicConfig(level=logging.INFO)
 
@@ -76,7 +76,7 @@ async def main():
                 aws_service=AWSService(get_s3_client()),
                 domain_persistence=UserDomainsPersistence(db_session),
                 suppression_persistence=SuppressionPersistence(db_session),
-                epi_persistence=ExternalAppsInstallPersistence(db_session)
+                epi_persistence=ExternalAppsInstallationsPersistence(db_session)
             )
         with integration_service as service:
             await queue.consume(

@@ -1,8 +1,8 @@
-from models.integrations.external_apps_install import ExternalAppsInstall
+from models.integrations.external_apps_installations import ExternalAppsInstall
 from sqlalchemy.orm import Session
 
 
-class ExternalAppsInstallPersistence:
+class ExternalAppsInstallationsPersistence:
 
     def __init__(self, session: Session):
         self.session = session

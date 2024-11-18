@@ -8,7 +8,7 @@ from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.integrations.suppression import IntegrationsSuppressionPersistence
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
 from persistence.audience_persistence import AudiencePersistence
-from persistence.integrations.external_apps_install  import ExternalAppsInstallPersistence
+from persistence.integrations.external_apps_installations  import ExternalAppsInstallationsPersistence
 from .attentive import AttentiveIntegrationsService
 from .shopify import ShopifyIntegrationService
 from .sendlane import SendlaneIntegrationService
@@ -25,7 +25,7 @@ class IntegrationService:
                  lead_persistence: LeadsPersistence, audience_persistence: AudiencePersistence, 
                  lead_orders_persistence: LeadOrdersPersistence, 
                  integrations_user_sync_persistence: IntegrationsUserSyncPersistence,
-                 aws_service: AWSService, domain_persistence, suppression_persistence: IntegrationsSuppressionPersistence, epi_persistence: ExternalAppsInstallPersistence):
+                 aws_service: AWSService, domain_persistence, suppression_persistence: IntegrationsSuppressionPersistence, epi_persistence: ExternalAppsInstallationsPersistence):
         self.db = db
         self.client = httpx.Client()
         self.integration_persistence = integration_persistence
