@@ -26,6 +26,7 @@ import CalendarPopup from '@/components/CustomCalendar'
 import CustomTablePagination from '@/components/CustomTablePagination';
 import UnlockButton from '@/components/UnlockButton';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
+import { useNotification } from '@/context/NotificationContext';
 
 const style = {
     buttonBlockText: {
@@ -50,6 +51,7 @@ interface FetchDataParams {
 
 const Leads: React.FC = () => {
     const router = useRouter();
+    const { hasNotification } = useNotification();
     const [data, setData] = useState<any[]>([]);
     const [count_leads, setCount] = useState<number | null>(null);
     const [order, setOrder] = useState<'asc' | 'desc' | undefined>(undefined);
@@ -62,7 +64,7 @@ const Leads: React.FC = () => {
     const dropdownOpen = Boolean(dropdownEl);
     const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
     const [page, setPage] = useState(0);
-    const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [rowsPerPage, setRowsPerPage] = useState(15);
     const [activeFilter, setActiveFilter] = useState<string>('');
     const [calendarAnchorEl, setCalendarAnchorEl] = useState<null | HTMLElement>(null);
     const [selectedDates, setSelectedDates] = useState<{ start: Date | null; end: Date | null }>({ start: null, end: null });
@@ -350,12 +352,12 @@ const Leads: React.FC = () => {
             setCount(count || 0);
             setStatus(response.data.status);
             let newRowsPerPageOptions: number[] = []; // Default options
-            if (count <= 10) {
-                newRowsPerPageOptions = [5, 10];
+            if (count <= 15) {
+                newRowsPerPageOptions = [10, 15];
             } else if (count <= 50) {
-                newRowsPerPageOptions = [10, 20];
+                newRowsPerPageOptions = [15, 20];
             } else if (count <= 100) {
-                newRowsPerPageOptions = [10, 20, 50];
+                newRowsPerPageOptions = [15, 20, 50];
             } else if (count <= 300) {
                 newRowsPerPageOptions = [10, 20, 50, 100];
             } else if (count <= 500) {
@@ -456,12 +458,13 @@ const Leads: React.FC = () => {
         try {
             setIsLoading(true)
             const response = await axiosInstance.get(url);
-            const [leads, count, max_page] = response.data;
+            const [leads, count] = response.data;
 
             setData(Array.isArray(leads) ? leads : []);
             setCount(count || 0);
             setStatus(response.data.status);
             setSelectedFilters([]);
+
         } catch (error) {
             console.error('Error fetching leads:', error);
         }
@@ -921,12 +924,12 @@ const Leads: React.FC = () => {
                             flexDirection: 'row',
                             alignItems: 'center',
                             justifyContent: 'space-between',
-                            marginTop: '0.5rem',
+                            marginTop: hasNotification ? '1rem' : '0.5rem',
                             flexWrap: 'wrap',
                             pl: '0.5rem',
                             gap: '15px',
                             '@media (max-width: 900px)': {
-                                marginTop: '1.125rem'
+                                marginTop: hasNotification ? '3rem' : '1.125rem',
                             }
                         }}>
                         <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1 }}>
@@ -1112,7 +1115,7 @@ const Leads: React.FC = () => {
                                 className='second-sub-title'
                                 label="Clear all"
                                 onClick={handleResetFilters}
-                                sx={{ color: '#5052B2 !important', backgroundColor: 'transparent', lineHeight: '20px !important' }}
+                                sx={{ color: '#5052B2 !important', backgroundColor: 'transparent', lineHeight: '20px !important', fontWeight: '400 !important', borderRadius: '4px' }}
                             />
                         )}
                         {selectedFilters.map(filter => {
@@ -1232,7 +1235,9 @@ const Leads: React.FC = () => {
                                         component={Paper}
                                         sx={{
                                             border: '1px solid rgba(235, 235, 235, 1)',
-                                            maxHeight: selectedFilters.length < 0 ? '74vh' : '67vh',
+                                            maxHeight: selectedFilters.length > 0 
+                                                ? (hasNotification ? '63vh' : '68vh') 
+                                                : '72vh',
                                             overflowY: 'scroll'
                                         }}
                                     >

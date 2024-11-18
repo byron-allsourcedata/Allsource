@@ -153,7 +153,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
 
       const isLastTagRemoved = updatedTags.length === 0;
 
-      // Если удалена последняя метка и категория "visitedDate", очищаем состояние
+      // If the last tag and category "visitedDate" are deleted, clear the state
       if (category === "visitedDate" && isLastTagRemoved) {
         setDateRange({ fromDate: null, toDate: null });
         setSelectedDateRange(null);
@@ -380,7 +380,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
         allTime: false,
       });
 
-      // Определяем старый диапазон дат
       const oldFromDate = prevRange.fromDate
         ? dayjs(prevRange.fromDate).format('MMM DD, YYYY')
         : '';
@@ -388,7 +387,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
         ? dayjs(prevRange.toDate).format('MMM DD, YYYY')
         : '';
 
-      // Форматируем новый диапазон дат
       const fromDate = updatedRange.fromDate
         ? dayjs(updatedRange.fromDate).format('MMM DD, YYYY')
         : '';
@@ -396,22 +394,21 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
         ? dayjs(updatedRange.toDate).format('MMM DD, YYYY')
         : '';
 
-      // Устанавливаем новый диапазон дат и метку
       const newTag = fromDate && toDate ? `From ${fromDate} to ${toDate}` : null;
 
-      // Сначала обновляем метку
+    
       setSelectedTags((prevTags) => {
         const updatedTags = {
           ...prevTags,
           visitedDate: newTag ? [newTag] : [],
         };
 
-        // Если новая метка существует, добавляем ее
+        // If a new label exists, add it
         if (newTag) {
           addTag("visitedDate", newTag);
         }
 
-        // Если метка была заменена или удалена, очищаем диапазон дат
+        // If the label has been replaced or removed, clear the date range
         if (!newTag && prevTags.visitedDate.length > 0) {
           setDateRange({ fromDate: null, toDate: null });
           setSelectedDateRange(null);
@@ -607,15 +604,15 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
   };
 
   const handleFilters = () => {
-    const filterDates = getFilterDates(); // Функция для получения диапазонов дат, например lastWeek, last30Days и т.д.
+    const filterDates = getFilterDates(); // Function to get date ranges like lastWeek, last30Days, etc.
 
-    // Проверка, что хотя бы один из фильтров по времени активен
+    // Check that at least one of the time filters is active
     const isDateFilterChecked = Object.values(checkedFilters).some((value) => value);
 
     let fromTime = timeRange.fromTime ? dayjs(timeRange.fromTime).format('HH:mm') : null;
     let toTime = timeRange.toTime ? dayjs(timeRange.toTime).format('HH:mm') : null;
 
-    // Обработка фильтров по времени (утро, день, вечер, весь день)
+    // Process filters by time (morning, afternoon, evening, all day)
     if (checkedFiltersTime.morning) {
       fromTime = "00:00"; // 12AM
       toTime = "11:00";   // 11AM
@@ -630,11 +627,11 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
       toTime = "23:59";   // 11:59PM
     }
 
-    // Определение значений from_date и to_date на основе активных фильтров
-    let fromDateTime = null;
-    let toDateTime = null;
+  // Determine from_date and to_date values ​​based on active filters
+  let fromDateTime = null;
+  let toDateTime = null;
 
-    // Если активен хотя бы один фильтр по дате, используем его диапазоны
+  // If at least one date filter is active, use its ranges
     if (isDateFilterChecked) {
       if (checkedFilters.lastWeek) {
         fromDateTime = filterDates.lastWeek.from;
@@ -650,7 +647,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
         toDateTime = filterDates.allTime.to;
       }
     } else {
-      // Если не выбран ни один фильтр, используем диапазон из dateRange
+      // If no filter is selected, use the range from dateRange
       fromDateTime = dateRange.fromDate
         ? dayjs(dateRange.fromDate).startOf("day").unix()
         : null;
@@ -662,21 +659,21 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
 
     // Составление объекта с фильтрами
     const filters = {
-      ...buttonFilters, // Существующие фильтры кнопок
-      from_date: fromDateTime, // Установленное значение from_date
-      to_date: toDateTime,     // Установленное значение to_date
-      from_time: fromTime,     // Установленное значение времени начала
-      to_time: toTime,         // Установленное значение времени окончания
+      ...buttonFilters, // Existing button filters
+      from_date: fromDateTime, // Set value from_date
+      to_date: toDateTime, // Set value of to_date
+      from_time: fromTime, // Set start time value
+      to_time: toTime, // Set end time value
       selectedFunnels: buttonFilters ? buttonFilters.selectedFunnels : selectedFunnels,
       button: buttonFilters ? buttonFilters.button : selectedButton,
-      checkedFiltersTime,      // Фильтры по времени (утро, день, вечер и т.д.)
+      checkedFiltersTime,     // Filters by time (morning, afternoon, evening, etc.)
       checkedFiltersPageVisits,
       checkedFilters,
       regions,
       checkedFiltersTimeSpent,
       selectedStatus,
-      recurringVisits: selectedValues, // Преобразованные выбранные значения
-      searchQuery, // Запрос для поиска
+      recurringVisits: selectedValues,
+      searchQuery, 
     };
 
     saveFiltersToSessionStorage(filters);
@@ -722,7 +719,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
         more_three: false,
       });
 
-      // Проверка активных фильтров посещений страниц
+      // Checking active page visit filters
       const isPageVisitsFilterActive = Object.values(savedFilters.checkedFiltersPageVisits || {}).some(value => value === true);
 
       if (isPageVisitsFilterActive) {
@@ -733,7 +730,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
           more_three: "More than 3 pages",
         };
 
-        // Проходим по всем фильтрам и добавляем тег для каждого активного
+        // Go through all filters and add a tag for each active one
         Object.keys(savedFilters.checkedFiltersPageVisits).forEach((key) => {
           if (savedFilters.checkedFiltersPageVisits[key]) {
             addTag("pageVisits", pageVisitsTagMap[key]);
@@ -794,7 +791,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
           all_day: "All day",
         };
 
-        // Обработка активных фильтров
+        // Process active filters
         Object.keys(savedFilters.checkedFiltersTime).forEach((key) => {
           if (savedFilters.checkedFiltersTime[key]) {
             addTag("visitedTime", timeTagMap[key]);
@@ -802,11 +799,11 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
         });
 
       } else {
-        // Преобразование времени из строкового формата в Dayjs
+        // Convert time from string format to Dayjs
         const fromTime = savedFilters.from_time ? dayjs(savedFilters.from_time, 'HH:mm') : null;
         const toTime = savedFilters.to_time ? dayjs(savedFilters.to_time, 'HH:mm') : null;
 
-        // Форматирование времени для тега
+        // Formatting time for tag
         const formattedFromTime = fromTime ? fromTime.format('h:mm A') : '';
         const formattedToTime = toTime ? toTime.format('h:mm A') : '';
         if (fromTime && toTime) {
@@ -877,15 +874,15 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
   // Check active filters
   const isDateFilterActive = () => {
     return (
-      Object.values(checkedFilters).some(value => value) || // Проверка чекбоксов для дат
-      (dateRange.fromDate && dateRange.toDate) // Проверка пользовательского выбора диапазона дат
+      Object.values(checkedFilters).some(value => value) || // Checking checkboxes for dates
+      (dateRange.fromDate && dateRange.toDate) // Validate user's date range selection
     );
   };
 
   const isTimeFilterActive = () => {
     return (
-      Object.values(checkedFiltersTime).some(value => value) || // Проверка чекбоксов для времени
-      (timeRange.fromTime && timeRange.toTime) // Проверка пользовательского выбора диапазона времени
+      Object.values(checkedFiltersTime).some(value => value) || // Checking checkboxes for time
+      (timeRange.fromTime && timeRange.toTime) // Validate custom time range selection
     );
   };
 
@@ -1110,7 +1107,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
       over_60: false,
     });
 
-    // Сброс состояния дат
+    // Reset date
     setDateRange({
       fromDate: null,
       toDate: null,
@@ -1123,7 +1120,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
       allTime: false,
     });
 
-    // Сброс значений фильтров для времени
+    // Reset time filters
     setCheckedFiltersTime({
       morning: false,
       evening: false,
@@ -1133,7 +1130,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
 
     setSelectedValues([]);
 
-    // Сброс значений фильтров
+    // Reset filter values
     setRegions("");
     setSelectedDateRange(null);
     setSelectedTimeRange(null);

@@ -30,6 +30,7 @@ const NotificationPopup: React.FC<NotificationPopupProps> = ({ open, onClose, an
     useEffect(() => {
         const accessToken = localStorage.getItem("token");
         if (accessToken) {
+            if (open) {
             const fetchData = async () => {
                 try {
                     const response = await axiosInstance.get("/notification");
@@ -44,6 +45,7 @@ const NotificationPopup: React.FC<NotificationPopupProps> = ({ open, onClose, an
             };
             fetchData();
         }
+    }
     }, [open]);
 
     const keywords = [

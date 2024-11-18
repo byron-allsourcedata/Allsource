@@ -53,6 +53,7 @@ const centerContainerStyles = {
 };
 import FilterDatasync from "@/components/FilterDatasync";
 import AudiencePopup from "@/components/AudienceSlider";
+import { useNotification } from "@/context/NotificationContext";
 
 interface DataSyncProps {
   service_name?: string
@@ -60,6 +61,7 @@ interface DataSyncProps {
 
 const DataSync = () => {
   const router = useRouter();
+  const { hasNotification } = useNotification();
   const [order, setOrder] = useState<"asc" | "desc" | undefined>(undefined);
   const [orderBy, setOrderBy] = useState<string | undefined>(undefined);
   const [data, setData] = useState<any[]>([]);
@@ -387,8 +389,11 @@ const DataSync = () => {
           width: "100%",
           ml: 2,
           pr: 1.5,
-          "@media (max-width: 440px)": { 
-            pt: 8,
+          "@media (max-width: 900px)": { 
+            pt: hasNotification ? 5 : 0,
+          },
+          "@media (max-width: 400px)": { 
+            pt: hasNotification ? 7 : 0,
           },
         }}
       >
