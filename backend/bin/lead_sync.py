@@ -144,16 +144,11 @@ async def handle_payment_notification(user, notification_persistence, plan_leads
         save_account_notification = notification_persistence.save_account_notification(user.id, account_notification.id,
                                                                                        f"{credit_usage_percentage}, {plan_lead_credit_price}")
 
-        try:
-            await publish_rabbitmq_message(
-                connection=connection,
-                queue_name=queue_name,
-                message_body={'notification_text': notification_text, 'notification_id': save_account_notification.id}
-            )
-        except:
-            await rabbitmq_connection.close()
-        finally:
-            await rabbitmq_connection.close()
+        await publish_rabbitmq_message(
+            connection=connection,
+            queue_name=queue_name,
+            message_body={'notification_text': notification_text, 'notification_id': save_account_notification.id}
+        )
 
 
 async def handle_inactive_leads_notification(user, leads_persistence, notification_persistence):
@@ -168,16 +163,11 @@ async def handle_inactive_leads_notification(user, leads_persistence, notificati
         connection = await rabbitmq_connection.connect()
         save_account_notification = notification_persistence.save_account_notification(user.id, account_notification.id,
                                                                                        len(inactive_leads_user))
-        try:
-            await publish_rabbitmq_message(
-                connection=connection,
-                queue_name=queue_name,
-                message_body={'notification_text': notification_text, 'notification_id': save_account_notification.id}
-            )
-        except:
-            await rabbitmq_connection.close()
-        finally:
-            await rabbitmq_connection.close()
+        await publish_rabbitmq_message(
+            connection=connection,
+            queue_name=queue_name,
+            message_body={'notification_text': notification_text, 'notification_id': save_account_notification.id}
+        )
 
 
 async def notify_missing_plan(notification_persistence, user):
@@ -188,17 +178,12 @@ async def notify_missing_plan(notification_persistence, user):
     connection = await rabbitmq_connection.connect()
     save_account_notification = notification_persistence.save_account_notification(user.id, account_notification.id)
 
-    try:
-        await publish_rabbitmq_message(
-            connection=connection,
-            queue_name=queue_name,
-            message_body={'notification_text': account_notification.text,
-                          'notification_id': save_account_notification.id}
-        )
-    except:
-        await rabbitmq_connection.close()
-    finally:
-        await rabbitmq_connection.close()
+    await publish_rabbitmq_message(
+        connection=connection,
+        queue_name=queue_name,
+        message_body={'notification_text': account_notification.text,
+                      'notification_id': save_account_notification.id}
+    )
 
 
 async def process_payment_transaction(session, five_x_five_user_up_id, user_domain_id, user, lead_user,
@@ -719,8 +704,12 @@ async def main():
             .first()
 
         while True:
-            await process_files(session=session, rabbitmq_connection=connection, root_user=result)
-            session.close()
+            try:
+                await process_files(session=session, rabbitmq_connection=connection, root_user=result)
+                session.close()
+            except ConnectionResetError:
+                logging.info("Connection to the database expired")
+
             logging.info('Sleeping for 10 minutes...')
             time.sleep(60 * 10)
             Session = sessionmaker(bind=engine)
