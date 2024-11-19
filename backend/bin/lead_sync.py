@@ -712,6 +712,13 @@ async def main():
 
             logging.info('Sleeping for 10 minutes...')
             time.sleep(60 * 10)
+
+            await connection.close()
+            logging.info("Connection to RabbitMQ closed")
+
+            connection = await rabbitmq_connection.connect()
+            logging.info("Reconnected to RabbitMQ")
+
             Session = sessionmaker(bind=engine)
             session = Session()
     except Exception as e:
