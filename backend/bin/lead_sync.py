@@ -711,11 +711,8 @@ async def main():
                 logging.info("Connection to the database expired")
 
             logging.info('Sleeping for 10 minutes...')
-            time.sleep(60 * 10)
-
             await connection.close()
-            logging.info("Connection to RabbitMQ closed")
-
+            time.sleep(60 * 10)
             connection = await rabbitmq_connection.connect()
             logging.info("Reconnected to RabbitMQ")
 
