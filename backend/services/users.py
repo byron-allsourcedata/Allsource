@@ -59,7 +59,7 @@ class UsersService:
         if domain and domain.is_pixel_installed:
             percent = 75
         else:
-            percent = 75 if domains[0].is_pixel_installed else percent
+            percent = 75 if domains and domains[0].is_pixel_installed else percent
         if self.user.get('team_member'):
             team_member = self.user.get('team_member')
             
