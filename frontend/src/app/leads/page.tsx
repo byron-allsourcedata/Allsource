@@ -346,30 +346,14 @@ const Leads: React.FC = () => {
             const response = await axiosInstance.get(url);
             const [leads, count] = response.data;
   
-            setData(Array.isArray(leads) ? leads : []); 
-            setCount(count || 0); 
-            setStatus(response.data.status);  
-            let newRowsPerPageOptions = [15, 30, 50, 100, 200, 500];
-            if (count < 15) {
-                newRowsPerPageOptions = [15];  
-            } else {
-                if (count <= 30) {
-                    newRowsPerPageOptions = [15, 30];
-                } else if (count <= 50) {
-                    newRowsPerPageOptions = [15, 30, 50];
-                } else if (count <= 100) {
-                    newRowsPerPageOptions = [15, 30, 50, 100];
-                } else if (count <= 200) {
-                    newRowsPerPageOptions = [15, 30, 50, 100, 200];
-                } else if (count <= 500) {
-                    newRowsPerPageOptions = [15, 30, 50, 100, 200, 500];
-                } else {
-                    newRowsPerPageOptions = [15, 30, 50, 100, 200, 500];
-                }
-            }
-            setRowsPerPageOptions(newRowsPerPageOptions);
-            const selectedValue = newRowsPerPageOptions.includes(rowsPerPage) ? rowsPerPage : 15;
-            setRowsPerPage(selectedValue);  
+            setData(Array.isArray(leads) ? leads : []);
+            setCount(count || 0);
+            setStatus(response.data.status);
+            const options = [15, 30, 50, 100, 200, 500];
+            const RowsPerPageOptions = options.filter(option => option <= count);  
+            setRowsPerPageOptions(RowsPerPageOptions);
+            const selectedValue = RowsPerPageOptions.includes(rowsPerPage) ? rowsPerPage : 15;
+            setRowsPerPage(selectedValue);
         } catch (error) {
             if (error instanceof AxiosError && error.response?.status === 403) {
                 if (error.response.data.status === 'NEED_BOOK_CALL') {
