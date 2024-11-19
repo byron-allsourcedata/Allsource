@@ -44,10 +44,13 @@ class UsersService:
         result = self.subscription_service.get_user_subscription_with_trial_status(
             self.user.get('id'))
         if result['subscription']:
+
             return {
                 "is_artificial_status": result['is_artificial_status'],
                 "is_trial": result['subscription'].is_trial,
                 "plan_end": result['subscription'].plan_end,
+                'price': result['price'],
+                'currency': result['currency']
             }
         return {
             "is_trial_pending": True
