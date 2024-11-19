@@ -9,10 +9,6 @@ export const datasyncStyle: { [key: string]: SxProps<Theme> } = {
         margin: 0,
         alignItems: 'center',
         justifyContent: 'center',
-        '@media (max-width: 440px)': {
-            marginTop: '-60px',
-            padding: '0',
-        },
     },
     table_column: {
       fontFamily: 'Nunito Sans', fontSize: '12px', fontWeight: '600',

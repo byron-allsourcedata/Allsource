@@ -10,7 +10,7 @@ from typing_extensions import Annotated
 from config.auth import AuthConfig
 from config.aws import get_s3_client
 from config.database import SessionLocal
-from enums import UserAuthorizationStatus
+from enums import DomainStatus, UserAuthorizationStatus
 from exceptions import InvalidToken
 from models.users import Users as User
 from persistence.audience_persistence import AudiencePersistence
@@ -26,6 +26,7 @@ from persistence.sendgrid_persistence import SendgridPersistence
 from persistence.settings_persistence import SettingsPersistence
 from persistence.suppression_persistence import SuppressionPersistence
 from persistence.user_persistence import UserPersistence
+from persistence.integrations.external_apps_installations import ExternalAppsInstallationsPersistence
 from schemas.auth_token import Token
 from services.admin_customers import AdminCustomersService
 from services.audience import AudienceService
@@ -48,6 +49,7 @@ from services.users import UsersService
 from services.users_auth import UsersAuth
 from services.users_email_verification import UsersEmailVerificationService
 from services.webhook import WebhookService
+
 
 logger = logging.getLogger(__name__)
 
@@ -392,6 +394,8 @@ def get_integrations_user_sync_persistence(db: Session = Depends(get_db)) -> Int
 def get_aws_service(s3_client=Depends(get_s3_client)) -> AWSService:
     return AWSService(s3_client)
 
+def get_epi_persistence(db: Session = Depends(get_db)) -> ExternalAppsInstallationsPersistence:
+    return ExternalAppsInstallationsPersistence(db)
 
 def get_integration_service(db: Session = Depends(get_db),
                             audience_persistence=Depends(get_audience_persistence),
@@ -404,7 +408,8 @@ def get_integration_service(db: Session = Depends(get_db),
                             aws_service: AWSService = Depends(get_aws_service),
                             domain_persistence=Depends(get_user_domain_persistence),
                             suppression_persitence: IntegrationsSuppressionPersistence = Depends(
-                                get_suppression_persistence)
+                                get_suppression_persistence),
+                            epi_persistence: ExternalAppsInstallationsPersistence = Depends(get_epi_persistence)
                             ):
     return IntegrationService(db,
                               integration_presistence,
@@ -414,4 +419,13 @@ def get_integration_service(db: Session = Depends(get_db),
                               integrations_user_sync_persistence,
                               aws_service,
                               domain_persistence,
-                              suppression_persitence)
+                              suppression_persitence, epi_persistence)
+
+
+def check_api_key(maximiz_api_key = Header(None), domain_persistence: UserDomainsPersistence = Depends(get_user_domain_persistence)):
+    if maximiz_api_key:
+        domains = domain_persistence.get_domain_by_filter(api_key=maximiz_api_key)
+        if domains:
+            return domains[0]
+        raise HTTPException(status_code=404, detail={'status': DomainStatus.DOMAIN_NOT_FOUND.value})
+    raise HTTPException(status_code=401, detail={'status': UserAuthorizationStatus.INVALID_API_KEY.value})

@@ -52,7 +52,7 @@ const Settings: React.FC = () => {
         <Box>
             <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1, padding: '1rem 0rem 1rem',
                 position: 'fixed',
-                top: hasNotification ? '6.85rem' : '68px',
+                top: '68px',
                 right: '16px',
                 left: '170px',
                 background: '#fff',
@@ -68,7 +68,11 @@ const Settings: React.FC = () => {
                   flexDirection: 'column',
                   alignItems: 'start',
                   zIndex: 10,
+                  pt: hasNotification ? '3.25rem' : '0px'
                 },
+                "@media (max-width: 400px)": { 
+                    pt: hasNotification ? '4rem' : '0px'
+                  },
             }}>
                 <Typography variant="h4" gutterBottom className='first-sub-title' sx={{...planStyles.title, gap:1, alignItems: 'center', justifyContent: 'center'}}>
                     Settings <CustomTooltip title={"The Settings menu allows you to customise your user experience, manage your account preferences, and adjust notifications."} linkText="Learn more" linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/settings"/>
@@ -125,7 +129,7 @@ const Settings: React.FC = () => {
             ) : (
                 <Box sx={{ marginTop: '68px',
                  "@media (max-width: 900px)": {
-                    marginTop: '5rem'
+                    marginTop: hasNotification ? '7rem' :'5rem'
                     }
                 }}>
                     {activeSection === 'accountDetails' && accountDetails && (

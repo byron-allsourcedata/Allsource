@@ -19,7 +19,7 @@ interface ClientLayoutProps {
 
 export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
   const pathname = usePathname(); // Get the current path
-  const excludedPaths = ['/signin', '/signup', '/email-verificate', '/account-setup', '/reset-password', '/reset-password/confirm-send', '/choose-plan', '/authentication/verify-token', '/admin/users', '/forgot-password', '/admin'];
+  const excludedPaths = ['/signin', '/signup', '/email-verificate', '/account-setup', '/reset-password', '/reset-password/confirm-send', '/choose-plan', '/authentication/verify-token', '/admin/users', '/forgot-password', '/admin', '/thanks-installed-app'];
   const isAuthenticated = !excludedPaths.includes(pathname);
   const [showSlider, setSlider] = useState(false);
   const { newNotification } = useSSE();
@@ -123,6 +123,10 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
             marginLeft: '142px',
             '@media (max-width: 899px)': {
               padding: '0 16px 32px',
+              marginLeft: 0,
+            },
+            '@media (max-width: 599px)': {
+              padding: '0 16px 16px',
               marginLeft: 0,
             }
           }}>

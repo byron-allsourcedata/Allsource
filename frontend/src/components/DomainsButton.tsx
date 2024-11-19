@@ -215,15 +215,24 @@ const DomainButton: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [upgradePlanPopup, setUpgradePlanPopup] = useState(false);
   useEffect(() => {
-    if(domains.length === 0 || !currentDomain) {
-      setLoading(true);
-      setDomains(sessionStorage.getItem('me') ? JSON.parse(sessionStorage.getItem('me') || '').domains : [])
-      setCurrentDomain(sessionStorage.getItem('current_domain') || '');
-    }
-    else {
-      setLoading(false)
-    }
-  }, [domains, currentDomain])
+    const intervalId = setInterval(() => {
+      const savedMe = sessionStorage.getItem('me');
+      const savedDomains = savedMe ? JSON.parse(savedMe || '{}').domains : [];
+      const savedCurrentDomain = sessionStorage.getItem('current_domain') || '';
+  
+      if (JSON.stringify(domains) !== JSON.stringify(savedDomains)) {
+        setDomains(savedDomains);
+      }
+  
+      if (currentDomain !== savedCurrentDomain) {
+        setCurrentDomain(savedCurrentDomain);
+      }
+    }, 1000); 
+  
+    return () => clearInterval(intervalId)
+  }, [domains, currentDomain]);
+  
+  
 
 
 
