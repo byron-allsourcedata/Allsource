@@ -62,7 +62,7 @@ const Leads: React.FC = () => {
     const dropdownOpen = Boolean(dropdownEl);
     const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
     const [page, setPage] = useState(0);
-    const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [rowsPerPage, setRowsPerPage] = useState(15);
     const [activeFilter, setActiveFilter] = useState<string>('');
     const [calendarAnchorEl, setCalendarAnchorEl] = useState<null | HTMLElement>(null);
     const [selectedDates, setSelectedDates] = useState<{ start: Date | null; end: Date | null }>({ start: null, end: null });
@@ -345,12 +345,14 @@ const Leads: React.FC = () => {
 
             const response = await axiosInstance.get(url);
             const [leads, count] = response.data;
-  
             setData(Array.isArray(leads) ? leads : []);
             setCount(count || 0);
-            setStatus(response.data.status);
-            const options = [15, 30, 50, 100, 200, 500];
-            const RowsPerPageOptions = options.filter(option => option <= count);  
+            setStatus(response.data.status);  
+            const options = [15, 30, 50, 100, 200, 500];          
+            let RowsPerPageOptions = options.filter(option => option <= count);  
+            if (RowsPerPageOptions.length < options.length) {
+              RowsPerPageOptions = [...RowsPerPageOptions, options[RowsPerPageOptions.length]];
+            }
             setRowsPerPageOptions(RowsPerPageOptions);
             const selectedValue = RowsPerPageOptions.includes(rowsPerPage) ? rowsPerPage : 15;
             setRowsPerPage(selectedValue);
