@@ -22,10 +22,11 @@ import CloseIcon from '@mui/icons-material/Close';
 import CustomizedProgressBar from '@/components/CustomizedProgressBar';
 import Tooltip from '@mui/material/Tooltip';
 import CustomToolTip from '@/components/customToolTip';
-import CalendarPopup from '@/components/CustomCalendar'
+import CalendarPopup from '@/components/CustomCalendar';
 import CustomTablePagination from '@/components/CustomTablePagination';
 import UnlockButton from '@/components/UnlockButton';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
+import { useNotification } from '@/context/NotificationContext';
 
 const style = {
     buttonBlockText: {
@@ -50,8 +51,9 @@ interface FetchDataParams {
 
 const Leads: React.FC = () => {
     const router = useRouter();
+    const { hasNotification } = useNotification();
     const [data, setData] = useState<any[]>([]);
-    const [count_leads, setCount] = useState<number | null>(null);
+    const [count_leads, setCount] = useState<number | null>(null); 
     const [order, setOrder] = useState<'asc' | 'desc' | undefined>(undefined);
     const [orderBy, setOrderBy] = useState<string | undefined>(undefined);
     const [appliedDates, setAppliedDates] = useState<{ start: Date | null; end: Date | null }>({ start: null, end: null });
@@ -447,7 +449,7 @@ const Leads: React.FC = () => {
         try {
             setIsLoading(true)
             const response = await axiosInstance.get(url);
-            const [leads, count, max_page] = response.data;
+            const [leads, count] = response.data;
 
             setData(Array.isArray(leads) ? leads : []);
             setCount(count || 0);
@@ -912,12 +914,12 @@ const Leads: React.FC = () => {
                             flexDirection: 'row',
                             alignItems: 'center',
                             justifyContent: 'space-between',
-                            marginTop: '0.5rem',
+                            marginTop: hasNotification ? '1rem' : '0.5rem',
                             flexWrap: 'wrap',
                             pl: '0.5rem',
                             gap: '15px',
                             '@media (max-width: 900px)': {
-                                marginTop: '1.125rem'
+                                marginTop: hasNotification ? '3rem' : '1.125rem',
                             }
                         }}>
                         <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1 }}>
@@ -1103,7 +1105,7 @@ const Leads: React.FC = () => {
                                 className='second-sub-title'
                                 label="Clear all"
                                 onClick={handleResetFilters}
-                                sx={{ color: '#5052B2 !important', backgroundColor: 'transparent', lineHeight: '20px !important' }}
+                                sx={{ color: '#5052B2 !important', backgroundColor: 'transparent', lineHeight: '20px !important', fontWeight: '400 !important', borderRadius: '4px' }}
                             />
                         )}
                         {selectedFilters.map(filter => {
@@ -1223,7 +1225,9 @@ const Leads: React.FC = () => {
                                         component={Paper}
                                         sx={{
                                             border: '1px solid rgba(235, 235, 235, 1)',
-                                            maxHeight: selectedFilters.length < 0 ? '74vh' : '67vh',
+                                            maxHeight: selectedFilters.length > 0 
+                                            ? (hasNotification ? '63vh' : '68vh') 
+                                            : '72vh',
                                             overflowY: 'scroll'
                                         }}
                                     >
