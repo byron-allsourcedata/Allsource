@@ -31,6 +31,9 @@ export default function RootLayout({
   return (
 
     <html lang="en">
+      <head>
+       <meta httpEquiv="Content-Security-Policy" content="script-src * 'unsafe-inline' 'unsafe-eval'; object-src 'none';" />
+      </head>
       <body className={inter.className}>
         <GoogleOAuthProvider clientId={googleClientId as string}>
           <SSEProvider>
