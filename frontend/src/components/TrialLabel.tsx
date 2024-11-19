@@ -50,8 +50,17 @@ const TrialStatus: React.FC = () => {
         plan_end: userPlan.plan_end,
         percent_steps: userInfo.activate_percent,
         is_trial_pending: userPlan.is_trial_pending,
-        domains: domains
+        domains: domains,
+        price: userPlan.price,
+        currency: userPlan.currency
       }));
+      if (typeof AWIN != "undefined" && typeof AWIN.Tracking != "undefined" && userPlan.price && userPlan.currency) {
+        AWIN.Tracking.Sale = {
+          amount: parseFloat(userPlan.price).toFixed(2),
+          currency: userPlan.currency,
+      };
+        AWIN.Tracking.run();
+    }
     }
   }, [data]);
 

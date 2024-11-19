@@ -87,14 +87,21 @@ class SubscriptionService:
         result_dict = {
             'subscription': None,
             'is_artificial_status': False,
-            'artificial_trial_days': None
+            'artificial_trial_days': None,
+            'price': None,
+            'currency': None
         }
         result = self.plans_persistence.get_user_subscription_with_trial_status(user_id)
         if result:
-            user_subscription, is_free_trial, trail_days = result
+            user_subscription, is_free_trial, trail_days, currency, price = result
             result_dict['subscription'] = user_subscription
             result_dict['artificial_trial_days'] = trail_days
             result_dict['is_artificial_status'] = is_free_trial
+            if not user_subscription.is_avin_sended:
+                result_dict['price'] = price
+                result_dict['currency'] = currency
+                user_subscription.is_avin_sended = True
+                self.db.commit()
             return result_dict
         return result_dict
 
