@@ -216,28 +216,22 @@ const DomainButton: React.FC = () => {
   };
 
   useEffect(() => {
-    const fetchData = () => {
-      setLoading(true);
-      const storedMe = sessionStorage.getItem('me');
-      if (storedMe) {
-        const parsedMe = JSON.parse(storedMe);
-        const parsedDomains = parsedMe.domains || [];
-        if (parsedDomains.length > 0) {
-          setDomains(parsedDomains);
-          const savedDomain = sessionStorage.getItem('current_domain');
-          if (savedDomain) {
-            setCurrentDomain(savedDomain.replace('https://', ''));
-          } else {
-            const firstDomain = parsedDomains[0].domain.replace('https://', '');
-            setCurrentDomain(firstDomain);
-            sessionStorage.setItem('current_domain', parsedDomains[0].domain);
-          }
-        }
+    const intervalId = setInterval(() => {
+      const savedMe = sessionStorage.getItem('me');
+      const savedDomains = savedMe ? JSON.parse(savedMe || '{}').domains : [];
+      const savedCurrentDomain = sessionStorage.getItem('current_domain') || '';
+  
+      if (JSON.stringify(domains) !== JSON.stringify(savedDomains)) {
+        setDomains(savedDomains);
       }
-      setLoading(false);
-    };
-    fetchData();
-  }, []);
+  
+      if (currentDomain !== savedCurrentDomain) {
+        setCurrentDomain(savedCurrentDomain);
+      }
+    }, 1000); 
+  
+    return () => clearInterval(intervalId)
+  }, [domains, currentDomain]); 
   
 
   const handleSetDomain = (domain: string) => {

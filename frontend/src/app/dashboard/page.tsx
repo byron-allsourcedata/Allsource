@@ -500,7 +500,6 @@ const Dashboard: React.FC = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-
       try {
         const response = await axiosInstance.get('/dashboard/revenue');
         
@@ -511,11 +510,10 @@ const Dashboard: React.FC = () => {
         setRevenueData(response.data.total_counts);
         
       } catch (error) {
-        console.error("Ошибка при получении данных по Revenue:", error);
+        
       } finally {
       }
     };
-
     fetchData();
   }, []);
   const handleTabChange = (event: React.SyntheticEvent, newIndex: number) => {
