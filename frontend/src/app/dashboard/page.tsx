@@ -30,6 +30,7 @@ import RevenueTracking from "@/components/RevenueTracking";
 
 
 
+
 interface TabPanelProps {
   children?: React.ReactNode;
   value: number;
@@ -489,7 +490,28 @@ const Dashboard: React.FC = () => {
     }
   }, [setShowSlider, router]);
 
+
   const [tabIndex, setTabIndex] = useState(0);
+
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await axiosInstance.get('/dashboard/revenue');
+        
+        if (!response.data.total_counts || !response.data.total_counts.total_revenue) {
+          setTabIndex(1)
+          return; 
+        }
+        
+      } catch (error) {
+        
+      } finally {
+      }
+    };
+    fetchData();
+  }, []);
+  
   const handleTabChange = (event: React.SyntheticEvent, newIndex: number) => {
     setTabIndex(newIndex);
   };
@@ -497,8 +519,6 @@ const Dashboard: React.FC = () => {
   if (isLoading) {
     return <CustomizedProgressBar />;
   }
-
-  
 
   return (
     <>
