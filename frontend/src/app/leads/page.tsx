@@ -22,7 +22,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import CustomizedProgressBar from '@/components/CustomizedProgressBar';
 import Tooltip from '@mui/material/Tooltip';
 import CustomToolTip from '@/components/customToolTip';
-import CalendarPopup from '@/components/CustomCalendar'
+import CalendarPopup from '@/components/CustomCalendar';
 import CustomTablePagination from '@/components/CustomTablePagination';
 import UnlockButton from '@/components/UnlockButton';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
@@ -53,7 +53,7 @@ const Leads: React.FC = () => {
     const router = useRouter();
     const { hasNotification } = useNotification();
     const [data, setData] = useState<any[]>([]);
-    const [count_leads, setCount] = useState<number | null>(null);
+    const [count_leads, setCount] = useState<number | null>(null); 
     const [order, setOrder] = useState<'asc' | 'desc' | undefined>(undefined);
     const [orderBy, setOrderBy] = useState<string | undefined>(undefined);
     const [appliedDates, setAppliedDates] = useState<{ start: Date | null; end: Date | null }>({ start: null, end: null });
@@ -347,26 +347,17 @@ const Leads: React.FC = () => {
 
             const response = await axiosInstance.get(url);
             const [leads, count] = response.data;
-
             setData(Array.isArray(leads) ? leads : []);
             setCount(count || 0);
-            setStatus(response.data.status);
-            let newRowsPerPageOptions: number[] = []; // Default options
-            if (count <= 15) {
-                newRowsPerPageOptions = [10, 15];
-            } else if (count <= 50) {
-                newRowsPerPageOptions = [15, 20];
-            } else if (count <= 100) {
-                newRowsPerPageOptions = [15, 20, 50];
-            } else if (count <= 300) {
-                newRowsPerPageOptions = [10, 20, 50, 100];
-            } else if (count <= 500) {
-                newRowsPerPageOptions = [10, 20, 50, 100, 300];
-            } else {
-                newRowsPerPageOptions = [10, 20, 50, 100, 300, 500];
+            setStatus(response.data.status);  
+            const options = [15, 30, 50, 100, 200, 500];          
+            let RowsPerPageOptions = options.filter(option => option <= count);  
+            if (RowsPerPageOptions.length < options.length) {
+              RowsPerPageOptions = [...RowsPerPageOptions, options[RowsPerPageOptions.length]];
             }
-
-            setRowsPerPageOptions(newRowsPerPageOptions);
+            setRowsPerPageOptions(RowsPerPageOptions);
+            const selectedValue = RowsPerPageOptions.includes(rowsPerPage) ? rowsPerPage : 15;
+            setRowsPerPage(selectedValue);
         } catch (error) {
             if (error instanceof AxiosError && error.response?.status === 403) {
                 if (error.response.data.status === 'NEED_BOOK_CALL') {
@@ -464,7 +455,6 @@ const Leads: React.FC = () => {
             setCount(count || 0);
             setStatus(response.data.status);
             setSelectedFilters([]);
-
         } catch (error) {
             console.error('Error fetching leads:', error);
         }
@@ -1236,8 +1226,8 @@ const Leads: React.FC = () => {
                                         sx={{
                                             border: '1px solid rgba(235, 235, 235, 1)',
                                             maxHeight: selectedFilters.length > 0 
-                                                ? (hasNotification ? '63vh' : '68vh') 
-                                                : '72vh',
+                                            ? (hasNotification ? '63vh' : '68vh') 
+                                            : '72vh',
                                             overflowY: 'scroll'
                                         }}
                                     >

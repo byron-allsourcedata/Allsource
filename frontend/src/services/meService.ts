@@ -1,5 +1,16 @@
 import axiosInterceptorInstance from '../axios/axiosInterceptorInstance';
 
+declare global {
+  namespace AWIN {
+      namespace Tracking {
+          let Sale: {
+              amount?: string;
+              currency?: string;
+          };
+          function run(): void;
+      }
+  }
+}
 
 export const fetchUserData = async () => {
   try {
@@ -20,9 +31,17 @@ export const fetchUserData = async () => {
           plan_end: userPlan.plan_end,
           percent_steps: userInfo.activate_percent,
           is_trial_pending: userPlan.is_trial_pending,
-          domains: responseData.user_domains
+          domains: responseData.user_domains,
+          price: userPlan.price,
+          currency: userPlan.currency
         }));
-  
+        if (typeof AWIN != "undefined" && typeof AWIN.Tracking != "undefined" && userPlan.price && userPlan.currency) {
+          AWIN.Tracking.Sale = {
+            amount: parseFloat(userPlan.price).toFixed(2),
+            currency: userPlan.currency,
+        };
+          AWIN.Tracking.run();
+      }
         return {
           email: userInfo.email,
           full_name: userInfo.full_name,
@@ -31,7 +50,9 @@ export const fetchUserData = async () => {
           days_left: userPlan.plan_end,
           percent_steps: userInfo.percent_steps,
           is_trial_pending: userPlan.is_trial_pending,
-          domains: responseData.user_domains
+          domains: responseData.user_domains,
+          price: userPlan.price,
+          currency: userPlan.currency
         };
       }
     }

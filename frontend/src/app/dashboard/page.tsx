@@ -29,8 +29,6 @@ import { useNotification } from '../../context/NotificationContext';
 import RevenueTracking from "@/components/RevenueTracking";
 
 
-
-
 interface TabPanelProps {
   children?: React.ReactNode;
   value: number;
@@ -492,8 +490,6 @@ const Dashboard: React.FC = () => {
 
 
   const [tabIndex, setTabIndex] = useState(0);
-
-
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -511,15 +507,10 @@ const Dashboard: React.FC = () => {
     };
     fetchData();
   }, []);
-  
+
   const handleTabChange = (event: React.SyntheticEvent, newIndex: number) => {
     setTabIndex(newIndex);
   };
-
-  if (isLoading) {
-    return <CustomizedProgressBar />;
-  }
-
   return (
     <>
       {showCharts ? (

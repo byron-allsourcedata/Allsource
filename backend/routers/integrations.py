@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 import json
-from urllib.parse import urlencode
+from urllib.parse import quote, urlencode
 from fastapi import APIRouter, Depends, Query, HTTPException, status, Body
 from fastapi.responses import RedirectResponse
 from enums import UserAuthorizationStatus
@@ -143,17 +143,19 @@ async def set_suppression(suppression_data: SupperssionSet, service_name: str = 
 
 @router.get("/bigcommerce/oauth")
 async def bigcommerce_redirect_login(store_hash: str = Query(...), is_pixel_install: bool = Query(False), user = Depends(check_user_authentication), domain = Depends(check_domain)):
-    scope = ['store_v2_orders_read_only','store_v2_content','store_content_checkout', 'store_v2_information_read_only']
+    # scope = ['store_v2_orders_read_only', 'store_v2_content', 'store_v2_information_read_only']
+
     params = {
         "client_id": BigcommerceConfig.client_id,
+        'context': f'stores/{store_hash}',
         "redirect_uri": BigcommerceConfig.redirect_uri,
-        "context": f"stores/{store_hash}",
         "response_type": "code",
-        "scope": ' '.join(scope),
+        "scope": "store_content_checkout store_v2_content store_v2_default store_v2_information_read_only store_v2_orders_read_only",
         'state': f'{user.get("id")}:{domain.id}:{is_pixel_install}'
     }
-    query_string = urlencode(params)
-    authorize_url = f"https://login.bigcommerce.com/oauth2/authorize?{query_string}"    
+    query_string = urlencode(params, safe=':/')
+
+    authorize_url = f"https://login.bigcommerce.com/oauth2/authorize?{query_string}"
     return {
         'url': authorize_url
     }
@@ -175,7 +177,13 @@ async def bigcommerce_oauth_callback(code: str, state: str = Query(None), integr
             status_oauth = True
             shop_hash = response.json().get('context').split('/')[1]
             access_token = response.json().get('access_token')
-    user_id, domain_id, is_pixell_install = state.split(':') if state else None, None, None
+    if state:
+        parts = state.split(':')
+        user_id = parts[0] if len(parts) > 0 else None
+        domain_id = parts[1] if len(parts) > 1 else None
+        is_pixell_install = parts[2] if len(parts) > 2 else None
+    else:
+        user_id, domain_id, is_pixell_install = None, None, None
     if status_oauth:
         if state:
             url = BigcommerceConfig.frontend_dashboard_redirect if is_pixell_install else BigcommerceConfig.frontend_redirect
