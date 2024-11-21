@@ -1,6 +1,8 @@
 import logging
 from datetime import datetime, timezone
 
+from httpx import Client
+
 from enums import NotificationTitles
 from persistence.notification import NotificationPersistence
 from services.subscriptions import SubscriptionService
@@ -55,6 +57,7 @@ class WebhookService:
             'user': user_data,
             'lead_credit_plan_id': lead_credit_plan_id if lead_credit_plan_id else None
         }
+        
         return result
 
     def cancel_subscription_confirmation(self, payload):

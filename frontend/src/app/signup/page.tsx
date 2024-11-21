@@ -24,9 +24,9 @@ const Signup: React.FC = () => {
   const user_teams_mail = searchParams.get('user_teams_mail');
   const teams_token = searchParams.get('token');
   const spi = searchParams.get('spi');
-  const [formValues, setFormValues] = useState({ full_name: '', email: user_teams_mail, password: '', is_without_card: !isWithoutCard, termsAccepted: false, teams_token: teams_token, spi: spi });
+  const awin_awc = searchParams.get('awc')
+  const [formValues, setFormValues] = useState({ full_name: '', email: user_teams_mail, password: '', is_without_card: !isWithoutCard, awc: awin_awc || null, termsAccepted: false, teams_token: teams_token, spi: spi });
   const [formSubmitted, setFormSubmitted] = useState(false);
-
 
   useEffect(() => {
     document.body.style.overflow = 'hidden';
@@ -35,6 +35,9 @@ const Signup: React.FC = () => {
     };
   }, []);
 
+  useEffect(() => {
+    console.log(awin_awc)
+  })
 
   const navigateTo = (path: string) => {
     window.location.href = path;
@@ -255,7 +258,8 @@ const Signup: React.FC = () => {
                   token: credentialResponse.credential,
                   ...(spi && { spi }),
                   ...(teams_token && { teams_token }),
-                  ...{is_without_card : !isWithoutCard}
+                  ...{is_without_card : !isWithoutCard},
+                  ...{awc: awin_awc || null}
                 });
 
                 const responseData = response.data;

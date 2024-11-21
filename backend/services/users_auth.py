@@ -103,7 +103,7 @@ class UsersAuth:
         self.db.commit()
         return account_notification.id
 
-    def add_user(self, is_without_card, customer_id: str, user_form: dict, spi: str):
+    def add_user(self, is_without_card, customer_id: str, user_form: dict, spi: str, awin_awc: str = None):
         stripe_payment_url = None
         if spi:
             trial_period = self.plan_persistence.get_plan_by_price_id(spi).trial_days
@@ -124,8 +124,8 @@ class UsersAuth:
             customer_id=customer_id,
             last_signed_in=datetime.now(),
             added_on=datetime.now(),
-            stripe_payment_url=stripe_payment_url.get('link') if stripe_payment_url else None
-
+            stripe_payment_url=stripe_payment_url.get('link') if stripe_payment_url else None,
+            awin_awc = awin_awc if awin_awc else None
         )
         if not is_without_card:
             user_object.is_with_card = True
@@ -177,7 +177,7 @@ class UsersAuth:
 
         customer_id = stripe_service.create_customer_google(google_payload)
         user_object = self.add_user(is_without_card=is_without_card, customer_id=customer_id, user_form=google_payload,
-                                    spi=auth_google_data.spi)
+                                    spi=auth_google_data.spi, awin_awc=auth_google_data.awc)
         if teams_token:
             notification_id = self.save_account_notification(user_object.id, NotificationTitles.TEAM_MEMBER_ADDED.value)
             self.send_member_notification(user_id=owner_id, title=NotificationTitles.TEAM_MEMBER_ADDED.value, notification_id=notification_id)
@@ -335,7 +335,7 @@ class UsersAuth:
         if user_form.spi:
             status = SignUpStatus.SUCCESS
         user_object = self.add_user(is_without_card=is_without_card, customer_id=customer_id, user_form=user_data,
-                                    spi=user_form.spi)
+                                    spi=user_form.spi, awin_awc=user_form.awc)
         if teams_token:
             notification_id = self.save_account_notification(user_object.id, NotificationTitles.TEAM_MEMBER_ADDED.value)
             self.send_member_notification(user_id=owner_id, title=NotificationTitles.TEAM_MEMBER_ADDED.value, notification_id=notification_id)

@@ -49,8 +49,6 @@ class UsersService:
                 "is_artificial_status": result['is_artificial_status'],
                 "is_trial": result['subscription'].is_trial,
                 "plan_end": result['subscription'].plan_end,
-                'price': result['price'],
-                'currency': result['currency']
             }
         return {
             "is_trial_pending": True

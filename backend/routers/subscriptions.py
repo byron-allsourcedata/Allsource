@@ -50,7 +50,6 @@ async def update_payment_confirmation(request: fastRequest, webhook_service: Web
             logging.error('Failed to publish rabbitmq message')
         finally:
             await rabbitmq_connection.close()
-
     return "OK"
 
 

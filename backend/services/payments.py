@@ -2,6 +2,7 @@ import logging
 from datetime import datetime
 from typing import List
 
+from httpx import Client
 import stripe
 
 from config.stripe import StripeConfig
@@ -144,6 +145,14 @@ class PaymentsService:
         platform_subscription_id = subscription.platform_subscription_id
         current_subscription = stripe.Subscription.retrieve(platform_subscription_id)
         is_downgrade = self.is_downgrade(price_id, user.get('current_subscription_id'))
+        plan = self.plan_persistence.get_plan_by_price_id(price_id)
+        if user.get("awin_awc"):
+            with Client() as client:
+                try:
+                    
+                    client.get(f'https://www.awin1.com/sread.php?a=107427&b={plan.price}&cr=USD&c=AW&d=SUBCRIPRION:{plan.price}&vc=&t=1&ch=aw&cks={user.get("awin_awc")}')
+                except:
+                    ...
         if is_downgrade:
             return self.downgrade_subscription(current_subscription, platform_subscription_id, price_id, subscription)
         else:

@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime, timezone, timedelta
-
+from httpx import Client
 from dateutil.relativedelta import relativedelta
 from sqlalchemy.orm import Session
 
@@ -88,8 +88,6 @@ class SubscriptionService:
             'subscription': None,
             'is_artificial_status': False,
             'artificial_trial_days': None,
-            'price': None,
-            'currency': None
         }
         result = self.plans_persistence.get_user_subscription_with_trial_status(user_id)
         if result:
@@ -97,11 +95,6 @@ class SubscriptionService:
             result_dict['subscription'] = user_subscription
             result_dict['artificial_trial_days'] = trail_days
             result_dict['is_artificial_status'] = is_free_trial
-            if not user_subscription.is_avin_sended:
-                result_dict['price'] = price
-                result_dict['currency'] = currency
-                user_subscription.is_avin_sended = True
-                self.db.commit()
             return result_dict
         return result_dict
 
@@ -255,7 +248,13 @@ class SubscriptionService:
                                                                User.current_subscription_id: add_subscription_obj.id
                                                                },
                                                               synchronize_session=False)
+        user = self.db.query(User).filter(User.id == user_id).first()
         self.db.commit()
+        with Client() as cliet:
+            try:
+                cliet.get(f'https://www.awin1.com/sread.php?a=107427&b=03&cr=USD&c=AW&d=FREE_TRIAL:0&vc=&t=0&ch=aw&cks={user.awin_awc}')
+            except:
+                ...
 
     def remove_trial(self, user_id: int):
         trial_subscription = self.db.query(UserSubscriptions).filter(
@@ -366,6 +365,12 @@ class SubscriptionService:
                     user.leads_credits = leads_credits if user.leads_credits >= 0 else leads_credits - user.leads_credits
                     user.prospect_credits = prospect_credits
                 self.db.flush()
+                user = self.db.query(User).join(UserSubscriptions, UserSubscriptions.user_id == User.id).filter(UserSubscriptions.platform_subscription_id == platform_subscription_id).first()
+                with Client() as cliet:
+                    try:
+                        cliet.get(f'https://www.awin1.com/sread.php?a=107427&b=03&cr=USD&c=AW&d=FREE_TRIAL:0&vc=&t=0&ch=aw&cks={user.awin_awc}')
+                    except:
+                        ...
             else:
                 self.db.query(UserSubscriptions).where(UserSubscriptions.user_id == user_id,
                                                        UserSubscriptions.status == 'active').update(
