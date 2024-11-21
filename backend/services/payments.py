@@ -150,7 +150,7 @@ class PaymentsService:
             with Client() as client:
                 try:
                     
-                    client.get(f'https://www.awin1.com/sread.php?a=107427&b={plan.price}&cr=USD&c=AW&d=SUBCRIPRION:{plan.price}&vc=&t=1&ch=aw&cks={user.get("awin_awc")}')
+                    client.get(f'https://www.awin1.com/sread.php?a=107427&b={plan.price}&cr=USD&c=AW&d=SUBCRIPRION:{plan.price}&vc=&t=0&ch=aw&cks={user.get("awin_awc")}')
                 except:
                     ...
         if is_downgrade:
