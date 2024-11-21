@@ -219,27 +219,27 @@ const DomainButton: React.FC = () => {
       const savedMe = sessionStorage.getItem('me');
       const savedDomains = savedMe ? JSON.parse(savedMe || '{}').domains : [];
       const savedCurrentDomain = sessionStorage.getItem('current_domain') || '';
-  
+
       if (JSON.stringify(domains) !== JSON.stringify(savedDomains)) {
         setDomains(savedDomains);
       }
-  
+
       if (currentDomain !== savedCurrentDomain) {
         setCurrentDomain(savedCurrentDomain);
       }
-    }, 1000); 
-  
+    }, 1000);
+
     return () => clearInterval(intervalId)
   }, [domains, currentDomain]);
-  
-  
+
+
 
 
 
   const handleDropdownClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     setDropdownEl(event.currentTarget);
   };
-
+  
   const handleDropdownClose = () => {
     setDropdownEl(null);
   };
@@ -311,7 +311,7 @@ const DomainButton: React.FC = () => {
         sx={{ '& .MuiMenu-list': { padding: '2px' } }}
       >
         <MenuItem onClick={() => setDomainPopup(true)}>
-          <Typography className='second-sub-title' sx={{ color: '#5052B2 !important' }}> + Add new domain</Typography>
+          <Typography className='second-sub-title' sx={{ color: '#5052B2 ' }}> + Add new domain</Typography>
         </MenuItem>
         <AddDomainPopup
           open={showDomainPopup}
@@ -340,9 +340,11 @@ const DomainButton: React.FC = () => {
               alignItems: 'center',
               cursor: domain.enable ? 'pointer' : 'not-allowed',
               width: '20rem',
-              color: domain.enable ? 'inherit' : 'gray'
+              // color: domain.enable ? 'inherit' : 'rgba(32,  33, 36, 0.3) !important'
             }}>
-              <Typography className='second-sub-title'>
+              <Typography className='second-sub-title'
+                sx={{ color: domain.enable ? 'inherit' : 'rgba(32, 33, 36, 0.3) !important' }}
+              >
                 {domain.domain.replace('https://', '')}
               </Typography>
               {domains.length > 1 && (

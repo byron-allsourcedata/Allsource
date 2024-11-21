@@ -67,21 +67,30 @@ class UsersService:
                 "email": team_member.get('email'),
                 "full_name": team_member.get('full_name'),
                 "activate_percent": percent if percent > 50 else team_member.get('activate_steps_percent'),
-                "domains": domains
+                "domains": [self.add_percent_to_domain(domain) for domain in domains]
             }
         return {
             "email": self.user.get('email'),
             "full_name": self.user.get('full_name'),
             "activate_percent": percent,
-            "domains": domains
+            "domains": [self.add_percent_to_domain(domain) for domain in domains]
         }
 
+    def add_percent_to_domain(self, domain: UserDomains):
+        domain_percent = 75 if domain.is_pixel_installed else 50  
+        domain_data = self.domain_mapped(domain)
+        domain_data["activate_percent"] = domain_percent
+        return domain_data
     def get_domains(self):
         domains = self.domain_persistence.get_domains_by_user(self.user.get('id'))
-        sorted_domains = sorted(domains, key=lambda x: x.created_at)
+        enabled_domains = [domain for domain in domains if domain.is_enable]
+        disabled_domains = [domain for domain in domains if not domain.is_enable]
+        enabled_domains_sorted = sorted(enabled_domains, key=lambda x: (x.created_at, x.id))
+        disabled_domains_sorted = sorted(disabled_domains, key=lambda x: (x.created_at, x.id))
+        sorted_domains = enabled_domains_sorted + disabled_domains_sorted
         return [
-            self.domain_mapped(domain)
-            for i, domain in enumerate(sorted_domains)
+            self.add_percent_to_domain(domain)
+            for domain in sorted_domains
         ]
 
     def domain_mapped(self, domain: UserDomains):
