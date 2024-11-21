@@ -54,33 +54,23 @@ class UsersService:
         }
 
     def get_my_info(self, domain):
-        percent = self.user.get('activate_steps_percent')
-        domains = self.domain_persistence.get_domains_by_user(self.user.get('id'))
-        if domain and domain.is_pixel_installed:
-            percent = 75
-        else:
-            percent = 75 if domains[0].is_pixel_installed else percent
         if self.user.get('team_member'):
-            team_member = self.user.get('team_member')
-            
+            team_member = self.user.get('team_member')       
             return {
                 "email": team_member.get('email'),
                 "full_name": team_member.get('full_name'),
-                "activate_percent": percent if percent > 50 else team_member.get('activate_steps_percent'),
-                "domains": [self.add_percent_to_domain(domain) for domain in domains]
             }
         return {
             "email": self.user.get('email'),
             "full_name": self.user.get('full_name'),
-            "activate_percent": percent,
-            "domains": [self.add_percent_to_domain(domain) for domain in domains]
         }
 
-    def add_percent_to_domain(self, domain: UserDomains):
-        domain_percent = 75 if domain.is_pixel_installed else 50  
+    def add_percent_to_domain(self, domain: UserDomains, activate_percent):
+        domain_percent = 75 if domain.is_pixel_installed else activate_percent 
         domain_data = self.domain_mapped(domain)
         domain_data["activate_percent"] = domain_percent
         return domain_data
+
     def get_domains(self):
         domains = self.domain_persistence.get_domains_by_user(self.user.get('id'))
         enabled_domains = [domain for domain in domains if domain.is_enable]
@@ -89,7 +79,7 @@ class UsersService:
         disabled_domains_sorted = sorted(disabled_domains, key=lambda x: (x.created_at, x.id))
         sorted_domains = enabled_domains_sorted + disabled_domains_sorted
         return [
-            self.add_percent_to_domain(domain)
+            self.add_percent_to_domain(domain, self.user.get('activate_steps_percent'))
             for domain in sorted_domains
         ]
 
