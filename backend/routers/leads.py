@@ -44,7 +44,7 @@ async def get_leads(
         search_query=search_query,
         from_time=from_time,
         to_time=to_time
-    )[:27]
+    )
 
 
 @router.get("/search-location")
