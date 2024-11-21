@@ -139,7 +139,7 @@ const AddDomainPopup = ({ open, handleClose, handleSave }: AddDomainProps) => {
 
   return (
 
-    <Box sx={{ display: 'flex', flexDirection: 'column', padding: '1rem', width: '100%' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', padding: '1rem', width: '100%', }}>
       <TextField
         onKeyDown={(e) => e.stopPropagation()}
         fullWidth

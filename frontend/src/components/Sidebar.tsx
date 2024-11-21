@@ -99,7 +99,8 @@ const sidebarStyles = {
     },
     ListItem: {
         minHeight: '4.5em',
-        color:'rgba(59, 59, 59, 1)'
+        color:'rgba(59, 59, 59, 1)',
+        ml: '3px'
     },
     activeItem: {
         borderLeft: '3px solid rgba(80, 82, 178, 1)',

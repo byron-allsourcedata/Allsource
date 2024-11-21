@@ -50,6 +50,10 @@ const RevenueTracking = () => {
         textAlign: 'left',
         color: '#1c1c1c',
         fontSize: '1rem',
+        display: 'flex',
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 1,
         '@media (max-width: 1199px)': {
           fontSize: '1rem',
           lineHeight: 'normal',

@@ -362,7 +362,6 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates }) => 
                 ...s,
                 data: aggregatedData.map((month) => {
                     const monthData = monthlyData[month][s.id];
-                    console.log(monthData)
                     return monthData ? (monthData[monthData.length - 1] - monthData[0]) : 0;
 
                 }),

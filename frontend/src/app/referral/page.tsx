@@ -12,6 +12,8 @@ import axiosInstance from "@/axios/axiosInterceptorInstance";
 import Image from "next/image";
 import { useNotification } from '../../context/NotificationContext';
 import ReferralOverview from "@/components/ReferralOverview";
+import ReferralSignups from "@/components/ReferralSignups";
+import ReferralRewards from "@/components/ReferralRewards";
 
 const centerContainerStyles = {
     display: 'flex',
@@ -100,13 +102,13 @@ const Suppressions: React.FC = () => {
 
     return (
         <Box sx={referralStyle.mainContent}>
-            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'fixed', top: hasNotification ? '7.05rem' : '4.5rem', pt:'20px', pb:'12px', left: '9.1rem', pl: '2rem', zIndex: 1200, backgroundColor: '#fff', justifyContent: 'space-between', width: '100%', ml: 0, "@media (max-width: 900px)": { left: 0, top: '5rem', zIndex: 50 },  "@media (max-width: 600px)": { flexDirection: 'column', pl: '1.5rem', display: 'flex', alignItems: 'flex-start', zIndex: 50 }, "@media (max-width: 440px)": { flexDirection: 'column', pt: 0, zIndex: 50, justifyContent: 'flex-start' } }}>
-                <Box sx={{ flexShrink: 0, display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'start',  width: '100%', gap: 1, "@media (max-width: 600px)": { mb: 1 } }}>
+            <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', position: 'fixed', top: hasNotification ? '7.05rem' : '4.25rem', pt: '12px', pb: '16px', left: '9.1rem', pl: '2rem', zIndex: 1200, backgroundColor: '#fff', justifyContent: 'space-between', width: '100%', ml: 0, "@media (max-width: 900px)": { left: 0, zIndex: 50 }, "@media (max-width: 600px)": { flexDirection: 'column', pl: '1.5rem', display: 'flex', alignItems: 'flex-start', zIndex: 50, width: '97%' }, "@media (max-width: 440px)": { flexDirection: 'column', pt: hasNotification ? '3rem' : '0.75rem', top: hasNotification ? '4.5rem' : '', zIndex: 50, justifyContent: 'flex-start' }, "@media (max-width: 400px)": { pt: hasNotification ? '4.25rem' : '', pb: '6px', } }}>
+                <Box sx={{ flexShrink: 0, display: 'flex', flexDirection: 'row', alignItems: 'center', width: '10%', gap: 1, "@media (max-width: 600px)": { mb: 2 }, "@media (max-width: 440px)": { mb: 1 }, }}>
                     <Typography className="first-sub-title">Referral</Typography>
-                    <CustomTooltip title={"Our Referral program rewards you for bringing new users to our platform. Share your unique referral link with friends and colleagues, and earn incentives for each successful sign-up."} linkText="Learn more" linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/referral" />
+                    <Box sx={{ "@media (max-width: 600px)": { display: 'none' } }}><CustomTooltip title={"Our Referral program rewards you for bringing new users to our platform. Share your unique referral link with friends and colleagues, and earn incentives for each successful sign-up."} linkText="Learn more" linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/referral" /></Box>
                 </Box>
 
-                <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'start', width: '100%', alignItems: 'center', pt: 2, "@media (max-width: 900px)": { pr: 0 }, "@media (max-width: 600px)": { width: '97%', pr: '0' } }}>
+                <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center', width: '90%', pr: '20%', alignItems: 'center', "@media (max-width: 900px)": { pr: 0 }, "@media (max-width: 600px)": { width: '97%', pr: '0' } }}>
                     {status === 'PIXEL_INSTALLATION_NEEDED' ? '' : (
                         <Tabs
                             value={tabIndex}
@@ -249,14 +251,19 @@ const Suppressions: React.FC = () => {
                 </Box>
             ) : (
                 <>
-                    <Box sx={{ width: '100%', mt: '2.5rem', padding: 0, "@media (max-width: 600px)": { mt: '4.5rem' }, "@media (max-width: 440px)": { mt: '7.5rem' }, }}>
+                    <Box sx={{ width: '100%', padding: 0, "@media (max-width: 600px)": { mt: '4.5rem' }, "@media (max-width: 440px)": { mt: '7.5rem' }, }}>
                         <TabPanel value={tabIndex} index={0}>
-                           <ReferralOverview />
+                            <ReferralOverview />
                         </TabPanel>
                     </Box>
                     <Box sx={{ width: '100%', padding: 0, margin: 0 }}>
                         <TabPanel value={tabIndex} index={1}>
-                            
+                            <ReferralSignups />
+                        </TabPanel>
+                    </Box>
+                    <Box sx={{ width: '100%', padding: 0, margin: 0 }}>
+                        <TabPanel value={tabIndex} index={2}>
+                            <ReferralRewards />
                         </TabPanel>
                     </Box>
                 </>)}
