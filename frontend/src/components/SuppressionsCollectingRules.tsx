@@ -20,11 +20,23 @@ const CollectionRules: React.FC = () => {
         }
     };
 
+    const handlePageViewsBlur = () => {
+        if (pageViews === '') {
+            setPageViews('0');
+        }
+    };
+
     const handleSecondsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = parseInt(e.target.value, 10);
 
         if (value >= 0 || e.target.value === '') {
             setSeconds(e.target.value);
+        }
+    };
+
+    const handleSecondsBlur = () => {
+        if (seconds === '') {
+            setSeconds('0');
         }
     };
 
@@ -139,6 +151,7 @@ const CollectionRules: React.FC = () => {
                             type="number"
                             value={pageViews}
                             onChange={handlePageViewsChange}
+                            onBlur={handlePageViewsBlur}
                             InputProps={{ style: { color: 'rgba(17, 17, 19, 1)', fontFamily: 'Nunito Sans', fontWeight: 400, fontSize: '14px' } }}
                             InputLabelProps={{ style: { color: 'rgba(17, 17, 19, 0.6)', fontFamily: 'Nunito Sans', fontWeight: 400, fontSize: '14px' } }}
                             sx={{
@@ -191,6 +204,7 @@ const CollectionRules: React.FC = () => {
                             rows={2}
                             value={seconds}
                             onChange={handleSecondsChange}
+                            onBlur={handleSecondsBlur}
                             InputProps={{ style: { color: 'rgba(17, 17, 19, 1)', fontFamily: 'Nunito Sans', fontWeight: 400, fontSize: '14px' } }}
                             InputLabelProps={{ style: { color: 'rgba(17, 17, 19, 0.6)', fontFamily: 'Nunito Sans', fontWeight: 400, fontSize: '14px', padding: 0 } }}
                             sx={{
