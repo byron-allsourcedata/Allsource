@@ -56,7 +56,7 @@ class UsersService:
             "is_trial_pending": True
         }
 
-    def get_my_info(self, domain):
+    def get_my_info(self):
         if self.user.get('team_member'):
             team_member = self.user.get('team_member')       
             return {
