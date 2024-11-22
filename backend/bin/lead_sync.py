@@ -711,7 +711,11 @@ async def main():
                 logging.info("Connection to the database expired")
 
             logging.info('Sleeping for 10 minutes...')
+            await connection.close()
             time.sleep(60 * 10)
+            connection = await rabbitmq_connection.connect()
+            logging.info("Reconnected to RabbitMQ")
+
             Session = sessionmaker(bind=engine)
             session = Session()
     except Exception as e:
