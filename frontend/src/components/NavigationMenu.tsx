@@ -32,7 +32,7 @@ const navigationmenuStyles = {
     top: 0,
     left: 0,
     right: 0,
-    zIndex: 200,
+    zIndex: 100,
     background: '#fff',
     boxShadow: '0 0.25rem 0.25rem 0 rgba(47, 47, 47, 0.04)',
     borderBottom: '0.0625 solid #E4E4E4',
@@ -49,7 +49,7 @@ const navigationmenuStyles = {
     backgroundColor: '#fff',
     transition: 'left 0.3s ease-in-out',
     zIndex: 100,
-    paddingTop: '4.5rem', // Adjust for the header height
+    marginTop: '4.5rem', // Adjust for the header height
   },
   activeItem: {
     borderLeft: '0.25rem solid rgba(80, 82, 178, 1)',
