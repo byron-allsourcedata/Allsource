@@ -712,6 +712,10 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
                     <Typography variant="h6" className='first-sub-title' sx={{
                         color: '#4a4a4a !important',
                         lineHeight: '22px !important',
+                        display: 'flex',
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 1,
                         '@media (max-width: 600px)': {
                             display: 'none'
                         }

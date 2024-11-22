@@ -1,10 +1,8 @@
 "use client";
 import { Box, Grid, Typography, Button, Menu, MenuItem, Modal, Tab, Tabs } from "@mui/material";
 import Image from "next/image";
-import dynamic from "next/dynamic";
 import React, { useState, useEffect, Suspense, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useUser } from "../../context/UserContext";
 import axiosInstance from "../../axios/axiosInterceptorInstance";
 import { AxiosError } from "axios";
 import { dashboardStyles } from "./dashboardStyles";
@@ -12,8 +10,6 @@ import { ProgressSection } from "../../components/ProgressSection";
 import PixelInstallation from "../../components/PixelInstallation";
 import Slider from "../../components/Slider";
 import { SliderProvider, useSlider } from "../../context/SliderContext";
-import { useTrial } from "../../context/TrialProvider";
-import StatsCards from "../../components/StatsCard";
 import { PopupButton } from "react-calendly";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import { showErrorToast, showToast } from '@/components/ToastNotification';
@@ -139,6 +135,10 @@ const VerifyPixelIntegration: React.FC = () => {
           color: '#1c1c1c',
           fontSize: '16px',
           marginBottom: '1.5rem',
+          display: 'flex',
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 1,
           '@media (max-width: 900px)': {
             fontSize: '16px',
             lineHeight: 'normal',

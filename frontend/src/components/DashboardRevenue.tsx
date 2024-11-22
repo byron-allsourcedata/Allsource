@@ -1250,7 +1250,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                 </Box>
             </Box>
 
-            <Box sx={{ mb: 3, boxShadow: '0px 2px 10px 0px rgba(0, 0, 0, 0.1)' }}>
+            {/* <Box sx={{ mb: 3, boxShadow: '0px 2px 10px 0px rgba(0, 0, 0, 0.1)' }}>
                 <Card variant="outlined" sx={{ width: '100%' }}>
                     <CardContent>
                         <Stack sx={{ justifyContent: 'space-between', flexDirection: 'row' }}>
@@ -1322,11 +1322,11 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                             }}
                         >
 
-                        </LineChart> */}
+                        </LineChart> 
 
                     </CardContent>
                 </Card>
-            </Box>
+            </Box> */}
             {loading && (<CustomizedProgressBar />)}
         </Box>
     )

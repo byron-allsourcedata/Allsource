@@ -136,4 +136,22 @@ export const suppressionsStyles: { [key: string]: SxProps<Theme> } = {
         backgroundColor: 'rgba(255, 255, 255, 1)',
         color: 'rgba(80, 82, 178, 1)',
       },
+    centerContainerStyles: {
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center',
+        border: '1px solid rgba(235, 235, 235, 1)',
+        borderRadius: 2,
+        padding: 3,
+        boxSizing: 'border-box',
+        width: '100%',
+        textAlign: 'center',
+        flex: 1,
+        '& img': {
+            width: 'auto',
+            height: 'auto',
+            maxWidth: '100%'
+        }
+    }
 }

@@ -48,7 +48,7 @@ const ReferralOverview: React.FC = () => {
         fetchRules();
     }, [fetchRules]);
 
-    const [referralLink, setReferralLink] = useState('');
+    const [referralLink, setReferralLink] = useState('1233213213tttttt');
 
     const handleCopyClick = () => {
         navigator.clipboard.writeText(referralLink).then(() => {
@@ -169,7 +169,7 @@ const ReferralOverview: React.FC = () => {
                                     type="text"
                                     rows={2}
                                     disabled={!referralLink}
-                                    // value={seconds}
+                                    value={referralLink}
                                     InputProps={{
                                         style: { color: 'rgba(17, 17, 19, 1)', fontFamily: 'Nunito Sans', fontWeight: 400, fontSize: '14px' },
                                         endAdornment: (
@@ -249,8 +249,11 @@ const ReferralOverview: React.FC = () => {
                     </Box>
 
                     <Box sx={{ display: 'flex', flexDirection: 'row', width: '100%', gap: 1, '@media (max-width: 600px)': { flexDirection: 'column' } }}>
-                        <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', border: '1px solid rgba(235, 235, 235, 1)', justifyContent: 'center', alignItems: 'center', borderRadius: '4px', pt: 2, pb: 2, gap: 2.5, }}>
-                            <Image src={'/stripe-image.svg'} width={97} height={97} alt="stripe-icon" />
+                        <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', border: '1px solid rgba(235, 235, 235, 1)', justifyContent: 'center', alignItems: 'start', borderRadius: '4px', padding: '1rem 1.5rem', gap: 2, maxHeight: '245px' }}>
+                                <Typography className="second-sub-title">
+                                    How it works
+                                </Typography>
+                            <Image src={'/how-works.svg'} width={637} height={140} alt="stripe-icon" />
                         </Box>
 
                         <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', border: '1px solid rgba(235, 235, 235, 1)', justifyContent: 'start', borderRadius: '4px', padding: '1rem 1.5rem', gap: 2 }}>
@@ -282,9 +285,9 @@ const ReferralOverview: React.FC = () => {
                                                     <AddIcon sx={{color: 'black'}} fontSize="small" />
                                                 )
                                             }
-                                            sx={{ display: 'flex', alignItems: 'center' }}
+                                            sx={{ display: 'flex', alignItems: 'center', padding: 0, margin: 0, minHeight: 0, cursor: 'pointer',  }}
                                         >
-                                            <Typography className="second-sub-title" sx={{fontWeight: '400 !important'}}>
+                                            <Typography className="second-sub-title" sx={{fontWeight: '400 !important', }}>
                                                 {item.question}
                                             </Typography>
                                         </AccordionSummary>

@@ -59,7 +59,6 @@ const Header: React.FC<HeaderProps> = ({ NewRequestNotification }) => {
   const { resetTrialData } = useTrial();
   const [notificationIconPopupOpen, setNotificationIconPopupOpen] = useState(false);
   const [hasNewNotifications, setHasNewNotifications] = useState<boolean>(false);
-  const [popupPosition, setPopupPosition] = useState({ top: 0, left: 0 });
   const buttonRef = useRef<HTMLButtonElement>(null);
   const handleSignOut = () => {
     localStorage.clear();

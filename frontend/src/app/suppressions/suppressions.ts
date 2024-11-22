@@ -62,5 +62,23 @@ export const suppressionsStyle: { [key: string]: SxProps<Theme> } = {
         padding: '10px',
         borderRadius: '8px',
         boxShadow: '0 0 10px rgba(0, 0, 0, 0.1)',
+      },
+      table_column: {
+        fontFamily: 'Nunito Sans', fontSize: '12px', fontWeight: '600',
+        lineHeight: '16px',
+        textAlign: 'left',
+        textWrap: 'nowrap',
+        color: '#202124',
+        '&::after': {
+          content: '""',
+          display: 'block',
+          position: 'absolute',
+          top: '15px', // Space from the top
+          bottom: '15px', // Space from the bottom
+          right: 0, // Position the border at the right edge
+          width: '1px',
+          height: 'calc(100% - 30px)', // Full height minus top and bottom spacing
+          backgroundColor: 'rgba(235, 235, 235, 1)', // Border color
       }
+    }
 };
