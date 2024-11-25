@@ -322,8 +322,15 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates }) => 
     ): AggregatedResult {
         let aggregatedData: string[] = [];
         let aggregatedSeries: Series[] = [];
+
+        if (period <= 7) {
+            return {
+                aggregatedData: formattedData,
+                aggregatedSeries: series,
+            };
+        }
     
-        if (period < 2) {
+        if (period <= 30) {
             const weeklyData: Record<string, Record<string, number[]>> = {};
     
             formattedData.forEach((date, index) => {
@@ -372,7 +379,7 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates }) => 
         return { aggregatedData, aggregatedSeries };
     }
 
-    const periodInMonths = dayjs(formattedData[formattedData.length - 1]).diff(dayjs(formattedData[0]), 'month');
+    const periodInMonths = dayjs(formattedData[formattedData.length - 1]).diff(dayjs(formattedData[0]), 'day');
     const { aggregatedData, aggregatedSeries } = aggregateData(formattedData, filteredSeries, periodInMonths);
 
     return (
@@ -397,7 +404,7 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates }) => 
                                     onClick={() => toggleChartType('line')}
                                     sx={{
                                         width: '20px',
-                                        ml: 6.25,
+                                        ml: 5.5,
                                         height: '20px',
                                         borderRadius: '4px',
                                         border: `1.5px solid ${chartType === 'line' ? 'rgba(80, 82, 178, 1)' : 'rgba(115, 115, 115, 1)'}`,
@@ -586,7 +593,7 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates }) => 
                             ]}
                             series={filteredSeries}
                             height={mainchartSize}
-                            margin={{ left: 35, right: 20, top: 20, bottom: 20 }}
+                            margin={{ left: 45, right: 20, top: 20, bottom: 20 }}
                             grid={{ horizontal: true }}
                             sx={{
                                 border: 'none',
@@ -620,7 +627,7 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates }) => 
                             ]}
                             series={aggregatedSeries.map((s) => ({ data: s.data, label: s.label }))}
                             grid={{ horizontal: true }}
-                            margin={{ left: 35, right: 20, top: 20, bottom: 20 }}
+                            margin={{ left: 45, right: 20, top: 20, bottom: 20 }}
                             borderRadius={3}
                             slotProps={{
                                 legend: { hidden: true },

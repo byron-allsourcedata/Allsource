@@ -15,6 +15,7 @@ import { PieChart } from '@mui/x-charts/PieChart';
 import { useMediaQuery } from '@mui/material';
 import { BarChart } from '@mui/x-charts/BarChart';
 import { ShowChart, BarChart as IconBarChart } from "@mui/icons-material";
+import dayjs from "dayjs";
 
 
 const CustomIcon = () => (
@@ -345,6 +346,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
     const [data, setDays] = useState<string[]>([]);
     const formattedData = data.map(dateStr => {
         return new Date(dateStr).toLocaleDateString('en-US', {
+            year: 'numeric',
             month: 'short',
             day: 'numeric',
         });
@@ -384,6 +386,89 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
 
     const totalValue = dataChart.reduce((acc, curr) => acc + curr.value, 0);
 
+    interface Series {
+        id: string;
+        label: string;
+        data: number[];
+        curve?: string;
+        stack?: string;
+        showMark?: boolean;
+        area?: boolean;
+        stackOrder?: string;
+    }
+    
+    interface AggregatedResult {
+        aggregatedData: string[];
+        aggregatedSeries: Series[];
+    }
+    
+    function aggregateData(
+        formattedData: string[],
+        series: Series[],
+        period: number
+    ): AggregatedResult {
+        let aggregatedData: string[] = [];
+        let aggregatedSeries: Series[] = [];
+    
+        if (period <= 7) {
+            return {
+                aggregatedData: formattedData,
+                aggregatedSeries: series,
+            };
+        }
+
+        if (period <= 30) {
+            const weeklyData: Record<string, Record<string, number[]>> = {};
+            console.log(formattedData)
+            formattedData.forEach((date, index) => {
+                const weekStart = dayjs(date).startOf('week').format('MMM DD');
+                if (!weeklyData[weekStart]) weeklyData[weekStart] = {};
+                
+                series.forEach((s) => {
+                    if (!weeklyData[weekStart][s.id]) weeklyData[weekStart][s.id] = [];
+                    weeklyData[weekStart][s.id].push(s.data[index]);
+                });
+            });
+    
+            aggregatedData = Object.keys(weeklyData);
+            aggregatedSeries = series.map((s) => ({
+                ...s,
+                data: aggregatedData.map((week) => {
+                    const weekData = weeklyData[week][s.id];
+                    return weekData ? Math.max(...weekData) : 0;
+                }),
+            }));
+        } 
+        
+        else {
+            const monthlyData: Record<string, Record<string, number[]>> = {};
+            console.log(monthlyData)
+            formattedData.forEach((date, index) => {
+                
+                const month = dayjs(date).format('MMM YYYY')
+                if (!monthlyData[month]) monthlyData[month] = {};
+                
+                series.forEach((s) => {
+                    if (!monthlyData[month][s.id]) monthlyData[month][s.id] = [];
+                    monthlyData[month][s.id].push(s.data[index]);
+                });
+            });
+    
+            aggregatedData = Object.keys(monthlyData);
+            aggregatedSeries = series.map((s) => ({
+                ...s,
+                data: aggregatedData.map((month) => {
+                    const monthData = monthlyData[month][s.id];
+                    return monthData ? Math.max(...monthData) : 0;
+                }),
+            }));
+        }
+    
+        return { aggregatedData, aggregatedSeries };
+    }
+    
+    const periodInDays = dayjs(formattedData[formattedData.length - 1]).diff(dayjs(formattedData[0]), 'day');
+    const { aggregatedData, aggregatedSeries } = aggregateData(formattedData, filteredSeries, periodInDays);
 
     /// Meta
     const metadata =
@@ -693,7 +778,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                         scaleType: 'point',
                                         data: formattedData,
                                         disableTicks: true,
-                                        disableLine: true
+                                        disableLine: true,
                                     }]}
                                     yAxis={[{
                                         valueFormatter: (value) => {
@@ -720,7 +805,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                 <BarChart
                                     height={mainchartSize}
                                     colors={filteredSeriescolor.map(s => colorMapping[s.id as keyof typeof colorMapping])}
-                                    xAxis={[{ scaleType: 'band', data: formattedData }]}
+                                    xAxis={[{ scaleType: 'band', data: aggregatedData, disableTicks: true, disableLine: true, min: 1 }]}
                                     yAxis={[
                                         {
                                             valueFormatter: (value) => {
@@ -737,7 +822,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                             min: 1
                                         }
                                     ]}
-                                    series={filteredSeries}
+                                    series={aggregatedSeries.map((s) => ({ data: s.data, label: s.label }))}
                                     grid={{ horizontal: true }}
                                     margin={{ left: 35, right: 20, top: 20, bottom: 20 }}
                                     borderRadius={3}

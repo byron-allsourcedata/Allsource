@@ -536,12 +536,12 @@ const Dashboard: React.FC = () => {
               flexDirection: "column",
             }}
           >
-            <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center',
-                pt: hasNotification ? 6.25 : 3,
+            <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'start',
+                pt: hasNotification ? 6.25 : 3.5,
                 pb: 0.75,
                 position: 'fixed',
-                top: hasNotification ? '3.95rem' : '3.25rem',
-                right: isCalendarOpen ? '31px' : '16px',
+                top: hasNotification ? '3.95rem' : '3.75rem',
+                right: '16px',
                 left: '170px',
                 background: '#fff',
                 zIndex: '1',
@@ -568,14 +568,14 @@ const Dashboard: React.FC = () => {
                 className="first-sub-title"
                 sx={{
                   ...dashboardStyles.title, '@media (max-width: 600px)': {
-                    display: 'none'
+                    display: 'none',
                   },
                 }}
               >
                 Dashboard <CustomTooltip title={"Text about dashboard"} />
               </Typography>
               <Box sx={{
-                display: 'none', width: '100%', justifyContent: 'space-between', alignItems: 'center', '@media (max-width: 600px)': {
+                display: 'none', width: '100%', justifyContent: 'space-between', alignItems: 'start', '@media (max-width: 600px)': {
                   display: 'flex'
                 }
               }}>
@@ -589,7 +589,7 @@ const Dashboard: React.FC = () => {
                 </Typography>
 
                 <Box sx={{
-                  display: 'none', justifyContent: 'flex-end', alignItems: 'center', pt: 0.5, gap: 1, '@media (max-width: 600px)': {
+                  display: 'none', justifyContent: 'flex-end', alignItems: 'start', pt: 0.5, gap: 1, '@media (max-width: 600px)': {
                     display: 'flex',
                   }
                 }}>
@@ -615,7 +615,7 @@ const Dashboard: React.FC = () => {
               </Box>
 
               <Box sx={{
-                flexGrow: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', '@media (max-width: 600px)': {
+                flexGrow: 1, display: 'flex', justifyContent: 'center', alignItems: 'start', '@media (max-width: 600px)': {
                   width: '100%',
                   mt: hasNotification ? 1 : 2
                 }
@@ -626,6 +626,7 @@ const Dashboard: React.FC = () => {
                   sx={{
                     textTransform: 'none',
                     minHeight: 0,
+                    alignItems: 'start',
                     '& .MuiTabs-indicator': {
                       backgroundColor: 'rgba(80, 82, 178, 1)',
                       height: '1.4px',
@@ -695,7 +696,7 @@ const Dashboard: React.FC = () => {
                 }
               }}>
                 {/* Calendary picker*/}
-                <Typography className="second-sub-title">{selectedDateLabel ? selectedDateLabel : 'All time'}</Typography>
+                <Typography className="second-sub-title">{selectedDateLabel ? selectedDateLabel : ''}</Typography>
                 <Button
                   aria-controls={isCalendarOpen ? 'calendar-popup' : undefined}
                   aria-haspopup="true"
@@ -741,14 +742,7 @@ const Dashboard: React.FC = () => {
                   }
                 </Button>
               </Box>
-
-
             </Box>
-
-
-
-
-
             <Box sx={{ width: '100%', marginTop: '68px',
               "@media (max-width: 900px)": { 
                   marginTop: '40px'
