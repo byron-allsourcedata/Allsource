@@ -22,11 +22,12 @@ router = APIRouter()
 
 
 @router.get("/me")
-def get_me(user_service: UsersService = Depends(get_users_service), domain = Depends(check_domain)):
+def get_me(user_service: UsersService = Depends(get_users_service)):
     plan = user_service.get_info_plan()
     domains = user_service.get_domains()
+    user_info = user_service.get_my_info()  
     return {
-        "user_info": user_service.get_my_info(domain),
+        "user_info": user_info,
         "user_plan": plan,
         "user_domains": domains
     }
