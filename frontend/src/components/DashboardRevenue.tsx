@@ -711,7 +711,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                     }]}
                                     series={filteredSeries}
                                     height={mainchartSize}
-                                    margin={{ left: 35, right: 20, top: 20, bottom: 20 }}
+                                    margin={{ left: 40, right: 20, top: 20, bottom: 20 }}
                                     grid={{ horizontal: true }}
                                     sx={{ border: 'none' }}
                                     slotProps={{ legend: { hidden: true } }}
@@ -732,11 +732,14 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                                     return value.toString(); // Return smaller numbers without formatting
                                                 }
                                             },
+                                            disableTicks: true, 
+                                            disableLine: true, 
+                                            min: 1
                                         }
                                     ]}
                                     series={filteredSeries}
                                     grid={{ horizontal: true }}
-                                    margin={{ left: 50, right: 20, top: 20, bottom: 20 }}
+                                    margin={{ left: 35, right: 20, top: 20, bottom: 20 }}
                                     borderRadius={3}
                                     slotProps={{
                                         legend: { hidden: true },

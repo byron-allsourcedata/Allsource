@@ -586,7 +586,7 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates }) => 
                             ]}
                             series={filteredSeries}
                             height={mainchartSize}
-                            margin={{ left: 50, right: 20, top: 20, bottom: 20 }}
+                            margin={{ left: 35, right: 20, top: 20, bottom: 20 }}
                             grid={{ horizontal: true }}
                             sx={{
                                 border: 'none',
@@ -599,7 +599,7 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates }) => 
                         </LineChart>
                     ) : (
                         <BarChart
-                            height={350}
+                            height={mainchartSize}
                             colors={filteredSeriescolor.map(s => colorMapping[s.id as keyof typeof colorMapping])}
                             xAxis={[{ scaleType: 'band', data: aggregatedData, disableTicks: true, disableLine: true, min: 1 }]}
                             yAxis={[
@@ -620,7 +620,7 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates }) => 
                             ]}
                             series={aggregatedSeries.map((s) => ({ data: s.data, label: s.label }))}
                             grid={{ horizontal: true }}
-                            margin={{ left: 50, right: 20, top: 20, bottom: 20 }}
+                            margin={{ left: 35, right: 20, top: 20, bottom: 20 }}
                             borderRadius={3}
                             slotProps={{
                                 legend: { hidden: true },
