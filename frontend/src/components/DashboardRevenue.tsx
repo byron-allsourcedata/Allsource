@@ -15,7 +15,6 @@ import { PieChart } from '@mui/x-charts/PieChart';
 import { useMediaQuery } from '@mui/material';
 import { BarChart } from '@mui/x-charts/BarChart';
 import { ShowChart, BarChart as IconBarChart } from "@mui/icons-material";
-import { margin } from "@mui/system";
 
 
 const CustomIcon = () => (
@@ -529,28 +528,28 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                         <IconButton
                                             onClick={() => toggleChartType('line')}
                                             sx={{
-                                                width: '16px',
+                                                width: '20px',
                                                 ml: 5,
-                                                height: '16px',
-                                                borderRadius: '4px', // Квадратная форма
+                                                height: '20px',
+                                                borderRadius: '4px', // square form
                                                 border: `1.5px solid ${chartType === 'line' ? 'rgba(80, 82, 178, 1)' : 'rgba(115, 115, 115, 1)'}`,
                                                 color: chartType === 'line' ? 'rgba(80, 82, 178, 1)' : 'rgba(115, 115, 115, 1)',
                                             }}
                                         >
-                                            <ShowChart sx={{ fontSize: '16px' }} />
+                                            <ShowChart sx={{ fontSize: '20px' }} />
                                         </IconButton>
 
                                         <IconButton
                                             onClick={() => toggleChartType('bar')}
                                             sx={{
-                                                width: '16px',
-                                                height: '16px',
-                                                borderRadius: '4px', // Квадратная форма
+                                                width: '20px',
+                                                height: '20px',
+                                                borderRadius: '4px', // square form
                                                 border: `1.5px solid ${chartType === 'bar' ? 'rgba(80, 82, 178, 1)' : 'rgba(115, 115, 115, 1)'}`,
                                                 color: chartType === 'bar' ? 'rgba(80, 82, 178, 1)' : 'rgba(115, 115, 115, 1)',
                                             }}
                                         >
-                                            <IconBarChart sx={{ fontSize: '16px' }} />
+                                            <IconBarChart sx={{ fontSize: '20px' }} />
                                         </IconButton>
                                     </Box>
                                 </Stack>

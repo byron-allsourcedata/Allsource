@@ -541,7 +541,7 @@ const Dashboard: React.FC = () => {
                 pb: 0.75,
                 position: 'fixed',
                 top: hasNotification ? '3.95rem' : '3.25rem',
-                right: '16px',
+                right: isCalendarOpen ? '31px' : '16px',
                 left: '170px',
                 background: '#fff',
                 zIndex: '1',

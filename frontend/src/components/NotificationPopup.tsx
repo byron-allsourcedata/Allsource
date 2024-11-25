@@ -104,8 +104,8 @@ const NotificationPopup: React.FC<NotificationPopupProps> = ({ open, onClose, an
             PaperProps={{
                 sx: {
                     width: '364px',
-                    height: '530px',
-                    overflow: 'scroll',
+                    maxHeight: '530px',
+                    overflowY: 'hidden',
                     overflowX: 'hidden',
                     boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)',
                     ml: -16,
@@ -130,7 +130,7 @@ const NotificationPopup: React.FC<NotificationPopupProps> = ({ open, onClose, an
                 </Typography>
             </Box>
             <Divider />
-            <Box sx={{ margin: '2px', overflowY: 'auto' }}>
+            <Box sx={{ margin: '2px', overflowY: 'scroll', maxHeight: '400px' }}>
                 {loading ? (
                     <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
                         <Box sx={{

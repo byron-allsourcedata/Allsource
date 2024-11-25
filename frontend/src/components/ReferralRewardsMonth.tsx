@@ -8,6 +8,7 @@ import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
 import axiosInstance from "@/axios/axiosInterceptorInstance";
+import { list } from "postcss";
 
 interface RewardData {
     month: string;
@@ -69,7 +70,8 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({ open, onBack, selectedMonth
     const [totalCount, setTotalCount] = useState(0);
     const [order, setOrder] = useState<'asc' | 'desc' | undefined>(undefined);
     const [orderBy, setOrderBy] = useState<string | undefined>(undefined);
-    const [data, setData] = useState<RewardData[] | null>(null);
+    const [data, setData] = useState<RewardData[] | []>([]);
+
 
     const handlePageChange = (event: React.MouseEvent<HTMLButtonElement> | null, newPage: number) => {
         setPage(newPage);
@@ -116,7 +118,7 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({ open, onBack, selectedMonth
         }}>
 
             <Box>
-                <Box sx={{display: 'flex', flexDirection: 'row', alignItems: 'center', mb:2, gap:2}}>
+                <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', mb: 2, gap: 2 }}>
                     <IconButton
                         onClick={onBack}
                         sx={{
@@ -141,121 +143,136 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({ open, onBack, selectedMonth
                     justifyContent: 'space-between',
                     minHeight: '76vh',
                 }}>
-                                    <Box sx={{ display: 'flex', }}>
-                    <TableContainer sx={{
-                        border: '1px solid #EBEBEB',
-                        borderRadius: '4px 4px 0px 0px',
-                    }}>
-                        <Table>
-                            <TableHead>
-                                <TableRow>
-                                    {tableHeaders.map(({ key, label, sortable }) => (
-                                        <TableCell
-                                            key={key}
-                                            sx={{
-                                                ...suppressionsStyles.tableColumn,
-                                                ...(key === 'personal_email' && {
+                    <Box sx={{ display: 'flex', }}>
+                        <TableContainer sx={{
+                            border: '1px solid #EBEBEB',
+                            borderRadius: '4px 4px 0px 0px',
+                        }}>
+                            <Table>
+                                <TableHead>
+                                    <TableRow>
+                                        {tableHeaders.map(({ key, label, sortable }) => (
+                                            <TableCell
+                                                key={key}
+                                                sx={{
+                                                    ...suppressionsStyles.tableColumn,
+                                                    ...(key === 'personal_email' && {
+                                                        position: 'sticky',
+                                                        left: 0,
+                                                        zIndex: 99,
+                                                        backgroundColor: '#fff',
+                                                    }),
+                                                }}
+                                                onClick={sortable ? () => handleSortRequest(key) : undefined}
+                                                style={{ cursor: sortable ? 'pointer' : 'default' }}
+                                            >
+                                                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                                    <Typography variant="body2" className='table-heading'>{label}</Typography>
+                                                    {sortable && orderBy === key && (
+                                                        <IconButton size="small" sx={{ ml: 1 }}>
+                                                            {order === 'asc' ? (
+                                                                <ArrowUpwardIcon fontSize="inherit" />
+                                                            ) : (
+                                                                <ArrowDownwardIcon fontSize="inherit" />
+                                                            )}
+                                                        </IconButton>
+                                                    )}
+                                                </Box>
+                                            </TableCell>
+                                        ))}
+                                    </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                    {data && data.length === 0 ? (
+                                        <TableRow sx={suppressionsStyles.tableBodyRow}>
+                                            <TableCell
+                                            colSpan={8}
+                                                sx={{
+                                                    ...suppressionsStyles.tableBodyColumn,
+                                                    textAlign: 'center',
+                                                    paddingTop: '18px',
+                                                    paddingBottom: '18px',
+                                                }}
+                                            >
+                                                No rewards details
+                                            </TableCell>
+                                        </TableRow>
+                                    ) : (
+                                        data && data.map((item, index) => (
+                                            <TableRow key={index} sx={{
+                                                ...suppressionsStyles.tableBodyRow,
+                                                '&:hover': {
+                                                    backgroundColor: '#F7F7F7',
+                                                    '& .sticky-cell': {
+                                                        backgroundColor: '#F7F7F7',
+                                                    }
+                                                },
+                                            }}>
+                                                <TableCell className='sticky-cell table-data' sx={{
+                                                    ...suppressionsStyles.tableBodyColumn,
+                                                    cursor: 'pointer',
                                                     position: 'sticky',
                                                     left: 0,
-                                                    zIndex: 99,
+                                                    zIndex: 1,
                                                     backgroundColor: '#fff',
-                                                }),
-                                            }}
-                                            onClick={sortable ? () => handleSortRequest(key) : undefined}
-                                            style={{ cursor: sortable ? 'pointer' : 'default' }}
-                                        >
-                                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                                <Typography variant="body2" className='table-heading'>{label}</Typography>
-                                                {sortable && orderBy === key && (
-                                                    <IconButton size="small" sx={{ ml: 1 }}>
-                                                        {order === 'asc' ? (
-                                                            <ArrowUpwardIcon fontSize="inherit" />
-                                                        ) : (
-                                                            <ArrowDownwardIcon fontSize="inherit" />
-                                                        )}
-                                                    </IconButton>
-                                                )}
-                                            </Box>
-                                        </TableCell>
-                                    ))}
-                                </TableRow>
-                            </TableHead>
-                            <TableBody>
-                                {data?.map((item, index) => (
-                                    <TableRow key={index} sx={{
-                                        ...suppressionsStyles.tableBodyRow,
-                                        '&:hover': {
-                                            backgroundColor: '#F7F7F7',
-                                            '& .sticky-cell': {
-                                                backgroundColor: '#F7F7F7',
-                                            }
-                                        },
-                                    }}>
-                                        <TableCell className='sticky-cell table-data' sx={{
-                                            ...suppressionsStyles.tableBodyColumn,
-                                            cursor: 'pointer',
-                                            position: 'sticky',
-                                            left: 0,
-                                            zIndex: 1,
-                                            backgroundColor: '#fff',
-                                        }}>
-                                            {item.account_name}
-                                        </TableCell>
+                                                }}>
+                                                    {item.account_name}
+                                                </TableCell>
 
-                                        <TableCell className='table-data' sx={suppressionsStyles.tableBodyColumn}>
-                                            {item.email}
-                                        </TableCell>
+                                                <TableCell className='table-data' sx={suppressionsStyles.tableBodyColumn}>
+                                                    {item.email}
+                                                </TableCell>
 
-                                        <TableCell className='table-data' sx={suppressionsStyles.tableBodyColumn}>
-                                            {dayjs(item.join_date).format('MMM D, YYYY')}
-                                        </TableCell>
+                                                <TableCell className='table-data' sx={suppressionsStyles.tableBodyColumn}>
+                                                    {dayjs(item.join_date).format('MMM D, YYYY')}
+                                                </TableCell>
 
-                                        <TableCell className='table-data' sx={suppressionsStyles.tableBodyColumn}>
-                                            {item.plan_amount}
-                                        </TableCell>
+                                                <TableCell className='table-data' sx={suppressionsStyles.tableBodyColumn}>
+                                                    {item.plan_amount}
+                                                </TableCell>
 
-                                        <TableCell className='table-data' sx={suppressionsStyles.tableBodyColumn}>
-                                            {item.reward_amount}
-                                        </TableCell>
+                                                <TableCell className='table-data' sx={suppressionsStyles.tableBodyColumn}>
+                                                    {item.reward_amount}
+                                                </TableCell>
 
-                                        <TableCell sx={{ ...suppressionsStyles.tableColumn, textAlign: 'center', pl: 0 }}>
-                                            <Typography component="span" sx={{
-                                                background: getStatusStyle(item.reward_status).background,
-                                                padding: '6px 8px',
-                                                borderRadius: '2px',
-                                                fontFamily: 'Roboto',
-                                                fontSize: '12px',
-                                                fontWeight: '400',
-                                                lineHeight: '16px',
-                                                color: getStatusStyle(item.reward_status).color,
-                                            }}>
-                                                {item.reward_status}
-                                            </Typography>
-                                        </TableCell>
+                                                <TableCell sx={{ ...suppressionsStyles.tableColumn, textAlign: 'center', pl: 0 }}>
+                                                    <Typography component="span" sx={{
+                                                        background: getStatusStyle(item.reward_status).background,
+                                                        padding: '6px 8px',
+                                                        borderRadius: '2px',
+                                                        fontFamily: 'Roboto',
+                                                        fontSize: '12px',
+                                                        fontWeight: '400',
+                                                        lineHeight: '16px',
+                                                        color: getStatusStyle(item.reward_status).color,
+                                                    }}>
+                                                        {item.reward_status}
+                                                    </Typography>
+                                                </TableCell>
 
-                                        <TableCell className='table-data' sx={suppressionsStyles.tableBodyColumn}>
-                                            {dayjs(item.payout_date).format('MMM D, YYYY')}
-                                        </TableCell>
+                                                <TableCell className='table-data' sx={suppressionsStyles.tableBodyColumn}>
+                                                    {dayjs(item.payout_date).format('MMM D, YYYY')}
+                                                </TableCell>
 
-                                        <TableCell className='table-data' sx={suppressionsStyles.tableBodyColumn}>
-                                            {item.referral_link}
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </TableContainer>
+                                                <TableCell className='table-data' sx={suppressionsStyles.tableBodyColumn}>
+                                                    {item.referral_link}
+                                                </TableCell>
+                                            </TableRow>
+                                        )))}
+                                </TableBody>
+                            </Table>
+                        </TableContainer>
+                    </Box>
+                    <Box sx={{ display: 'flex', justifyContent: 'end' }}>
+                        <CustomTablePagination
+                            count={totalCount}
+                            page={page}
+                            rowsPerPage={rowsPerPage}
+                            onPageChange={handlePageChange}
+                            onRowsPerPageChange={handleRowsPerPageChange}
+                        />
+                    </Box>
                 </Box>
-                <Box sx={{ display: 'flex', justifyContent: 'end' }}>
-                    <CustomTablePagination
-                        count={totalCount}
-                        page={page}
-                        rowsPerPage={rowsPerPage}
-                        onPageChange={handlePageChange}
-                        onRowsPerPageChange={handleRowsPerPageChange}
-                    />
-                </Box>
-                    </Box>        
 
             </Box>
         </Box>

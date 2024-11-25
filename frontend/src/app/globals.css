@@ -248,17 +248,4 @@ input:-webkit-autofill, textarea:-webkit-autofill {
   -webkit-text-fill-color: #000 !important;
 }
 
-*::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-*::-webkit-scrollbar-thumb {
-  background-color: #888;
-  border-radius: 10px;
-}
-
-*::-webkit-scrollbar-track {
-  background-color: #f1f1f1;
-}
 
