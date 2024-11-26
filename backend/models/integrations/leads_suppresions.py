@@ -2,12 +2,15 @@ from models.base import Base
 from sqlalchemy import VARCHAR, Integer, Column, JSON, Boolean, TIMESTAMP
 from datetime import datetime
 
-class SuppressedContact(Base):
+class LeadsSupperssion(Base):
 
-    __tablename__ = 'suppressed_contacts'
+    __tablename__ = 'integrations_suppressed_contacts'
     
     id = Column(Integer, primary_key=True, autoincrement=True)
-    five_x_five_user_id = Column(Integer, nullable=False)
+    id_service = Column(VARCHAR)
+    email = Column(VARCHAR)
+    phone_number = Column(VARCHAR)
     domain_id = Column(Integer, nullable=False)
     created_at = Column(TIMESTAMP, default=datetime.now)
-    date_requested_at = Column(TIMESTAMP, default=datetime.now)
+    integration_id = Column(Integer, nullable=False)
+    

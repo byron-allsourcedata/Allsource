@@ -37,7 +37,7 @@ from models.five_x_five_users import FiveXFiveUser
 from models.leads_users import LeadUser
 from models.users import Users
 from models.leads_orders import LeadOrders
-from models.integrations.suppresions import LeadsSupperssion
+from models.integrations.leads_suppresions import LeadsSupperssion
 from dotenv import load_dotenv
 from sqlalchemy.dialects.postgresql import insert
 from datetime import datetime, timedelta, timezone

@@ -8,7 +8,7 @@ from enums import SuppressionStatus
 from fastapi import HTTPException, status
 from models.suppression_rule import SuppressionRule
 from sqlalchemy import func
-from models.integrations.suppresions_contact import SuppressedContact
+from models.integrations.suppressed_contact import SuppressedContact
 
 class SuppressionPersistence:
 
