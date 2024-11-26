@@ -430,7 +430,24 @@ const SuppressionRules: React.FC = () => {
     useEffect(() => {
         fetchRules();
     }, [fetchRules]);
-
+   
+    const [contactCount, setContactCount] = useState(null); 
+    const fetchContactCount = useCallback(async () => {
+        try {
+            setLoading(true);
+            const response = await axiosInstance.get(`/suppressions/suppressed-contacts-count`);
+            const data = response.data;
+            setContactCount(data.suppressed_contacts_count);  
+        } catch (err) {
+            console.error("Ошибка при получении данных о количестве контактов:", err);
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+    
+    useEffect(() => {
+        fetchContactCount();
+    }, [fetchContactCount]); 
 
 
     return (
@@ -470,7 +487,7 @@ const SuppressionRules: React.FC = () => {
                                         color: 'rgba(95, 99, 104, 1)',
                                         lineHeight: '20px',
                                         fontFamily: 'Nunito Sans',
-                                    }}>Contacts suppressed till now - 1k</Typography>
+                                    }}>Contacts suppressed till now - {contactCount}</Typography>
                                 </Box>
                             </Box>
                         </Box>

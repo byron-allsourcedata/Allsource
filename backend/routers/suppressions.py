@@ -5,7 +5,9 @@ from dependencies import get_suppression_service, check_user_authorization, chec
 from fastapi.responses import FileResponse
 from enums import SuppressionStatus
 from schemas.suppressions import SuppressionRequest, CollectionRuleRequest
-
+from dependencies import get_db
+from sqlalchemy.orm import Session
+from persistence.suppression_persistence import SuppressionPersistence
 router = APIRouter()
 
 
@@ -128,3 +130,13 @@ async def process_page_views_limit(collection_rule: CollectionRuleRequest,
                                    domain=Depends(check_domain),
                                    user: User = Depends(check_user_authorization)):
     return suppression_service.process_page_views_limit(collection_rule.page_views, collection_rule.seconds, domain.id)
+
+
+@router.get("/suppressed-contacts-count")
+async def get_suppressed_contacts_count(
+    db: Session = Depends(get_db), 
+    domain=Depends(check_domain)
+):
+    suppression_persistence = SuppressionPersistence(db)
+    count = suppression_persistence.get_contacts_count(domain.id)
+    return {"suppressed_contacts_count": count}
