@@ -210,6 +210,7 @@ const ReferralSignups: React.FC = () => {
                 flexDirection: 'column',
                 justifyContent: 'space-between',
                 minHeight: '77vh',
+                '@media (max-width: 600px)': {margin: '0rem auto 0rem'}
             }}>
                 {signupsInfo.length === 0 ? (
                     <Box sx={suppressionsStyles.centerContainerStyles}>

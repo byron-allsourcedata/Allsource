@@ -322,21 +322,21 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates }) => 
     ): AggregatedResult {
         let aggregatedData: string[] = [];
         let aggregatedSeries: Series[] = [];
-
+    
         if (period <= 7) {
             return {
                 aggregatedData: formattedData,
                 aggregatedSeries: series,
             };
         }
-    
+
         if (period <= 30) {
             const weeklyData: Record<string, Record<string, number[]>> = {};
-    
+            console.log(formattedData)
             formattedData.forEach((date, index) => {
                 const weekStart = dayjs(date).startOf('week').format('MMM DD');
                 if (!weeklyData[weekStart]) weeklyData[weekStart] = {};
-    
+                
                 series.forEach((s) => {
                     if (!weeklyData[weekStart][s.id]) weeklyData[weekStart][s.id] = [];
                     weeklyData[weekStart][s.id].push(s.data[index]);
@@ -348,16 +348,19 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates }) => 
                 ...s,
                 data: aggregatedData.map((week) => {
                     const weekData = weeklyData[week][s.id];
-                    return weekData ? (weekData[weekData.length - 1] - weekData[0]) : 0;
+                    return weekData ? Math.max(...weekData) : 0;
                 }),
             }));
-        } else {
+        } 
+        
+        else {
             const monthlyData: Record<string, Record<string, number[]>> = {};
-            
+            console.log(monthlyData)
             formattedData.forEach((date, index) => {
-                const month = dayjs(date).format('MMM YYYY');
+                
+                const month = dayjs(date).format('MMM YYYY')
                 if (!monthlyData[month]) monthlyData[month] = {};
-    
+                
                 series.forEach((s) => {
                     if (!monthlyData[month][s.id]) monthlyData[month][s.id] = [];
                     monthlyData[month][s.id].push(s.data[index]);
@@ -369,18 +372,16 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates }) => 
                 ...s,
                 data: aggregatedData.map((month) => {
                     const monthData = monthlyData[month][s.id];
-                    return monthData ? (monthData[monthData.length - 1] - monthData[0]) : 0;
-
+                    return monthData ? Math.max(...monthData) : 0;
                 }),
             }));
-            
         }
     
         return { aggregatedData, aggregatedSeries };
     }
-
-    const periodInMonths = dayjs(formattedData[formattedData.length - 1]).diff(dayjs(formattedData[0]), 'day');
-    const { aggregatedData, aggregatedSeries } = aggregateData(formattedData, filteredSeries, periodInMonths);
+    
+    const periodInDays = dayjs(formattedData[formattedData.length - 1]).diff(dayjs(formattedData[0]), 'day');
+    const { aggregatedData, aggregatedSeries } = aggregateData(formattedData, filteredSeries, periodInDays);
 
     return (
         <>

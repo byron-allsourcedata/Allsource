@@ -69,6 +69,7 @@ const ReferralOverview: React.FC = () => {
                 width: '100%',
                 padding: 0,
                 margin: '3rem auto 0rem',
+                '@media (max-width: 600px)': {margin: '0rem auto 0rem'} 
             }}>
                 <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', position: 'relative', gap: 2 }}>
                     <Box sx={{ display: 'flex', flexDirection: 'row', width: '100%', gap: 1, '@media (max-width: 600px)': { flexDirection: 'column' } }}>
@@ -208,27 +209,29 @@ const ReferralOverview: React.FC = () => {
                     </Box>
 
                     <Box sx={{ display: 'flex', flexDirection: 'row', width: '100%', backgroundColor: 'rgba(255, 247, 247, 1)', borderRadius: '4px', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 1.5rem' }}>
-                        <Box sx={{ display: 'flex', flexDirection: 'row', width: '100%', gap: 2, alignItems: 'center' }}>
-                            <Box sx={{
-                                display: 'flex',
-                                justifyContent: 'center',
-                                alignItems: 'center',
-                                backgroundColor: 'rgba(248, 70, 75, 0.2)',
-                                borderRadius: '4px',
-                                width: '49px',
-                                height: '52px',
-                                padding: '3px 12px'
-                            }}>
-                                <Image src={'/partner-icon.svg'} alt={'hands-icon'} width={42} height={28} />
-                            </Box>
+                        <Box sx={{ display: 'flex', flexDirection: 'row', width: '100%', gap: 2, alignItems: 'center', '@media (max-width: 600px)': { flexDirection: 'column', gap: 3 }}}>
+                            <Box sx={{display: 'flex', flexDirection: 'row', width: '100%', gap:2, alignItems: 'center'}}>
+                                <Box sx={{
+                                    display: 'flex',
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    backgroundColor: 'rgba(248, 70, 75, 0.2)',
+                                    borderRadius: '4px',
+                                    width: '49px',
+                                    height: '52px',
+                                    padding: '3px 12px'
+                                }}>
+                                    <Image src={'/partner-icon.svg'} alt={'hands-icon'} width={42} height={28} />
+                                </Box>
 
-                            <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', gap: 1 }}>
-                                <Typography className="second-sub-title">
-                                    Become a official partner
-                                </Typography>
-                                <Typography className="paragraph">
-                                    Unlock exclusive rewards and benefits by partnering with us—schedule a call with our sales executive today to get started!
-                                </Typography>
+                                <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', gap: 1 }}>
+                                    <Typography className="second-sub-title">
+                                        Become a official partner
+                                    </Typography>
+                                    <Typography className="paragraph">
+                                        Unlock exclusive rewards and benefits by partnering with us—schedule a call with our sales executive today to get started!
+                                    </Typography>
+                                </Box>
                             </Box>
 
                             <Button variant="outlined" sx={{
@@ -248,12 +251,12 @@ const ReferralOverview: React.FC = () => {
 
                     </Box>
 
-                    <Box sx={{ display: 'flex', flexDirection: 'row', width: '100%', gap: 1, '@media (max-width: 600px)': { flexDirection: 'column' } }}>
-                        <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', border: '1px solid rgba(235, 235, 235, 1)', justifyContent: 'center', alignItems: 'start', borderRadius: '4px', padding: '1rem 1.5rem', gap: 2, maxHeight: '245px' }}>
-                                <Typography className="second-sub-title">
-                                    How it works
-                                </Typography>
-                            <Image src={'/how-works.svg'} width={637} height={140} alt="stripe-icon" />
+                    <Box sx={{ display: 'flex', flexDirection: 'row', width: '100%', gap: 1, '@media (max-width: 1200px)': { flexDirection: 'column' } }}>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', border: '1px solid rgba(235, 235, 235, 1)', justifyContent: 'center', alignItems: 'start', borderRadius: '4px', padding: '1rem 1.5rem', gap: 2, maxHeight: '245px', '@media (max-width: 900px)': {display: 'none'}, }}>
+                            <Typography className="second-sub-title">
+                                How it works
+                            </Typography>
+                            <Image src={'/how-works.svg'} width={659} height={140} alt="stripe-icon" />
                         </Box>
 
                         <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', border: '1px solid rgba(235, 235, 235, 1)', justifyContent: 'start', borderRadius: '4px', padding: '1rem 1.5rem', gap: 2 }}>
@@ -273,25 +276,25 @@ const ReferralOverview: React.FC = () => {
                                             borderRadius: '8px',
                                             borderBottom: '1px solid rgba(228, 228, 228, 1)',
                                             boxShadow: 'none',
-                                            mb:0,
+                                            mb: 0,
                                             "&:before": { display: "none", borderBottom: 'none', },
                                         }}
                                     >
                                         <AccordionSummary
                                             expandIcon={
                                                 expanded === index ? (
-                                                    <RemoveCircleOutlineIcon sx={{color: 'black'}} fontSize="small" />
+                                                    <RemoveCircleOutlineIcon sx={{ color: 'black' }} fontSize="small" />
                                                 ) : (
-                                                    <AddIcon sx={{color: 'black'}} fontSize="small" />
+                                                    <AddIcon sx={{ color: 'black' }} fontSize="small" />
                                                 )
                                             }
-                                            sx={{ display: 'flex', alignItems: 'center', padding: 0, margin: 0, minHeight: 0, cursor: 'pointer',  }}
+                                            sx={{ display: 'flex', alignItems: 'center', padding: 0, margin: 0, minHeight: 0, cursor: 'pointer', }}
                                         >
-                                            <Typography className="second-sub-title" sx={{fontWeight: '400 !important', }}>
+                                            <Typography className="second-sub-title" sx={{ fontWeight: '400 !important', }}>
                                                 {item.question}
                                             </Typography>
                                         </AccordionSummary>
-                                        <AccordionDetails sx={{margin:0, paddingTop: 0}}>
+                                        <AccordionDetails sx={{ margin: 0, paddingTop: 0 }}>
                                             <Typography className="table-data">
                                                 {item.answer}
                                             </Typography>
