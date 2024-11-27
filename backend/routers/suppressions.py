@@ -8,6 +8,7 @@ from schemas.suppressions import SuppressionRequest, CollectionRuleRequest
 from dependencies import get_db
 from sqlalchemy.orm import Session
 from persistence.suppression_persistence import SuppressionPersistence
+from dependencies import get_suppression_persistence
 router = APIRouter()
 
 
@@ -134,9 +135,8 @@ async def process_page_views_limit(collection_rule: CollectionRuleRequest,
 
 @router.get("/suppressed-contacts-count")
 async def get_suppressed_contacts_count(
-    db: Session = Depends(get_db), 
-    domain=Depends(check_domain)
-):
-    suppression_persistence = SuppressionPersistence(db)
+    suppression_persistence: SuppressionPersistence = Depends(get_suppression_persistence),
+    domain=Depends(check_domain),
+    ):
     count = suppression_persistence.get_contacts_count(domain.id)
     return {"suppressed_contacts_count": count}

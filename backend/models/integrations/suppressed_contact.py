@@ -1,5 +1,5 @@
 from models.base import Base
-from sqlalchemy import Integer, Column, TIMESTAMP, ForeignKey, Index
+from sqlalchemy import Integer, Column, TIMESTAMP, ForeignKey, Index, VARCHAR
 from datetime import datetime
 
 class SuppressedContact(Base):
@@ -14,3 +14,4 @@ class SuppressedContact(Base):
     domain_id = Column(Integer, ForeignKey("users_domains.id"), nullable=False)
     created_at = Column(TIMESTAMP, default=datetime.now)
     requested_at = Column(TIMESTAMP, default=datetime.now)
+    suppression_type = Column(VARCHAR)
