@@ -214,20 +214,40 @@ class LeadsPersistence:
         if status:
             status_list = status.split(',')
             filters = []
+
             for status_data in status_list:
                 if status_data == 'converted_sales':
                     filters.append(LeadUser.is_converted_sales == True)
+
                 elif status_data == 'view_product':
-                    filters.append(LeadUser.behavior_type == "viewed_product")
+                    if 'converted_sales' not in status_list:
+                        filters.append(and_(
+                            LeadUser.behavior_type == "viewed_product",
+                            LeadUser.is_converted_sales == False
+                        ))
+                    else:
+                        filters.append(and_(LeadUser.behavior_type == "viewed_product"))
+
                 elif status_data == 'visitor':
-                    filters.append(LeadUser.behavior_type == "visitor")
+                    if 'converted_sales' not in status_list:
+                        filters.append(and_(
+                            LeadUser.behavior_type == "visitor",
+                            LeadUser.is_converted_sales == False
+                        ))
+                    else:
+                        filters.append(and_(LeadUser.behavior_type == "visitor"))
+
                 elif status_data == 'abandoned_cart':
-                    query = (
-                        query
-                        .join(LeadsUsersAddedToCart, LeadsUsersAddedToCart.lead_user_id == LeadUser.id)
-                        .outerjoin(LeadsUsersOrdered, LeadsUsersOrdered.lead_user_id == LeadUser.id)
-                        .where(
+                    query = query.outerjoin(
+                        LeadsUsersAddedToCart, LeadsUsersAddedToCart.lead_user_id == LeadUser.id
+                    ).outerjoin(
+                        LeadsUsersOrdered, LeadsUsersOrdered.lead_user_id == LeadUser.id
+                    )
+
+                    filters.append(
+                        and_(
                             LeadUser.behavior_type == "product_added_to_cart",
+                            LeadUser.is_converted_sales == False,
                             LeadsUsersAddedToCart.added_at.isnot(None),
                             or_(
                                 LeadsUsersAddedToCart.added_at > LeadsUsersOrdered.ordered_at,
@@ -238,7 +258,10 @@ class LeadsPersistence:
                             )
                         )
                     )
+
             query = query.filter(or_(*filters))
+
+
         if from_time and to_time:
             from_time = datetime.strptime(from_time, '%H:%M').time()
             to_time = datetime.strptime(to_time, '%H:%M').time()
