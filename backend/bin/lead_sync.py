@@ -384,7 +384,7 @@ async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, sess
                         created_at=datetime.now()
                     )
                     session.add(suppressed_contact)
-                    session.flush() 
+                    session.commit() 
                     logging.info(f"{email} exists in five_x_five_user")
                     return
         if suppression_rule:
@@ -398,7 +398,7 @@ async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, sess
                         created_at=datetime.now()
                     )
                     session.add(suppressed_contact)
-                    session.flush()
+                    session.commit() 
                     return
 
             if suppression_rule.is_based_activation and suppression_rule.activate_certain_urls:
@@ -411,7 +411,7 @@ async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, sess
                         created_at=datetime.now()
                     )
                     session.add(suppressed_contact)
-                    session.flush()
+                    session.commit() 
                     return
 
         emails_to_check = get_all_five_x_user_emails(five_x_five_user.business_email, five_x_five_user.personal_emails,
@@ -432,7 +432,7 @@ async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, sess
                 created_at=datetime.now()
             )
             session.add(suppressed_contact)
-            session.flush()
+            session.commit() 
             logging.info(f"No charging option suppressed, skip lead")
             return
 
