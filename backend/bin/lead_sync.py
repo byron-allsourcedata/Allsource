@@ -31,13 +31,14 @@ from models.leads_visits import LeadsVisits
 from models.five_x_five_hems import FiveXFiveHems
 from models.suppressions_list import SuppressionList
 from models.users_payments_transactions import UsersPaymentsTransactions
+from models.integrations.suppressed_contact import SuppressedContact
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from models.five_x_five_users import FiveXFiveUser
 from models.leads_users import LeadUser
 from models.users import Users
 from models.leads_orders import LeadOrders
-from models.integrations.suppresions import LeadsSupperssion
+from models.integrations.leads_suppresions import LeadsSupperssion
 from dotenv import load_dotenv
 from sqlalchemy.dialects.postgresql import insert
 from datetime import datetime, timedelta, timezone
@@ -336,12 +337,12 @@ async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, sess
         return
     user, user_domain = result
     if not user_domain.is_enable and not root_user:
-        logging.info(f"domain has not enable {user_domain.id}")
+        logging.info(f"Domain is not enabled: {user_domain.id}")
         return
     user_domain_id = user_domain.id
     if not subscription_service.is_allow_add_lead(user.id):
         await notify_missing_plan(notification_persistence, user)
-        logging.info(f"user not active partner_uid_client_id: {partner_uid_client_id}")
+        logging.info(f"User not active: partner_uid_client_id {partner_uid_client_id}")
         return
 
     if page is None:
@@ -375,15 +376,42 @@ async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, sess
                                                          five_x_five_user.additional_personal_emails)
             for email in suppressions_emails:
                 if email in emails_to_check:
+                    suppressed_contact = SuppressedContact(
+                        five_x_five_user_id=five_x_five_user.id,
+                        domain_id=user_domain_id,
+                        suppression_type='email',
+                        suppression_detail=email,
+                        created_at=datetime.now()
+                    )
+                    session.add(suppressed_contact)
+                    session.commit() 
                     logging.info(f"{email} exists in five_x_five_user")
                     return
         if suppression_rule:
             if suppression_rule.is_url_certain_activation and suppression_rule.activate_certain_urls:
                 if check_certain_urls(page, suppression_rule):
+                    suppressed_contact = SuppressedContact(
+                        five_x_five_user_id=five_x_five_user.id,
+                        domain_id=user_domain_id,
+                        suppression_type='url',
+                        suppression_detail=page,
+                        created_at=datetime.now()
+                    )
+                    session.add(suppressed_contact)
+                    session.commit() 
                     return
 
             if suppression_rule.is_based_activation and suppression_rule.activate_certain_urls:
                 if check_activate_based_urls(page, suppression_rule):
+                    suppressed_contact = SuppressedContact(
+                        five_x_five_user_id=five_x_five_user.id,
+                        domain_id=user_domain_id,
+                        suppression_type='url',
+                        suppression_detail=page,
+                        created_at=datetime.now()
+                    )
+                    session.add(suppressed_contact)
+                    session.commit() 
                     return
 
         emails_to_check = get_all_five_x_user_emails(five_x_five_user.business_email, five_x_five_user.personal_emails,
@@ -396,6 +424,15 @@ async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, sess
             LeadsSupperssion.integration_id.in_(integrations_ids)
         ).first() is not None
         if lead_suppression:
+            suppressed_contact = SuppressedContact(
+                five_x_five_user_id=five_x_five_user.id,
+                domain_id=user_domain_id,
+                suppression_type='lead',
+                suppression_detail=None,  
+                created_at=datetime.now()
+            )
+            session.add(suppressed_contact)
+            session.commit() 
             logging.info(f"No charging option suppressed, skip lead")
             return
 

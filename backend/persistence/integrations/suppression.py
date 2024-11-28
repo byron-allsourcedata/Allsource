@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from models.integrations.suppresions import LeadsSupperssion
+from models.integrations.leads_suppresions import LeadsSupperssion
 
 class IntegrationsSuppressionPersistence:
 

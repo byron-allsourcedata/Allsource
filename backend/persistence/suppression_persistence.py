@@ -7,7 +7,8 @@ from sqlalchemy.orm import Session
 from enums import SuppressionStatus
 from fastapi import HTTPException, status
 from models.suppression_rule import SuppressionRule
-
+from sqlalchemy import func
+from models.integrations.suppressed_contact import SuppressedContact
 
 class SuppressionPersistence:
 
@@ -143,3 +144,10 @@ class SuppressionPersistence:
             rules.collection_timeout = seconds
         self.db.add(rules)
         self.db.commit()
+
+    def get_contacts_count(self, domain_id: int) -> int:
+        return (
+            self.db.query(func.count(SuppressedContact.id))
+            .filter(SuppressedContact.domain_id == domain_id)
+            .scalar()
+        )
