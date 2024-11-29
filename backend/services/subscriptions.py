@@ -229,14 +229,14 @@ class SubscriptionService:
 
         return user_payment_transaction
     
-    async def trackAwinConversion(self, user, price, subscription_type, platform_subscription_id):
+    async def trackAwinConversion(self, user, price, subscription_type, date):
         mode = 1 if os.getenv('AWIN_MODE') == 'dev' else 0
         awin_campaign_id = os.getenv('AWIN_CAMPAIGN_ID')
-        unique_order_id = f"{user.get('id')}_{platform_subscription_id}"
+        order_id = f"{user.get('id')}_{date}"
         if user.get("awin_awc"):
             with Client() as client:
                 try:
-                    client.get(f"https://www.awin1.com/sread.php?a={awin_campaign_id}&b={price}&cr=USD&c=AW&d={subscription_type}:{price}&vc=&t={mode}&ch=aw&cks={user.get("awin_awc")}&order_id={unique_order_id}")
+                    client.get(f"https://www.awin1.com/sread.php?a={awin_campaign_id}&b={price}&cr=USD&c=AW&d={subscription_type}:{price}&vc=&t={mode}&ch=aw&cks={user.get("awin_awc")}&order_id={order_id}")
                 except Exception as e:
                     logging.error(f"Unexpected error: {e}")
 
@@ -265,7 +265,7 @@ class SubscriptionService:
                                                               synchronize_session=False)
         user = self.db.query(User).filter(User.id == user_id).first()
         self.db.commit()
-        self.trackAwinConversion(user, 0, 'FREE_TRIAL', uuid.uuid4())
+        self.trackAwinConversion(user, 0, 'FREE_TRIAL', add_subscription_obj.created_at.strftime('%Y-%m-%d'))
 
     def remove_trial(self, user_id: int):
         trial_subscription = self.db.query(UserSubscriptions).filter(
@@ -358,9 +358,9 @@ class SubscriptionService:
             price_id = stripe_payload['items']['data'][0]['plan']['id']
             plan = self.plans_persistence.get_plan_by_price_id(price_id)
             if stripe_status == 'trialing':
-                self.trackAwinConversion(user, 0, 'FREE_TRIAL', platform_subscription_id)
+                self.trackAwinConversion(user, 0, 'FREE_TRIAL', user_subscription.plan_start.strftime('%Y-%m-%d'))
             else:
-                self.trackAwinConversion(user, plan.price, 'SUBCRIPRION', platform_subscription_id)
+                self.trackAwinConversion(user, plan.price, 'SUBCRIPRION', user_subscription.plan_start.strftime('%Y-%m-%d'))
                 
             domains_limit = plan.domains_limit
             integrations_limit = plan.integrations_limit
