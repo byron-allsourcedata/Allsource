@@ -1,8 +1,7 @@
 import axiosInstance from "@/axios/axiosInterceptorInstance";
-import { Box, Checkbox, Divider, ListItemText, MenuItem, Select, SelectChangeEvent, Typography, IconButton } from "@mui/material";
+import { Box, Divider, MenuItem, Select, SelectChangeEvent, Typography, IconButton } from "@mui/material";
 import { useState, useEffect } from "react";
 import CustomizedProgressBar from "./CustomizedProgressBar";
-import axiosInterceptorInstance from "@/axios/axiosInterceptorInstance";
 import StatsCard from "./StatsCard";
 import Image from "next/image";
 import * as React from 'react';
@@ -59,21 +58,21 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
     ];
 
     const colorMapping = {
-        revenue: 'rgba(244, 87, 69, 1)',
+        total_revenue: 'rgba(244, 87, 69, 1)',
         visitors: 'rgba(80, 82, 178, 1)',
         viewed_product: 'rgba(224, 176, 5, 1)',
         abandoned_cart: 'rgba(144, 190, 109, 1)'
     };
 
     type VisibleSeries = {
-        revenue: boolean;
+        total_revenue: boolean;
         visitors: boolean;
         viewed_product: boolean;
         abandoned_cart: boolean;
     };
 
     const [visibleSeries, setVisibleSeries] = useState<VisibleSeries>({
-        revenue: true,
+        total_revenue: true,
         visitors: true,
         viewed_product: true,
         abandoned_cart: true,
@@ -121,7 +120,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
 
                     setSeries([
                         {
-                            id: 'revenue',
+                            id: 'total_revenue',
                             label: 'Total Revenue',
                             data: revenueData,
                             curve: 'linear',
@@ -131,7 +130,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                         },
                         {
                             id: 'visitors',
-                            label: 'Total Visitors',
+                            label: 'Visitors',
                             data: visitorsData,
                             curve: 'linear',
                             showMark: false,
@@ -200,7 +199,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
 
                     setSeries([
                         {
-                            id: 'revenue',
+                            id: 'total_revenue',
                             label: 'Total Revenue',
                             data: revenueData,
                             curve: 'linear',
@@ -210,7 +209,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                         },
                         {
                             id: 'visitors',
-                            label: 'Total Visitors',
+                            label: 'Visitors',
                             data: visitorsData,
                             curve: 'linear',
                             showMark: false,
@@ -249,7 +248,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
 
     const options = [
         { id: 'revenue', label: 'Total Revenue', color: 'rgba(180, 218, 193, 1)' },
-        { id: 'visitors', label: 'Total Visitors', color: 'rgba(252, 229, 204, 1)' },
+        { id: 'visitors', label: 'Visitors', color: 'rgba(252, 229, 204, 1)' },
         { id: 'viewed_product', label: 'View Products', color: 'rgba(201, 218, 248, 1)' },
         { id: 'abandoned_cart', label: 'Abandoned cart', color: 'rgba(254, 238, 236, 1)' },
     ];
@@ -315,7 +314,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
         },
         {
             id: 'visitors' as keyof typeof colorMapping,
-            label: 'Total Visitors',
+            label: 'Visitors',
             curve: 'linear',
             showMark: false,
             area: false,
@@ -359,14 +358,14 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
     const visitorSeries = series.filter((s) => s.id === 'visitors') as [];
 
     const dataChart = [
-        { id: 'Total Visitors', value: values.totalVisitors },
+        { id: 'Visitors', value: values.totalVisitors },
         { id: 'View Products', value: values.viewProducts },
         { id: 'Abandoden cart', value: values.totalAbandonedCart },
     ];
 
     const distribution = [
         {
-            name: 'Total Visitors',
+            name: 'Visitors',
             color: 'rgba(63, 129, 243, 1)',
         },
         {

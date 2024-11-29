@@ -1,7 +1,6 @@
 import axiosInstance from "@/axios/axiosInterceptorInstance";
-import { Box, Typography, TextField, Button, Card, CardContent, IconButton, Stack, SelectChangeEvent, Chip, MenuItem, Select, useMediaQuery } from "@mui/material";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { showToast } from "./ToastNotification";
+import { Box, Typography, Card, CardContent, IconButton, Stack, SelectChangeEvent, Chip, MenuItem, Select, useMediaQuery } from "@mui/material";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import CustomizedProgressBar from "./CustomizedProgressBar";
 import { ShowChart, BarChart as IconBarChart } from "@mui/icons-material";
@@ -42,7 +41,6 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates }) => 
 
     const mainchartSize = isLargeScreen ? 450 : isMediumScreen ? 300 : isMobile ? 200 : 260;
 
-    const previousDates = useRef<AppliedDates>({ start: null, end: null });
 
     useEffect(() => {
         const fetchData = async () => {
@@ -80,21 +78,19 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates }) => 
 
                 setSeries([
                     {
-                        id: 'contacts',
-                        label: 'Total Contacts',
+                        id: 'total_contacts_collected',
+                        label: 'Total Contacts Collected',
                         data: revenueData,
                         curve: 'linear',
-                        stack: 'total',
                         showMark: false,
                         area: false,
                         stackOrder: 'ascending',
                     },
                     {
-                        id: 'visitors',
+                        id: 'total_visitors',
                         label: 'Total Visitors',
                         data: visitorsData,
                         curve: 'linear',
-                        stack: 'total',
                         showMark: false,
                         area: false,
                         stackOrder: 'ascending',
@@ -104,7 +100,6 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates }) => 
                         label: 'View Products',
                         data: viewedProductData,
                         curve: 'linear',
-                        stack: 'total',
                         showMark: false,
                         area: false,
                         stackOrder: 'ascending',
@@ -114,7 +109,6 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates }) => 
                         label: 'Abandoned to Cart',
                         data: abandonedCartData,
                         curve: 'linear',
-                        stack: 'total',
                         showMark: false,
                         area: false,
                         stackOrder: 'ascending',
@@ -124,7 +118,6 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates }) => 
                         label: 'Converted Sale',
                         data: convertedSaleData,
                         curve: 'linear',
-                        stack: 'total',
                         showMark: false,
                         area: false,
                         stackOrder: 'ascending',
@@ -157,24 +150,24 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates }) => 
     ];
 
     const colorMapping = {
-        contacts: 'rgba(244, 87, 69, 1)',
-        visitors: 'rgba(80, 82, 178, 1)',
+        total_contacts_collected: 'rgba(244, 87, 69, 1)',
+        total_visitors: 'rgba(80, 82, 178, 1)',
         viewed_product: 'rgba(224, 176, 5, 1)',
         abandoned_cart: 'rgba(144, 190, 109, 1)',
         converted_sale: 'rgba(5, 115, 234, 1)',
     };
 
     type VisibleSeries = {
-        contacts: boolean;
-        visitors: boolean;
+        total_contacts_collected: boolean;
+        total_visitors: boolean;
         viewed_product: boolean;
         abandoned_cart: boolean;
         converted_sale: boolean;
     };
 
     const [visibleSeries, setVisibleSeries] = useState<VisibleSeries>({
-        contacts: true,
-        visitors: true,
+        total_contacts_collected: true,
+        total_visitors: true,
         viewed_product: true,
         abandoned_cart: true,
         converted_sale: true,
@@ -188,8 +181,8 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates }) => 
     };
 
     const options = [
-        { id: 'contacts', label: 'Total Contacts', color: 'rgba(244, 87, 69, 1)' },
-        { id: 'visitors', label: 'Total Visitors', color: 'rgba(80, 82, 178, 1)' },
+        { id: 'total_contacts_collected', label: 'Total Contacts Collected', color: 'rgba(244, 87, 69, 1)' },
+        { id: 'total_visitors', label: 'Total Visitors', color: 'rgba(80, 82, 178, 1)' },
         { id: 'viewed_product', label: 'View Products', color: 'rgba(224, 176, 5, 1)' },
         { id: 'abandoned_cart', label: 'Abandoned cart', color: 'rgba(144, 190, 109, 1)' },
         { id: 'converted_sale', label: 'Converted Sale', color: 'rgba(5, 115, 234, 1)'}
@@ -230,7 +223,6 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates }) => 
             id: keyof typeof colorMapping;
             label: string;
             curve: string;
-            stack: string;
             showMark: boolean;
             area: boolean;
             stackOrder: string;
@@ -238,20 +230,18 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates }) => 
         }[]
     >([
         {
-            id: 'contacts' as keyof typeof colorMapping,
-            label: 'Total Contacts',
+            id: 'total_contacts_collected' as keyof typeof colorMapping,
+            label: 'Total Contacts Collected',
             curve: 'linear',
-            stack: 'total',
             showMark: false,
             area: false,
             stackOrder: 'ascending',
             data: [],
         },
         {
-            id: 'visitors' as keyof typeof colorMapping,
+            id: 'total_visitors' as keyof typeof colorMapping,
             label: 'Total Visitors',
             curve: 'linear',
-            stack: 'total',
             showMark: false,
             area: false,
             stackOrder: 'ascending',
@@ -262,7 +252,6 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates }) => 
             label: 'View Products',
             curve: 'linear',
             showMark: false,
-            stack: 'total',
             area: false,
             stackOrder: 'ascending',
             data: [0],
@@ -271,7 +260,6 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates }) => 
             id: 'abandoned_cart' as keyof typeof colorMapping,
             label: 'Abandoned to Cart',
             curve: 'linear',
-            stack: 'total',
             showMark: false,
             area: false,
             stackOrder: 'ascending',
@@ -281,7 +269,6 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates }) => 
             id: 'converted_sale' as keyof typeof colorMapping,
             label: 'Converted Sale',
             curve: 'linear',
-            stack: 'total',
             showMark: false,
             area: false,
             stackOrder: 'ascending',
