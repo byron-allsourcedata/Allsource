@@ -19,6 +19,7 @@ import axiosInterceptorInstance from "../../axios/axiosInterceptorInstance";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import PersonIcon from '@mui/icons-material/Person';
+import { fetchUserData } from '@/services/meService';
 
 const AccountSetup = () => {
   const [organizationName, setOrganizationName] = useState("");
@@ -223,6 +224,7 @@ const AccountSetup = () => {
 
       switch (response.data.status) {
         case "SUCCESS":
+          await fetchUserData();
           if (response.data.stripe_payment_url) {
             router.push(`${response.data.stripe_payment_url}`)
           } else {
@@ -639,8 +641,8 @@ const AccountSetup = () => {
                 error={!!errors.organizationName}
                 helperText={errors.organizationName}
                 InputLabelProps={{
-                  sx: styles.inputLabel,
-                  className: "form-input-label"
+                  className: "form-input-label",
+                  focused: false
                 }}
               />
               <Typography variant="body1" component="h3" className="first-sub-title" sx={styles.text}>
@@ -653,8 +655,9 @@ const AccountSetup = () => {
                 placeholder={isFocused ? "example.com" : ""}
                 sx={styles.formField}
                 InputLabelProps={{
-                  sx: styles.inputLabel,
-                  className: "form-input-label"
+
+                  className: "form-input-label",
+                  focused: false
                 }}
                 value={isFocused ? websiteLink.replace(/^https?:\/\//, "") : `https://${websiteLink.replace(/^https?:\/\//, "")}`}
                 onChange={handleWebsiteLink}

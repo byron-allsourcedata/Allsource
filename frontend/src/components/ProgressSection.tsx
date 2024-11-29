@@ -166,7 +166,7 @@ export const ProgressSection: React.FC = () => {
           <Box sx={{ flexGrow: 1, mx: 2 }}>
             <LinearProgress
               variant="determinate"
-              value={percentSteps}
+              value={percentSteps ? percentSteps : 0}
               sx={{
                 height: "8px",
                 borderRadius: "4px",

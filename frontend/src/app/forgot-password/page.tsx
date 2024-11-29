@@ -181,7 +181,8 @@ const ForgotPassword: React.FC = () => {
             <TextField sx={updatepasswordStyles.formField}
               InputLabelProps={{
                 className: "form-input-label",
-                sx: updatepasswordStyles.inputLabel }}
+                sx: updatepasswordStyles.inputLabel,
+                focused: false }}
               label="New password"
               name="password"
               type={showPassword ? 'text' : 'password'}
@@ -233,7 +234,8 @@ const ForgotPassword: React.FC = () => {
             <TextField
               InputLabelProps={{ 
                 className: "form-input-label",
-                sx: updatepasswordStyles.inputLabel }}
+                sx: updatepasswordStyles.inputLabel,
+                focused: false }}
               label="Confirm password"
               name="confirmPassword"
               type={showConfirmPassword ? 'text' : 'password'}

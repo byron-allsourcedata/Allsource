@@ -329,8 +329,9 @@ const Signup: React.FC = () => {
           <Box component="form" onSubmit={handleSubmit} sx={signupStyles.form}>
             <TextField
               InputLabelProps={{ 
-                sx: signupStyles.inputLabel,
-                className: "form-input-label"
+
+                className: "form-input-label",
+                focused: false
               }}
               label="Full name"
               name="full_name"
@@ -346,8 +347,8 @@ const Signup: React.FC = () => {
             />
             <TextField sx={signupStyles.formField}
               InputLabelProps={{
-                sx: signupStyles.inputLabel,
-                className: "form-input-label"
+                className: "form-input-label",
+                focused: false
               }}
               label="Email address"
               name="email"
@@ -366,8 +367,8 @@ const Signup: React.FC = () => {
             />
             <TextField sx={signupStyles.formField}
               InputLabelProps={{
-                sx: signupStyles.inputLabel,
-                className: "form-input-label"
+                className: "form-input-label",
+                focused: false
               }}
               label="Create password"
               name="password"

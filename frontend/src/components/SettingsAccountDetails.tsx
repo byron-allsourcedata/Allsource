@@ -451,7 +451,8 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
                             margin="normal"
                             InputLabelProps={{
                                 className: "form-input-label",
-                                sx: accontDetailsStyles.inputLabel
+                                focused: false
+
                             }}
                             InputProps={{
                                 readOnly: !isFullNameEditable,
@@ -591,7 +592,7 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
                             margin="normal"
                             InputLabelProps={{
                                 className: "form-input-label",
-                                sx: accontDetailsStyles.inputLabel
+                                focused: false
                             }}
                             InputProps={{
                                 readOnly: !isEmailEditable,
@@ -789,7 +790,8 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
                                 }}
                                     InputLabelProps={{
                                         className: "form-input-label",
-                                        sx: accontDetailsStyles.inputLabel
+                                        focused: false
+
                                     }}
                                     label="Current Password"
                                     type={showCurrentPassword ? 'text' : 'password'}
@@ -820,7 +822,7 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
                                 }}
                                     InputLabelProps={{
                                         className: "form-input-label",
-                                        sx: accontDetailsStyles.inputLabel
+                                        focused: false
                                     }}
                                     label="New Password"
                                     type={showPassword ? 'text' : 'password'}
@@ -874,7 +876,7 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
                                     }}
                                     InputLabelProps={{
                                         className: "form-input-label",
-                                        sx: accontDetailsStyles.inputLabel
+                                        focused: false
                                     }}
                                     label="Confirm New Password"
                                     type={showConfirmPassword ? 'text' : 'password'}
@@ -993,7 +995,7 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
                                 margin="normal"
                                 InputLabelProps={{
                                     className: "form-input-label",
-                                    sx: accontDetailsStyles.inputLabel
+                                    focused: false
                                 }}
                                 InputProps={{
                                     readOnly: !isOrganizationNameEditable,
@@ -1081,7 +1083,7 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
                                 margin="normal"
                                 InputLabelProps={{
                                     className: "form-input-label",
-                                    sx: accontDetailsStyles.inputLabel
+                                    focused: false
                                 }}
                                 InputProps={{
                                     readOnly: !isCompanyWebsiteEditable,
@@ -1168,7 +1170,7 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
                                 fullWidth
                                 margin="normal"
                                 InputLabelProps={{
-                                    sx: accontDetailsStyles.inputLabel,
+                                    focused: false,
                                     className: "form-input-label"
                                 }}
                                 InputProps={{

@@ -98,7 +98,8 @@ const ResetPassword: React.FC = () => {
             <TextField sx={resetStyles.formField}
               InputLabelProps={{
                 className: "form-input-label",
-                sx: resetStyles.inputLabel }}
+                sx: resetStyles.inputLabel,
+                focused: false }}
               label="Email address"
               name="email"
               type="email"

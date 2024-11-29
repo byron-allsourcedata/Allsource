@@ -192,7 +192,7 @@ body {
   line-height: 20px;
   color: #707071;
 }
-.MuiInputLabel-shrink.MuiInputLabel-outlined {
+.MuiInputLabel.MuiInputLabel-outlined {
   color: rgba(17, 17, 19, 0.6);
   font-family: 'Nunito Sans';
   font-weight: 400;

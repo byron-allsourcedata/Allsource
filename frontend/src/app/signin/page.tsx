@@ -241,7 +241,8 @@ const Signup: React.FC = () => {
             <TextField sx={loginStyles.formField}
               InputLabelProps={{ 
                 className: "form-input-label",
-                sx: loginStyles.inputLabel 
+                sx: loginStyles.inputLabel,
+                focused: false
               }}
               label="Email address"
               name="email"
@@ -260,7 +261,8 @@ const Signup: React.FC = () => {
             <TextField
               InputLabelProps={{ 
                 className: "form-input-label",
-                sx: loginStyles.inputLabel 
+                sx: loginStyles.inputLabel,
+                focused: false 
               }}
               label="Enter password"
               name="password"

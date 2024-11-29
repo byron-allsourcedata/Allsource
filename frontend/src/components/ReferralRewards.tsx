@@ -235,7 +235,7 @@ const ReferralRewards: React.FC = () => {
                                     </Box>
 
                                     <Box sx={{ display: "flex", gap: 5, '@media (max-width: 600px)': { flexDirection: 'column', justifyContent: 'space-between', width: '100%', gap: 2 } }}>
-                                        <Box sx={{ display: 'flex', '@media (max-width: 600px)': { justifyContent: 'space-between', width: '100%', display: 'flex', pr:0.75 } }}>
+                                        <Box sx={{ display: 'flex', gap:6, '@media (max-width: 900px)': { gap: 3}, '@media (max-width: 600px)': { justifyContent: 'space-between', width: '100%', display: 'flex', pr:0.75 } }}>
                                             <Box>
                                                 <Typography variant="body2" className="table-heading">
                                                     Total Rewards
@@ -249,7 +249,7 @@ const ReferralRewards: React.FC = () => {
                                                 <Typography variant="subtitle1" className="table-data">{data.rewardsPaid}</Typography>
                                             </Box>
                                         </Box>
-                                        <Box sx={{ display: 'flex', '@media (max-width: 600px)': { justifyContent: 'space-between', width: '100%', display: 'flex', pr:1.5 } }}>
+                                        <Box sx={{ display: 'flex', gap:6, '@media (max-width: 900px)': { gap: 3}, '@media (max-width: 600px)': { justifyContent: 'space-between', width: '100%', display: 'flex', pr:1.5 } }}>
                                             <Box>
                                                 <Typography variant="body2" className="table-heading">
                                                     No. of Invites

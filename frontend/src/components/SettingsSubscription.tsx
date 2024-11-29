@@ -956,7 +956,7 @@ export const SettingsSubscription: React.FC = () => {
                         <TextField
                             InputLabelProps={{
                                 sx: subscriptionStyles.inputLabel,
-                                className: "form-input-label"
+                                focused: false
                             }}
                             label="Enter the reason for unsubscribe"
                             name="unsubscribe"

@@ -10,16 +10,24 @@ import { emailStyles } from './emailStyles';
 import { showErrorToast, showToast } from '@/components/ToastNotification';
 import { useUser } from '../../context/UserContext';
 import PersonIcon from '@mui/icons-material/Person';
+import useAxios from 'axios-hooks';
 
 const EmailVerificate: React.FC = () => {
   const [canResend, setCanResend] = useState(true);
   const [timer, setTimer] = useState(60);
   const router = useRouter();
   const { full_name: userFullName, email: userEmail } = useUser();
-  const meItem = typeof window !== 'undefined' ? sessionStorage.getItem('me') : null;
-  const meData = meItem ? JSON.parse(meItem) : { full_name: '', email: '' };
-  const full_name = userFullName || meData.full_name;
-  const email = userEmail || meData.email;
+  const [email, setEmail] = useState('');
+  const [full_name, setFullName] = useState('');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const meItem = sessionStorage.getItem('me');
+      const meData = meItem ? JSON.parse(meItem) : { full_name: '', email: '' };
+      setEmail(userEmail || meData.email);
+      setFullName(userFullName || meData.full_name);
+    }
+  }, [userEmail, userFullName]);
 
   const [token, setToken] = useState<string | null>(null);
 
@@ -49,10 +57,6 @@ const EmailVerificate: React.FC = () => {
     setAnchorEl(null);
   };
 
-  const handleSettingsClick = () => {
-    handleProfileMenuClose();
-    router.push('/settings');
-  };
 
   const handleSignOut = () => {
     localStorage.clear();
@@ -77,21 +81,32 @@ const EmailVerificate: React.FC = () => {
     }
   };
 
+  const [{ data }, refetch] = useAxios(
+    {
+      url: `${process.env.NEXT_PUBLIC_API_BASE_URL}check-verification-status`,
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      method: 'GET',
+    },
+    { manual: true }
+  );
+
   useEffect(() => {
     const interval = setInterval(() => {
-      axiosInterceptorInstance.get('check-verification-status')
-        .then(response => {
-          if (response.status === 200 && response.data.status === "EMAIL_VERIFIED") {
+      refetch()
+        .then((response) => {
+          if (response.status === 200 && response.data.status === 'EMAIL_VERIFIED') {
             showToast('Verification done successfully');
             clearInterval(interval);
             router.push('/account-setup');
           }
         })
-        .catch(error => console.error('Error:', error));
+        .catch((error) => console.error('Error:', error));
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [router]);
+  }, [refetch, router]);
 
   useEffect(() => {
     let countdown: NodeJS.Timeout;

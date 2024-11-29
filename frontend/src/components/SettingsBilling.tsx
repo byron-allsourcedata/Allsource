@@ -1521,7 +1521,7 @@ export const SettingsBilling: React.FC = () => {
                             margin="normal"
                             InputLabelProps={{
                                 className: "form-input-label",
-                                sx: billingStyles.inputLabel
+                                focused: false
                             }}
                             InputProps={{
                                 className: "form-input",
