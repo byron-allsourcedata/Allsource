@@ -1,9 +1,11 @@
 import logging
+import uuid
 from datetime import datetime, timezone, timedelta
 from httpx import Client
 from dateutil.relativedelta import relativedelta
 from sqlalchemy.orm import Session
-
+import os
+from dotenv import load_dotenv
 from models.leads_users import LeadUser
 from models.plans import SubscriptionPlan
 from models.subscription_transactions import SubscriptionTransactions
@@ -16,6 +18,8 @@ from persistence.user_persistence import UserPersistence
 from utils import get_utc_aware_date_for_postgres
 from decimal import *
 from services.stripe_service import determine_plan_name_from_product_id
+
+load_dotenv()
 
 logger = logging.getLogger(__name__)
 
@@ -224,6 +228,17 @@ class SubscriptionService:
         ).first()
 
         return user_payment_transaction
+    
+    async def trackAwinConversion(self, user, price, subscription_type, platform_subscription_id):
+        mode = 1 if os.getenv('MODE') == 'dev' else 0
+        awin_campaign_id = os.getenv('AWIN_CAMPAIGN_ID')
+        unique_order_id = f"{user.get('id')}_{platform_subscription_id}"
+        if user.get("awin_awc"):
+            with Client() as client:
+                try:
+                    client.get(f"https://www.awin1.com/sread.php?a={awin_campaign_id}&b={price}&cr=USD&c=AW&d={subscription_type}:{price}&vc=&t={mode}&ch=aw&cks={user.get("awin_awc")}&order_id={unique_order_id}")
+                except Exception as e:
+                    logging.error(f"Unexpected error: {e}")
 
     def create_subscription_from_free_trial(self, user_id):
         plan = self.plans_persistence.get_free_trail_plan()
@@ -250,11 +265,7 @@ class SubscriptionService:
                                                               synchronize_session=False)
         user = self.db.query(User).filter(User.id == user_id).first()
         self.db.commit()
-        with Client() as cliet:
-            try:
-                cliet.get(f'https://www.awin1.com/sread.php?a=107427&b=03&cr=USD&c=AW&d=FREE_TRIAL:0&vc=&t=0&ch=aw&cks={user.awin_awc}')
-            except:
-                ...
+        self.trackAwinConversion(user, 0, 'FREE_TRIAL', uuid.uuid4())
 
     def remove_trial(self, user_id: int):
         trial_subscription = self.db.query(UserSubscriptions).filter(
@@ -304,7 +315,7 @@ class SubscriptionService:
 
     def get_plan_by_price(self, lead_credit_price):
         return self.db.query(SubscriptionPlan).filter(SubscriptionPlan.price == lead_credit_price).first()
-
+    
     def process_subscription(self, stripe_payload, user: Users):
         result = {
             'status': None,
@@ -346,6 +357,11 @@ class SubscriptionService:
                 UserSubscriptions.price_id == price_id).first()
             price_id = stripe_payload['items']['data'][0]['plan']['id']
             plan = self.plans_persistence.get_plan_by_price_id(price_id)
+            if stripe_status == 'trialing':
+                self.trackAwinConversion(user, 0, 'FREE_TRIAL', platform_subscription_id)
+            else:
+                self.trackAwinConversion(user, plan.price, 'SUBCRIPRION', platform_subscription_id)
+                
             domains_limit = plan.domains_limit
             integrations_limit = plan.integrations_limit
             leads_credits = plan.leads_credits
@@ -353,7 +369,7 @@ class SubscriptionService:
             members_limit = plan.members_limit
             lead_credit_price = plan.lead_credit_price
             result['lead_credit_price'] = lead_credit_price
-            if user_subscription is not None and user_subscription.status == 'active':
+            if user_subscription and user_subscription.status == 'active':
                 if canceled_at:
                     user_subscription.cancel_scheduled_at = datetime.fromtimestamp(canceled_at, timezone.utc).replace(
                         tzinfo=None)
@@ -365,12 +381,6 @@ class SubscriptionService:
                     user.leads_credits = leads_credits if user.leads_credits >= 0 else leads_credits - user.leads_credits
                     user.prospect_credits = prospect_credits
                 self.db.flush()
-                user = self.db.query(User).join(UserSubscriptions, UserSubscriptions.user_id == User.id).filter(UserSubscriptions.platform_subscription_id == platform_subscription_id).first()
-                with Client() as cliet:
-                    try:
-                        cliet.get(f'https://www.awin1.com/sread.php?a=107427&b=03&cr=USD&c=AW&d=FREE_TRIAL:0&vc=&t=0&ch=aw&cks={user.awin_awc}')
-                    except:
-                        ...
             else:
                 self.db.query(UserSubscriptions).where(UserSubscriptions.user_id == user_id,
                                                        UserSubscriptions.status == 'active').update(
