@@ -394,7 +394,7 @@ async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, sess
                         five_x_five_user_id=five_x_five_user.id,
                         domain_id=user_domain_id,
                         suppression_type='url',
-                        suppression_detail=page,
+                        suppression_detail=normalize_url(page),
                         created_at=datetime.now()
                     )
                     session.add(suppressed_contact)
@@ -407,7 +407,7 @@ async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, sess
                         five_x_five_user_id=five_x_five_user.id,
                         domain_id=user_domain_id,
                         suppression_type='url',
-                        suppression_detail=page,
+                        suppression_detail=normalize_url(page),
                         created_at=datetime.now()
                     )
                     session.add(suppressed_contact)

@@ -14,4 +14,5 @@ class SuppressedContact(Base):
     domain_id = Column(Integer, ForeignKey("users_domains.id"), nullable=False)
     created_at = Column(TIMESTAMP, default=datetime.now)
     requested_at = Column(TIMESTAMP, default=datetime.now)
-    suppression_type = Column(VARCHAR)
+    suppression_type = Column(VARCHAR, nullable=True)
+    suppression_detail = Column(VARCHAR, nullable=True)

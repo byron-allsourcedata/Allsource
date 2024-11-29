@@ -487,7 +487,7 @@ const SuppressionRules: React.FC = () => {
                                         color: 'rgba(95, 99, 104, 1)',
                                         lineHeight: '20px',
                                         fontFamily: 'Nunito Sans',
-                                    }}>Contacts suppressed till now - {contactCount}</Typography>
+                                    }}> {contactCount === 0 ? "No suppressed contacts" : `Contacts suppressed till now - ${contactCount}`}</Typography>
                                 </Box>
                             </Box>
                         </Box>
