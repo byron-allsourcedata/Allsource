@@ -230,7 +230,7 @@ class SubscriptionService:
         return user_payment_transaction
     
     async def trackAwinConversion(self, user, price, subscription_type, platform_subscription_id):
-        mode = 1 if os.getenv('MODE') == 'dev' else 0
+        mode = 1 if os.getenv('AWIN_MODE') == 'dev' else 0
         awin_campaign_id = os.getenv('AWIN_CAMPAIGN_ID')
         unique_order_id = f"{user.get('id')}_{platform_subscription_id}"
         if user.get("awin_awc"):
