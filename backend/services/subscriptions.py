@@ -1,9 +1,11 @@
 import logging
+import uuid
 from datetime import datetime, timezone, timedelta
-
+from httpx import Client
 from dateutil.relativedelta import relativedelta
 from sqlalchemy.orm import Session
-
+import os
+from dotenv import load_dotenv
 from models.leads_users import LeadUser
 from models.plans import SubscriptionPlan
 from models.subscription_transactions import SubscriptionTransactions
@@ -16,6 +18,8 @@ from persistence.user_persistence import UserPersistence
 from utils import get_utc_aware_date_for_postgres
 from decimal import *
 from services.stripe_service import determine_plan_name_from_product_id
+
+load_dotenv()
 
 logger = logging.getLogger(__name__)
 
@@ -88,8 +92,6 @@ class SubscriptionService:
             'subscription': None,
             'is_artificial_status': False,
             'artificial_trial_days': None,
-            'price': None,
-            'currency': None
         }
         result = self.plans_persistence.get_user_subscription_with_trial_status(user_id)
         if result:
@@ -97,11 +99,6 @@ class SubscriptionService:
             result_dict['subscription'] = user_subscription
             result_dict['artificial_trial_days'] = trail_days
             result_dict['is_artificial_status'] = is_free_trial
-            if not user_subscription.is_avin_sended:
-                result_dict['price'] = price
-                result_dict['currency'] = currency
-                user_subscription.is_avin_sended = True
-                self.db.commit()
             return result_dict
         return result_dict
 
@@ -231,6 +228,17 @@ class SubscriptionService:
         ).first()
 
         return user_payment_transaction
+    
+    async def trackAwinConversion(self, user, price, subscription_type, date):
+        mode = 1 if os.getenv('AWIN_MODE') == 'dev' else 0
+        awin_campaign_id = os.getenv('AWIN_CAMPAIGN_ID')
+        order_id = f"{user.get('id')}_{date}"
+        if user.get("awin_awc"):
+            with Client() as client:
+                try:
+                    client.get(f"https://www.awin1.com/sread.php?a={awin_campaign_id}&b={price}&cr=USD&c=AW&d={subscription_type}:{price}&vc=&t={mode}&ch=aw&cks={user.get("awin_awc")}&order_id={order_id}")
+                except Exception as e:
+                    logging.error(f"Unexpected error: {e}")
 
     def create_subscription_from_free_trial(self, user_id):
         plan = self.plans_persistence.get_free_trail_plan()
@@ -255,7 +263,9 @@ class SubscriptionService:
                                                                User.current_subscription_id: add_subscription_obj.id
                                                                },
                                                               synchronize_session=False)
+        user = self.db.query(User).filter(User.id == user_id).first()
         self.db.commit()
+        self.trackAwinConversion(user, 0, 'FREE_TRIAL', add_subscription_obj.created_at.strftime('%Y-%m-%d'))
 
     def remove_trial(self, user_id: int):
         trial_subscription = self.db.query(UserSubscriptions).filter(
@@ -305,7 +315,7 @@ class SubscriptionService:
 
     def get_plan_by_price(self, lead_credit_price):
         return self.db.query(SubscriptionPlan).filter(SubscriptionPlan.price == lead_credit_price).first()
-
+    
     def process_subscription(self, stripe_payload, user: Users):
         result = {
             'status': None,
@@ -347,6 +357,11 @@ class SubscriptionService:
                 UserSubscriptions.price_id == price_id).first()
             price_id = stripe_payload['items']['data'][0]['plan']['id']
             plan = self.plans_persistence.get_plan_by_price_id(price_id)
+            if stripe_status == 'trialing':
+                self.trackAwinConversion(user, 0, 'FREE_TRIAL', user_subscription.plan_start.strftime('%Y-%m-%d'))
+            else:
+                self.trackAwinConversion(user, plan.price, 'SUBCRIPRION', user_subscription.plan_start.strftime('%Y-%m-%d'))
+                
             domains_limit = plan.domains_limit
             integrations_limit = plan.integrations_limit
             leads_credits = plan.leads_credits
@@ -354,7 +369,7 @@ class SubscriptionService:
             members_limit = plan.members_limit
             lead_credit_price = plan.lead_credit_price
             result['lead_credit_price'] = lead_credit_price
-            if user_subscription is not None and user_subscription.status == 'active':
+            if user_subscription and user_subscription.status == 'active':
                 if canceled_at:
                     user_subscription.cancel_scheduled_at = datetime.fromtimestamp(canceled_at, timezone.utc).replace(
                         tzinfo=None)

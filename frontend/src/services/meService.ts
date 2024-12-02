@@ -1,16 +1,5 @@
 import axiosInterceptorInstance from '../axios/axiosInterceptorInstance';
 
-declare global {
-  namespace AWIN {
-      namespace Tracking {
-          let Sale: {
-              amount?: string;
-              currency?: string;
-          };
-          function run(): void;
-      }
-  }
-}
 
 export const fetchUserData = async () => {
   try {
@@ -35,13 +24,7 @@ export const fetchUserData = async () => {
           price: userPlan.price,
           currency: userPlan.currency
         }));
-        if (typeof AWIN != "undefined" && typeof AWIN.Tracking != "undefined" && userPlan.price && userPlan.currency) {
-          AWIN.Tracking.Sale = {
-            amount: parseFloat(userPlan.price).toFixed(2),
-            currency: userPlan.currency,
-        };
-          AWIN.Tracking.run();
-      }
+        
         return {
           email: userInfo.email,
           full_name: userInfo.full_name,

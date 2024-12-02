@@ -55,6 +55,7 @@ class WebhookService:
             'user': user_data,
             'lead_credit_plan_id': lead_credit_plan_id if lead_credit_plan_id else None
         }
+        
         return result
 
     def cancel_subscription_confirmation(self, payload):
