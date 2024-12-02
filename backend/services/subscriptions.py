@@ -229,16 +229,17 @@ class SubscriptionService:
 
         return user_payment_transaction
     
-    async def trackAwinConversion(self, user, price, subscription_type, date):
+    def trackAwinConversion(self, user, price, subscription_type, date):
         mode = 1 if os.getenv('AWIN_MODE') == 'dev' else 0
         awin_campaign_id = os.getenv('AWIN_CAMPAIGN_ID')
-        order_id = f"{user.get('id')}_{date}"
-        if user.get("awin_awc"):
-            with Client() as client:
-                try:
-                    client.get(f"https://www.awin1.com/sread.php?a={awin_campaign_id}&b={price}&cr=USD&c=AW&d={subscription_type}:{price}&vc=&t={mode}&ch=aw&cks={user.get('awin_awc')}&order_id={order_id}")
-                except Exception as e:
-                    logging.error(f"Unexpected error: {e}")
+        order_id = f"{user.id}_{date}"
+        
+        with Client() as client:
+            try:
+                client.get(f"https://www.awin1.com/sread.php?a={awin_campaign_id}&b={price}&cr=USD&c=AW&d={subscription_type}:{price}&vc=&t={mode}&ch=aw&cks={user.awin_awc}&order_id={order_id}")    
+            except Exception as e:
+                logging.error(f"Unexpected error: {e}")
+
 
     def create_subscription_from_free_trial(self, user_id):
         plan = self.plans_persistence.get_free_trail_plan()
@@ -265,7 +266,8 @@ class SubscriptionService:
                                                               synchronize_session=False)
         user = self.db.query(User).filter(User.id == user_id).first()
         self.db.commit()
-        self.trackAwinConversion(user, 0, 'FREE_TRIAL', add_subscription_obj.created_at.strftime('%Y-%m-%d'))
+        if user.awin_awc:
+            self.trackAwinConversion(user, 0, 'FREE_TRIAL', add_subscription_obj.created_at.strftime('%Y-%m-%d'))
 
     def remove_trial(self, user_id: int):
         trial_subscription = self.db.query(UserSubscriptions).filter(
@@ -356,12 +358,7 @@ class SubscriptionService:
                 UserSubscriptions.platform_subscription_id == platform_subscription_id,
                 UserSubscriptions.price_id == price_id).first()
             price_id = stripe_payload['items']['data'][0]['plan']['id']
-            plan = self.plans_persistence.get_plan_by_price_id(price_id)
-            if stripe_status == 'trialing':
-                self.trackAwinConversion(user, 0, 'FREE_TRIAL', user_subscription.plan_start.strftime('%Y-%m-%d'))
-            else:
-                self.trackAwinConversion(user, plan.price, 'SUBCRIPRION', user_subscription.plan_start.strftime('%Y-%m-%d'))
-                
+            plan = self.plans_persistence.get_plan_by_price_id(price_id)    
             domains_limit = plan.domains_limit
             integrations_limit = plan.integrations_limit
             leads_credits = plan.leads_credits
@@ -386,7 +383,7 @@ class SubscriptionService:
                                                        UserSubscriptions.status == 'active').update(
                     {"status": "inactive", "updated_at": datetime.now(timezone.utc).replace(tzinfo=None)})
                 self.db.flush()
-                new_subscription = UserSubscriptions(
+                user_subscription = UserSubscriptions(
                     plan_start=actual_start_date,
                     plan_end=actual_end_date,
                     domains_limit=domains_limit,
@@ -401,17 +398,22 @@ class SubscriptionService:
                     lead_credit_price=lead_credit_price,
                     is_trial=True if stripe_status == 'trialing' else False
                 )
-                self.db.add(new_subscription)
+                self.db.add(user_subscription)
                 self.db.flush()
                 self.update_users_domains(user_id, domains_limit)
                 self.update_team_members(user.id, members_limit)
                 user.leads_credits = leads_credits if user.leads_credits >= 0 else leads_credits - user.leads_credits
                 user.prospect_credits = prospect_credits
-                user.current_subscription_id = new_subscription.id
+                user.current_subscription_id = user_subscription.id
                 user.is_leads_auto_charging = True
                 if user.stripe_payment_url:
                     user.stripe_payment_url = None
                 self.db.flush()
+            if user.awin_awc:
+                if stripe_status == 'trialing':
+                    self.trackAwinConversion(user, 0, 'FREE_TRIAL', user_subscription.plan_start.strftime('%Y-%m-%d'))
+                else:
+                    self.trackAwinConversion(user, plan.price, 'SUBCRIPRION', user_subscription.plan_start.strftime('%Y-%m-%d'))
 
         if status == "canceled" or status == 'inactive':
             self.db.query(UserSubscriptions).filter(
