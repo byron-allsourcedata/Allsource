@@ -236,7 +236,7 @@ class SubscriptionService:
         if user.get("awin_awc"):
             with Client() as client:
                 try:
-                    client.get(f"https://www.awin1.com/sread.php?a={awin_campaign_id}&b={price}&cr=USD&c=AW&d={subscription_type}:{price}&vc=&t={mode}&ch=aw&cks={user.get("awin_awc")}&order_id={order_id}")
+                    client.get(f"https://www.awin1.com/sread.php?a={awin_campaign_id}&b={price}&cr=USD&c=AW&d={subscription_type}:{price}&vc=&t={mode}&ch=aw&cks={user.get('awin_awc')}&order_id={order_id}")
                 except Exception as e:
                     logging.error(f"Unexpected error: {e}")
 
