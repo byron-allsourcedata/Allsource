@@ -1,8 +1,6 @@
 import logging
 from datetime import datetime, timezone
 
-from httpx import Client
-
 from enums import NotificationTitles
 from persistence.notification import NotificationPersistence
 from services.subscriptions import SubscriptionService
