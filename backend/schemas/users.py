@@ -7,6 +7,14 @@ from enums import SignUpStatus, LoginStatus, BaseEnum, VerificationEmail, Update
     VerifyToken, CompanyInfoEnum, PixelStatus
 
 
+class ShopifyPayloadModel(BaseModel):
+    code: Optional[str] = None
+    hmac: Optional[str] = None
+    host: Optional[str] = None
+    shop: Optional[str] = None
+    state: Optional[str] = None
+    timestamp: Optional[str] = None
+
 class UserSignUpForm(BaseModel):
     full_name: str = Field(...)
     email: str = Field(...)
@@ -14,6 +22,7 @@ class UserSignUpForm(BaseModel):
     is_without_card: bool = Field(default=True)
     teams_token: Optional[str] = None
     spi: Optional[str] = None
+    shopify_data: Optional[ShopifyPayloadModel] = None
 
 
 class DismissNotificationsRequest(BaseModel):
@@ -27,6 +36,7 @@ class DeleteNotificationRequest(BaseModel):
 class UserSignUpFormResponse(BaseModel):
     status: SignUpStatus
     token: Optional[str] = None
+    shopify_data: Optional[ShopifyPayloadModel] = None
 
 
 class UserLoginFormResponse(BaseModel):

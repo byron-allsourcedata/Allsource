@@ -193,6 +193,17 @@ class UsersAuth:
             }
         token = create_access_token(token_info)
         logger.info("Token created")
+
+        if auth_google_data.shopify_data:
+            update_user_signup_source(db=db, user_id=user_object.get("user_filed_id"),
+                                            source=UserSignupSource.SHOPIFY)
+            shopify_service.save_shopify_token(shop=user_form.shopify_data.shop, state=user_form.shopify_data.state,
+                                            query_params=user_form.shopify_data, db=db, user_id=user_object.get("user_filed_id"))
+            shopify_service.save_shopify_shop_id(db=db, user_id=user_object.get("user_filed_id"))
+            shopify_service.create_webhooks_for_store(db=db, user_id=user_object.get("user_filed_id"))
+            shopify_service.initialize_pixel(db=db, user_id=user_object.get("user_filed_id"))
+            skip_book_demo(db=db, user_id=user_object.get("user_filed_id"))
+
         self.user_persistence_service.email_confirmed(user_object.id)
         if not user_object.is_with_card:
             return {
@@ -351,6 +362,17 @@ class UsersAuth:
             }
         token = create_access_token(token_info)
         logger.info("Token created")
+
+        if user_form.shopify_data:
+            update_user_signup_source(db=db, user_id=user_object.get("user_filed_id"),
+                                            source=UserSignupSource.SHOPIFY)
+            shopify_service.save_shopify_token(shop=user_form.shopify_data.shop, state=user_form.shopify_data.state,
+                                            query_params=user_form.shopify_data, db=db, user_id=user_object.get("user_filed_id"))
+            shopify_service.save_shopify_shop_id(db=db, user_id=user_object.get("user_filed_id"))
+            shopify_service.create_webhooks_for_store(db=db, user_id=user_object.get("user_filed_id"))
+            shopify_service.initialize_pixel(db=db, user_id=user_object.get("user_filed_id"))
+            skip_book_demo(db=db, user_id=user_object.get("user_filed_id"))
+
         if is_without_card and teams_token is None:
             template_id = self.send_grid_persistence_service.get_template_by_alias(
                 SendgridTemplate.EMAIL_VERIFICATION_TEMPLATE.value)
