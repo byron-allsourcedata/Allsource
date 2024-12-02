@@ -178,7 +178,7 @@ class UsersAuth:
 
         customer_id = stripe_service.create_customer_google(google_payload)
         user_object = self.add_user(is_without_card=is_without_card, customer_id=customer_id, user_form=google_payload,
-                                    spi=auth_google_data.spi, awin_awc=auth_google_data.awc)
+                                    spi=auth_google_data.spi, awin_awc=auth_google_data.awc, utm_source=auth_google_data.utm_source)
         if teams_token:
             notification_id = self.save_account_notification(user_object.id, NotificationTitles.TEAM_MEMBER_ADDED.value)
             self.send_member_notification(user_id=owner_id, title=NotificationTitles.TEAM_MEMBER_ADDED.value, notification_id=notification_id)
