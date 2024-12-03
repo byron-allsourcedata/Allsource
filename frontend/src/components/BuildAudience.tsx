@@ -16,6 +16,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import SearchIcon from '@mui/icons-material/Search';
+import { showErrorToast } from './ToastNotification';
 
 interface LeadData {
     id: number;
@@ -91,12 +92,11 @@ const BuildAudience: React.FC<BuildAudienceProps> = ({ open, onClose, onDataFetc
             if (Array.isArray(leads_list) && typeof count_leads === 'number' && typeof max_page === 'number') {
                 onDataFetch(leads_list, count_leads, max_page);
             } else {
-                console.error('Unexpected data format');
+                showErrorToast('Unexpected data format');
             }
 
             onClose();
         } catch (error) {
-            console.error('Error applying filters:', error);
         }
     };
 

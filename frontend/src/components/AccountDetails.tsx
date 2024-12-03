@@ -5,6 +5,7 @@ import { accountStyles } from '../css/accountDetails';
 import Image from 'next/image'
 import DownloadIcon from '@mui/icons-material/Download';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
+import { showErrorToast } from './ToastNotification';
 
 interface PopupDetailsProps {
     open: boolean;
@@ -64,10 +65,10 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                 document.body.removeChild(link);
                 window.URL.revokeObjectURL(url);
             } else {
-                console.error('Error downloading file:', response.statusText);
+                showErrorToast(`Error downloading file:${response.statusText}`);
             }
         } catch (error) {
-            console.error('Error during the download process:', error);
+            showErrorToast(`Error during the download process: ${error}`);
         }
     };
 

@@ -18,7 +18,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ handleClose, onSuccess }) =
 
     const handleButtonClick = async () => {
         if (!stripe || !elements) {
-            console.error('Stripe.js has not loaded yet.');
+            showErrorToast('Stripe.js has not loaded yet.');
             return;
         }
         const cardNumberElement = elements.getElement(CardNumberElement);
@@ -26,7 +26,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ handleClose, onSuccess }) =
         const cardCvcElement = elements.getElement(CardCvcElement);
 
         if (!cardNumberElement || !cardExpiryElement || !cardCvcElement) {
-            console.error('Card elements not initialized.');
+            showErrorToast('Card elements not initialized.');
             return;
         }
 
@@ -61,11 +61,9 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ handleClose, onSuccess }) =
                 if (error.response) {
                     showErrorToast(`Error: ${error.response.status} - ${error.response.data.message || 'An error occurred.'}`);
                 } else {
-                    console.error('Network error or no response received:', error);
                     showErrorToast('Network error or no response received.');
                 }
             } else {
-                console.error('Unexpected error:', error);
                 showErrorToast('An unexpected error occurred.');
             }
         } finally {

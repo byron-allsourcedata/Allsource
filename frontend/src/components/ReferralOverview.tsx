@@ -54,7 +54,6 @@ const ReferralOverview: React.FC = () => {
         navigator.clipboard.writeText(referralLink).then(() => {
             alert('Referral link copied!');
         }).catch(err => {
-            console.error('Failed to copy: ', err);
         });
     };
 

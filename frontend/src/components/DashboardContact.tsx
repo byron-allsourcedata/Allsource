@@ -125,7 +125,6 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates }) => 
                 ]);
                 setDays(days);
             } catch (error) {
-                console.error("Error fetching contact data:", error);
             } finally {
                 setLoading(false);
             }
@@ -319,7 +318,6 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates }) => 
 
         if (period <= 30) {
             const weeklyData: Record<string, Record<string, number[]>> = {};
-            console.log(formattedData)
             formattedData.forEach((date, index) => {
                 const weekStart = dayjs(date).startOf('week').format('MMM DD');
                 if (!weeklyData[weekStart]) weeklyData[weekStart] = {};
@@ -342,7 +340,6 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates }) => 
         
         else {
             const monthlyData: Record<string, Record<string, number[]>> = {};
-            console.log(monthlyData)
             formattedData.forEach((date, index) => {
                 
                 const month = dayjs(date).format('MMM YYYY')
