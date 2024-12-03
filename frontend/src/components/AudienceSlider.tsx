@@ -4,7 +4,7 @@ import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import CloseIcon from '@mui/icons-material/Close';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
-import { showToast } from './ToastNotification';
+import { showErrorToast, showToast } from './ToastNotification';
 import Image from 'next/image';
 import SearchIcon from '@mui/icons-material/Search';
 import ConnectKlaviyo from './ConnectKlaviyo';
@@ -80,7 +80,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
             const response = await axiosInstance.get('/audience/list');
             setListItems(response.data);
         } catch (error) {
-            console.error('Error fetching list items:', error);
+            showErrorToast('Error fetching list items');
         }
     }; 
 

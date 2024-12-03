@@ -128,11 +128,8 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
         if (response.status === 200) {
           setDomain(response.data.shop_domain);
           setAccessToken(response.data.access_token);
-        } else {
-          console.error(`Unexpected status code: ${response.status}`);
         }
       } catch (error) {
-        console.error('Error fetching credentials:', error);
       }
     };
     fetchCredentials()
@@ -224,7 +221,6 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
         handleClose()
       }
     } catch (error) {
-      console.error("An error occurred:", error);
       showErrorToast('An error occurred while installing the pixel');
     }
   };

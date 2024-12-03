@@ -11,6 +11,7 @@ import { AxiosError } from "axios";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import Image from "next/image";
 import { useNotification } from '../../context/NotificationContext';
+import { showErrorToast } from "@/components/ToastNotification";
 
 const centerContainerStyles = {
     display: 'flex',
@@ -83,7 +84,7 @@ const Suppressions: React.FC = () => {
                     setStatus(error.response.data.status);
                 }
             } else {
-                console.error('Error fetching data:', error);
+                showErrorToast(`Error fetching data:${error}`);
             }
         } finally {
             setLoading(false)

@@ -44,7 +44,6 @@ const ReferralRewards: React.FC = () => {
             });
             setRewards(response.data);
         } catch (error) {
-            console.error("Error fetching rewards:", error);
         } finally {
             setLoading(false);
         }

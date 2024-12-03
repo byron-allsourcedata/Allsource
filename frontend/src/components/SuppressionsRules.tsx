@@ -439,7 +439,6 @@ const SuppressionRules: React.FC = () => {
             const data = response.data;
             setContactCount(data.suppressed_contacts_count);  
         } catch (err) {
-            console.error("Ошибка при получении данных о количестве контактов:", err);
         } finally {
             setLoading(false);
         }

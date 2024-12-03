@@ -3,8 +3,6 @@ import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { Box, Button, Checkbox, FormControlLabel, FormHelperText, TextField, Typography, Link, IconButton, InputAdornment, List, ListItem, ListItemIcon, ListItemText } from '@mui/material';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import axiosInstance from '../../axios/axiosInterceptorInstance';
 import { AxiosError } from 'axios';
 import { signupStyles } from './signupStyles';
@@ -24,9 +22,10 @@ const Signup: React.FC = () => {
   const user_teams_mail = searchParams.get('user_teams_mail');
   const teams_token = searchParams.get('token');
   const spi = searchParams.get('spi');
-  const [formValues, setFormValues] = useState({ full_name: '', email: user_teams_mail, password: '', is_without_card: !isWithoutCard, termsAccepted: false, teams_token: teams_token, spi: spi });
+  const awin_awc = searchParams.get('awc')
+  const utm_source = searchParams.get('utm_source')
+  const [formValues, setFormValues] = useState({ full_name: '', email: user_teams_mail, password: '', is_without_card: !isWithoutCard, awc: awin_awc || null, utm_source: utm_source || null, termsAccepted: false, teams_token: teams_token, spi: spi });
   const [formSubmitted, setFormSubmitted] = useState(false);
-
 
   useEffect(() => {
     document.body.style.overflow = 'hidden';
@@ -34,7 +33,6 @@ const Signup: React.FC = () => {
       document.body.style.overflow = 'auto';
     };
   }, []);
-
 
   const navigateTo = (path: string) => {
     window.location.href = path;
@@ -200,7 +198,7 @@ const Signup: React.FC = () => {
           const errorData = error.response.data as { [key: string]: string };
           setErrors(errorData);
         } else {
-          console.error('Error:', error);
+          showErrorToast(`Error:${error}`);
         }
       }
     }
@@ -255,7 +253,9 @@ const Signup: React.FC = () => {
                   token: credentialResponse.credential,
                   ...(spi && { spi }),
                   ...(teams_token && { teams_token }),
-                  ...{is_without_card : !isWithoutCard}
+                  ...{is_without_card : !isWithoutCard},
+                  ...{awc: awin_awc || null},
+                  ...{utm_source: utm_source || null}
                 });
 
                 const responseData = response.data;
@@ -310,7 +310,7 @@ const Signup: React.FC = () => {
                     break;
                 }
               } catch (error) {
-                console.error('Error during Google login:', error);
+                showErrorToast(`Error during Google login ${error}`);
               }
             }}
             onError={() => {

@@ -191,7 +191,6 @@ const ReferralSignups: React.FC = () => {
         navigator.clipboard.writeText(referralLink).then(() => {
             alert('Referral link copied!');
         }).catch(err => {
-            console.error('Failed to copy: ', err);
         });
     };
 
@@ -339,7 +338,6 @@ const ReferralSignups: React.FC = () => {
                                             }}>
                                                 <TableCell className='sticky-cell table-data' sx={{
                                                     ...suppressionsStyles.tableBodyColumn,
-                                                    cursor: 'pointer',
                                                     position: 'sticky',
                                                     left: 0,
                                                     zIndex: 1,

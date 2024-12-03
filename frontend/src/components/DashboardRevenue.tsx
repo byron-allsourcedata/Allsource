@@ -158,7 +158,6 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                     ]);
                     setDays(days);
                 } catch (error) {
-                    console.error("Error fetching revenue data:", error);
                 } finally {
                     setLoading(false)
                 }
@@ -418,7 +417,6 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
 
         if (period <= 30) {
             const weeklyData: Record<string, Record<string, number[]>> = {};
-            console.log(formattedData)
             formattedData.forEach((date, index) => {
                 const weekStart = dayjs(date).startOf('week').format('MMM DD');
                 if (!weeklyData[weekStart]) weeklyData[weekStart] = {};
@@ -441,7 +439,6 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
         
         else {
             const monthlyData: Record<string, Record<string, number[]>> = {};
-            console.log(monthlyData)
             formattedData.forEach((date, index) => {
                 
                 const month = dayjs(date).format('MMM YYYY')

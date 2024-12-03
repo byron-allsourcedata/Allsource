@@ -45,6 +45,8 @@ class Users(Base):
     invited_by_id = Column(VARCHAR(32), nullable=True)
     added_on = Column(TIMESTAMP(precision=7), nullable=True)
     current_subscription_id = Column(Integer, nullable=False)
+    awin_awc = Column(VARCHAR(128), nullable=True)
+    source_platform = Column(VARCHAR(64), nullable=True)
 
 
 User = Users

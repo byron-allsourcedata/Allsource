@@ -23,6 +23,8 @@ class UserSignUpForm(BaseModel):
     teams_token: Optional[str] = None
     spi: Optional[str] = None
     shopify_data: Optional[ShopifyPayloadModel] = None
+    awc: Optional[str] = None 
+    utm_source: Optional[str] = None
 
 
 class DismissNotificationsRequest(BaseModel):
