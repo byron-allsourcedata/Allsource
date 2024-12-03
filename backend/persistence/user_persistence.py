@@ -92,7 +92,8 @@ class UserPersistence:
                 'prospect_credits': user.prospect_credits,
                 'is_leads_auto_charging': user.is_leads_auto_charging,
                 'team_access_level': user.team_access_level,
-                'current_subscription_id': user.current_subscription_id
+                'current_subscription_id': user.current_subscription_id,
+                'awin_awc': user.awin_awc
             }
         self.db.rollback()
         if result_as_object:

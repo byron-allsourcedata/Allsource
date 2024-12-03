@@ -54,13 +54,6 @@ const TrialStatus: React.FC = () => {
         price: userPlan.price,
         currency: userPlan.currency
       }));
-      if (typeof AWIN != "undefined" && typeof AWIN.Tracking != "undefined" && userPlan.price && userPlan.currency) {
-        AWIN.Tracking.Sale = {
-          amount: parseFloat(userPlan.price).toFixed(2),
-          currency: userPlan.currency,
-      };
-        AWIN.Tracking.run();
-    }
     }
   }, [data]);
 

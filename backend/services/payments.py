@@ -1,9 +1,7 @@
 import logging
 from datetime import datetime
 from typing import List
-
 import stripe
-
 from config.stripe import StripeConfig
 from enums import SubscriptionStatus
 from persistence.plans_persistence import PlansPersistence

@@ -14,6 +14,8 @@ class UserSignUpForm(BaseModel):
     is_without_card: bool = Field(default=True)
     teams_token: Optional[str] = None
     spi: Optional[str] = None
+    awc: Optional[str] = None 
+    utm_source: Optional[str] = None
 
 
 class DismissNotificationsRequest(BaseModel):
