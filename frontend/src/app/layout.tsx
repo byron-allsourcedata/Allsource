@@ -47,7 +47,7 @@ export default function RootLayout({
           </SSEProvider>
         </GoogleOAuthProvider>
         <ToastNotificationContainer />
-        <script defer={true} src="https://www.dwin1.com/107427.js" type="text/javascript"></script>
+        <script defer={true} src="https://www.awin1.com/107427.js" type="text/javascript"></script>
       </body>
     </html>
 
