@@ -9,6 +9,10 @@ from persistence.leads_order_persistence import LeadOrdersPersistence
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
 from httpx import Client
+from schemas.integrations.shopify import ShopifyCredentials
+from schemas.users import ShopifyPayloadModel
+import shopify
+from enums import SourcePlatformEnum
 from fastapi import HTTPException
 from datetime import datetime, timedelta
 from services.aws import AWSService
@@ -28,6 +32,32 @@ class ShopifyIntegrationService:
         self.client = client
         self.AWS = aws_service
         self.db = db
+        
+    def get_shopify_token(self, shopify_data: ShopifyPayloadModel):
+        shopify.Session.setup(api_key=os.getenv('SHOPIFY_KEY'), secret=os.getenv('SHOPIFY_SECRET'))
+        session = shopify.Session(shopify_data.shop, os.getenv('SHOPIFY_API_VERSION'))
+        access_token = session.request_token(params=shopify_data.model_dump())
+        return access_token
+    
+    def get_shopify_shop_id(shopify_data: ShopifyPayloadModel, shopify_access_token):
+        shop_id = None
+        with shopify.Session.temp(shopify_data.shop, os.getenv('SHOPIFY_API_VERSION'), shopify_access_token):
+            shop = shopify.Shop.current()
+            shop_id = shop.id
+        return shop_id
+            
+    def create_webhooks_for_store(shopify_data: ShopifyPayloadModel, shopify_access_token):        
+        with shopify.Session.temp(shopify_data.shop, os.getenv('SHOPIFY_API_VERSION'), shopify_access_token):
+            sub_webhook = shopify.Webhook.create({
+                "topic": "app_subscriptions/update",
+                "address": os.getenv("API_HOST_URL") + "/api/v1/subscriptions/shopify/billing/webhook",
+                "format": "json"
+            })
+            uninstall_webhook = shopify.Webhook.create({
+                "topic": "app/uninstalled",
+                "address": os.getenv("API_HOST_URL") + "/api/v1/oauth/shopify/uninstall",
+                "format": "json"
+            })
 
 
     def __handle_request(self, method: str, url: str, headers: dict = None, json: dict = None, data: dict = None, params: dict = None):
@@ -67,7 +97,7 @@ class ShopifyIntegrationService:
 
 
     def get_credentials(self, domain_id: int):
-        return self.integration_persistence.get_credentials_for_service(domain_id, 'Shopify')
+        return self.integration_persistence.get_credentials_for_service(domain_id, SourcePlatformEnum.SHOPIFY.value)
 
 
     def __set_pixel(self, user, domain, credentials):
@@ -117,7 +147,7 @@ class ShopifyIntegrationService:
         return response.json().get('customers')
 
 
-    def __save_integration(self, shop_domain: str, access_token: str, domain_id: int):
+    def __save_integration(self, shop_domain: str, access_token: str, domain_id: int, user_id, shop_id=None):
         credential = self.get_credentials(domain_id=domain_id)
         if credential:
             credential.access_token = access_token
@@ -128,8 +158,11 @@ class ShopifyIntegrationService:
             'domain_id': domain_id, 
             'shop_domain': shop_domain,
             'access_token': access_token, 
-            'service_name': 'Shopify'
+            'service_name': SourcePlatformEnum.SHOPIFY.value,
+            'user_id': user_id
         }
+        if shop_id:
+            credentials['shop_id'] = shop_id
 
         integration = self.integration_persistence.create_integration(credentials)
         if not integration:
@@ -163,13 +196,13 @@ class ShopifyIntegrationService:
         if user_website != shop_domain:
             raise HTTPException(status_code=400, detail={'status': 'error', 'detail': {'message': 'Store Domain does not match the one you specified earlier'}})
         self.__get_orders(credential=credentials.shopify)
-        self.__save_integration(credentials.shopify.shop_domain, credentials.shopify.access_token, domain.id)
+        self.__save_integration(credentials.shopify.shop_domain, credentials.shopify.access_token, domain.id, user.get('id'))
         if not domain.is_pixel_installed:
             self.__set_pixel(user, domain, credentials)
         return {
             'status': 'Successfully',
             'detail': {
-                'service_name': 'Shopify'
+                'service_name': SourcePlatformEnum.SHOPIFY.value
             }
         }
     
@@ -180,7 +213,7 @@ class ShopifyIntegrationService:
             lead_user = self.lead_persistence.get_leads_user_filter_by_email(domain_id, order.email)
             if lead_user and len(lead_user) > 0: 
                 self.lead_orders_persistence.create_lead_order({
-                    'platform': 'Shopify',
+                    'platform': SourcePlatformEnum.SHOPIFY.value,
                     'platform_user_id': order.shopify_user_id,
                     'platform_order_id': order.order_shopify_id,
                     'lead_user_id': lead_user[0].id,

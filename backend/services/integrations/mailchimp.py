@@ -8,7 +8,7 @@ from persistence.domains import UserDomainsPersistence
 from schemas.integrations.integrations import *
 from schemas.integrations.klaviyo import *
 from fastapi import HTTPException
-from enums import IntegrationsStatus
+from enums import IntegrationsStatus, SourcePlatformEnum
 import httpx
 import json
 from typing import List
@@ -69,7 +69,7 @@ class MailchimpIntegrationsService:
             'domain_id': domain_id,
             'access_token': api_key,
             'data_center': server,
-            'service_name': 'Mailchimp'
+            'service_name': SourcePlatformEnum.MAILCHIMP.value
         })
         if not integartions:
             raise HTTPException(status_code=409, detail={'status': IntegrationsStatus.CREATE_IS_FAILED.value})

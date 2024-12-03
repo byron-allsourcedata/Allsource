@@ -23,8 +23,7 @@ const Signup: React.FC = () => {
   const teams_token = searchParams.get('token');
   const spi = searchParams.get('spi');
   const awin_awc = searchParams.get('awc')
-  const utm_source = searchParams.get('utm_source')
-  const [formValues, setFormValues] = useState({ full_name: '', email: user_teams_mail, password: '', is_without_card: !isWithoutCard, awc: awin_awc || null, utm_source: utm_source || null, termsAccepted: false, teams_token: teams_token, spi: spi });
+  const [formValues, setFormValues] = useState({ full_name: '', email: user_teams_mail, password: '', is_without_card: !isWithoutCard, awc: awin_awc || null, termsAccepted: false, teams_token: teams_token, spi: spi });
   const [formSubmitted, setFormSubmitted] = useState(false);
 
   useEffect(() => {
@@ -254,8 +253,7 @@ const Signup: React.FC = () => {
                   ...(spi && { spi }),
                   ...(teams_token && { teams_token }),
                   ...{is_without_card : !isWithoutCard},
-                  ...{awc: awin_awc || null},
-                  ...{utm_source: utm_source || null}
+                  ...{awc: awin_awc || null}
                 });
 
                 const responseData = response.data;

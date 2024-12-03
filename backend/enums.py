@@ -4,6 +4,18 @@ from enum import Enum
 class BaseEnum(Enum):
     SUCCESS = 'SUCCESS'
     FAILURE = 'FAILURE'
+    
+class SourcePlatformEnum(Enum):
+    SHOPIFY = 'shopify'
+    AWIN = 'awin'
+    ATTENTIVE = 'attentive'
+    BIG_COMMERCE = 'bigcommerce'
+    KLAVIYO = 'klaviyo'
+    MAILCHIMP = 'mailchimp'
+    META = 'meta'
+    OMNISEND = 'omnisend'
+    SENDLANE = 'sendlane'
+    ZAPIER = 'zapier'
 
 
 class UserPaymentStatusEnum(Enum):

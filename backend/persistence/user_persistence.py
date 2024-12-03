@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from enums import TeamsInvitationStatus, SignUpStatus
 from models.teams_invitations import TeamInvitation
+from models.users_domains import UserDomains
 from models.users import Users
 
 logger = logging.getLogger(__name__)
@@ -21,6 +22,11 @@ class UserPersistence:
             {Users.reset_password_sent_at: send_message_expiration_time},
             synchronize_session=False)
         self.db.commit()
+        
+    def save_user_domain(self, user_id, domain):
+        domain = self.db.add(UserDomains(user_id=user_id, domain=domain.replace('https://', '').replace('http://', '')))
+        self.db.commit()
+        return domain
 
     def get_team_members(self, user_id: int):
         users = self.db.query(Users).filter(Users.team_owner_id == user_id).all()

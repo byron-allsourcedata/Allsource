@@ -23,7 +23,7 @@ import time
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
 
-PLATFORMS = ['BigCommerce', 'Shopify']
+PLATFORMS = ['bigCommerce', 'shopify']
 
 
 if __name__ == '__main__':

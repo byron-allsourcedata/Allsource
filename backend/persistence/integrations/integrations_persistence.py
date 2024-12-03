@@ -1,6 +1,6 @@
 from models.integrations.users_domains_integrations import UserIntegration, Integration
 from sqlalchemy.orm import Session
-
+from sqlalchemy import func
 
 class IntegrationsPresistence:
 
@@ -13,6 +13,18 @@ class IntegrationsPresistence:
         self.db.add(integration)
         self.db.commit()
         return integration
+    
+    def get_integration_by_shop_url(self, shop: str, service_name: str) -> UserIntegration:
+        user_integration = (
+            self.db.query(UserIntegration)
+            .filter(
+                func.lower(UserIntegration.shop) == shop.lower(),
+                UserIntegration.service_name == service_name
+            )
+            .first()
+        )
+        return user_integration
+
 
     def get_integration_by_user(self, domain_id: int) -> UserIntegration:
         return self.db.query(UserIntegration).filter(UserIntegration.domain_id == domain_id).all()

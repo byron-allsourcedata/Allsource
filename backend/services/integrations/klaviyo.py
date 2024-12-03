@@ -9,7 +9,7 @@ from persistence.domains import UserDomainsPersistence
 from schemas.integrations.integrations import *
 from schemas.integrations.klaviyo import *
 from fastapi import HTTPException
-from enums import IntegrationsStatus
+from enums import IntegrationsStatus, SourcePlatformEnum
 import httpx
 import json
 from typing import List
@@ -49,7 +49,7 @@ class KlaviyoIntegrationsService:
         return credential
         
 
-    def __save_integrations(self, api_key: str, domain_id: int):
+    def __save_integrations(self, api_key: str, domain_id: int, user_id):
         credential = self.get_credentials(domain_id)
         if credential:
             credential.access_token = api_key
@@ -60,7 +60,8 @@ class KlaviyoIntegrationsService:
         integartions = self.integrations_persisntece.create_integration({
             'domain_id': domain_id,
             'access_token': api_key,
-            'service_name': 'Klaviyo'
+            'service_name': SourcePlatformEnum.KLAVIYO.value,
+            'user_id': user_id
         })
         if not integartions:
             raise HTTPException(status_code=409, detail={'status': IntegrationsStatus.CREATE_IS_FAILED.value})
@@ -178,7 +179,7 @@ class KlaviyoIntegrationsService:
             self.__get_list(credentials.klaviyo.api_key)
         except:
             raise HTTPException(status_code=400, detail=IntegrationsStatus.CREDENTAILS_INVALID.value)
-        self.__save_integrations(credentials.klaviyo.api_key, domain.id)
+        self.__save_integrations(credentials.klaviyo.api_key, domain.id, user_id=user.get('id'))
         return {
             'status': IntegrationsStatus.SUCCESS.value
         }

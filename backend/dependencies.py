@@ -89,6 +89,28 @@ def get_user_persistence_service(db: Session = Depends(get_db)):
 def get_audience_persistence(db: Session = Depends(get_db)):
     return AudiencePersistence(db=db)
 
+def get_user_integrations_presistence(db: Session = Depends(get_db)) -> IntegrationsPresistence:
+    return IntegrationsPresistence(db)
+
+def get_lead_orders_persistence(db: Session = Depends(get_db)) -> LeadsPersistence:
+    return LeadsPersistence(db)
+
+def get_integrations_user_sync_persistence(db: Session = Depends(get_db)) -> IntegrationsUserSyncPersistence:
+    return IntegrationsUserSyncPersistence(db)
+
+def get_user_domain_persistence(db: Session = Depends(get_db)) -> UserDomainsPersistence:
+    return UserDomainsPersistence(db)
+
+def get_epi_persistence(db: Session = Depends(get_db)) -> ExternalAppsInstallationsPersistence:
+    return ExternalAppsInstallationsPersistence(db)
+
+def get_notification_persistence(db: Session = Depends(get_db)):
+    return NotificationPersistence(db)
+
+
+def get_aws_service(s3_client=Depends(get_s3_client)) -> AWSService:
+    return AWSService(s3_client)
+
 
 def get_subscription_service(db: Session = Depends(get_db),
                              user_persistence_service: UserPersistence = Depends(get_user_persistence_service),
@@ -102,6 +124,32 @@ def get_payments_plans_service(db: Session = Depends(get_db),
                                user_persistence_service: UserPersistence = Depends(get_user_persistence_service)):
     return PaymentsPlans(db=db, subscription_service=subscription_service,
                          user_persistence_service=user_persistence_service)
+    
+
+    
+def get_integration_service(db: Session = Depends(get_db),
+                            audience_persistence=Depends(get_audience_persistence),
+                            integration_presistence: IntegrationsPresistence = Depends(
+                                get_user_integrations_presistence),
+                            lead_presistence: LeadsPersistence = Depends(get_leads_persistence),
+                            lead_orders_persistence: LeadOrdersPersistence = Depends(get_lead_orders_persistence),
+                            integrations_user_sync_persistence: IntegrationsUserSyncPersistence = Depends(
+                                get_integrations_user_sync_persistence),
+                            aws_service: AWSService = Depends(get_aws_service),
+                            domain_persistence=Depends(get_user_domain_persistence),
+                            suppression_persitence: IntegrationsSuppressionPersistence = Depends(
+                                get_suppression_persistence),
+                            epi_persistence: ExternalAppsInstallationsPersistence = Depends(get_epi_persistence)
+                            ):
+    return IntegrationService(db,
+                              integration_presistence,
+                              lead_presistence,
+                              audience_persistence,
+                              lead_orders_persistence,
+                              integrations_user_sync_persistence,
+                              aws_service,
+                              domain_persistence,
+                              suppression_persitence, epi_persistence)
 
 
 def get_users_auth_service(db: Session = Depends(get_db),
@@ -111,11 +159,13 @@ def get_users_auth_service(db: Session = Depends(get_db),
                                get_send_grid_persistence_service),
                            plans_persistence: PlansPersistence = Depends(
                                get_plans_persistence),
+                           integration_service: IntegrationService = Depends(
+                               get_integration_service),
                            subscription_service: SubscriptionService = Depends(get_subscription_service)):
     return UsersAuth(db=db, payments_service=payments_plans, user_persistence_service=user_persistence_service,
                      send_grid_persistence_service=send_grid_persistence_service,
                      subscription_service=subscription_service,
-                     plans_persistence=plans_persistence
+                     plans_persistence=plans_persistence, integration_service=integration_service
                      )
 
 
@@ -228,14 +278,6 @@ def check_user_authentication(Authorization: Annotated[str, Header()],
             )
         user['team_member'] = team_memer
     return user
-
-
-def get_user_domain_persistence(db: Session = Depends(get_db)) -> UserDomainsPersistence:
-    return UserDomainsPersistence(db)
-
-
-def get_notification_persistence(db: Session = Depends(get_db)):
-    return NotificationPersistence(db)
 
 
 def check_domain(
@@ -377,49 +419,6 @@ def check_user_admin(Authorization: Annotated[str, Header()],
     if 'admin' not in user['role']:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail={'status': 'FORBIDDEN'})
     return user
-
-
-def get_user_integrations_presistence(db: Session = Depends(get_db)) -> IntegrationsPresistence:
-    return IntegrationsPresistence(db)
-
-
-def get_lead_orders_persistence(db: Session = Depends(get_db)) -> LeadsPersistence:
-    return LeadsPersistence(db)
-
-
-def get_integrations_user_sync_persistence(db: Session = Depends(get_db)) -> IntegrationsUserSyncPersistence:
-    return IntegrationsUserSyncPersistence(db)
-
-
-def get_aws_service(s3_client=Depends(get_s3_client)) -> AWSService:
-    return AWSService(s3_client)
-
-def get_epi_persistence(db: Session = Depends(get_db)) -> ExternalAppsInstallationsPersistence:
-    return ExternalAppsInstallationsPersistence(db)
-
-def get_integration_service(db: Session = Depends(get_db),
-                            audience_persistence=Depends(get_audience_persistence),
-                            integration_presistence: IntegrationsPresistence = Depends(
-                                get_user_integrations_presistence),
-                            lead_presistence: LeadsPersistence = Depends(get_leads_persistence),
-                            lead_orders_persistence: LeadOrdersPersistence = Depends(get_lead_orders_persistence),
-                            integrations_user_sync_persistence: IntegrationsUserSyncPersistence = Depends(
-                                get_integrations_user_sync_persistence),
-                            aws_service: AWSService = Depends(get_aws_service),
-                            domain_persistence=Depends(get_user_domain_persistence),
-                            suppression_persitence: IntegrationsSuppressionPersistence = Depends(
-                                get_suppression_persistence),
-                            epi_persistence: ExternalAppsInstallationsPersistence = Depends(get_epi_persistence)
-                            ):
-    return IntegrationService(db,
-                              integration_presistence,
-                              lead_presistence,
-                              audience_persistence,
-                              lead_orders_persistence,
-                              integrations_user_sync_persistence,
-                              aws_service,
-                              domain_persistence,
-                              suppression_persitence, epi_persistence)
 
 
 def check_api_key(maximiz_api_key = Header(None), domain_persistence: UserDomainsPersistence = Depends(get_user_domain_persistence)):

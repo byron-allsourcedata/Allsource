@@ -4,7 +4,7 @@ from fastapi import HTTPException
 from httpx import Client
 
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
-from enums import IntegrationsStatus
+from enums import IntegrationsStatus, SourcePlatformEnum
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from schemas.integrations.integrations import IntegrationCredentials, DataMap
@@ -28,7 +28,7 @@ class AttentiveIntegrationsService:
             'access_token': api_key,
             'user_id': user.get('id'),
             'full_name': user.get('full_name'),
-            'service_name': 'Attentive'
+            'service_name': SourcePlatformEnum.Attentive.value
         })
         if not integrations:
             raise HTTPException(status_code=409, detail={'status': IntegrationsStatus.CREATE_IS_FAILED.value})
