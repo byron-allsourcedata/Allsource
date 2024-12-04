@@ -18,6 +18,9 @@ from persistence.user_persistence import UserPersistence
 from utils import get_utc_aware_date_for_postgres
 from decimal import *
 from services.stripe_service import determine_plan_name_from_product_id
+from fastapi import Response
+from urllib.parse import urlparse, urlencode
+import requests
 
 load_dotenv()
 
@@ -229,17 +232,46 @@ class SubscriptionService:
 
         return user_payment_transaction
     
-    def trackAwinConversion(self, user, price, subscription_type, date):
-        mode = 1 if os.getenv('AWIN_MODE') == 'dev' else 0
-        awin_campaign_id = os.getenv('AWIN_CAMPAIGN_ID')
-        order_id = f"{user.id}_{date}"
-        
-        with Client() as client:
-            try:
-                client.get(f"https://www.awin1.com/sread.php?a={awin_campaign_id}&b={price}&cr=USD&c=AW&d={subscription_type}:{price}&vc=&t={mode}&ch=aw&cks={user.awin_awc}&ref={order_id}")    
-            except Exception as e:
-                logging.error(f"Unexpected error: {e}")
+    def set_cookie(self, response: Response, key: str, value: str, domain: str):
+        expires = timedelta(days=30)
+        response.set_cookie(
+            key=key,
+            value=value,
+            domain=domain,
+            expires=expires.total_seconds(),
+            secure=True,
+            httponly=True,
+        )
 
+    
+    def trackAwinConversion(self, response: Response, user: User, price, subscription_type, date):
+        refer = 'https://dev.maximiz.ai' if os.getenv('AWIN_MODE') == 'dev' else 'https://app.maximiz.ai'
+        url = urlparse(refer)
+        awc = user.awin_awc
+        self.set_cookie(response, "awcCookie", awc, "topleveldomain")
+        
+        order_id = f"{user.id}_{date}"
+        awin_campaign_id = os.getenv('AWIN_CAMPAIGN_ID')
+        mode = 1 if os.getenv('AWIN_MODE') == 'dev' else 0
+        commissionBreakdown = None
+        voucherCode = None
+        params = {
+            "tt": "ss",
+            "tv": "2",
+            "merchant": f"{awin_campaign_id}",
+            "amount": price,
+            "ch": "aw",
+            "cr": "USD",
+            "parts": f"{price}",
+            "ref": f"{order_id}",
+            "vc": f"{voucherCode}",
+            "t": mode,
+            "cks": awc
+        }
+        request_url = f"https://www.awin1.com/sread.php?{urlencode(params)}"
+        headers = {'Referer': refer}
+        response = requests.get(request_url, headers=headers)
+        return response
 
     def create_subscription_from_free_trial(self, user_id):
         plan = self.plans_persistence.get_free_trail_plan()
@@ -318,7 +350,7 @@ class SubscriptionService:
     def get_plan_by_price(self, lead_credit_price):
         return self.db.query(SubscriptionPlan).filter(SubscriptionPlan.price == lead_credit_price).first()
     
-    def process_subscription(self, stripe_payload, user: Users):
+    def process_subscription(self, response: Response, stripe_payload, user: Users):
         result = {
             'status': None,
             'lead_credit_price': None
@@ -411,9 +443,9 @@ class SubscriptionService:
                 self.db.flush()
             if user.awin_awc:
                 if stripe_status == 'trialing':
-                    self.trackAwinConversion(user, 0, 'FREE_TRIAL', user_subscription.plan_start.strftime('%Y-%m-%d'))
+                    self.trackAwinConversion(response, user, 0, 'FREE_TRIAL', user_subscription.plan_start.strftime('%Y-%m-%d'))
                 else:
-                    self.trackAwinConversion(user, plan.price, 'SUBCRIPRION', user_subscription.plan_start.strftime('%Y-%m-%d'))
+                    self.trackAwinConversion(response, user, plan.price, 'SUBCRIPRION', user_subscription.plan_start.strftime('%Y-%m-%d'))
 
         if status == "canceled" or status == 'inactive':
             self.db.query(UserSubscriptions).filter(
