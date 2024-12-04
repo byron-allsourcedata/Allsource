@@ -262,7 +262,7 @@ class SubscriptionService:
             "amount": price,
             "ch": "aw",
             "cr": "USD",
-            "parts": f"{price}",
+            "parts": f"subscription_type : {price}",
             "ref": f"{order_id}",
             "vc": f"{voucherCode}",
             "t": mode,
