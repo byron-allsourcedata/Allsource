@@ -12,17 +12,17 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({ title, linkText, linkUrl 
   return (
     <Box
       sx={{
-        '@media (max-width: 600px)': { display: 'none' }, maxWidth: '14px', display: 'flex', position: 'relative',  // Скрывает компонент на маленьких экранах
+        '@media (max-width: 600px)': { display: 'none' }, maxWidth: '14px', display: 'flex', position: 'relative',
       }}
     >
       <Tooltip
         sx={{ '@media (max-width: 600px)': { display: 'none' } }}
         title={
           <Box sx={{ backgroundColor: '#fff', margin: 0, padding: 0, display: 'flex', flexDirection: 'row', alignItems: 'center', }}>
-            <Typography className='table-data' component='div' sx={{ fontSize: '10px !important', }}>
+            <Typography className='table-data' component='div' sx={{ fontSize: '12px !important', }}>
               {title}
               {linkText && linkUrl && (
-                <Typography className='table-heading' component='span' sx={{ pl: 0.5, color: 'rgba(80, 82, 178, 1) !important', whiteSpace: 'nowrap', fontSize: '11px !important', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                <Typography className='table-heading' component='span' sx={{ pl: 0.5, color: 'rgba(80, 82, 178, 1) !important', whiteSpace: 'nowrap', fontSize: '12px !important', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   <Link href={linkUrl} target="_blank" rel="noopener" underline="none" color="inherit">
                     {linkText}
                   </Link>
