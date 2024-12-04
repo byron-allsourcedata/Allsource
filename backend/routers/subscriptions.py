@@ -1,11 +1,11 @@
 import logging
 
-from fastapi import APIRouter, Depends, Request as fastRequest, HTTPException, status
+from fastapi import APIRouter, Depends, Request as fastRequest, HTTPException, status, Response
 
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 from dependencies import get_plans_service, get_payments_service, get_webhook, check_user_authentication, \
     check_user_authorization_without_pixel
-from enums import TeamAccessLevel, NotificationTitles
+from enums import TeamAccessLevel
 from models.users import Users
 from schemas.subscriptions import UnsubscribeRequest
 from services.payments import PaymentsService
