@@ -427,7 +427,7 @@ class SubscriptionService:
                 if stripe_status == 'trialing':
                     self.trackAwinConversion(user, 0, 'FREE_TRIAL', user_subscription.plan_start.strftime('%Y-%m-%d'))
                 else:
-                    self.trackAwinConversion(user, plan.price, 'SUBCRIPRION', user_subscription.plan_start.strftime('%Y-%m-%d'))
+                    self.trackAwinConversion(user, plan.price, 'SUBSCRIPTION', user_subscription.plan_start.strftime('%Y-%m-%d'))
 
         if status == "canceled" or status == 'inactive':
             self.db.query(UserSubscriptions).filter(
