@@ -232,20 +232,8 @@ class SubscriptionService:
 
         return user_payment_transaction
     
-    def set_cookie(self, response: Response, key: str, value: str, domain: str):
-        expires = timedelta(days=30)
-        response.set_cookie(
-            key=key,
-            value=value,
-            domain=domain,
-            expires=expires.total_seconds(),
-            secure=True,
-            httponly=True,
-        )
-
-    
     def trackAwinConversion(self, user: User, price, subscription_type, date):
-        refer = 'https://dev.maximiz.ai' if os.getenv('AWIN_MODE') == 'dev' else 'https://app.maximiz.ai'
+        refer = os.getenv('SITE_URL')
         awc = user.awin_awc
         order_id = f"{user.id}_{date}"
         awin_campaign_id = os.getenv('AWIN_CAMPAIGN_ID')
