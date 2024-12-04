@@ -4,7 +4,7 @@ from enums import CompanyInfoEnum
 from models.users import Users
 from models.users_domains import UserDomains
 from sqlalchemy.orm import Session
-
+from enums import SourcePlatformEnum
 from schemas.users import CompanyInfo
 from services.subscriptions import SubscriptionService
 
@@ -30,8 +30,9 @@ class CompanyInfoService:
             user.company_website_visits = company_info.monthly_visits
             user.is_company_details_filled = True
             self.db.flush()
-            self.db.add(UserDomains(user_id=self.user.get('id'),
-                                    domain=company_info.company_website.replace('https://', '').replace('http://', '')))
+            if self.user.get('source_platform') != SourcePlatformEnum.SHOPIFY.value:
+                self.db.add(UserDomains(user_id=self.user.get('id'),
+                                        domain=company_info.company_website.replace('https://', '').replace('http://', '')))
             self.db.commit()
             return {
                 'status': CompanyInfoEnum.SUCCESS,
@@ -41,7 +42,11 @@ class CompanyInfoService:
             return {'status': result}
 
     def get_company_info(self):
-        return self.check_company_info_authorization()
+        result = {}
+        if self.user.get('source_platform') == SourcePlatformEnum.SHOPIFY.value:
+            result['domain_url'] = self.db.query(UserDomains.domain).filter_by(user_id=self.user.get('id')).scalar()
+        result['status'] = self.check_company_info_authorization()
+        return result
 
     def check_company_info_authorization(self):
         if self.user.get('is_with_card'):

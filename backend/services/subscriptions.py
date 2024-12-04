@@ -11,6 +11,7 @@ from models.plans import SubscriptionPlan
 from models.subscription_transactions import SubscriptionTransactions
 from models.subscriptions import Subscription, UserSubscriptions
 from models.users import Users, User
+from models.integrations.users_domains_integrations import UserIntegration
 from models.users_domains import UserDomains
 from models.users_payments_transactions import UsersPaymentsTransactions
 from persistence.plans_persistence import PlansPersistence
@@ -33,6 +34,11 @@ class SubscriptionService:
 
     def get_userid_by_customer(self, customer_id):
         return self.db.query(User).filter(User.customer_id == customer_id).first()
+    
+    def get_user_by_shopify_shop_id(self, shop_id):
+        return self.db.query(User).join(UserIntegration, UserIntegration.user_id == User.id)\
+                .filter(UserIntegration.shop_id == shop_id).first()
+
 
     def cancellation_downgrade(self, subscription_id):
         self.db.query(UserSubscriptions).where(UserSubscriptions.id == subscription_id).update(

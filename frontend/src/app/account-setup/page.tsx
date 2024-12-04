@@ -83,8 +83,14 @@ const AccountSetup = () => {
         const response = await axiosInterceptorInstance.get("/company-info");
 
         const status = response.data.status;
+        const domain_url = response.data.domain_url
+        if (domain_url) {
+          setWebsiteLink(domain_url)
+        }
 
         switch (status) {
+          case "SUCCESS":
+            break;
           case "NEED_EMAIL_VERIFIED":
             router.push("/email-verificate");
             break;
@@ -297,7 +303,7 @@ const AccountSetup = () => {
     { min: 1, max: 10, label: "1-10" },
     { min: 11, max: 50, label: "11-50" },
     { min: 51, max: 100, label: "51-100" },
-    { min: 101, max: 250, label: "101-250"},
+    { min: 101, max: 250, label: "101-250" },
     { min: 251, max: 500, label: "251-500" },
     { min: 501, max: Infinity, label: ">1k" },
   ];
@@ -366,8 +372,8 @@ const AccountSetup = () => {
                 }
               },
               "@media (max-width: 600px)": {
-              display: 'flex'
-            },
+                display: 'flex'
+              },
             }}
           >
             <PersonIcon sx={{ fontSize: '22px' }} />
@@ -648,6 +654,7 @@ const AccountSetup = () => {
               <Typography variant="body1" component="h3" className="first-sub-title" sx={styles.text}>
                 Share your company website
               </Typography>
+
               <TextField
                 fullWidth
                 label="Enter website link"
@@ -655,19 +662,25 @@ const AccountSetup = () => {
                 placeholder={isFocused ? "example.com" : ""}
                 sx={styles.formField}
                 InputLabelProps={{
-
                   className: "form-input-label",
-                  focused: false
+                  focused: false,
                 }}
-                value={isFocused ? websiteLink.replace(/^https?:\/\//, "") : `https://${websiteLink.replace(/^https?:\/\//, "")}`}
-                onChange={handleWebsiteLink}
-                onFocus={handleFocus}
-                onBlur={handleBlur}
+                value={
+                  websiteLink
+                    ? websiteLink.replace(/^https?:\/\//, "")
+                    : isFocused
+                      ? websiteLink.replace(/^https?:\/\//, "")
+                      : `https://${websiteLink.replace(/^https?:\/\//, "")}`
+                }
+                onChange={websiteLink ? undefined : handleWebsiteLink}
+                onFocus={websiteLink ? undefined : handleFocus}
+                onBlur={websiteLink ? undefined : handleBlur} 
+                disabled={!!websiteLink}
                 error={!!errors.websiteLink}
                 helperText={errors.websiteLink}
                 InputProps={{
                   className: "form-input",
-                  startAdornment: isFocused && (
+                  startAdornment: isFocused && !websiteLink && (
                     <InputAdornment position="start">https://</InputAdornment>
                   ),
                 }}

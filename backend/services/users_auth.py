@@ -142,6 +142,30 @@ class UsersAuth:
         owner_id = None
         status = SignUpStatus.NEED_CHOOSE_PLAN
         client_id = os.getenv("CLIENT_GOOGLE_ID")
+        shopify_data = auth_google_data.shopify_data
+        shopify_access_token = None
+        shop_id = None
+        
+        if shopify_data:
+            try:
+                shopify_access_token = self.integration_service.shopify.get_shopify_token(shopify_data=shopify_data)
+                shop_id = self.integration_service.shopify.get_shopify_shop_id(
+                    shopify_data=shopify_data, 
+                    shopify_access_token=shopify_access_token
+                )
+                if not shopify_access_token or not shop_id:
+                    logger.error("Invalid Shopify access token or shop ID.")
+                    return {
+                        'is_success': False,
+                        'error': 'Failed to retrieve valid Shopify access token or shop ID.'
+                    }
+            except Exception as e:
+                logger.exception("An error occurred while processing Shopify data.")
+                return {
+                    'is_success': False,
+                    'error': f"Shopify integration error: {str(e)}"
+                }
+        
         google_request = google_requests.Request()
         is_without_card = auth_google_data.is_without_card
         idinfo = id_token.verify_oauth2_token(str(auth_google_data.token), google_request, client_id)
@@ -198,15 +222,8 @@ class UsersAuth:
         token = create_access_token(token_info)
         logger.info("Token created")
 
-        if auth_google_data.shopify_data:           
-            user_object.source_platform = SourcePlatformEnum.SHOPIFY.value
-            user_object.is_book_call_passed = True
-            self.db.commit()
-            self.integration_service.shopify.save_shopify_token(shop=auth_google_data.shopify_data.shop, state=auth_google_data.shopify_data.state,
-                                            query_params=auth_google_data.shopify_data, user_id=user_object.get("user_filed_id"))
-            self.integration_service.shopify.save_shopify_shop_id(user_id=user_object.get("user_filed_id"))
-            self.integration_service.shopify.create_webhooks_for_store(user_id=user_object.get("user_filed_id"))
-            self.integration_service.shopify.initialize_pixel(user_id=user_object.get("user_filed_id"))
+        if shopify_data:
+            self._process_shopify_integration(user_object, shopify_data, shopify_access_token, shop_id)
 
         self.user_persistence_service.email_confirmed(user_object.id)
         if not user_object.is_with_card:

@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 import json
 from urllib.parse import quote, urlencode
-from fastapi import APIRouter, Depends, Query, HTTPException, status, Body
+from fastapi import APIRouter, Depends, Query, HTTPException, status, Body, Request
 from fastapi.responses import RedirectResponse
 from enums import UserAuthorizationStatus
 from dependencies import get_integration_service, IntegrationService, IntegrationsPresistence, \
@@ -236,4 +236,19 @@ async def get_dont_import_leads(domain = Depends(check_api_key)):
     with open('../backend/data/integrations/example_lead.json', 'r') as file:
         example_lead = file.read()
         return json.loads(example_lead)
+    
+@router.get('/shopify/install/redirect')
+async def oauth_shopify_install_redirect(shop: str, r: Request, integrations_service: IntegrationService = Depends(get_integration_service)):
+    try:
+        with integrations_service as service:
+            url = service.shopify.get_shopify_install_url(shop, r)
+            return RedirectResponse(url = url)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail='Something went wrong')
+    
+@router.post('/shopify/uninstall')
+async def shopify_app_uninstalled_webhook(request: Request, integrations_service: IntegrationService = Depends(get_integration_service)):
+    with integrations_service as service:
+        payload = await request.json()
+        return service.shopify.handle_uninstalled_app(payload)
     

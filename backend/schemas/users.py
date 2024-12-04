@@ -37,7 +37,6 @@ class DeleteNotificationRequest(BaseModel):
 class UserSignUpFormResponse(BaseModel):
     status: SignUpStatus
     token: Optional[str] = None
-    shopify_data: Optional[ShopifyPayloadModel] = None
 
 
 class UserLoginFormResponse(BaseModel):
@@ -96,7 +95,7 @@ class UpdatePasswordResponse(BaseModel):
 class CompanyInfoResponse(BaseModel):
     status: CompanyInfoEnum
     stripe_payment_url: Optional[str] = None
-
+    domain_url: Optional[str] = None
 
 class CheckVerificationStatusResponse(BaseModel):
     status: VerificationEmail

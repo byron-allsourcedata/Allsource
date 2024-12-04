@@ -23,7 +23,7 @@ class Users(Base):
     employees_workers = Column(VARCHAR(16), nullable=True)
     created_at = Column(TIMESTAMP(precision=7), nullable=True)
     last_login = Column(TIMESTAMP(precision=7), nullable=True)
-    payment_status = Column(VARCHAR, default='PENDING', nullable=True)
+    payment_status = Column(VARCHAR, default='pending', nullable=True)
     customer_id = Column(VARCHAR, nullable=True)
     reset_password_sent_at = Column(DateTime, nullable=True)
     pixel_code_sent_at = Column(DateTime, nullable=True)

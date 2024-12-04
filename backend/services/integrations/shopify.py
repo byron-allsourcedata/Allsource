@@ -1,7 +1,10 @@
 import hashlib
 import os
+import binascii
 from enums import IntegrationsStatus
+from config.shopify import ShopifyConfig
 from models.users_domains import UserDomains
+from models.users import User
 from schemas.integrations.shopify import ShopifyCustomer, ShopifyOrderAPI
 from schemas.integrations.integrations import IntegrationCredentials
 from persistence.leads_persistence import LeadsPersistence
@@ -34,28 +37,28 @@ class ShopifyIntegrationService:
         self.db = db
         
     def get_shopify_token(self, shopify_data: ShopifyPayloadModel):
-        shopify.Session.setup(api_key=os.getenv('SHOPIFY_KEY'), secret=os.getenv('SHOPIFY_SECRET'))
-        session = shopify.Session(shopify_data.shop, os.getenv('SHOPIFY_API_VERSION'))
+        shopify.Session.setup(api_key=ShopifyConfig.key, secret=ShopifyConfig.secret)
+        session = shopify.Session(shopify_data.shop, ShopifyConfig.api_version)
         access_token = session.request_token(params=shopify_data.model_dump())
         return access_token
     
     def get_shopify_shop_id(shopify_data: ShopifyPayloadModel, shopify_access_token):
         shop_id = None
-        with shopify.Session.temp(shopify_data.shop, os.getenv('SHOPIFY_API_VERSION'), shopify_access_token):
+        with shopify.Session.temp(shopify_data.shop, ShopifyConfig.api_version, shopify_access_token):
             shop = shopify.Shop.current()
             shop_id = shop.id
         return shop_id
             
     def create_webhooks_for_store(shopify_data: ShopifyPayloadModel, shopify_access_token):        
-        with shopify.Session.temp(shopify_data.shop, os.getenv('SHOPIFY_API_VERSION'), shopify_access_token):
-            sub_webhook = shopify.Webhook.create({
+        with shopify.Session.temp(shopify_data.shop, ShopifyConfig.api_version, shopify_access_token):
+            shopify.Webhook.create({
                 "topic": "app_subscriptions/update",
-                "address": os.getenv("API_HOST_URL") + "/api/v1/subscriptions/shopify/billing/webhook",
+                "address": os.getenv("SITE_HOST_URL") + "/api/subscriptions/shopify/billing/webhook",
                 "format": "json"
             })
-            uninstall_webhook = shopify.Webhook.create({
+            shopify.Webhook.create({
                 "topic": "app/uninstalled",
-                "address": os.getenv("API_HOST_URL") + "/api/v1/oauth/shopify/uninstall",
+                "address": os.getenv("SITE_HOST_URL") + "/api/integrations/shopify/uninstall",
                 "format": "json"
             })
 
@@ -145,7 +148,21 @@ class ShopifyIntegrationService:
 
         response = self.__handle_request('GET', url, headers=headers)
         return response.json().get('customers')
-
+    
+    def get_shopify_install_url(self, shop, r):
+        shopify.Session.setup(api_key=ShopifyConfig.key, secret=ShopifyConfig.secret)
+        shopify.Session.validate_params(params=r.query_params)
+        session = shopify.Session(shop, ShopifyConfig.api_version)
+        state = binascii.b2a_hex(os.urandom(15)).decode("utf-8")
+        url = session.create_permission_url(ShopifyConfig.scopes, ShopifyConfig.callback_uri, state)
+        return url
+    
+    def handle_uninstalled_app(self, payload):
+        user_integration = self.integration_persistence.get_integration_by_shop_id(shop_id=payload["id"])
+        if user_integration:
+            self.db.query(User).filter(User.id == user_integration.user_id).update({"payment_status": "canceled"})
+            self.db.delete(user_integration)
+            self.db.commit()
 
     def __save_integration(self, shop_domain: str, access_token: str, domain_id: int, user_id, shop_id=None):
         credential = self.get_credentials(domain_id=domain_id)
