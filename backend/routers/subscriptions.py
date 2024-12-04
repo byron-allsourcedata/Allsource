@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, Request as fastRequest, HTTPException, s
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 from dependencies import get_plans_service, get_payments_service, get_webhook, check_user_authentication, \
     check_user_authorization_without_pixel
-from enums import TeamAccessLevel, NotificationTitles
+from enums import TeamAccessLevel
 from models.users import Users
 from schemas.subscriptions import UnsubscribeRequest
 from services.payments import PaymentsService
@@ -30,9 +30,9 @@ async def create_customer_session(price_id: str, payments_service: PaymentsServi
 
 
 @router.post("/update-subscription-webhook")
-async def update_payment_confirmation(request: fastRequest, response: Response, webhook_service: WebhookService = Depends(get_webhook)):
+async def update_payment_confirmation(request: fastRequest, webhook_service: WebhookService = Depends(get_webhook)):
     payload = await request.json()
-    result_update_subscription = webhook_service.update_subscription_confirmation(response=response, payload=payload)
+    result_update_subscription = webhook_service.update_subscription_confirmation(payload=payload)
     if result_update_subscription.get('status'):
         user = result_update_subscription['user']
         rabbitmq_connection = RabbitMQConnection()

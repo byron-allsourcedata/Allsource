@@ -244,17 +244,12 @@ class SubscriptionService:
         )
 
     
-    def trackAwinConversion(self, response: Response, user: User, price, subscription_type, date):
+    def trackAwinConversion(self, user: User, price, subscription_type, date):
         refer = 'https://dev.maximiz.ai' if os.getenv('AWIN_MODE') == 'dev' else 'https://app.maximiz.ai'
-        url = urlparse(refer)
         awc = user.awin_awc
-        self.set_cookie(response, "awcCookie", awc, "topleveldomain")
-        
         order_id = f"{user.id}_{date}"
         awin_campaign_id = os.getenv('AWIN_CAMPAIGN_ID')
         mode = 1 if os.getenv('AWIN_MODE') == 'dev' else 0
-        commissionBreakdown = None
-        voucherCode = None
         params = {
             "tt": "ss",
             "tv": "2",
@@ -262,9 +257,8 @@ class SubscriptionService:
             "amount": price,
             "ch": "aw",
             "cr": "USD",
-            "parts": f"subscription_type : {price}",
+            "parts": f"{subscription_type}:{price}",
             "ref": f"{order_id}",
-            "vc": f"{voucherCode}",
             "t": mode,
             "cks": awc
         }
@@ -350,7 +344,7 @@ class SubscriptionService:
     def get_plan_by_price(self, lead_credit_price):
         return self.db.query(SubscriptionPlan).filter(SubscriptionPlan.price == lead_credit_price).first()
     
-    def process_subscription(self, response: Response, stripe_payload, user: Users):
+    def process_subscription(self, stripe_payload, user: Users):
         result = {
             'status': None,
             'lead_credit_price': None
@@ -443,9 +437,9 @@ class SubscriptionService:
                 self.db.flush()
             if user.awin_awc:
                 if stripe_status == 'trialing':
-                    self.trackAwinConversion(response, user, 0, 'FREE_TRIAL', user_subscription.plan_start.strftime('%Y-%m-%d'))
+                    self.trackAwinConversion(user, 0, 'FREE_TRIAL', user_subscription.plan_start.strftime('%Y-%m-%d'))
                 else:
-                    self.trackAwinConversion(response, user, plan.price, 'SUBCRIPRION', user_subscription.plan_start.strftime('%Y-%m-%d'))
+                    self.trackAwinConversion(user, plan.price, 'SUBCRIPRION', user_subscription.plan_start.strftime('%Y-%m-%d'))
 
         if status == "canceled" or status == 'inactive':
             self.db.query(UserSubscriptions).filter(

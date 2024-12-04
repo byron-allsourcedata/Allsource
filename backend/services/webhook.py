@@ -15,7 +15,7 @@ class WebhookService:
         self.subscription_service = subscription_service
         self.notification_persistence = notification_persistence
 
-    def update_subscription_confirmation(self, response: Response, payload):
+    def update_subscription_confirmation(self, payload):
         stripe_request_created_timestamp = payload.get("created")
         stripe_request_created_at = datetime.fromtimestamp(stripe_request_created_timestamp, timezone.utc).replace(
             tzinfo=None)
@@ -35,14 +35,14 @@ class WebhookService:
             if schedule is not None:
                 return payload
 
-        # if self.subscription_service.check_duplicate_send(stripe_request_created_at, platform_subscription_id,
-        #                                                   price_id):
-        #     return payload
+        if self.subscription_service.check_duplicate_send(stripe_request_created_at, platform_subscription_id,
+                                                          price_id):
+            return payload
 
-        # self.subscription_service.create_subscription_transaction(user_id=user_data.id,
-        #                                                           stripe_payload=payload)
+        self.subscription_service.create_subscription_transaction(user_id=user_data.id,
+                                                                  stripe_payload=payload)
 
-        result = self.subscription_service.process_subscription(response=response, user=user_data, stripe_payload=data_object)
+        result = self.subscription_service.process_subscription(user=user_data, stripe_payload=data_object)
         lead_credit_plan_id = None
         if result['lead_credit_price']:
             plan = self.subscription_service.get_plan_by_price(lead_credit_price=result['lead_credit_price'])
