@@ -652,48 +652,44 @@ async def process_files(session, rabbitmq_connection, root_user):
     )
 
     try:
-        while True:
-            try:
-                with open(LAST_PROCESSED_FILE_PATH, "r") as file:
-                    last_processed_file = file.read().strip()
-            except FileNotFoundError:
-                last_processed_file = None
+        with open(LAST_PROCESSED_FILE_PATH, "r") as file:
+            last_processed_file = file.read().strip()
+    except FileNotFoundError:
+        last_processed_file = None
 
-            five_x_five_cookie_sync_event_date = session.query(FiveXFiveCookieSyncFile.event_date)
+    five_x_five_cookie_sync_event_date = session.query(FiveXFiveCookieSyncFile.event_date)
 
-            if last_processed_file:
-                date_object = datetime.strptime(last_processed_file, '%Y-%m-%d %H:%M:%S.%f')
-                five_x_five_cookie_sync_event_date = five_x_five_cookie_sync_event_date.filter(
-                    FiveXFiveCookieSyncFile.event_date > date_object)
+    if last_processed_file:
+        date_object = datetime.strptime(last_processed_file, '%Y-%m-%d %H:%M:%S.%f')
+        five_x_five_cookie_sync_event_date = five_x_five_cookie_sync_event_date.filter(
+            FiveXFiveCookieSyncFile.event_date > date_object)
 
-            five_x_five_cookie_sync_file = five_x_five_cookie_sync_event_date.order_by(
-                FiveXFiveCookieSyncFile.event_date)
-            event_date = five_x_five_cookie_sync_file.limit(1).scalar()
-            if not event_date:
-                return
+    five_x_five_cookie_sync_file = five_x_five_cookie_sync_event_date.order_by(
+        FiveXFiveCookieSyncFile.event_date)
+    event_date = five_x_five_cookie_sync_file.limit(1).scalar()
+    if not event_date:
+        return
 
-            new_dt = event_date + timedelta(hours=1)
+    new_dt = event_date + timedelta(hours=1)
 
-            cookie_sync_files_query = session.query(FiveXFiveCookieSyncFile).filter(
-                FiveXFiveCookieSyncFile.event_date.between(event_date, new_dt)
-            )
-            cookie_sync_files = cookie_sync_files_query.order_by(FiveXFiveCookieSyncFile.event_date).all()
-            last_processed_file_name = ''
-            groupped_requests = {}
-            for request_row in cookie_sync_files:
-                group_requests_by_date(request_row, groupped_requests)
-                last_processed_file_name = request_row.event_date
-            await process_table(session, groupped_requests, rabbitmq_connection, subscription_service,
-                                leads_persistence,
-                                notification_persistence, None)
-            if root_user:
-                await process_table(session, groupped_requests, rabbitmq_connection, subscription_service,
-                                    leads_persistence,
-                                    notification_persistence, root_user)
-            logging.debug(f"Last processed event time {str(last_processed_file_name)}")
-            update_last_processed_file(str(last_processed_file_name))
-    except StopIteration:
-        pass
+    cookie_sync_files_query = session.query(FiveXFiveCookieSyncFile).filter(
+        FiveXFiveCookieSyncFile.event_date.between(event_date, new_dt)
+    )
+    cookie_sync_files = cookie_sync_files_query.order_by(FiveXFiveCookieSyncFile.event_date).all()
+    last_processed_file_name = ''
+    groupped_requests = {}
+    for request_row in cookie_sync_files:
+        group_requests_by_date(request_row, groupped_requests)
+        last_processed_file_name = request_row.event_date
+    await process_table(session, groupped_requests, rabbitmq_connection, subscription_service,
+                        leads_persistence,
+                        notification_persistence, None)
+    if root_user:
+        await process_table(session, groupped_requests, rabbitmq_connection, subscription_service,
+                            leads_persistence,
+                            notification_persistence, root_user)
+    logging.debug(f"Last processed event time {str(last_processed_file_name)}")
+    update_last_processed_file(str(last_processed_file_name))
 
 
 async def main():
