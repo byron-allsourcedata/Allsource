@@ -1,6 +1,6 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { Box, Button, TextField, Typography, Link, IconButton, InputAdornment } from '@mui/material';
 import axiosInterceptorInstance from '../../axios/axiosInterceptorInstance';
@@ -12,6 +12,7 @@ import { fetchUserData } from '@/services/meService';
 
 const Signup: React.FC = () => {
   const router = useRouter();
+  const searchParams = useSearchParams();
   useEffect(() => {
     document.body.style.overflow = 'hidden';
     return () => {
@@ -28,7 +29,19 @@ const Signup: React.FC = () => {
 
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
-  const [formValues, setFormValues] = useState({ email: '', password: '' });
+  const initialShopifyData = {
+    code: searchParams.get('code') || null,
+    hmac: searchParams.get('hmac') || null,
+    host: searchParams.get('host') || null,
+    shop: searchParams.get('shop') || null,
+    state: searchParams.get('state') || null,
+    timestamp: searchParams.get('timestamp') || null,
+  };
+  const isShopifyDataComplete = Object.values(initialShopifyData).every(value => value !== null);
+  const [formValues, setFormValues] = useState({
+    email: '', password: '',
+    ...(isShopifyDataComplete && { shopify_data: initialShopifyData })
+  });
 
 
   const validateField = (name: string, value: string) => {
@@ -185,6 +198,7 @@ const Signup: React.FC = () => {
               try {
                 const response = await axiosInterceptorInstance.post('/login-google', {
                   token: credentialResponse.credential,
+                  ...(isShopifyDataComplete && { shopify_data: initialShopifyData })
                 });
                 const responseData = response.data;
                 if (typeof window !== 'undefined') {
@@ -214,9 +228,9 @@ const Signup: React.FC = () => {
                   case 'INCORRECT_PASSWORD_OR_EMAIL':
                     showErrorToast("User with this email does not exist");
                     break;
-                    case "PIXEL_INSTALLATION_NEEDED":
-                      router.push('/dashboard')
-                      break;
+                  case "PIXEL_INSTALLATION_NEEDED":
+                    router.push('/dashboard')
+                    break;
                   default:
                     router.push('/dashboard')
                     console.error('Authorization failed:', response.data.status);
@@ -239,7 +253,7 @@ const Signup: React.FC = () => {
           </Box>
           <Box component="form" onSubmit={handleSubmit} sx={loginStyles.form}>
             <TextField sx={loginStyles.formField}
-              InputLabelProps={{ 
+              InputLabelProps={{
                 className: "form-input-label",
                 sx: loginStyles.inputLabel,
                 focused: false
@@ -254,15 +268,15 @@ const Signup: React.FC = () => {
               onChange={handleChange}
               error={Boolean(errors.email)}
               helperText={errors.email}
-              InputProps={{ 
-                className: "form-input" 
+              InputProps={{
+                className: "form-input"
               }}
             />
             <TextField
-              InputLabelProps={{ 
+              InputLabelProps={{
                 className: "form-input-label",
                 sx: loginStyles.inputLabel,
-                focused: false 
+                focused: false
               }}
               label="Enter password"
               name="password"
@@ -280,9 +294,9 @@ const Signup: React.FC = () => {
                   <InputAdornment position="end">
                     <IconButton onClick={togglePasswordVisibility} edge="end">
                       {/* {showPassword ? <VisibilityIcon /> : <VisibilityOffIcon />} */}
-                      <Image 
-                        src={showPassword ? "/custom-visibility-icon-off.svg" : "/custom-visibility-icon.svg"} 
-                        alt={showPassword ? "Show password" : "Hide password"} 
+                      <Image
+                        src={showPassword ? "/custom-visibility-icon-off.svg" : "/custom-visibility-icon.svg"}
+                        alt={showPassword ? "Show password" : "Hide password"}
                         height={18} width={18} // Adjust the size as needed
                         title={showPassword ? "Hide password" : "Show password"}
                       />
@@ -292,10 +306,10 @@ const Signup: React.FC = () => {
               }}
             />
             <Typography variant="body2" className='hyperlink-red' sx={loginStyles.resetPassword}>
-            <Link href="/reset-password" sx={loginStyles.loginLink}>
-              Forgot Password
-            </Link>
-          </Typography>
+              <Link href="/reset-password" sx={loginStyles.loginLink}>
+                Forgot Password
+              </Link>
+            </Typography>
             <Button className='hyperlink-red'
               type="submit"
               variant="contained"
@@ -305,10 +319,10 @@ const Signup: React.FC = () => {
               Login
             </Button>
           </Box>
-          
+
           <Typography variant="body2" className='second-sub-title' sx={loginStyles.loginText}>
             Don’t have an account?{' '}
-            <Link href="/signup" className='hyperlink-red' sx={loginStyles.loginLink}>
+            <Link href={`/signup?${searchParams.toString()}`} className='hyperlink-red' sx={loginStyles.loginLink}>
               Signup now
             </Link>
           </Typography>

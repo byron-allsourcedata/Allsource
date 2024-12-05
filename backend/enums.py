@@ -5,6 +5,11 @@ class BaseEnum(Enum):
     SUCCESS = 'SUCCESS'
     FAILURE = 'FAILURE'
     
+class OauthShopify(Enum):
+    NO_USER_CONNECTED = 'NO_USER_CONNECTED'
+    ERROR_SHOPIFY_TOKEN = 'ERROR_SHOPIFY_TOKEN'
+    
+    
 class SourcePlatformEnum(Enum):
     SHOPIFY = 'shopify'
     AWIN = 'awin'

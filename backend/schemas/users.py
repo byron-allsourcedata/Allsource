@@ -52,6 +52,7 @@ class PixelFormResponse(BaseModel):
 class UserLoginForm(BaseModel):
     email: str = Field(...)
     password: str = Field(...)
+    shopify_data: Optional[ShopifyPayloadModel] = None
 
 
 class ResetPasswordForm(BaseModel):

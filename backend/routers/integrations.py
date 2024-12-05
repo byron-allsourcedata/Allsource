@@ -10,6 +10,7 @@ from dependencies import get_integration_service, IntegrationService, Integratio
             UserPersistence, get_user_domain_persistence, UserDomainsPersistence, check_api_key
 from schemas.integrations.integrations import *
 from enums import TeamAccessLevel
+from schemas.integrations.shopify import ShopifyLandingResponse
 import httpx
 from config.bigcommerce import BigcommerceConfig
 
@@ -65,7 +66,7 @@ async def create_integration(creditional: IntegrationCredentials, service_name: 
         service = getattr(service, service_name.lower())
         if not service:
             raise HTTPException(status_code=404, detail=f'Service {service_name} not found')
-        service.add_integration(creditional, domain=domain, user=user)
+        service.add_integration(creditional, domain=domain, user_id=user.get('id'))
         return {'message': 'Successfuly'}
 
 
@@ -251,4 +252,11 @@ async def shopify_app_uninstalled_webhook(request: Request, integrations_service
     with integrations_service as service:
         payload = await request.json()
         return service.shopify.handle_uninstalled_app(payload)
+    
+    
+@router.get("/shopify/landing", response_model=ShopifyLandingResponse)
+def oauth_shopify_callback(shop: str, r: Request, integrations_service: IntegrationService = Depends(get_integration_service)):
+    with integrations_service as service:
+        result = service.shopify.oauth_shopify_callback(shop, r)
+        return ShopifyLandingResponse(token=result.get('token'), message=result.get('message'))
     

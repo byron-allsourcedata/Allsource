@@ -9,9 +9,10 @@ from sqlalchemy.orm import Session
 
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 from enums import SignUpStatus, LoginStatus, ResetPasswordEnum, \
-    VerifyToken, UserAuthorizationStatus, SendgridTemplate, NotificationTitles, SourcePlatformEnum
+    VerifyToken, UserAuthorizationStatus, SendgridTemplate, NotificationTitles, SourcePlatformEnum, OauthShopify
 from models.account_notification import AccountNotification
 from models.users import Users
+from schemas.integrations.integrations import IntegrationCredentials
 from models.users_account_notification import UserAccountNotification
 from persistence.plans_persistence import PlansPersistence
 from persistence.sendgrid_persistence import SendgridPersistence
@@ -148,22 +149,22 @@ class UsersAuth:
         
         if shopify_data:
             try:
-                shopify_access_token = self.integration_service.shopify.get_shopify_token(shopify_data=shopify_data)
-                shop_id = self.integration_service.shopify.get_shopify_shop_id(
-                    shopify_data=shopify_data, 
-                    shopify_access_token=shopify_access_token
-                )
+                with self.integration_service as service:
+                    shopify_access_token = service.shopify.get_shopify_token(shopify_data=shopify_data)
+                    shop_id = service.shopify.get_shopify_shop_id(
+                        shopify_data=shopify_data, 
+                        shopify_access_token=shopify_access_token
+                    )
+                
                 if not shopify_access_token or not shop_id:
                     logger.error("Invalid Shopify access token or shop ID.")
                     return {
-                        'is_success': False,
-                        'error': 'Failed to retrieve valid Shopify access token or shop ID.'
+                        'status': OauthShopify.ERROR_SHOPIFY_TOKEN.value
                     }
             except Exception as e:
                 logger.exception("An error occurred while processing Shopify data.")
                 return {
-                    'is_success': False,
-                    'error': f"Shopify integration error: {str(e)}"
+                    'status': OauthShopify.ERROR_SHOPIFY_TOKEN.value
                 }
         
         google_request = google_requests.Request()
@@ -286,6 +287,30 @@ class UsersAuth:
             return {
                 'status': LoginStatus.INCORRECT_PASSWORD_OR_EMAIL
             }
+            
+        shopify_data = auth_google_data.shopify_data
+        shopify_access_token = None
+        shop_id = None
+        
+        if shopify_data:
+            try:
+                with self.integration_service as service:
+                    shopify_access_token = service.shopify.get_shopify_token(shopify_data=shopify_data)
+                    shop_id = service.shopify.get_shopify_shop_id(
+                        shopify_data=shopify_data, 
+                        shopify_access_token=shopify_access_token
+                    )
+                if not shopify_access_token or not shop_id:
+                    logger.error("Invalid Shopify access token or shop ID.")
+                    return {
+                        'status': OauthShopify.ERROR_SHOPIFY_TOKEN.value
+                    }
+            except Exception as e:
+                logger.exception("An error occurred while processing Shopify data.")
+                return {
+                    'status': OauthShopify.ERROR_SHOPIFY_TOKEN.value
+                }
+                
         if not user_object.is_email_confirmed:
             self.user_persistence_service.email_confirmed(user_object.id)
         if user_object:
@@ -301,6 +326,9 @@ class UsersAuth:
                     "id": user_object.id,
                 }
             token = create_access_token(token_info)
+            if shopify_data:
+                    self._process_shopify_integration(user_object, shopify_data, shopify_access_token, shop_id)
+            
             authorization_data = self.get_user_authorization_information(user_object, self.subscription_service)
             if authorization_data['status'] == LoginStatus.PAYMENT_NEEDED:
                 return {
@@ -348,22 +376,21 @@ class UsersAuth:
     
         if shopify_data:
             try:
-                shopify_access_token = self.integration_service.shopify.get_shopify_token(shopify_data=shopify_data)
-                shop_id = self.integration_service.shopify.get_shopify_shop_id(
-                    shopify_data=shopify_data, 
-                    shopify_access_token=shopify_access_token
-                )
+                with self.integration_service as service:
+                    shopify_access_token = service.shopify.get_shopify_token(shopify_data=shopify_data)
+                    shop_id = service.shopify.get_shopify_shop_id(
+                        shopify_data=shopify_data, 
+                        shopify_access_token=shopify_access_token
+                    )
                 if not shopify_access_token or not shop_id:
                     logger.error("Invalid Shopify access token or shop ID.")
                     return {
-                        'is_success': False,
-                        'error': 'Failed to retrieve valid Shopify access token or shop ID.'
+                        'status': OauthShopify.ERROR_SHOPIFY_TOKEN.value
                     }
             except Exception as e:
                 logger.exception("An error occurred while processing Shopify data.")
                 return {
-                    'is_success': False,
-                    'error': f"Shopify integration error: {str(e)}"
+                    'status': OauthShopify.ERROR_SHOPIFY_TOKEN.value
                 }
             
         if teams_token:
@@ -435,14 +462,17 @@ class UsersAuth:
     
     def _process_shopify_integration(self, user_object, shopify_data, shopify_access_token, shop_id):
         domain = self.user_persistence_service.save_user_domain(user_object.id, shopify_data.shop)
-        credentials = ShopifyOrBigcommerceCredentials(shop_domain=shopify_data.shop, access_token=shopify_access_token)
-        self.integration_service.shopify.__set_pixel(user_object, domain, credentials)
-        self.integration_service.shopify.__save_integration(shopify_data.shop, shopify_access_token, domain.id, user_object.id, shop_id)
+        credentials = IntegrationCredentials(
+                            shopify=ShopifyOrBigcommerceCredentials(shop_domain=shopify_data.shop, access_token=shopify_access_token)
+                        )
+        with self.integration_service as service:
+            service.shopify.add_integration(credentials, domain, user_object.id, shop_id)
+            service.shopify.create_webhooks_for_store(shopify_data=shopify_data, shopify_access_token=shopify_access_token)
+        
         user_object.source_platform = SourcePlatformEnum.SHOPIFY.value
         user_object.is_book_call_passed = True
         self.db.commit()
-        self.integration_service.shopify.create_webhooks_for_store(shopify_data=shopify_data, shopify_access_token=shopify_access_token)
-        
+       
     def _send_email_verification(self, user_object, token):
         template_id = self.send_grid_persistence_service.get_template_by_alias(SendgridTemplate.EMAIL_VERIFICATION_TEMPLATE.value)
         if not template_id:
@@ -465,49 +495,77 @@ class UsersAuth:
 
     def login_account(self, login_form: UserLoginForm):
         email = login_form.email
-        password = login_form.password
         user_object = self.user_persistence_service.get_user_by_email(email)
         if not user_object:
             return {'status': LoginStatus.INCORRECT_PASSWORD_OR_EMAIL}
         if not user_object.password:
             return {'status': LoginStatus.INCORRECT_PASSWORD_OR_EMAIL}
-        if user_object:
-            check_password = verify_password(password, user_object.password)
-            if check_password:
-                logger.info("Password verification passed")
-                self.user_persistence_service.set_last_signed_in(user_id=user_object.id)
-                if user_object.team_owner_id:
-                    token_info = {
-                        "id": user_object.team_owner_id,
-                        "team_member_id": user_object.id
-                    }
-                    user_object = self.user_persistence_service.get_user_by_id(user_object.team_owner_id, True)
-                else:
-                    token_info = {
-                        "id": user_object.id,
-                    }
-                token = create_access_token(token_info)
-                authorization_data = self.get_user_authorization_information(user_object, self.subscription_service)
-                if authorization_data['status'] == LoginStatus.PAYMENT_NEEDED:
+        
+        password = login_form.password
+        shopify_data = login_form.shopify_data
+        shopify_access_token = None
+        shop_id = None
+        
+        check_password = verify_password(password, user_object.password)
+        if not check_password:
+            logger.info("Password Verification Failed")
+            return {
+                'status': LoginStatus.INCORRECT_PASSWORD_OR_EMAIL
+            }
+        
+        if shopify_data:
+            try:
+                with self.integration_service as service:
+                    shopify_access_token = service.shopify.get_shopify_token(shopify_data=shopify_data)
+                    shop_id = service.shopify.get_shopify_shop_id(
+                        shopify_data=shopify_data, 
+                        shopify_access_token=shopify_access_token
+                    )
+                if not shopify_access_token or not shop_id:
+                    logger.error("Invalid Shopify access token or shop ID.")
                     return {
-                        'status': authorization_data['status'].value,
-                        'token': token,
-                        'stripe_payment_url': authorization_data['stripe_payment_url']
+                        'status': OauthShopify.ERROR_SHOPIFY_TOKEN.value
                     }
-                if authorization_data['status'] != LoginStatus.SUCCESS:
-                    return {
-                        'status': authorization_data['status'].value,
-                        'token': token
-                    }
+            except Exception as e:
+                logger.exception("An error occurred while processing Shopify data.")
                 return {
-                    'status': LoginStatus.SUCCESS,
-                    'token': token
+                    'status': OauthShopify.ERROR_SHOPIFY_TOKEN.value
                 }
-            else:
-                logger.info("Password Verification Failed")
-                return {
-                    'status': LoginStatus.INCORRECT_PASSWORD_OR_EMAIL
-                }
+                
+        logger.debug("Password verification passed")
+        self.user_persistence_service.set_last_signed_in(user_id=user_object.id)
+        if user_object.team_owner_id:
+            token_info = {
+                "id": user_object.team_owner_id,
+                "team_member_id": user_object.id
+            }
+            user_object = self.user_persistence_service.get_user_by_id(user_object.team_owner_id, True)
+        else:
+            token_info = {
+                "id": user_object.id,
+            }
+        token = create_access_token(token_info)
+        
+        if shopify_data:
+            self._process_shopify_integration(user_object, shopify_data, shopify_access_token, shop_id)
+            
+        authorization_data = self.get_user_authorization_information(user_object, self.subscription_service)
+        
+        if authorization_data['status'] == LoginStatus.PAYMENT_NEEDED:
+            return {
+                'status': authorization_data['status'].value,
+                'token': token,
+                'stripe_payment_url': authorization_data['stripe_payment_url']
+            }
+        if authorization_data['status'] != LoginStatus.SUCCESS:
+            return {
+                'status': authorization_data['status'].value,
+                'token': token
+            }
+        return {
+            'status': LoginStatus.SUCCESS,
+            'token': token
+        }
 
     def verify_token(self, token):
         try:

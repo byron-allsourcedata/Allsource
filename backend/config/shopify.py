@@ -12,5 +12,5 @@ class ShopifyConfig(Base):
         "read_script_tags",
         "write_script_tags",
     ]
-    callback_uri = f"{os.getenv('SITE_HOST_URL')}/shopifyLanding"
+    callback_uri = f"{os.getenv('SITE_HOST_URL')}/shopify-landing"
     api_version = "2024-10"

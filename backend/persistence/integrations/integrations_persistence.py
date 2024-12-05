@@ -23,6 +23,16 @@ class IntegrationsPresistence:
             .first()
         )
         return user_integration
+    
+    def get_integration_by_shop_url(self, shop_url):
+        user_integration = (
+            self.db.query(UserIntegration)
+            .filter(
+                UserIntegration.shop_domain == shop_url
+            )
+            .first()
+        )
+        return user_integration
 
 
     def get_integration_by_user(self, domain_id: int) -> UserIntegration:

@@ -87,7 +87,7 @@ class BigcommerceIntegrationsService:
         except:
             raise HTTPException(status_code=400, detail={'status': IntegrationsStatus.CREATE_IS_FAILED.value})
         
-    def add_integration(self, new_credentials: IntegrationCredentials, domain, user):
+    def add_integration(self, new_credentials: IntegrationCredentials, domain, user_id):
         eai = self.eai_persistence.get_epi_by_filter_one(platform='Bigcommerce', store_hash=new_credentials.bigcommerce.shop_domain)
         if not eai:
             raise HTTPException(status_code=400, detail={'status': IntegrationsStatus.CREATE_IS_FAILED.value})
@@ -101,14 +101,14 @@ class BigcommerceIntegrationsService:
         if not credentials and info.domain != domain.domain:
             raise HTTPException(status_code=400, detail=IntegrationsStatus.NOT_MATCHED_EARLIER.value)
         integration = self.__save_integrations(store_hash=eai.store_hash, 
-                                 access_token=eai.access_token, domain_id=domain.id, user_id=user.get('id'))
-        self.__set_pixel(user, domain, shop_domain=integration.shop_domain, access_token=integration.access_token)
+                                 access_token=eai.access_token, domain_id=domain.id, user_id=user_id)
+        self.__set_pixel(user_id, domain, shop_domain=integration.shop_domain, access_token=integration.access_token)
         if not integration:
             raise HTTPException(status_code=409, detail=IntegrationsStatus.CREATE_IS_FAILED.value)
         return integration
         
 
-    def add_integration_with_app(self, new_credentials: IntegrationCredentials, domain, user):
+    def add_integration_with_app(self, new_credentials: IntegrationCredentials, domain, user_id):
         credentials = self.get_credentials(domain_id=domain.id)
         info = self.__get_store_info(store_hash=new_credentials.bigcommerce.shop_domain, 
                                      access_token=new_credentials.bigcommerce.access_token)
@@ -119,8 +119,8 @@ class BigcommerceIntegrationsService:
         if not credentials and info.domain != domain.domain:
             raise HTTPException(status_code=400, detail=IntegrationsStatus.NOT_MATCHED_EARLIER.value)
         integration = self.__save_integrations(store_hash=new_credentials.bigcommerce.shop_domain, 
-                                 access_token=new_credentials.bigcommerce.access_token, domain_id=domain.id, user_id=user.get('id'))
-        self.__set_pixel(user, domain, shop_domain=integration.shop_domain, access_token=integration.access_token)
+                                 access_token=new_credentials.bigcommerce.access_token, domain_id=domain.id, user_id=user_id)
+        self.__set_pixel(user_id, domain, shop_domain=integration.shop_domain, access_token=integration.access_token)
         if not integration:
             raise HTTPException(status_code=409, detail=IntegrationsStatus.CREATE_IS_FAILED.value)
         return integration

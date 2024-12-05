@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, Request as fastRequest, HTTPException, s
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 from dependencies import get_plans_service, get_payments_service, get_webhook, check_user_authentication, \
     check_user_authorization_without_pixel
-from enums import TeamAccessLevel, NotificationTitles
+from enums import TeamAccessLevel
 from models.users import Users
 from schemas.subscriptions import UnsubscribeRequest
 from services.payments import PaymentsService
@@ -26,6 +26,9 @@ async def get_subscription_plans(plans_service: PlansService = Depends(get_plans
 @router.get("/session/new")
 async def create_customer_session(price_id: str, payments_service: PaymentsService = Depends(get_payments_service),
                                   user: Users = Depends(check_user_authentication)):
+    # * IF USER FROM SHOPIFY, GO WITH THIS FLOW
+    if users.check_user_signup_source(db, user_id=user.parent_id) == UserSignupSource.SHOPIFY.value:
+        return shopify_service.get_subscription_charge_for_user(db=db, plan_data=plan_data, user_id=user.parent_id)
     return payments_service.create_customer_session(price_id=price_id, user=user)
 
 
@@ -55,7 +58,7 @@ async def update_payment_confirmation(request: fastRequest, webhook_service: Web
 
 @router.post("/cancel-subscription-webhook")
 async def update_payment_confirmation(request: fastRequest, webhook_service: WebhookService = Depends(get_webhook)):
-    payload = await request.json()
+    payload = await request.json()        
     result_update_subscription = webhook_service.cancel_subscription_confirmation(payload=payload)
     if result_update_subscription.get('status') and result_update_subscription['status'] == 'failed':
         user = result_update_subscription['message_body']['user']
@@ -113,7 +116,9 @@ def cancel_user_subscription(unsubscribe_request: UnsubscribeRequest,
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Access denied. Admins only."
             )
-
+    if user_subscription.PaymentPlatformName == 'shopify':
+            shopify_service.cancel_current_subscription(db=db, user_id=user.parent_id)
+            subscription_data = subscriptions.get_subscription(db=db, user_id=user.parent_id)
     return payments_service.cancel_user_subscription(user=user,
                                                      reason_unsubscribe=unsubscribe_request.reason_unsubscribe)
 
@@ -129,7 +134,11 @@ def upgrade_and_downgrade_user_subscription(price_id: str,
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Access denied. Admins only."
             )
-
+    if current_price_obj.PaymentPlatformName == 'shopify':
+        try:
+            new_plan = plans.get_plan_by_stripe_id(db=db, price_id=new_price_id)
+            result = subscriptions.shopify_upgrade_downgrade(user=user, db=db, new_plan=new_plan)
+            return {"data": result["message"], "redirect_url": result["redirect_url"]}
     return payments_service.upgrade_and_downgrade_user_subscription(price_id=price_id, user=user)
 
 

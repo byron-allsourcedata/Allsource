@@ -56,3 +56,7 @@ class ShopifyOrderAPI(BaseModel):
     
 class ShopifyCredentials(BaseModel):
     access_token: str
+    
+class ShopifyLandingResponse(BaseModel):
+    token: Optional[str]
+    message: Optional[str]

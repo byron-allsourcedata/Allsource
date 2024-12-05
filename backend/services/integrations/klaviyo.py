@@ -174,12 +174,12 @@ class KlaviyoIntegrationsService:
         return self.__mapped_list(response.json().get('data'))
 
 
-    def add_integration(self, credentials: IntegrationCredentials, domain, user):
+    def add_integration(self, credentials: IntegrationCredentials, domain, user_id):
         try:
             self.__get_list(credentials.klaviyo.api_key)
         except:
             raise HTTPException(status_code=400, detail=IntegrationsStatus.CREDENTAILS_INVALID.value)
-        self.__save_integrations(credentials.klaviyo.api_key, domain.id, user_id=user.get('id'))
+        self.__save_integrations(credentials.klaviyo.api_key, domain.id, user_id=user_id)
         return {
             'status': IntegrationsStatus.SUCCESS.value
         }

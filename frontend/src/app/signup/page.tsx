@@ -23,7 +23,19 @@ const Signup: React.FC = () => {
   const teams_token = searchParams.get('token');
   const spi = searchParams.get('spi');
   const awin_awc = searchParams.get('awc')
-  const [formValues, setFormValues] = useState({ full_name: '', email: user_teams_mail, password: '', is_without_card: !isWithoutCard, awc: awin_awc || null, termsAccepted: false, teams_token: teams_token, spi: spi });
+  const initialShopifyData = {
+    code: searchParams.get('code') || null,
+    hmac: searchParams.get('hmac') || null,
+    host: searchParams.get('host') || null,
+    shop: searchParams.get('shop') || null,
+    state: searchParams.get('state') || null,
+    timestamp: searchParams.get('timestamp') || null,
+  };
+  const isShopifyDataComplete = Object.values(initialShopifyData).every(value => value !== null);
+  const [formValues, setFormValues] = useState({
+    full_name: '', email: user_teams_mail, password: '', is_without_card: !isWithoutCard, awc: awin_awc || null, termsAccepted: false, teams_token: teams_token, spi: spi,
+    ...(isShopifyDataComplete && { shopify_data: initialShopifyData })
+  });
   const [formSubmitted, setFormSubmitted] = useState(false);
 
   useEffect(() => {
@@ -252,8 +264,9 @@ const Signup: React.FC = () => {
                   token: credentialResponse.credential,
                   ...(spi && { spi }),
                   ...(teams_token && { teams_token }),
-                  ...{is_without_card : !isWithoutCard},
-                  ...{awc: awin_awc || null}
+                  ...{ is_without_card: !isWithoutCard },
+                  ...{ awc: awin_awc || null },
+                  ...(isShopifyDataComplete && { shopify_data: initialShopifyData })
                 });
 
                 const responseData = response.data;
@@ -326,7 +339,7 @@ const Signup: React.FC = () => {
           </Box>
           <Box component="form" onSubmit={handleSubmit} sx={signupStyles.form}>
             <TextField
-              InputLabelProps={{ 
+              InputLabelProps={{
 
                 className: "form-input-label",
                 focused: false
@@ -340,7 +353,7 @@ const Signup: React.FC = () => {
               error={Boolean(errors.full_name)}
               helperText={errors.full_name}
               InputProps={{
-                className: "form-input" 
+                className: "form-input"
               }}
             />
             <TextField sx={signupStyles.formField}
@@ -460,7 +473,7 @@ const Signup: React.FC = () => {
           </Box>
           <Typography variant="body2" className='second-sub-title' sx={signupStyles.loginText}>
             Already have an account?{' '}
-            <Link href="/signin" sx={signupStyles.loginLink} className='hyperlink-red'>
+            <Link href={`/signin?${searchParams.toString()}`} sx={signupStyles.loginLink} className='hyperlink-red'>
               Login
             </Link>
           </Typography>

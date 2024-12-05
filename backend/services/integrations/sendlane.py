@@ -87,11 +87,11 @@ class SendlaneIntegrationService:
             return
         return [self.__mapped_list(list) for list in lists.json().get('data')]
 
-    def add_integration(self, credentials: IntegrationCredentials, domain, user):
+    def add_integration(self, credentials: IntegrationCredentials, domain, user_id):
         lists = self.__get_list(credentials.sendlane.api_key)
         if lists.status_code == 401:
             raise HTTPException(status_code=400, detail={'status': IntegrationsStatus.CREDENTAILS_INVALID.value})
-        return self.__save_integrations(credentials.sendlane.api_key, domain_id=domain.id, user_id=user.get('id'))
+        return self.__save_integrations(credentials.sendlane.api_key, domain_id=domain.id, user_id=user_id)
 
     
     def __get_sender(self, api_key):

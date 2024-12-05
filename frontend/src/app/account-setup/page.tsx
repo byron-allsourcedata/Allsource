@@ -24,6 +24,7 @@ import { fetchUserData } from '@/services/meService';
 const AccountSetup = () => {
   const [organizationName, setOrganizationName] = useState("");
   const [websiteLink, setWebsiteLink] = useState("");
+  const [domainLink, setDomainLink] = useState("");
   const [selectedEmployees, setSelectedEmployees] = useState("");
   const [selectedVisits, setSelectedVisits] = useState("");
   const [selectedRoles, setSelectedRoles] = useState("");
@@ -85,7 +86,7 @@ const AccountSetup = () => {
         const status = response.data.status;
         const domain_url = response.data.domain_url
         if (domain_url) {
-          setWebsiteLink(domain_url)
+          setDomainLink(domain_url)
         }
 
         switch (status) {
@@ -672,10 +673,10 @@ const AccountSetup = () => {
                       ? websiteLink.replace(/^https?:\/\//, "")
                       : `https://${websiteLink.replace(/^https?:\/\//, "")}`
                 }
-                onChange={websiteLink ? undefined : handleWebsiteLink}
-                onFocus={websiteLink ? undefined : handleFocus}
-                onBlur={websiteLink ? undefined : handleBlur} 
-                disabled={!!websiteLink}
+                onChange={domainLink ? undefined : handleWebsiteLink}
+                onFocus={domainLink ? undefined : handleFocus}
+                onBlur={domainLink ? undefined : handleBlur} 
+                disabled={!!domainLink}
                 error={!!errors.websiteLink}
                 helperText={errors.websiteLink}
                 InputProps={{

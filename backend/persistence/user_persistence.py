@@ -24,9 +24,14 @@ class UserPersistence:
         self.db.commit()
         
     def save_user_domain(self, user_id, domain):
-        domain = self.db.add(UserDomains(user_id=user_id, domain=domain.replace('https://', '').replace('http://', '')))
+        user_domain = self.db.query(UserDomains).filter(UserDomains.domain == domain).first()
+        if user_domain:
+            return user_domain
+        user_domain = UserDomains(user_id=user_id, domain=domain.replace('https://', '').replace('http://', ''))
+        self.db.add(user_domain)
         self.db.commit()
-        return domain
+        return user_domain
+
 
     def get_team_members(self, user_id: int):
         users = self.db.query(Users).filter(Users.team_owner_id == user_id).all()
