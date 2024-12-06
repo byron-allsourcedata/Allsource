@@ -654,7 +654,7 @@ async def process_files(session, rabbitmq_connection, root_user):
         db=session
     )
 
-    while true:
+    while True:
         try:
             with open(LAST_PROCESSED_FILE_PATH, "r") as file:
                 last_processed_file = file.read().strip()
