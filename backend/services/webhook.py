@@ -169,13 +169,13 @@ class WebhookService:
             saved_details_of_payment = save_payment_details_in_stripe(customer_id=customer_id)
             if not saved_details_of_payment:
                 logger.warning("set default card false")
+                
         result = {
             'status': result['status'],
             'user': user_data,
             'lead_credit_plan_id': lead_credit_plan_id if lead_credit_plan_id else None
         }
         
-        return result
     
         is_actual_charge = True
         user_subscription = subscriptions.get_subscription(db, user.parent_id)

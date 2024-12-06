@@ -393,9 +393,10 @@ def get_webhook(subscription_service: SubscriptionService = Depends(get_subscrip
 
 def get_payments_service(plans_service: PlansService = Depends(get_plans_service),
                          plan_persistence: PlansPersistence = Depends(get_plans_persistence),
+                         integration_service: IntegrationService = Depends(get_integration_service),
                          subscription_service: SubscriptionService = Depends(get_subscription_service)):
     return PaymentsService(plans_service=plans_service, plan_persistence=plan_persistence,
-                           subscription_service=subscription_service)
+                           subscription_service=subscription_service, integration_service=integration_service)
 
 
 def get_company_info_service(db: Session = Depends(get_db), user=Depends(check_user_authentication),

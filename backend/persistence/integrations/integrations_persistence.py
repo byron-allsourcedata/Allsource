@@ -33,7 +33,7 @@ class IntegrationsPresistence:
             .first()
         )
         return user_integration
-
+    
 
     def get_integration_by_user(self, domain_id: int) -> UserIntegration:
         return self.db.query(UserIntegration).filter(UserIntegration.domain_id == domain_id).all()

@@ -4,8 +4,10 @@ import binascii
 import httpx
 from enums import IntegrationsStatus, OauthShopify
 from config.shopify import ShopifyConfig
+from fastapi import HTTPException, status
 from models.users_domains import UserDomains
 from models.users import User
+from models.plans import SubscriptionPlan
 from ..jwt_service import create_access_token
 from schemas.integrations.shopify import ShopifyCustomer, ShopifyOrderAPI
 from schemas.integrations.integrations import IntegrationCredentials
@@ -14,11 +16,9 @@ from persistence.leads_order_persistence import LeadOrdersPersistence
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
 from httpx import Client
-from schemas.integrations.shopify import ShopifyCredentials
 from schemas.users import ShopifyPayloadModel
 import shopify
 from enums import SourcePlatformEnum
-from fastapi import HTTPException
 from datetime import datetime, timedelta
 from services.aws import AWSService
 from sqlalchemy.orm import Session
@@ -50,6 +50,39 @@ class ShopifyIntegrationService:
             shop = shopify.Shop.current()
             shop_id = shop.id
         return shop_id
+    
+    def create_new_recurring_charge(self, shopify_domain: str, shopify_access_token: str, plan: SubscriptionPlan, test_mode: bool) -> str:
+        with shopify.Session.temp(shopify_domain, ShopifyConfig.api_version, shopify_access_token):
+            plan_interval = "EVERY_30_DAYS" if plan.interval == "month" else "ANNUAL"
+            new_charge = shopify.RecurringApplicationCharge.create({
+                "name": plan.title,
+                "return_url": os.getenv("STRIPE_SUCCESS_URL"),
+                "price": float(plan.price),
+                "currency_code": plan.currency.upper(),
+                "interval": plan_interval,
+                "test": test_mode
+            })
+        
+        if new_charge is None:
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail={'status': 'Failed to create new charge'})
+        
+        link = new_charge.attributes.get("confirmation_url")
+        return {"link": link}
+    
+    def initialize_subscription_charge(self, plan: SubscriptionPlan, user: dict):
+        test_mode = True if os.getenv("MODE") == "dev" else False
+        return self.create_new_recurring_charge(shopify_domain=user.get('shop_domain'), shopify_access_token=user.get('shopify_token'), plan=plan, test_mode=test_mode)
+    
+    def cancel_current_subscription(self, user: User):
+        with shopify.Session.temp(user.shop_domain, ShopifyConfig.api_version, user.shopify_token):
+            charge = shopify.RecurringApplicationCharge.current()
+            if charge is None:
+                raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail={'status': 'No shopify plan active'})
+            charge.destroy()
+        return True
+    
+    def update_downgrade_subscription(user, new_plan):
+        pass
             
     def create_webhooks_for_store(self, shopify_data: ShopifyPayloadModel, shopify_access_token):        
         with shopify.Session.temp(shopify_data.shop, ShopifyConfig.api_version, shopify_access_token):

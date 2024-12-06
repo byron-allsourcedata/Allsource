@@ -47,6 +47,9 @@ class Users(Base):
     current_subscription_id = Column(Integer, nullable=False)
     awin_awc = Column(VARCHAR(128), nullable=True)
     source_platform = Column(VARCHAR(64), nullable=True)
+    shop_id = Column(VARCHAR, nullable=True)
+    shopify_token = Column(VARCHAR, nullable=True)
+    shop_domain = Column(VARCHAR, nullable=True)
 
 
 User = Users

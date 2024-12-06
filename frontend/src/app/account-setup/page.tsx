@@ -86,6 +86,7 @@ const AccountSetup = () => {
         const status = response.data.status;
         const domain_url = response.data.domain_url
         if (domain_url) {
+          setWebsiteLink(domain_url)
           setDomainLink(domain_url)
         }
 

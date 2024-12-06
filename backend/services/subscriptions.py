@@ -236,7 +236,7 @@ class SubscriptionService:
         return user_payment_transaction
     
     def trackAwinConversion(self, user, price, subscription_type, date):
-        mode = 1 if os.getenv('AWIN_MODE') == 'dev' else 0
+        mode = 1 if os.getenv('MODE') == 'dev' else 0
         awin_campaign_id = os.getenv('AWIN_CAMPAIGN_ID')
         order_id = f"{user.id}_{date}"
         

@@ -105,7 +105,9 @@ class UserPersistence:
                 'team_access_level': user.team_access_level,
                 'current_subscription_id': user.current_subscription_id,
                 'awin_awc': user.awin_awc,
-                'source_platform': user.source_platform
+                'source_platform': user.source_platform,
+                'shop_domain': user.shop_domain,
+                'shopify_token': user.shopify_token
             }
         self.db.rollback()
         if result_as_object:

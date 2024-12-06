@@ -3,8 +3,10 @@ from datetime import datetime
 from typing import List
 import stripe
 from config.stripe import StripeConfig
-from enums import SubscriptionStatus
+from models.plans import SubscriptionPlan
+from enums import SubscriptionStatus, SourcePlatformEnum
 from persistence.plans_persistence import PlansPersistence
+from services.integrations.base import IntegrationService
 from services.plans import PlansService
 from .stripe_service import renew_subscription, get_default_payment_method, purchase_product, \
     cancel_subscription_at_period_end, cancel_downgrade, create_stripe_checkout_session
@@ -69,10 +71,11 @@ def compare_prices(price_id1: int, price_id2: int) -> int:
 class PaymentsService:
 
     def __init__(self, plans_service: PlansService, plan_persistence: PlansPersistence,
-                 subscription_service: SubscriptionService):
+                 subscription_service: SubscriptionService, integration_service: IntegrationService):
         self.plans_service = plans_service
         self.plan_persistence = plan_persistence
         self.subscription_service = subscription_service
+        self.integration_service = integration_service
 
     def upgrade_subscription(self, current_subscription, platform_subscription_id, price_id):
         if current_subscription['schedule']:
@@ -98,6 +101,10 @@ class PaymentsService:
         stripe.SubscriptionSchedule.release(schedule.id)
 
     def create_customer_session(self, price_id: str, user):
+        if user.get('source_platform') == SourcePlatformEnum.SHOPIFY.value:
+            plan = self.plan_persistence.get_plan_by_price_id(price_id)
+            with self.integration_service as service:
+                return service.shopify.initialize_subscription_charge(plan=plan, user=user)
         customer_id = self.plans_service.get_customer_id(user)
         trial_period = 0
         if not self.plan_persistence.get_user_subscription(user.get('id')):
@@ -122,10 +129,15 @@ class PaymentsService:
         return {'status': get_subscription_status(schedule_downgrade_subscription)}
 
     def cancel_user_subscription(self, user, reason_unsubscribe):
-        subscription = self.plan_persistence.get_user_subscription(user_id=user.get('id'))
-        if not subscription:
+        user_subscription = self.plan_persistence.get_user_subscription(user_id=user.get('id'))
+        if not user_subscription:
             return SubscriptionStatus.SUBSCRIPTION_NOT_FOUND
-        subscription_data = cancel_subscription_at_period_end(subscription.platform_subscription_id)
+        
+        if user_subscription.PaymentPlatformName == SourcePlatformEnum.SHOPIFY.value:
+            with self.integration_service as service:
+                subscription_data = service.shopify.cancel_current_subscription(user=user)
+        else:
+            subscription_data = cancel_subscription_at_period_end(user_subscription.platform_subscription_id)
         if subscription_data['status'] == 'active':
             cancel_at = subscription_data.get('canceled_at')
             cancel_scheduled_at = datetime.fromtimestamp(cancel_at)
@@ -139,6 +151,11 @@ class PaymentsService:
         subscription = self.plan_persistence.get_user_subscription(user_id=user.get('id'))
         if subscription is None:
             return {'status': SubscriptionStatus.INCOMPLETE}
+        if user.source_platform == SourcePlatformEnum.SHOPIFY.value:
+            plan = self.plan_persistence.get_plan_by_price_id(price_id)
+            with self.integration_service as service:
+                return service.shopify.initialize_subscription_charge(plan=plan, user=user)
+            
         platform_subscription_id = subscription.platform_subscription_id
         current_subscription = stripe.Subscription.retrieve(platform_subscription_id)
         is_downgrade = self.is_downgrade(price_id, user.get('current_subscription_id'))
