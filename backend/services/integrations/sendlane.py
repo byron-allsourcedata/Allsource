@@ -229,54 +229,54 @@ class SendlaneIntegrationService:
             for data_sync_item in data_syncs_list if not sync else [sync]:
                 if lead and lead.behavior_type != data_sync_item.leads_type and data_sync_item.leads_type not in ('allContacts', None):
                     logging.warning("Lead behavior type mismatch: %s vs %s", lead.behavior_type, data_sync_item.leads_type)
-                    continue
-
-                last_lead_sync_id = data_sync_item.last_lead_sync_id
-                if last_lead_sync_id:
-                    last_leads_sync = self.leads_persistence.get_lead_user_by_up_id(domain_id=domain.id, up_id=last_lead_sync_id)
-                for lead in leads:
-                    if last_leads_sync and lead.five_x_five_user_id < last_leads_sync.id:
-                        continue
-                    if stage > 3:
-                        logging.info("Stage limit reached. Exiting.")
-                        return
-                    
-                    if next_try and datetime.now() < datetime.fromisoformat(next_try):
-                        await asyncio.sleep(1)
-                        logging.info("Processing lead sync with next try: %s", next_try)
-                        await self.process_lead_sync(
-                            lead_user=lead,
-                            user_domain_id=domain.id, 
-                            behavior_type=lead.behavior_type, 
-                            stage=stage, 
-                            next_try=next_try  
-                        )
-                        continue
-                    profile = self.__create_contact(lead.five_x_five_user_id, credentials, data_sync_item.list_id)
-                    if not profile:
-                        data_sync_item.sync_status = False
-                        self.sync_persistence.db.commit()
-                        logging.error("Profile creation failed for lead: %s", lead.five_x_five_user_id)
-                        if stage != 3:
-                            next_try_str = (datetime.now() + timedelta(hours=3)).isoformat()
-                            await self.process_lead_sync(
-                                lead_user=lead,
-                                user_domain_id=domain.id, 
-                                behavior_type=lead.behavior_type, 
-                                stage=stage + 1, 
-                                next_try=next_try_str
-                            )
-                        continue
-                    data_sync_item.sync_status = True
-                    self.sync_persistence.db.commit()
-                    logging.info("Profile added successfully for lead: %s", lead.five_x_five_user_id)
-                    counter += 1
-                    last_leads_sync = lead
-                self.sync_persistence.update_sync({
-                    'last_sync_date': datetime.now(),
-                    'last_lead_sync_id': self.leads_persistence.get_lead_data(last_leads_sync.five_x_five_user_id).up_id if counter > 0 else last_lead_sync_id
-                },counter=counter, id=data_sync_item.id)
-                logging.info("Sync updated for item id: %s", data_sync_item.id)
+                else:
+                    last_lead_sync_id = data_sync_item.last_lead_sync_id
+                    if last_lead_sync_id:
+                        last_leads_sync = self.leads_persistence.get_lead_user_by_up_id(domain_id=domain.id, up_id=last_lead_sync_id)
+                    for lead in leads:
+                        if last_leads_sync and lead.five_x_five_user_id < last_leads_sync.id:
+                            logging.info('No sync needed')
+                        else:
+                            if stage > 3:
+                                logging.info("Stage limit reached. Exiting.")
+                                return
+                            
+                            if next_try and datetime.now() < datetime.fromisoformat(next_try):
+                                await asyncio.sleep(1)
+                                logging.info("Processing lead sync with next try: %s", next_try)
+                                await self.process_lead_sync(
+                                    lead_user=lead,
+                                    user_domain_id=domain.id, 
+                                    behavior_type=lead.behavior_type, 
+                                    stage=stage, 
+                                    next_try=next_try  
+                                )
+                            else:
+                                profile = self.__create_contact(lead.five_x_five_user_id, credentials, data_sync_item.list_id)
+                                if not profile:
+                                    data_sync_item.sync_status = False
+                                    self.sync_persistence.db.commit()
+                                    logging.error("Profile creation failed for lead: %s", lead.five_x_five_user_id)
+                                    if stage != 3:
+                                        next_try_str = (datetime.now() + timedelta(hours=3)).isoformat()
+                                        await self.process_lead_sync(
+                                            lead_user=lead,
+                                            user_domain_id=domain.id, 
+                                            behavior_type=lead.behavior_type, 
+                                            stage=stage + 1, 
+                                            next_try=next_try_str
+                                        )
+                                else:
+                                    data_sync_item.sync_status = True
+                                    self.sync_persistence.db.commit()
+                                    logging.info("Profile added successfully for lead: %s", lead.five_x_five_user_id)
+                                    counter += 1
+                                    last_leads_sync = lead
+                    self.sync_persistence.update_sync({
+                        'last_sync_date': datetime.now(),
+                        'last_lead_sync_id': self.leads_persistence.get_lead_data(last_leads_sync.five_x_five_user_id).up_id if counter > 0 else last_lead_sync_id
+                    },counter=counter, id=data_sync_item.id)
+                    logging.info("Sync updated for item id: %s", data_sync_item.id)
 
     def __create_contact(self, lead_id: int, credential: UserIntegration, list_id: int):
         lead_data = self.leads_persistence.get_lead_data(lead_id)
