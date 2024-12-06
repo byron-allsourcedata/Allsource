@@ -110,7 +110,8 @@ async def process_files(sts_client, session):
 async def main():
     sts_client = create_sts_client(os.getenv('S3_KEY_ID'), os.getenv('S3_KEY_SECRET'))
     engine = create_engine(
-        f"postgresql://{os.getenv('DB_USERNAME')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}")
+        f"postgresql://{os.getenv('DB_USERNAME')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}", pool_pre_ping=True
+    )
     Session = sessionmaker(bind=engine)
     session = Session()
 
@@ -118,11 +119,8 @@ async def main():
     try:
         while True:
             await process_files(sts_client=sts_client, session=session)
-            session.close()
             logging.info('Sleeping for 10 minutes...')
             time.sleep(60 * 10)
-            Session = sessionmaker(bind=engine)
-            session = Session()
     except Exception as e:
         session.rollback()
         logging.error(f"An error occurred: {str(e)}")
