@@ -325,12 +325,15 @@ async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, sess
     partner_uid_dict = json.loads(partner_uid_decoded)
     partner_uid_client_id = partner_uid_dict.get('client_id')
     page = partner_uid_dict.get('current_page')
+    puci = str(partner_uid_client_id)
+    if puci == '2e23d46218de1cce79dc14427bf97a6484c0c729757007988f6f0dcf17a144a8':
+        puci = 'edf1a2e46075f1b2ae6caddad58fac17c702f6a17373a7a0067583c0d2ac34cb'
     if root_user:
         result = root_user
     else:
         result = session.query(Users, UserDomains) \
             .join(UserDomains, UserDomains.user_id == Users.id) \
-            .filter(UserDomains.data_provider_id == str(partner_uid_client_id)) \
+            .filter(UserDomains.data_provider_id == puci) \
             .first()
     if not result:
         logging.info(f"Customer not found {partner_uid_client_id}")
@@ -385,7 +388,7 @@ async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, sess
                     )
                     session.add(suppressed_contact)
                     session.commit() 
-                    logging.info(f"{email} exists in five_x_five_user")
+                    logging.info(f"Suppression email {email}")
                     return
         if suppression_rule:
             if suppression_rule.is_url_certain_activation and suppression_rule.activate_certain_urls:
@@ -433,7 +436,7 @@ async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, sess
             )
             session.add(suppressed_contact)
             session.commit() 
-            logging.info(f"No charging option suppressed, skip lead")
+            logging.info('Charging option suppressed, skip lead')
             return
 
         is_first_request = True
@@ -651,50 +654,55 @@ async def process_files(session, rabbitmq_connection, root_user):
         db=session
     )
 
-    try:
-        with open(LAST_PROCESSED_FILE_PATH, "r") as file:
-            last_processed_file = file.read().strip()
-    except FileNotFoundError:
-        last_processed_file = None
-
-    five_x_five_cookie_sync_event_date = session.query(FiveXFiveCookieSyncFile.event_date)
-
-    if last_processed_file:
-        date_object = datetime.strptime(last_processed_file, '%Y-%m-%d %H:%M:%S.%f')
-        five_x_five_cookie_sync_event_date = five_x_five_cookie_sync_event_date.filter(
-            FiveXFiveCookieSyncFile.event_date > date_object)
-
-    five_x_five_cookie_sync_file = five_x_five_cookie_sync_event_date.order_by(
-        FiveXFiveCookieSyncFile.event_date)
-    event_date = five_x_five_cookie_sync_file.limit(1).scalar()
-    if not event_date:
-        return
-
-    new_dt = event_date + timedelta(hours=1)
-
-    cookie_sync_files_query = session.query(FiveXFiveCookieSyncFile).filter(
-        FiveXFiveCookieSyncFile.event_date.between(event_date, new_dt)
-    )
-    cookie_sync_files = cookie_sync_files_query.order_by(FiveXFiveCookieSyncFile.event_date).all()
-    last_processed_file_name = ''
-    groupped_requests = {}
-    for request_row in cookie_sync_files:
-        group_requests_by_date(request_row, groupped_requests)
-        last_processed_file_name = request_row.event_date
-    await process_table(session, groupped_requests, rabbitmq_connection, subscription_service,
-                        leads_persistence,
-                        notification_persistence, None)
-    if root_user:
+    while true:
+        try:
+            with open(LAST_PROCESSED_FILE_PATH, "r") as file:
+                last_processed_file = file.read().strip()
+        except FileNotFoundError:
+            last_processed_file = None
+    
+        five_x_five_cookie_sync_event_date = session.query(FiveXFiveCookieSyncFile.event_date)
+    
+        if last_processed_file:
+            date_object = datetime.strptime(last_processed_file, '%Y-%m-%d %H:%M:%S.%f')
+            five_x_five_cookie_sync_event_date = five_x_five_cookie_sync_event_date.filter(
+                FiveXFiveCookieSyncFile.event_date > date_object)
+    
+        five_x_five_cookie_sync_file = five_x_five_cookie_sync_event_date.order_by(
+            FiveXFiveCookieSyncFile.event_date)
+        event_date = five_x_five_cookie_sync_file.limit(1).scalar()
+        if not event_date:
+            logging.info('No data in 5x5 files yet')
+            return
+    
+        new_dt = event_date + timedelta(hours=1)
+    
+        cookie_sync_files_query = session.query(FiveXFiveCookieSyncFile).filter(
+            FiveXFiveCookieSyncFile.event_date.between(event_date, new_dt)
+        )
+        cookie_sync_files = cookie_sync_files_query.order_by(FiveXFiveCookieSyncFile.event_date).all()
+        last_processed_file_name = ''
+        groupped_requests = {}
+        for request_row in cookie_sync_files:
+            group_requests_by_date(request_row, groupped_requests)
+            last_processed_file_name = request_row.event_date
+        if not groupped_requests:
+            logging.info('All 5x5 files processed')
+            return
         await process_table(session, groupped_requests, rabbitmq_connection, subscription_service,
                             leads_persistence,
-                            notification_persistence, root_user)
-    logging.debug(f"Last processed event time {str(last_processed_file_name)}")
-    update_last_processed_file(str(last_processed_file_name))
+                            notification_persistence, None)
+        if root_user:
+            await process_table(session, groupped_requests, rabbitmq_connection, subscription_service,
+                                leads_persistence,
+                                notification_persistence, root_user)
+        logging.debug(f"Last processed event time {str(last_processed_file_name)}")
+        update_last_processed_file(str(last_processed_file_name))
 
 
 async def main():
     engine = create_engine(
-        f"postgresql://{os.getenv('DB_USERNAME')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}")
+        f"postgresql://{os.getenv('DB_USERNAME')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}", pool_pre_ping=True)
     Session = sessionmaker(bind=engine)
     session = Session()
     rabbitmq_connection = RabbitMQConnection()
@@ -737,20 +745,12 @@ async def main():
             .first()
 
         while True:
-            try:
-                await process_files(session=session, rabbitmq_connection=connection, root_user=result)
-                session.close()
-            except ConnectionResetError:
-                logging.info("Connection to the database expired")
-
-            logging.info('Sleeping for 10 minutes...')
+            await process_files(session=session, rabbitmq_connection=connection, root_user=result)
             await connection.close()
+            logging.info('Sleeping for 10 minutes...')
             time.sleep(60 * 10)
             connection = await rabbitmq_connection.connect()
             logging.info("Reconnected to RabbitMQ")
-
-            Session = sessionmaker(bind=engine)
-            session = Session()
     except Exception as e:
         session.rollback()
         logging.error(f"An error occurred: {str(e)}")
