@@ -25,6 +25,7 @@ from persistence.plans_persistence import PlansPersistence
 from persistence.sendgrid_persistence import SendgridPersistence
 from persistence.settings_persistence import SettingsPersistence
 from persistence.suppression_persistence import SuppressionPersistence
+from persistence.partners_asset_persistence import PartnersAssetPersistence
 from persistence.user_persistence import UserPersistence
 from persistence.integrations.external_apps_installations import ExternalAppsInstallationsPersistence
 from schemas.auth_token import Token
@@ -49,6 +50,7 @@ from services.users import UsersService
 from services.users_auth import UsersAuth
 from services.users_email_verification import UsersEmailVerificationService
 from services.webhook import WebhookService
+from services.partners_assets import PartnersAssetService
 
 
 logger = logging.getLogger(__name__)
@@ -61,6 +63,11 @@ def get_db():
     finally:
         db.close()
 
+def get_partnersAsset_persistence(db: Session = Depends(get_db)) -> PartnersAssetPersistence:
+    return PartnersAssetPersistence(db)
+
+def get_partnersAssets_service(partners_asset_persistence: PartnersAssetPersistence = Depends(get_partnersAsset_persistence)):
+    return PartnersAssetService(partners_asset_persistence=partners_asset_persistence)
 
 def get_plans_persistence(db: Session = Depends(get_db)):
     return PlansPersistence(db=db)

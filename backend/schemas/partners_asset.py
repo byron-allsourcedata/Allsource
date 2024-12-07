@@ -1,0 +1,11 @@
+from pydantic import BaseModel
+from typing import Optional
+class DomainScheme(BaseModel):
+    domain: str
+
+class PartnersAssetResponse(BaseModel):
+    id: int
+    title: str
+    type: str
+    preview_url: str
+    file_url: str
