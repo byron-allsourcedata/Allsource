@@ -44,6 +44,11 @@ class ShopifyIntegrationService:
         access_token = session.request_token(params=shopify_data.model_dump())
         return access_token
     
+    def get_charge_by_id(self, user_data, charge_id):
+        with shopify.Session.temp(user_data.shop_domain, ShopifyConfig.api_version, user_data.shopify_token):
+            charge = shopify.RecurringApplicationCharge.find(charge_id)
+            return charge
+        
     def get_shopify_shop_id(self, shopify_data: ShopifyPayloadModel, shopify_access_token: str):
         shop_id = None
         with shopify.Session.temp(shopify_data.shop, ShopifyConfig.api_version, shopify_access_token):

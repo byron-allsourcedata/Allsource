@@ -387,8 +387,9 @@ def get_plans_service(plans_persistence: PlansPersistence = Depends(get_plans_pe
 
 
 def get_webhook(subscription_service: SubscriptionService = Depends(get_subscription_service),
-                notification_persistence: NotificationPersistence = Depends(get_notification_persistence)):
-    return WebhookService(subscription_service=subscription_service, notification_persistence=notification_persistence)
+                notification_persistence: NotificationPersistence = Depends(get_notification_persistence),
+                integration_service: IntegrationService = Depends(get_integration_service)):
+    return WebhookService(subscription_service=subscription_service, notification_persistence=notification_persistence, integration_service=integration_service)
 
 
 def get_payments_service(plans_service: PlansService = Depends(get_plans_service),

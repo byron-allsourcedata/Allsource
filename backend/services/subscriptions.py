@@ -1,17 +1,16 @@
 import logging
-import uuid
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 from httpx import Client
 from dateutil.relativedelta import relativedelta
 from sqlalchemy.orm import Session
 import os
+from dateutil.relativedelta import relativedelta
 from dotenv import load_dotenv
 from models.leads_users import LeadUser
 from models.plans import SubscriptionPlan
 from models.subscription_transactions import SubscriptionTransactions
 from models.subscriptions import Subscription, UserSubscriptions
 from models.users import Users, User
-from models.integrations.users_domains_integrations import UserIntegration
 from models.users_domains import UserDomains
 from models.users_payments_transactions import UsersPaymentsTransactions
 from persistence.plans_persistence import PlansPersistence
@@ -36,8 +35,7 @@ class SubscriptionService:
         return self.db.query(User).filter(User.customer_id == customer_id).first()
     
     def get_user_by_shopify_shop_id(self, shop_id):
-        return self.db.query(User).join(UserIntegration, UserIntegration.user_id == User.id)\
-                .filter(UserIntegration.shop_id == shop_id).first()
+        return self.db.query(User).filter(User.shop_id == shop_id).first()
 
 
     def cancellation_downgrade(self, subscription_id):
@@ -170,7 +168,35 @@ class SubscriptionService:
                 self.db.commit()
             return True
         return False
+    
+    def create_shopify_subscription_transaction(self, subscription_info, user_id, plan: SubscriptionPlan):
+        status = subscription_info.get("status", "").lower()
+        if status == 'cancelled':
+            status = 'canceled'
+        created_at = datetime.fromisoformat(subscription_info.get("created_at"))
+        start_date = created_at
+        end_date = start_date + (
+            relativedelta(months=1) if plan.interval == "month" else relativedelta(years=1)
+        ) if status != "cancelled" else start_date
 
+        subscription_transaction_obj = SubscriptionTransactions(
+            user_id=user_id,
+            start_date=start_date,
+            end_date=end_date,
+            currency=plan.currency,
+            plan_id=plan.id,
+            plan_name=plan.title,
+            created_at=created_at,
+            status=status,
+            amount=plan.price
+        )
+        self.db.add(subscription_transaction_obj)
+        self.db.flush()
+
+    
+    def get_plan_by_title(self, plan_type, interval):
+        return self.plans_persistence.get_plan_by_title(plan_type, interval)
+        
     def create_subscription_transaction(self, user_id, stripe_payload: dict):
         start_date_timestamp = stripe_payload.get("data").get("object").get("current_period_start")
         stripe_request_created_timestamp = stripe_payload.get("created")
@@ -189,7 +215,7 @@ class SubscriptionService:
         interval = stripe_payload.get("data").get("object").get("plan").get("interval")
         payment_platform_subscription_id = stripe_payload.get("data").get("object").get("id")
         transaction_id = stripe_payload.get("id")
-        plan_id = self.plans_persistence.get_plan_by_title(plan_type, interval)
+        plan_id = self.plans_persistence.get_plan_by_title(plan_type, interval).id
         subscription_transaction_obj = SubscriptionTransactions(
             user_id=user_id,
             start_date=start_date,
@@ -323,6 +349,65 @@ class SubscriptionService:
 
     def get_plan_by_price(self, lead_credit_price):
         return self.db.query(SubscriptionPlan).filter(SubscriptionPlan.price == lead_credit_price).first()
+    
+    def process_shopify_subscription(self, user, plan, subscription_info):
+        result = {'status': None, 'lead_credit_price': None}
+        
+        status = subscription_info.get("status", "").lower()
+        if status == 'cancelled':
+            status = 'canceled'
+        created_at = datetime.fromisoformat(subscription_info.get("created_at"))
+        start_date = created_at
+
+        if status == 'canceled':
+            end_date = start_date
+        else:
+            end_date = start_date + relativedelta(months=1) if plan.interval == "month" else start_date + relativedelta(years=1)
+            
+        if status == 'active':
+            result['lead_credit_price'] = plan.lead_credit_price
+
+            self.db.query(UserSubscriptions).where(
+                UserSubscriptions.user_id == user.id,
+                UserSubscriptions.status == 'active'
+            ).update({"status": "inactive", "updated_at": datetime.now(timezone.utc).replace(tzinfo=None)})
+            
+            user_subscription = UserSubscriptions(
+                plan_start=start_date,
+                plan_end=end_date,
+                domains_limit=plan.domains_limit,
+                integrations_limit=plan.integrations_limit,
+                plan_id=plan.id,
+                members_limit=plan.members_limit,
+                status=status,
+                created_at=datetime.now(timezone.utc).replace(tzinfo=None),
+                user_id=user.id,
+                lead_credit_price=plan.lead_credit_price,
+                is_trial=False
+            )
+
+            self.db.add(user_subscription)
+
+            self.update_users_domains(user.id, plan.domains_limit)
+            self.update_team_members(user.id, plan.members_limit)
+            
+            user.leads_credits = max(plan.leads_credits - user.leads_credits, 0)
+            user.prospect_credits = plan.prospect_credits
+            user.current_subscription_id = user_subscription.id
+            user.is_leads_auto_charging = True
+            user.stripe_payment_url = None if user.stripe_payment_url else user.stripe_payment_url
+
+        elif status == "canceled":
+            self.db.query(UserSubscriptions).filter(
+                UserSubscriptions.id == user.current_subscription_id
+            ).update({"status": status, "plan_end": end_date})
+        
+        user.payment_status = status
+        self.db.commit()
+        
+        result['status'] = status
+        return result
+
     
     def process_subscription(self, stripe_payload, user: Users):
         result = {

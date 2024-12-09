@@ -36,7 +36,7 @@ class PlansPersistence:
         plan = self.db.query(SubscriptionPlan).filter(SubscriptionPlan.title == title,
                                                       SubscriptionPlan.interval == interval).first()
         if plan:
-            return plan.id
+            return plan
         else:
             return None
 

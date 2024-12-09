@@ -197,9 +197,9 @@ export const SettingsSubscription: React.FC = () => {
             setIsLoading(true)
             const response = await axiosInterceptorInstance.get(`${path}?price_id=${stripePriceId}`);
             if (response.status === 200) {
-                if (!hasActivePlan && response.data.link) {
+                if (response.data.link !== null && response.data.link !== undefined) {
                     window.location.href = response.data.link;
-                }
+                }                
                 if (response.data.status_subscription) {
                     if (response.data.status_subscription === 'active') {
                         showToast('Subscription was successful!');

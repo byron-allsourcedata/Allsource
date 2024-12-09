@@ -4,15 +4,18 @@ from datetime import datetime, timezone
 from enums import NotificationTitles
 from persistence.notification import NotificationPersistence
 from services.subscriptions import SubscriptionService
+from services.integrations.base import IntegrationService
 from .stripe_service import save_payment_details_in_stripe, determine_plan_name_from_product_id
 
 logger = logging.getLogger(__name__)
 
 
 class WebhookService:
-    def __init__(self, subscription_service: SubscriptionService, notification_persistence: NotificationPersistence):
+    def __init__(self, subscription_service: SubscriptionService, notification_persistence: NotificationPersistence, integration_service: IntegrationService):
         self.subscription_service = subscription_service
         self.notification_persistence = notification_persistence
+        self.integration_service = integration_service
+        
 
     def update_subscription_confirmation(self, payload):
         stripe_request_created_timestamp = payload.get("created")
@@ -142,100 +145,41 @@ class WebhookService:
         }
     
     def shopify_billing_update_webhook(self, payload):
-        print('---------------')
-        print(payload)
-        # subscription_info = payload.get("app_subscription")
-        # shop_id = subscription_info.get("admin_graphql_api_shop_id").split('Shop/')[-1]
-        # plan_name = subscription_info.get("name")
-        # is_subscription_active = subscription_info.get("status").lower() == 'active'
-        # is_trial = False
-        # charge_id = subscription_info.get("admin_graphql_api_id").split('AppSubscription/')[-1]
-
-        # logger.info(f'This is the shopify webhook request -> {repr(payload)}')
+        subscription_info = payload.get("app_subscription")
+        shop_id = subscription_info.get("admin_graphql_api_shop_id").split('Shop/')[-1]
+        logger.info(f'This is the shopify webhook request -> {repr(payload)}')
+        user_data = self.subscription_service.get_user_by_shopify_shop_id(shop_id=shop_id)
+        charge_id = subscription_info.get("admin_graphql_api_id").split('AppSubscription/')[-1]
+        plan_name = subscription_info.get("name")
+        if not user_data:
+            logger.error("Not found user by shop id")
+            return payload
         
-        # user_data = self.subscription_service.get_user_by_shopify_shop_id(shop_id=shop_id)
-        # if not user_data:
-        #     logger.error("Not found user by shop id")
-        #     return payload
+        payment_period = None
+        with self.integration_service as service:
+            shopify_charge = service.shopify.get_charge_by_id(user_data, charge_id)
+            if shopify_charge.billing_on:
+                billing_on = datetime.strptime(shopify_charge.billing_on, "%Y-%m-%d")
+                activated_on = datetime.strptime(shopify_charge.activated_on, "%Y-%m-%d")
+                delta_days = (billing_on - activated_on).days
+                if delta_days <= 31:
+                    payment_period = "month"
+                else:
+                    payment_period = "year"  
+        
+        plan = self.subscription_service.get_plan_by_title(plan_name, payment_period)
+        
+        self.subscription_service.create_shopify_subscription_transaction(subscription_info=subscription_info, user_id=user_data.id, plan=plan)
 
-
-        # self.subscription_service.create_subscription_transaction(user_id=user_data.id,
-        #                                                           stripe_payload=payload)
-
-        # result = self.subscription_service.process_subscription(user=user_data, stripe_payload=data_object)
-        # lead_credit_plan_id = None
-        # if result['lead_credit_price']:
-        #     plan = self.subscription_service.get_plan_by_price(lead_credit_price=result['lead_credit_price'])
-        #     lead_credit_plan_id = plan.id
-        # if result['status'] == 'active':
-        #     saved_details_of_payment = save_payment_details_in_stripe(customer_id=customer_id)
-        #     if not saved_details_of_payment:
-        #         logger.warning("set default card false")
+        result = self.subscription_service.process_shopify_subscription(user=user_data, plan=plan, subscription_info=subscription_info)
+        lead_credit_plan_id = None
+        if result['lead_credit_price']:
+            plan = self.subscription_service.get_plan_by_price(lead_credit_price=result['lead_credit_price'])
+            lead_credit_plan_id = plan.id
                 
-        # result = {
-        #     'status': result['status'],
-        #     'user': user_data,
-        #     'lead_credit_plan_id': lead_credit_plan_id if lead_credit_plan_id else None
-        # }
+        result = {
+            'status': result['status'],
+            'user': user_data,
+            'lead_credit_plan_id': lead_credit_plan_id if lead_credit_plan_id else None
+        }
         
-    
-        # is_actual_charge = True
-        # user_subscription = subscriptions.get_subscription(db, user.parent_id)
-        # if user_subscription is not None:
-        #     if user_subscription.PaymentPlatformName == 'shopify' and user_subscription.subscription_id is not None:
-        #         try:
-        #             current_charge_id = int(user_subscription.subscription_id)
-        #             income_charge_id = int(charge_id)
-        #             if income_charge_id < current_charge_id:
-        #                 is_actual_charge = False
-        #         except Exception as e:
-        #             logger.error("Can't check charge ids actuality")
-
-        # if is_actual_charge == False:
-        #     logger.info("This information is not about the actual charge")
-        #     return { "success": False }
-
-        # user_plan, plan_info = plans.get_current_user_plan(db=db, user_id=user.parent_id)
-        # shopify_charge = shopify_service.get_charge_by_id(db=db, user_id=user.parent_id, charge_id=charge_id)
-
-        # payment_period = None
-
-        # if shopify_charge.billing_on is not None:
-        #     billing_on = datetime.strptime(shopify_charge.billing_on, "%Y-%m-%d")
-        #     activated_on = datetime.strptime(shopify_charge.activated_on, "%Y-%m-%d")
-        #     delta_days = (billing_on - activated_on).days
-        #     if delta_days <= 31:
-        #         payment_period = "monthly"
-        #     else:
-        #         payment_period = "yearly"
-
-
-        # """
-        # Updaing the details of zoho lead for user
-        # """
-        # edit_user_details_for_zoho = subscriptions.update_zoho_details(db=db, user_id=user.id)
-        # if edit_user_details_for_zoho:
-        #     logger.info("update details of zoho for user")
-
-        # """
-        # Logic for existing or new subscription, credits and credit usage
-        # """
-        # update_payment_status_of_user = users.update_user_payment_status(db=db, user_id=user.id, is_success=is_subscription_active)
-        # if update_payment_status_of_user:
-        #     logger.info(f"updated the payment status of user to completed {user.email}")
-
-        #     user_subscription = subscriptions.create_shopify_subscription(db=db, user_obj=user, shopify_payload=payload)
-        #     if user_subscription:
-        #         logger.info("New subscription created")
-
-        #     # Its new plan - if user have no any plan OR new title plan is different
-        #     is_new_plan = user_plan is None or (plan_info["title"] != plan_name)
-
-        #     if is_new_plan:
-        #         if is_subscription_active:
-        #             plans.create_new_usp(db=db, user_id=user.id, subscription_id=user_subscription.id, plan_title=plan_name, is_trial=is_trial, interval=payment_period)
-        #     else:
-        #         if is_subscription_active:
-        #             plans.reset_counters(db, user_plan["id"])
-        #         plans.update_subscription_id(db, user_plan["id"], user_subscription.id)
-
