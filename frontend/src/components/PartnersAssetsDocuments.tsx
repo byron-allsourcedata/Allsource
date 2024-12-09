@@ -1,25 +1,12 @@
-import { suppressionsStyles } from "@/css/suppressions";
-import { Button, IconButton, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography, Link } from "@mui/material";
+import { IconButton, Typography } from "@mui/material";
 import DownloadIcon from '@mui/icons-material/Download';
-import SmartDisplayIcon from '@mui/icons-material/SmartDisplay';
 import { Box } from "@mui/system";
-import Image from "next/image";
-import dayjs from "dayjs";
-import CustomTablePagination from "./CustomTablePagination";
-import { useEffect, useState } from "react";
-import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
-import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
-import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
-import axiosInstance from "@/axios/axiosInterceptorInstance";
-import { list } from "postcss";
 
 interface MonthDetailsProps {
-    onBack: () => void;
     asset: any;
-    open: boolean;
 }
 
-const PartnersAssetsDocuments: React.FC<MonthDetailsProps> = ({ open, onBack, asset }) => {
+const PartnersAssetsDocuments: React.FC<MonthDetailsProps> = ({ asset }) => {
     return (
     <Box
         sx={{

@@ -1,25 +1,15 @@
-import { suppressionsStyles } from "@/css/suppressions";
-import { Button, IconButton, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography, Link } from "@mui/material";
+import { IconButton, Typography, Link } from "@mui/material";
 import DownloadIcon from '@mui/icons-material/Download';
-import SmartDisplayIcon from '@mui/icons-material/SmartDisplay';
 import { Box } from "@mui/system";
 import Image from "next/image";
-import dayjs from "dayjs";
-import CustomTablePagination from "./CustomTablePagination";
-import { useEffect, useState } from "react";
-import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
-import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
-import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
+import { useState } from "react";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
-import { list } from "postcss";
 
 interface MonthDetailsProps {
-    onBack: () => void;
     asset: any;
-    open: boolean;
 }
 
-const PartnersAssetsImage: React.FC<MonthDetailsProps> = ({ open, onBack, asset }) => {
+const PartnersAssetsImage: React.FC<MonthDetailsProps> = ({asset }) => {
     const [videoWidth, setVideoWidth] = useState(154);
     const [loading, setLoading] = useState(false);
 
@@ -42,15 +32,16 @@ const PartnersAssetsImage: React.FC<MonthDetailsProps> = ({ open, onBack, asset 
             if (contentDisposition) {
                 const filenameMatch = contentDisposition.match(/filename="?(.+)"?/);
                 if (filenameMatch && filenameMatch[1]) {
-                    filename = filenameMatch[1];
+                    filename = decodeURIComponent(filenameMatch[1]);
                 }
             }
             link.setAttribute('download', filename);
 
             document.body.appendChild(link);
             link.click();
-
             document.body.removeChild(link);
+
+            console.log('File downloaded successfully:', filename);
         } catch (error) {
         } finally {
             setLoading(false)
