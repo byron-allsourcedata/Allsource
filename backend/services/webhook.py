@@ -142,6 +142,7 @@ class WebhookService:
         }
     
     def shopify_billing_update_webhook(self, payload):
+        print('---------------')
         print(payload)
         # subscription_info = payload.get("app_subscription")
         # shop_id = subscription_info.get("admin_graphql_api_shop_id").split('Shop/')[-1]
