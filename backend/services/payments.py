@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import List
 import stripe
 from config.stripe import StripeConfig
+import pytz
 from models.plans import SubscriptionPlan
 from enums import SubscriptionStatus, SourcePlatformEnum
 from persistence.plans_persistence import PlansPersistence
@@ -133,7 +134,7 @@ class PaymentsService:
         if not user_subscription:
             return SubscriptionStatus.SUBSCRIPTION_NOT_FOUND
         
-        if user_subscription.PaymentPlatformName == SourcePlatformEnum.SHOPIFY.value:
+        if user.get('source_platform') == SourcePlatformEnum.SHOPIFY.value:
             with self.integration_service as service:
                 subscription_data = service.shopify.cancel_current_subscription(user=user)
         else:
@@ -144,14 +145,18 @@ class PaymentsService:
             self.plans_service.save_reason_unsubscribe(reason_unsubscribe, user.get('id'), cancel_scheduled_at)
             return SubscriptionStatus.SUCCESS
         else:
-            return SubscriptionStatus.UNKNOWN
+            utc = pytz.UTC
+            time_now = datetime.now(utc)
+            self.plans_service.cancel_subscription(reason_unsubscribe, user.get('id'), time_now)
+            self.plans_service.save_reason_unsubscribe(reason_unsubscribe, user.get('id'), time_now)
+            return SubscriptionStatus.SUCCESS
 
     def upgrade_and_downgrade_user_subscription(self, price_id: str, user) -> dict[str, SubscriptionStatus] | dict[
         str, str] | dict[str, str]:
         subscription = self.plan_persistence.get_user_subscription(user_id=user.get('id'))
         if subscription is None:
             return {'status': SubscriptionStatus.INCOMPLETE}
-        if user.source_platform == SourcePlatformEnum.SHOPIFY.value:
+        if user.get('source_platform') == SourcePlatformEnum.SHOPIFY.value:
             plan = self.plan_persistence.get_plan_by_price_id(price_id)
             with self.integration_service as service:
                 return service.shopify.initialize_subscription_charge(plan=plan, user=user)

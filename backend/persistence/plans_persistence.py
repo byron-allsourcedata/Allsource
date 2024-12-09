@@ -19,6 +19,12 @@ class PlansPersistence:
         subscription.cancellation_reason = reason_unsubscribe
         subscription.cancel_scheduled_at = cancel_scheduled_at
         self.db.commit()
+        
+    def cancel_subscription(self, reason_unsubscribe, user_id, time):
+        subscription = self.get_user_subscription(user_id)
+        subscription.cancellation_reason = reason_unsubscribe
+        subscription.plan_end = time
+        self.db.commit()
 
     def get_trial_status_by_user_id(self, user_id: int):
         subscription = self.db.query(UserSubscriptions).filter(UserSubscriptions.user_id == user_id).first()

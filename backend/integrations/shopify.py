@@ -1,6 +1,6 @@
 import os
 
-from .base import Base
+from config.base import Base
 
 
 class ShopifyConfig(Base):

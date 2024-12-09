@@ -35,7 +35,10 @@ class PlansService:
 
     def save_reason_unsubscribe(self, reason_unsubscribe, user_id, cancel_scheduled_at):
         self.plans_persistence.save_reason_unsubscribe(reason_unsubscribe, user_id, cancel_scheduled_at)
-
+        
+    def cancel_subscription(self, reason_unsubscribe, user_id, time):
+        self.plans_persistence.cancel_subscription(reason_unsubscribe, user_id, time)
+        
     def get_subscription_plans(self, user):
         stripe_plans = self.plans_persistence.get_stripe_plans()
         user_subscription = self.plans_persistence.get_user_subscription(user_id=user.get('id'))

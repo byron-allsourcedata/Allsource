@@ -3,7 +3,7 @@ import os
 import binascii
 import httpx
 from enums import IntegrationsStatus, OauthShopify
-from config.shopify import ShopifyConfig
+from integrations.shopify import ShopifyConfig
 from fastapi import HTTPException, status
 from models.users_domains import UserDomains
 from models.users import User
@@ -74,21 +74,21 @@ class ShopifyIntegrationService:
         return self.create_new_recurring_charge(shopify_domain=user.get('shop_domain'), shopify_access_token=user.get('shopify_token'), plan=plan, test_mode=test_mode)
     
     def cancel_current_subscription(self, user: User):
-        with shopify.Session.temp(user.shop_domain, ShopifyConfig.api_version, user.shopify_token):
+        with shopify.Session.temp(user.get('shop_domain'), ShopifyConfig.api_version, user.get('shopify_token')):
             charge = shopify.RecurringApplicationCharge.current()
             if charge is None:
                 raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail={'status': 'No shopify plan active'})
             charge.destroy()
-        return True
-    
-    def update_downgrade_subscription(user, new_plan):
-        pass
+        return {
+            'status': 'cancel'
+        }
             
     def create_webhooks_for_store(self, shopify_data: ShopifyPayloadModel, shopify_access_token):        
         with shopify.Session.temp(shopify_data.shop, ShopifyConfig.api_version, shopify_access_token):
             shopify.Webhook.create({
                 "topic": "app_subscriptions/update",
-                "address": os.getenv("SITE_HOST_URL") + "/api/subscriptions/shopify/billing/webhook",
+                # "address": os.getenv("SITE_HOST_URL") + "/api/subscriptions/shopify/billing/webhook",
+                "address": 'https://api-dev.maximiz.ai' + "/api/subscriptions/shopify/billing/webhook",
                 "format": "json"
             })
             shopify.Webhook.create({
