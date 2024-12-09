@@ -10,7 +10,8 @@ from models.users_domains import UserDomains
 from schemas.auth_google_token import AuthGoogleData
 from schemas.users import UserSignUpForm, UserSignUpFormResponse, UserLoginFormResponse, UserLoginForm, UpdatePassword, \
     ResendVerificationEmailResponse, ResetPasswordForm, ResetPasswordResponse, UpdatePasswordResponse, \
-    CheckVerificationStatusResponse, VerifyTokenResponse, DismissNotificationsRequest, DeleteNotificationRequest
+    CheckVerificationStatusResponse, VerifyTokenResponse, DismissNotificationsRequest, DeleteNotificationRequest, \
+    StripeAccountID, StripeConnectResponse
 from services.notification import Notification
 from services.users import UsersService
 from services.users_auth import UsersAuth
@@ -130,3 +131,10 @@ async def check_verification_status(
         user: UsersEmailVerificationService = Depends(get_users_email_verification_service)):
     result_status = user.check_verification_status()
     return CheckVerificationStatusResponse(status=result_status)
+
+
+@router.post("/connect-stripe", response_model=StripeConnectResponse)
+async def update_password(connect_account_id: StripeAccountID,
+                          user: UsersService = Depends(get_users_service)):
+    result_status = user.add_stripe_account(connect_account_id.stripe_connect_account_id)
+    return StripeConnectResponse(status=result_status)

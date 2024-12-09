@@ -89,15 +89,25 @@ const CalendarPopup: React.FC<CalendarPopupProps> = ({ anchorEl, open, onClose, 
     };
 
     const handleToday = () => {
-        const today = new Date();
-        updateCalendar(today, today, 'Today');
-    }
-
-
-    const handleYesterday = () => {
-        const yesterday = subDays(new Date(), 1);
-        updateCalendar(yesterday, yesterday, 'Yesterday');
+        const todayStart = new Date();
+        todayStart.setHours(0, 0, 0, 0);
+    
+        const todayEnd = new Date();
+        todayEnd.setHours(23, 59, 59, 999);
+    
+        updateCalendar(todayStart, todayEnd, 'Today');
     };
+    
+    const handleYesterday = () => {
+        const yesterdayStart = subDays(new Date(), 1);
+        yesterdayStart.setHours(0, 0, 0, 0);
+    
+        const yesterdayEnd = subDays(new Date(), 1);
+        yesterdayEnd.setHours(23, 59, 59, 999);
+    
+        updateCalendar(yesterdayStart, yesterdayEnd, 'Yesterday');
+    };
+    
 
     const handleThisWeek = () => {
         const start = startOfWeek(new Date(), { weekStartsOn: 1 });

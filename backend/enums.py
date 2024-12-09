@@ -172,3 +172,7 @@ class IntegrationsStatus(Enum):
     SUCCESS = "SUCCESS"
     NOT_MATCHED_EARLIER = "Store Domain does not match the one you specified earlier"
     ALREADY_EXIST = 'ALREADY_EXIST'
+
+
+class StripeConnectStatus(Enum):
+    SUCCESS_CONNECT = "SUCCESS_CONNECT"

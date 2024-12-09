@@ -20,6 +20,7 @@
     "@mui/x-date-pickers": "7.19.0",
     "@next/font": "14.2.4",
     "@react-oauth/google": "^0.12.1",
+    "@stripe/connect-js": "^3.3.18",
     "@stripe/react-stripe-js": "^2.8.0",
     "@stripe/stripe-js": "^4.6.0",
     "axios": "^1.7.7",
@@ -41,6 +42,7 @@
     "react-router-dom": "^6.26.1",
     "react-tag-input-component": "^2.0.2",
     "react-toastify": "^10.0.5",
+    "stripe": "^17.4.0",
     "styled-components": "^6.1.12",
     "sweetalert2": "^11.6.13"
   },

@@ -47,6 +47,7 @@ class Users(Base):
     current_subscription_id = Column(Integer, nullable=False)
     awin_awc = Column(VARCHAR(128), nullable=True)
     source_platform = Column(VARCHAR(64), nullable=True)
+    connected_stripe_account_id = Column(VARCHAR(128), nullable=True)
 
 
 User = Users

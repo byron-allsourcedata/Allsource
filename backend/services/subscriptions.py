@@ -268,7 +268,8 @@ class SubscriptionService:
             members_limit=plan.members_limit,
             status=status,
             plan_id=plan.id,
-            is_trial=True
+            is_trial=True,
+            lead_credit_price=plan.lead_credit_price
         )
         self.db.add(add_subscription_obj)
         self.db.flush()

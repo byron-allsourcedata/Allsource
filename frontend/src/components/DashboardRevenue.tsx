@@ -246,7 +246,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
     }, [appliedDates]);
 
     const options = [
-        { id: 'revenue', label: 'Total Revenue', color: 'rgba(180, 218, 193, 1)' },
+        { id: 'total_revenue', label: 'Total Revenue', color: 'rgba(180, 218, 193, 1)' },
         { id: 'visitors', label: 'Visitors', color: 'rgba(252, 229, 204, 1)' },
         { id: 'viewed_product', label: 'View Products', color: 'rgba(201, 218, 248, 1)' },
         { id: 'abandoned_cart', label: 'Abandoned cart', color: 'rgba(254, 238, 236, 1)' },
@@ -303,7 +303,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
         }[]
     >([
         {
-            id: 'revenue' as keyof typeof colorMapping,
+            id: 'total_revenue' as keyof typeof colorMapping,
             label: 'Total Revenue',
             curve: 'linear',
             showMark: false,
