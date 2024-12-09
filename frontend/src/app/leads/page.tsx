@@ -28,16 +28,6 @@ import UnlockButton from '@/components/UnlockButton';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { useNotification } from '@/context/NotificationContext';
 
-const style = {
-    buttonBlockText: {
-        display: 'flex',
-        flexDirection: 'row',
-        justifyContent: 'center',
-        alignItems: 'center',
-    }
-}
-
-
 
 interface FetchDataParams {
     sortBy?: string;
@@ -53,7 +43,7 @@ const Leads: React.FC = () => {
     const router = useRouter();
     const { hasNotification } = useNotification();
     const [data, setData] = useState<any[]>([]);
-    const [count_leads, setCount] = useState<number | null>(null); 
+    const [count_leads, setCount] = useState<number | null>(null);
     const [order, setOrder] = useState<'asc' | 'desc' | undefined>(undefined);
     const [orderBy, setOrderBy] = useState<string | undefined>(undefined);
     const [appliedDates, setAppliedDates] = useState<{ start: Date | null; end: Date | null }>({ start: null, end: null });
@@ -239,8 +229,25 @@ const Leads: React.FC = () => {
 
 
             // Processing "Date Calendly"
-            const startEpoch = appliedDates.start ? Math.floor(appliedDates.start.getTime() / 1000) : null;
-            const endEpoch = appliedDates.end ? Math.floor(appliedDates.end.getTime() / 1000) : null;
+            const startEpoch = appliedDates.start
+                ? Math.floor(new Date(appliedDates.start.toISOString()).getTime() / 1000)
+                : null;
+
+            const normalDate = startEpoch 
+            ? new Date(startEpoch * 1000).toLocaleString('en-US', { timeZone: 'UTC' }) 
+            : null;
+            
+            const normalDateSmr = startEpoch 
+            ? new Date(startEpoch * 1000).toLocaleString('ru-RU', { timeZone: 'Europe/Samara' }) 
+            : null;
+            console.log(appliedDates)
+            console.log('normal',normalDate);
+            console.log('normal smr', normalDateSmr);
+            
+
+            const endEpoch = appliedDates.end
+                ? Math.floor(new Date(appliedDates.end.toISOString()).getTime() / 1000)
+                : null;
 
             let url = `/leads?page=${page + 1}&per_page=${rowsPerPage}`;
             if (startEpoch !== null && endEpoch !== null) {
@@ -349,11 +356,11 @@ const Leads: React.FC = () => {
             const [leads, count] = response.data;
             setData(Array.isArray(leads) ? leads : []);
             setCount(count || 0);
-            setStatus(response.data.status);  
-            const options = [15, 30, 50, 100, 200, 500];          
-            let RowsPerPageOptions = options.filter(option => option <= count);  
+            setStatus(response.data.status);
+            const options = [15, 30, 50, 100, 200, 500];
+            let RowsPerPageOptions = options.filter(option => option <= count);
             if (RowsPerPageOptions.length < options.length) {
-              RowsPerPageOptions = [...RowsPerPageOptions, options[RowsPerPageOptions.length]];
+                RowsPerPageOptions = [...RowsPerPageOptions, options[RowsPerPageOptions.length]];
             }
             setRowsPerPageOptions(RowsPerPageOptions);
             const selectedValue = RowsPerPageOptions.includes(rowsPerPage) ? rowsPerPage : 15;
@@ -448,6 +455,9 @@ const Leads: React.FC = () => {
 
         try {
             setIsLoading(true)
+            setAppliedDates({start: null, end: null})
+            setFormattedDates('')
+            sessionStorage.removeItem('filters')
             const response = await axiosInstance.get(url);
             const [leads, count] = response.data;
 
@@ -920,7 +930,10 @@ const Leads: React.FC = () => {
                             gap: '15px',
                             '@media (max-width: 900px)': {
                                 marginTop: hasNotification ? '3rem' : '1.125rem',
-                            }
+                            },
+                            '@media (max-width: 600px)': {
+                                marginTop: hasNotification ? '2rem' : '0rem',
+                            },
                         }}>
                         <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1 }}>
                             <Typography className='first-sub-title'>
@@ -929,7 +942,7 @@ const Leads: React.FC = () => {
                             <CustomToolTip title={'Contacts automatically sync across devices and platforms.'} linkText='Learn more' linkUrl='https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/contacts' />
                         </Box>
                         <Box sx={{
-                            display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '15px', pt:'4px',
+                            display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '15px', pt: '4px',
                             '@media (max-width: 900px)': {
                                 gap: '8px'
                             }
@@ -1050,7 +1063,7 @@ const Leads: React.FC = () => {
                                 sx={{
                                     textTransform: 'none',
                                     color: 'rgba(128, 128, 128, 1)',
-                                    border: '1px solid rgba(184, 184, 184, 1)',
+                                    border: formattedDates ? '1px solid rgba(80, 82, 178, 1)' : '1px solid rgba(184, 184, 184, 1)',
                                     borderRadius: '4px',
                                     opacity: status === 'PIXEL_INSTALLATION_NEEDED' ? '0.5' : '1',
                                     padding: '8px',
@@ -1069,13 +1082,17 @@ const Leads: React.FC = () => {
                                     }
                                 }}
                             >
-                                <DateRangeIcon fontSize='medium' />
+                                <DateRangeIcon fontSize='medium' sx={{color: formattedDates ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)',}} />
                                 <Typography variant="body1" sx={{
                                     fontFamily: 'Nunito Sans',
                                     fontSize: '14px',
                                     fontWeight: '600',
                                     lineHeight: '19.6px',
-                                    textAlign: 'left'
+                                    textAlign: 'left',
+                                    
+                                    "@media (max-width: 600px)":{
+                                        display:'none'
+                                    },
                                 }}>
                                     {formattedDates}
                                 </Typography>
@@ -1099,7 +1116,7 @@ const Leads: React.FC = () => {
                             </Button>
                         </Box>
                     </Box>
-                    <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, mt: 2 }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, mt: 2, overflowX: 'auto', "@media (max-width: 600px)": {mb:1} }}>
                         {selectedFilters.length > 0 && (
                             <Chip
                                 className='second-sub-title'
@@ -1225,10 +1242,20 @@ const Leads: React.FC = () => {
                                         component={Paper}
                                         sx={{
                                             border: '1px solid rgba(235, 235, 235, 1)',
-                                            maxHeight: selectedFilters.length > 0 
-                                            ? (hasNotification ? '63vh' : '68vh') 
-                                            : '72vh',
-                                            overflowY: 'scroll'
+                                            maxHeight: selectedFilters.length > 0
+                                                ? (hasNotification ? '63vh' : '68vh')
+                                                : '72vh',
+                                            overflowY: 'auto',
+                                            "@media (max-height: 800px)":{
+                                                maxHeight: selectedFilters.length > 0
+                                                ? (hasNotification ? '53vh' : '57vh')
+                                                : '70vh',
+                                            },
+                                            "@media (max-width: 400px)":{
+                                                maxHeight: selectedFilters.length > 0
+                                                ? (hasNotification ? '53vh' : '60vh')
+                                                : '67vh',
+                                            },
                                         }}
                                     >
                                         <Table stickyHeader aria-label="leads table">
@@ -1405,7 +1432,7 @@ const Leads: React.FC = () => {
                                             </TableBody>
                                         </Table>
                                     </TableContainer>
-                                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', padding: '24px 0 0' }}>
+                                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', padding: '24px 0 0', "@media (max-width: 600px)": {padding: '12px 0 0'}   }}>
                                         <CustomTablePagination
                                             count={count_leads ?? 0}
                                             page={page}

@@ -874,7 +874,7 @@ export const SettingsBilling: React.FC = () => {
                                                     color: '#5f6368',
                                                     letterSpacing: '0.06px'
                                                 }}>
-                                                    {billingDetails.overage === -1 ? `${billingDetails.overage}/contact` : `$ ${billingDetails.overage}/contact`}
+                                                    {billingDetails.overage === 'free' ? `--` : `$ ${billingDetails.overage}/contact`}
                                                 </Typography>
                                             </Box>
                                             <Box position="relative" display="inline-block">
@@ -1162,7 +1162,7 @@ export const SettingsBilling: React.FC = () => {
                         label='Coming soon'
                         className='second-sub-title'
                         sx={{
-                            backgroundColor: '#FDF2CA', borderRadius: '4px', justifyContent: 'center', color: '#795E00 !important',
+                            backgroundColor: '#FDF2CA', borderRadius: '4px', justifyContent: 'center', color: '#795E00 !important', "@media (max-width: 600px)": { display: 'none' }
                         }}>
                     </Chip>
                 </Box>
@@ -1223,6 +1223,16 @@ export const SettingsBilling: React.FC = () => {
                             marginRight: '-24px'
                         }} />
                     </Box>
+                    <Box sx={{display: 'none', "@media (max-width: 600px)": { display: 'flex', width: '100%', justifyContent: 'end' }}}>
+                        <Chip
+                            label='Coming soon'
+                            className='second-sub-title'
+                            sx={{
+                                backgroundColor: '#FDF2CA', borderRadius: '4px', justifyContent: 'center', color: '#795E00 !important',
+                            }}>
+                        </Chip>
+                    </Box>
+
                     <Box sx={{ width: '100%', marginBottom: 2 }}>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', opacity: 0.6 }}>
                             <Typography className='second-sub-title' sx={{ lineHeight: '20px !important', mb: '12px' }}>
@@ -1235,7 +1245,7 @@ export const SettingsBilling: React.FC = () => {
 
                         <LinearProgress
                             variant="determinate"
-                            value={100}
+                            value={0}
                             sx={{
                                 height: '8px',
                                 borderRadius: '4px',

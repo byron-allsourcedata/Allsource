@@ -93,7 +93,8 @@ class UserPersistence:
                 'is_leads_auto_charging': user.is_leads_auto_charging,
                 'team_access_level': user.team_access_level,
                 'current_subscription_id': user.current_subscription_id,
-                'awin_awc': user.awin_awc
+                'awin_awc': user.awin_awc,
+                'connected_stripe_account_id': user.connected_stripe_account_id
             }
         self.db.rollback()
         if result_as_object:
@@ -184,3 +185,10 @@ class UserPersistence:
             }
             for user in users
         ]
+
+    def add_stripe_account(self, user_id: int, stripe_connected_account_id: str):
+        self.db.query(Users).filter(Users.id == user_id).update(
+            {Users.connected_stripe_account_id: stripe_connected_account_id},
+            synchronize_session=False
+        )
+        self.db.commit()
