@@ -3,10 +3,11 @@ import DownloadIcon from '@mui/icons-material/Download';
 import { Box } from "@mui/system";
 
 interface MonthDetailsProps {
+    handleDownloadFile: any;
     asset: any;
 }
 
-const PartnersAssetsDocuments: React.FC<MonthDetailsProps> = ({ asset }) => {
+const PartnersAssetsDocuments: React.FC<MonthDetailsProps> = ({ handleDownloadFile, asset }) => {
     return (
     <Box
         sx={{
@@ -64,10 +65,10 @@ const PartnersAssetsDocuments: React.FC<MonthDetailsProps> = ({ asset }) => {
                     letterSpacing: "0.005em"
                 }}
                 >
-                Docx
+                {asset.file_extension}
                 </Typography>
             </Box>
-            <IconButton sx={{ ':hover': { backgroundColor: 'transparent', }, padding: 0 }}>
+            <IconButton onClick={() => handleDownloadFile(asset.id, asset.file_url)} sx={{ ':hover': { backgroundColor: 'transparent', }, padding: 0 }}>
                 <DownloadIcon sx={{ width: '20px', height: '20px', color: 'rgba(188, 188, 188, 1)', ':hover': { color: 'rgba(80, 82, 178, 1)' } }} />
             </IconButton>
         </Box>

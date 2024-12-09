@@ -6,10 +6,11 @@ import Image from "next/image";
 import { useState } from "react";
 
 interface MonthDetailsProps {
+    handleDownloadFile: any
     asset: any;
 }
 
-const PartnersAssetsVideo: React.FC<MonthDetailsProps> = ({asset }) => {
+const PartnersAssetsVideo: React.FC<MonthDetailsProps> = ({handleDownloadFile,asset }) => {
     const handlePlayClick = (event: React.MouseEvent<HTMLButtonElement>) => {
         event.stopPropagation(); 
         window.open(asset.file_url, '_blank', 'noopener,noreferrer');
@@ -86,7 +87,7 @@ const PartnersAssetsVideo: React.FC<MonthDetailsProps> = ({asset }) => {
         >
         {asset.title}
         </Typography>
-        <IconButton sx={{ ':hover': { backgroundColor: 'transparent', }, padding: 0 }}>
+        <IconButton onClick={() => handleDownloadFile(asset.id, asset.file_url)} sx={{ ':hover': { backgroundColor: 'transparent', }, padding: 0 }}>
             <DownloadIcon sx={{ width: '20px', height: '20px', color: 'rgba(188, 188, 188, 1)', ':hover': { color: 'rgba(80, 82, 178, 1)' } }} />
         </IconButton>
         </Box>

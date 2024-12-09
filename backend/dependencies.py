@@ -63,10 +63,10 @@ def get_db():
     finally:
         db.close()
 
-def get_partnersAsset_persistence(db: Session = Depends(get_db)) -> PartnersAssetPersistence:
+def get_partners_asset_persistence(db: Session = Depends(get_db)) -> PartnersAssetPersistence:
     return PartnersAssetPersistence(db)
 
-def get_partnersAssets_service(partners_asset_persistence: PartnersAssetPersistence = Depends(get_partnersAsset_persistence)):
+def get_partners_assets_service(partners_asset_persistence: PartnersAssetPersistence = Depends(get_partners_asset_persistence)):
     return PartnersAssetService(partners_asset_persistence=partners_asset_persistence)
 
 def get_plans_persistence(db: Session = Depends(get_db)):

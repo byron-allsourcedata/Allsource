@@ -3,6 +3,7 @@ import { useState } from "react";
 import PartnersAssetsVideo from '@/components/PartnersAssetsVideo';
 import PartnersAssetsImage from '@/components/PartnersAssetsImage';
 import PartnersAssetsDocuments from '@/components/PartnersAssetsDocuments';
+import axiosInstance from "@/axios/axiosInterceptorInstance";
 
 interface AssetsData {
     id: number;
@@ -10,6 +11,8 @@ interface AssetsData {
     preview_url: string;
     type: string;
     title: string;
+    file_extension: string;
+    file_size: string;
 }
 
 interface PartnersAssetsData {
@@ -24,7 +27,35 @@ interface PartnersAssetProps {
 const PartnersAsset: React.FC<PartnersAssetProps> = ({ data }) => {
     const [loading, setLoading] = useState(false);
     const [open, setOpen] = useState<boolean>(false);
-    // const [assets, setAssets] = useState<PartnersAssetsData>({videos: [], presentations: [], images: [], documents: []});
+
+    const handleDownloadFile = async (id: number, fileUrl: string,) => {
+        try {
+            setLoading(true)
+            const response = await axiosInstance.get('/partners-assets/download', {
+                params: {
+                    asset_id: id
+                },
+                responseType: 'blob'
+            });
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+
+            const filename = fileUrl.split('/').pop();
+            if (filename) {
+                link.setAttribute('download', filename);
+
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+    
+                console.log('File downloaded successfully:', filename);
+            }
+        } catch (error) {
+        } finally {
+            setLoading(false)
+        }
+    };
 
     return (
         <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }} >
@@ -47,11 +78,11 @@ const PartnersAsset: React.FC<PartnersAssetProps> = ({ data }) => {
                         console.log(item)
                         switch (item.type) {
                             case "video":
-                                return <PartnersAssetsVideo key={item.id} asset={item}/>
+                                return <PartnersAssetsVideo handleDownloadFile={handleDownloadFile} key={item.id} asset={item}/>
                             case "document":
-                                return <PartnersAssetsDocuments key={item.id} asset={item}/>
+                                return <PartnersAssetsDocuments handleDownloadFile={handleDownloadFile} key={item.id} asset={item}/>
                             default:
-                                return <PartnersAssetsImage key={item.id} asset={item}/>
+                                return <PartnersAssetsImage handleDownloadFile={handleDownloadFile} key={item.id} asset={item}/>
                         }
                     })}
                 </Box>

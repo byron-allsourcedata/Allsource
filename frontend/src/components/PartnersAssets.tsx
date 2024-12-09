@@ -14,6 +14,8 @@ interface AssetsData {
     preview_url: string;
     type: string;
     title: string;
+    file_extension: string;
+    file_size: string;
 }
 
 interface PartnersAssetsData {
