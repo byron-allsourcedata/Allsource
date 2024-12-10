@@ -92,14 +92,12 @@ class ShopifyIntegrationService:
         with shopify.Session.temp(shopify_data.shop, ShopifyConfig.api_version, shopify_access_token):
             shopify.Webhook.create({
                 "topic": "app_subscriptions/update",
-                #"address": os.getenv("SITE_HOST_URL") + "/api/subscriptions/shopify/billing/webhook",
-                "address": 'https://api-dev.maximiz.ai' + "/api/subscriptions/shopify/billing/webhook",
+                "address": os.getenv("SITE_HOST_URL") + "/api/subscriptions/shopify/billing/webhook",
                 "format": "json"
             })
             shopify.Webhook.create({
                 "topic": "app/uninstalled",
-                #"address": os.getenv("SITE_HOST_URL") + "/api/integrations/shopify/uninstall",
-                "address": 'https://api-dev.maximiz.ai' + "/api/integrations/shopify/uninstall",
+                "address": os.getenv("SITE_HOST_URL") + "/api/integrations/shopify/uninstall",
                 "format": "json"
             })
 
@@ -204,7 +202,7 @@ class ShopifyIntegrationService:
     def handle_uninstalled_app(self, payload):
         user_integration = self.integration_persistence.get_integration_by_shop_id(shop_id=payload["id"])
         if user_integration:
-            self.db.query(User).filter(User.shop_id==str(payload["id"])).update({"shop_id": None, "shopify_token": None, "shop_domain": None})
+            self.db.query(User).filter(User.shop_id==str(payload["id"])).update({"shop_id": None, "shopify_token": None, "shop_domain": None, "charge_id": None})
             self.db.delete(user_integration)
             self.db.commit()
             

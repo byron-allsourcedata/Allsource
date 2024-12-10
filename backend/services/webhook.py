@@ -150,8 +150,6 @@ class WebhookService:
         logger.info(f'This is the shopify webhook request -> {repr(payload)}')
         user_data = self.subscription_service.get_user_by_shopify_shop_id(shop_id=shop_id)
         charge_id = subscription_info.get("admin_graphql_api_id").split('AppSubscription/')[-1]
-        print(subscription_info.get("name"))
-        print(f"charge_id {charge_id}")
         try:
             current_charge_id = int(user_data.charge_id)
             income_charge_id = int(charge_id)
