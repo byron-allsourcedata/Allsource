@@ -173,6 +173,8 @@ def buy_credits(credits_used: int, payments_service: PaymentsService = Depends(g
 @router.post("/shopify/billing/webhook", status_code=status.HTTP_200_OK)
 async def shopify_billing_update_webhook(request: fastRequest, webhook_service: WebhookService = Depends(get_webhook)):
     payload = await request.json()
+    print('----------')
+    print(payload)
     webhook_service.shopify_billing_update_webhook(payload=payload)
     
     return { "success": True }
