@@ -68,10 +68,12 @@ const Settings: React.FC = () => {
                   flexDirection: 'column',
                   alignItems: 'start',
                   zIndex: 10,
-                  pt: hasNotification ? '3.25rem' : '0px'
+                  pt: hasNotification ? '3.25rem' : '20px',
+                  top: hasNotification ? '68px' : '60px'
                 },
                 "@media (max-width: 400px)": { 
-                    pt: hasNotification ? '4rem' : '0px'
+                    pt: hasNotification ? '4rem' : '20px',
+                    top: hasNotification ? '68px' : '60px'
                   },
             }}>
                 <Typography variant="h4" gutterBottom className='first-sub-title' sx={{...planStyles.title, gap:1, alignItems: 'center', justifyContent: 'center', display: 'flex', flexDirection: 'row',}}>

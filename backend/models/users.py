@@ -51,6 +51,7 @@ class Users(Base):
     shop_id = Column(VARCHAR(64), nullable=True)
     shopify_token = Column(VARCHAR(64), nullable=True)
     shop_domain = Column(VARCHAR(64), nullable=True)
+    connected_stripe_account_id = Column(VARCHAR(128), nullable=True)
 
 
 User = Users

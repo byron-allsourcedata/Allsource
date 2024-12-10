@@ -1,10 +1,7 @@
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { Box, Typography, TextField, Button, FormControl, InputLabel, MenuItem, Select, IconButton, InputAdornment, Accordion, AccordionSummary, AccordionDetails } from "@mui/material";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import CustomizedProgressBar from "./CustomizedProgressBar";
-import CustomTooltip from "./customToolTip";
-import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy'
 import Image from "next/image";
 import AddIcon from '@mui/icons-material/Add';
@@ -27,6 +24,10 @@ const ReferralOverview: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [expanded, setExpanded] = useState<number | false>(false);
 
+    const [accountCreatePending, setAccountCreatePending] = useState(false);
+    const [error, setError] = useState(false);
+    const [connectedAccountId, setConnectedAccountId] = useState();
+
     const handleOpenSection = (panel: number) => (
         event: React.SyntheticEvent,
         isExpanded: boolean
@@ -34,19 +35,20 @@ const ReferralOverview: React.FC = () => {
         setExpanded(isExpanded ? panel : false);
     };
 
-    const fetchRules = useCallback(async () => {
+    const fetchRules = async () => {
         setLoading(true);
         try {
-            // const response = await axiosInstance
+            const response = await axiosInstance.get('referral/overview')
+            setConnectedAccountId(response.data.connected_stripe_account_id)
         } catch (err) {
         } finally {
             setLoading(false);
         }
-    }, []);
+    };
 
     useEffect(() => {
         fetchRules();
-    }, [fetchRules]);
+    }, []);
 
     const [referralLink, setReferralLink] = useState('1233213213tttttt');
 
@@ -68,32 +70,181 @@ const ReferralOverview: React.FC = () => {
                 width: '100%',
                 padding: 0,
                 margin: '3rem auto 0rem',
-                '@media (max-width: 600px)': {margin: '0rem auto 0rem'} 
+                '@media (max-width: 600px)': { margin: '0rem auto 0rem' }
             }}>
                 <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', position: 'relative', gap: 2 }}>
                     <Box sx={{ display: 'flex', flexDirection: 'row', width: '100%', gap: 1, '@media (max-width: 600px)': { flexDirection: 'column' } }}>
-                        <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', border: '1px solid rgba(235, 235, 235, 1)', justifyContent: 'center', alignItems: 'center', borderRadius: '4px', pt: 2, pb: 2, gap: 2.5, }}>
-                            <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', width: '100%', gap: 1 }}>
-                                <Image src={'/stripe-image.svg'} width={97} height={97} alt="stripe-icon" />
-                                <Typography className="second-sub-title">
-                                    Start by connecting your stripe account
-                                </Typography>
-                            </Box>
 
-                            <Button variant="outlined" sx={{
-                                display: 'flex', width: '100%', textWrap: 'nowrap',
-                                backgroundColor: '#fff', color: 'rgba(80, 82, 178, 1)', fontFamily: "Nunito Sans", textTransform: 'none', lineHeight: '22.4px',
-                                fontWeight: '600', padding: '0.75em 5em', marginRight: '16px', border: '1px solid rgba(80, 82, 178, 1)', maxWidth: '109px', '&:hover': {
-                                    backgroundColor: '#fff', boxShadow: '0 2px 2px rgba(0, 0, 0, 0.3)', '&.Mui-disabled': {
-                                        backgroundColor: 'rgba(80, 82, 178, 0.6)',
+                        {connectedAccountId ? (
+                            <>
+                                <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', border: '1px solid rgba(235, 235, 235, 1)', justifyContent: 'start', alignItems: 'start', borderRadius: '4px', pt: 2, pb: 2, gap: 2.5, }}>
+                                    <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'start', alignItems: 'center', width: '100%', gap: 1, padding: 1 }}>
+                                        <Image src={'/stripe-image.svg'} width={60} height={60} alt="stripe-icon" />
+                                        <Typography className="second-sub-title">
+                                            Stripe account details
+                                        </Typography>
+                                    </Box>
+                                    <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'start', alignItems: 'center', width: '100%', gap: 1, pl: 2 }}>
+                                        <Typography className="table-heading">
+                                            Account ID
+                                        </Typography>
+                                        <Typography className="table-data">
+                                            {connectedAccountId}
+                                        </Typography>
+                                    </Box>
+                                            <Button
+                                                variant="outlined"
+                                                sx={{
+                                                    display: accountCreatePending ? 'flex' : 'none',
+                                                    mt: 2,
+                                                    ml: 2,
+                                                    textWrap: 'nowrap',
+                                                    backgroundColor: '#fff',
+                                                    color: 'rgba(80, 82, 178, 1)',
+                                                    fontFamily: "Nunito Sans",
+                                                    textTransform: 'none',
+                                                    lineHeight: '22.4px',
+                                                    fontWeight: '600',
+                                                    padding: '0.75em 2em',
+                                                    border: '1px solid rgba(80, 82, 178, 1)',
+                                                    '&:hover': {
+                                                        backgroundColor: '#fff',
+                                                        boxShadow: '0 2px 2px rgba(0, 0, 0, 0.3)',
+                                                        '&.Mui-disabled': {
+                                                            backgroundColor: 'rgba(80, 82, 178, 0.6)',
+                                                            color: 'rgba(80, 82, 178, 1)',
+                                                            cursor: 'not-allowed',
+                                                        }
+                                                    }
+                                                }}
+                                                onClick={async () => {
+                                                    setAccountCreatePending(true);
+                                                    setError(false);
+                                                    setLoading(true);
+                                                    try {
+                                                        const linkResponse = await fetch("/api/account_link", {
+                                                            method: "POST",
+                                                            headers: {
+                                                                "Content-Type": "application/json",
+                                                            },
+                                                            body: JSON.stringify({ account: connectedAccountId })
+                                                        });
+                                                        const linkData = await linkResponse.json();
+
+                                                        const { url, error: linkError } = linkData;
+                                                        if (url) {
+                                                            window.open(url, '_blank');
+                                                        }
+
+                                                        if (linkError) {
+                                                            setError(true);
+                                                        }
+
+                                                        if (error) {
+                                                            setError(true);
+                                                        }
+                                                    } catch (err) {
+                                                        setAccountCreatePending(false);
+                                                        setError(true);
+                                                        console.error("Error occurred:", err);
+                                                    } finally {
+                                                        setLoading(false);
+                                                    }
+                                                }}
+                                            >
+                                                Add information
+                                            </Button>
+                                </Box>
+                            </>
+                        ) : (
+                            <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', border: '1px solid rgba(235, 235, 235, 1)', justifyContent: 'center', alignItems: 'center', borderRadius: '4px', pt: 2, pb: 2, gap: 2.5, }}>
+                                <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', width: '100%', gap: 1 }}>
+                                    <Image src={'/stripe-image.svg'} width={97} height={97} alt="stripe-icon" />
+                                    <Typography className="second-sub-title">
+                                        Start by connecting your stripe account
+                                    </Typography>
+                                </Box>
+
+                                <Button
+                                    variant="outlined"
+                                    sx={{
+                                        display: 'flex',
+                                        textWrap: 'nowrap',
+                                        backgroundColor: '#fff',
                                         color: 'rgba(80, 82, 178, 1)',
-                                        cursor: 'not-allowed',
-                                    }
-                                }
-                            }}>
-                                Connect to stripe
-                            </Button>
-                        </Box>
+                                        fontFamily: "Nunito Sans",
+                                        textTransform: 'none',
+                                        lineHeight: '22.4px',
+                                        fontWeight: '600',
+                                        padding: '0.75em 2em',
+                                        border: '1px solid rgba(80, 82, 178, 1)',
+                                        '&:hover': {
+                                            backgroundColor: '#fff',
+                                            boxShadow: '0 2px 2px rgba(0, 0, 0, 0.3)',
+                                            '&.Mui-disabled': {
+                                                backgroundColor: 'rgba(80, 82, 178, 0.6)',
+                                                color: 'rgba(80, 82, 178, 1)',
+                                                cursor: 'not-allowed',
+                                            }
+                                        }
+                                    }}
+                                    onClick={async () => {
+                                        setError(false);
+                                        setLoading(true);
+                                        try {
+                                            const accountResponse = await fetch("/api/account", {
+                                                method: "POST",
+                                            });
+                                            const accountData = await accountResponse.json();
+                                            setConnectedAccountId(accountData.account);
+
+                                            await axiosInstance.post('/connect-stripe', {
+                                                stripe_connect_account_id: accountData.account,
+                                            });
+
+                                            const { account, error } = accountData;
+
+
+
+                                            if (account) {
+                                                setAccountCreatePending(true);
+                                                setConnectedAccountId(account);
+                                                const linkResponse = await fetch("/api/account_link", {
+                                                    method: "POST",
+                                                    headers: {
+                                                        "Content-Type": "application/json",
+                                                    },
+                                                    body: JSON.stringify({ account: connectedAccountId || account })
+                                                });
+                                                const linkData = await linkResponse.json();
+
+                                                const { url, error: linkError } = linkData;
+                                                if (url) {
+                                                    window.open(url, '_blank');
+                                                }
+
+                                                if (linkError) {
+                                                    setError(true);
+                                                }
+                                            }
+
+                                            if (error) {
+                                                setError(true);
+                                            }
+                                        } catch (err) {
+                                            setAccountCreatePending(false);
+                                            setError(true);
+                                            console.error("Error occurred:", err);
+                                        } finally {
+                                            setLoading(false);
+                                        }
+                                    }}
+                                >
+                                    Connect to stripe
+                                </Button>
+                            </Box>
+                        )}
+
 
                         <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', border: '1px solid rgba(235, 235, 235, 1)', justifyContent: 'start', borderRadius: '4px', padding: '1rem 1.5rem', gap: 4 }}>
                             <Box sx={{ display: 'flex', justifyContent: 'start', alignItems: 'center', width: '100%' }}>
@@ -112,7 +263,7 @@ const ReferralOverview: React.FC = () => {
                                         sx={{
                                             fontFamily: 'Roboto',
                                             fontSize: '14px',
-                                            color: 'rgba(74, 74, 74, 1)',  // Цвет текста
+                                            color: 'rgba(74, 74, 74, 1)',
                                         }}
                                     >
                                         Discount Code
@@ -194,7 +345,7 @@ const ReferralOverview: React.FC = () => {
                                                 borderColor: 'rgba(208, 213, 221, 1)',
                                             },
                                             "&:hover fieldset": {
-                                                borderColor: 'rgba(208, 213, 221, 1)', // цвет рамки при наведении
+                                                borderColor: 'rgba(208, 213, 221, 1)',
                                             },
                                             "&.Mui-focused fieldset": {
                                                 borderColor: 'rgba(208, 213, 221, 1)',
@@ -208,8 +359,8 @@ const ReferralOverview: React.FC = () => {
                     </Box>
 
                     <Box sx={{ display: 'flex', flexDirection: 'row', width: '100%', backgroundColor: 'rgba(255, 247, 247, 1)', borderRadius: '4px', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 1.5rem' }}>
-                        <Box sx={{ display: 'flex', flexDirection: 'row', width: '100%', gap: 2, alignItems: 'center', '@media (max-width: 600px)': { flexDirection: 'column', gap: 3 }}}>
-                            <Box sx={{display: 'flex', flexDirection: 'row', width: '100%', gap:2, alignItems: 'center'}}>
+                        <Box sx={{ display: 'flex', flexDirection: 'row', width: '100%', gap: 2, alignItems: 'center', '@media (max-width: 600px)': { flexDirection: 'column', gap: 3 } }}>
+                            <Box sx={{ display: 'flex', flexDirection: 'row', width: '100%', gap: 2, alignItems: 'center' }}>
                                 <Box sx={{
                                     display: 'flex',
                                     justifyContent: 'center',
@@ -251,7 +402,7 @@ const ReferralOverview: React.FC = () => {
                     </Box>
 
                     <Box sx={{ display: 'flex', flexDirection: 'row', width: '100%', gap: 1, '@media (max-width: 1200px)': { flexDirection: 'column' } }}>
-                        <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', border: '1px solid rgba(235, 235, 235, 1)', justifyContent: 'center', alignItems: 'start', borderRadius: '4px', padding: '1rem 1.5rem', gap: 2, maxHeight: '245px', '@media (max-width: 900px)': {display: 'none'}, }}>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', border: '1px solid rgba(235, 235, 235, 1)', justifyContent: 'center', alignItems: 'start', borderRadius: '4px', padding: '1rem 1.5rem', gap: 2, maxHeight: '245px', '@media (max-width: 900px)': { display: 'none' }, }}>
                             <Typography className="second-sub-title">
                                 How it works
                             </Typography>
@@ -306,7 +457,7 @@ const ReferralOverview: React.FC = () => {
 
                 </Box>
 
-            </Box>
+            </Box >
         </>
 
     );

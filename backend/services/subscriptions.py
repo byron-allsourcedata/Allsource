@@ -18,6 +18,9 @@ from persistence.user_persistence import UserPersistence
 from utils import get_utc_aware_date_for_postgres
 from decimal import *
 from services.stripe_service import determine_plan_name_from_product_id
+from fastapi import Response
+from urllib.parse import urlparse, urlencode
+import requests
 
 load_dotenv()
 
@@ -264,17 +267,28 @@ class SubscriptionService:
 
         return user_payment_transaction
     
-    def trackAwinConversion(self, user, price, subscription_type, date):
-        mode = 1 if os.getenv('MODE') == 'dev' else 0
-        awin_campaign_id = os.getenv('AWIN_CAMPAIGN_ID')
+    def trackAwinConversion(self, user: User, price, subscription_type, date):
+        refer = os.getenv('SITE_URL')
+        awc = user.awin_awc
         order_id = f"{user.id}_{date}"
-        
-        with Client() as client:
-            try:
-                client.get(f"https://www.awin1.com/sread.php?a={awin_campaign_id}&b={price}&cr=USD&c=AW&d={subscription_type}:{price}&vc=&t={mode}&ch=aw&cks={user.awin_awc}&ref={order_id}")    
-            except Exception as e:
-                logging.error(f"Unexpected error: {e}")
-
+        awin_campaign_id = os.getenv('AWIN_CAMPAIGN_ID')
+        mode = 1 if os.getenv('AWIN_MODE') == 'dev' else 0
+        params = {
+            "tt": "ss",
+            "tv": "2",
+            "merchant": f"{awin_campaign_id}",
+            "amount": price,
+            "ch": "aw",
+            "cr": "USD",
+            "parts": f"{subscription_type}:{price}",
+            "ref": f"{order_id}",
+            "t": mode,
+            "cks": awc
+        }
+        request_url = f"https://www.awin1.com/sread.php?{urlencode(params)}"
+        headers = {'Referer': refer}
+        response = requests.get(request_url, headers=headers)
+        return response
 
     def create_subscription_from_free_trial(self, user_id):
         plan = self.plans_persistence.get_free_trail_plan()
@@ -289,7 +303,8 @@ class SubscriptionService:
             members_limit=plan.members_limit,
             status=status,
             plan_id=plan.id,
-            is_trial=True
+            is_trial=True,
+            lead_credit_price=plan.lead_credit_price
         )
         self.db.add(add_subscription_obj)
         self.db.flush()
@@ -508,7 +523,7 @@ class SubscriptionService:
                 if stripe_status == 'trialing':
                     self.trackAwinConversion(user, 0, 'FREE_TRIAL', user_subscription.plan_start.strftime('%Y-%m-%d'))
                 else:
-                    self.trackAwinConversion(user, plan.price, 'SUBCRIPRION', user_subscription.plan_start.strftime('%Y-%m-%d'))
+                    self.trackAwinConversion(user, plan.price, 'SUBSCRIPTION', user_subscription.plan_start.strftime('%Y-%m-%d'))
 
         if status == "canceled" or status == 'inactive':
             self.db.query(UserSubscriptions).filter(
