@@ -4,13 +4,15 @@ import SmartDisplayIcon from '@mui/icons-material/SmartDisplay';
 import { Box } from "@mui/system";
 import Image from "next/image";
 import { useState } from "react";
+import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 
 interface MonthDetailsProps {
+    toggleFavorite: any;
     handleDownloadFile: any
     asset: any;
 }
 
-const PartnersAssetsVideo: React.FC<MonthDetailsProps> = ({handleDownloadFile,asset }) => {
+const PartnersAssetsVideo: React.FC<MonthDetailsProps> = ({toggleFavorite, handleDownloadFile, asset }) => {
     const handlePlayClick = (event: React.MouseEvent<HTMLButtonElement>) => {
         event.stopPropagation(); 
         window.open(asset.file_url, '_blank', 'noopener,noreferrer');
@@ -69,6 +71,19 @@ const PartnersAssetsVideo: React.FC<MonthDetailsProps> = ({handleDownloadFile,as
                 }}
             >
                 12:00
+            </Box>
+            <Box
+                sx={{
+                position: "absolute",
+                top: 0,
+                right: 0,
+                height: "16px",
+                width: "16px",
+                }}
+            >
+                <IconButton onClick={() => toggleFavorite(asset.id)} sx={{ width: '12.84px', height: '10.96px' }} >
+                    <FavoriteBorderIcon sx={{ width: '12.84px', height: '10.96px'  }} />
+                </IconButton>
             </Box>
         </Box>
         <Box sx={{

@@ -31,9 +31,30 @@ const PartnersAssets: React.FC = () => {
     const filteredAssets = asset === "All"
             ? assets
             : assets.filter((assetData) => assetData.type === asset);
+    const [favorites, setFavorites] = useState<Set<number>>(new Set())
 
     const handleAssetChange = (event: SelectChangeEvent) => {
         setAsset(event.target.value)
+    };
+    const currentUserId = 110;
+
+    const toggleFavorite = (id: number) => {
+        console.log({id})
+        setFavorites((prevFavorites) => {
+            const updatedFavorites = new Set(prevFavorites);
+            if (updatedFavorites.has(id)) {
+                updatedFavorites.delete(id);
+            } else {
+                updatedFavorites.add(id);
+            }
+
+            localStorage.setItem(
+                `favorites_${currentUserId}`,
+                JSON.stringify(Array.from(updatedFavorites))
+            );
+
+            return updatedFavorites;
+        });
     };
 
     const fetchRewards = async () => {
@@ -54,6 +75,12 @@ const PartnersAssets: React.FC = () => {
                 {type: "Images", asset: assetsByType["image"] || []},
                 {type: "Documents", asset: assetsByType["document"] || []}
             ]);
+
+            const storedFavorites = localStorage.getItem(`favorites_${currentUserId}`);
+            if (storedFavorites) {
+                setFavorites(new Set(JSON.parse(storedFavorites)));
+            }
+
         } catch (error) {
             console.error("Error fetching rewards:", error);
         } finally {
@@ -160,7 +187,7 @@ const PartnersAssets: React.FC = () => {
                         ) : (
                             <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }} >
                                 {filteredAssets.map((data, index) => (
-                                    <PartnersAsset key={index} data={data} />
+                                    <PartnersAsset toggleFavorite={toggleFavorite} key={index} data={data} />
                                 ))}
                             </Box>
                         )}

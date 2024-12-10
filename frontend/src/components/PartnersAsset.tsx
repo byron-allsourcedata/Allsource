@@ -22,9 +22,10 @@ interface PartnersAssetsData {
 
 interface PartnersAssetProps {
     data: any;
+    toggleFavorite: any
   }
 
-const PartnersAsset: React.FC<PartnersAssetProps> = ({ data }) => {
+const PartnersAsset: React.FC<PartnersAssetProps> = ({ data, toggleFavorite }) => {
     const [loading, setLoading] = useState(false);
     const [open, setOpen] = useState<boolean>(false);
 
@@ -78,11 +79,11 @@ const PartnersAsset: React.FC<PartnersAssetProps> = ({ data }) => {
                         console.log(item)
                         switch (item.type) {
                             case "video":
-                                return <PartnersAssetsVideo handleDownloadFile={handleDownloadFile} key={item.id} asset={item}/>
+                                return <PartnersAssetsVideo toggleFavorite={toggleFavorite} handleDownloadFile={handleDownloadFile} key={item.id} asset={item}/>
                             case "document":
-                                return <PartnersAssetsDocuments handleDownloadFile={handleDownloadFile} key={item.id} asset={item}/>
+                                return <PartnersAssetsDocuments toggleFavorite={toggleFavorite} handleDownloadFile={handleDownloadFile} key={item.id} asset={item}/>
                             default:
-                                return <PartnersAssetsImage handleDownloadFile={handleDownloadFile} key={item.id} asset={item}/>
+                                return <PartnersAssetsImage toggleFavorite={toggleFavorite} handleDownloadFile={handleDownloadFile} key={item.id} asset={item}/>
                         }
                     })}
                 </Box>

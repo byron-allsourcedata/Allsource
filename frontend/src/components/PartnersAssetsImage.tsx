@@ -5,11 +5,12 @@ import Image from "next/image";
 import { useState } from "react";
 
 interface MonthDetailsProps {
+    toggleFavorite: any;
     handleDownloadFile: any
     asset: any;
 }
 
-const PartnersAssetsImage: React.FC<MonthDetailsProps> = ({ handleDownloadFile, asset }) => {
+const PartnersAssetsImage: React.FC<MonthDetailsProps> = ({ toggleFavorite, handleDownloadFile, asset }) => {
     const [videoWidth, setVideoWidth] = useState(154);
     const [loading, setLoading] = useState(false);
     return (

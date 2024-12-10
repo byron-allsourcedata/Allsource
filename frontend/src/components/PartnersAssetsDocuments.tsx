@@ -3,11 +3,12 @@ import DownloadIcon from '@mui/icons-material/Download';
 import { Box } from "@mui/system";
 
 interface MonthDetailsProps {
+    toggleFavorite: any;
     handleDownloadFile: any;
     asset: any;
 }
 
-const PartnersAssetsDocuments: React.FC<MonthDetailsProps> = ({ handleDownloadFile, asset }) => {
+const PartnersAssetsDocuments: React.FC<MonthDetailsProps> = ({ toggleFavorite, handleDownloadFile, asset }) => {
     return (
     <Box
         sx={{
@@ -28,7 +29,7 @@ const PartnersAssetsDocuments: React.FC<MonthDetailsProps> = ({ handleDownloadFi
             height: "79px",
             borderRadius: "4px",
             backgroundColor: "#EFF1F5",
-            backgroundImage: "url(download.svg)",
+            backgroundImage: asset.file_extension === "jpg" ? 'url(pdf.svg)' : 'url(xslx.svg)',
             backgroundPosition: "center",
             backgroundRepeat: "no-repeat",
             backgroundSize: "40px 40px",
