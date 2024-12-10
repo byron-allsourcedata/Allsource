@@ -405,9 +405,6 @@ class SubscriptionService:
             self.db.query(UserSubscriptions).filter(
                 UserSubscriptions.id == user.current_subscription_id
             ).update({"status": status})
-            user.shop_id = None
-            user.shopify_token = None
-            user.shop_domain = None
         
         user.payment_status = status
         self.db.commit()
