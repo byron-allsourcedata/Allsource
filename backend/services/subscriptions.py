@@ -34,8 +34,8 @@ class SubscriptionService:
     def get_userid_by_customer(self, customer_id):
         return self.db.query(User).filter(User.customer_id == customer_id).first()
     
-    def get_user_by_shopify_shop_id(self, shop_id):
-        return self.db.query(User).filter(User.shop_id == shop_id).first()
+    def get_user_by_shopify_shop_id(self, shop_id: str):
+        return self.db.query(User).filter(User.shop_id == str(shop_id)).first()
 
 
     def cancellation_downgrade(self, subscription_id):
