@@ -19,12 +19,6 @@ class PlansPersistence:
         subscription.cancellation_reason = reason_unsubscribe
         subscription.cancel_scheduled_at = cancel_scheduled_at
         self.db.commit()
-        
-    def cancel_subscription(self, reason_unsubscribe, user_id, time):
-        subscription = self.get_user_subscription(user_id)
-        subscription.cancellation_reason = reason_unsubscribe
-        subscription.plan_end = time
-        self.db.commit()
 
     def get_trial_status_by_user_id(self, user_id: int):
         subscription = self.db.query(UserSubscriptions).filter(UserSubscriptions.user_id == user_id).first()
@@ -35,6 +29,14 @@ class PlansPersistence:
     def get_plan_by_title(self, title: str, interval: str):
         plan = self.db.query(SubscriptionPlan).filter(SubscriptionPlan.title == title,
                                                       SubscriptionPlan.interval == interval).first()
+        if plan:
+            return plan
+        else:
+            return None
+        
+    def get_plan_by_title_price(self, plan_name: str, payment_amount: str):
+        plan = self.db.query(SubscriptionPlan).filter(SubscriptionPlan.title == plan_name,
+                                                      SubscriptionPlan.price == payment_amount).first()
         if plan:
             return plan
         else:

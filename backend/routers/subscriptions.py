@@ -173,8 +173,22 @@ def buy_credits(credits_used: int, payments_service: PaymentsService = Depends(g
 @router.post("/shopify/billing/webhook", status_code=status.HTTP_200_OK)
 async def shopify_billing_update_webhook(request: fastRequest, webhook_service: WebhookService = Depends(get_webhook)):
     payload = await request.json()
-    print('------------------------')
-    print(payload)
-    webhook_service.shopify_billing_update_webhook(payload=payload)
-    
-    return { "success": True }
+    result_update_subscription = webhook_service.shopify_billing_update_webhook(payload=payload)
+    if result_update_subscription.get('status'):
+        user = result_update_subscription['user']
+        rabbitmq_connection = RabbitMQConnection()
+        connection = await rabbitmq_connection.connect()
+        try:
+            await publish_rabbitmq_message(
+                connection=connection,
+                queue_name=QUEUE_CREDITS_CHARGING,
+                message_body={
+                    'customer_id': user.customer_id,
+                    'plan_id': result_update_subscription['lead_credit_plan_id']
+                }
+            )
+        except:
+            logging.error('Failed to publish rabbitmq message')
+        finally:
+            await rabbitmq_connection.close()
+    return "OK"

@@ -169,7 +169,7 @@ class SubscriptionService:
             return True
         return False
     
-    def create_shopify_subscription_transaction(self, subscription_info, user_id, plan: SubscriptionPlan):
+    def create_shopify_subscription_transaction(self, subscription_info, user_id, plan: SubscriptionPlan, charge_id):
         status = subscription_info.get("status", "").lower()
         if status == 'cancelled':
             status = 'canceled'
@@ -188,7 +188,8 @@ class SubscriptionService:
             plan_name=plan.title,
             created_at=created_at,
             status=status,
-            amount=plan.price
+            amount=plan.price,
+            charge_id=charge_id
         )
         self.db.add(subscription_transaction_obj)
         self.db.flush()
@@ -196,6 +197,9 @@ class SubscriptionService:
     
     def get_plan_by_title(self, plan_type, interval):
         return self.plans_persistence.get_plan_by_title(plan_type, interval)
+    
+    def get_plan_by_title_price(self, plan_name, payment_amount):
+        return self.plans_persistence.get_plan_by_title_price(plan_name, payment_amount)
         
     def create_subscription_transaction(self, user_id, stripe_payload: dict):
         start_date_timestamp = stripe_payload.get("data").get("object").get("current_period_start")
@@ -350,7 +354,7 @@ class SubscriptionService:
     def get_plan_by_price(self, lead_credit_price):
         return self.db.query(SubscriptionPlan).filter(SubscriptionPlan.price == lead_credit_price).first()
     
-    def process_shopify_subscription(self, user, plan, subscription_info):
+    def process_shopify_subscription(self, user, plan, subscription_info, charge_id):
         result = {'status': None, 'lead_credit_price': None}
         
         status = subscription_info.get("status", "").lower()
@@ -396,11 +400,15 @@ class SubscriptionService:
             user.current_subscription_id = user_subscription.id
             user.is_leads_auto_charging = True
             user.stripe_payment_url = None if user.stripe_payment_url else user.stripe_payment_url
+            user.charge_id = charge_id
 
         elif status == "canceled":
             self.db.query(UserSubscriptions).filter(
                 UserSubscriptions.id == user.current_subscription_id
-            ).update({"status": status, "plan_end": end_date})
+            ).update({"status": status})
+            user.shop_id = None
+            user.shopify_token = None
+            user.shop_domain = None
         
         user.payment_status = status
         self.db.commit()

@@ -139,6 +139,7 @@ class PaymentsService:
                 subscription_data = service.shopify.cancel_current_subscription(user=user)
         else:
             subscription_data = cancel_subscription_at_period_end(user_subscription.platform_subscription_id)
+            
         if subscription_data['status'] == 'active':
             cancel_at = subscription_data.get('canceled_at')
             cancel_scheduled_at = datetime.fromtimestamp(cancel_at)
@@ -147,7 +148,6 @@ class PaymentsService:
         else:
             utc = pytz.UTC
             time_now = datetime.now(utc)
-            self.plans_service.cancel_subscription(reason_unsubscribe, user.get('id'), time_now)
             self.plans_service.save_reason_unsubscribe(reason_unsubscribe, user.get('id'), time_now)
             return SubscriptionStatus.SUCCESS
 

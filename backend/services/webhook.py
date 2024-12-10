@@ -150,14 +150,25 @@ class WebhookService:
         logger.info(f'This is the shopify webhook request -> {repr(payload)}')
         user_data = self.subscription_service.get_user_by_shopify_shop_id(shop_id=shop_id)
         charge_id = subscription_info.get("admin_graphql_api_id").split('AppSubscription/')[-1]
+        try:
+            current_charge_id = int(user_data.charge_id)
+            income_charge_id = int(charge_id)
+            if income_charge_id < current_charge_id:
+                return payload
+        except Exception as e:
+            logger.error("Can't check charge ids actuality")
+            
+        
         plan_name = subscription_info.get("name")
         if not user_data:
             logger.error("Not found user by shop id")
             return payload
         
         payment_period = None
+        payment_amount = None
         with self.integration_service as service:
             shopify_charge = service.shopify.get_charge_by_id(user_data, charge_id)
+            payment_amount = shopify_charge.price
             if shopify_charge.billing_on:
                 billing_on = datetime.strptime(shopify_charge.billing_on, "%Y-%m-%d")
                 activated_on = datetime.strptime(shopify_charge.activated_on, "%Y-%m-%d")
@@ -166,12 +177,14 @@ class WebhookService:
                     payment_period = "month"
                 else:
                     payment_period = "year"  
-        
-        plan = self.subscription_service.get_plan_by_title(plan_name, payment_period)
-        
-        self.subscription_service.create_shopify_subscription_transaction(subscription_info=subscription_info, user_id=user_data.id, plan=plan)
+        if payment_period:
+            plan = self.subscription_service.get_plan_by_title(plan_name, payment_period)
+        else:
+            plan = self.subscription_service.get_plan_by_title_price(plan_name, payment_amount)
+            
+        self.subscription_service.create_shopify_subscription_transaction(subscription_info=subscription_info, user_id=user_data.id, plan=plan, charge_id=charge_id)
 
-        result = self.subscription_service.process_shopify_subscription(user=user_data, plan=plan, subscription_info=subscription_info)
+        result = self.subscription_service.process_shopify_subscription(user=user_data, plan=plan, subscription_info=subscription_info, charge_id=charge_id)
         lead_credit_plan_id = None
         if result['lead_credit_price']:
             plan = self.subscription_service.get_plan_by_price(lead_credit_price=result['lead_credit_price'])
@@ -182,4 +195,5 @@ class WebhookService:
             'user': user_data,
             'lead_credit_plan_id': lead_credit_plan_id if lead_credit_plan_id else None
         }
+        return result
         
