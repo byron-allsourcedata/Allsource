@@ -14,11 +14,11 @@ class IntegrationsPresistence:
         self.db.commit()
         return integration
         
-    def get_integration_by_shop_id(self, shop_id) -> UserIntegration:
+    def get_integration_by_shop_id(self, shop_id: str) -> UserIntegration:
         user_integration = (
             self.db.query(UserIntegration)
             .filter(
-                UserIntegration.shop_id == shop_id
+                UserIntegration.shop_id == str(shop_id)
             )
             .first()
         )
