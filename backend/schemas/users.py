@@ -4,7 +4,7 @@ from typing_extensions import TypedDict
 from pydantic import BaseModel, Field
 
 from enums import SignUpStatus, LoginStatus, BaseEnum, VerificationEmail, UpdatePasswordStatus, ResetPasswordEnum, \
-    VerifyToken, CompanyInfoEnum, PixelStatus
+    VerifyToken, CompanyInfoEnum, PixelStatus, StripeConnectStatus
 
 
 class ShopifyPayloadModel(BaseModel):
@@ -114,3 +114,12 @@ class CalendlyDict(TypedDict):
 
 class CalendlyResponse(BaseModel):
     user: Optional[CalendlyDict] = None
+
+
+class StripeAccountID(BaseModel):
+    stripe_connect_account_id: str
+
+
+class StripeConnectResponse(BaseModel):
+    status: StripeConnectStatus
+

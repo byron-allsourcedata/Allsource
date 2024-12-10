@@ -27,6 +27,7 @@ from persistence.settings_persistence import SettingsPersistence
 from persistence.suppression_persistence import SuppressionPersistence
 from persistence.user_persistence import UserPersistence
 from persistence.integrations.external_apps_installations import ExternalAppsInstallationsPersistence
+from persistence.referral_persistence import ReferralPersistence
 from schemas.auth_token import Token
 from services.admin_customers import AdminCustomersService
 from services.audience import AudienceService
@@ -49,6 +50,8 @@ from services.users import UsersService
 from services.users_auth import UsersAuth
 from services.users_email_verification import UsersEmailVerificationService
 from services.webhook import WebhookService
+from services.referral import ReferralService
+
 
 
 logger = logging.getLogger(__name__)
@@ -80,6 +83,10 @@ def get_send_grid_persistence_service(db: Session = Depends(get_db)):
 
 def get_settings_persistence(db: Session = Depends(get_db)):
     return SettingsPersistence(db=db)
+
+
+def get_referral_persistence_service(db: Session = Depends(get_db)):
+    return ReferralPersistence(db=db)
 
 
 def get_user_persistence_service(db: Session = Depends(get_db)):
@@ -430,3 +437,9 @@ def check_api_key(maximiz_api_key = Header(None), domain_persistence: UserDomain
             return domains[0]
         raise HTTPException(status_code=404, detail={'status': DomainStatus.DOMAIN_NOT_FOUND.value})
     raise HTTPException(status_code=401, detail={'status': UserAuthorizationStatus.INVALID_API_KEY.value})
+
+
+def get_referral_service(user=Depends(check_user_authentication),
+                         referral_persistence: ReferralPersistence = Depends(get_referral_persistence_service)
+                         ):
+    return ReferralService(user=user, referral_persistence_service=referral_persistence)
