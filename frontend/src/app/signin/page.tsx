@@ -119,6 +119,9 @@ const Signup: React.FC = () => {
               get_me()
               router.push('/dashboard');
               break;
+            case 'NON_SHOPIFY_ACCOUNT':
+              showErrorToast("non shopify account");
+              break;
 
             case "INCORRECT_PASSWORD_OR_EMAIL":
               showErrorToast("Incorrect password or email.");
@@ -214,6 +217,9 @@ const Signup: React.FC = () => {
                     break;
                   case 'NEED_CHOOSE_PLAN':
                     router.push('/settings?section=subscription');
+                    break;
+                  case 'NON_SHOPIFY_ACCOUNT':
+                    showErrorToast("non shopify account");
                     break;
                   case 'FILL_COMPANY_DETAILS':
                     router.push('/account-setup');

@@ -8,7 +8,7 @@ class BaseEnum(Enum):
 class OauthShopify(Enum):
     NO_USER_CONNECTED = 'NO_USER_CONNECTED'
     ERROR_SHOPIFY_TOKEN = 'ERROR_SHOPIFY_TOKEN'
-    NonShopifyAccount = 'NonShopifyAccount'
+    NON_SHOPIFY_ACCOUNT = 'NON_SHOPIFY_ACCOUNT'
     
     
 class SourcePlatformEnum(Enum):

@@ -294,6 +294,7 @@ class UsersAuth:
         shopify_data = auth_google_data.shopify_data
         shopify_access_token = None
         shop_id = None
+        shopify_status = None
         
         if shopify_data:
             try:
@@ -305,14 +306,10 @@ class UsersAuth:
                     )
                 if not shopify_access_token or not shop_id:
                     logger.error("Invalid Shopify access token or shop ID.")
-                    return {
-                        'status': OauthShopify.ERROR_SHOPIFY_TOKEN.value
-                    }
+                    shopify_status = OauthShopify.ERROR_SHOPIFY_TOKEN
             except Exception as e:
                 logger.exception("An error occurred while processing Shopify data.")
-                return {
-                    'status': OauthShopify.ERROR_SHOPIFY_TOKEN.value
-                }
+                shopify_status = OauthShopify.ERROR_SHOPIFY_TOKEN
                 
         if not user_object.is_email_confirmed:
             self.user_persistence_service.email_confirmed(user_object.id)
@@ -329,8 +326,11 @@ class UsersAuth:
                     "id": user_object.id,
                 }
             token = create_access_token(token_info)
-            if shopify_data:
+            if shopify_data and shopify_status is None:
+                if user_object.source_platform == SourcePlatformEnum.SHOPIFY.value:
                     self._process_shopify_integration(user_object, shopify_data, shopify_access_token, shop_id)
+                else:
+                    shopify_status = OauthShopify.NON_SHOPIFY_ACCOUNT
             
             authorization_data = self.get_user_authorization_information(user_object, self.subscription_service)
             if authorization_data['status'] == LoginStatus.PAYMENT_NEEDED:
@@ -555,7 +555,7 @@ class UsersAuth:
             if user_object.source_platform == SourcePlatformEnum.SHOPIFY.value:
                 self._process_shopify_integration(user_object, shopify_data, shopify_access_token, shop_id)
             else:
-                shopify_status = OauthShopify.NonShopifyAccount
+                shopify_status = OauthShopify.NON_SHOPIFY_ACCOUNT
             
         authorization_data = self.get_user_authorization_information(user_object, self.subscription_service)
         
