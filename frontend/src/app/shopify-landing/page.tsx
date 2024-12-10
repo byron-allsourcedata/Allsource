@@ -25,6 +25,7 @@ const ShopifyLanding = () => {
           localStorage.clear();
           sessionStorage.clear();
           localStorage.setItem('token', token);
+          router.push(`/dashboard`);
         } else if (message && message == 'NO_USER_CONNECTED') {
           localStorage.clear();
           sessionStorage.clear();

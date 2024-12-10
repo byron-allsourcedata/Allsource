@@ -92,8 +92,8 @@ class ShopifyIntegrationService:
         with shopify.Session.temp(shopify_data.shop, ShopifyConfig.api_version, shopify_access_token):
             shopify.Webhook.create({
                 "topic": "app_subscriptions/update",
-                # "address": os.getenv("SITE_HOST_URL") + "/api/subscriptions/shopify/billing/webhook",
-                "address": 'https://api-dev.maximiz.ai' + "/api/subscriptions/shopify/billing/webhook",
+                "address": os.getenv("SITE_HOST_URL") + "/api/subscriptions/shopify/billing/webhook",
+                # "address": 'https://api-dev.maximiz.ai' + "/api/subscriptions/shopify/billing/webhook",
                 "format": "json"
             })
             shopify.Webhook.create({
@@ -203,7 +203,6 @@ class ShopifyIntegrationService:
     def handle_uninstalled_app(self, payload):
         user_integration = self.integration_persistence.get_integration_by_shop_id(shop_id=payload["id"])
         if user_integration:
-            self.db.query(User).filter(User.id == user_integration.user_id).update({"payment_status": "canceled"})
             self.db.delete(user_integration)
             self.db.commit()
             
@@ -216,16 +215,16 @@ class ShopifyIntegrationService:
             result['message'] = OauthShopify.NO_USER_CONNECTED.value
             return result
 
-        user = self.db.query(User).filter(User.id == user_integration.user_id).first
-        shopify_pay_load_model = ShopifyPayloadModel(
+        user = self.db.query(User).filter(User.id == user_integration.user_id).first()
+        shopify_payload_model = ShopifyPayloadModel(
             code=query_params.get('code'),
             hmac=query_params.get('hmac'),
             host=query_params.get('host'),
-            shop=shop,
+            shop=query_params.get('shop'),
             state=query_params.get('state'),
             timestamp=query_params.get('timestamp')
         )
-        shopify_token = self.get_shopify_token(shopify_pay_load_model)
+        shopify_token = self.get_shopify_token(shopify_payload_model)
         if shopify_token is None:
             result['message'] = OauthShopify.ERROR_SHOPIFY_TOKEN.value
             return result

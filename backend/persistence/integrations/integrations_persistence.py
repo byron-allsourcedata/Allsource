@@ -28,7 +28,7 @@ class IntegrationsPresistence:
         user_integration = (
             self.db.query(UserIntegration)
             .filter(
-                UserIntegration.shop_domain == shop_url
+                UserIntegration.shop_domain.like(f"%{shop_url}")
             )
             .first()
         )
