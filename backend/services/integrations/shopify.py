@@ -92,13 +92,14 @@ class ShopifyIntegrationService:
         with shopify.Session.temp(shopify_data.shop, ShopifyConfig.api_version, shopify_access_token):
             shopify.Webhook.create({
                 "topic": "app_subscriptions/update",
-                "address": os.getenv("SITE_HOST_URL") + "/api/subscriptions/shopify/billing/webhook",
-                # "address": 'https://api-dev.maximiz.ai' + "/api/subscriptions/shopify/billing/webhook",
+                #"address": os.getenv("SITE_HOST_URL") + "/api/subscriptions/shopify/billing/webhook",
+                "address": 'https://api-dev.maximiz.ai' + "/api/subscriptions/shopify/billing/webhook",
                 "format": "json"
             })
             shopify.Webhook.create({
                 "topic": "app/uninstalled",
-                "address": os.getenv("SITE_HOST_URL") + "/api/integrations/shopify/uninstall",
+                #"address": os.getenv("SITE_HOST_URL") + "/api/integrations/shopify/uninstall",
+                "address": 'https://api-dev.maximiz.ai' + "/api/integrations/shopify/uninstall",
                 "format": "json"
             })
 
