@@ -107,7 +107,7 @@ class UserPersistence:
                 'awin_awc': user.awin_awc,
                 'source_platform': user.source_platform,
                 'shop_domain': user.shop_domain,
-                'shopify_token': user.shopify_token
+                'shopify_token': user.shopify_token,
                 'connected_stripe_account_id': user.connected_stripe_account_id
             }
         self.db.rollback()
