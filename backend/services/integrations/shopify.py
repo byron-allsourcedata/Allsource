@@ -204,7 +204,7 @@ class ShopifyIntegrationService:
     def handle_uninstalled_app(self, payload):
         user_integration = self.integration_persistence.get_integration_by_shop_id(shop_id=payload["id"])
         if user_integration:
-            self.db.query(User).filter(User.shop_id==payload["id"]).update({"shop_id": None, "shopify_token": None, "shop_domain": None})
+            self.db.query(User).filter(User.shop_id==str(payload["id"])).update({"shop_id": None, "shopify_token": None, "shop_domain": None})
             self.db.delete(user_integration)
             self.db.commit()
             
