@@ -472,6 +472,10 @@ class UsersAuth:
             service.shopify.add_integration(credentials, domain, user_object.id, shop_id)
             service.shopify.create_webhooks_for_store(shopify_data=shopify_data, shopify_access_token=shopify_access_token)
         
+        if not user_object.shop_id:
+            user_object.shop_id = shop_id
+            user_object.shopify_token = shopify_access_token
+            user_object.shop_domain = shopify_data.shop
         user_object.source_platform = SourcePlatformEnum.SHOPIFY.value
         user_object.is_book_call_passed = True
         user_object.is_email_confirmed = True

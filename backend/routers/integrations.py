@@ -251,8 +251,6 @@ async def oauth_shopify_install_redirect(shop: str, r: Request, integrations_ser
 async def shopify_app_uninstalled_webhook(request: Request, integrations_service: IntegrationService = Depends(get_integration_service)):
     with integrations_service as service:
         payload = await request.json()
-        print('----------')
-        print(payload)
         return service.shopify.handle_uninstalled_app(payload)
     
     
