@@ -1,9 +1,7 @@
 import { Box, Typography} from "@mui/material";
-import { useState } from "react";
 import PartnersAssetsVideo from '@/components/PartnersAssetsVideo';
 import PartnersAssetsImage from '@/components/PartnersAssetsImage';
 import PartnersAssetsDocuments from '@/components/PartnersAssetsDocuments';
-import axiosInstance from "@/axios/axiosInterceptorInstance";
 
 interface AssetsData {
     id: number;
@@ -25,37 +23,10 @@ interface PartnersAssetProps {
     toggleFavorite: any
   }
 
-const PartnersAsset: React.FC<PartnersAssetProps> = ({ data, toggleFavorite }) => {
-    const [loading, setLoading] = useState(false);
-    const [open, setOpen] = useState<boolean>(false);
-
-    const handleDownloadFile = async (id: number, fileUrl: string,) => {
-        try {
-            setLoading(true)
-            const response = await axiosInstance.get('/partners-assets/download', {
-                params: {
-                    asset_id: id
-                },
-                responseType: 'blob'
-            });
-            const url = window.URL.createObjectURL(new Blob([response.data]));
-            const link = document.createElement('a');
-            link.href = url;
-
-            const filename = fileUrl.split('/').pop();
-            if (filename) {
-                link.setAttribute('download', filename);
-
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-    
-                console.log('File downloaded successfully:', filename);
-            }
-        } catch (error) {
-        } finally {
-            setLoading(false)
-        }
+const PartnersAsset: React.FC<PartnersAssetProps> = ({data, toggleFavorite }) => {
+    const handleDownloadFile = (fileUrl: string) => {;
+        window.location.href = fileUrl;
+        window.history.back;
     };
 
     return (
@@ -75,13 +46,13 @@ const PartnersAsset: React.FC<PartnersAssetProps> = ({ data, toggleFavorite }) =
                 {data.type}
                 </Typography>
                 <Box sx={{ display: "flex", flexWrap: "wrap",  gap: 3, '@media (max-width: 360px)': { gap: 2 } }}>
+                    {console.log(data)}
                     {data.asset.map((item: AssetsData) => {
-                        console.log(item)
                         switch (item.type) {
                             case "video":
                                 return <PartnersAssetsVideo toggleFavorite={toggleFavorite} handleDownloadFile={handleDownloadFile} key={item.id} asset={item}/>
                             case "document":
-                                return <PartnersAssetsDocuments toggleFavorite={toggleFavorite} handleDownloadFile={handleDownloadFile} key={item.id} asset={item}/>
+                                return <PartnersAssetsDocuments  toggleFavorite={toggleFavorite} handleDownloadFile={handleDownloadFile} key={item.id} asset={item}/>
                             default:
                                 return <PartnersAssetsImage toggleFavorite={toggleFavorite} handleDownloadFile={handleDownloadFile} key={item.id} asset={item}/>
                         }

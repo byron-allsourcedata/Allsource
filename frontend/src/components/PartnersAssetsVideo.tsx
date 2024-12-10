@@ -5,6 +5,7 @@ import { Box } from "@mui/system";
 import Image from "next/image";
 import { useState } from "react";
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
+import FavoriteIcon from '@mui/icons-material/Favorite';
 
 interface MonthDetailsProps {
     toggleFavorite: any;
@@ -12,7 +13,7 @@ interface MonthDetailsProps {
     asset: any;
 }
 
-const PartnersAssetsVideo: React.FC<MonthDetailsProps> = ({toggleFavorite, handleDownloadFile, asset }) => {
+const PartnersAssetsVideo: React.FC<MonthDetailsProps> = ({ toggleFavorite, handleDownloadFile, asset }) => {
     const handlePlayClick = (event: React.MouseEvent<HTMLButtonElement>) => {
         event.stopPropagation(); 
         window.open(asset.file_url, '_blank', 'noopener,noreferrer');
@@ -37,7 +38,7 @@ const PartnersAssetsVideo: React.FC<MonthDetailsProps> = ({toggleFavorite, handl
         <Box
             sx={{position: "relative", width: "154px", height: "79px", '@media (max-width: 360px)': {width: "140px"}}}
             >
-                <Link href={asset.file_url} target="_blank" rel="noopener noreferrer" >
+                <Link href={asset.file_url} target="_blank" rel="noopener noreferrer">
                     <Image src={asset.preview_url} alt="Pitch decks image" height={79} width={videoWidth}/>
                 </Link>
             <Box 
@@ -82,7 +83,7 @@ const PartnersAssetsVideo: React.FC<MonthDetailsProps> = ({toggleFavorite, handl
                 }}
             >
                 <IconButton onClick={() => toggleFavorite(asset.id)} sx={{ width: '12.84px', height: '10.96px' }} >
-                    <FavoriteBorderIcon sx={{ width: '12.84px', height: '10.96px'  }} />
+                {asset.isFavorite ?  <FavoriteIcon sx={{ width: '12.84px', height: '10.96px', color: "rgba(248, 70, 75, 1)"  }} /> : <FavoriteBorderIcon sx={{ width: '12.84px', height: '10.96px'  }} />}
                 </IconButton>
             </Box>
         </Box>
@@ -102,7 +103,7 @@ const PartnersAssetsVideo: React.FC<MonthDetailsProps> = ({toggleFavorite, handl
         >
         {asset.title}
         </Typography>
-        <IconButton onClick={() => handleDownloadFile(asset.id, asset.file_url)} sx={{ ':hover': { backgroundColor: 'transparent', }, padding: 0 }}>
+        <IconButton onClick={() => handleDownloadFile(asset.file_url)} sx={{ ':hover': { backgroundColor: 'transparent', }, padding: 0 }}>
             <DownloadIcon sx={{ width: '20px', height: '20px', color: 'rgba(188, 188, 188, 1)', ':hover': { color: 'rgba(80, 82, 178, 1)' } }} />
         </IconButton>
         </Box>

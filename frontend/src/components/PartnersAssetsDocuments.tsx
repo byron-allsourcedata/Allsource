@@ -1,6 +1,8 @@
 import { IconButton, Typography } from "@mui/material";
 import DownloadIcon from '@mui/icons-material/Download';
 import { Box } from "@mui/system";
+import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
+import FavoriteIcon from '@mui/icons-material/Favorite';
 
 interface MonthDetailsProps {
     toggleFavorite: any;
@@ -33,8 +35,22 @@ const PartnersAssetsDocuments: React.FC<MonthDetailsProps> = ({ toggleFavorite, 
             backgroundPosition: "center",
             backgroundRepeat: "no-repeat",
             backgroundSize: "40px 40px",
+            position: "relative",
             '@media (max-width: 360px)': {width: "140px"}
         }}>
+            <Box
+                sx={{
+                position: "absolute",
+                top: 0,
+                right: 0,
+                height: "16px",
+                width: "16px",
+                }}
+            >
+                <IconButton onClick={() => toggleFavorite(asset.id)} sx={{ width: '12.84px', height: '10.96px' }} >
+                {asset.isFavorite ?  <FavoriteIcon sx={{ width: '12.84px', height: '10.96px', color: "rgba(248, 70, 75, 1)"  }} /> : <FavoriteBorderIcon sx={{ width: '12.84px', height: '10.96px'  }} />}
+                </IconButton>
+            </Box>
         </Box>
         <Box sx={{
             display: "flex",
@@ -69,7 +85,7 @@ const PartnersAssetsDocuments: React.FC<MonthDetailsProps> = ({ toggleFavorite, 
                 {asset.file_extension}
                 </Typography>
             </Box>
-            <IconButton onClick={() => handleDownloadFile(asset.id, asset.file_url)} sx={{ ':hover': { backgroundColor: 'transparent', }, padding: 0 }}>
+            <IconButton onClick={() => handleDownloadFile(asset.file_url)} sx={{ ':hover': { backgroundColor: 'transparent', }, padding: 0 }}>
                 <DownloadIcon sx={{ width: '20px', height: '20px', color: 'rgba(188, 188, 188, 1)', ':hover': { color: 'rgba(80, 82, 178, 1)' } }} />
             </IconButton>
         </Box>

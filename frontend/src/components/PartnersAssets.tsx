@@ -16,22 +16,23 @@ interface AssetsData {
     title: string;
     file_extension: string;
     file_size: string;
+    isFavorite: boolean;
 }
 
 interface PartnersAssetsData {
     type: string;
-    asset: AssetsData | [];
+    asset: AssetsData[] | [];
 }
 
 const PartnersAssets: React.FC = () => {
     const [loading, setLoading] = useState(false);
-    const [assets, setAssets] = useState<PartnersAssetsData[]>([{type: "Videos", asset: []}, {type: "Pitch decks", asset: []}, {type: "Images", asset: []}, {type: "Documents", asset: []} ]);
+    const [assets, setAssets] = useState<PartnersAssetsData[]>([{type: "Videos", asset: []}, {type: "Pitch decks", asset: []}, {type: "Images", asset: []}, {type: "Documents", asset: []}, ]);
     const [asset, setAsset] = useState<string>("All");
-    const yearsOptions: string[] = ["All", "Videos", "Pitch decks", "Images", "Documents"];
+    const yearsOptions: string[] = ["All", "Videos", "Pitch decks", "Images", "Documents", "Favorites"];
+    const [favorites, setFavorites] = useState<PartnersAssetsData[]>([{type: "Favorites", asset: []}])
     const filteredAssets = asset === "All"
             ? assets
-            : assets.filter((assetData) => assetData.type === asset);
-    const [favorites, setFavorites] = useState<Set<number>>(new Set())
+            : asset === "Favorites" ? favorites : assets.filter((assetData) => assetData.type === asset);
 
     const handleAssetChange = (event: SelectChangeEvent) => {
         setAsset(event.target.value)
@@ -39,47 +40,47 @@ const PartnersAssets: React.FC = () => {
     const currentUserId = 110;
 
     const toggleFavorite = (id: number) => {
-        console.log({id})
-        setFavorites((prevFavorites) => {
-            const updatedFavorites = new Set(prevFavorites);
-            if (updatedFavorites.has(id)) {
-                updatedFavorites.delete(id);
-            } else {
-                updatedFavorites.add(id);
-            }
+        setAssets((prevAssets) =>
+            prevAssets.map((group) => ({
+                ...group,
+                asset: group.asset.map((item) =>
+                    item.id === id ? { ...item, isFavorite: !item.isFavorite } : item
+                ),
+            }))
+        );
+        const allAssets = assets.flatMap((group) => group.asset)
+        const updatedFavorites = favorites[0].asset.some((fav: any) => fav.id === id)
+            ? favorites[0].asset.filter((fav: any) => fav.id !== id)
+            : [...favorites[0].asset, allAssets.find((item) => item.id === id)!];
 
-            localStorage.setItem(
-                `favorites_${currentUserId}`,
-                JSON.stringify(Array.from(updatedFavorites))
-            );
-
-            return updatedFavorites;
-        });
+        localStorage.setItem(`favorites_${currentUserId}`, JSON.stringify(updatedFavorites));
+        setFavorites([{ type: "Favorites", asset: updatedFavorites }]);
     };
 
     const fetchRewards = async () => {
         setLoading(true);
         try {
+            const userFavorites = JSON.parse(localStorage.getItem(`favorites_${currentUserId}`) || '[]');
+
             const response = await axiosInstance.get("/partners-assets");
             const assetsByType = response.data.reduce((acc: Record<string, AssetsData[]>, item: AssetsData) => {
                 if (!acc[item.type]) {
                     acc[item.type] = [];
                 }
-                acc[item.type].push(item);
+                const isFavorite = userFavorites.some((fav: any) => fav.id === item.id);
+                acc[item.type].push({ ...item, isFavorite });
                 return acc;
             }, {});
+
 
             setAssets([
                 {type: "Videos", asset: assetsByType["video"] || []},
                 {type: "Pitch decks", asset: assetsByType["presentation"] || []},
                 {type: "Images", asset: assetsByType["image"] || []},
-                {type: "Documents", asset: assetsByType["document"] || []}
+                {type: "Documents", asset: assetsByType["document"] || []},
             ]);
 
-            const storedFavorites = localStorage.getItem(`favorites_${currentUserId}`);
-            if (storedFavorites) {
-                setFavorites(new Set(JSON.parse(storedFavorites)));
-            }
+            setFavorites([{ type: "Favorites", asset: userFavorites }]);
 
         } catch (error) {
             console.error("Error fetching rewards:", error);

@@ -22,36 +22,6 @@ class PartnersAssetService:
             for i, asset in enumerate(assets)
         ]
 
-    def download_asset(self, asset_id):
-        if asset_id:
-
-            partners_asset = self.partners_asset_persistence.get_asset_by_id(asset_id=asset_id)
-
-            if not partners_asset or not partners_asset.file_url:
-                logger.debug('Invalid asset or missing file URL')
-                return False
-
-            try:
-                response = requests.get(partners_asset.file_url, stream=True)
-                response.raise_for_status()
-
-                file_stream = BytesIO()
-                for chunk in response.iter_content(chunk_size=8192):
-                    file_stream.write(chunk)
-
-                file_stream.seek(0)
-
-                return StreamingResponse(
-                    file_stream,
-                    media_type="application/octet-stream",
-                )
-
-            except requests.exceptions.RequestException as err:
-                logger.debug('Error downloading file', err)
-                return False
-
-        return False
-
     def get_file_size(self, file_url: str) -> str:
         try:
             response = requests.head(file_url, allow_redirects=True, timeout=5)
