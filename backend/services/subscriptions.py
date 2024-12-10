@@ -169,7 +169,7 @@ class SubscriptionService:
             return True
         return False
     
-    def create_shopify_subscription_transaction(self, subscription_info, user_id, plan: SubscriptionPlan, charge_id):
+    def create_shopify_subscription_transaction(self, subscription_info, user_id, plan: SubscriptionPlan):
         status = subscription_info.get("status", "").lower()
         if status == 'cancelled':
             status = 'canceled'
@@ -188,8 +188,7 @@ class SubscriptionService:
             plan_name=plan.title,
             created_at=created_at,
             status=status,
-            amount=plan.price,
-            charge_id=charge_id
+            amount=plan.price
         )
         self.db.add(subscription_transaction_obj)
         self.db.flush()

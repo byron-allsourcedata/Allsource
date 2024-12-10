@@ -21,7 +21,6 @@ class SubscriptionTransactions(Base):
     currency = Column(VARCHAR, nullable=True)
     price_id = Column(VARCHAR, nullable=True)
     amount = Column(DECIMAL(10, 2), nullable=False)
-    charge_id = Column(VARCHAR(64), nullable=True)
 
 
 event.listen(SubscriptionTransactions, "before_insert", create_timestamps)

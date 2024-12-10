@@ -182,7 +182,7 @@ class WebhookService:
         else:
             plan = self.subscription_service.get_plan_by_title_price(plan_name, payment_amount)
             
-        self.subscription_service.create_shopify_subscription_transaction(subscription_info=subscription_info, user_id=user_data.id, plan=plan, charge_id=charge_id)
+        self.subscription_service.create_shopify_subscription_transaction(subscription_info=subscription_info, user_id=user_data.id, plan=plan)
 
         result = self.subscription_service.process_shopify_subscription(user=user_data, plan=plan, subscription_info=subscription_info, charge_id=charge_id)
         lead_credit_plan_id = None
