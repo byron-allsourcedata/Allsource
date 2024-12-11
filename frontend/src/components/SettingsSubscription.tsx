@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Button, Tabs, Tab, TextField, Dialog, DialogActions, Tooltip, Slider, DialogContent, DialogTitle, IconButton, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, TableSortLabel, InputAdornment, Drawer, Divider, List, ListItem, ListItemIcon, ListItemText, Chip } from '@mui/material';
+import { Box, Typography, Button, Tabs, Tab, TextField, Slider, IconButton, Drawer, Divider, Chip, Link } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import PlanCard from '@/components/PlanCard';
 import axiosInterceptorInstance from '@/axios/axiosInterceptorInstance';
@@ -109,6 +109,11 @@ export const SettingsSubscription: React.FC = () => {
     const [errors, setErrors] = useState<{ [key: string]: string }>({});
     const [formValues, setFormValues] = useState({ unsubscribe: '', });
     const [hasActivePlan, setHasActivePlan] = useState<boolean>(false);
+    const [showSlider, setShowSlider] = useState(true);
+
+    const handleFilterPopupClose = () => {
+        setShowSlider(false);
+    };
 
 
     const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
@@ -726,22 +731,31 @@ export const SettingsSubscription: React.FC = () => {
                             }
                         }}>
                             <Box display="flex" justifyContent="flex-end" mt={2}>
-
-                                <Button className="hyperlink-red" sx={{
-                                    background: '#5052B2',
-                                    borderRadius: '4px',
-                                    border: '1px solid #5052b2',
-                                    boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                                    color: '#fff !important',
-                                    textTransform: 'none',
-                                    padding: '10px 24px',
-                                    width: '100%',
-                                    '&:hover': {
-                                        color: '#5052B2 !important'
-                                    }
-                                }}>
+                                <Link
+                                    href="https://calendly.com/maximiz-support/30min"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={handleCustomPlanPopupClose}
+                                    sx={{
+                                        display: 'inline-block',
+                                        width: '100%',
+                                        textDecoration: 'none',
+                                        color: '#fff',
+                                        padding: '1em 8em',
+                                        fontFamily: 'Nunito Sans',
+                                        fontWeight: '600',
+                                        fontSize: '14px',
+                                        borderRadius: '4px',
+                                        border: 'none',
+                                        lineHeight: '22.4px',
+                                        backgroundColor: '#5052B2',
+                                        textTransform: 'none',
+                                        textAlign: 'center',
+                                        cursor: 'pointer',
+                                    }}
+                                >
                                     Book a call
-                                </Button>
+                                </Link>
                             </Box>
                         </Box>
                     </Box>
@@ -1018,4 +1032,3 @@ export const SettingsSubscription: React.FC = () => {
         </Box>
     );
 };
-
