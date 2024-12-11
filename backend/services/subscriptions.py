@@ -272,7 +272,7 @@ class SubscriptionService:
         awc = user.awin_awc
         order_id = f"{subscription_id}_{user.id}_{date}"
         awin_campaign_id = os.getenv('AWIN_CAMPAIGN_ID')
-        mode = 1 if os.getenv('AWIN_MODE') == 'dev' else 0
+        mode = 1 if os.getenv('APP_MODE') == 'dev' else 0
         params = {
             "tt": "ss",
             "tv": "2",

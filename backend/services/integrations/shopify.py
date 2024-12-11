@@ -79,7 +79,7 @@ class ShopifyIntegrationService:
         return {"link": link}
     
     def initialize_subscription_charge(self, plan: SubscriptionPlan, user: dict):
-        test_mode = True if os.getenv("MODE") == "dev" else False
+        test_mode = True if os.getenv("APP_MODE") == "dev" else False
         return self.create_new_recurring_charge(shopify_domain=user.get('shop_domain'), shopify_access_token=user.get('shopify_token'), plan=plan, test_mode=test_mode)
     
     def cancel_current_subscription(self, user: User):
