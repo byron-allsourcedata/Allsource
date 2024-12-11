@@ -36,11 +36,14 @@ class PartnersAssetService:
             return "0.00 MB" 
         
     def get_file_extension(self, file_url) -> str:
-        url_path = urlparse(file_url).path
-        extension = os.path.splitext(url_path)[-1][1:].capitalize()
-        if not extension:
+        if file_url:
+            url_path = urlparse(file_url).path
+            extension = os.path.splitext(url_path)[-1][1:].capitalize()
+            if not extension:
+                return "Unknown"
+            return extension
+        else: 
             return "Unknown"
-        return extension
 
     def domain_mapped(self, asset: PartnersAsset):
         return PartnersAssetResponse(

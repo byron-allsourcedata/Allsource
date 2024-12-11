@@ -76,6 +76,18 @@ def test_get_file_size_failure(mocker, service):
     mock_response.assert_called_once_with(file_url, allow_redirects=True, timeout=5)
 
 
+def test_get_file_size_fail_response(mocker, service):
+    mock_response = mocker.patch("requests.head")
+    mock_response.return_value.status_code = 303
+    mock_response.return_value.headers = {"Date": "Wed, 11 Dec 2024 06:37:42 GMT", "Content-Type": "image/jpeg", "Content-Length": "912261"}
+
+    file_url = "https://images.hdqwalls.com/download/sunset-tree-red-ocean-sky-7w-3840x2160.jpg"
+    file_size = service.get_file_size(file_url)
+    
+    assert file_size == "0.00 MB"
+    mock_response.assert_called_once_with(file_url, allow_redirects=True, timeout=5) 
+
+
 def test_get_file_extension_valid(service):
     file_url = "http://example.com/file.png"
     extension = service.get_file_extension(file_url)
@@ -84,6 +96,12 @@ def test_get_file_extension_valid(service):
 
 def test_get_file_extension_no_extension(service):
     file_url = "http://example.com/file"
+    extension = service.get_file_extension(file_url)
+    assert extension == "Unknown"
+
+
+def test_get_file_extension_no_valid_type(service):
+    file_url = None
     extension = service.get_file_extension(file_url)
     assert extension == "Unknown"
 
