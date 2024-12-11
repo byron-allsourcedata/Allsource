@@ -592,15 +592,15 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
                     />
                 </Box>
             )}
-            {integrationsCredentials.some(integration => integration.service_name === "bigcommerce") && (
-                <Box onClick={() => handleActive('bigcommerce')}>
+            {integrationsCredentials.some(integration => integration.service_name === "big_commerce") && (
+                <Box onClick={() => handleActive('big_commerce')}>
                     <IntegrationBox
                         image="/bigcommerce-icon.svg"
-                        service_name="bigcommerce"
-                        active={activeService === 'bigcommerce'}
+                        service_name="big_commerce"
+                        active={activeService === 'big_commerce'}
                         handleClick={() => setOpenBigcommerceConnect(true)}
                         handleDelete={handleDeleteOpen}
-                        is_failed={integrationsCredentials?.find(integration => integration.service_name === 'bigcommerce')?.is_failed}
+                        is_failed={integrationsCredentials?.find(integration => integration.service_name === 'big_commerce')?.is_failed}
                     />
                 </Box>
             )}
@@ -695,8 +695,8 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
         <BCommerceConnect 
             open={openBigcommrceConnect} 
             onClose={handleClose}
-            initShopHash={integrationsCredentials?.find(integration => integration.service_name === 'bigcommerce')?.shop_domain}
-            error_message={integrationsCredentials?.find(integration => integration.service_name === 'bigcommerce')?.error_message}
+            initShopHash={integrationsCredentials?.find(integration => integration.service_name === 'big_commerce')?.shop_domain}
+            error_message={integrationsCredentials?.find(integration => integration.service_name === 'big_commerce')?.error_message}
         />
         <OmnisendConnect open={openOmnisendConnect} handleClose={handleClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'omnisend')?.access_token}/>
         <MailchimpConnect open={openMailchinpConnect} handleClose={handleClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'mailchimp')?.access_token} />
@@ -712,7 +712,7 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
             handleSaveSettings={handleSaveSettings}
         />
         <Box>
-            {(activeService && activeService != 'shopify' && activeService != 'bigcommerce') && (<DataSyncList key={activeService} service_name={activeService} />)}
+            {(activeService && activeService != 'shopify' && activeService != 'big_commerce') && (<DataSyncList key={activeService} service_name={activeService} />)}
         </Box>
 
         <DeleteIntegrationPopup open={openDeletePopup} onClose={handleDeleteClose} service_name={activeService} handleDelete={handleDelete}/>
@@ -741,7 +741,7 @@ const IntegrationsAvaliable = ({ integrationsCredentials, integrations, handleSa
         { image: 'shopify-icon.svg', service_name: 'shopify' },
         { image: 'klaviyo.svg', service_name: 'klaviyo' },
         { image: 'meta-icon.svg', service_name: 'meta' },
-        { image: 'bigcommerce-icon.svg', service_name: 'bigcommerce' },
+        { image: 'bigcommerce-icon.svg', service_name: 'big_commerce' },
         { image: 'omnisend_icon_black.svg', service_name: 'omnisend'}, 
         { image: 'mailchimp-icon.svg', service_name: 'mailchimp'},
         { image: 'sendlane-icon.svg', service_name: 'sendlane'},
@@ -778,7 +778,7 @@ const IntegrationsAvaliable = ({ integrationsCredentials, integrations, handleSa
         case 'shopify':
             setOpenShopifyConnect(true);
             break;
-        case 'bigcommerce':
+        case 'big_commerce':
             setOpenBigcommerceConnect(true);
             break;
         case 'omnisend':

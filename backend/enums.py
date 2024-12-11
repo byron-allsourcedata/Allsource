@@ -15,7 +15,7 @@ class SourcePlatformEnum(Enum):
     SHOPIFY = 'shopify'
     AWIN = 'awin'
     ATTENTIVE = 'attentive'
-    BIG_COMMERCE = 'bigcommerce'
+    BIG_COMMERCE = 'big_commerce'
     KLAVIYO = 'klaviyo'
     MAILCHIMP = 'mailchimp'
     META = 'meta'
