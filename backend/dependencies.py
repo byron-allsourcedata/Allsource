@@ -25,6 +25,7 @@ from persistence.plans_persistence import PlansPersistence
 from persistence.sendgrid_persistence import SendgridPersistence
 from persistence.settings_persistence import SettingsPersistence
 from persistence.suppression_persistence import SuppressionPersistence
+from persistence.partners_asset_persistence import PartnersAssetPersistence
 from persistence.user_persistence import UserPersistence
 from persistence.integrations.external_apps_installations import ExternalAppsInstallationsPersistence
 from persistence.referral_persistence import ReferralPersistence
@@ -50,6 +51,7 @@ from services.users import UsersService
 from services.users_auth import UsersAuth
 from services.users_email_verification import UsersEmailVerificationService
 from services.webhook import WebhookService
+from services.partners_assets import PartnersAssetService
 from services.referral import ReferralService
 
 
@@ -64,6 +66,11 @@ def get_db():
     finally:
         db.close()
 
+def get_partners_asset_persistence(db: Session = Depends(get_db)) -> PartnersAssetPersistence:
+    return PartnersAssetPersistence(db)
+
+def get_partners_assets_service(partners_asset_persistence: PartnersAssetPersistence = Depends(get_partners_asset_persistence)):
+    return PartnersAssetService(partners_asset_persistence=partners_asset_persistence)
 
 def get_plans_persistence(db: Session = Depends(get_db)):
     return PlansPersistence(db=db)
@@ -210,6 +217,17 @@ def check_user_setting_access(Authorization: Annotated[str, Header()],
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail={'status': auth_status.value}
+        )
+    return user
+
+def check_user_partners_access(Authorization: Annotated[str, Header()],
+                                           user_persistence_service: UserPersistence = Depends(
+                                               get_user_persistence_service)) -> Token:
+    user = check_user_authentication(Authorization, user_persistence_service)
+    if not user['is_partner']:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={'status': 'NOT_FOUND'}
         )
     return user
 

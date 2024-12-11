@@ -11,6 +11,7 @@ class Users(Base):
     is_email_confirmed = Column(BOOLEAN, default=False, nullable=True)
     is_with_card = Column(BOOLEAN, default=False, nullable=True)
     is_company_details_filled = Column(BOOLEAN, default=False, nullable=True)
+    is_partner = Column(BOOLEAN, default=False, nullable=True)
     password = Column(VARCHAR, nullable=True)
     full_name = Column(VARCHAR, nullable=True)
     team_owner_id = Column(BIGINT, nullable=True)
