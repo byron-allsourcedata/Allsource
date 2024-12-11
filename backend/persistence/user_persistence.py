@@ -186,3 +186,10 @@ class UserPersistence:
             }
             for user in users
         ]
+
+    def add_stripe_account(self, user_id: int, stripe_connected_account_id: str):
+        self.db.query(Users).filter(Users.id == user_id).update(
+            {Users.connected_stripe_account_id: stripe_connected_account_id},
+            synchronize_session=False
+        )
+        self.db.commit()

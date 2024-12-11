@@ -5,7 +5,7 @@ from enums import UpdatePasswordStatus
 from persistence.user_persistence import UserPersistence
 from models.users import Users
 from persistence.plans_persistence import PlansPersistence
-from schemas.users import UpdatePassword
+from schemas.users import UpdatePassword, StripeAccountID
 from schemas.domains import DomainResponse
 from services.jwt_service import get_password_hash
 import requests
@@ -163,3 +163,7 @@ class UsersService:
 
         self.user_persistence_service.update_calendly_uuid(self.user.get('id'), str(uuid), str(invitees))
         return 'OK'
+
+    def add_stripe_account(self, stripe_connected_account_id: str):
+        self.user_persistence_service.add_stripe_account(self.user.get('id'), stripe_connected_account_id)
+        return 'SUCCESS_CONNECT'
