@@ -232,10 +232,10 @@ class SubscriptionService:
 
         return user_payment_transaction
     
-    def trackAwinConversion(self, user: User, price, subscription_type, date):
+    def trackAwinConversion(self, user: User, price, subscription_type, date, subscription_id):
         refer = os.getenv('SITE_URL')
         awc = user.awin_awc
-        order_id = f"{user.id}_{date}"
+        order_id = f"{subscription_id}_{user.id}_{date}"
         awin_campaign_id = os.getenv('AWIN_CAMPAIGN_ID')
         mode = 1 if os.getenv('AWIN_MODE') == 'dev' else 0
         params = {
@@ -273,16 +273,19 @@ class SubscriptionService:
         )
         self.db.add(add_subscription_obj)
         self.db.flush()
-        self.db.query(User).filter(User.id == user_id).update({User.activate_steps_percent: 50,
-                                                               User.leads_credits: plan.leads_credits,
-                                                               User.prospect_credits: plan.prospect_credits,
-                                                               User.current_subscription_id: add_subscription_obj.id
-                                                               },
-                                                              synchronize_session=False)
-        user = self.db.query(User).filter(User.id == user_id).first()
+        user_query = self.db.query(User).filter(User.id == user_id)
+        user = user_query.update({
+            User.activate_steps_percent: 50,
+            User.leads_credits: plan.leads_credits,
+            User.prospect_credits: plan.prospect_credits,
+            User.current_subscription_id: add_subscription_obj.id
+        }, synchronize_session="fetch")
+
         self.db.commit()
+
+        user = user_query.first()
         if user.awin_awc:
-            self.trackAwinConversion(user, 0, 'FREE_TRIAL', add_subscription_obj.created_at.strftime('%Y-%m-%d'))
+            self.trackAwinConversion(user, 0, 'FREE_TRIAL', add_subscription_obj.created_at.strftime('%Y-%m-%d'), add_subscription_obj.id)
 
     def remove_trial(self, user_id: int):
         trial_subscription = self.db.query(UserSubscriptions).filter(
@@ -426,9 +429,9 @@ class SubscriptionService:
                 self.db.flush()
             if user.awin_awc:
                 if stripe_status == 'trialing':
-                    self.trackAwinConversion(user, 0, 'FREE_TRIAL', user_subscription.plan_start.strftime('%Y-%m-%d'))
+                    self.trackAwinConversion(user, 0, 'FREE_TRIAL', user_subscription.plan_start.strftime('%Y-%m-%d'), user_subscription.id)
                 else:
-                    self.trackAwinConversion(user, plan.price, 'SUBSCRIPTION', user_subscription.plan_start.strftime('%Y-%m-%d'))
+                    self.trackAwinConversion(user, plan.price, 'SUBSCRIPTION', user_subscription.plan_start.strftime('%Y-%m-%d'), user_subscription.id)
 
         if status == "canceled" or status == 'inactive':
             self.db.query(UserSubscriptions).filter(
