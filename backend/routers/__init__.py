@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from routers import subscriptions, users, company_info, pixel_installation, admin_customers, dashboard, sse_events, \
-    leads, audience, calendly, integrations, settings, domains, suppressions, data_sync, partners
+    leads, audience, calendly, integrations, settings, domains, suppressions, data_sync, referral, partners
 
 main_router = APIRouter()
 
@@ -20,3 +20,4 @@ main_router.include_router(integrations.router, prefix='/integrations', tags=['I
 main_router.include_router(data_sync.router, prefix='/data-sync', tags=['DataSync'])
 main_router.include_router(settings.router, prefix='/settings')
 main_router.include_router(domains.router, prefix='/domains', tags=['Domains'])
+main_router.include_router(referral.router, prefix='/referral')

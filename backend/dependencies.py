@@ -51,6 +51,7 @@ from services.users_auth import UsersAuth
 from services.users_email_verification import UsersEmailVerificationService
 from services.webhook import WebhookService
 from services.partners_assets import PartnersAssetService
+from services.referral import ReferralService
 
 
 logger = logging.getLogger(__name__)
