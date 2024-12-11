@@ -16,7 +16,7 @@ import httpx
 from facebook_business.adobjects.adaccount import AdAccount
 from facebook_business.api import FacebookAdsApi
 from fastapi import HTTPException
-from enums import IntegrationsStatus
+from enums import IntegrationsStatus, SourcePlatformEnum
 from datetime import datetime, timedelta
 from schemas.integrations.integrations import IntegrationCredentials, DataMap, ListFromIntegration
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
@@ -83,7 +83,7 @@ class MetaIntegrationsService:
             'access_token': access_token.get('access_token'),
             'expire_access_token': access_token.get('expires_in'),
             'last_access_token_update': datetime.now(),
-            'service_name': 'Meta',
+            'service_name': SourcePlatformEnum.META.value,
         })
         integrations = self.integrations_persisntece.get_all_integrations_filter_by(ad_account_id=ad_account_info.get('id'), domain_id=domain.id)
         for integration in integrations:

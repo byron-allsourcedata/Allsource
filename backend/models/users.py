@@ -24,7 +24,7 @@ class Users(Base):
     employees_workers = Column(VARCHAR(16), nullable=True)
     created_at = Column(TIMESTAMP(precision=7), nullable=True)
     last_login = Column(TIMESTAMP(precision=7), nullable=True)
-    payment_status = Column(VARCHAR, default='PENDING', nullable=True)
+    payment_status = Column(VARCHAR, default='pending', nullable=True)
     customer_id = Column(VARCHAR, nullable=True)
     reset_password_sent_at = Column(DateTime, nullable=True)
     pixel_code_sent_at = Column(DateTime, nullable=True)
@@ -48,6 +48,10 @@ class Users(Base):
     current_subscription_id = Column(Integer, nullable=False)
     awin_awc = Column(VARCHAR(128), nullable=True)
     source_platform = Column(VARCHAR(64), nullable=True)
+    charge_id = Column(VARCHAR(64), nullable=True)
+    shop_id = Column(VARCHAR(64), nullable=True)
+    shopify_token = Column(VARCHAR(64), nullable=True)
+    shop_domain = Column(VARCHAR(64), nullable=True)
     connected_stripe_account_id = Column(VARCHAR(128), nullable=True)
 
 

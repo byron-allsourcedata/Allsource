@@ -26,6 +26,15 @@ async def get_subscription_plans(plans_service: PlansService = Depends(get_plans
 @router.get("/session/new")
 async def create_customer_session(price_id: str, payments_service: PaymentsService = Depends(get_payments_service),
                                   user: Users = Depends(check_user_authentication)):
+    
+    if user.get('team_member'):
+        team_member = user.get('team_member')
+        if team_member.get('team_access_level') not in {TeamAccessLevel.ADMIN.value, TeamAccessLevel.OWNER.value}:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied. Admins only."
+            )
+            
     return payments_service.create_customer_session(price_id=price_id, user=user)
 
 
@@ -55,7 +64,7 @@ async def update_payment_confirmation(request: fastRequest, webhook_service: Web
 
 @router.post("/cancel-subscription-webhook")
 async def update_payment_confirmation(request: fastRequest, webhook_service: WebhookService = Depends(get_webhook)):
-    payload = await request.json()
+    payload = await request.json()        
     result_update_subscription = webhook_service.cancel_subscription_confirmation(payload=payload)
     if result_update_subscription.get('status') and result_update_subscription['status'] == 'failed':
         user = result_update_subscription['message_body']['user']
@@ -113,7 +122,7 @@ def cancel_user_subscription(unsubscribe_request: UnsubscribeRequest,
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Access denied. Admins only."
             )
-
+            
     return payments_service.cancel_user_subscription(user=user,
                                                      reason_unsubscribe=unsubscribe_request.reason_unsubscribe)
 
@@ -159,3 +168,27 @@ def buy_credits(credits_used: int, payments_service: PaymentsService = Depends(g
             )
 
     return payments_service.charge_user_for_extra_credits(credits_used, user)
+
+
+@router.post("/shopify/billing/webhook", status_code=status.HTTP_200_OK)
+async def shopify_billing_update_webhook(request: fastRequest, webhook_service: WebhookService = Depends(get_webhook)):
+    payload = await request.json()
+    result_update_subscription = webhook_service.shopify_billing_update_webhook(payload=payload)
+    if result_update_subscription.get('status'):
+        user = result_update_subscription['user']
+        rabbitmq_connection = RabbitMQConnection()
+        connection = await rabbitmq_connection.connect()
+        try:
+            await publish_rabbitmq_message(
+                connection=connection,
+                queue_name=QUEUE_CREDITS_CHARGING,
+                message_body={
+                    'customer_id': user.customer_id,
+                    'plan_id': result_update_subscription['lead_credit_plan_id']
+                }
+            )
+        except:
+            logging.error('Failed to publish rabbitmq message')
+        finally:
+            await rabbitmq_connection.close()
+    return "OK"

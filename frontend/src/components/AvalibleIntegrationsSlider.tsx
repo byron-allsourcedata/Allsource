@@ -146,9 +146,9 @@ const AlivbleIntagrationsSlider = ({open, isContactSync = false, integrations, i
                             <List sx={{ display: 'flex', gap: '16px', py: 2, flexWrap: 'wrap' }}>
                                 {integrations.some(integration => integration.service_name === 'WordPress') &&
                                     !integrationsCredentials.some(integration =>  
-                                        integration.service_name === 'Shopify' || 
-                                        integration.service_name === 'Bigcommerce' ||
-                                        integration.service_name == 'WordPress'
+                                        integration.service_name === 'shopify' || 
+                                        integration.service_name === 'big_commerce' ||
+                                        integration.service_name == 'wordPress'
                                     ) && 
                                     !isContactSync && (
                                     <ListItem sx={{p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',
@@ -248,9 +248,9 @@ const AlivbleIntagrationsSlider = ({open, isContactSync = false, integrations, i
                                     )}
                                     {integrations.some(integration => integration.service_name === 'Shopify') &&
                                     !integrationsCredentials.some(integration => 
-                                        integration.service_name === 'WordPress' || 
-                                        integration.service_name === 'Bigcommerce' ||
-                                        integration.service_name === 'Shopify'
+                                        integration.service_name === 'wordPress' || 
+                                        integration.service_name === 'big_commerce' ||
+                                        integration.service_name === 'shopify'
                                     ) && 
                                     !isContactSync && (
                                 <ListItem sx={{p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',
@@ -361,11 +361,11 @@ const AlivbleIntagrationsSlider = ({open, isContactSync = false, integrations, i
                                         }}  />
                                     </ListItemButton>
                                 </ListItem> )}
-                                {integrations.some(integration => integration.service_name === 'Bigcommerce') &&
+                                {integrations.some(integration => integration.service_name === 'big_commerce') &&
                                     !integrationsCredentials.some(integration =>  
-                                        integration.service_name === 'Shopify' || 
-                                        integration.service_name === 'Bigcommerce' ||
-                                        integration.service_name === 'WordPress'
+                                        integration.service_name === 'shopify' || 
+                                        integration.service_name === 'big_commerce' ||
+                                        integration.service_name === 'wordPress'
                                     ) && 
                                     !isContactSync && (
                                     <ListItem sx={{p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',

@@ -8,7 +8,7 @@ from persistence.leads_persistence import LeadsPersistence
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
 from fastapi import HTTPException
-from enums import IntegrationsStatus
+from enums import IntegrationsStatus, SourcePlatformEnum
 from httpx import Client
 
 class ZapierIntegrationService: 
@@ -28,7 +28,7 @@ class ZapierIntegrationService:
     def __create_integrations(self, domain):
         integration = {
             'domain_id': domain.id,
-            'service_name': 'Zapier'
+            'service_name': SourcePlatformEnum.ZAPIER.value
         }
         self.integration_persistence.create_integration(integration)
         return integration

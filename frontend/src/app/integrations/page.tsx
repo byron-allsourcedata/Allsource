@@ -556,111 +556,111 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
                 justifyContent: 'center',
                 } 
             }}>
-            {integrationsCredentials.some(integration => integration.service_name === "Shopify") && (
-                <Box onClick={() => handleActive('Shopify')}>
+            {integrationsCredentials.some(integration => integration.service_name === "shopify") && (
+                <Box onClick={() => handleActive('shopify')}>
                     <IntegrationBox
                         image="/shopify-icon.svg"
-                        service_name="Shopify"
-                        active={activeService === 'Shopify'}
+                        service_name="shopify"
+                        active={activeService === 'shopify'}
                         handleClick={() => setOpenShopifyConnect(true)}
                         handleDelete={handleDeleteOpen}
-                        is_failed={integrationsCredentials?.find(integration => integration.service_name === 'Shopify')?.is_failed}
+                        is_failed={integrationsCredentials?.find(integration => integration.service_name === 'shopify')?.is_failed}
                     />
                 </Box>
             )}
-            {integrationsCredentials.some(integration => integration.service_name === "Klaviyo") && (
-                <Box onClick={() => handleActive('Klaviyo')}>
+            {integrationsCredentials.some(integration => integration.service_name === "klaviyo") && (
+                <Box onClick={() => handleActive('klaviyo')}>
                     <IntegrationBox
                         image="/klaviyo.svg"
-                        service_name="Klaviyo"
-                        active={activeService === 'Klaviyo'}
+                        service_name="klaviyo"
+                        active={activeService === 'klaviyo'}
                         handleClick={() => setOpenKlaviyoConnect(true)}
                         handleDelete={handleDeleteOpen}
-                        is_failed={integrationsCredentials?.find(integration => integration.service_name === 'Klaviyo')?.is_failed}
+                        is_failed={integrationsCredentials?.find(integration => integration.service_name === 'klaviyo')?.is_failed}
                     />
                 </Box>
             )}
-            {integrationsCredentials.some(integration => integration.service_name === "Meta") && (
-                <Box onClick={() => handleActive('Meta')}>
+            {integrationsCredentials.some(integration => integration.service_name === "meta") && (
+                <Box onClick={() => handleActive('meta')}>
                     <IntegrationBox
                         image="/meta-icon.svg"
-                        service_name="Meta"
-                        active={activeService === 'Meta'}
+                        service_name="meta"
+                        active={activeService === 'meta'}
                         handleClick={() => setOpenMetaConnect(true)}
                         handleDelete={handleDeleteOpen}
-                        is_failed={integrationsCredentials?.find(integration => integration.service_name === 'Meta')?.is_failed}
+                        is_failed={integrationsCredentials?.find(integration => integration.service_name === 'meta')?.is_failed}
                     />
                 </Box>
             )}
-            {integrationsCredentials.some(integration => integration.service_name === "Bigcommerce") && (
-                <Box onClick={() => handleActive('Bigcommerce')}>
+            {integrationsCredentials.some(integration => integration.service_name === "big_commerce") && (
+                <Box onClick={() => handleActive('big_commerce')}>
                     <IntegrationBox
                         image="/bigcommerce-icon.svg"
-                        service_name="Bigcommerce"
-                        active={activeService === 'Bigcommerce'}
+                        service_name="big_commerce"
+                        active={activeService === 'big_commerce'}
                         handleClick={() => setOpenBigcommerceConnect(true)}
                         handleDelete={handleDeleteOpen}
-                        is_failed={integrationsCredentials?.find(integration => integration.service_name === 'Bigcommerce')?.is_failed}
+                        is_failed={integrationsCredentials?.find(integration => integration.service_name === 'big_commerce')?.is_failed}
                     />
                 </Box>
             )}
-            {integrationsCredentials.some(integration => integration.service_name === "Omnisend") && (
-                <Box onClick={() => handleActive('Omnisend')}>
+            {integrationsCredentials.some(integration => integration.service_name === "omnisend") && (
+                <Box onClick={() => handleActive('omnisend')}>
                     <IntegrationBox
                         image="/omnisend_icon_black.svg"
-                        service_name="Omnisend"
-                        active={activeService === 'Omnisend'}
+                        service_name="omnisend"
+                        active={activeService === 'omnisend'}
                         handleClick={() => setOpenOmnisendConnect(true)}
                         handleDelete={handleDeleteOpen}
-                        is_failed={integrationsCredentials?.find(integration => integration.service_name === 'Omnisend')?.is_failed}
+                        is_failed={integrationsCredentials?.find(integration => integration.service_name === 'omnisend')?.is_failed}
                     />
                 </Box>
             )}
-            {integrationsCredentials.some(integration => integration.service_name === "Mailchimp") && (
-                <Box onClick={() => handleActive('Mailchimp')}>
+            {integrationsCredentials.some(integration => integration.service_name === "mailchimp") && (
+                <Box onClick={() => handleActive('mailchimp')}>
                     <IntegrationBox
                         image="/mailchimp-icon.svg"
-                        service_name="Mailchimp"
-                        active={activeService === 'Mailchimp'}
+                        service_name="mailchimp"
+                        active={activeService === 'mailchimp'}
                         handleClick={() => setOpenMailchimpConnect(true)}
                         handleDelete={handleDeleteOpen}
-                        is_failed={integrationsCredentials?.find(integration => integration.service_name === 'Mailchimp')?.is_failed}
+                        is_failed={integrationsCredentials?.find(integration => integration.service_name === 'mailchimp')?.is_failed}
                     />
                 </Box>
             )}
-            {integrationsCredentials.some(integration => integration.service_name === "Sendlane") && (
-                <Box onClick={() => handleActive('Sendlane')}>
+            {integrationsCredentials.some(integration => integration.service_name === "sendlane") && (
+                <Box onClick={() => handleActive('sendlane')}>
                     <IntegrationBox
                         image="/sendlane-icon.svg"
-                        service_name="Sendlane"
-                        active={activeService === 'Sendlane'}
+                        service_name="sendlane"
+                        active={activeService === 'sendlane'}
                         handleClick={() => setOpenSendlaneConnect(true)}
                         handleDelete={handleDeleteOpen}
-                        is_failed={integrationsCredentials?.find(integration => integration.service_name === 'Sendlane')?.is_failed}
+                        is_failed={integrationsCredentials?.find(integration => integration.service_name === 'sendlane')?.is_failed}
                     />
                 </Box>
             )}
-            {integrationsCredentials.some(integration => integration.service_name === "Attentive") && (
-                <Box onClick={() => handleActive('Attentive')}>
+            {integrationsCredentials.some(integration => integration.service_name === "attentive") && (
+                <Box onClick={() => handleActive('attentive')}>
                     <IntegrationBox
                         image="/attentive.svg"
-                        service_name="Attentive"
-                        active={activeService === 'Attentive'}
+                        service_name="attentive"
+                        active={activeService === 'attentive'}
                         handleClick={() => setOpenAttentiveConnect(true)}
                         handleDelete={handleDeleteOpen}
-                        is_failed={integrationsCredentials?.find(integration => integration.service_name === 'Attentive')?.is_failed}
+                        is_failed={integrationsCredentials?.find(integration => integration.service_name === 'attentive')?.is_failed}
                     />
                 </Box>
             )}
-            {integrationsCredentials.some(integration => integration.service_name === "Zapier") && (
-                <Box onClick={() => handleActive('Zapier')}>
+            {integrationsCredentials.some(integration => integration.service_name === "zapier") && (
+                <Box onClick={() => handleActive('zapier')}>
                     <IntegrationBox
                         image="/zapier-icon.svg"
-                        service_name="Zapier"
-                        active={activeService === 'Zapier'}
+                        service_name="zapier"
+                        active={activeService === 'zapier'}
                         handleClick={() => setOpenZapierConnect(true)}
                         handleDelete={handleDeleteOpen}
-                        is_failed={integrationsCredentials?.find(integration => integration.service_name === 'Zapier')?.is_failed}
+                        is_failed={integrationsCredentials?.find(integration => integration.service_name === 'zapier')?.is_failed}
                     />
                 </Box>
             )}
@@ -672,13 +672,13 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
             open={openKlaviyoConnect} 
             handleClose={handleClose}
             onSave={handleSaveSettings}  
-            initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'Klaviyo')?.access_token}
+            initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'klaviyo')?.access_token}
         />
         <AttentiveIntegrationPopup 
             open={OpenAttentiveConnect} 
             handleClose={handleClose}
             onSave={handleSaveSettings}  
-            initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'Attentive')?.access_token}
+            initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'attentive')?.access_token}
         />
         <MetaConnectButton 
             open={openMetaConnect} 
@@ -689,19 +689,19 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
             open={openShopifyConnect} 
             handleClose={handleClose}
             onSave={handleSaveSettings}  
-            initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'Shopify')?.access_token}
-            initShopDomain={integrationsCredentials?.find(integration => integration.service_name === 'Shopify')?.shop_domain}
+            initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'shopify')?.access_token}
+            initShopDomain={integrationsCredentials?.find(integration => integration.service_name === 'shopify')?.shop_domain}
         />
         <BCommerceConnect 
             open={openBigcommrceConnect} 
             onClose={handleClose}
-            initShopHash={integrationsCredentials?.find(integration => integration.service_name === 'Bigcommerce')?.shop_domain}
-            error_message={integrationsCredentials?.find(integration => integration.service_name === 'Bigcommerce')?.error_message}
+            initShopHash={integrationsCredentials?.find(integration => integration.service_name === 'big_commerce')?.shop_domain}
+            error_message={integrationsCredentials?.find(integration => integration.service_name === 'big_commerce')?.error_message}
         />
-        <OmnisendConnect open={openOmnisendConnect} handleClose={handleClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'Omnisend')?.access_token}/>
-        <MailchimpConnect open={openMailchinpConnect} handleClose={handleClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'Mailchimp')?.access_token} />
-        <SendlaneConnect open={openSendlaneConnect} handleClose={handleClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'Sendlane')?.access_token}/>
-        <AttentiveIntegrationPopup open={OpenAttentiveConnect} handleClose={handleClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'Attentive')?.access_token}/>
+        <OmnisendConnect open={openOmnisendConnect} handleClose={handleClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'omnisend')?.access_token}/>
+        <MailchimpConnect open={openMailchinpConnect} handleClose={handleClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'mailchimp')?.access_token} />
+        <SendlaneConnect open={openSendlaneConnect} handleClose={handleClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'sendlane')?.access_token}/>
+        <AttentiveIntegrationPopup open={OpenAttentiveConnect} handleClose={handleClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'attentive')?.access_token}/>
         <ZapierConnectPopup open={openZapierConnect} handlePopupClose={handleClose} />
         <AlivbleIntagrationsSlider 
             isContactSync={false} 
@@ -712,7 +712,7 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
             handleSaveSettings={handleSaveSettings}
         />
         <Box>
-            {(activeService && activeService != 'Shopify' && activeService != 'Bigcommerce') && (<DataSyncList key={activeService} service_name={activeService} />)}
+            {(activeService && activeService != 'shopify' && activeService != 'big_commerce') && (<DataSyncList key={activeService} service_name={activeService} />)}
         </Box>
 
         <DeleteIntegrationPopup open={openDeletePopup} onClose={handleDeleteClose} service_name={activeService} handleDelete={handleDelete}/>
@@ -738,17 +738,17 @@ const IntegrationsAvaliable = ({ integrationsCredentials, integrations, handleSa
     };
 
     const integrationsAvailable = [
-        { image: 'shopify-icon.svg', service_name: 'Shopify' },
-        { image: 'klaviyo.svg', service_name: 'Klaviyo' },
-        { image: 'meta-icon.svg', service_name: 'Meta' },
-        { image: 'bigcommerce-icon.svg', service_name: 'Bigcommerce' },
-        { image: 'omnisend_icon_black.svg', service_name: 'Omnisend'}, 
-        { image: 'mailchimp-icon.svg', service_name: 'Mailchimp'},
-        { image: 'sendlane-icon.svg', service_name: 'Sendlane'},
-        { image: 'attentive.svg', service_name: 'Attentive'},
-        { image: 'listrak.svg', service_name: 'Listark'},
-        { image: 'cordial.svg', service_name: 'Cordial'},
-        { image: 'zapier-icon.svg', service_name: 'Zapier'}
+        { image: 'shopify-icon.svg', service_name: 'shopify' },
+        { image: 'klaviyo.svg', service_name: 'klaviyo' },
+        { image: 'meta-icon.svg', service_name: 'meta' },
+        { image: 'bigcommerce-icon.svg', service_name: 'big_commerce' },
+        { image: 'omnisend_icon_black.svg', service_name: 'omnisend'}, 
+        { image: 'mailchimp-icon.svg', service_name: 'mailchimp'},
+        { image: 'sendlane-icon.svg', service_name: 'sendlane'},
+        { image: 'attentive.svg', service_name: 'attentive'},
+        { image: 'listrak.svg', service_name: 'listark'},
+        { image: 'cordial.svg', service_name: 'cordial'},
+        { image: 'zapier-icon.svg', service_name: 'zapier'}
     ];
 
     const handleClose = () => {
@@ -769,30 +769,30 @@ const IntegrationsAvaliable = ({ integrationsCredentials, integrations, handleSa
         return
       }
       switch (service_name) {
-        case 'Klaviyo':
+        case 'klaviyo':
             setOpenKlaviyoConnect(true);
             break;
-        case 'Attentive':
+        case 'attentive':
             setOpenAttentiveConnect(true);
             break;
-        case 'Shopify':
+        case 'shopify':
             setOpenShopifyConnect(true);
             break;
-        case 'Bigcommerce':
+        case 'big_commerce':
             setOpenBigcommerceConnect(true);
             break;
-        case 'Omnisend':
+        case 'omnisend':
             setOpenOmnisendConnect(true);
             break;
-        case 'Mailchimp':
+        case 'mailchimp':
             setOpenmailchimpConnect(true);
             break;
-        case 'Sendlane':
+        case 'sendlane':
             setOpenSendlaneConnect(true);
             break;
-        case 'Meta':
+        case 'meta':
             setOpenMetaConnect(true)
-        case 'Zapier':
+        case 'zapier':
           setOpenZapierConnect(true)
         default:
             break;

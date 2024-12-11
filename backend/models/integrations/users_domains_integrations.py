@@ -17,6 +17,8 @@ class UserIntegration(Base):
     expire_access_token = Column(Integer)
     error_message = Column(VARCHAR)
     is_failed = Column(Boolean, default=False)
+    user_id = Column(VARCHAR)
+    shop_id = Column(VARCHAR)
 
 class Integration(Base):
 

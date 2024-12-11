@@ -53,3 +53,17 @@ class ShopifyOrderAPI(BaseModel):
     created_at_shopify: Optional[str] = None
     email: Optional[EmailStr] = None
     currency_code: Optional[str] = None
+    
+class ShopifyCredentials(BaseModel):
+    access_token: str
+    
+class ShopifyLandingResponse(BaseModel):
+    token: Optional[str]
+    message: Optional[str]
+    
+class GenericEcommerceResponse(BaseModel):
+    message: str
+    
+class ShopifyShopRedactForm(BaseModel):
+    shop_id: int
+    shop_domain: str

@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 import json
 from urllib.parse import quote, urlencode
-from fastapi import APIRouter, Depends, Query, HTTPException, status, Body
+from fastapi import APIRouter, Depends, Query, HTTPException, status, Body, Request
 from fastapi.responses import RedirectResponse
 from enums import UserAuthorizationStatus
 from dependencies import get_integration_service, IntegrationService, IntegrationsPresistence, \
@@ -10,6 +10,7 @@ from dependencies import get_integration_service, IntegrationService, Integratio
             UserPersistence, get_user_domain_persistence, UserDomainsPersistence, check_api_key
 from schemas.integrations.integrations import *
 from enums import TeamAccessLevel
+from schemas.integrations.shopify import ShopifyLandingResponse, GenericEcommerceResponse
 import httpx
 from config.bigcommerce import BigcommerceConfig
 
@@ -65,7 +66,7 @@ async def create_integration(creditional: IntegrationCredentials, service_name: 
         service = getattr(service, service_name.lower())
         if not service:
             raise HTTPException(status_code=404, detail=f'Service {service_name} not found')
-        service.add_integration(creditional, domain=domain, user=user)
+        service.add_integration(creditional, domain=domain, user_id=user.get('id'))
         return {'message': 'Successfuly'}
 
 
@@ -236,4 +237,44 @@ async def get_dont_import_leads(domain = Depends(check_api_key)):
     with open('../backend/data/integrations/example_lead.json', 'r') as file:
         example_lead = file.read()
         return json.loads(example_lead)
+    
+@router.get('/shopify/install/redirect')
+async def oauth_shopify_install_redirect(shop: str, r: Request, integrations_service: IntegrationService = Depends(get_integration_service)):
+    try:
+        with integrations_service as service:
+            url = service.shopify.get_shopify_install_url(shop, r)
+            return RedirectResponse(url = url)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail='Something went wrong')
+    
+@router.post('/shopify/uninstall')
+async def shopify_app_uninstalled_webhook(request: Request, integrations_service: IntegrationService = Depends(get_integration_service)):
+    with integrations_service as service:
+        payload = await request.json()
+        return service.shopify.handle_uninstalled_app(payload)
+    
+    
+@router.get("/shopify/landing", response_model=ShopifyLandingResponse)
+def oauth_shopify_callback(shop: str, r: Request, integrations_service: IntegrationService = Depends(get_integration_service)):
+    with integrations_service as service:
+        result = service.shopify.oauth_shopify_callback(shop, r)
+        return ShopifyLandingResponse(token=result.get('token'), message=result.get('message'))
+    
+@router.post("/shopify/customers/redact", status_code=status.HTTP_200_OK)
+async def shopify_customers_redact(r: Request, integrations_service: IntegrationService = Depends(get_integration_service)):
+    
+    with integrations_service as service:
+        request_body = await r.body()
+        shopify_hmac_header = r.headers.get("X-Shopify-Hmac-SHA256")
+        service.shopify.shopify_customers_redact(request_body, shopify_hmac_header)
+        return GenericEcommerceResponse(message="No customer data found")
+        
+
+@router.post("/shopify/shop/redact", status_code=status.HTTP_200_OK)
+async def oauth_shopify_redact(r: Request, integrations_service: IntegrationService = Depends(get_integration_service)):    
+    with integrations_service as service:
+        request_body = await r.body()
+        shopify_hmac_header = r.headers.get("X-Shopify-Hmac-SHA256")
+        service.shopify.oauth_shopify_redact(request_body, shopify_hmac_header)
+        return GenericEcommerceResponse(message="Shopify data deleted successfully")
     

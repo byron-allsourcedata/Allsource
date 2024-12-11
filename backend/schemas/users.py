@@ -7,6 +7,14 @@ from enums import SignUpStatus, LoginStatus, BaseEnum, VerificationEmail, Update
     VerifyToken, CompanyInfoEnum, PixelStatus, StripeConnectStatus
 
 
+class ShopifyPayloadModel(BaseModel):
+    code: Optional[str] = None
+    hmac: Optional[str] = None
+    host: Optional[str] = None
+    shop: Optional[str] = None
+    state: Optional[str] = None
+    timestamp: Optional[str] = None
+
 class UserSignUpForm(BaseModel):
     full_name: str = Field(...)
     email: str = Field(...)
@@ -14,8 +22,8 @@ class UserSignUpForm(BaseModel):
     is_without_card: bool = Field(default=True)
     teams_token: Optional[str] = None
     spi: Optional[str] = None
-    awc: Optional[str] = None 
-    utm_source: Optional[str] = None
+    shopify_data: Optional[ShopifyPayloadModel] = None
+    awc: Optional[str] = None
 
 
 class DismissNotificationsRequest(BaseModel):
@@ -44,6 +52,7 @@ class PixelFormResponse(BaseModel):
 class UserLoginForm(BaseModel):
     email: str = Field(...)
     password: str = Field(...)
+    shopify_data: Optional[ShopifyPayloadModel] = None
 
 
 class ResetPasswordForm(BaseModel):
@@ -87,7 +96,7 @@ class UpdatePasswordResponse(BaseModel):
 class CompanyInfoResponse(BaseModel):
     status: CompanyInfoEnum
     stripe_payment_url: Optional[str] = None
-
+    domain_url: Optional[str] = None
 
 class CheckVerificationStatusResponse(BaseModel):
     status: VerificationEmail

@@ -30,7 +30,15 @@ class PlansPersistence:
         plan = self.db.query(SubscriptionPlan).filter(SubscriptionPlan.title == title,
                                                       SubscriptionPlan.interval == interval).first()
         if plan:
-            return plan.id
+            return plan
+        else:
+            return None
+        
+    def get_plan_by_title_price(self, plan_name: str, payment_amount: str):
+        plan = self.db.query(SubscriptionPlan).filter(SubscriptionPlan.title == plan_name,
+                                                      SubscriptionPlan.price == payment_amount).first()
+        if plan:
+            return plan
         else:
             return None
 

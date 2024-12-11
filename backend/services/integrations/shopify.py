@@ -1,7 +1,16 @@
 import hashlib
 import os
-from enums import IntegrationsStatus
+import binascii
+import httpx
+import hmac
+import base64
+from enums import IntegrationsStatus, OauthShopify
+from integrations.shopify import ShopifyConfig
+from fastapi import HTTPException, status
 from models.users_domains import UserDomains
+from models.users import User
+from models.plans import SubscriptionPlan
+from ..jwt_service import create_access_token
 from schemas.integrations.shopify import ShopifyCustomer, ShopifyOrderAPI
 from schemas.integrations.integrations import IntegrationCredentials
 from persistence.leads_persistence import LeadsPersistence
@@ -9,8 +18,12 @@ from persistence.leads_order_persistence import LeadOrdersPersistence
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
 from httpx import Client
-from fastapi import HTTPException
-from datetime import datetime, timedelta
+from schemas.integrations.shopify import ShopifyShopRedactForm
+from schemas.users import ShopifyPayloadModel
+import shopify
+from models.subscriptions import UserSubscriptions
+from enums import SourcePlatformEnum
+from datetime import datetime, timedelta, timezone
 from services.aws import AWSService
 from sqlalchemy.orm import Session
 
@@ -28,9 +41,75 @@ class ShopifyIntegrationService:
         self.client = client
         self.AWS = aws_service
         self.db = db
+        
+    def get_shopify_token(self, shopify_data: ShopifyPayloadModel):
+        shopify.Session.setup(api_key=ShopifyConfig.key, secret=ShopifyConfig.secret)
+        session = shopify.Session(shopify_data.shop, ShopifyConfig.api_version)
+        access_token = session.request_token(params=shopify_data.model_dump())
+        return access_token
+    
+    def get_charge_by_id(self, user_data, charge_id):
+        with shopify.Session.temp(user_data.shop_domain, ShopifyConfig.api_version, user_data.shopify_token):
+            charge = shopify.RecurringApplicationCharge.find(charge_id)
+            return charge
+        
+    def get_shopify_shop_id(self, shopify_data: ShopifyPayloadModel, shopify_access_token: str):
+        shop_id = None
+        with shopify.Session.temp(shopify_data.shop, ShopifyConfig.api_version, shopify_access_token):
+            shop = shopify.Shop.current()
+            shop_id = shop.id
+        return shop_id
+    
+    def create_new_recurring_charge(self, shopify_domain: str, shopify_access_token: str, plan: SubscriptionPlan, test_mode: bool) -> str:
+        with shopify.Session.temp(shopify_domain, ShopifyConfig.api_version, shopify_access_token):
+            plan_interval = "EVERY_30_DAYS" if plan.interval == "month" else "ANNUAL"
+            new_charge = shopify.RecurringApplicationCharge.create({
+                "name": plan.title,
+                "return_url": os.getenv("STRIPE_SUCCESS_URL"),
+                "price": float(plan.price),
+                "currency_code": plan.currency.upper(),
+                "interval": plan_interval,
+                "test": test_mode
+            })
+        
+        if new_charge is None:
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail={'status': 'Failed to create new charge'})
+        
+        link = new_charge.attributes.get("confirmation_url")
+        return {"link": link}
+    
+    def initialize_subscription_charge(self, plan: SubscriptionPlan, user: dict):
+        test_mode = True if os.getenv("APP_MODE") == "dev" else False
+        return self.create_new_recurring_charge(shopify_domain=user.get('shop_domain'), shopify_access_token=user.get('shopify_token'), plan=plan, test_mode=test_mode)
+    
+    def cancel_current_subscription(self, user: User):
+        with shopify.Session.temp(user.get('shop_domain'), ShopifyConfig.api_version, user.get('shopify_token')):
+            charge = shopify.RecurringApplicationCharge.current()
+            if charge is None:
+                raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail={'status': 'No shopify plan active'})
+            charge.destroy()
+        return {
+            'status': 'cancel'
+        }
+            
+    def create_webhooks_for_store(self, shopify_data: ShopifyPayloadModel, shopify_access_token):        
+        with shopify.Session.temp(shopify_data.shop, ShopifyConfig.api_version, shopify_access_token):
+            shopify.Webhook.create({
+                "topic": "app_subscriptions/update",
+                "address": os.getenv("SITE_HOST_URL") + "/api/subscriptions/shopify/billing/webhook",
+                "format": "json"
+            })
+            shopify.Webhook.create({
+                "topic": "app/uninstalled",
+                "address": os.getenv("SITE_HOST_URL") + "/api/integrations/shopify/uninstall",
+                "format": "json"
+            })
 
 
     def __handle_request(self, method: str, url: str, headers: dict = None, json: dict = None, data: dict = None, params: dict = None):
+        if self.client.is_closed:
+            self.client = httpx.Client()
+
         response = self.client.request(method, url, headers=headers, json=json, data=data, params=params)
 
         if response.is_redirect:
@@ -67,14 +146,14 @@ class ShopifyIntegrationService:
 
 
     def get_credentials(self, domain_id: int):
-        return self.integration_persistence.get_credentials_for_service(domain_id, 'Shopify')
+        return self.integration_persistence.get_credentials_for_service(domain_id, SourcePlatformEnum.SHOPIFY.value)
 
 
-    def __set_pixel(self, user, domain, credentials):
+    def __set_pixel(self, user_id, domain, credentials):
         client_id = domain.data_provider_id
         if client_id is None:
             client_id = hashlib.sha256((str(domain.id) + os.getenv('SECRET_SALT')).encode()).hexdigest()
-            self.db.query(UserDomains).filter(UserDomains.user_id == user.get('id'), UserDomains.domain == domain.domain).update(
+            self.db.query(UserDomains).filter(UserDomains.user_id == user_id, UserDomains.domain == domain.domain).update(
                 {UserDomains.data_provider_id: client_id},
                 synchronize_session=False
             )
@@ -85,20 +164,20 @@ class ShopifyIntegrationService:
         script_shopify = f"window.pixelClientId = '{client_id}';\n" + existing_script_code
         self.AWS.upload_string(script_shopify, f'shopify-pixel-code/{client_id}.js')
         script_event_url = f'https://maximiz-data.s3.us-east-2.amazonaws.com/shopify-pixel-code/{client_id}.js'
-        url = f'{credentials.shop_domain}/admin/api/2024-07/script_tags.json'
+        url = f'{credentials.shopify.shop_domain}/admin/api/2024-07/script_tags.json'
 
         headers = {
-            'X-Shopify-Access-Token': credentials.access_token,
+            'X-Shopify-Access-Token': credentials.shopify.access_token,
             "Content-Type": "application/json"
         }
         scrips_list = self.__handle_request("GET", url, headers=headers)
         if scrips_list.status_code == 401:
-            credentials.error_message = 'Invalid Access Token'
+            credentials.shopify.error_message = 'Invalid Access Token'
             self.integration_persistence.db.commit()
             raise HTTPException(status_code=403, detail={'status': IntegrationsStatus.CREDENTAILS_INVALID.value})
         for script in scrips_list.json().get('script_tags'):
             if 'shopify-pixel-code' in script.get('src'):
-                self.__handle_request('DELETE', f"{credentials.shop_domain}/admin/api/2024-07/script_tags/{script.get('id')}.json", headers=headers)
+                self.__handle_request('DELETE', f"{credentials.shopify.shop_domain}/admin/api/2024-07/script_tags/{script.get('id')}.json", headers=headers)
         script_event_data = {
             "script_tag": {
                 "event": "onload",
@@ -115,9 +194,88 @@ class ShopifyIntegrationService:
 
         response = self.__handle_request('GET', url, headers=headers)
         return response.json().get('customers')
+    
+    def get_shopify_install_url(self, shop, r):
+        shopify.Session.setup(api_key=ShopifyConfig.key, secret=ShopifyConfig.secret)
+        shopify.Session.validate_params(params=r.query_params)
+        session = shopify.Session(shop, ShopifyConfig.api_version)
+        state = binascii.b2a_hex(os.urandom(15)).decode("utf-8")
+        url = session.create_permission_url(ShopifyConfig.scopes, ShopifyConfig.callback_uri, state)
+        return url
+    
+    def handle_uninstalled_app(self, payload):
+        user_integration = self.integration_persistence.get_integration_by_shop_id(shop_id=payload["id"])
+        if user_integration:
+            self.db.query(User).filter(User.shop_id==str(payload["id"])).update({"shop_id": None, "shopify_token": None, "shop_domain": None, "charge_id": None})
+            self.db.delete(user_integration)
+            self.db.commit()
+        
+    def verify_shopify_hmac(self, data: bytes, hmac_header: str) -> bool:
+        digest = hmac.new(ShopifyConfig.secret.encode('utf-8'), data, hashlib.sha256).digest()
+        computed_hmac = base64.b64encode(digest).decode('utf-8')
+        return hmac.compare_digest(computed_hmac, hmac_header)
+            
+    def shopify_customers_redact(self, request_body, shopify_hmac_header):
+        verified = self.verify_shopify_hmac(request_body, shopify_hmac_header)
+        if not verified:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+    
+    def oauth_shopify_redact(self, request_body, shopify_hmac_header):
+        verified = self.verify_shopify_hmac(request_body, shopify_hmac_header)
+        if not verified:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+        
+        shop_redact_form: ShopifyShopRedactForm = ShopifyShopRedactForm.model_validate_json(request_body.decode('utf-8'))
+    
+        user_integration = self.integration_persistence.get_integration_by_shop_id(shop_id=shop_redact_form.shop_id)
+        if user_integration:
+            user = self.db.query(User).filter(User.shop_id==str(shop_redact_form.shop_id)).first()
+            user.shop_id = None
+            user.shop_domain = None
+            user.charge_id = None
+            self.db.delete(user_integration)
+            self.db.flush()
+            user_subscription = self.db.query(UserSubscriptions).filter(UserSubscriptions.id==str(shop_redact_form.shop_id)).first()
+            if user_subscription:
+                user_subscription.cancel_scheduled_at = datetime.now(timezone.utc).replace(tzinfo=None)
+                user_subscription.cancellation_reason = "APP removing from Shopify side"
+                user_subscription.status = 'canceled'
+                self.db.commit()
+        
+    def oauth_shopify_callback(self, shop, r):
+        result = {}
+        query_params = dict(r.query_params)
+        user_integration = self.integration_persistence.get_integration_by_shop_url(shop_url=shop)
 
+        if user_integration is None:
+            result['message'] = OauthShopify.NO_USER_CONNECTED.value
+            return result
 
-    def __save_integration(self, shop_domain: str, access_token: str, domain_id: int):
+        user = self.db.query(User).filter(User.id == user_integration.user_id).first()
+        shopify_payload_model = ShopifyPayloadModel(
+            code=query_params.get('code'),
+            hmac=query_params.get('hmac'),
+            host=query_params.get('host'),
+            shop=query_params.get('shop'),
+            state=query_params.get('state'),
+            timestamp=query_params.get('timestamp')
+        )
+        shopify_token = self.get_shopify_token(shopify_payload_model)
+        if shopify_token is None:
+            result['message'] = OauthShopify.ERROR_SHOPIFY_TOKEN.value
+            return result
+        
+        self.__save_integration(shop, shopify_token, user_integration.domain_id, user.id)
+        
+        token_info = {
+                "id": user.id
+            }
+        token = create_access_token(token_info)
+        result['token'] = token
+        return result
+    
+
+    def __save_integration(self, shop_domain: str, access_token: str, domain_id: int, user_id, shop_id=None):
         credential = self.get_credentials(domain_id=domain_id)
         if credential:
             credential.access_token = access_token
@@ -128,8 +286,11 @@ class ShopifyIntegrationService:
             'domain_id': domain_id, 
             'shop_domain': shop_domain,
             'access_token': access_token, 
-            'service_name': 'Shopify'
+            'service_name': SourcePlatformEnum.SHOPIFY.value,
+            'user_id': user_id
         }
+        if shop_id:
+            credentials['shop_id'] = shop_id
 
         integration = self.integration_persistence.create_integration(credentials)
         if not integration:
@@ -155,21 +316,20 @@ class ShopifyIntegrationService:
         return response.json().get('customers')
 
 
-    def add_integration(self, credentials: IntegrationCredentials, domain, user):
+    def add_integration(self, credentials: IntegrationCredentials, domain, user_id, shop_id=None):
         if not credentials.shopify.shop_domain.startswith('https://'):
             credentials.shopify.shop_domain = f'https://{credentials.shopify.shop_domain}'
         shop_domain = credentials.shopify.shop_domain.lower().lstrip('http://').lstrip('https://')
         user_website = domain.domain.lower().lstrip('http://').lstrip('https://')
         if user_website != shop_domain:
             raise HTTPException(status_code=400, detail={'status': 'error', 'detail': {'message': 'Store Domain does not match the one you specified earlier'}})
-        self.__get_orders(credential=credentials.shopify)
-        self.__save_integration(credentials.shopify.shop_domain, credentials.shopify.access_token, domain.id)
+        self.__save_integration(credentials.shopify.shop_domain, credentials.shopify.access_token, domain.id, user_id, shop_id)
         if not domain.is_pixel_installed:
-            self.__set_pixel(user, domain, credentials)
+            self.__set_pixel(user_id, domain, credentials)
         return {
             'status': 'Successfully',
             'detail': {
-                'service_name': 'Shopify'
+                'service_name': SourcePlatformEnum.SHOPIFY.value
             }
         }
     
@@ -180,7 +340,7 @@ class ShopifyIntegrationService:
             lead_user = self.lead_persistence.get_leads_user_filter_by_email(domain_id, order.email)
             if lead_user and len(lead_user) > 0: 
                 self.lead_orders_persistence.create_lead_order({
-                    'platform': 'Shopify',
+                    'platform': SourcePlatformEnum.SHOPIFY.value,
                     'platform_user_id': order.shopify_user_id,
                     'platform_order_id': order.order_shopify_id,
                     'lead_user_id': lead_user[0].id,

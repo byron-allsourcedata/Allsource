@@ -13,7 +13,7 @@ from models.integrations.integrations_users_sync import IntegrationUserSync
 from models.five_x_five_users import FiveXFiveUser
 from schemas.integrations.sendlane import SendlaneContact, SendlaneSender
 from schemas.integrations.integrations import DataMap, IntegrationCredentials, ListFromIntegration
-from enums import IntegrationsStatus
+from enums import IntegrationsStatus, SourcePlatformEnum
 from persistence.domains import UserDomainsPersistence
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
@@ -52,7 +52,7 @@ class SendlaneIntegrationService:
         return response
 
 
-    def __save_integrations(self, api_key: str, domain_id: int):
+    def __save_integrations(self, api_key: str, domain_id: int, user_id):
         credential = self.get_credentials(domain_id)
         if credential:
             credential.access_token = api_key
@@ -63,7 +63,8 @@ class SendlaneIntegrationService:
         integartions = self.integrations_persisntece.create_integration({
             'domain_id': domain_id,
             'access_token': api_key,
-            'service_name': 'Sendlane'
+            'service_name': SourcePlatformEnum.SENDLANE.value,
+            'user_id': user_id
         })
         if not integartions:
             raise HTTPException(status_code=409, detail={'status': IntegrationsStatus.CREATE_IS_FAILED.value})
@@ -86,11 +87,11 @@ class SendlaneIntegrationService:
             return
         return [self.__mapped_list(list) for list in lists.json().get('data')]
 
-    def add_integration(self, credentials: IntegrationCredentials, domain, user):
+    def add_integration(self, credentials: IntegrationCredentials, domain, user_id):
         lists = self.__get_list(credentials.sendlane.api_key)
         if lists.status_code == 401:
             raise HTTPException(status_code=400, detail={'status': IntegrationsStatus.CREDENTAILS_INVALID.value})
-        return self.__save_integrations(credentials.sendlane.api_key, domain_id=domain.id)
+        return self.__save_integrations(credentials.sendlane.api_key, domain_id=domain.id, user_id=user_id)
 
     
     def __get_sender(self, api_key):

@@ -92,7 +92,7 @@ const BCommerceConnect = ({open, onClose, error_message, initShopHash}: Bigcomme
                 }
             }, {
                 params: {
-                    service_name: 'bigcommerce'
+                    service_name: 'big_commerce'
                 }
             })
         }
@@ -107,7 +107,7 @@ const BCommerceConnect = ({open, onClose, error_message, initShopHash}: Bigcomme
             const fetchData = async() => {
                 const response = await axiosInstance.get('/integrations/eai', {
                     params: {
-                        platform: 'Bigcommerce'
+                        platform: 'big_commerce'
                     }
                 })
                 if(response.status == 200) {

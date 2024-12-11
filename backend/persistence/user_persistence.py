@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from enums import TeamsInvitationStatus, SignUpStatus
 from models.teams_invitations import TeamInvitation
+from models.users_domains import UserDomains
 from models.users import Users
 
 logger = logging.getLogger(__name__)
@@ -21,6 +22,16 @@ class UserPersistence:
             {Users.reset_password_sent_at: send_message_expiration_time},
             synchronize_session=False)
         self.db.commit()
+        
+    def save_user_domain(self, user_id, domain):
+        user_domain = self.db.query(UserDomains).filter(UserDomains.domain == domain).first()
+        if user_domain:
+            return user_domain
+        user_domain = UserDomains(user_id=user_id, domain=domain.replace('https://', '').replace('http://', ''))
+        self.db.add(user_domain)
+        self.db.commit()
+        return user_domain
+
 
     def get_team_members(self, user_id: int):
         users = self.db.query(Users).filter(Users.team_owner_id == user_id).all()
@@ -95,6 +106,9 @@ class UserPersistence:
                 'team_access_level': user.team_access_level,
                 'current_subscription_id': user.current_subscription_id,
                 'awin_awc': user.awin_awc,
+                'source_platform': user.source_platform,
+                'shop_domain': user.shop_domain,
+                'shopify_token': user.shopify_token,
                 'connected_stripe_account_id': user.connected_stripe_account_id
             }
         self.db.rollback()
