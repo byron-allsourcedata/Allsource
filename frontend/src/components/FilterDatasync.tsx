@@ -1476,11 +1476,11 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
             <Collapse in={isLeadFunnel}>
               <Box sx={{ display: "flex", width: '100%', flexWrap: 'wrap', gap: 1, pt: 2, pl: 2 }}>
                 {[
-                  "Klaviyo",
-                  "Mailchimp",
-                  "Omnisend",
-                  "Meta",
-                  "Sendlane"
+                  "klaviyo",
+                  "mailchimp",
+                  "omnisend",
+                  "meta",
+                  "sendlane"
                 ].map((label) => {
                   const isSelected = selectedFunnels.includes(label);
                   return (
