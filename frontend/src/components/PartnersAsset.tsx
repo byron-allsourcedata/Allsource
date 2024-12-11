@@ -46,7 +46,6 @@ const PartnersAsset: React.FC<PartnersAssetProps> = ({data, toggleFavorite }) =>
                 {data.type}
                 </Typography>
                 <Box sx={{ display: "flex", flexWrap: "wrap",  gap: 3, '@media (max-width: 360px)': { gap: 2 } }}>
-                    {console.log(data)}
                     {data.asset.map((item: AssetsData) => {
                         switch (item.type) {
                             case "video":
