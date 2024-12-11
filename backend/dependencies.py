@@ -213,6 +213,17 @@ def check_user_setting_access(Authorization: Annotated[str, Header()],
         )
     return user
 
+def check_user_partners_access(Authorization: Annotated[str, Header()],
+                                           user_persistence_service: UserPersistence = Depends(
+                                               get_user_persistence_service)) -> Token:
+    user = check_user_authentication(Authorization, user_persistence_service)
+    if not user['is_partner']:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={'status': 'NOT_FOUND'}
+        )
+    return user
+
 
 def check_user_authentication(Authorization: Annotated[str, Header()],
                               user_persistence_service: UserPersistence = Depends(

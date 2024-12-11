@@ -11,6 +11,7 @@ class Users(Base):
     is_email_confirmed = Column(BOOLEAN, default=False, nullable=True)
     is_with_card = Column(BOOLEAN, default=False, nullable=True)
     is_company_details_filled = Column(BOOLEAN, default=False, nullable=True)
+    is_partner = Column(BOOLEAN, default=False, nullable=True)
     password = Column(VARCHAR, nullable=True)
     full_name = Column(VARCHAR, nullable=True)
     team_owner_id = Column(BIGINT, nullable=True)
@@ -45,8 +46,6 @@ class Users(Base):
     invited_by_id = Column(VARCHAR(32), nullable=True)
     added_on = Column(TIMESTAMP(precision=7), nullable=True)
     current_subscription_id = Column(Integer, nullable=False)
-    awin_awc = Column(VARCHAR(128), nullable=True)
-    source_platform = Column(VARCHAR(64), nullable=True)
 
 
 User = Users

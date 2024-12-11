@@ -69,6 +69,7 @@ class UserPersistence:
                 "is_email_confirmed": user.is_email_confirmed,
                 "is_with_card": user.is_with_card,
                 "is_company_details_filled": user.is_company_details_filled,
+                "is_partner": user.is_partner,
                 "full_name": user.full_name,
                 "team_owner_id": user.team_owner_id,
                 "image": user.image,
@@ -92,8 +93,7 @@ class UserPersistence:
                 'prospect_credits': user.prospect_credits,
                 'is_leads_auto_charging': user.is_leads_auto_charging,
                 'team_access_level': user.team_access_level,
-                'current_subscription_id': user.current_subscription_id,
-                'awin_awc': user.awin_awc
+                'current_subscription_id': user.current_subscription_id
             }
         self.db.rollback()
         if result_as_object:
