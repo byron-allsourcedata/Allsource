@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { Box, Button, TextField, Typography, Link, IconButton, InputAdornment } from '@mui/material';
@@ -9,8 +9,9 @@ import { loginStyles } from './loginStyles';
 import { showErrorToast } from '../../components/ToastNotification';
 import { GoogleLogin } from '@react-oauth/google';
 import { fetchUserData } from '@/services/meService';
+import CustomizedProgressBar from '@/components/CustomizedProgressBar';
 
-const Signup: React.FC = () => {
+const Signin: React.FC = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   useEffect(() => {
@@ -338,4 +339,14 @@ const Signup: React.FC = () => {
   );
 };
 
-export default Signup;
+
+const SigninPage: React.FC = () => {
+  return (
+    <Suspense fallback={<CustomizedProgressBar />}>
+        <Signin />
+    </Suspense>
+  );
+};
+
+
+export default SigninPage;

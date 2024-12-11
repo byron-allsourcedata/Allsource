@@ -1,11 +1,12 @@
 'use client'
-import React, { useEffect } from 'react';
+import React, { Suspense, useEffect } from 'react';
 import Image from "next/image";
 import { Typography, Box, Link } from "@mui/material";
 import axiosInterceptorInstance from '@/axios/axiosInterceptorInstance';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { shopifyLandingStyle } from "./shopify-landing";
 import { CustomInfoToast } from '../../components/ToastNotification';
+import CustomizedProgressBar from '@/components/CustomizedProgressBar';
 
 const ShopifyLanding = () => {
   const router = useRouter();
@@ -63,4 +64,12 @@ const ShopifyLanding = () => {
   );
 };
 
-export default ShopifyLanding;
+const ShopifyLandingPage: React.FC = () => {
+  return (
+    <Suspense fallback={<CustomizedProgressBar />}>
+        <ShopifyLanding />
+    </Suspense>
+  );
+};
+
+export default ShopifyLandingPage;
