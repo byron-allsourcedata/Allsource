@@ -2,6 +2,8 @@ import hashlib
 import os
 import binascii
 import httpx
+import hmac
+import base64
 from enums import IntegrationsStatus, OauthShopify
 from integrations.shopify import ShopifyConfig
 from fastapi import HTTPException, status
@@ -16,10 +18,12 @@ from persistence.leads_order_persistence import LeadOrdersPersistence
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
 from httpx import Client
+from schemas.integrations.shopify import ShopifyShopRedactForm
 from schemas.users import ShopifyPayloadModel
 import shopify
+from models.subscriptions import UserSubscriptions
 from enums import SourcePlatformEnum
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from services.aws import AWSService
 from sqlalchemy.orm import Session
 
@@ -205,7 +209,39 @@ class ShopifyIntegrationService:
             self.db.query(User).filter(User.shop_id==str(payload["id"])).update({"shop_id": None, "shopify_token": None, "shop_domain": None, "charge_id": None})
             self.db.delete(user_integration)
             self.db.commit()
+        
+    def verify_shopify_hmac(self, data: bytes, hmac_header: str) -> bool:
+        digest = hmac.new(ShopifyConfig.secret.encode('utf-8'), data, hashlib.sha256).digest()
+        computed_hmac = base64.b64encode(digest).decode('utf-8')
+        return hmac.compare_digest(computed_hmac, hmac_header)
             
+    def shopify_customers_redact(self, request_body, shopify_hmac_header):
+        verified = self.verify_shopify_hmac(request_body, shopify_hmac_header)
+        if not verified:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+    
+    def oauth_shopify_redact(self, request_body, shopify_hmac_header):
+        verified = self.verify_shopify_hmac(request_body, shopify_hmac_header)
+        if not verified:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+        
+        shop_redact_form: ShopifyShopRedactForm = ShopifyShopRedactForm.model_validate_json(request_body.decode('utf-8'))
+    
+        user_integration = self.integration_persistence.get_integration_by_shop_id(shop_id=shop_redact_form.shop_id)
+        if user_integration:
+            user = self.db.query(User).filter(User.shop_id==str(shop_redact_form.shop_id)).first()
+            user.shop_id = None
+            user.shop_domain = None
+            user.charge_id = None
+            self.db.delete(user_integration)
+            self.db.flush()
+            user_subscription = self.db.query(UserSubscriptions).filter(UserSubscriptions.id==str(shop_redact_form.shop_id)).first()
+            if user_subscription:
+                user_subscription.cancel_scheduled_at = datetime.now(timezone.utc).replace(tzinfo=None)
+                user_subscription.cancellation_reason = "APP removing from Shopify side"
+                user_subscription.status = 'canceled'
+                self.db.commit()
+        
     def oauth_shopify_callback(self, shop, r):
         result = {}
         query_params = dict(r.query_params)

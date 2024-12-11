@@ -60,3 +60,10 @@ class ShopifyCredentials(BaseModel):
 class ShopifyLandingResponse(BaseModel):
     token: Optional[str]
     message: Optional[str]
+    
+class GenericEcommerceResponse(BaseModel):
+    message: str
+    
+class ShopifyShopRedactForm(BaseModel):
+    shop_id: int
+    shop_domain: str

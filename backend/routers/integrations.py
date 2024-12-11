@@ -10,7 +10,7 @@ from dependencies import get_integration_service, IntegrationService, Integratio
             UserPersistence, get_user_domain_persistence, UserDomainsPersistence, check_api_key
 from schemas.integrations.integrations import *
 from enums import TeamAccessLevel
-from schemas.integrations.shopify import ShopifyLandingResponse
+from schemas.integrations.shopify import ShopifyLandingResponse, GenericEcommerceResponse
 import httpx
 from config.bigcommerce import BigcommerceConfig
 
@@ -259,4 +259,22 @@ def oauth_shopify_callback(shop: str, r: Request, integrations_service: Integrat
     with integrations_service as service:
         result = service.shopify.oauth_shopify_callback(shop, r)
         return ShopifyLandingResponse(token=result.get('token'), message=result.get('message'))
+    
+@router.post("/shopify/customers/redact", status_code=status.HTTP_200_OK)
+async def shopify_customers_redact(r: Request, integrations_service: IntegrationService = Depends(get_integration_service)):
+    
+    with integrations_service as service:
+        request_body = await r.body()
+        shopify_hmac_header = r.headers.get("X-Shopify-Hmac-SHA256")
+        service.shopify.shopify_customers_redact(request_body, shopify_hmac_header)
+        return GenericEcommerceResponse(message="No customer data found")
+        
+
+@router.post("/shopify/shop/redact", status_code=status.HTTP_200_OK)
+async def oauth_shopify_redact(r: Request, integrations_service: IntegrationService = Depends(get_integration_service)):    
+    with integrations_service as service:
+        request_body = await r.body()
+        shopify_hmac_header = r.headers.get("X-Shopify-Hmac-SHA256")
+        service.shopify.oauth_shopify_redact(request_body, shopify_hmac_header)
+        return GenericEcommerceResponse(message="Shopify data deleted successfully")
     
