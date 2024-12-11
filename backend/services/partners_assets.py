@@ -34,17 +34,21 @@ class PartnersAssetService:
         except Exception as err:
             logger.debug('Error fetching file size', err)
             return "0.00 MB" 
+        
+    def get_file_extension(self, file_url) -> str:
+        url_path = urlparse(file_url).path
+        extension = os.path.splitext(url_path)[-1][1:].capitalize()
+        if not extension:
+            return "Unknown"
+        return extension
 
     def domain_mapped(self, asset: PartnersAsset):
-        url_path = urlparse(asset.file_url).path
-        file_extension = os.path.splitext(url_path)[-1][1:].capitalize()
-        file_size = self.get_file_size(asset.file_url)
         return PartnersAssetResponse(
             id=asset.id,
             title=asset.title,
             type=asset.type,
             preview_url=asset.preview_url,
             file_url=asset.file_url,
-            file_extension=file_extension,
-            file_size=file_size,
+            file_extension=self.get_file_extension(asset.file_url),
+            file_size=self.get_file_size(asset.file_url),
         ).model_dump()
