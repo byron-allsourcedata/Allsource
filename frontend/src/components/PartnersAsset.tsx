@@ -56,12 +56,6 @@ const PartnersAsset: React.FC<PartnersAssetProps> = ({data, toggleFavorite }) =>
                                 return <PartnersAssetsImage toggleFavorite={toggleFavorite} handleDownloadFile={handleDownloadFile} key={item.id} asset={item}/>
                         }
                     })}
-                    <Box sx={{
-                        border: "1px dashed rgba(80, 82, 178, 1)",
-                        width: "62px",
-                        height: "62px",
-                        borderRadius: "4px",
-                    }}/>
                 </Box>
             </Box>
         </Box>
