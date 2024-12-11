@@ -217,7 +217,22 @@ const TrialStatus: React.FC = () => {
             {statusText}
           </Typography>
 
-          {((statusText.includes('Trial') && is_artificial_status) && !(statusText.includes('Pending'))) && (
+          {((statusText.includes('Trial') && is_artificial_status) && !(statusText.includes('Pending')) && ! (statusText.includes('Expired'))) && (
+            <Button onClick={handleChoosePlanSlider} sx={{ ml: 0, textTransform: 'none', padding: 0, color: 'rgba(80, 82, 178, 1) !important' }}>
+              <Typography className='first-sub-title' sx={{
+                color: 'rgba(20, 110, 246, 1) !important',
+                marginRight: '5px',
+                pt: '1px',
+                letterSpacing: '-0.02em',
+                textAlign: 'left',
+                fontSize: '13px !important',
+                fontWeight: '500 !important'
+              }}>
+                Choose Plan
+              </Typography>
+            </Button>
+          )}
+          {((statusText.includes('Expired') && is_artificial_status) && !(statusText.includes('Pending'))) && (
             <Button onClick={handleOpenSlider} sx={{ ml: 0, textTransform: 'none', padding: 0, color: 'rgba(80, 82, 178, 1) !important' }}>
               <Typography className='first-sub-title' sx={{
                 color: 'rgba(20, 110, 246, 1) !important',

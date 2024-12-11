@@ -87,8 +87,6 @@ const VerifyPixelIntegration: React.FC = () => {
           const status = response.data.status;
           if (status === "PIXEL_CODE_INSTALLED") {
             showToast("Pixel code is installed successfully!");
-          } else if (status === "PIXEL_CODE_PARSE_FAILED") {
-            showErrorToast("Could not find pixel code on your site");
           }
         })
         .catch(error => {

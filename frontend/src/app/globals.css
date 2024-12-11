@@ -249,3 +249,6 @@ input:-webkit-autofill, textarea:-webkit-autofill {
 }
 
 
+.calendlypopupsliders {
+  z-index: 9000;
+}
