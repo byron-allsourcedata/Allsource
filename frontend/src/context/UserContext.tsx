@@ -10,7 +10,8 @@ interface UserContextType {
   percent_steps: number | 0;
   isTrialPending: boolean | false;
   resetUserData: () => void;
-  domains: any[]
+  domains: any[];
+  partner: boolean
 }
 
 interface UserProviderProps {
@@ -27,6 +28,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   const [daysDifference, setDaysDifference] = useState<number | null>(null);
   const [percent_steps, setPercent] = useState<number | 0>(0);
   const [isTrialPending, setIsTrialPending] = useState<boolean>(false);
+  const [partner, setIsPartner] = useState<boolean>(false);
   const [domains, setDomans] = useState<[]>([]);
     const resetUserData = () => {
       setEmail(null);
@@ -49,6 +51,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
         setPercent(storedData.percent_steps);
         setIsTrialPending(storedData.is_trial_pending);
         setDomans(storedData.domains);
+        setIsPartner(storedData.partner)
     
         const endDate = new Date(storedData.plan_end);
         if (storedData.plan_end == null) {
@@ -66,6 +69,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
                 setPercent(userData.percent_steps);
                 setIsTrialPending(userData.is_trial_pending);
                 setDomans(userData.domains);
+                setIsPartner(userData.partner)
               }
             });
             timeDifference = endDate.getTime() - currentDate.getTime(); 
@@ -83,6 +87,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
             setPercent(userData.percent_steps);
             setIsTrialPending(userData.is_trial_pending);
             setDomans(userData.domains);
+            setIsPartner(userData.partner)
           }
           setHasFetched(true);
         });
@@ -91,7 +96,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     
 
   return (
-    <UserContext.Provider value={{ email, full_name, website, daysDifference, percent_steps, isTrialPending, resetUserData, domains }}>
+    <UserContext.Provider value={{ email, full_name, website, daysDifference, percent_steps, isTrialPending, resetUserData, domains, partner }}>
       {children}
     </UserContext.Provider>
   );

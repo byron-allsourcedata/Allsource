@@ -185,11 +185,11 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading, hasNotification }) => {
-    const { percent_steps: userPercentSteps } = useUser();
+    const { percent_steps: userPercentSteps, partner, email } = useUser();
     const router = useRouter();
     const pathname = usePathname();
     const [showBookSlider, setShowBookSlider] = useState(false);
-
+    
     const handleNavigation = async (route: string) => {
         try {
             setLoading(true)
@@ -265,6 +265,12 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading, hasNotific
                     </ListItemIcon>
                     <ListItemText primary="Suppressions" />
                 </ListItem>
+                {partner && <ListItem button onClick={() => handleNavigation('/partners')} sx={isActive('/partners') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
+                    <ListItemIcon sx={sidebarStyles.listItemIcon}>
+                        <FeaturedPlayListIcon />
+                    </ListItemIcon>
+                    <ListItemText primary="Partners" />
+                </ListItem>}
                 {/* <ListItem button onClick={() => handleNavigation('/rules')} sx={isActive('/rules') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
                         <RuleFolderIcon />

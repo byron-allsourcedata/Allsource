@@ -8,13 +8,16 @@ export const fetchUserData = async () => {
     if (accessToken) {
       const response = await axiosInterceptorInstance.get('/me', { headers: { CurrentDomain: currentDomain ? currentDomain : null} });
       const responseData = response.data;
+
   
       if (responseData.user_info && responseData.user_plan) {
         const userInfo = responseData.user_info;
         const userPlan = responseData.user_plan;
+        console.log({userInfo})
         sessionStorage.setItem('me', JSON.stringify({
           email: userInfo.email,
           full_name: userInfo.full_name,
+          partner: userInfo.is_partner,
           company_website: userInfo.company_website || '',
           trial: userPlan.is_trial,
           plan_end: userPlan.plan_end,
@@ -28,6 +31,7 @@ export const fetchUserData = async () => {
         return {
           email: userInfo.email,
           full_name: userInfo.full_name,
+          partner: userInfo.is_partner,
           company_website: userInfo.company_website,
           trial: userPlan.is_trial,
           days_left: userPlan.plan_end,

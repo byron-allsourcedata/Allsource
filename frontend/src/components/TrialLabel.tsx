@@ -37,25 +37,6 @@ const TrialStatus: React.FC = () => {
     }
   }, [accessToken]);
 
-  useEffect(() => {
-    if (data?.user_info && data?.user_plan && data?.user_domains.length > 0) {
-      const userInfo = data.user_info;
-      const userPlan = data.user_plan;
-      const domains = data.user_domains;
-      sessionStorage.setItem('me', JSON.stringify({
-        email: userInfo.email,
-        full_name: userInfo.full_name,
-        company_website: userInfo.company_website,
-        trial: userPlan.is_trial,
-        plan_end: userPlan.plan_end,
-        percent_steps: userInfo.activate_percent,
-        is_trial_pending: userPlan.is_trial_pending,
-        domains: domains,
-        price: userPlan.price,
-        currency: userPlan.currency
-      }));
-    }
-  }, [data]);
 
   const [statusText, setStatusText] = useState('');
   const [backgroundColor, setBackgroundColor] = useState('');
