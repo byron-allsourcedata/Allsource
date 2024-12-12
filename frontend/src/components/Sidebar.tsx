@@ -9,6 +9,7 @@ import CategoryIcon from '@mui/icons-material/Category';
 import IntegrationsIcon from '@mui/icons-material/IntegrationInstructions';
 import FeaturedPlayListIcon from '@mui/icons-material/FeaturedPlayList';
 import SettingsIcon from '@mui/icons-material/Settings';
+import AccountBoxIcon from '@mui/icons-material/AccountBox';
 import Image from 'next/image';
 import { AxiosError } from 'axios';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
@@ -185,7 +186,7 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading, hasNotification }) => {
-    const { percent_steps: userPercentSteps, partner, email } = useUser();
+    const { percent_steps: userPercentSteps, partner } = useUser();
     const router = useRouter();
     const pathname = usePathname();
     const [showBookSlider, setShowBookSlider] = useState(false);
@@ -267,7 +268,7 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading, hasNotific
                 </ListItem>
                 {partner && <ListItem button onClick={() => handleNavigation('/partners')} sx={isActive('/partners') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
-                        <FeaturedPlayListIcon />
+                        <AccountBoxIcon />
                     </ListItemIcon>
                     <ListItemText primary="Partners" />
                 </ListItem>}
