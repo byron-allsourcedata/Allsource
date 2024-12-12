@@ -56,14 +56,16 @@ class UsersService:
 
     def get_my_info(self):
         if self.user.get('team_member'):
-            team_member = self.user.get('team_member')       
+            team_member = self.user.get('team_member')
             return {
                 "email": team_member.get('email'),
                 "full_name": team_member.get('full_name'),
+                "is_partner": team_member.get('is_partner')
             }
         return {
             "email": self.user.get('email'),
             "full_name": self.user.get('full_name'),
+            "is_partner": self.user.get('is_partner')
         }
 
     def add_percent_to_domain(self, domain: UserDomains, activate_percent):
