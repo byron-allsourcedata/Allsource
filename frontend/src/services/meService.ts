@@ -13,7 +13,6 @@ export const fetchUserData = async () => {
       if (responseData.user_info && responseData.user_plan) {
         const userInfo = responseData.user_info;
         const userPlan = responseData.user_plan;
-        console.log({userInfo})
         sessionStorage.setItem('me', JSON.stringify({
           email: userInfo.email,
           full_name: userInfo.full_name,
