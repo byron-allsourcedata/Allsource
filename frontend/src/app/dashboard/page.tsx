@@ -555,7 +555,7 @@ const Dashboard: React.FC = () => {
                   },
                 }}
               >
-                Dashboard <CustomTooltip title={"Text about dashboard"} />
+                Dashboard <CustomTooltip title={"Indicates the count of resolved identities and revenue figures for the specified time"} linkText="Learn More" linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/dashboard" />
               </Typography>
               <Box sx={{
                 display: 'none', width: '100%', justifyContent: 'space-between', alignItems: 'start', '@media (max-width: 600px)': {
