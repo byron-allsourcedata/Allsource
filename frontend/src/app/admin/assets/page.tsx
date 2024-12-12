@@ -185,7 +185,7 @@ const Assets: React.FC = () => {
             </Box> 
             <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }} >
                 {assets.map((data, index) => (
-                    <PartnersAsset toggleFavorite={() => {}} key={index} data={data} />
+                    <PartnersAsset toggleFavorite={() => {}} key={index} data={data} isAdmin={true} />
                 ))}
             </Box> 
         </>

@@ -1,7 +1,9 @@
+import React, { useState } from 'react';
 import { Box, Typography} from "@mui/material";
 import PartnersAssetsVideo from '@/components/PartnersAssetsVideo';
 import PartnersAssetsImage from '@/components/PartnersAssetsImage';
 import PartnersAssetsDocuments from '@/components/PartnersAssetsDocuments';
+import FormDownloadPopup from '@/components/FormDownloadPopup'
 
 interface AssetsData {
     id: number;
@@ -21,13 +23,24 @@ interface PartnersAssetsData {
 interface PartnersAssetProps {
     data: any;
     toggleFavorite: any
+    isAdmin?: boolean
   }
 
-const PartnersAsset: React.FC<PartnersAssetProps> = ({data, toggleFavorite }) => {
+const PartnersAsset: React.FC<PartnersAssetProps> = ({data, toggleFavorite, isAdmin = false}) => {
+    const [formPopupOpen, setFormPopupOpen] = useState(false);
+
     const handleDownloadFile = (fileUrl: string) => {;
         window.location.href = fileUrl;
         window.history.back;
     };
+
+    const handleFormOpenPopup = () => {
+        setFormPopupOpen(true)
+    }
+
+    const handleFormClosePopup = () => {
+        setFormPopupOpen(false)
+    }
 
     return (
         <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }} >
@@ -56,6 +69,20 @@ const PartnersAsset: React.FC<PartnersAssetProps> = ({data, toggleFavorite }) =>
                                 return <PartnersAssetsImage toggleFavorite={toggleFavorite} handleDownloadFile={handleDownloadFile} key={item.id} asset={item}/>
                         }
                     })}
+                    <FormDownloadPopup open={formPopupOpen} onClose={handleFormClosePopup} />
+                    {isAdmin && <Box onClick={handleFormOpenPopup} sx={{ 
+                        border: "1px dashed rgba(80, 82, 178, 1)", 
+                        width: "62px", 
+                        height: "62px", 
+                        borderRadius: "4px", 
+                        alignSelf: "flex-end", 
+                        backgroundImage: 'url(/add-square.svg)', 
+                        backgroundPosition: "center", 
+                        backgroundRepeat: "no-repeat", 
+                        backgroundSize: "40px 40px", 
+                        cursor: "pointer", 
+                        "&:hover": { backgroundColor: "#EFF1F5" }, 
+                    }}/>}
                 </Box>
             </Box>
         </Box>
