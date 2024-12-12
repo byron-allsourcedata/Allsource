@@ -738,26 +738,22 @@ async def main():
     )
 
     logging.info("Started")
-    try:
-        result = session.query(Users, UserDomains) \
-            .join(UserDomains, UserDomains.user_id == Users.id) \
-            .filter((UserDomains.domain == ROOT_BOT_CLIENT_DOMAIN) & (Users.email == ROOT_BOT_CLIENT_EMAIL)) \
-            .first()
-
-        while True:
+    result = session.query(Users, UserDomains) \
+        .join(UserDomains, UserDomains.user_id == Users.id) \
+        .filter((UserDomains.domain == ROOT_BOT_CLIENT_DOMAIN) & (Users.email == ROOT_BOT_CLIENT_EMAIL)) \
+        .first()
+    while True:
+        try:
             await process_files(session=session, rabbitmq_connection=connection, root_user=result)
             await connection.close()
             logging.info('Sleeping for 10 minutes...')
             time.sleep(60 * 10)
             connection = await rabbitmq_connection.connect()
             logging.info("Reconnected to RabbitMQ")
-    except Exception as e:
-        session.rollback()
-        logging.error(f"An error occurred: {str(e)}")
-        traceback.print_exc()
-    finally:
-        session.close()
-        logging.info("Connection to the database closed")
-
+        except Exception as e:
+            session.rollback()
+            logging.error(f"An error occurred: {str(e)}")
+            traceback.print_exc()
+            time.sleep(30)
 
 asyncio.run(main())
