@@ -22,6 +22,7 @@ const Signup: React.FC = () => {
   const teams_token = searchParams.get('token');
   const spi = searchParams.get('spi');
   const awin_awc = searchParams.get('awc')
+  const coupon = searchParams.get('coupon')
   const initialShopifyData = {
     code: searchParams.get('code') || null,
     hmac: searchParams.get('hmac') || null,
@@ -32,8 +33,12 @@ const Signup: React.FC = () => {
   };
   const isShopifyDataComplete = Object.values(initialShopifyData).every(value => value !== null);
   const [formValues, setFormValues] = useState({
-    full_name: '', email: user_teams_mail, password: '', is_with_card: is_with_card || false, awc: awin_awc || null, termsAccepted: false, teams_token: teams_token, spi: spi,
-    ...(isShopifyDataComplete && { shopify_data: initialShopifyData })
+    full_name: '', email: user_teams_mail, password: '', is_with_card: is_with_card || false, termsAccepted: false,
+    ...(isShopifyDataComplete && { shopify_data: initialShopifyData }),
+    ...{ awc: awin_awc },
+    ...{ coupon: coupon },
+    ...{ teams_token: teams_token },
+    ...{ spi: spi },
   });
   const [formSubmitted, setFormSubmitted] = useState(false);
 
@@ -263,8 +268,9 @@ const Signup: React.FC = () => {
                   token: credentialResponse.credential,
                   ...(spi && { spi }),
                   ...(teams_token && { teams_token }),
-                  ...{ is_with_card: !is_with_card },
-                  ...{ awc: awin_awc || null },
+                  ...{ is_with_card: is_with_card },
+                  ...{ awc: awin_awc },
+                  ...{ coupon: coupon },
                   ...(isShopifyDataComplete && { shopify_data: initialShopifyData })
                 });
 

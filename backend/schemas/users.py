@@ -24,6 +24,7 @@ class UserSignUpForm(BaseModel):
     spi: Optional[str] = None
     shopify_data: Optional[ShopifyPayloadModel] = None
     awc: Optional[str] = None
+    coupon: Optional[str] = None
 
 
 class DismissNotificationsRequest(BaseModel):

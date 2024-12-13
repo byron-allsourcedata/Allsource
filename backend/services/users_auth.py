@@ -107,7 +107,7 @@ class UsersAuth:
         self.db.commit()
         return account_notification.id
 
-    def add_user(self, is_with_card, customer_id: str, user_form: dict, spi: str, awin_awc: str = None, shopify_access_token = None, shop_id = None, shopify_data = None):
+    def add_user(self, is_with_card, customer_id: str, user_form: dict, spi: str, awin_awc: str = None, shopify_access_token = None, shop_id = None, shopify_data = None, coupon = None):
         stripe_payment_url = None
         if spi:
             trial_period = self.plan_persistence.get_plan_by_price_id(spi).trial_days
@@ -115,7 +115,8 @@ class UsersAuth:
                 customer_id=customer_id,
                 line_items=[{"price": spi, "quantity": 1}],
                 mode="subscription",
-                trial_period=trial_period
+                trial_period=trial_period,
+                coupon=coupon
             )
         user_object = Users(
             email=user_form.get('email'),
@@ -148,6 +149,7 @@ class UsersAuth:
         shopify_data = auth_google_data.shopify_data
         shopify_access_token = None
         shop_id = None
+        coupon = auth_google_data.coupon
         
         if shopify_data:
             try:
@@ -208,7 +210,7 @@ class UsersAuth:
 
         customer_id = stripe_service.create_customer_google(google_payload)
         user_object = self.add_user(is_with_card=is_with_card, customer_id=customer_id, user_form=google_payload,
-                                    spi=auth_google_data.spi, awin_awc=auth_google_data.awc)
+                                    spi=auth_google_data.spi, awin_awc=auth_google_data.awc, coupon=coupon)
         if teams_token:
             notification_id = self.save_account_notification(user_object.id, NotificationTitles.TEAM_MEMBER_ADDED.value)
             self.send_member_notification(user_id=owner_id, title=NotificationTitles.TEAM_MEMBER_ADDED.value, notification_id=notification_id)
@@ -247,7 +249,13 @@ class UsersAuth:
                 if subscription_plan_is_active:
                     return {'status': LoginStatus.SUCCESS}
                 else:
-                    return {'status': LoginStatus.NEED_CHOOSE_PLAN}
+                    if user.stripe_payment_url:
+                        return {
+                            'status': LoginStatus.PAYMENT_NEEDED,
+                            'stripe_payment_url': user.stripe_payment_url
+                        }
+                    else:
+                        return {'status': LoginStatus.NEED_CHOOSE_PLAN}
             else:
                 return {'status': LoginStatus.FILL_COMPANY_DETAILS}
         else:
@@ -336,7 +344,7 @@ class UsersAuth:
                 return {
                     'status': authorization_data['status'].value,
                     'token': token,
-                    'stripe_payment_url': authorization_data['stripe_payment_url']
+                    'stripe_payment_url': authorization_data.get('stripe_payment_url')
                 }
             if authorization_data['status'] != UserAuthorizationStatus.SUCCESS:
                 return {
@@ -373,6 +381,7 @@ class UsersAuth:
         owner_id = None
         shopify_data = user_form.shopify_data
         teams_token = user_form.teams_token
+        coupon = user_form.coupon
         shopify_access_token = None
         shop_id = None
         if shopify_data:
@@ -424,7 +433,8 @@ class UsersAuth:
             status = SignUpStatus.SUCCESS
             
         user_object = self.add_user(is_with_card=is_with_card, customer_id=customer_id, user_form=user_data,
-                                    spi=user_form.spi, awin_awc=user_form.awc, shopify_access_token=shopify_access_token, shop_id=shop_id, shopify_data=shopify_data)
+                                    spi=user_form.spi, awin_awc=user_form.awc, shopify_access_token=shopify_access_token, shop_id=shop_id, shopify_data=shopify_data,
+                                    coupon=coupon)
         
         if teams_token:
             notification_id = self.save_account_notification(user_object.id, NotificationTitles.TEAM_MEMBER_ADDED.value)
@@ -562,7 +572,7 @@ class UsersAuth:
             return {
                 'status': authorization_data['status'].value,
                 'token': token,
-                'stripe_payment_url': authorization_data['stripe_payment_url']
+                'stripe_payment_url': authorization_data.get('stripe_payment_url')
             }
         if authorization_data['status'] != LoginStatus.SUCCESS:
             return {
