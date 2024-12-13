@@ -19,7 +19,7 @@ class UserSignUpForm(BaseModel):
     full_name: str = Field(...)
     email: str = Field(...)
     password: str = Field(...)
-    is_without_card: bool = Field(default=True)
+    is_with_card: bool = Field(default=False)
     teams_token: Optional[str] = None
     spi: Optional[str] = None
     shopify_data: Optional[ShopifyPayloadModel] = None

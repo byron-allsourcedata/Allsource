@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional
 
 class ShopifyPayloadModel(BaseModel):
@@ -11,7 +11,7 @@ class ShopifyPayloadModel(BaseModel):
 
 class AuthGoogleData(BaseModel):
     token: str
-    is_without_card: Optional[bool] = True
+    is_with_card: bool = Field(default=False)
     teams_token: Optional[str] = None
     spi: Optional[str] = None
     awc: Optional[str] = None

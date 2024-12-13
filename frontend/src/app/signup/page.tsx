@@ -15,8 +15,7 @@ import CustomizedProgressBar from '@/components/CustomizedProgressBar';
 const Signup: React.FC = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const isWithoutCard = searchParams.get('is_without_card') === 'false';
-
+  const is_with_card = searchParams.get('is_with_card');
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const user_teams_mail = searchParams.get('user_teams_mail');
@@ -33,7 +32,7 @@ const Signup: React.FC = () => {
   };
   const isShopifyDataComplete = Object.values(initialShopifyData).every(value => value !== null);
   const [formValues, setFormValues] = useState({
-    full_name: '', email: user_teams_mail, password: '', is_without_card: !isWithoutCard, awc: awin_awc || null, termsAccepted: false, teams_token: teams_token, spi: spi,
+    full_name: '', email: user_teams_mail, password: '', is_with_card: is_with_card || false, awc: awin_awc || null, termsAccepted: false, teams_token: teams_token, spi: spi,
     ...(isShopifyDataComplete && { shopify_data: initialShopifyData })
   });
   const [formSubmitted, setFormSubmitted] = useState(false);

@@ -107,7 +107,7 @@ class UsersAuth:
         self.db.commit()
         return account_notification.id
 
-    def add_user(self, is_without_card, customer_id: str, user_form: dict, spi: str, awin_awc: str = None, shopify_access_token = None, shop_id = None, shopify_data = None):
+    def add_user(self, is_with_card, customer_id: str, user_form: dict, spi: str, awin_awc: str = None, shopify_access_token = None, shop_id = None, shopify_data = None):
         stripe_payment_url = None
         if spi:
             trial_period = self.plan_persistence.get_plan_by_price_id(spi).trial_days
@@ -133,10 +133,9 @@ class UsersAuth:
             source_platform = SourcePlatformEnum.AWIN.value if awin_awc else None,
             shop_id=shop_id if shop_id else None,
             shopify_token=shopify_access_token if shopify_access_token else None,
-            shop_domain=shopify_data.shop if shopify_data and shopify_data.shop else None
+            shop_domain=shopify_data.shop if shopify_data and shopify_data.shop else None,
+            is_with_card=is_with_card
         )
-        if not is_without_card:
-            user_object.is_with_card = True
         self.db.add(user_object)
         self.db.commit()
         return user_object
@@ -171,7 +170,7 @@ class UsersAuth:
                 }
         
         google_request = google_requests.Request()
-        is_without_card = auth_google_data.is_without_card
+        is_with_card = auth_google_data.is_with_card
         idinfo = id_token.verify_oauth2_token(str(auth_google_data.token), google_request, client_id)
         if idinfo:
             if teams_token:
@@ -208,7 +207,7 @@ class UsersAuth:
             }
 
         customer_id = stripe_service.create_customer_google(google_payload)
-        user_object = self.add_user(is_without_card=is_without_card, customer_id=customer_id, user_form=google_payload,
+        user_object = self.add_user(is_with_card=is_with_card, customer_id=customer_id, user_form=google_payload,
                                     spi=auth_google_data.spi, awin_awc=auth_google_data.awc)
         if teams_token:
             notification_id = self.save_account_notification(user_object.id, NotificationTitles.TEAM_MEMBER_ADDED.value)
@@ -407,7 +406,7 @@ class UsersAuth:
             owner_id = status_result['team_owner_id']
             
         check_user_object = self.user_persistence_service.get_user_by_email(user_form.email)
-        is_without_card = user_form.is_without_card
+        is_with_card = user_form.is_with_card
         if check_user_object is not None:
             logger.info(f"User already exists in database with email: {user_form.email}")
             return {
@@ -424,7 +423,7 @@ class UsersAuth:
         if user_form.spi:
             status = SignUpStatus.SUCCESS
             
-        user_object = self.add_user(is_without_card=is_without_card, customer_id=customer_id, user_form=user_data,
+        user_object = self.add_user(is_with_card=is_with_card, customer_id=customer_id, user_form=user_data,
                                     spi=user_form.spi, awin_awc=user_form.awc, shopify_access_token=shopify_access_token, shop_id=shop_id, shopify_data=shopify_data)
         
         if teams_token:
@@ -447,10 +446,10 @@ class UsersAuth:
             self._process_shopify_integration(user_object, shopify_data, shopify_access_token, shop_id)
             
             
-        if is_without_card and teams_token is None:
+        if is_with_card is False and teams_token is None:
             return self._send_email_verification(user_object, token)
         
-        if not is_without_card:
+        if teams_token is None:
             return {
                 'is_success': True,
                 'status': SignUpStatus.FILL_COMPANY_DETAILS,
