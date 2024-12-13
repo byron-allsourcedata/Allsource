@@ -23,6 +23,7 @@ const Signup: React.FC = () => {
   const spi = searchParams.get('spi');
   const awin_awc = searchParams.get('awc')
   const coupon = searchParams.get('coupon')
+  const ift = searchParams.get('ift')
   const initialShopifyData = {
     code: searchParams.get('code') || null,
     hmac: searchParams.get('hmac') || null,
@@ -39,6 +40,7 @@ const Signup: React.FC = () => {
     ...{ coupon: coupon },
     ...{ teams_token: teams_token },
     ...{ spi: spi },
+    ...{ ift: ift },
   });
   const [formSubmitted, setFormSubmitted] = useState(false);
 
@@ -271,6 +273,7 @@ const Signup: React.FC = () => {
                   ...{ is_with_card: is_with_card },
                   ...{ awc: awin_awc },
                   ...{ coupon: coupon },
+                  ...{ ift: ift },
                   ...(isShopifyDataComplete && { shopify_data: initialShopifyData })
                 });
 

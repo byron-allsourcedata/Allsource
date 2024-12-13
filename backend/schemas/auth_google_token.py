@@ -17,5 +17,6 @@ class AuthGoogleData(BaseModel):
     awc: Optional[str] = None
     shopify_data: Optional[ShopifyPayloadModel] = None
     coupon: Optional[str] = None
+    ift: Optional[str] = None
 
     

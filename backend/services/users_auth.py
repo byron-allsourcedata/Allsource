@@ -154,6 +154,7 @@ class UsersAuth:
         shopify_access_token = None
         shop_id = None
         coupon = auth_google_data.coupon
+        ift = auth_google_data.ift
         
         if shopify_data:
             try:
@@ -235,6 +236,10 @@ class UsersAuth:
             self._process_shopify_integration(user_object, shopify_data, shopify_access_token, shop_id)
 
         self.user_persistence_service.email_confirmed(user_object.id)
+        
+        if ift and ift == 'arwt':
+            self.subscription_service.create_subscription_from_free_trial(user_id=user_object.id)
+            
         if not user_object.is_with_card:
             return {
                 'status': SignUpStatus.FILL_COMPANY_DETAILS,
@@ -246,10 +251,10 @@ class UsersAuth:
             'token': token,
         }
 
-    def get_user_authorization_information(self, user: Users, subscription_service: SubscriptionService):
+    def get_user_authorization_information(self, user: Users):
         if user.is_with_card:
             if user.company_name:
-                subscription_plan_is_active = subscription_service.is_user_has_active_subscription(user.id)
+                subscription_plan_is_active = self.subscription_service.is_user_has_active_subscription(user.id)
                 if subscription_plan_is_active:
                     return {'status': LoginStatus.SUCCESS}
                 else:
@@ -266,7 +271,7 @@ class UsersAuth:
             if user.is_email_confirmed:
                 if user.company_name:
                     if user.is_book_call_passed:
-                        subscription_plan_is_active = subscription_service.is_user_has_active_subscription(user.id)
+                        subscription_plan_is_active = self.subscription_service.is_user_has_active_subscription(user.id)
                         if subscription_plan_is_active:
                             if user.is_pixel_installed:
                                 return {'status': LoginStatus.SUCCESS}
@@ -343,7 +348,7 @@ class UsersAuth:
                 else:
                     shopify_status = OauthShopify.NON_SHOPIFY_ACCOUNT
             
-            authorization_data = self.get_user_authorization_information(user_object, self.subscription_service)
+            authorization_data = self.get_user_authorization_information(user_object)
             if authorization_data['status'] == LoginStatus.PAYMENT_NEEDED:
                 return {
                     'status': authorization_data['status'].value,
@@ -388,6 +393,7 @@ class UsersAuth:
         coupon = user_form.coupon
         shopify_access_token = None
         shop_id = None
+        ift = user_form.ift
         if shopify_data:
             try:
                 with self.integration_service as service:
@@ -459,10 +465,12 @@ class UsersAuth:
         if shopify_data:
             self._process_shopify_integration(user_object, shopify_data, shopify_access_token, shop_id)
             
+        if ift and ift == 'arwt':
+            self.subscription_service.create_subscription_from_free_trial(user_id=user_object.id)
             
         if is_with_card is False and teams_token is None:
             return self._send_email_verification(user_object, token)
-        
+            
         if teams_token is None:
             return {
                 'is_success': True,
@@ -570,7 +578,7 @@ class UsersAuth:
             else:
                 shopify_status = OauthShopify.NON_SHOPIFY_ACCOUNT
             
-        authorization_data = self.get_user_authorization_information(user_object, self.subscription_service)
+        authorization_data = self.get_user_authorization_information(user_object)
         
         if authorization_data['status'] == LoginStatus.PAYMENT_NEEDED:
             return {
