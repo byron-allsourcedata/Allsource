@@ -11,6 +11,7 @@ interface MonthDetailsProps {
     toggleFavorite: any;
     handleDownloadFile: any
     asset: any;
+    isAdmin: boolean
 }
 
 const PartnersAssetsVideo: React.FC<MonthDetailsProps> = ({ toggleFavorite, handleDownloadFile, asset }) => {

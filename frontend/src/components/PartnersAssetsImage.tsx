@@ -10,6 +10,7 @@ interface MonthDetailsProps {
     toggleFavorite: any;
     handleDownloadFile: any
     asset: any;
+    isAdmin: boolean
 }
 
 const PartnersAssetsImage: React.FC<MonthDetailsProps> = ({ toggleFavorite, handleDownloadFile, asset }) => {

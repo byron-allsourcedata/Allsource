@@ -62,11 +62,11 @@ const PartnersAsset: React.FC<PartnersAssetProps> = ({data, toggleFavorite, isAd
                     {data.asset.map((item: AssetsData) => {
                         switch (item.type) {
                             case "video":
-                                return <PartnersAssetsVideo toggleFavorite={toggleFavorite} handleDownloadFile={handleDownloadFile} key={item.id} asset={item}/>
+                                return <PartnersAssetsVideo toggleFavorite={toggleFavorite} handleDownloadFile={handleDownloadFile} key={item.id} asset={item} isAdmin={isAdmin}/>
                             case "document":
-                                return <PartnersAssetsDocuments  toggleFavorite={toggleFavorite} handleDownloadFile={handleDownloadFile} key={item.id} asset={item}/>
+                                return <PartnersAssetsDocuments toggleFavorite={toggleFavorite} handleDownloadFile={handleDownloadFile} key={item.id} asset={item} isAdmin={isAdmin} handleFormOpenPopup={handleFormOpenPopup}/>
                             default:
-                                return <PartnersAssetsImage toggleFavorite={toggleFavorite} handleDownloadFile={handleDownloadFile} key={item.id} asset={item}/>
+                                return <PartnersAssetsImage toggleFavorite={toggleFavorite} handleDownloadFile={handleDownloadFile} key={item.id} asset={item} isAdmin={isAdmin}/>
                         }
                     })}
                     <FormDownloadPopup open={formPopupOpen} onClose={handleFormClosePopup} />

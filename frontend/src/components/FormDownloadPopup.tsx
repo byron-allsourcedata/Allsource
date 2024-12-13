@@ -20,6 +20,28 @@ interface FormDownloadPopupProps {
 }
 
 const FormDownloadPopup: React.FC<FormDownloadPopupProps> = ({ open, onClose }) => {
+    const [dragActive, setDragActive] = useState(false);
+    const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+
+    const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+        event.preventDefault();
+        setDragActive(true);
+    };
+
+    const handleDragLeave = () => {
+        setDragActive(false);
+    };
+
+    const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
+        event.preventDefault();
+        setDragActive(false);
+
+        const file = event.dataTransfer.files[0];
+        if (file) {
+            setUploadedFile(file);
+        }
+    };
+    
     return (
         <Drawer anchor="right" open={open}>
             <Box
@@ -82,12 +104,43 @@ const FormDownloadPopup: React.FC<FormDownloadPopupProps> = ({ open, onClose }) 
                             }}
                         />
 
-                        <Box sx={{
-                            border: "1px dashed rgba(80, 82, 178, 1)",
-                            marginTop: "24px",
-                            height: "180px",
-                            width: "100%"   
-                        }}/>
+                        <Box 
+                            onDragOver={handleDragOver}
+                            onDragLeave={handleDragLeave}
+                            onDrop={handleDrop}
+                            sx={{
+                                border: "1px dashed rgba(80, 82, 178, 1)",
+                                marginTop: "24px",
+                                height: "180px",
+                                width: "100%",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                backgroundColor: dragActive ? "rgba(80, 82, 178, 0.1)" : "transparent",
+                            }}>
+                                {uploadedFile ? (
+                            <Typography
+                                sx={{
+                                    fontFamily: "Nunito Sans",
+                                    fontSize: "14px",
+                                    textAlign: "center",
+                                }}
+                            >
+                                File uploaded: {uploadedFile.name}
+                            </Typography>
+                        ) : (
+                            <Typography
+                                sx={{
+                                    fontFamily: "Nunito Sans",
+                                    fontSize: "14px",
+                                    textAlign: "center",
+                                    color: dragActive ? "rgba(80, 82, 178, 1)" : "rgba(0, 0, 0, 0.6)",
+                                }}
+                            >
+                                Drag & Drop your video here
+                            </Typography>
+                        )}
+                        </Box>
 
                         <Typography
                             sx={{
@@ -113,7 +166,7 @@ const FormDownloadPopup: React.FC<FormDownloadPopupProps> = ({ open, onClose }) 
                     padding: "20px 1em",
                 }}
             >
-                <Button variant="outlined" onClick={() => {}} sx={{
+                <Button variant="outlined" onClick={onClose} sx={{
                     opacity: "20%"
                 }}>
                     <Typography
