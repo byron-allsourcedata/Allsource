@@ -76,7 +76,7 @@ class MailchimpIntegrationsService:
         return integartions
 
 
-    def add_integration(self, credential: IntegrationCredentials, domain, user):
+    def add_integration(self, credential: IntegrationCredentials, domain, user: dict):
         data_center = credential.mailchimp.api_key.split('-')[-1]
         try:
             lists = self.get_list(api_key=credential.mailchimp.api_key, server=data_center)
