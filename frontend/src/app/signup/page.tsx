@@ -263,7 +263,7 @@ const Signup: React.FC = () => {
                   token: credentialResponse.credential,
                   ...(spi && { spi }),
                   ...(teams_token && { teams_token }),
-                  ...{ is_without_card: !isWithoutCard },
+                  ...{ is_with_card: !is_with_card },
                   ...{ awc: awin_awc || null },
                   ...(isShopifyDataComplete && { shopify_data: initialShopifyData })
                 });
