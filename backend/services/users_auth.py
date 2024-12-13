@@ -6,7 +6,7 @@ from datetime import timezone
 from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token
 from sqlalchemy.orm import Session
-
+from fastapi import HTTPException, status
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 from enums import SignUpStatus, LoginStatus, ResetPasswordEnum, \
     VerifyToken, UserAuthorizationStatus, SendgridTemplate, NotificationTitles, SourcePlatformEnum, OauthShopify
@@ -110,7 +110,11 @@ class UsersAuth:
     def add_user(self, is_with_card, customer_id: str, user_form: dict, spi: str, awin_awc: str = None, shopify_access_token = None, shop_id = None, shopify_data = None, coupon = None):
         stripe_payment_url = None
         if spi:
-            trial_period = self.plan_persistence.get_plan_by_price_id(spi).trial_days
+            plan = self.plan_persistence.get_plan_by_price_id(spi)
+            if not plan:
+                raise HTTPException(status.HTTP_404_NOT_FOUND, detail={'error': 'spi with this value does not exist'})
+            
+            trial_period = plan.trial_days
             stripe_payment_url = create_stripe_checkout_session(
                 customer_id=customer_id,
                 line_items=[{"price": spi, "quantity": 1}],
