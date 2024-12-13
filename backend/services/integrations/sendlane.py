@@ -52,7 +52,7 @@ class SendlaneIntegrationService:
         return response
 
 
-    def __save_integrations(self, api_key: str, domain_id: int, user_id):
+    def __save_integrations(self, api_key: str, domain_id: int, user: dict):
         credential = self.get_credentials(domain_id)
         if credential:
             credential.access_token = api_key
@@ -63,8 +63,8 @@ class SendlaneIntegrationService:
         integartions = self.integrations_persisntece.create_integration({
             'domain_id': domain_id,
             'access_token': api_key,
-            'service_name': SourcePlatformEnum.SENDLANE.value,
-            'user_id': user_id
+            'full_name': user.get('full_name'),
+            'service_name': SourcePlatformEnum.SENDLANE.value
         })
         if not integartions:
             raise HTTPException(status_code=409, detail={'status': IntegrationsStatus.CREATE_IS_FAILED.value})
@@ -87,11 +87,11 @@ class SendlaneIntegrationService:
             return
         return [self.__mapped_list(list) for list in lists.json().get('data')]
 
-    def add_integration(self, credentials: IntegrationCredentials, domain, user_id):
+    def add_integration(self, credentials: IntegrationCredentials, domain, user: dict):
         lists = self.__get_list(credentials.sendlane.api_key)
         if lists.status_code == 401:
             raise HTTPException(status_code=400, detail={'status': IntegrationsStatus.CREDENTAILS_INVALID.value})
-        return self.__save_integrations(credentials.sendlane.api_key, domain_id=domain.id, user_id=user_id)
+        return self.__save_integrations(credentials.sendlane.api_key, domain_id=domain.id, user=user)
 
     
     def __get_sender(self, api_key):

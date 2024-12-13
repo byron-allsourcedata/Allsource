@@ -478,7 +478,7 @@ class UsersAuth:
                             shopify=ShopifyOrBigcommerceCredentials(shop_domain=shopify_data.shop, access_token=shopify_access_token)
                         )
         with self.integration_service as service:
-            service.shopify.add_integration(credentials, domain, user_object.id, shop_id)
+            service.shopify.add_integration(credentials, domain, user_object.__dict__, shop_id)
             service.shopify.create_webhooks_for_store(shopify_data=shopify_data, shopify_access_token=shopify_access_token)
         
         if not user_object.shop_id:
