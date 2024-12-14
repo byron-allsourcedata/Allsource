@@ -11,37 +11,62 @@ import ListItemButton from '@mui/material/ListItemButton';
 import ListItemText from '@mui/material/ListItemText';
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 
-interface MonthDetailsProps {
-    toggleFavorite: any;
-    handleDownloadFile: any;
-    asset: any;
-    isAdmin: boolean
-    handleFormOpenPopup: any
+interface AssetsData {
+    id: number;
+    file_url: string;
+    preview_url: string;
+    type: string;
+    title: string;
+    file_extension: string;
+    file_size: string;
+    isFavorite: boolean;
 }
 
-const PartnersAssetsDocuments: React.FC<MonthDetailsProps> = ({ toggleFavorite, handleDownloadFile, asset, isAdmin, handleFormOpenPopup }) => {
-    const [adminMenuOpen, setAdminMenuOpen] = useState(false);
-    const [anchorEl, setAnchorEl] = useState(null);
+interface PartnersAseetsProps {
+    toggleFavorite: (id: number) => void;
+    handleDownloadFile: (fileUrl: string) => void;
+    asset: AssetsData;
+    isAdmin: boolean;
+    handleFormOpenPopup: () => void;
+    handleDeleteAsset: any;
+    handleEditAsset: any;
+    handleAdminMenu: any;
+    adminMenuOpen: any;
+    anchorEl: any
+}
 
-    const handleAdminMenu = (e: any) => {
-        setAdminMenuOpen((prevState) => !prevState)
-        setAnchorEl(e.currentTarget);
-    }
+const PartnersAssetsDocuments: React.FC<PartnersAseetsProps> = ({
+    asset, isAdmin, 
+    toggleFavorite, 
+    handleDownloadFile,  
+    handleFormOpenPopup,
+    handleDeleteAsset,
+    handleEditAsset,
+    handleAdminMenu,
+    adminMenuOpen,
+    anchorEl}) => {
+    // const [adminMenuOpen, setAdminMenuOpen] = useState(false);
+    // const [anchorEl, setAnchorEl] = useState(null);
 
-    const handleDeleteAsset = async () => {
-        try {
-            setAdminMenuOpen(false)
-            const response = await axiosInstance.delete(`partners-assets/${asset.id}`);
-            console.log({response})
+    // const handleAdminMenu = (e: any) => {
+    //     setAdminMenuOpen((prevState) => !prevState)
+    //     setAnchorEl(e.currentTarget);
+    // }
 
-        } catch (error) {
-            console.error("Error fetching rewards:", error);
-        }
-    }
+    // const handleDeleteAsset = async () => {
+    //     try {
+    //         setAdminMenuOpen(false)
+    //         const response = await axiosInstance.delete(`partners-assets/${asset.id}`);
+    //         console.log({response})
 
-    const handleEditAsset = () => {
-        handleFormOpenPopup()
-    }
+    //     } catch (error) {
+    //         console.error("Error fetching rewards:", error);
+    //     }
+    // }
+
+    // const handleEditAsset = () => {
+    //     handleFormOpenPopup()
+    // }
 
     return (
     <Box

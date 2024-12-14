@@ -4,6 +4,7 @@ import PartnersAssetsVideo from '@/components/PartnersAssetsVideo';
 import PartnersAssetsImage from '@/components/PartnersAssetsImage';
 import PartnersAssetsDocuments from '@/components/PartnersAssetsDocuments';
 import FormDownloadPopup from '@/components/FormDownloadPopup'
+import axiosInstance from "@/axios/axiosInterceptorInstance";
 
 interface AssetsData {
     id: number;
@@ -13,6 +14,7 @@ interface AssetsData {
     title: string;
     file_extension: string;
     file_size: string;
+    isFavorite: boolean;
 }
 
 interface PartnersAssetsData {
@@ -21,13 +23,16 @@ interface PartnersAssetsData {
 }
 
 interface PartnersAssetProps {
-    data: any;
-    toggleFavorite?: any
+    data: PartnersAssetsData;
+    toggleFavorite?: (id: number) => void
     isAdmin?: boolean
   }
 
 const PartnersAsset: React.FC<PartnersAssetProps> = ({data, toggleFavorite = () => {}, isAdmin = false}) => {
     const [formPopupOpen, setFormPopupOpen] = useState(false);
+    const [adminMenuOpen, setAdminMenuOpen] = useState(false);
+    const [anchorEl, setAnchorEl] = useState(null);
+
 
     const handleDownloadFile = (fileUrl: string) => {;
         window.location.href = fileUrl;
@@ -40,6 +45,27 @@ const PartnersAsset: React.FC<PartnersAssetProps> = ({data, toggleFavorite = () 
 
     const handleFormClosePopup = () => {
         setFormPopupOpen(false)
+    }
+
+
+    const handleAdminMenu = (e: any) => {
+        setAdminMenuOpen((prevState) => !prevState)
+        setAnchorEl(e.currentTarget);
+    }
+
+    const handleDeleteAsset = async (id: number) => {
+        try {
+            setAdminMenuOpen(false)
+            const response = await axiosInstance.delete(`partners-assets/${id}`);
+            // console.log({response})
+
+        } catch (error) {
+            console.error("Error fetching rewards:", error);
+        }
+    }
+
+    const handleEditAsset = () => {
+        handleFormOpenPopup()
     }
 
     return (
@@ -62,11 +88,47 @@ const PartnersAsset: React.FC<PartnersAssetProps> = ({data, toggleFavorite = () 
                     {data.asset.map((item: AssetsData) => {
                         switch (item.type) {
                             case "video":
-                                return <PartnersAssetsVideo toggleFavorite={toggleFavorite} handleDownloadFile={handleDownloadFile} key={item.id} asset={item} isAdmin={isAdmin}/>
+                                return <PartnersAssetsVideo
+                                key={item.id} 
+                                asset={item} 
+                                isAdmin={isAdmin}  
+                                toggleFavorite={toggleFavorite} 
+                                handleDownloadFile={handleDownloadFile} 
+                                handleFormOpenPopup={handleFormOpenPopup}
+                                handleDeleteAsset={handleDeleteAsset}
+                                handleAdminMenu={handleAdminMenu}
+                                handleEditAsset={handleEditAsset}
+                                adminMenuOpen={adminMenuOpen}
+                                anchorEl={anchorEl}
+                                />
                             case "document":
-                                return <PartnersAssetsDocuments toggleFavorite={toggleFavorite} handleDownloadFile={handleDownloadFile} key={item.id} asset={item} isAdmin={isAdmin} handleFormOpenPopup={handleFormOpenPopup}/>
+                                return <PartnersAssetsDocuments 
+                                key={item.id} 
+                                asset={item} 
+                                isAdmin={isAdmin}  
+                                toggleFavorite={toggleFavorite} 
+                                handleDownloadFile={handleDownloadFile} 
+                                handleFormOpenPopup={handleFormOpenPopup}
+                                handleDeleteAsset={handleDeleteAsset}
+                                handleAdminMenu={handleAdminMenu}
+                                handleEditAsset={handleEditAsset}
+                                adminMenuOpen={adminMenuOpen}
+                                anchorEl={anchorEl}
+                                />
                             default:
-                                return <PartnersAssetsImage toggleFavorite={toggleFavorite} handleDownloadFile={handleDownloadFile} key={item.id} asset={item} isAdmin={isAdmin}/>
+                                return <PartnersAssetsImage
+                                key={item.id} 
+                                asset={item} 
+                                isAdmin={isAdmin}  
+                                toggleFavorite={toggleFavorite} 
+                                handleDownloadFile={handleDownloadFile} 
+                                handleFormOpenPopup={handleFormOpenPopup}
+                                handleDeleteAsset={handleDeleteAsset}
+                                handleAdminMenu={handleAdminMenu}
+                                handleEditAsset={handleEditAsset}
+                                adminMenuOpen={adminMenuOpen}
+                                anchorEl={anchorEl}
+                                />
                         }
                     })}
                     <FormDownloadPopup open={formPopupOpen} onClose={handleFormClosePopup} />

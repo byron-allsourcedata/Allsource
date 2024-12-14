@@ -6,15 +6,46 @@ import Image from "next/image";
 import { useState } from "react";
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import FavoriteIcon from '@mui/icons-material/Favorite';
+import MoreVertOutlinedIcon from '@mui/icons-material/MoreVertOutlined';
+import Popover from '@mui/material/Popover';
+import List from '@mui/material/List';
+import ListItemButton from '@mui/material/ListItemButton';
+import ListItemText from '@mui/material/ListItemText';
 
-interface MonthDetailsProps {
-    toggleFavorite: any;
-    handleDownloadFile: any
-    asset: any;
-    isAdmin: boolean
+interface AssetsData {
+    id: number;
+    file_url: string;
+    preview_url: string;
+    type: string;
+    title: string;
+    file_extension: string;
+    file_size: string;
+    isFavorite: boolean;
 }
 
-const PartnersAssetsVideo: React.FC<MonthDetailsProps> = ({ toggleFavorite, handleDownloadFile, asset }) => {
+interface PartnersAseetsProps {
+    toggleFavorite: (id: number) => void;
+    handleDownloadFile: (fileUrl: string) => void;
+    asset: AssetsData;
+    isAdmin: boolean;
+    handleFormOpenPopup: () => void;
+    handleDeleteAsset: any;
+    handleEditAsset: any;
+    handleAdminMenu: any;
+    adminMenuOpen: any;
+    anchorEl: any
+}
+
+const PartnersAssetsVideo: React.FC<PartnersAseetsProps> = ({
+    asset, isAdmin, 
+    toggleFavorite, 
+    handleDownloadFile,  
+    handleFormOpenPopup,
+    handleDeleteAsset,
+    handleEditAsset,
+    handleAdminMenu,
+    adminMenuOpen,
+    anchorEl}) => {
     const handlePlayClick = (event: React.MouseEvent<HTMLButtonElement>) => {
         event.stopPropagation(); 
         window.open(asset.file_url, '_blank', 'noopener,noreferrer');
@@ -74,7 +105,7 @@ const PartnersAssetsVideo: React.FC<MonthDetailsProps> = ({ toggleFavorite, hand
             >
                 12:00
             </Box>
-            <Box
+            {!isAdmin && <Box
                 sx={{
                 position: "absolute",
                 top: 0,
@@ -86,7 +117,7 @@ const PartnersAssetsVideo: React.FC<MonthDetailsProps> = ({ toggleFavorite, hand
                 <IconButton onClick={() => toggleFavorite(asset.id)} sx={{ width: '12.84px', height: '10.96px' }} >
                 {asset.isFavorite ?  <FavoriteIcon sx={{ width: '12.84px', height: '10.96px', color: "rgba(248, 70, 75, 1)"  }} /> : <FavoriteBorderIcon sx={{ width: '12.84px', height: '10.96px'  }} />}
                 </IconButton>
-            </Box>
+            </Box>}
         </Box>
         <Box sx={{
             display: "flex",
@@ -104,9 +135,36 @@ const PartnersAssetsVideo: React.FC<MonthDetailsProps> = ({ toggleFavorite, hand
         >
         {asset.title}
         </Typography>
-        <IconButton onClick={() => handleDownloadFile(asset.file_url)} sx={{ ':hover': { backgroundColor: 'transparent', }, padding: 0 }}>
-            <DownloadIcon sx={{ width: '20px', height: '20px', color: 'rgba(188, 188, 188, 1)', ':hover': { color: 'rgba(80, 82, 178, 1)' } }} />
-        </IconButton>
+        {isAdmin ? <IconButton onClick={(event) => handleAdminMenu(event)} sx={{ ':hover': { backgroundColor: 'transparent', }, padding: 0 }}>
+                <MoreVertOutlinedIcon sx={{ width: '20px', height: '20px', color: 'rgba(188, 188, 188, 1)', ':hover': { color: 'rgba(80, 82, 178, 1)' } }} />
+            </IconButton> :
+            <IconButton onClick={() => handleDownloadFile(asset.file_url)} sx={{ ':hover': { backgroundColor: 'transparent', }, padding: 0 }}>
+                <DownloadIcon sx={{ width: '20px', height: '20px', color: 'rgba(188, 188, 188, 1)', ':hover': { color: 'rgba(80, 82, 178, 1)' } }} />
+            </IconButton>}
+            <Popover
+                open={adminMenuOpen}
+                onClose={handleAdminMenu}
+                anchorEl={anchorEl}
+                anchorOrigin={{
+                    vertical: 'bottom',
+                    horizontal: 'left',
+                }}
+                >
+                <List
+                    sx={{ 
+                        width: '100%', maxWidth: 360}}
+                    >
+                    <ListItemButton sx={{':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}}>
+                        <ListItemText primary="Delete" onClick={handleDeleteAsset}/>
+                    </ListItemButton>
+                    <ListItemButton sx={{':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}}>
+                        <ListItemText primary="Edit" onClick={handleEditAsset}/>
+                    </ListItemButton>
+                    <ListItemButton sx={{':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => handleDownloadFile(asset.file_url)}>
+                        <ListItemText primary="Download" />
+                    </ListItemButton>
+                </List>
+            </Popover>
         </Box>
     </Box>
     );
