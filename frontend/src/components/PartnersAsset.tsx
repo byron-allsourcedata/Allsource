@@ -22,11 +22,11 @@ interface PartnersAssetsData {
 
 interface PartnersAssetProps {
     data: any;
-    toggleFavorite: any
+    toggleFavorite?: any
     isAdmin?: boolean
   }
 
-const PartnersAsset: React.FC<PartnersAssetProps> = ({data, toggleFavorite, isAdmin = false}) => {
+const PartnersAsset: React.FC<PartnersAssetProps> = ({data, toggleFavorite = () => {}, isAdmin = false}) => {
     const [formPopupOpen, setFormPopupOpen] = useState(false);
 
     const handleDownloadFile = (fileUrl: string) => {;

@@ -9,6 +9,7 @@ import Popover from '@mui/material/Popover';
 import List from '@mui/material/List';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemText from '@mui/material/ListItemText';
+import axiosInstance from "@/axios/axiosInterceptorInstance";
 
 interface MonthDetailsProps {
     toggleFavorite: any;
@@ -25,6 +26,21 @@ const PartnersAssetsDocuments: React.FC<MonthDetailsProps> = ({ toggleFavorite, 
     const handleAdminMenu = (e: any) => {
         setAdminMenuOpen((prevState) => !prevState)
         setAnchorEl(e.currentTarget);
+    }
+
+    const handleDeleteAsset = async () => {
+        try {
+            setAdminMenuOpen(false)
+            const response = await axiosInstance.delete(`partners-assets/${asset.id}`);
+            console.log({response})
+
+        } catch (error) {
+            console.error("Error fetching rewards:", error);
+        }
+    }
+
+    const handleEditAsset = () => {
+        handleFormOpenPopup()
     }
 
     return (
@@ -47,14 +63,14 @@ const PartnersAssetsDocuments: React.FC<MonthDetailsProps> = ({ toggleFavorite, 
             height: "79px",
             borderRadius: "4px",
             backgroundColor: "#EFF1F5",
-            backgroundImage: asset.file_extension === "jpg" ? 'url(/pdf.svg)' : 'url(/xslx.svg)',
+            backgroundImage: asset.file_extension === "pdf" ? 'url(/pdf.svg)' : 'url(/xslx.svg)',
             backgroundPosition: "center",
             backgroundRepeat: "no-repeat",
             backgroundSize: "40px 40px",
             position: "relative",
             '@media (max-width: 360px)': {width: "140px"}
         }}>
-            <Box
+            {!isAdmin && <Box
                 sx={{
                 position: "absolute",
                 top: 0,
@@ -66,7 +82,7 @@ const PartnersAssetsDocuments: React.FC<MonthDetailsProps> = ({ toggleFavorite, 
                 <IconButton onClick={() => toggleFavorite(asset.id)} sx={{ width: '12.84px', height: '10.96px' }} >
                 {asset.isFavorite ?  <FavoriteIcon sx={{ width: '12.84px', height: '10.96px', color: "rgba(248, 70, 75, 1)"  }} /> : <FavoriteBorderIcon sx={{ width: '12.84px', height: '10.96px'  }} />}
                 </IconButton>
-            </Box>
+            </Box>}
         </Box>
         <Box sx={{
             display: "flex",
@@ -121,10 +137,10 @@ const PartnersAssetsDocuments: React.FC<MonthDetailsProps> = ({ toggleFavorite, 
                         width: '100%', maxWidth: 360}}
                     >
                     <ListItemButton sx={{':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}}>
-                        <ListItemText primary="Delete" />
+                        <ListItemText primary="Delete" onClick={handleDeleteAsset}/>
                     </ListItemButton>
                     <ListItemButton sx={{':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}}>
-                        <ListItemText primary="Edit" onClick={handleFormOpenPopup}/>
+                        <ListItemText primary="Edit" onClick={handleEditAsset}/>
                     </ListItemButton>
                     <ListItemButton sx={{':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => handleDownloadFile(asset.file_url)}>
                         <ListItemText primary="Download" />

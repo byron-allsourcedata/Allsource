@@ -1,11 +1,10 @@
-from fastapi.responses import StreamingResponse
 import logging
 import os
 from urllib.parse import urlparse
 import requests
-from io import BytesIO
+from enums import PartnersAssetsInfoEnum
 from persistence.partners_asset_persistence import PartnersAssetPersistence, PartnersAsset
-from schemas.partners_asset import PartnersAssetResponse
+from schemas.partners_asset import PartnersAssetResponse, PartnersAssetRequest
 
 logger = logging.getLogger(__name__)
 
@@ -21,19 +20,37 @@ class PartnersAssetService:
             self.domain_mapped(asset)
             for i, asset in enumerate(assets)
         ]
+    
+    def delete_asset(self, id: int):
+        if id:
+            try:
+                self.partners_asset_persistence.delete_asset(asset_id=id)
+                return PartnersAssetsInfoEnum.SUCCESS
+            except Exception as err:
+                logger.debug('Error deleting assets file', err)
+                return PartnersAssetsInfoEnum.NOT_FOUND
+        else:
+            return PartnersAssetsInfoEnum.NOT_VALID_ID
+
+
+    def create_asset(self, data: PartnersAssetRequest):
+        return PartnersAssetsInfoEnum.SUCCESS
 
     def get_file_size(self, file_url: str) -> str:
-        try:
-            response = requests.head(file_url, allow_redirects=True, timeout=5)
-            if response.status_code == 200 and 'Content-Length' in response.headers:
-                size_in_bytes = int(response.headers['Content-Length'])
-                size_in_mb = size_in_bytes / (1024 ** 2)
-                return f"{size_in_mb:.2f} MB"
-            else:
-                return "0.00 MB"
-        except Exception as err:
-            logger.debug('Error fetching file size', err)
-            return "0.00 MB" 
+        if file_url:
+            try:
+                response = requests.head(file_url, allow_redirects=True, timeout=5)
+                if response.status_code == 200 and 'Content-Length' in response.headers:
+                    size_in_bytes = int(response.headers['Content-Length'])
+                    size_in_mb = size_in_bytes / (1024 ** 2)
+                    return f"{size_in_mb:.2f} MB"
+                else:
+                    return "0.00 MB"
+            except Exception as err:
+                logger.debug('Error fetching file size', err)
+                return "0.00 MB" 
+        else:
+            return "0.00 MB"
         
     def get_file_extension(self, file_url) -> str:
         if file_url:
