@@ -98,9 +98,11 @@ const PartnersAssets: React.FC = () => {
         }
     };
 
+
     useEffect(() => {
         fetchRewards()
     }, []);
+
 
     return (
         <>
@@ -197,7 +199,9 @@ const PartnersAssets: React.FC = () => {
                         ) : (
                             <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }} >
                                 {filteredAssets.map((data, index) => (
-                                    <PartnersAsset toggleFavorite={toggleFavorite} key={index} data={data} />
+                                    <PartnersAsset 
+                                        toggleFavorite={toggleFavorite}
+                                        key={index} data={data} />
                                 ))}
                             </Box>
                         )}

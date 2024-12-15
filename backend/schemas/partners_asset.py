@@ -19,8 +19,3 @@ class PartnersAssetResponse(BaseModel):
 
 class PartnersAssetsInfoResponse(BaseModel):
     status: PartnersAssetsInfoEnum
-
-
-class PartnersAssetRequest(BaseModel):
-    file: Dict[File]
-    description: str

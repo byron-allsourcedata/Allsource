@@ -1,10 +1,11 @@
 import logging
 import os
+from fastapi import HTTPException, UploadFile
 from urllib.parse import urlparse
 import requests
 from enums import PartnersAssetsInfoEnum
 from persistence.partners_asset_persistence import PartnersAssetPersistence, PartnersAsset
-from schemas.partners_asset import PartnersAssetResponse, PartnersAssetRequest
+from schemas.partners_asset import PartnersAssetResponse
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +22,7 @@ class PartnersAssetService:
             for i, asset in enumerate(assets)
         ]
     
+
     def delete_asset(self, id: int):
         if id:
             try:
@@ -33,8 +35,39 @@ class PartnersAssetService:
             return PartnersAssetsInfoEnum.NOT_VALID_ID
 
 
-    def create_asset(self, data: PartnersAssetRequest):
-        return PartnersAssetsInfoEnum.SUCCESS
+    async def update_asset(self, asset_id: int, description: str, file: UploadFile = None):
+        updating_data = {"description": description}
+
+        if file:
+            file_contents = await file.read()
+            updating_data["file_url"] = "https://milkhail-scrapping-nfluencers.s3.eu-west-1.amazonaws.com/clients_requests/2274644ac7b0ca83af842bbf0f4d59d8.zip"
+            updating_data["preview_url"] = "https://images.hdqwalls.com/download/sunset-tree-red-ocean-sky-7w-3840x2160.jpg"
+ 
+        updated_data = self.partners_asset_persistence.update_asset(asset_id, updating_data)
+
+        if not updated_data:
+            raise HTTPException(status_code=404, detail="Asset not found")
+
+        return self.domain_mapped(updated_data)
+
+
+    async def create_asset(self, description: str, type: str, file: UploadFile = None):
+        if(file):
+            file_contents = await file.read()
+        creating_data = {
+            "description": description, 
+            "type": type, 
+            "file_url": "https://milkhail-scrapping-nfluencers.s3.eu-west-1.amazonaws.com/clients_requests/2274644ac7b0ca83af842bbf0f4d59d8.zip",
+            "preview_url": "https://images.hdqwalls.com/download/sunset-tree-red-ocean-sky-7w-3840x2160.jpg"
+        }
+
+        created_data = self.partners_asset_persistence.create_data(creating_data)
+
+        if not created_data:
+            raise HTTPException(status_code=404, detail="Asset not found")
+
+        return self.domain_mapped(created_data)
+
 
     def get_file_size(self, file_url: str) -> str:
         if file_url:
@@ -51,7 +84,8 @@ class PartnersAssetService:
                 return "0.00 MB" 
         else:
             return "0.00 MB"
-        
+
+
     def get_file_extension(self, file_url) -> str:
         if file_url:
             url_path = urlparse(file_url).path
@@ -61,6 +95,7 @@ class PartnersAssetService:
             return extension
         else: 
             return "Unknown"
+
 
     def domain_mapped(self, asset: PartnersAsset):
         return PartnersAssetResponse(

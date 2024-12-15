@@ -23,16 +23,18 @@ interface PartnersAssetsData {
 }
 
 interface PartnersAssetProps {
+    updateOrAddAsset?: (type: string, newAsset: AssetsData) => void;
     data: PartnersAssetsData;
+    deleteAsset: any
     toggleFavorite?: (id: number) => void
     isAdmin?: boolean
   }
 
-const PartnersAsset: React.FC<PartnersAssetProps> = ({data, toggleFavorite = () => {}, isAdmin = false}) => {
+const PartnersAsset: React.FC<PartnersAssetProps> = ({data, deleteAsset, updateOrAddAsset = () => {}, toggleFavorite = () => {}, isAdmin = false}) => {
     const [formPopupOpen, setFormPopupOpen] = useState(false);
+    const [fileData, setFileData] = useState<any>(null);
     const [adminMenuOpen, setAdminMenuOpen] = useState(false);
     const [anchorEl, setAnchorEl] = useState(null);
-
 
     const handleDownloadFile = (fileUrl: string) => {;
         window.location.href = fileUrl;
@@ -54,19 +56,15 @@ const PartnersAsset: React.FC<PartnersAssetProps> = ({data, toggleFavorite = () 
     }
 
     const handleDeleteAsset = async (id: number) => {
-        try {
-            setAdminMenuOpen(false)
-            const response = await axiosInstance.delete(`partners-assets/${id}`);
-            // console.log({response})
-
-        } catch (error) {
-            console.error("Error fetching rewards:", error);
-        }
+        setAdminMenuOpen(false)
+        deleteAsset(id)
     }
 
-    const handleEditAsset = () => {
-        handleFormOpenPopup()
-    }
+    const handleEditAsset = (item: AssetsData) => {
+        setAdminMenuOpen(false)
+        setFileData({ id: item.id, title: item.title, type: item.type});
+        handleFormOpenPopup();
+    };
 
     return (
         <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }} >
@@ -94,10 +92,9 @@ const PartnersAsset: React.FC<PartnersAssetProps> = ({data, toggleFavorite = () 
                                 isAdmin={isAdmin}  
                                 toggleFavorite={toggleFavorite} 
                                 handleDownloadFile={handleDownloadFile} 
-                                handleFormOpenPopup={handleFormOpenPopup}
                                 handleDeleteAsset={handleDeleteAsset}
                                 handleAdminMenu={handleAdminMenu}
-                                handleEditAsset={handleEditAsset}
+                                handleEditAsset={() => handleEditAsset(item)}
                                 adminMenuOpen={adminMenuOpen}
                                 anchorEl={anchorEl}
                                 />
@@ -108,10 +105,9 @@ const PartnersAsset: React.FC<PartnersAssetProps> = ({data, toggleFavorite = () 
                                 isAdmin={isAdmin}  
                                 toggleFavorite={toggleFavorite} 
                                 handleDownloadFile={handleDownloadFile} 
-                                handleFormOpenPopup={handleFormOpenPopup}
                                 handleDeleteAsset={handleDeleteAsset}
                                 handleAdminMenu={handleAdminMenu}
-                                handleEditAsset={handleEditAsset}
+                                handleEditAsset={() => handleEditAsset(item)}
                                 adminMenuOpen={adminMenuOpen}
                                 anchorEl={anchorEl}
                                 />
@@ -122,17 +118,21 @@ const PartnersAsset: React.FC<PartnersAssetProps> = ({data, toggleFavorite = () 
                                 isAdmin={isAdmin}  
                                 toggleFavorite={toggleFavorite} 
                                 handleDownloadFile={handleDownloadFile} 
-                                handleFormOpenPopup={handleFormOpenPopup}
                                 handleDeleteAsset={handleDeleteAsset}
                                 handleAdminMenu={handleAdminMenu}
-                                handleEditAsset={handleEditAsset}
+                                handleEditAsset={() => handleEditAsset(item)}
                                 adminMenuOpen={adminMenuOpen}
                                 anchorEl={anchorEl}
                                 />
                         }
                     })}
-                    <FormDownloadPopup open={formPopupOpen} onClose={handleFormClosePopup} />
-                    {isAdmin && <Box onClick={handleFormOpenPopup} sx={{ 
+                    <FormDownloadPopup 
+                        fileData={fileData} 
+                        open={formPopupOpen} 
+                        onClose={handleFormClosePopup} 
+                        updateOrAddAsset={updateOrAddAsset}
+                        action={"Add"} />
+                    {isAdmin && <Box onClick={() => handleFormOpenPopup()} sx={{ 
                         border: "1px dashed rgba(80, 82, 178, 1)", 
                         width: "62px", 
                         height: "62px", 

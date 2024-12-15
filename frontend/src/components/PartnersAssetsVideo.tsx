@@ -28,7 +28,6 @@ interface PartnersAseetsProps {
     handleDownloadFile: (fileUrl: string) => void;
     asset: AssetsData;
     isAdmin: boolean;
-    handleFormOpenPopup: () => void;
     handleDeleteAsset: any;
     handleEditAsset: any;
     handleAdminMenu: any;
@@ -40,7 +39,6 @@ const PartnersAssetsVideo: React.FC<PartnersAseetsProps> = ({
     asset, isAdmin, 
     toggleFavorite, 
     handleDownloadFile,  
-    handleFormOpenPopup,
     handleDeleteAsset,
     handleEditAsset,
     handleAdminMenu,
@@ -154,11 +152,11 @@ const PartnersAssetsVideo: React.FC<PartnersAseetsProps> = ({
                     sx={{ 
                         width: '100%', maxWidth: 360}}
                     >
-                    <ListItemButton sx={{':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}}>
-                        <ListItemText primary="Delete" onClick={handleDeleteAsset}/>
+                    <ListItemButton sx={{':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => handleDeleteAsset(asset.id)}>
+                        <ListItemText primary="Delete"/>
                     </ListItemButton>
-                    <ListItemButton sx={{':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}}>
-                        <ListItemText primary="Edit" onClick={handleEditAsset}/>
+                    <ListItemButton sx={{':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={handleEditAsset}>
+                        <ListItemText primary="Edit"/>
                     </ListItemButton>
                     <ListItemButton sx={{':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => handleDownloadFile(asset.file_url)}>
                         <ListItemText primary="Download" />
