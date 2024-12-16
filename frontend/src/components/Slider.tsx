@@ -15,10 +15,11 @@ interface SliderProps {
 }
 
 const Slider: React.FC<SliderProps> = ({ setShowSliders }) => {
-  const [prefillData, setPrefillData] = useState<{ email: '', name: '' } | null>(null);
+  const [prefillData, setPrefillData] = useState<{ email: '', name: ''} | null>(null);
   const [isPrefillLoaded, setIsPrefillLoaded] = useState(false);
   const [fullName, setFullName] = useState<string | null>(null);
   const [email, setEmail] = useState<string | null>(null);
+  const [utmParams, setUtmParams] = useState<string | null>(null);
 
   useEffect(() => {
     const meItem = typeof window !== 'undefined' ? sessionStorage.getItem('me') : null;
@@ -34,13 +35,38 @@ const Slider: React.FC<SliderProps> = ({ setShowSliders }) => {
     email: email || '',
   };
 
+  const buildUrl = () => {
+    const baseUrl = "https://calendly.com/maximiz/activate-free-trial";
+    const searchParams = new URLSearchParams();
+  
+    if (utmParams) {
+      try {
+        const parsedUtmParams = typeof utmParams === 'string' ? JSON.parse(utmParams) : utmParams;
+  
+        if (typeof parsedUtmParams === 'object' && parsedUtmParams !== null) {
+          Object.entries(parsedUtmParams).forEach(([key, value]) => {
+            if (value !== null && value !== undefined) {
+              searchParams.append(key, value as string);
+            }
+          });
+        }
+      } catch (error) {
+        console.error("Error parsing utmParams:", error);
+      }
+    }
+  
+    const finalUrl = `${baseUrl}${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
+    return finalUrl;
+  };
+
   const fetchPrefillData = async () => {
     try {
       const response = await axiosInstance.get('/calendly');
       const user = response.data.user;
 
       if (user) {
-        const { full_name, email } = user;
+        const { full_name, email, utm_params } = user;
+        setUtmParams(utm_params)
         setPrefillData({
           email: email || '',
           name: full_name || '',
@@ -146,7 +172,7 @@ const Slider: React.FC<SliderProps> = ({ setShowSliders }) => {
         }}>
           <img src="/slider-bookcall.png" alt="Setup" style={{ width: '40%', marginBottom: '3rem', marginTop: '2rem', }} />
           <div id='calendly-popup-wrapper' className="book-call-button__wrapper" style={{ zIndex: 2000 }}> </div>
-          {prefillData ? (
+          {prefillData && prefillData.email ? (
             <>
               <Typography
                 variant="body1"
@@ -203,7 +229,7 @@ const Slider: React.FC<SliderProps> = ({ setShowSliders }) => {
                       cursor: 'pointer',
                     }}
                     prefill={prefillData}
-                    url="https://calendly.com/maximiz/activate-free-trial"
+                    url={buildUrl()}
                     rootElement={document.getElementById("calendly-popup-wrapper")!}
                     text="Reschedule a Call"
                   />
@@ -304,7 +330,7 @@ const Slider: React.FC<SliderProps> = ({ setShowSliders }) => {
                       textTransform: 'none',
                       cursor: 'pointer',
                     }}
-                    url="https://calendly.com/maximiz/activate-free-trial"
+                    url={buildUrl()}
                     rootElement={document.getElementById("calendly-popup-wrapper")!}
                     text="Get Started"
                     prefill={prefillDataStorage}

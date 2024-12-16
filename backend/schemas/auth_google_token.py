@@ -8,6 +8,13 @@ class ShopifyPayloadModel(BaseModel):
     shop: Optional[str] = None
     state: Optional[str] = None
     timestamp: Optional[str] = None
+    
+class UtmParams(BaseModel):
+    utm_source: Optional[str] = None
+    utm_medium: Optional[str] = None
+    utm_campaign: Optional[str] = None
+    utm_content: Optional[str] = None
+    utm_term: Optional[str] = None
 
 class AuthGoogleData(BaseModel):
     token: str
@@ -18,5 +25,6 @@ class AuthGoogleData(BaseModel):
     shopify_data: Optional[ShopifyPayloadModel] = None
     coupon: Optional[str] = None
     ift: Optional[str] = None
+    utm_params: Optional[UtmParams] = None
 
     

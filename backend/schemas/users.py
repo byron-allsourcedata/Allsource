@@ -15,6 +15,13 @@ class ShopifyPayloadModel(BaseModel):
     state: Optional[str] = None
     timestamp: Optional[str] = None
 
+class UtmParams(BaseModel):
+    utm_source: Optional[str] = None
+    utm_medium: Optional[str] = None
+    utm_campaign: Optional[str] = None
+    utm_content: Optional[str] = None
+    utm_term: Optional[str] = None
+
 class UserSignUpForm(BaseModel):
     full_name: str = Field(...)
     email: str = Field(...)
@@ -26,6 +33,7 @@ class UserSignUpForm(BaseModel):
     awc: Optional[str] = None
     coupon: Optional[str] = None
     ift: Optional[str] = None
+    utm_params: Optional[UtmParams] = None
 
 
 class DismissNotificationsRequest(BaseModel):
@@ -110,8 +118,9 @@ class VerifyTokenResponse(BaseModel):
 
 
 class CalendlyDict(TypedDict):
-    email: str
-    full_name: str
+    email: Optional[str] = None
+    full_name: Optional[str] = None
+    utm_params: Optional[str] = None
 
 
 class CalendlyResponse(BaseModel):
