@@ -189,8 +189,6 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading, hasNotific
     const { domains, partner } = useUser();
     const router = useRouter();
     const pathname = usePathname();
-    const [showBookSlider, setShowBookSlider] = useState(false);
-
     const [currentDomain, setCurrentDomain] = useState<string | null>(null);
     const [activatePercent, setActivatePercent] = useState<number>(0);
     useEffect(() => {
@@ -206,8 +204,9 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading, hasNotific
             if (domain) {
                 setActivatePercent(domain.activate_percent);
             }
+            console.log('123')
         }
-    }, [currentDomain, domains]);
+    }, [currentDomain]);
     
     const handleNavigation = async (route: string) => {
         try {

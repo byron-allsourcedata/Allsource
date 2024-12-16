@@ -76,7 +76,7 @@ const AlivbleIntagrationsSlider = ({open, isContactSync = false, integrations, i
               }
             }
           }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 3.5, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 2.85, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
                     <Typography variant="h6" className="first-sub-title" sx={{ textAlign: 'center' }}>
                         Add an Integration
                     </Typography>
@@ -174,7 +174,7 @@ const AlivbleIntagrationsSlider = ({open, isContactSync = false, integrations, i
                                 )}
 
                                 {/* Klaviyo */}
-                                {integrations.some(integration => integration.service_name === 'Klaviyo') && (
+                                {integrations.some(integration => integration.service_name === 'klaviyo') && (
                                     !integrationsCredentials.some(integration => integration.service_name === 'Klaviyo') )&&(
                                     <ListItem sx={{p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',
                                     '@media (max-width:600px)': {
@@ -198,7 +198,7 @@ const AlivbleIntagrationsSlider = ({open, isContactSync = false, integrations, i
                                 </ListItem> )}
 
                             {/* Attentive */}
-                            {integrations.some(integration => integration.service_name === 'Attentive') && (
+                            {integrations.some(integration => integration.service_name === 'attentive') && (
                                 !integrationsCredentials.some(integration => integration.service_name === 'Attentive') )&&(
                                 <ListItem sx={{p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',
                                 '@media (max-width:600px)': {
@@ -223,8 +223,8 @@ const AlivbleIntagrationsSlider = ({open, isContactSync = false, integrations, i
 
 
 
-                                {integrations.some(integration => integration.service_name === 'Zepier') && (
-                                    !integrationsCredentials.some(integration => integration.service_name === 'Zepier') )&&(
+                                {integrations.some(integration => integration.service_name === 'zapier') && (
+                                    !integrationsCredentials.some(integration => integration.service_name === 'zapier') )&&(
                                 <ListItem sx={{p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',
                                     '@media (max-width:600px)': {
                                         flexBasis: 'calc(50% - 8px)'
@@ -246,9 +246,9 @@ const AlivbleIntagrationsSlider = ({open, isContactSync = false, integrations, i
                                     </ListItemButton>
                                 </ListItem>
                                     )}
-                                    {integrations.some(integration => integration.service_name === 'Shopify') &&
+                                    {integrations.some(integration => integration.service_name === 'shopify') &&
                                     !integrationsCredentials.some(integration => 
-                                        integration.service_name === 'wordPress' || 
+                                        integration.service_name === 'wordpress' || 
                                         integration.service_name === 'big_commerce' ||
                                         integration.service_name === 'shopify'
                                     ) && 
@@ -273,7 +273,7 @@ const AlivbleIntagrationsSlider = ({open, isContactSync = false, integrations, i
                                         }}  />
                                     </ListItemButton>
                                 </ListItem> )}
-                                {integrations.some(integration => integration.service_name === 'Elastic') && (
+                                {integrations.some(integration => integration.service_name === 'elastic') && (
                                     !integrationsCredentials.some(integration => integration.service_name === 'Elastic') )&&(
                                 <ListItem sx={{p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',
                                     '@media (max-width:600px)': {
@@ -295,7 +295,7 @@ const AlivbleIntagrationsSlider = ({open, isContactSync = false, integrations, i
                                         }}  />
                                     </ListItemButton>
                                 </ListItem> )}
-                                {integrations.some(integration => integration.service_name === 'Meta') && (
+                                {integrations.some(integration => integration.service_name === 'meta') && (
                                     !integrationsCredentials.some(integration => integration.service_name === 'Meta') )&&(
                                 <ListItem  sx={{p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',
                                     '@media (max-width:600px)': {
@@ -317,7 +317,7 @@ const AlivbleIntagrationsSlider = ({open, isContactSync = false, integrations, i
                                         }}  />
                                     </ListItemButton>
                                 </ListItem> )}
-                                {integrations.some(integration => integration.service_name === 'Omnisend') && (
+                                {integrations.some(integration => integration.service_name === 'omnisend') && (
                                     !integrationsCredentials.some(integration => integration.service_name === 'Omnisend') )&&(
                                 <ListItem sx={{p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',
                                     '@media (max-width:600px)': {
@@ -339,8 +339,8 @@ const AlivbleIntagrationsSlider = ({open, isContactSync = false, integrations, i
                                         }}  />
                                     </ListItemButton>
                                 </ListItem> )}
-                                {integrations.some(integration => integration.service_name === 'Mailchimp') && (
-                                    !integrationsCredentials.some(integration => integration.service_name === 'Mailchimp') )&&(
+                                {integrations.some(integration => integration.service_name === 'mailchimp') && (
+                                    !integrationsCredentials.some(integration => integration.service_name === 'mailchimp') )&&(
                                 <ListItem sx={{p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',
                                     '@media (max-width:600px)': {
                                         flexBasis: 'calc(50% - 8px)'
@@ -389,8 +389,8 @@ const AlivbleIntagrationsSlider = ({open, isContactSync = false, integrations, i
                                         </ListItemButton>
                                     </ListItem>
                                 )}
-                                {integrations.some(integration => integration.service_name === 'Sendlane') && (
-                                    !integrationsCredentials.some(integration => integration.service_name === 'Sendlane') )&&(
+                                {integrations.some(integration => integration.service_name === 'sendlane') && (
+                                    !integrationsCredentials.some(integration => integration.service_name === 'sendlane') )&&(
                                     <ListItem sx={{p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',
                                         '@media (max-width:600px)': {
                                             flexBasis: 'calc(50% - 8px)'
@@ -412,7 +412,7 @@ const AlivbleIntagrationsSlider = ({open, isContactSync = false, integrations, i
                                         </ListItemButton>
                                     </ListItem>
                                 )}
-                                {integrations.some(integration => integration.service_name === 'Zapier') && (
+                                {integrations.some(integration => integration.service_name === 'zapier') && (
                                     !integrationsCredentials.some(integration => integration.service_name === 'Zapier') )&&(
                                     <ListItem sx={{p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',
                                         '@media (max-width:600px)': {

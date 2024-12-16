@@ -94,6 +94,14 @@ const KlaviyoIntegrationPopup = ({ handleClose, open, onSave, initApiKey }: Crea
     const label = { inputProps: { 'aria-label': 'Switch demo' } };
     const [selectedRadioValue, setSelectedRadioValue] = useState('');
     const [isDropdownValid, setIsDropdownValid] = useState(false);
+    const [activeTab, setActiveTab] = useState<string>('1');
+
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: string) => {
+    if (activeTab === '1' && newValue === '2') {
+      return;
+    }
+    setActiveTab(newValue);
+  };
 
     useEffect(() => {
         setApiKey(initApiKey || '')
@@ -296,7 +304,7 @@ const KlaviyoIntegrationPopup = ({ handleClose, open, onSave, initApiKey }: Crea
                     }
                 }}
             >
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 3.5, px: 2, borderBottom: '1px solid #e4e4e4' }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 2.85, px: 2, borderBottom: '0.5px solid #e4e4e4' }}>
                     <Typography variant="h6" sx={{ textAlign: 'center', color: '#202124', fontFamily: 'Nunito Sans', fontWeight: '600', fontSize: '16px', lineHeight: 'normal' }}>
                         Connect to Klaviyo
                     </Typography>
@@ -321,8 +329,10 @@ const KlaviyoIntegrationPopup = ({ handleClose, open, onSave, initApiKey }: Crea
                         <TabContext value={value}>
                             <Box sx={{ pb: 4 }}>
                                 <TabList centered aria-label="Connect to Klaviyo Tabs"
+                                    onChange={() => setValue("1")}
                                     TabIndicatorProps={{ sx: { backgroundColor: "#5052b2" } }}
                                     sx={{
+                                        cursor: 'pointer',
                                         "& .MuiTabs-scroller": {
                                             overflowX: 'auto !important',
                                         },
@@ -335,7 +345,7 @@ const KlaviyoIntegrationPopup = ({ handleClose, open, onSave, initApiKey }: Crea
                                         }
                                     }}>
                                     <Tab label="API Key" value="1" sx={{ ...klaviyoStyles.tabHeading, cursor: 'pointer' }} />
-                                    <Tab label="Suppression Sync" value="2" sx={klaviyoStyles.tabHeading} />
+                                    <Tab label="Suppression Sync" value="2" sx={{...klaviyoStyles.tabHeading, cursor: 'pointer'}} />
                                 </TabList>
                             </Box>
                             <TabPanel value="1" sx={{ p: 0 }}>
@@ -556,7 +566,7 @@ const KlaviyoIntegrationPopup = ({ handleClose, open, onSave, initApiKey }: Crea
                             </TabPanel>
                         </TabContext>
                     </Box>
-                    <Box sx={{ px: 2, py: 3.5, width: '100%', border: '1px solid #e4e4e4' }}>
+                    <Box sx={{ px: 2, py: 3.5, width: '100%'}}>
                         <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
                             {getButton(value)}
                         </Box>
