@@ -79,23 +79,17 @@ const Assets: React.FC = () => {
         );
     };
 
-    const convertTitle = (title: string) => {
-        switch (title) {
-            case "video":
-                return "Videos"
-            case "image":
-                return "Images"
-            case "presentation":
-                return "Pitch decks"
-            case "document":
-                return "Documents"
-        }
+    const assetTypeMap: Record<string, string> = {
+        video: "Videos",
+        image: "Images",
+        presentation: "Pitch decks",
+        document: "Documents",
     }
 
     const updateOrAddAsset = (type: string, newAsset: AssetsData) => {
         setAssets((prevAssets) => 
             prevAssets.map((group) => {
-                if (group.type === convertTitle(type)) {
+                if (group.type === assetTypeMap[type] || "Unknown") {
                     const existingAssetIndex = group.asset.findIndex((item) => item.id === newAsset.id);
                     if (existingAssetIndex !== -1) {
                         const updatedAssets = [...group.asset];

@@ -95,10 +95,10 @@ const PartnersAssetsDocuments: React.FC<PartnersAseetsProps> = ({
                 <Typography
                 sx={{
                     fontFamily: "Roboto",
-                    color: "#202124",
+                    color: "#808080",
                     fontSize: "10px",
-                    fontWeight: "600",
-                    lineHeight: "14px",
+                    fontWeight: "400",
+                    lineHeight: "11.72px",
                     letterSpacing: "0.005em"
                 }}
                 >
