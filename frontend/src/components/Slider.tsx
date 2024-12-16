@@ -35,7 +35,7 @@ const Slider: React.FC<SliderProps> = ({ setShowSliders }) => {
     email: email || '',
   };
 
-  const buildUrl = () => {
+  const calendlyPopupUrl = () => {
     const baseUrl = "https://calendly.com/maximiz/activate-free-trial";
     const searchParams = new URLSearchParams();
   
@@ -229,7 +229,7 @@ const Slider: React.FC<SliderProps> = ({ setShowSliders }) => {
                       cursor: 'pointer',
                     }}
                     prefill={prefillData}
-                    url={buildUrl()}
+                    url={calendlyPopupUrl()}
                     rootElement={document.getElementById("calendly-popup-wrapper")!}
                     text="Reschedule a Call"
                   />
@@ -330,7 +330,7 @@ const Slider: React.FC<SliderProps> = ({ setShowSliders }) => {
                       textTransform: 'none',
                       cursor: 'pointer',
                     }}
-                    url={buildUrl()}
+                    url={calendlyPopupUrl()}
                     rootElement={document.getElementById("calendly-popup-wrapper")!}
                     text="Get Started"
                     prefill={prefillDataStorage}

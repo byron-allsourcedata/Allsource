@@ -211,7 +211,7 @@ export const SettingsSubscription: React.FC = () => {
         }
       };
     
-      const buildUrl = () => {
+      const calendlyPopupUrl = () => {
         const baseUrl = "https://calendly.com/maximiz-support/30min";
         const searchParams = new URLSearchParams();
       
@@ -774,7 +774,7 @@ export const SettingsSubscription: React.FC = () => {
                         }}>
                             <Box display="flex" justifyContent="flex-end" mt={2}>
                                 <Link
-                                    href={buildUrl()}
+                                    href={calendlyPopupUrl()}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     onClick={handleCustomPlanPopupClose}

@@ -251,7 +251,7 @@ const SupportSection: React.FC = () => {
     }
   };
 
-  const buildUrl = () => {
+  const calendlyPopupUrl = () => {
     const baseUrl = "https://calendly.com/maximiz-support/30min";
     const searchParams = new URLSearchParams();
   
@@ -355,7 +355,7 @@ const SupportSection: React.FC = () => {
                 textTransform: "none",
                 cursor: "pointer",
               }}
-              url={buildUrl()}
+              url={calendlyPopupUrl()}
               rootElement={rootElement}
               text="Schedule a call with us"
             />

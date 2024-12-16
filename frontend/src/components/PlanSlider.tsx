@@ -81,7 +81,7 @@ const PlanSlider: React.FC<PopupProps> = ({
         }
       };
     
-      const buildUrl = () => {
+      const calendlyPopupUrl = () => {
         const baseUrl = "https://calendly.com/maximiz/activate-free-trial";
         const searchParams = new URLSearchParams();
       
@@ -434,7 +434,7 @@ const PlanSlider: React.FC<PopupProps> = ({
                                 }}
                             >
                                 <Link
-                                    href={buildUrl()}
+                                    href={calendlyPopupUrl()}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     onClick={handleClose}
