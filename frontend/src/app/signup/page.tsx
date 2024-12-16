@@ -71,7 +71,7 @@ const Signup: React.FC = () => {
   }, [router]);
 
   useEffect(() => {
-    const utm_keys = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term"];
+    const utm_keys = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term", "awc"];
     const searchParams = new URLSearchParams(window.location.search);
     const utmParams: Record<string, string> = {};
 

@@ -169,6 +169,7 @@ class UsersAuth:
         shop_id = None
         coupon = auth_google_data.coupon
         ift = auth_google_data.ift
+        awc = auth_google_data.awc if auth_google_data.awc else auth_google_data.utm_params.awc
         
         if shopify_data:
             try:
@@ -229,7 +230,7 @@ class UsersAuth:
 
         customer_id = stripe_service.create_customer_google(google_payload)
         user_object = self.add_user(is_with_card=is_with_card, customer_id=customer_id, user_form=google_payload,
-                                    spi=auth_google_data.spi, awin_awc=auth_google_data.awc, access_token=shopify_access_token, shop_id=shop_id, shop_data=shopify_data, 
+                                    spi=auth_google_data.spi, awin_awc=awc, access_token=shopify_access_token, shop_id=shop_id, shop_data=shopify_data, 
                                     coupon=coupon, utm_params=auth_google_data.utm_params)
         
         if teams_token:
@@ -409,6 +410,7 @@ class UsersAuth:
         coupon = user_form.coupon
         shopify_access_token = None
         shop_id = None
+        awc = user_form.awc if user_form.awc else user_form.utm_params.awc
         ift = user_form.ift
         if shopify_data:
             try:
@@ -459,7 +461,7 @@ class UsersAuth:
             status = SignUpStatus.SUCCESS
             
         user_object = self.add_user(is_with_card=is_with_card, customer_id=customer_id, user_form=user_data,
-                                    spi=user_form.spi, awin_awc=user_form.awc, access_token=shopify_access_token, shop_id=shop_id, shop_data=shopify_data,
+                                    spi=user_form.spi, awin_awc=awc, access_token=shopify_access_token, shop_id=shop_id, shop_data=shopify_data,
                                     coupon=coupon, utm_params=user_form.utm_params)
         
         if teams_token:

@@ -21,6 +21,7 @@ class UtmParams(BaseModel):
     utm_campaign: Optional[str] = None
     utm_content: Optional[str] = None
     utm_term: Optional[str] = None
+    awc: Optional[str] = None
 
 class UserSignUpForm(BaseModel):
     full_name: str = Field(...)
