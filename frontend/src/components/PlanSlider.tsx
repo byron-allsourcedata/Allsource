@@ -1,5 +1,6 @@
 "use client";
 import React, { useLayoutEffect, useRef, useState } from "react";
+import axiosInstance from "../axios/axiosInterceptorInstance";
 import {
     Box,
     Button,
@@ -57,12 +58,52 @@ const PlanSlider: React.FC<PopupProps> = ({
     handleChoosePlan,
 }) => {
     const calendlyPopupRef = useRef<HTMLDivElement | null>(null);
+    const [utmParams, setUtmParams] = useState<string | null>(null);
     const [rootElement, setRootElement] = useState<HTMLElement | null>(null);
     useLayoutEffect(() => {
         if (calendlyPopupRef.current) {
+            fetchPrefillData();
             setRootElement(calendlyPopupRef.current);
         }
     }, []);
+
+    const fetchPrefillData = async () => {
+        try {
+          const response = await axiosInstance.get('/calendly');
+          const user = response.data.user;
+    
+          if (user) {
+            const { full_name, email, utm_params } = user;
+            setUtmParams(utm_params)
+          }
+        } catch (error) {
+          setUtmParams(null);
+        }
+      };
+    
+      const calendlyPopupUrl = () => {
+        const baseUrl = "https://calendly.com/maximiz/activate-free-trial";
+        const searchParams = new URLSearchParams();
+      
+        if (utmParams) {
+          try {
+            const parsedUtmParams = typeof utmParams === 'string' ? JSON.parse(utmParams) : utmParams;
+      
+            if (typeof parsedUtmParams === 'object' && parsedUtmParams !== null) {
+              Object.entries(parsedUtmParams).forEach(([key, value]) => {
+                if (value !== null && value !== undefined) {
+                  searchParams.append(key, value as string);
+                }
+              });
+            }
+          } catch (error) {
+            console.error("Error parsing utmParams:", error);
+          }
+        }
+      
+        const finalUrl = `${baseUrl}${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
+        return finalUrl;
+      };
 
     return (
         <>
@@ -393,7 +434,7 @@ const PlanSlider: React.FC<PopupProps> = ({
                                 }}
                             >
                                 <Link
-                                    href="https://calendly.com/maximiz/activate-free-trial"
+                                    href={calendlyPopupUrl()}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     onClick={handleClose}

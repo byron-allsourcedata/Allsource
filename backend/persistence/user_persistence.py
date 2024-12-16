@@ -109,7 +109,8 @@ class UserPersistence:
                 'source_platform': user.source_platform,
                 'shop_domain': user.shop_domain,
                 'shopify_token': user.shopify_token,
-                'connected_stripe_account_id': user.connected_stripe_account_id
+                'connected_stripe_account_id': user.connected_stripe_account_id,
+                'utm_params': user.utm_params
             }
         self.db.rollback()
         if result_as_object:

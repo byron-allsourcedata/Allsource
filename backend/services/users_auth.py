@@ -1,5 +1,6 @@
 import logging
 import os
+import json
 from datetime import datetime, timedelta
 from datetime import timezone
 
@@ -18,7 +19,7 @@ from persistence.plans_persistence import PlansPersistence
 from persistence.sendgrid_persistence import SendgridPersistence
 from persistence.user_persistence import UserPersistence
 from schemas.auth_google_token import AuthGoogleData
-from schemas.users import UserSignUpForm, UserLoginForm, ResetPasswordForm
+from schemas.users import UserSignUpForm, UserLoginForm, ResetPasswordForm, UtmParams
 from services.integrations.base import IntegrationService
 from schemas.integrations.integrations import ShopifyOrBigcommerceCredentials
 from services.payments_plans import PaymentsPlans
@@ -107,8 +108,10 @@ class UsersAuth:
         self.db.commit()
         return account_notification.id
 
-    def add_user(self, is_with_card, customer_id: str, user_form: dict, spi: str, awin_awc: str = None, shopify_access_token = None, shop_id = None, shopify_data = None, coupon = None):
+    def add_user(self, is_with_card: bool, customer_id: str, user_form: dict, spi: str, awin_awc: str, access_token: str, shop_id: str, 
+                 shop_data, coupon: str, utm_params: UtmParams):
         stripe_payment_url = None
+        shop_data = None
         if spi:
             plan = self.plan_persistence.get_plan_by_price_id(spi)
             if not plan:
@@ -122,6 +125,16 @@ class UsersAuth:
                 trial_period=trial_period,
                 coupon=coupon
             )
+            stripe_payment_url = stripe_payment_url.get('link')
+        
+        if shop_data and shop_data.shop:
+            shop_data = shop_data.shop
+            
+        utm_params_dict = utm_params.model_dump() if utm_params else {}
+        utm_params_cleaned = {key: value for key, value in utm_params_dict.items() if value is not None}
+        utm_params_json = json.dumps(utm_params_cleaned) if utm_params_cleaned else None
+
+            
         user_object = Users(
             email=user_form.get('email'),
             is_email_confirmed=user_form.get('is_email_confirmed', False),
@@ -133,13 +146,14 @@ class UsersAuth:
             customer_id=customer_id,
             last_signed_in=datetime.now(),
             added_on=datetime.now(),
-            stripe_payment_url=stripe_payment_url.get('link') if stripe_payment_url else None,
-            awin_awc = awin_awc if awin_awc else None,
+            stripe_payment_url=stripe_payment_url,
+            awin_awc = awin_awc,
             source_platform = SourcePlatformEnum.AWIN.value if awin_awc else None,
-            shop_id=shop_id if shop_id else None,
-            shopify_token=shopify_access_token if shopify_access_token else None,
-            shop_domain=shopify_data.shop if shopify_data and shopify_data.shop else None,
-            is_with_card=is_with_card
+            shop_id=shop_id,
+            shopify_token=access_token,
+            shop_domain=shop_data,
+            is_with_card=is_with_card,
+            utm_params=utm_params_json
         )
         self.db.add(user_object)
         self.db.commit()
@@ -155,6 +169,7 @@ class UsersAuth:
         shop_id = None
         coupon = auth_google_data.coupon
         ift = auth_google_data.ift
+        awc = auth_google_data.awc if auth_google_data.awc else auth_google_data.utm_params.awc
         
         if shopify_data:
             try:
@@ -215,7 +230,9 @@ class UsersAuth:
 
         customer_id = stripe_service.create_customer_google(google_payload)
         user_object = self.add_user(is_with_card=is_with_card, customer_id=customer_id, user_form=google_payload,
-                                    spi=auth_google_data.spi, awin_awc=auth_google_data.awc, coupon=coupon)
+                                    spi=auth_google_data.spi, awin_awc=awc, access_token=shopify_access_token, shop_id=shop_id, shop_data=shopify_data, 
+                                    coupon=coupon, utm_params=auth_google_data.utm_params)
+        
         if teams_token:
             notification_id = self.save_account_notification(user_object.id, NotificationTitles.TEAM_MEMBER_ADDED.value)
             self.send_member_notification(user_id=owner_id, title=NotificationTitles.TEAM_MEMBER_ADDED.value, notification_id=notification_id)
@@ -393,6 +410,7 @@ class UsersAuth:
         coupon = user_form.coupon
         shopify_access_token = None
         shop_id = None
+        awc = user_form.awc if user_form.awc else user_form.utm_params.awc
         ift = user_form.ift
         if shopify_data:
             try:
@@ -443,8 +461,8 @@ class UsersAuth:
             status = SignUpStatus.SUCCESS
             
         user_object = self.add_user(is_with_card=is_with_card, customer_id=customer_id, user_form=user_data,
-                                    spi=user_form.spi, awin_awc=user_form.awc, shopify_access_token=shopify_access_token, shop_id=shop_id, shopify_data=shopify_data,
-                                    coupon=coupon)
+                                    spi=user_form.spi, awin_awc=awc, access_token=shopify_access_token, shop_id=shop_id, shop_data=shopify_data,
+                                    coupon=coupon, utm_params=user_form.utm_params)
         
         if teams_token:
             notification_id = self.save_account_notification(user_object.id, NotificationTitles.TEAM_MEMBER_ADDED.value)
