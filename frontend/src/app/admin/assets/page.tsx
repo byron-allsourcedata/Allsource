@@ -2,8 +2,9 @@
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { Box} from "@mui/material";
 import { useEffect, useState} from "react";
-import { useRouter } from "next/navigation";
+import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import PartnersAsset from '@/components/PartnersAsset';
+
 
 interface AssetsData {
     id: number;
@@ -24,17 +25,7 @@ interface PartnersAssetsData {
 const Assets: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [assets, setAssets] = useState<PartnersAssetsData[]>([{type: "Videos", asset: []}, {type: "Pitch decks", asset: []}, {type: "Images", asset: []}, {type: "Documents", asset: []}, ]);
-    const router = useRouter();
-    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-    const open = Boolean(anchorEl);
 
-    const handleProfileMenuClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-        setAnchorEl(event.currentTarget);
-    };
-
-    const handleProfileMenuClose = () => {
-        setAnchorEl(null);
-    };
 
     const fetchRewards = async () => {
         setLoading(true);
@@ -88,10 +79,23 @@ const Assets: React.FC = () => {
         );
     };
 
+    const convertTitle = (title: string) => {
+        switch (title) {
+            case "video":
+                return "Videos"
+            case "image":
+                return "Images"
+            case "presentation":
+                return "Pitch decks"
+            case "document":
+                return "Documents"
+        }
+    }
+
     const updateOrAddAsset = (type: string, newAsset: AssetsData) => {
         setAssets((prevAssets) => 
             prevAssets.map((group) => {
-                if (group.asset[0]?.type === type) {
+                if (group.type === convertTitle(type)) {
                     const existingAssetIndex = group.asset.findIndex((item) => item.id === newAsset.id);
                     if (existingAssetIndex !== -1) {
                         const updatedAssets = [...group.asset];
@@ -108,6 +112,9 @@ const Assets: React.FC = () => {
 
     return (
         <>
+            {loading &&
+                <CustomizedProgressBar />
+            }
             <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }} >
                 {assets.map((data, index) => (
                     <PartnersAsset deleteAsset={handleDeleteAsset} updateOrAddAsset={updateOrAddAsset} key={index} data={data} isAdmin={true} />

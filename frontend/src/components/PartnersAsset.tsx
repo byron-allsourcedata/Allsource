@@ -4,7 +4,6 @@ import PartnersAssetsVideo from '@/components/PartnersAssetsVideo';
 import PartnersAssetsImage from '@/components/PartnersAssetsImage';
 import PartnersAssetsDocuments from '@/components/PartnersAssetsDocuments';
 import FormDownloadPopup from '@/components/FormDownloadPopup'
-import axiosInstance from "@/axios/axiosInterceptorInstance";
 
 interface AssetsData {
     id: number;
@@ -25,13 +24,14 @@ interface PartnersAssetsData {
 interface PartnersAssetProps {
     updateOrAddAsset?: (type: string, newAsset: AssetsData) => void;
     data: PartnersAssetsData;
-    deleteAsset: any
+    deleteAsset?: any
     toggleFavorite?: (id: number) => void
     isAdmin?: boolean
   }
 
 const PartnersAsset: React.FC<PartnersAssetProps> = ({data, deleteAsset, updateOrAddAsset = () => {}, toggleFavorite = () => {}, isAdmin = false}) => {
     const [formPopupOpen, setFormPopupOpen] = useState(false);
+    const [typeAsset, setTypeAsset] = useState("video")
     const [fileData, setFileData] = useState<any>(null);
     const [adminMenuOpen, setAdminMenuOpen] = useState(false);
     const [anchorEl, setAnchorEl] = useState(null);
@@ -41,8 +41,28 @@ const PartnersAsset: React.FC<PartnersAssetProps> = ({data, deleteAsset, updateO
         window.history.back;
     };
 
-    const handleFormOpenPopup = () => {
+    const handleFormOpenPopup = (type: string | null = null) => {
         setFormPopupOpen(true)
+        if(type) {
+            handleTypeAsset(type)
+        }
+    }
+
+    const handleTypeAsset = (type: string) => {
+        switch (type) {
+            case "Videos":
+                setTypeAsset("video")
+                break
+            case "Images":
+                setTypeAsset("image")
+                break
+            case "Pitch decks":
+                setTypeAsset("presentation")
+                break
+            case "Documents":
+                setTypeAsset("document")
+                break
+        }
     }
 
     const handleFormClosePopup = () => {
@@ -62,7 +82,8 @@ const PartnersAsset: React.FC<PartnersAssetProps> = ({data, deleteAsset, updateO
 
     const handleEditAsset = (item: AssetsData) => {
         setAdminMenuOpen(false)
-        setFileData({ id: item.id, title: item.title, type: item.type});
+        setTypeAsset(item.type)
+        setFileData({ id: item.id, title: item.title});
         handleFormOpenPopup();
     };
 
@@ -131,8 +152,8 @@ const PartnersAsset: React.FC<PartnersAssetProps> = ({data, deleteAsset, updateO
                         open={formPopupOpen} 
                         onClose={handleFormClosePopup} 
                         updateOrAddAsset={updateOrAddAsset}
-                        action={"Add"} />
-                    {isAdmin && <Box onClick={() => handleFormOpenPopup()} sx={{ 
+                        type={typeAsset} />
+                    {isAdmin && <Box onClick={() => handleFormOpenPopup(data.type)} sx={{ 
                         border: "1px dashed rgba(80, 82, 178, 1)", 
                         width: "62px", 
                         height: "62px", 

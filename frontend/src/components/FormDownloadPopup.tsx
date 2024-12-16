@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { ChangeEvent, useState, useEffect } from 'react';
 import { Drawer, Box, Typography, Button, IconButton, TextField } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import FileUploadOutlinedIcon from '@mui/icons-material/FileUploadOutlined';
@@ -18,27 +18,33 @@ interface AssetsData {
 
 interface FormDownloadPopupProps {
     updateOrAddAsset: (type: string, newAsset: AssetsData) => void;
-    fileData: any
+    fileData: {id: string, title: string}
     open: boolean;
     onClose: () => void;
-    action: any
+    type: string
 }
 
-const FormDownloadPopup: React.FC<FormDownloadPopupProps> = ({ updateOrAddAsset, fileData, open, onClose, action: initialAction }) => {
+interface FileObject extends File{   
+    name: string;
+    type: string; 
+    sizesStr: string; 
+}
+
+const FormDownloadPopup: React.FC<FormDownloadPopupProps> = ({ updateOrAddAsset, fileData, open, onClose, type }) => {
     const [action, setAction] = useState("Add");
-    const [actionType, setActionType] = useState("video");
+    const [actionType, setActionType] = useState<keyof typeof allowedExtensions>("video");
     const [dragActive, setDragActive] = useState(false);
     const [buttonContain, setButtonContain] = useState(false);
-    const [file, setFile] = useState<any>(null);
-    const [fileObject, setFileobjet] = useState<any>(null);
+    const [file, setFile] = useState<File | null>(null);
+    const [fileObject, setFileobjet] = useState<FileObject | null>(null);
     const [preview, setPreview] = useState<string | null>(null);
     const [fileSizeError, setFileSizeError] = useState(false); 
     const [description, setDescription] = useState(""); 
 
     const allowedExtensions = {
-        image: ["jpg", "png"],
-        video: ["mp4"],
-        document: ["pdf", "xsl"],
+        image: ["jpg", "png", "jpeg", "gif", "webp", "svg", "tiff", "bmp", "heic", "heif"],
+        video: ["mp4", "mov", "avi", "mkv"],
+        document: ["pdf", "xslx"],
         presentation: ["pptx"],
     };
 
@@ -62,9 +68,9 @@ const FormDownloadPopup: React.FC<FormDownloadPopupProps> = ({ updateOrAddAsset,
         }
     };
 
-    const processDownloadFile = (uploadedFile: any) => {
+    const processDownloadFile = (uploadedFile: File) => {
         const fileNameWithoutExtension = uploadedFile.name.split('.').slice(0, -1).join('.');
-        const fileSize = parseInt((uploadedFile.size / (1024 * 1024)).toFixed(2))
+        const fileSize = parseFloat((uploadedFile.size / (1024 * 1024)).toFixed(2));
         const fileExtension = uploadedFile.name.split(".").pop()?.toLowerCase();
         if (fileSize > 30){
             setFileSizeError(true)
@@ -92,14 +98,16 @@ const FormDownloadPopup: React.FC<FormDownloadPopupProps> = ({ updateOrAddAsset,
         setFileobjet({...uploadedFile, 
             name:  uploadedFile.name,
             type: uploadedFile.type.split("/")[0],
-            size: fileSize + " MB"});
+            sizesStr: fileSize + " MB"});
         setDescription(fileNameWithoutExtension);
         setButtonContain(true)
     }
 
-    const handleFileUpload = (event: any) => {
+    const handleFileUpload = (event: ChangeEvent<HTMLInputElement>) => {
         setFileSizeError(false)
-        processDownloadFile(event.target.files[0]);
+        if (event.target.files && event.target.files[0]) {
+            processDownloadFile(event.target.files[0]);
+        }
     };
 
     const handleDeleteFile = () => {
@@ -131,7 +139,7 @@ const FormDownloadPopup: React.FC<FormDownloadPopupProps> = ({ updateOrAddAsset,
                     headers: { "Content-Type": "multipart/form-data" },
                 });
             } else {
-                formData.append("type", "document");
+                formData.append("type", type);
                 response = await axiosInstance.post(`partners-assets/`, formData, {
                     headers: { "Content-Type": "multipart/form-data" },
                 });
@@ -145,17 +153,19 @@ const FormDownloadPopup: React.FC<FormDownloadPopupProps> = ({ updateOrAddAsset,
     };
 
     useEffect(() => {
-        if (fileData && fileData.title) {
+        if (fileData) {
             setDescription(fileData.title);
             setButtonContain(true)
             setAction("Edit")
-            setActionType(fileData.type)
         }
     }, [fileData]);
 
     useEffect(() => {
+        if(type){
+            setActionType(type as keyof typeof allowedExtensions)
+        }
         setButtonContain(description.trim().length > 0);
-    }, [description]);
+    }, [description, type]);
 
     
     return (
@@ -181,7 +191,7 @@ const FormDownloadPopup: React.FC<FormDownloadPopupProps> = ({ updateOrAddAsset,
                     lineHeight: "21.82px"
                 }}
                 >
-                {action} {actionType}
+                {action} {type}
                 </Typography>
                 <Box sx={{ display: "flex", flexDirection: "row" }}>
                     <IconButton onClick={handleClose}>
@@ -207,7 +217,7 @@ const FormDownloadPopup: React.FC<FormDownloadPopupProps> = ({ updateOrAddAsset,
                                 margin: "24px 0 40px"
                             }}
                             >
-                            Upload and manage your {actionType}, all in one centralised section.
+                            Upload and manage your {type}, all in one centralised section.
                         </Typography>    
                                         
                         <TextField
@@ -257,7 +267,7 @@ const FormDownloadPopup: React.FC<FormDownloadPopupProps> = ({ updateOrAddAsset,
                                 color: "rgba(80, 82, 178, 1)",
                                 }}
                             >
-                                Upload a files
+                                Upload a file
                             </Button>
                             <input
                                 id="fileInput"
@@ -277,7 +287,8 @@ const FormDownloadPopup: React.FC<FormDownloadPopupProps> = ({ updateOrAddAsset,
                                 fontWeight: fileSizeError ? "600" : "400"
                             }}
                             >
-                            MP4,formats up to 30MB
+                            {allowedExtensions[actionType]?.join(', ')}, formats up to 30MB
+                            {/* {allowedExtensions["image"]?.join(', ')}, formats up to 30MB */}
                         </Typography>  
                 </Box>
                     <Box sx={{ marginTop: "16px" }}>
@@ -323,7 +334,7 @@ const FormDownloadPopup: React.FC<FormDownloadPopupProps> = ({ updateOrAddAsset,
                                 color: "rgba(120, 120, 120, 1)",
                             }}
                             >
-                            {fileObject.size}
+                            {fileObject.sizesStr}
                             </Typography>
                         </Box>
                         <IconButton onClick={handleDeleteFile}>
