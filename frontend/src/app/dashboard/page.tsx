@@ -299,35 +299,6 @@ const SupportSection: React.FC = () => {
           sx={{ rowGap: "24px", display: "flex" }}
         >
           <div id="calendly-popup-wrapper" ref={calendlyPopupRef} />
-          {rootElement && (
-            <PopupButton
-              className="book-call-button"
-              styles={{
-                marginLeft: '1.6em',
-                textWrap: "nowrap",
-                color: "rgba(80, 82, 178, 1)",
-                fontFamily: "Nunito Sans",
-                border: "none",
-                textDecoration: "none",
-                fontWeight: 600,
-                fontSize: "14px",
-                lineHeight: "22.4px",
-                backgroundColor: "transparent",
-                textTransform: "none",
-                cursor: "pointer",
-              }}
-              url="https://calendly.com/maximiz-support/30min"
-              rootElement={rootElement}
-              text="Schedule a call with us"
-            />
-          )}
-          <Image
-            src={"/headphones.svg"}
-            alt="headphones"
-            width={20}
-            height={20}
-
-          />
           <Button
             onClick={sendEmail}
             sx={{
