@@ -158,6 +158,11 @@ class UserPersistence:
         if query:
             self.db.query(Users).filter(Users.id == user_id).update({"is_email_confirmed": True})
             self.db.commit()
+            
+    def book_call_confirmed(self, user_id: int):
+        self.db.query(Users).filter(Users.id == user_id).update({Users.is_book_call_passed: True},
+                                                                synchronize_session=False)
+        self.db.commit()
 
     def update_password(self, user_id: int, password: str):
         self.db.query(Users).filter(Users.id == user_id).update({Users.password: password},
