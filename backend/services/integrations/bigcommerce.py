@@ -2,15 +2,18 @@ import hashlib
 import os
 from typing import List
 from sqlalchemy.orm import Session
+import requests
+from jose import JWTError
 from models.users_domains import UserDomains
 from enums import IntegrationsStatus, SourcePlatformEnum
-from schemas.integrations.integrations import IntegrationCredentials, OrderAPI
+from schemas.integrations.integrations import IntegrationCredentials, OrderAPI, ShopifyOrBigcommerceCredentials
 from schemas.integrations.bigcommerce import BigCommerceInfo
 from persistence.leads_persistence import LeadsPersistence
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
 from services.aws import AWSService
+from bigcommerce.api import BigcommerceApi
 from httpx import Client
-from fastapi import HTTPException
+from fastapi import HTTPException, status
 from datetime import datetime, timedelta
 from persistence.leads_order_persistence import LeadOrdersPersistence
 from persistence.integrations.external_apps_installations import ExternalAppsInstallationsPersistence
@@ -106,7 +109,33 @@ class BigcommerceIntegrationsService:
         if not integration:
             raise HTTPException(status_code=409, detail=IntegrationsStatus.CREATE_IS_FAILED.value)
         return integration
+    
+    def oauth_bigcommerce_load(self, signed_payload, signed_payload_jwt):
+        try:
+            payload = BigcommerceApi.oauth_verify_payload(signed_payload, os.getenv("BIGCOMMERCE_CLIENT_SECRET"))
+            payload_jwt = BigcommerceApi.oauth_verify_payload_jwt(signed_payload_jwt, os.getenv("BIGCOMMERCE_CLIENT_SECRET"), os.getenv("BIGCOMMERCE_CLIENT_ID"))
+        except JWTError:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid Request [JWT]")
+        if not payload or not payload_jwt:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid Request [NON]")
         
+        return {"status": "OK"}
+    
+    def oauth_bigcommerce_uninstall(self, signed_payload, signed_payload_jwt):
+        try:
+            payload = BigcommerceApi.oauth_verify_payload(signed_payload, os.getenv("BIGCOMMERCE_CLIENT_SECRET"))
+            payload_jwt = BigcommerceApi.oauth_verify_payload_jwt(signed_payload_jwt, os.getenv("BIGCOMMERCE_CLIENT_SECRET"), os.getenv("BIGCOMMERCE_CLIENT_ID"))
+        except JWTError:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid Request [JWT]")
+        if not payload or not payload_jwt:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid Request [NON]")
+        
+        user_integration = self.integration_persistence.get_integration_by_shop_url(shop_id=payload.get("store_hash"))
+        if user_integration:
+            self.db.delete(user_integration)
+            self.db.commit()
+            
+        return {"status": "OK"}
 
     def add_integration_with_app(self, new_credentials: IntegrationCredentials, domain, user: dict):
         credentials = self.get_credentials(domain_id=domain.id)

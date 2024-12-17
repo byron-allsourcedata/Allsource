@@ -146,8 +146,6 @@ async def set_suppression(suppression_data: SupperssionSet, service_name: str = 
 
 @router.get("/bigcommerce/oauth")
 async def bigcommerce_redirect_login(store_hash: str = Query(...), is_pixel_install: bool = Query(False), user = Depends(check_user_authentication), domain = Depends(check_domain)):
-    # scope = ['store_v2_orders_read_only', 'store_v2_content', 'store_v2_information_read_only']
-
     params = {
         "client_id": BigcommerceConfig.client_id,
         'context': f'stores/{store_hash}',
@@ -163,10 +161,9 @@ async def bigcommerce_redirect_login(store_hash: str = Query(...), is_pixel_inst
         'url': authorize_url
     }
     
-@router.get("/bigcommerce/auth")
+@router.get("/bigcommerce/auth/callback")
 def bigcommerce_auth(code: Optional[str], context: Optional[str], scope: Optional[str], integration_service: IntegrationService = Depends(get_integration_service),
                                      user_persistence: UserPersistence = Depends(get_user_persistence_service), domain_persistence: UserDomainsPersistence = Depends(get_user_domain_persistence), state: str = Query(None)):
-    state.qwe = 1
     status_oauth = False
     payload = {
         'client_id': BigcommerceConfig.client_id,
@@ -217,41 +214,14 @@ def bigcommerce_auth(code: Optional[str], context: Optional[str], scope: Optiona
             return RedirectResponse(BigcommerceConfig.external_app_installed)
     
 @router.get("/bigcommerce/uninstall", status_code=status.HTTP_200_OK)
-def oauth_bigcommerce_uninstall(signed_payload: Annotated[str, Query()], signed_payload_jwt: Annotated[str, Query()]):
-    signed_payload.qwe=123
-    # try:
-    #     payload = BigcommerceApi.oauth_verify_payload(signed_payload, BigcommerceConfig.client_secret)
-    #     payload_jwt = BigcommerceApi.oauth_verify_payload_jwt(signed_payload_jwt, BigcommerceConfig.client_secret, BigcommerceConfig.client_id)
-    # except JWTError:
-    #     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid Request [JWT]")
-    # if not payload or not payload_jwt:
-    #     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid Request [NON]")
-    # logger.info(payload)
-    # logger.info(payload_jwt)
-    # bigcommerce_token = db.query(BigcommerceToken).filter(BigcommerceToken.store == payload.get("store_hash")).first()
-    # if bigcommerce_token:
-    #     db.delete(bigcommerce_token)
-    #     db.commit()
-    # return {"status": "OK"}
+def oauth_bigcommerce_uninstall(signed_payload: Annotated[str, Query()], signed_payload_jwt: Annotated[str, Query()], integration_service: IntegrationService = Depends(get_integration_service)):
+    with integration_service as service:
+        return service.bigcommerce.oauth_bigcommerce_uninstall(signed_payload=signed_payload, signed_payload_jwt=signed_payload_jwt)
 
 @router.get("/bigcommerce/load", status_code=status.HTTP_200_OK)
-def oauth_bigcommerce_load(signed_payload: Annotated[str, Query()], signed_payload_jwt: Annotated[str, Query()]):
-    signed_payload.zxc=123
-    # try:
-    #     payload = BigcommerceApi.oauth_verify_payload(signed_payload, BigcommerceConfig.client_secret)
-    #     payload_jwt = BigcommerceApi.oauth_verify_payload_jwt(signed_payload_jwt, BigcommerceConfig.client_secret, BigcommerceConfig.client_id)
-    # except JWTError:
-    #     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid Request [JWT]")
-    # if not payload or not payload_jwt:
-    #     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid Request [NON]")
-    # logger.info(payload)
-    # logger.info(payload_jwt)
-    # bigcommerce_token = db.query(BigcommerceToken).filter(BigcommerceToken.store == payload.get("store_hash")).first()
-    # if bigcommerce_token:
-    #     db.delete(bigcommerce_token)
-    #     db.commit()
-    # return {"status": "OK"}
-    
+def oauth_bigcommerce_load(signed_payload: Annotated[str, Query()], signed_payload_jwt: Annotated[str, Query()], integration_service: IntegrationService = Depends(get_integration_service)):
+    with integration_service as service:
+        return service.bigcommerce.oauth_bigcommerce_load(signed_payload=signed_payload, signed_payload_jwt=signed_payload_jwt)
 
 @router.get('/eai')
 async def get_eais_platform(platform: str = Query(...), integration_service: IntegrationService = Depends(get_integration_service), user = Depends(check_user_authorization)):
