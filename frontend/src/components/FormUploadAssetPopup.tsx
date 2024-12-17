@@ -18,7 +18,7 @@ interface AssetsData {
 
 interface FormDownloadPopupProps {
     updateOrAddAsset: (type: string, newAsset: AssetsData) => void;
-    fileData: {id: string, title: string}
+    fileData: {id: number, title: string} | null
     open: boolean;
     onClose: () => void;
     type: string
@@ -134,7 +134,7 @@ const FormDownloadPopup: React.FC<FormDownloadPopupProps> = ({ updateOrAddAsset,
         try {
             let response;
     
-            if (action === "Edit" && fileData.id) {
+            if (action === "Edit" && fileData && fileData.id) {
                 response = await axiosInstance.put(`partners-assets/${fileData.id}/`, formData, {
                     headers: { "Content-Type": "multipart/form-data" },
                 });
@@ -288,7 +288,6 @@ const FormDownloadPopup: React.FC<FormDownloadPopupProps> = ({ updateOrAddAsset,
                             }}
                             >
                             {allowedExtensions[actionType]?.join(', ')}, formats up to 30MB
-                            {/* {allowedExtensions["image"]?.join(', ')}, formats up to 30MB */}
                         </Typography>  
                 </Box>
                     <Box sx={{ marginTop: "16px" }}>

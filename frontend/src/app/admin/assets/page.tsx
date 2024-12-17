@@ -89,7 +89,7 @@ const Assets: React.FC = () => {
     const updateOrAddAsset = (type: string, newAsset: AssetsData) => {
         setAssets((prevAssets) => 
             prevAssets.map((group) => {
-                if (group.type === assetTypeMap[type] || "Unknown") {
+                if (group.type === assetTypeMap[type]) {
                     const existingAssetIndex = group.asset.findIndex((item) => item.id === newAsset.id);
                     if (existingAssetIndex !== -1) {
                         const updatedAssets = [...group.asset];

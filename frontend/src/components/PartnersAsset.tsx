@@ -3,7 +3,7 @@ import { Box, Typography} from "@mui/material";
 import PartnersAssetsVideo from '@/components/PartnersAssetsVideo';
 import PartnersAssetsImage from '@/components/PartnersAssetsImage';
 import PartnersAssetsDocuments from '@/components/PartnersAssetsDocuments';
-import FormDownloadPopup from '@/components/FormDownloadPopup'
+import FormUploadAssetPopup from '@/components/FormUploadAssetPopup'
 
 interface AssetsData {
     id: number;
@@ -24,17 +24,17 @@ interface PartnersAssetsData {
 interface PartnersAssetProps {
     updateOrAddAsset?: (type: string, newAsset: AssetsData) => void;
     data: PartnersAssetsData;
-    deleteAsset?: any
+    deleteAsset?: (id: number) => void
     toggleFavorite?: (id: number) => void
     isAdmin?: boolean
   }
 
-const PartnersAsset: React.FC<PartnersAssetProps> = ({data, deleteAsset, updateOrAddAsset = () => {}, toggleFavorite = () => {}, isAdmin = false}) => {
+const PartnersAsset: React.FC<PartnersAssetProps> = ({data, deleteAsset = () => {}, updateOrAddAsset = () => {}, toggleFavorite = () => {}, isAdmin = false}) => {
     const [formPopupOpen, setFormPopupOpen] = useState(false);
     const [typeAsset, setTypeAsset] = useState("video")
-    const [fileData, setFileData] = useState<any>(null);
+    const [fileData, setFileData] = useState<{id: number, title: string} | null>(null);
     const [adminMenuOpen, setAdminMenuOpen] = useState(false);
-    const [anchorEl, setAnchorEl] = useState(null);
+    const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
 
     const handleDownloadFile = (fileUrl: string) => {;
         window.location.href = fileUrl;
@@ -70,7 +70,7 @@ const PartnersAsset: React.FC<PartnersAssetProps> = ({data, deleteAsset, updateO
     }
 
 
-    const handleAdminMenu = (e: any) => {
+    const handleAdminMenu = (e: React.MouseEvent<HTMLElement>) => {
         setAdminMenuOpen((prevState) => !prevState)
         setAnchorEl(e.currentTarget);
     }
@@ -147,7 +147,7 @@ const PartnersAsset: React.FC<PartnersAssetProps> = ({data, deleteAsset, updateO
                                 />
                         }
                     })}
-                    <FormDownloadPopup 
+                    <FormUploadAssetPopup 
                         fileData={fileData} 
                         open={formPopupOpen} 
                         onClose={handleFormClosePopup} 

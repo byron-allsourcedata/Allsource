@@ -1,5 +1,4 @@
 import { IconButton, Typography } from "@mui/material";
-import { useState } from 'react';
 import DownloadIcon from '@mui/icons-material/Download';
 import { Box } from "@mui/system";
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
@@ -26,11 +25,11 @@ interface PartnersAseetsProps {
     handleDownloadFile: (fileUrl: string) => void;
     asset: AssetsData;
     isAdmin: boolean;
-    handleDeleteAsset: any;
-    handleEditAsset: any;
-    handleAdminMenu: any;
-    adminMenuOpen: any;
-    anchorEl: any
+    handleDeleteAsset: (id: number) => void;
+    handleEditAsset: () => void;
+    handleAdminMenu: (e: React.MouseEvent<HTMLElement>) => void;
+    adminMenuOpen: boolean;
+    anchorEl: HTMLElement | null;
 }
 
 const PartnersAssetsDocuments: React.FC<PartnersAseetsProps> = ({
