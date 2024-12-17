@@ -1,12 +1,13 @@
 import logging
 import os
+import json
 from datetime import datetime, timedelta
 from datetime import timezone
 
 from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token
 from sqlalchemy.orm import Session
-
+from fastapi import HTTPException, status
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 from enums import SignUpStatus, LoginStatus, ResetPasswordEnum, \
     VerifyToken, UserAuthorizationStatus, SendgridTemplate, NotificationTitles, SourcePlatformEnum, OauthShopify
@@ -18,7 +19,7 @@ from persistence.plans_persistence import PlansPersistence
 from persistence.sendgrid_persistence import SendgridPersistence
 from persistence.user_persistence import UserPersistence
 from schemas.auth_google_token import AuthGoogleData
-from schemas.users import UserSignUpForm, UserLoginForm, ResetPasswordForm
+from schemas.users import UserSignUpForm, UserLoginForm, ResetPasswordForm, UtmParams
 from services.integrations.base import IntegrationService
 from schemas.integrations.integrations import ShopifyOrBigcommerceCredentials
 from services.payments_plans import PaymentsPlans
@@ -107,16 +108,33 @@ class UsersAuth:
         self.db.commit()
         return account_notification.id
 
-    def add_user(self, is_without_card, customer_id: str, user_form: dict, spi: str, awin_awc: str = None, shopify_access_token = None, shop_id = None, shopify_data = None):
+    def add_user(self, is_with_card: bool, customer_id: str, user_form: dict, spi: str, awin_awc: str, access_token: str, shop_id: str, 
+                 shop_data, coupon: str, utm_params: UtmParams):
         stripe_payment_url = None
+        shop_data = None
         if spi:
-            trial_period = self.plan_persistence.get_plan_by_price_id(spi).trial_days
+            plan = self.plan_persistence.get_plan_by_price_id(spi)
+            if not plan:
+                raise HTTPException(status.HTTP_404_NOT_FOUND, detail={'error': 'spi with this value does not exist'})
+            
+            trial_period = plan.trial_days
             stripe_payment_url = create_stripe_checkout_session(
                 customer_id=customer_id,
                 line_items=[{"price": spi, "quantity": 1}],
                 mode="subscription",
-                trial_period=trial_period
+                trial_period=trial_period,
+                coupon=coupon
             )
+            stripe_payment_url = stripe_payment_url.get('link')
+        
+        if shop_data and shop_data.shop:
+            shop_data = shop_data.shop
+            
+        utm_params_dict = utm_params.model_dump() if utm_params else {}
+        utm_params_cleaned = {key: value for key, value in utm_params_dict.items() if value is not None}
+        utm_params_json = json.dumps(utm_params_cleaned) if utm_params_cleaned else None
+
+            
         user_object = Users(
             email=user_form.get('email'),
             is_email_confirmed=user_form.get('is_email_confirmed', False),
@@ -128,15 +146,15 @@ class UsersAuth:
             customer_id=customer_id,
             last_signed_in=datetime.now(),
             added_on=datetime.now(),
-            stripe_payment_url=stripe_payment_url.get('link') if stripe_payment_url else None,
-            awin_awc = awin_awc if awin_awc else None,
+            stripe_payment_url=stripe_payment_url,
+            awin_awc = awin_awc,
             source_platform = SourcePlatformEnum.AWIN.value if awin_awc else None,
-            shop_id=shop_id if shop_id else None,
-            shopify_token=shopify_access_token if shopify_access_token else None,
-            shop_domain=shopify_data.shop if shopify_data and shopify_data.shop else None
+            shop_id=shop_id,
+            shopify_token=access_token,
+            shop_domain=shop_data,
+            is_with_card=is_with_card,
+            utm_params=utm_params_json
         )
-        if not is_without_card:
-            user_object.is_with_card = True
         self.db.add(user_object)
         self.db.commit()
         return user_object
@@ -149,6 +167,10 @@ class UsersAuth:
         shopify_data = auth_google_data.shopify_data
         shopify_access_token = None
         shop_id = None
+        coupon = auth_google_data.coupon
+        ift = auth_google_data.ift
+        awc = auth_google_data.awc if auth_google_data.awc else auth_google_data.utm_params.awc
+        ftd = auth_google_data.ftd
         
         if shopify_data:
             try:
@@ -171,7 +193,7 @@ class UsersAuth:
                 }
         
         google_request = google_requests.Request()
-        is_without_card = auth_google_data.is_without_card
+        is_with_card = auth_google_data.is_with_card
         idinfo = id_token.verify_oauth2_token(str(auth_google_data.token), google_request, client_id)
         if idinfo:
             if teams_token:
@@ -208,8 +230,10 @@ class UsersAuth:
             }
 
         customer_id = stripe_service.create_customer_google(google_payload)
-        user_object = self.add_user(is_without_card=is_without_card, customer_id=customer_id, user_form=google_payload,
-                                    spi=auth_google_data.spi, awin_awc=auth_google_data.awc)
+        user_object = self.add_user(is_with_card=is_with_card, customer_id=customer_id, user_form=google_payload,
+                                    spi=auth_google_data.spi, awin_awc=awc, access_token=shopify_access_token, shop_id=shop_id, shop_data=shopify_data, 
+                                    coupon=coupon, utm_params=auth_google_data.utm_params)
+        
         if teams_token:
             notification_id = self.save_account_notification(user_object.id, NotificationTitles.TEAM_MEMBER_ADDED.value)
             self.send_member_notification(user_id=owner_id, title=NotificationTitles.TEAM_MEMBER_ADDED.value, notification_id=notification_id)
@@ -230,6 +254,11 @@ class UsersAuth:
             self._process_shopify_integration(user_object, shopify_data, shopify_access_token, shop_id)
 
         self.user_persistence_service.email_confirmed(user_object.id)
+        
+        if ift and ift == 'arwt':
+            self.user_persistence_service.book_call_confirmed(user_object.id)
+            self.subscription_service.create_subscription_from_free_trial(user_id=user_object.id, ftd=ftd)
+            
         if not user_object.is_with_card:
             return {
                 'status': SignUpStatus.FILL_COMPANY_DETAILS,
@@ -241,21 +270,27 @@ class UsersAuth:
             'token': token,
         }
 
-    def get_user_authorization_information(self, user: Users, subscription_service: SubscriptionService):
+    def get_user_authorization_information(self, user: Users):
         if user.is_with_card:
             if user.company_name:
-                subscription_plan_is_active = subscription_service.is_user_has_active_subscription(user.id)
+                subscription_plan_is_active = self.subscription_service.is_user_has_active_subscription(user.id)
                 if subscription_plan_is_active:
                     return {'status': LoginStatus.SUCCESS}
                 else:
-                    return {'status': LoginStatus.NEED_CHOOSE_PLAN}
+                    if user.stripe_payment_url:
+                        return {
+                            'status': LoginStatus.PAYMENT_NEEDED,
+                            'stripe_payment_url': user.stripe_payment_url
+                        }
+                    else:
+                        return {'status': LoginStatus.NEED_CHOOSE_PLAN}
             else:
                 return {'status': LoginStatus.FILL_COMPANY_DETAILS}
         else:
             if user.is_email_confirmed:
                 if user.company_name:
                     if user.is_book_call_passed:
-                        subscription_plan_is_active = subscription_service.is_user_has_active_subscription(user.id)
+                        subscription_plan_is_active = self.subscription_service.is_user_has_active_subscription(user.id)
                         if subscription_plan_is_active:
                             if user.is_pixel_installed:
                                 return {'status': LoginStatus.SUCCESS}
@@ -332,12 +367,12 @@ class UsersAuth:
                 else:
                     shopify_status = OauthShopify.NON_SHOPIFY_ACCOUNT
             
-            authorization_data = self.get_user_authorization_information(user_object, self.subscription_service)
+            authorization_data = self.get_user_authorization_information(user_object)
             if authorization_data['status'] == LoginStatus.PAYMENT_NEEDED:
                 return {
                     'status': authorization_data['status'].value,
                     'token': token,
-                    'stripe_payment_url': authorization_data['stripe_payment_url']
+                    'stripe_payment_url': authorization_data.get('stripe_payment_url')
                 }
             if authorization_data['status'] != UserAuthorizationStatus.SUCCESS:
                 return {
@@ -374,8 +409,12 @@ class UsersAuth:
         owner_id = None
         shopify_data = user_form.shopify_data
         teams_token = user_form.teams_token
+        coupon = user_form.coupon
         shopify_access_token = None
         shop_id = None
+        awc = user_form.awc if user_form.awc else user_form.utm_params.awc
+        ift = user_form.ift
+        ftd = user_form.ftd
         if shopify_data:
             try:
                 with self.integration_service as service:
@@ -407,7 +446,7 @@ class UsersAuth:
             owner_id = status_result['team_owner_id']
             
         check_user_object = self.user_persistence_service.get_user_by_email(user_form.email)
-        is_without_card = user_form.is_without_card
+        is_with_card = user_form.is_with_card
         if check_user_object is not None:
             logger.info(f"User already exists in database with email: {user_form.email}")
             return {
@@ -424,8 +463,9 @@ class UsersAuth:
         if user_form.spi:
             status = SignUpStatus.SUCCESS
             
-        user_object = self.add_user(is_without_card=is_without_card, customer_id=customer_id, user_form=user_data,
-                                    spi=user_form.spi, awin_awc=user_form.awc, shopify_access_token=shopify_access_token, shop_id=shop_id, shopify_data=shopify_data)
+        user_object = self.add_user(is_with_card=is_with_card, customer_id=customer_id, user_form=user_data,
+                                    spi=user_form.spi, awin_awc=awc, access_token=shopify_access_token, shop_id=shop_id, shop_data=shopify_data,
+                                    coupon=coupon, utm_params=user_form.utm_params)
         
         if teams_token:
             notification_id = self.save_account_notification(user_object.id, NotificationTitles.TEAM_MEMBER_ADDED.value)
@@ -446,11 +486,14 @@ class UsersAuth:
         if shopify_data:
             self._process_shopify_integration(user_object, shopify_data, shopify_access_token, shop_id)
             
+        if ift and ift == 'arwt':
+            self.user_persistence_service.book_call_confirmed(user_object.id)
+            self.subscription_service.create_subscription_from_free_trial(user_id=user_object.id, ftd=ftd)
             
-        if is_without_card and teams_token is None:
+        if is_with_card is False and teams_token is None:
             return self._send_email_verification(user_object, token)
-        
-        if not is_without_card:
+            
+        if teams_token is None:
             return {
                 'is_success': True,
                 'status': SignUpStatus.FILL_COMPANY_DETAILS,
@@ -469,7 +512,7 @@ class UsersAuth:
                             shopify=ShopifyOrBigcommerceCredentials(shop_domain=shopify_data.shop, access_token=shopify_access_token)
                         )
         with self.integration_service as service:
-            service.shopify.add_integration(credentials, domain, user_object.id, shop_id)
+            service.shopify.add_integration(credentials, domain, user_object.__dict__, shop_id)
             service.shopify.create_webhooks_for_store(shopify_data=shopify_data, shopify_access_token=shopify_access_token)
         
         if not user_object.shop_id:
@@ -557,13 +600,13 @@ class UsersAuth:
             else:
                 shopify_status = OauthShopify.NON_SHOPIFY_ACCOUNT
             
-        authorization_data = self.get_user_authorization_information(user_object, self.subscription_service)
+        authorization_data = self.get_user_authorization_information(user_object)
         
         if authorization_data['status'] == LoginStatus.PAYMENT_NEEDED:
             return {
                 'status': authorization_data['status'].value,
                 'token': token,
-                'stripe_payment_url': authorization_data['stripe_payment_url']
+                'stripe_payment_url': authorization_data.get('stripe_payment_url')
             }
         if authorization_data['status'] != LoginStatus.SUCCESS:
             return {

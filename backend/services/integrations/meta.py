@@ -66,7 +66,7 @@ class MetaIntegrationsService:
             return
         return response.json()
 
-    def add_integration(self, credentials: IntegrationCredentials, domain, user):
+    def add_integration(self, credentials: IntegrationCredentials, domain, user: dict):
         credential = self.get_credentials(domain.id)
         access_token = self.get_long_lived_token(credentials.meta.access_token)
         if not access_token:

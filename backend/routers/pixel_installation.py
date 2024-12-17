@@ -25,8 +25,9 @@ async def manual(pixel_installation_service: PixelInstallationService = Depends(
 async def send_pixel_code_in_email(email_form: EmailFormRequest,
                                    pixel_installation_service: PixelInstallationService = Depends(
                                        get_pixel_installation_service),
-                                   user: User = Depends(check_user_authorization_without_pixel)):
-    return pixel_installation_service.send_pixel_code_in_email(email_form.email, user)
+                                   user: User = Depends(check_user_authorization_without_pixel),
+                                   domain=Depends(check_domain)):
+    return pixel_installation_service.send_pixel_code_in_email(email_form.email, user, domain)
 
 
 @router.post("/check-pixel-installed-parse", response_model=PixelFormResponse)

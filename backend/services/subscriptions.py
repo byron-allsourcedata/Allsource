@@ -290,8 +290,8 @@ class SubscriptionService:
         response = requests.get(request_url, headers=headers)
         return response
 
-    def create_subscription_from_free_trial(self, user_id):
-        plan = self.plans_persistence.get_free_trail_plan()
+    def create_subscription_from_free_trial(self, user_id, ftd=None):
+        plan = self.plans_persistence.get_free_trail_plan(ftd)
         status = 'active'
         created_at = datetime.strptime(get_utc_aware_date_for_postgres(), '%Y-%m-%dT%H:%M:%SZ')
         add_subscription_obj = Subscription(
@@ -308,17 +308,14 @@ class SubscriptionService:
         )
         self.db.add(add_subscription_obj)
         self.db.flush()
-        user_query = self.db.query(User).filter(User.id == user_id)
-        user = user_query.update({
-            User.activate_steps_percent: 50,
-            User.leads_credits: plan.leads_credits,
-            User.prospect_credits: plan.prospect_credits,
-            User.current_subscription_id: add_subscription_obj.id
-        }, synchronize_session="fetch")
-
+        user = self.db.query(User).filter(User.id == user_id).first()
+        user.activate_steps_percent=50
+        user.leads_credits=plan.leads_credits
+        user.prospect_credits=plan.prospect_credits
+        user.current_subscription_id=add_subscription_obj.id
+        user.is_book_call_passed=True
         self.db.commit()
 
-        user = user_query.first()
         if user.awin_awc:
             self.trackAwinConversion(user, 0, 'FREE_TRIAL', add_subscription_obj.created_at.strftime('%Y-%m-%d'), add_subscription_obj.id)
 

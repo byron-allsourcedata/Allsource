@@ -101,11 +101,12 @@ class PaymentsService:
         schedule = stripe.SubscriptionSchedule.retrieve(current_subscription.get("schedule"))
         stripe.SubscriptionSchedule.release(schedule.id)
 
-    def create_customer_session(self, price_id: str, user):
+    def create_customer_session(self, price_id: str, user: dict):
         if user.get('source_platform') == SourcePlatformEnum.SHOPIFY.value:
             plan = self.plan_persistence.get_plan_by_price_id(price_id)
             with self.integration_service as service:
                 return service.shopify.initialize_subscription_charge(plan=plan, user=user)
+            
         customer_id = self.plans_service.get_customer_id(user)
         trial_period = 0
         if not self.plan_persistence.get_user_subscription(user.get('id')):
