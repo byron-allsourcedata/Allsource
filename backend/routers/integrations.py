@@ -144,7 +144,7 @@ async def set_suppression(suppression_data: SupperssionSet, service_name: str = 
         return service.set_supperssions(suppression_data.suppression, domain.id)
 
 
-@router.get("/bigcommerce/oauth/callback")
+@router.get("/bigcommerce/oauth")
 async def bigcommerce_redirect_login(store_hash: str = Query(...), is_pixel_install: bool = Query(False), user = Depends(check_user_authentication), domain = Depends(check_domain)):
     params = {
         "client_id": BigcommerceConfig.client_id,
@@ -161,7 +161,7 @@ async def bigcommerce_redirect_login(store_hash: str = Query(...), is_pixel_inst
         'url': authorize_url
     }
     
-@router.get("/bigcommerce/auth")
+@router.get("/bigcommerce/auth/callback")
 def bigcommerce_auth(code: Optional[str], context: Optional[str], scope: Optional[str], integration_service: IntegrationService = Depends(get_integration_service),
                                      user_persistence: UserPersistence = Depends(get_user_persistence_service), domain_persistence: UserDomainsPersistence = Depends(get_user_domain_persistence), state: str = Query(None)):
     status_oauth = False
