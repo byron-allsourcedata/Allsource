@@ -52,8 +52,11 @@ class PlansPersistence:
         lead_credit_price = plan.lead_credit_price
         return domains_limit, integrations_limit, leads_credits, prospect_credits, members_limit, lead_credit_price
 
-    def get_free_trail_plan(self):
-        return self.db.query(SubscriptionPlan).filter(SubscriptionPlan.is_free_trial == True).first()
+    def get_free_trail_plan(self, ftd):
+        query = self.db.query(SubscriptionPlan).filter(SubscriptionPlan.is_free_trial == True)
+        if ftd == 'n':
+            query = query.filter(SubscriptionPlan.trial_days == 90)
+        return query.first()
 
     def get_current_price(self, current_subscription_id):
         subscription_plan = self.db.query(SubscriptionPlan).join(
