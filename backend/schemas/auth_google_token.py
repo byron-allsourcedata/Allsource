@@ -11,6 +11,7 @@ class AuthGoogleData(BaseModel):
     shopify_data: Optional[ShopifyPayloadModel] = None
     coupon: Optional[str] = None
     ift: Optional[str] = None
+    ftd: Optional[str] = None
     utm_params: Optional[UtmParams] = None
 
     

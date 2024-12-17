@@ -170,6 +170,7 @@ class UsersAuth:
         coupon = auth_google_data.coupon
         ift = auth_google_data.ift
         awc = auth_google_data.awc if auth_google_data.awc else auth_google_data.utm_params.awc
+        ftd = auth_google_data.ftd
         
         if shopify_data:
             try:
@@ -255,7 +256,7 @@ class UsersAuth:
         self.user_persistence_service.email_confirmed(user_object.id)
         
         if ift and ift == 'arwt':
-            self.subscription_service.create_subscription_from_free_trial(user_id=user_object.id)
+            self.subscription_service.create_subscription_from_free_trial(user_id=user_object.id, ftd=ftd)
             
         if not user_object.is_with_card:
             return {
@@ -412,6 +413,7 @@ class UsersAuth:
         shop_id = None
         awc = user_form.awc if user_form.awc else user_form.utm_params.awc
         ift = user_form.ift
+        ftd = user_form.ftd
         if shopify_data:
             try:
                 with self.integration_service as service:
@@ -484,7 +486,7 @@ class UsersAuth:
             self._process_shopify_integration(user_object, shopify_data, shopify_access_token, shop_id)
             
         if ift and ift == 'arwt':
-            self.subscription_service.create_subscription_from_free_trial(user_id=user_object.id)
+            self.subscription_service.create_subscription_from_free_trial(user_id=user_object.id, ftd=ftd)
             
         if is_with_card is False and teams_token is None:
             return self._send_email_verification(user_object, token)

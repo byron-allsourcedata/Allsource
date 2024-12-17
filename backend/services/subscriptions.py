@@ -290,8 +290,8 @@ class SubscriptionService:
         response = requests.get(request_url, headers=headers)
         return response
 
-    def create_subscription_from_free_trial(self, user_id):
-        plan = self.plans_persistence.get_free_trail_plan()
+    def create_subscription_from_free_trial(self, user_id, ftd=None):
+        plan = self.plans_persistence.get_free_trail_plan(ftd)
         status = 'active'
         created_at = datetime.strptime(get_utc_aware_date_for_postgres(), '%Y-%m-%dT%H:%M:%SZ')
         add_subscription_obj = Subscription(
