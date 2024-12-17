@@ -202,7 +202,7 @@ def bigcommerce_auth(code: Optional[str], context: Optional[str], scope: Optiona
                 with integration_service as service:
                     service.bigcommerce.add_integration_with_app(new_credentials=IntegrationCredentials(
                         bigcommerce=ShopifyOrBigcommerceCredentials(
-                            shop_domain=shop_hash,
+                            shop_domain=domain,
                             access_token=access_token
                         )
                     ), domain=domain, user=user)
