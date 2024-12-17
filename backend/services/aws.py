@@ -6,6 +6,9 @@ class AWSService:
 
     def upload_string(self, string_data: str, object_name: str) -> None:
         self.s3_client.put_object(Bucket='maximiz-data', Key=object_name, Body=string_data)
+    
+    def upload_stringa(self, string_data: str, object_name: str) -> None:
+        self.s3_client.put_object(Bucket='maximiz-data', Key=object_name, Body=string_data, ACL='public-read', ContentType="image/jpeg")
 
     def download_file(self, bucket_name: str, object_name: str, file_name: str) -> None:
         self.s3_client.download_file(bucket_name, object_name, file_name)

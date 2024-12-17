@@ -95,6 +95,7 @@ const FormDownloadPopup: React.FC<FormDownloadPopupProps> = ({ updateOrAddAsset,
             handleDeleteFile()
             return
         }
+        setFile(uploadedFile)
         setFileobjet({...uploadedFile, 
             name:  uploadedFile.name,
             type: uploadedFile.type.split("/")[0],
@@ -127,6 +128,7 @@ const FormDownloadPopup: React.FC<FormDownloadPopupProps> = ({ updateOrAddAsset,
         const formData = new FormData();
         formData.append("description", description);
     
+        console.log({file})
         if (file) {
             formData.append("file", file);
         }
@@ -273,7 +275,7 @@ const FormDownloadPopup: React.FC<FormDownloadPopupProps> = ({ updateOrAddAsset,
                                 id="fileInput"
                                 type="file"
                                 hidden
-                                accept=".jpg,.png,.mp4,.pdf,.xsl,.ppt"
+                                accept=".jpg,.png,.jpeg,.gif,.webp,.svg.,tiff.,bmp,.heic.,heif,.mp4,.mov,.avi,.mkv,.pdf,.xslx,.pdf,.xslx,.pptx"
                                 onChange={handleFileUpload}
                             />
                         </Box>
