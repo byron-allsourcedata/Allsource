@@ -176,6 +176,8 @@ def bigcommerce_auth(code: Optional[str], context: Optional[str], scope: Optiona
         response = client.post(BigcommerceConfig.token_url, data=payload)
         if response.status_code == 200:
             status_oauth = True
+            print('------------')
+            print(response.json())
             shop_hash = response.json().get('context').split('/')[1]
             access_token = response.json().get('access_token')
             
