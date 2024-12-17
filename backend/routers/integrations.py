@@ -151,7 +151,7 @@ async def bigcommerce_redirect_login(store_hash: str = Query(...), is_pixel_inst
         'context': f'{store_hash}',
         "redirect_uri": BigcommerceConfig.redirect_uri,
         "response_type": "code",
-        "scope": "store_content_checkout store_v2_content store_v2_default store_v2_information_read_only store_v2_orders_read_only",
+        "scope": "store_v2_content store_v2_default store_v2_information_read_only store_v2_orders_read_only",
         'state': f'{user.get("id")}:{domain.id}:{is_pixel_install}'
     }
     query_string = urlencode(params, safe=':/')
@@ -162,9 +162,10 @@ async def bigcommerce_redirect_login(store_hash: str = Query(...), is_pixel_inst
     }
     
 @router.get("/bigcommerce/auth/callback")
-def bigcommerce_auth(code: Optional[str], context: Optional[str], scope: Optional[str], integration_service: IntegrationService = Depends(get_integration_service),
+def bigcommerce_auth(code: Optional[str], context: Optional[str], integration_service: IntegrationService = Depends(get_integration_service),
                                      user_persistence: UserPersistence = Depends(get_user_persistence_service), domain_persistence: UserDomainsPersistence = Depends(get_user_domain_persistence), state: str = Query(None)):
     status_oauth = False
+    access_token = None
     payload = {
         'client_id': BigcommerceConfig.client_id,
         'client_secret': BigcommerceConfig.client_secret,
@@ -181,6 +182,7 @@ def bigcommerce_auth(code: Optional[str], context: Optional[str], scope: Optiona
                 shop_hash = context.split('/')[1]
             else:
                 shop_hash = context
+                
             access_token = response.json().get('access_token')
             
     if state:
@@ -210,12 +212,37 @@ def bigcommerce_auth(code: Optional[str], context: Optional[str], scope: Optiona
             except:
                 return RedirectResponse(f'{url}?message=Failed')
         with integration_service as service:
+            with httpx.Client() as client:
+                url = f"https://api.bigcommerce.com/stores/{shop_hash}/v2/store"
+                headers = {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-Auth-Token': access_token
+                }
+                response = client.get(url=url, headers=headers)
+                if response.status_code == 200:
+                    shop_info_response = response.json()
+                    domain = shop_info_response["domain"]
+            
             eai = service.bigcommerce.add_external_apps_install(new_credentials=IntegrationCredentials(
                         bigcommerce=ShopifyOrBigcommerceCredentials(
                             shop_domain=shop_hash,
                             access_token=access_token
                         )))
+            try:
+                with integration_service as service:
+                    service.bigcommerce.add_integration_with_app(new_credentials=IntegrationCredentials(
+                        bigcommerce=ShopifyOrBigcommerceCredentials(
+                            shop_domain=domain,
+                            access_token=access_token
+                        )
+                    ), domain=domain, user=user)
+                return RedirectResponse(f'{url}?message=Successfully')
+            except:
+                return RedirectResponse(f'{url}?message=Failed')
+            
             return RedirectResponse(BigcommerceConfig.external_app_installed)
+        
     return 'The pixel is not installed. Please visit https://app.maximiz.ai/dashboard and complete the integration there.'
     
 @router.get("/bigcommerce/uninstall", status_code=status.HTTP_200_OK)

@@ -130,7 +130,7 @@ class BigcommerceIntegrationsService:
         if not payload or not payload_jwt:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid Request [NON]")
         
-        user_integration = self.integration_persistence.get_integration_by_shop_url(shop_id=payload.get("store_hash"))
+        user_integration = self.integrations_persistence.get_integration_by_shop_url(shop_id=payload.get("store_hash"))
         if user_integration:
             self.db.delete(user_integration)
             self.db.commit()
