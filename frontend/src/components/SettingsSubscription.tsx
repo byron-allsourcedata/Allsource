@@ -7,6 +7,7 @@ import axiosInterceptorInstance from '@/axios/axiosInterceptorInstance';
 import CustomTooltip from './customToolTip';
 import CustomizedProgressBar from '@/components/CustomizedProgressBar';
 import Image from 'next/image';
+import axiosInstance from "../axios/axiosInterceptorInstance";
 import { showErrorToast, showToast } from './ToastNotification';
 import axios from 'axios';
 
@@ -110,6 +111,7 @@ export const SettingsSubscription: React.FC = () => {
     const [formValues, setFormValues] = useState({ unsubscribe: '', });
     const [hasActivePlan, setHasActivePlan] = useState<boolean>(false);
     const [showSlider, setShowSlider] = useState(true);
+    const [utmParams, setUtmParams] = useState<string | null>(null);
 
     const handleFilterPopupClose = () => {
         setShowSlider(false);
@@ -167,6 +169,7 @@ export const SettingsSubscription: React.FC = () => {
         const fetchData = async () => {
             try {
                 setIsLoading(true);
+                fetchPrefillData();
                 const response = await axiosInterceptorInstance.get(`/subscriptions/stripe-plans`);
                 setAllPlans(response.data.stripe_plans)
                 const stripePlans: StripePlan[] = response.data.stripe_plans;
@@ -193,6 +196,45 @@ export const SettingsSubscription: React.FC = () => {
     const handleBuyCredits = () => {
         // Логика для покупки кредитов
     };
+
+    const fetchPrefillData = async () => {
+        try {
+          const response = await axiosInstance.get('/calendly');
+          const user = response.data.user;
+    
+          if (user) {
+            const { full_name, email, utm_params } = user;
+            setUtmParams(utm_params)
+          }
+        } catch (error) {
+          setUtmParams(null);
+        }
+      };
+    
+      const calendlyPopupUrl = () => {
+        const baseUrl = "https://calendly.com/maximiz-support/30min";
+        const searchParams = new URLSearchParams();
+      
+        if (utmParams) {
+          try {
+            const parsedUtmParams = typeof utmParams === 'string' ? JSON.parse(utmParams) : utmParams;
+      
+            if (typeof parsedUtmParams === 'object' && parsedUtmParams !== null) {
+              Object.entries(parsedUtmParams).forEach(([key, value]) => {
+                if (value !== null && value !== undefined) {
+                  searchParams.append(key, value as string);
+                }
+              });
+            }
+          } catch (error) {
+            console.error("Error parsing utmParams:", error);
+          }
+        }
+      
+        const finalUrl = `${baseUrl}${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
+        return finalUrl;
+      };
+
 
     const handleChoosePlan = async (stripePriceId: string) => {
         let path = hasActivePlan
@@ -732,7 +774,7 @@ export const SettingsSubscription: React.FC = () => {
                         }}>
                             <Box display="flex" justifyContent="flex-end" mt={2}>
                                 <Link
-                                    href="https://calendly.com/maximiz-support/30min"
+                                    href={calendlyPopupUrl()}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     onClick={handleCustomPlanPopupClose}

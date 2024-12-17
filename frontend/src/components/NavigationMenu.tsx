@@ -115,7 +115,7 @@ const NavigationMenu: React.FC<NavigationProps> = ({ NewRequestNotification }) =
   const [anchorElNotificate, setAnchorElNotificate] = useState<null | HTMLElement>(null);
   const router = useRouter();
   const pathname = usePathname();
-  const { full_name: userFullName, email: userEmail } = useUser();
+  const { full_name: userFullName, email: userEmail, partner  } = useUser();
   const meItem = typeof window !== 'undefined' ? sessionStorage.getItem('me') : null;
   const meData = meItem ? JSON.parse(meItem) : { full_name: '', email: '' };
   const full_name = userFullName || meData.full_name;
@@ -376,6 +376,14 @@ const NavigationMenu: React.FC<NavigationProps> = ({ NewRequestNotification }) =
             <ListItemIcon><FeaturedPlayListIcon /></ListItemIcon>
             <ListItemText primary="Suppressions" />
           </ListItem>
+          {partner && <ListItem button onClick={() => handleNavigation('/partners')}
+            sx={{
+              ...(isActive('/partners') ? navigationmenuStyles.activeItem : {}),
+              ...navigationmenuStyles.mobileDrawerList
+            }}>
+            <ListItemIcon><FeaturedPlayListIcon /></ListItemIcon>
+            <ListItemText primary="Partners" />
+          </ListItem>}
           {/* <ListItem button onClick={() => handleNavigation('/rules')}
           sx={{
             ...(isActive('/rules') ? navigationmenuStyles.activeItem : {}),

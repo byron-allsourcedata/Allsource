@@ -1376,8 +1376,16 @@ const Leads: React.FC = () => {
                                                                 <UnlockButton onClick={() => handleUnlock()} label="Unlock mobile number" />
                                                             )}
                                                         </TableCell>
+                                                        
                                                         <TableCell
-                                                            sx={{ ...leadsStyles.table_array, position: 'relative' }}>{row.first_visited_date || '--'}</TableCell>
+                                                            sx={{ ...leadsStyles.table_array, position: 'relative' }}>{row.first_visited_date
+                                                                ? (() => {
+                                                                    const [day, month, year] = row.first_visited_date.split('.');
+                                                                    return `${month}/${day}/${year}`;
+                                                                  })()
+                                                                : '--'}
+                                                        </TableCell>
+                                                        
                                                         <TableCell
                                                             sx={{ ...leadsStyles.table_column, position: 'relative' }}
                                                         >

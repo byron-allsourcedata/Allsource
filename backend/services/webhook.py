@@ -152,6 +152,8 @@ class WebhookService:
         user_data = self.subscription_service.get_user_by_shopify_shop_id(shop_id=shop_id)
         charge_id = subscription_info.get("admin_graphql_api_id").split('AppSubscription/')[-1]
         try:
+            if not user_data.charge_id:
+                user_data.charge_id = 0
             current_charge_id = int(user_data.charge_id)
             income_charge_id = int(charge_id)
             if income_charge_id < current_charge_id:

@@ -26,7 +26,6 @@ class AttentiveIntegrationsService:
         integrations = self.integrations_persistence.create_integration({
             'domain_id': domain_id,
             'access_token': api_key,
-            'user_id': user.get('id'),
             'full_name': user.get('full_name'),
             'service_name': SourcePlatformEnum.Attentive.value
         })
@@ -43,7 +42,7 @@ class AttentiveIntegrationsService:
             return False
         return True
 
-    def add_integration(self, credential: IntegrationCredentials, domain, user_id):
+    def add_integration(self, credential: IntegrationCredentials, domain, user: dict):
         api_key = credential.attentive.api_key
         try:
             result_authentication = self.http_authentication(api_key=api_key)
@@ -51,7 +50,7 @@ class AttentiveIntegrationsService:
                 raise HTTPException(status_code=400, detail={"status": IntegrationsStatus.CREDENTAILS_INVALID.value})
         except:
             raise HTTPException(status_code=400, detail={'status': IntegrationsStatus.CREDENTAILS_INVALID.value})
-        integration = self.save_integration(domain_id=domain.id, api_key=api_key, user_id=user_id)
+        integration = self.save_integration(domain_id=domain.id, api_key=api_key, user=user)
         return integration
 
     async def create_sync(self, leads_type: str, list_id: str, list_name: str, data_map: List[DataMap], domain_id: int,

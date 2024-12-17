@@ -80,6 +80,9 @@ class ShopifyIntegrationService:
     
     def initialize_subscription_charge(self, plan: SubscriptionPlan, user: dict):
         test_mode = True if os.getenv("APP_MODE") == "dev" else False
+        if user.get('shopify_token') is None:
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail={'status': 'Shopify token not found'})
+        
         return self.create_new_recurring_charge(shopify_domain=user.get('shop_domain'), shopify_access_token=user.get('shopify_token'), plan=plan, test_mode=test_mode)
     
     def cancel_current_subscription(self, user: User):
@@ -251,7 +254,17 @@ class ShopifyIntegrationService:
             result['message'] = OauthShopify.NO_USER_CONNECTED.value
             return result
 
-        user = self.db.query(User).filter(User.id == user_integration.user_id).first()
+        user = (
+            self.db.query(User)
+            .join(UserDomains, UserDomains.user_id == User.id)
+            .filter(UserDomains.id == user_integration.domain_id)
+            .first()
+        )
+        
+        if user is None:
+            result['message'] = OauthShopify.USER_NOT_FOUND.value
+            return result
+        
         shopify_payload_model = ShopifyPayloadModel(
             code=query_params.get('code'),
             hmac=query_params.get('hmac'),
@@ -265,7 +278,7 @@ class ShopifyIntegrationService:
             result['message'] = OauthShopify.ERROR_SHOPIFY_TOKEN.value
             return result
         
-        self.__save_integration(shop, shopify_token, user_integration.domain_id, user.id)
+        self.__save_integration(shop_domain=shop, access_token=shopify_token, domain_id=user_integration.domain_id)
         
         token_info = {
                 "id": user.id
@@ -275,7 +288,7 @@ class ShopifyIntegrationService:
         return result
     
 
-    def __save_integration(self, shop_domain: str, access_token: str, domain_id: int, user_id, shop_id=None):
+    def __save_integration(self, shop_domain: str, access_token: str, domain_id: int, user=None, shop_id=None):
         credential = self.get_credentials(domain_id=domain_id)
         if credential:
             credential.access_token = access_token
@@ -286,9 +299,11 @@ class ShopifyIntegrationService:
             'domain_id': domain_id, 
             'shop_domain': shop_domain,
             'access_token': access_token, 
-            'service_name': SourcePlatformEnum.SHOPIFY.value,
-            'user_id': user_id
+            'service_name': SourcePlatformEnum.SHOPIFY.value
         }
+        if user:
+            credentials['full_name'] = user.get('full_name')
+            
         if shop_id:
             credentials['shop_id'] = shop_id
 
@@ -316,16 +331,16 @@ class ShopifyIntegrationService:
         return response.json().get('customers')
 
 
-    def add_integration(self, credentials: IntegrationCredentials, domain, user_id, shop_id=None):
+    def add_integration(self, credentials: IntegrationCredentials, domain, user: dict, shop_id=None):
         if not credentials.shopify.shop_domain.startswith('https://'):
             credentials.shopify.shop_domain = f'https://{credentials.shopify.shop_domain}'
         shop_domain = credentials.shopify.shop_domain.lower().lstrip('http://').lstrip('https://')
         user_website = domain.domain.lower().lstrip('http://').lstrip('https://')
         if user_website != shop_domain:
             raise HTTPException(status_code=400, detail={'status': 'error', 'detail': {'message': 'Store Domain does not match the one you specified earlier'}})
-        self.__save_integration(credentials.shopify.shop_domain, credentials.shopify.access_token, domain.id, user_id, shop_id)
+        self.__save_integration(credentials.shopify.shop_domain, credentials.shopify.access_token, domain.id, user, shop_id)
         if not domain.is_pixel_installed:
-            self.__set_pixel(user_id, domain, credentials)
+            self.__set_pixel(user.get('id'), domain, credentials)
         return {
             'status': 'Successfully',
             'detail': {
