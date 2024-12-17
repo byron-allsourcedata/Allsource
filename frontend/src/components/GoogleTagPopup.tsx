@@ -177,8 +177,8 @@ const GoogleTagPopup: React.FC<PopupProps> = ({open, handleClose}) => {
             const commitResponse = await axios.post(
                 `https://www.googleapis.com/tagmanager/v2/accounts/${accountId}/containers/${containerId}/workspaces/${workspaceId}:create_version`,
                 {
-                    name: 'Auto Commit and Publish',
-                    notes: 'Automatically committed and published via API',
+                    name: 'Maximiz: Auto Commit and Publish',
+                    notes: 'Maximiz: Automatically committed and published via API',
                 },
                 { headers: { Authorization: `Bearer ${accessToken}` } }
             );
@@ -240,10 +240,11 @@ const GoogleTagPopup: React.FC<PopupProps> = ({open, handleClose}) => {
                 const tagId = tagResponse.data.tagId;
                 await updateTagWithTrigger(accessToken, accountId, containerId, workspaceId, tagId, triggerId)
                 showToast('Tag created and sent successfully!')
+                await submitAndPublishWorkspace(accessToken, accountId, containerId, workspaceId);
             }catch (e){
                 showErrorToast('Tag already created!')
+                handleClose();
             }
-            await submitAndPublishWorkspace(accessToken, accountId, containerId, workspaceId);
             handleClose();
         } catch (error) {
             if (axios.isAxiosError(error)) {
@@ -255,6 +256,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({open, handleClose}) => {
         }
         finally {
             setLoading(false);
+            handleClose();
         }
     };
 
