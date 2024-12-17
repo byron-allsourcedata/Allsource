@@ -148,7 +148,7 @@ async def set_suppression(suppression_data: SupperssionSet, service_name: str = 
 async def bigcommerce_redirect_login(store_hash: str = Query(...), is_pixel_install: bool = Query(False), user = Depends(check_user_authentication), domain = Depends(check_domain)):
     params = {
         "client_id": BigcommerceConfig.client_id,
-        'context': f'stores/{store_hash}',
+        'context': f'{store_hash}',
         "redirect_uri": BigcommerceConfig.redirect_uri,
         "response_type": "code",
         "scope": "store_content_checkout store_v2_content store_v2_default store_v2_information_read_only store_v2_orders_read_only",
@@ -212,6 +212,7 @@ def bigcommerce_auth(code: Optional[str], context: Optional[str], scope: Optiona
                             access_token=access_token
                         )))
             return RedirectResponse(BigcommerceConfig.external_app_installed)
+    return 'The pixel is not installed. Please visit https://app.maximiz.ai/dashboard and complete the integration there.'
     
 @router.get("/bigcommerce/uninstall", status_code=status.HTTP_200_OK)
 def oauth_bigcommerce_uninstall(signed_payload: Annotated[str, Query()], signed_payload_jwt: Annotated[str, Query()], integration_service: IntegrationService = Depends(get_integration_service)):
