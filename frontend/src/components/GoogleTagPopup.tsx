@@ -79,7 +79,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({open, handleClose}) => {
 
     const createAllPagesTrigger = async (accessToken: string, accountId: string, containerId: string, workspaceId: string) => {
         const triggerData = {
-            name: 'All Pages Trigger for pixel script',
+            name: 'All Pages Trigger for Miximiz pixel script',
             type: 'pageview',
             filter: [],
         };
@@ -167,6 +167,39 @@ const GoogleTagPopup: React.FC<PopupProps> = ({open, handleClose}) => {
         }
     };
 
+    const submitAndPublishWorkspace = async (
+        accessToken: string,
+        accountId: string,
+        containerId: string,
+        workspaceId: string
+    ) => {
+        try {
+            const commitResponse = await axios.post(
+                `https://www.googleapis.com/tagmanager/v2/accounts/${accountId}/containers/${containerId}/workspaces/${workspaceId}:create_version`,
+                {
+                    name: 'Auto Commit and Publish',
+                    notes: 'Automatically committed and published via API',
+                },
+                { headers: { Authorization: `Bearer ${accessToken}` } }
+            );
+    
+            const containerVersionId = commitResponse.data.containerVersion.containerVersionId;
+            const publishResponse = await axios.post(
+                `https://www.googleapis.com/tagmanager/v2/accounts/${accountId}/containers/${containerId}/versions/${containerVersionId}:publish`,
+                {},
+                { headers: { Authorization: `Bearer ${accessToken}` } }
+            );
+    
+            showToast('Changes submitted and published successfully!');
+        } catch (error) {
+            if (axios.isAxiosError(error)) {
+                console.error('Axios error:', error.response?.data);
+            } else if (error instanceof Error) {
+                console.error('Error:', error.message);
+            }
+            showErrorToast('Failed to submit and publish workspace.');
+        }
+    };
 
     const handleCreateAndSendTag = async () => {
         setLoading(true);
@@ -181,14 +214,14 @@ const GoogleTagPopup: React.FC<PopupProps> = ({open, handleClose}) => {
                 return;
             }
             const triggers = await fetchExistingTriggers(accessToken, accountId, containerId, workspaceId);
-            let triggerId = findTriggerIdByName(triggers, 'All Pages Trigger for pixel script');
+            let triggerId = findTriggerIdByName(triggers, 'All Pages Trigger for Miximiz pixel script');
             if (!triggerId) {
                 triggerId = await createAllPagesTrigger(accessToken, accountId, containerId, workspaceId);
             }
             let manualResponse = await axiosInterceptorInstance.get(`/install-pixel/manually`);
             let pixelCode = manualResponse.data.manual;
             const tagData = {
-                name: 'Pixel script',
+                name: 'Maximiz pixel script',
                 type: 'html',
                 parameter: [
                     {
@@ -210,6 +243,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({open, handleClose}) => {
             }catch (e){
                 showErrorToast('Tag already created!')
             }
+            await submitAndPublishWorkspace(accessToken, accountId, containerId, workspaceId);
             handleClose();
         } catch (error) {
             if (axios.isAxiosError(error)) {
@@ -243,7 +277,12 @@ const GoogleTagPopup: React.FC<PopupProps> = ({open, handleClose}) => {
             if (response.credential) {
                 setSession({token: response.credential});
                 const redirectUri = dashboard_url;
-                const scope = 'https://www.googleapis.com/auth/tagmanager.edit.containers';
+                const scope = [
+                    'https://www.googleapis.com/auth/tagmanager.edit.containers',
+                    'https://www.googleapis.com/auth/tagmanager.manage.accounts',
+                    'https://www.googleapis.com/auth/tagmanager.publish',
+                    'https://www.googleapis.com/auth/tagmanager.edit.containerversions'
+                ].join(' ');
                 window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${encodeURIComponent(scope)}&access_type=offline&prompt=consent`;
             } else {
                 showErrorToast('Account data not available')
