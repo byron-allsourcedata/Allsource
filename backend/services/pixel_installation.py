@@ -48,13 +48,13 @@ class PixelInstallationService:
             '''
         return script, client_id
 
-    def send_pixel_code_in_email(self, email, user):
+    def send_pixel_code_in_email(self, email, user, domain):
         message_expiration_time = user.get('pixel_code_sent_at', None)
         time_now = datetime.now()
         if message_expiration_time is not None:
             if (message_expiration_time + timedelta(minutes=1)) > time_now:
                 return BaseEnum.SUCCESS
-        pixel_code, pixel_client_id = self.get_manual(user)
+        pixel_code, pixel_client_id = self.get_manual(user, domain)
         mail_object = SendgridHandler()
         template_id = self.send_grid_persistence_service.get_template_by_alias(
             SendgridTemplate.SEND_PIXEL_CODE_TEMPLATE.value)
