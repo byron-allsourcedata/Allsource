@@ -1,5 +1,6 @@
 import json
 import os
+from bigcommerce.api import BigcommerceApi
 from urllib.parse import urlencode
 from fastapi import APIRouter, Depends, Query, HTTPException, status, Body, Request
 from fastapi.responses import RedirectResponse
@@ -150,7 +151,7 @@ async def bigcommerce_redirect_login(store_hash: str = Query(...), is_pixel_inst
         'context': f'{store_hash}',
         "redirect_uri": BigcommerceConfig.redirect_uri,
         "response_type": "code",
-        "scope": "store_v2_content store_v2_information_read_only store_v2_default",
+        "scope": "store_v2_content store_v2_default store_v2_information_read_only store_v2_orders_read_only",
         'state': f'{user.get("id")}:{domain.id}:{is_pixel_install}'
     }
     query_string = urlencode(params, safe=':/')
@@ -163,6 +164,8 @@ async def bigcommerce_redirect_login(store_hash: str = Query(...), is_pixel_inst
 @router.get("/bigcommerce/auth/callback")
 def bigcommerce_auth(
     code: Optional[str],
+    context: Optional[str],
+    scope: Optional[str],
     state: str = Query(None),
     integration_service: IntegrationService = Depends(get_integration_service),
     user_persistence: UserPersistence = Depends(get_user_persistence_service),
@@ -176,17 +179,21 @@ def bigcommerce_auth(
         'grant_type': 'authorization_code'
     }
 
-    with httpx.Client() as client:
-        token_response = client.post(BigcommerceConfig.token_url, data=payload)
-        if token_response.status_code != 200:
-            return "The pixel is not installed. Please visit https://app.maximiz.ai/dashboard and complete the integration there."
+    # with httpx.Client() as client:
+    #     token_response = client.post(BigcommerceConfig.token_url, data=payload)
+    #     if token_response.status_code != 200:
+    #         return "The pixel is not installed. Please visit https://app.maximiz.ai/dashboard and complete the integration there."
 
-        token_data = token_response.json()
-    print('123_______________')
-    print(token_data)
+    #     token_data = token_response.json()
+
     #token_data = {'access_token': 'mrv2dn3hmmaoqtkv2vcf24fvp7ceyng', 'scope': None, 'user': {'id': 2516593, 'username': 'login@lolly.com', 'email': 'login@lolly.com'}, 'context': 't1gy0670au', 'ajs_anonymous_id': None}
-    access_token = token_data.get('access_token')
-    shop_hash = token_data.get('context', '').split('/')[1] if token_data.get('context', '').startswith("stores/") else token_data.get('context', '')
+    #access_token = token_data.get('access_token')
+    shop_hash = context.split('/')[1] if context.startswith("stores/") else context
+    
+    client = BigcommerceApi(client_id=BigcommerceConfig.client_id, store_hash=shop_hash)
+    access_token = client.oauth_fetch_token(BigcommerceConfig.client_secret, code, context, scope, BigcommerceConfig.redirect_uri)
+    
+    
     if state:
         user_id, domain_id, is_pixell_install = (state.split(':') + [None, None, None])[:3]
         redirect_url = BigcommerceConfig.frontend_dashboard_redirect if is_pixell_install else BigcommerceConfig.frontend_redirect

@@ -34,7 +34,7 @@ class BigcommerceIntegrationsService:
         self.eai_persistence = epi_persistence
 
     def get_credentials(self, domain_id: int):
-        integration = self.integrations_persistence.get_credentials_for_service(domain_id, 'Bigcommerce')
+        integration = self.integrations_persistence.get_credentials_for_service(domain_id, 'big_commerce')
         return integration
 
     def __handle_request(self, url: str, method: str = 'GET', headers: dict = None, json: dict = None, data: dict = None, params: dict = None, access_token: str = None):
@@ -56,12 +56,8 @@ class BigcommerceIntegrationsService:
         return response
 
     def __get_store_info(self, store_hash: str, access_token: str):
-        print('-------------')
         url = f'{store_hash}/v2/store'
         info = self.__handle_request(url, access_token=access_token)
-        print(store_hash)
-        print(url)
-        print(info)
         return self.__mapped_info(info.json())
     
 
