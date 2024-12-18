@@ -4,8 +4,7 @@ from typing import Union
 import tempfile
 import zipfile
 from pathlib import Path
-from PIL import Image, ImageDraw, UnidentifiedImageError
-from pptx import Presentation
+from PIL import Image, UnidentifiedImageError
 import subprocess
 from fastapi import HTTPException, UploadFile
 from io import BytesIO
@@ -53,15 +52,7 @@ class PartnersAssetService:
         updating_data = {"description": description}
 
         if file:
-            file_contents = await file.read()
-            file_extension = Path(file.filename).suffix.lower()
-            self.AWS.upload_string(file_contents, f'partners-assets/{description}{file_extension}')
-            preview = await self.generate_preview(file_contents, file_extension, type)
-            if preview:
-                file_preview_contents = preview.read()
-                self.AWS.upload_string(file_preview_contents, f'partners-assets/{description}_preview{file_extension}')
-            updating_data["file_url"] = f'https://maximiz-data.s3.us-east-2.amazonaws.com/partners-assets/{description}{file_extension}'
-            updating_data["preview_url"] = f'https://maximiz-data.s3.us-east-2.amazonaws.com/partners-assets/{description}_preview{file_extension}'
+            updating_data.update(await self.upload_files_asset(description, file))
  
         updated_data = self.partners_asset_persistence.update_asset(asset_id, updating_data)
 
@@ -71,31 +62,27 @@ class PartnersAssetService:
         return self.domain_mapped(updated_data)
     
 
-    async def upload_files_asset(self, description: str, file: UploadFile):
+    async def upload_files_asset(self, description: str, file: UploadFile, type: str):
+        files_data = {}
         file_contents = await file.read()
         file_extension = Path(file.filename).suffix.lower()
         self.AWS.upload_string(file_contents, f'partners-assets/{description}{file_extension}')
+        files_data["file_url"] = f'https://maximiz-data.s3.us-east-2.amazonaws.com/partners-assets/{description}{file_extension}'
         preview = await self.generate_preview(file_contents, file_extension, type)
         if preview:
             file_preview_contents = preview.read()
-            self.AWS.upload_string(file_preview_contents, f'partners-assets/{description}_preview{file_extension}')
+            self.AWS.upload_string(file_preview_contents, f'partners-assets/{description}_preview.jpg')
+            files_data["preview_url"] = f'https://maximiz-data.s3.us-east-2.amazonaws.com/partners-assets/{description}_preview.jpg',
+        else:
+            files_data["preview_url"] = None
+        return files_data
 
 
     async def create_asset(self, description: str, type: str, file: UploadFile = None):
         if(file):
-            file_contents = await file.read()
-            file_extension = Path(file.filename).suffix.lower()
-            self.AWS.upload_string(file_contents, f'partners-assets/{description}{file_extension}')
-            preview = await self.generate_preview(file_contents, file_extension, type)
-            if preview:
-                file_preview_contents = preview.read()
-                self.AWS.upload_string(file_preview_contents, f'partners-assets/{description}_preview{file_extension}')
-            creating_data = {
-                "description": description, 
-                "type": type, 
-                "file_url": f'https://maximiz-data.s3.us-east-2.amazonaws.com/partners-assets/{description}{file_extension}',
-                "preview_url": f'https://maximiz-data.s3.us-east-2.amazonaws.com/partners-assets/{description}_preview{file_extension}',
-            }
+            creating_data = await self.upload_files_asset(description, file, type)
+            creating_data["description"] = description
+            creating_data["type"] = type
 
             created_data = self.partners_asset_persistence.create_data(creating_data)
 
@@ -157,98 +144,24 @@ class PartnersAssetService:
         return preview
     
 
-    # def _generate_presentation_preview(self, file_path: str) -> BytesIO:
-    #     prs = Presentation(file_path)
-    #     first_slide = prs.slides[0]
+    def _generate_presentation_preview(self, presentation_path: str) -> Union[BytesIO, None]:
+        min_width, min_height = 200, 200
 
-    #     preview_image = None
+        try:
+            with zipfile.ZipFile(presentation_path, 'r') as pptx_zip:
+                media_files = [f for f in pptx_zip.namelist() if f.startswith('ppt/media/') and f.endswith(('.jpg', '.jpeg', '.png'))]
 
-    #     background_image = self._extract_slide_background(file_path, slide_index=0)
-    #     if background_image:
-    #         preview_image = Image.open(background_image)
-    #         preview_image.thumbnail((1920, 1080))
-
-  
-    #     if preview_image is None:
-    #         for shape in first_slide.shapes:
-    #             if shape.shape_type == 13: 
-    #                 img_stream = BytesIO(shape.image.blob)
-    #                 img = Image.open(img_stream)
-    #                 img.thumbnail((1920, 1080))
-    #                 preview_image = img
-    #                 break
-
-    #     if preview_image is None:
-    #         preview_image = Image.new("RGB", (1920, 1080), (255, 255, 255))
-    #         draw = ImageDraw.Draw(preview_image)
-    #         draw.text((960, 540), "No Preview Available", fill="black", anchor="mm")
-
-
-    #     preview_image.thumbnail((300, 300))
-    #     preview = BytesIO()
-    #     preview_image.save(preview, format="JPEG")
-    #     preview.seek(0)
-    #     return preview
-
-
-    # def _extract_slide_background(self, file_path: str, slide_index: int = 0) -> Union[BytesIO, None]:
-    #     with zipfile.ZipFile(file_path, 'r') as archive:
-    #         slide_path = f'ppt/slides/slide{slide_index + 1}.xml'
-    #         if slide_path not in archive.namelist():
-    #             return None
-
-
-    #         rels_path = f'ppt/slides/_rels/slide{slide_index + 1}.xml.rels'
-    #         if rels_path in archive.namelist():
-    #             rels_content = archive.read(rels_path).decode()
-    #             if 'image' in rels_content:
-    #                 media_path = rels_content.split('Target="..')[1].split('"')[0]
-    #                 media_full_path = os.path.join('ppt', media_path.strip('/'))
-
-    #                 if media_full_path in archive.namelist():
-    #                     with archive.open(media_full_path) as media_file:
-    #                         return BytesIO(media_file.read())
-    #     return None
-
-
-    # def _generate_presentation_preview(self, file_path: str) -> BytesIO:
-    #     prs = Presentation(file_path)
-    #     first_slide = prs.slides[0]
-    #     # image = Image.new("RGB", (1920, 1080), (255, 255, 255))
-    #     # preview = BytesIO()
-    #     # image.thumbnail((300, 300))
-    #     # image.save(preview, format="JPEG")
-    #     # preview.seek(0)
-    #     # return preview
-
-    #     preview_image = None
-
-    #     if first_slide.background and first_slide.background.fill.type == 1:
-    #         color = first_slide.background.fill.fore_color.rgb
-    #         preview_image = Image.new("RGB", (1920, 1080), (color.red, color.green, color.blue))
-        
-    #     preview_image.thumbnail((300, 300))
-    #     preview = BytesIO()
-    #     preview_image.save(preview, format="JPEG")
-    #     preview.seek(0)
-    #     return preview
-    
-        # images = []
-        # for shape in first_slide.shapes:
-        #     if shape.shape_type == 13: 
-        #         images.append(shape.image)
-
-        # if not images:
-        #     raise ValueError("No images found on the first slide.")
-
-        # image_stream = BytesIO(images[0].blob)
-        # img = Image.open(image_stream)
-
-        # img.thumbnail((300, 300))
-        # preview = BytesIO()
-        # img.save(preview, format="JPEG")
-        # preview.seek(0)
-        # return preview
+                for media_file in media_files:
+                    image_data = pptx_zip.read(media_file)
+                    with Image.open(BytesIO(image_data)) as img:
+                        if img.width >= min_width and img.height >= min_height:
+                            preview_image = BytesIO()
+                            img.convert('RGB').save(preview_image, format='JPEG')
+                            preview_image.seek(0)
+                            return preview_image
+            return None
+        except Exception as e:
+            return None
 
 
     def get_file_size(self, file_url: str) -> str:

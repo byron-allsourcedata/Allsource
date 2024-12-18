@@ -8,7 +8,7 @@ import FormUploadAssetPopup from '@/components/FormUploadAssetPopup'
 interface AssetsData {
     id: number;
     file_url: string;
-    preview_url: string;
+    preview_url: string | null;
     type: string;
     title: string;
     file_extension: string;

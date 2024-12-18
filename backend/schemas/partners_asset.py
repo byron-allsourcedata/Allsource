@@ -1,17 +1,13 @@
 from pydantic import BaseModel
-from fastapi import File
-from typing import Dict, Optional
+from typing import Optional
 from enums import PartnersAssetsInfoEnum
 
-
-class DomainScheme(BaseModel):
-    domain: str
 
 class PartnersAssetResponse(BaseModel):
     id: int
     title: str
     type: str
-    preview_url: str
+    preview_url: Optional[str] = None
     file_url: str
     file_extension: str
     file_size: str

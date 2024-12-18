@@ -15,7 +15,7 @@ import ListItemText from '@mui/material/ListItemText';
 interface AssetsData {
     id: number;
     file_url: string;
-    preview_url: string;
+    preview_url: string | null;
     type: string;
     title: string;
     file_extension: string;
@@ -69,7 +69,7 @@ const PartnersAssetsVideo: React.FC<PartnersAseetsProps> = ({
             sx={{position: "relative", width: "154px", height: "79px", '@media (max-width: 360px)': {width: "140px"}}}
             >
                 <Link href={asset.file_url} target="_blank" rel="noopener noreferrer">
-                    <Image src={asset.preview_url} alt="Pitch decks image" height={79} width={videoWidth}/>
+                    <Image src={asset.preview_url ?? "/pdf.svg"} alt="Pitch decks image" height={79} width={videoWidth}/>
                 </Link>
             <Box 
                 sx={{
