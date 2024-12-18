@@ -50,7 +50,7 @@ async def get_credential_service(platform: str,
 
 
 @router.post('/', status_code=200)
-async def create_integration(creditional: IntegrationCredentials, service_name: str = Query(...),
+async def create_integration(credentials: IntegrationCredentials, service_name: str = Query(...),
                              integration_service: IntegrationService = Depends(get_integration_service),
                              user=Depends(check_user_authentication), domain=Depends(check_domain)):
     if user.get('team_member'):
@@ -61,13 +61,13 @@ async def create_integration(creditional: IntegrationCredentials, service_name: 
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Access denied. Admins and standard only."
             )
-    if not creditional.pixel_install and not domain.is_pixel_installed:
+    if not credentials.pixel_install and not domain.is_pixel_installed:
         raise HTTPException(status_code=403, detail={'status': UserAuthorizationStatus.PIXEL_INSTALLATION_NEEDED.value})
     with integration_service as service:
         service = getattr(service, service_name.lower())
         if not service:
             raise HTTPException(status_code=404, detail=f'Service {service_name} not found')
-        service.add_integration(creditional=creditional, domain=domain, user=user)
+        service.add_integration(credentials=credentials, domain=domain, user=user)
         return {'message': 'Successfuly'}
 
 

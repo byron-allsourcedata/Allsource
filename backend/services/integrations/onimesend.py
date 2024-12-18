@@ -27,7 +27,7 @@ class OmnisendIntegrationService:
         self.QUEUE_DATA_SYNC = 'data_sync_leads'
 
     def get_credentials(self, domain_id: int):
-        return self.integration_persistence.get_credentials_for_service(domain_id, 'Omnisend')
+        return self.integration_persistence.get_credentials_for_service(domain_id, SourcePlatformEnum.OMNISEND.value)
     
     def __handle_request(self, url: str, headers: dict = None, json: dict = None, data: dict = None, params: dict = None, api_key: str = None,  method: str = 'GET'):
         if not headers:
@@ -135,7 +135,7 @@ class OmnisendIntegrationService:
             sync = IntegrationUserSync(**message.get('sync'))
             if sync:
                 serarch_sync = self.sync_persistence.get_integration_by_sync_id(sync_id=sync.id)
-                if not serarch_sync or serarch_sync.service_name != 'Omnisend':
+                if not serarch_sync or serarch_sync.service_name != SourcePlatformEnum.OMNISEND.value:
                     logging.info(f'Sync {sync.id} Omnisend not matched')
                     return
         leads_type = message.get('leads_type')
