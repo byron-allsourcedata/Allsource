@@ -190,10 +190,14 @@ def bigcommerce_auth(
     redirect_url = BigcommerceConfig.frontend_dashboard_redirect if is_pixell_install else BigcommerceConfig.frontend_redirect
 
     if state:
+        print('---------')
         user = user_persistence.get_user_by_id(user_id)
         domain_entry = domain_persistence.get_domain_by_filter(id=domain_id)
         domain = domain_entry[0].domain if domain_entry else None
-
+        print(user)
+        print(domain_entry)
+        print(domain)
+        
         if not domain:
             return RedirectResponse(f'{redirect_url}?message=Failed')
 
