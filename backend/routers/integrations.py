@@ -1,6 +1,5 @@
 import json
 import os
-from bigcommerce.api import BigcommerceApi
 from urllib.parse import urlencode
 from fastapi import APIRouter, Depends, Query, HTTPException, status, Body, Request
 from fastapi.responses import RedirectResponse
@@ -148,7 +147,7 @@ async def set_suppression(suppression_data: SupperssionSet, service_name: str = 
 async def bigcommerce_redirect_login(store_hash: str = Query(...), is_pixel_install: bool = Query(False), user = Depends(check_user_authentication), domain = Depends(check_domain)):
     params = {
         "client_id": BigcommerceConfig.client_id,
-        'context': f'{store_hash}',
+        'context': f'stores/{store_hash}',
         "redirect_uri": BigcommerceConfig.redirect_uri,
         "response_type": "code",
         "scope": "store_v2_content store_v2_default store_v2_information_read_only store_v2_orders_read_only",
@@ -180,7 +179,6 @@ def bigcommerce_auth(
         'grant_type': 'authorization_code'
     }
 
-
     with httpx.Client() as client:
         token_response = client.post(BigcommerceConfig.token_url, data=payload)
         if token_response.status_code != 200:
@@ -188,16 +186,8 @@ def bigcommerce_auth(
 
         token_data = token_response.json()
 
-    #token_data = {'access_token': 'fmpz3f99lsadrgzrz7dt6pocqpmdtgz', 'scope': None, 'user': {'id': 2516593, 'username': 'login@lolly.com', 'email': 'login@lolly.com'}, 'owner': {'id': 2516593, 'username': 'login@lolly.com', 'email': 'login@lolly.com'}, 'context': 'stores/t1gy0670au', 'ajs_anonymous_id': None, 'account_uuid': '3d3d4711-1882-42fa-acb9-c1ceb3c1ba65'}
-    
     access_token = token_data.get('access_token')
-    shop_hash = token_data.get('context', '').split('/')[1] if token_data.get('context', '').startswith("stores/") else token_data.get('context', '')
-    print('----------------')
-    print(access_token)
-    
-    #client = BigcommerceApi(client_id=BigcommerceConfig.client_id, store_hash=shop_hash)
-    #access_token = client.oauth_fetch_token(BigcommerceConfig.client_secret, code, context, scope, BigcommerceConfig.redirect_uri)
-    
+    shop_hash = token_data.get('context', '').split('/')[1]
     
     if state:
         user_id, domain_id, is_pixell_install = (state.split(':') + [None, None, None])[:3]
@@ -210,21 +200,59 @@ def bigcommerce_auth(
         if not domain:
             return RedirectResponse(f'{redirect_url}?message=Failed')
 
-        # try:
-        with integration_service as service:
-            service.bigcommerce.add_integration_with_app(
-                new_credentials=IntegrationCredentials(
-                    bigcommerce=ShopifyOrBigcommerceCredentials(
-                        shop_domain=shop_hash,
-                        access_token=access_token
-                    )
-                ),
-                domain=domain,
-                user=user
+        try:
+            with integration_service as service:
+                service.bigcommerce.add_integration_with_app(
+                    new_credentials=IntegrationCredentials(
+                        bigcommerce=ShopifyOrBigcommerceCredentials(
+                            shop_domain=shop_hash,
+                            access_token=access_token
+                        )
+                    ),
+                    domain=domain,
+                    user=user
+                )
+            return RedirectResponse(f'{redirect_url}?message=Successfully')
+        except Exception:
+            return RedirectResponse(f'{redirect_url}?message=Failed')
+    else:
+        with httpx.Client() as client:
+            shop_response = client.get(
+                url=f"https://api.bigcommerce.com/stores/{shop_hash}/v2/store",
+                headers={
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-Auth-Token': access_token
+                }
             )
-        return RedirectResponse(f'{redirect_url}?message=Successfully')
-        # except Exception:
-        #     return RedirectResponse(f'{redirect_url}?message=Failed')
+            
+            if shop_response.status_code != 200:
+                return RedirectResponse(BigcommerceConfig.external_app_installed)
+
+            shop_data = shop_response.json()
+            domain_url = shop_data.get("domain")
+
+            domain_entry = domain_persistence.get_domain_by_filter(domain=domain_url)
+            if domain_entry:
+                redirect_url = BigcommerceConfig.frontend_redirect
+                domain = domain_entry[0]
+                user = user_persistence.get_user_by_id(domain_entry[0].user_id)
+                if user:
+                    try:
+                        with integration_service as service:
+                            service.bigcommerce.add_integration_with_app(
+                                new_credentials=IntegrationCredentials(
+                                    bigcommerce=ShopifyOrBigcommerceCredentials(
+                                        shop_domain=shop_hash,
+                                        access_token=access_token
+                                    )
+                                ),
+                                domain=domain,
+                                user=user
+                            )
+                        return RedirectResponse(f'{redirect_url}?message=Successfully')
+                    except Exception:
+                        return RedirectResponse(f'{redirect_url}?message=Failed')
         
     with integration_service as service:
             service.bigcommerce.add_external_apps_install(
@@ -235,45 +263,7 @@ def bigcommerce_auth(
                 )
             )
         )
-
-    with httpx.Client() as client:
-        shop_response = client.get(
-            url=f"https://api.bigcommerce.com/stores/{shop_hash}/v2/store",
-            headers={
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-                'X-Auth-Token': access_token
-            }
-        )
-        
-        if shop_response.status_code != 200:
-            return RedirectResponse(BigcommerceConfig.external_app_installed)
-
-        shop_data = shop_response.json()
-        domain_url = shop_data.get("domain")
-
-        domain_entry = domain_persistence.get_domain_by_filter(domain=domain_url)
-        if domain_entry:
-            redirect_url = BigcommerceConfig.frontend_redirect
-            domain = domain_entry[0]
-            user = user_persistence.get_user_by_id(domain_entry[0].user_id)
-            if user:
-                try:
-                    with integration_service as service:
-                        service.bigcommerce.add_integration_with_app(
-                            new_credentials=IntegrationCredentials(
-                                bigcommerce=ShopifyOrBigcommerceCredentials(
-                                    shop_domain=shop_hash,
-                                    access_token=access_token
-                                )
-                            ),
-                            domain=domain,
-                            user=user
-                        )
-                    return RedirectResponse(f'{redirect_url}?message=Successfully')
-                except Exception:
-                    return RedirectResponse(f'{redirect_url}?message=Failed')
-
+            
     return RedirectResponse(BigcommerceConfig.external_app_installed)
     
 @router.get("/bigcommerce/uninstall", status_code=status.HTTP_200_OK)

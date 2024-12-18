@@ -84,13 +84,14 @@ class BigcommerceIntegrationsService:
 
     def add_external_apps_install(self, new_credentials: IntegrationCredentials):
         try:
-            epi = self.eai_persistence.get_epi_by_filter_one(ExternalAppsInstall.platform=='big_commerce', ExternalAppsInstall.store_hash==new_credentials.bigcommerce.shop_domain)
-            if not epi:
-                epi = self.eai_persistence.create_epi({
-                        'platform': 'big_commerce',
-                        'store_hash': new_credentials.bigcommerce.shop_domain,
-                        'access_token': new_credentials.bigcommerce.access_token
-                    })
+            epi = self.eai_persistence.get_epi_by_filter_one(platform='big_commerce', store_hash=new_credentials.bigcommerce.shop_domain)
+            if epi:
+                return epi
+            epi = self.eai_persistence.create_epi({
+                    'platform': 'big_commerce',
+                    'store_hash': new_credentials.bigcommerce.shop_domain,
+                    'access_token': new_credentials.bigcommerce.access_token
+                })
             if not epi:
                 raise HTTPException(status_code=400, detail={'status': IntegrationsStatus.CREATE_IS_FAILED.value})
             return epi
