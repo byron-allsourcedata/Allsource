@@ -190,32 +190,28 @@ def bigcommerce_auth(
     redirect_url = BigcommerceConfig.frontend_dashboard_redirect if is_pixell_install else BigcommerceConfig.frontend_redirect
 
     if state:
-        print('---------')
         user = user_persistence.get_user_by_id(user_id)
         domain_entry = domain_persistence.get_domain_by_filter(id=domain_id)
-        domain = domain_entry[0].domain if domain_entry else None
-        print(user)
-        print(domain_entry)
-        print(domain)
+        domain = domain_entry[0] if domain_entry else None
         
         if not domain:
             return RedirectResponse(f'{redirect_url}?message=Failed')
 
-        try:
-            with integration_service as service:
-                service.bigcommerce.add_integration_with_app(
-                    new_credentials=IntegrationCredentials(
-                        bigcommerce=ShopifyOrBigcommerceCredentials(
-                            shop_domain=domain,
-                            access_token=access_token
-                        )
-                    ),
-                    domain=domain,
-                    user=user
-                )
-            return RedirectResponse(f'{redirect_url}?message=Successfully')
-        except Exception:
-            return RedirectResponse(f'{redirect_url}?message=Failed')
+        # try:
+        with integration_service as service:
+            service.bigcommerce.add_integration_with_app(
+                new_credentials=IntegrationCredentials(
+                    bigcommerce=ShopifyOrBigcommerceCredentials(
+                        shop_domain=shop_hash,
+                        access_token=access_token
+                    )
+                ),
+                domain=domain,
+                user=user
+            )
+        return RedirectResponse(f'{redirect_url}?message=Successfully')
+        # except Exception:
+        #     return RedirectResponse(f'{redirect_url}?message=Failed')
         
     integration_service.bigcommerce.add_external_apps_install(
             new_credentials=IntegrationCredentials(
