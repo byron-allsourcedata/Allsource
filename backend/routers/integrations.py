@@ -176,13 +176,15 @@ def bigcommerce_auth(
         'grant_type': 'authorization_code'
     }
 
-    # with httpx.Client() as client:
-    #     token_response = client.post(BigcommerceConfig.token_url, data=payload)
-    #     if token_response.status_code != 200:
-    #         return "The pixel is not installed. Please visit https://app.maximiz.ai/dashboard and complete the integration there."
+    with httpx.Client() as client:
+        token_response = client.post(BigcommerceConfig.token_url, data=payload)
+        if token_response.status_code != 200:
+            return "The pixel is not installed. Please visit https://app.maximiz.ai/dashboard and complete the integration there."
 
-        #token_data = token_response.json()
-    token_data = {'access_token': 'mrv2dn3hmmaoqtkv2vcf24fvp7ceyng', 'scope': None, 'user': {'id': 2516593, 'username': 'login@lolly.com', 'email': 'login@lolly.com'}, 'context': 't1gy0670au', 'ajs_anonymous_id': None}
+        token_data = token_response.json()
+    print('123_______________')
+    print(token_data)
+    #token_data = {'access_token': 'mrv2dn3hmmaoqtkv2vcf24fvp7ceyng', 'scope': None, 'user': {'id': 2516593, 'username': 'login@lolly.com', 'email': 'login@lolly.com'}, 'context': 't1gy0670au', 'ajs_anonymous_id': None}
     access_token = token_data.get('access_token')
     shop_hash = token_data.get('context', '').split('/')[1] if token_data.get('context', '').startswith("stores/") else token_data.get('context', '')
     if state:
