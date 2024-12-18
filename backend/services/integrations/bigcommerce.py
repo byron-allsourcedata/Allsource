@@ -1,5 +1,6 @@
 import hashlib
 import os
+import httpx
 from typing import List
 from sqlalchemy.orm import Session
 import requests
@@ -37,6 +38,8 @@ class BigcommerceIntegrationsService:
         return integration
 
     def __handle_request(self, url: str, method: str = 'GET', headers: dict = None, json: dict = None, data: dict = None, params: dict = None, access_token: str = None):
+        if self.client.is_closed:
+            self.client = httpx.Client()
         if not headers:
             headers = {
                 'X-Auth-Token': access_token,
@@ -122,8 +125,6 @@ class BigcommerceIntegrationsService:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid Request [JWT]")
         if not payload or not payload_jwt:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid Request [NON]")
-        
-        return {"status": "OK"}
     
     def oauth_bigcommerce_uninstall(self, signed_payload, signed_payload_jwt):
         try:
@@ -134,12 +135,12 @@ class BigcommerceIntegrationsService:
         if not payload or not payload_jwt:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid Request [NON]")
         
-        user_integration = self.integrations_persistence.get_integration_by_shop_url(shop_id=payload.get("store_hash"))
+        user_integration = self.integrations_persistence.get_integration_by_shop_url(shop_url=payload.get("store_hash"))
         if user_integration:
             self.db.delete(user_integration)
             self.db.commit()
             
-        return {"status": "OK"}
+        return 'The BigCommerce Uninstall Was Successful'
 
     def add_integration_with_app(self, new_credentials: IntegrationCredentials, domain, user: dict):
         credentials = self.get_credentials(domain_id=domain.id)
