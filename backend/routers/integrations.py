@@ -192,7 +192,7 @@ def bigcommerce_auth(
     
     client = BigcommerceApi(client_id=BigcommerceConfig.client_id, store_hash=shop_hash)
     access_token = client.oauth_fetch_token(BigcommerceConfig.client_secret, code, context, scope, BigcommerceConfig.redirect_uri)
-    
+    access_token = access_token['access_token']
     
     if state:
         user_id, domain_id, is_pixell_install = (state.split(':') + [None, None, None])[:3]
