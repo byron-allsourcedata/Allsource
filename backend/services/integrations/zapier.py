@@ -23,7 +23,7 @@ class ZapierIntegrationService:
         self.QUEUE_DATA_SYNC = 'data_sync_leads'
     
     def get_credentials(self, domain_id):
-        return self.integration_persistence.get_credentials_for_service(domain_id=domain_id, service_name='Zapier')
+        return self.integration_persistence.get_credentials_for_service(domain_id=domain_id, service_name=SourcePlatformEnum.ZAPIER.value)
 
     def __create_integrations(self, domain):
         integration = {
@@ -107,7 +107,7 @@ class ZapierIntegrationService:
             if sync:
                 sync = sync[0]
                 serarch_sync = self.sync_persistence.get_integration_by_sync_id(sync_id=sync.id)
-                if not serarch_sync or serarch_sync.service_name != 'Zapier':
+                if not serarch_sync or serarch_sync.service_name != SourcePlatformEnum.ZAPIER.value:
                     logging.info(f'Sync {sync.id} Zapier not matched')
                     return
         leads_type = message.get('leads_type')

@@ -54,7 +54,7 @@ class MetaIntegrationsService:
 
 
     def get_credentials(self, domain_id: int):
-        return self.integrations_persisntece.get_credentials_for_service(domain_id, 'Meta')
+        return self.integrations_persisntece.get_credentials_for_service(domain_id, SourcePlatformEnum.META.value)
 
     def get_info_by_access_token(self, access_token: str):
         url = 'https://graph.facebook.com/v20.0/me'
@@ -227,7 +227,7 @@ class MetaIntegrationsService:
             sync = IntegrationUserSync(**message.get('sync'))
             if sync:
                 serarch_sync = self.sync_persistence.get_integration_by_sync_id(sync_id=sync.id)
-                if not serarch_sync or serarch_sync.service_name != 'Meta':
+                if not serarch_sync or serarch_sync.service_name != SourcePlatformEnum.META.value:
                     logging.info(f'Sync {sync.id} Meta not matched')
                     return
         leads_type = message.get('leads_type')

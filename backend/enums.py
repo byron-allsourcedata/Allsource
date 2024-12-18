@@ -23,6 +23,8 @@ class SourcePlatformEnum(Enum):
     OMNISEND = 'omnisend'
     SENDLANE = 'sendlane'
     ZAPIER = 'zapier'
+    WORDPRESS = 'wordpress'
+    HUBSPOT = 'hubspot'
 
 
 class UserPaymentStatusEnum(Enum):
