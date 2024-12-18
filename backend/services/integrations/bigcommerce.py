@@ -6,8 +6,9 @@ from sqlalchemy.orm import Session
 import requests
 from jose import JWTError
 from models.users_domains import UserDomains
+from models.integrations.external_apps_installations import ExternalAppsInstall
 from enums import IntegrationsStatus, SourcePlatformEnum
-from schemas.integrations.integrations import IntegrationCredentials, OrderAPI, ShopifyOrBigcommerceCredentials
+from schemas.integrations.integrations import IntegrationCredentials, OrderAPI
 from schemas.integrations.bigcommerce import BigCommerceInfo
 from persistence.leads_persistence import LeadsPersistence
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
@@ -83,11 +84,13 @@ class BigcommerceIntegrationsService:
 
     def add_external_apps_install(self, new_credentials: IntegrationCredentials):
         try:
-            epi =self.eai_persistence.create_epi({
-                'platform': 'big_commerce',
-                'store_hash': new_credentials.bigcommerce.shop_domain,
-                'access_token': new_credentials.bigcommerce.access_token
-            })
+            epi = self.eai_persistence.get_epi_by_filter_one(ExternalAppsInstall.platform=='big_commerce', ExternalAppsInstall.store_hash==new_credentials.bigcommerce.shop_domain)
+            if not epi:
+                epi = self.eai_persistence.create_epi({
+                        'platform': 'big_commerce',
+                        'store_hash': new_credentials.bigcommerce.shop_domain,
+                        'access_token': new_credentials.bigcommerce.access_token
+                    })
             if not epi:
                 raise HTTPException(status_code=400, detail={'status': IntegrationsStatus.CREATE_IS_FAILED.value})
             return epi

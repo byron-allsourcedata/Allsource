@@ -176,7 +176,6 @@ def bigcommerce_auth(
         'client_id': BigcommerceConfig.client_id,
         'client_secret': BigcommerceConfig.client_secret,
         'code': code,
-        'scope': scope,
         'redirect_uri': BigcommerceConfig.redirect_uri,
         'grant_type': 'authorization_code'
     }
@@ -189,7 +188,7 @@ def bigcommerce_auth(
 
         token_data = token_response.json()
 
-    #token_data = {'access_token': 'mrv2dn3hmmaoqtkv2vcf24fvp7ceyng', 'scope': None, 'user': {'id': 2516593, 'username': 'login@lolly.com', 'email': 'login@lolly.com'}, 'context': 't1gy0670au', 'ajs_anonymous_id': None}
+    #token_data = {'access_token': 'fmpz3f99lsadrgzrz7dt6pocqpmdtgz', 'scope': None, 'user': {'id': 2516593, 'username': 'login@lolly.com', 'email': 'login@lolly.com'}, 'owner': {'id': 2516593, 'username': 'login@lolly.com', 'email': 'login@lolly.com'}, 'context': 'stores/t1gy0670au', 'ajs_anonymous_id': None, 'account_uuid': '3d3d4711-1882-42fa-acb9-c1ceb3c1ba65'}
     
     access_token = token_data.get('access_token')
     shop_hash = token_data.get('context', '').split('/')[1] if token_data.get('context', '').startswith("stores/") else token_data.get('context', '')
