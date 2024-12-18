@@ -171,30 +171,34 @@ def bigcommerce_auth(
     user_persistence: UserPersistence = Depends(get_user_persistence_service),
     domain_persistence: UserDomainsPersistence = Depends(get_user_domain_persistence)
 ):
+    
     payload = {
         'client_id': BigcommerceConfig.client_id,
         'client_secret': BigcommerceConfig.client_secret,
         'code': code,
+        'scope': scope,
         'redirect_uri': BigcommerceConfig.redirect_uri,
         'grant_type': 'authorization_code'
     }
 
-    # with httpx.Client() as client:
-    #     token_response = client.post(BigcommerceConfig.token_url, data=payload)
-    #     if token_response.status_code != 200:
-    #         return "The pixel is not installed. Please visit https://app.maximiz.ai/dashboard and complete the integration there."
 
-    #     token_data = token_response.json()
+    with httpx.Client() as client:
+        token_response = client.post(BigcommerceConfig.token_url, data=payload)
+        if token_response.status_code != 200:
+            return "The pixel is not installed. Please visit https://app.maximiz.ai/dashboard and complete the integration there."
+
+        token_data = token_response.json()
 
     #token_data = {'access_token': 'mrv2dn3hmmaoqtkv2vcf24fvp7ceyng', 'scope': None, 'user': {'id': 2516593, 'username': 'login@lolly.com', 'email': 'login@lolly.com'}, 'context': 't1gy0670au', 'ajs_anonymous_id': None}
-    #access_token = token_data.get('access_token')
-    shop_hash = context.split('/')[1] if context.startswith("stores/") else context
     
-    client = BigcommerceApi(client_id=BigcommerceConfig.client_id, store_hash=shop_hash)
-    access_token = client.oauth_fetch_token(BigcommerceConfig.client_secret, code, context, scope, BigcommerceConfig.redirect_uri)
-    access_token = access_token['access_token']
-    print('---------------------')
+    access_token = token_data.get('access_token')
+    shop_hash = token_data.get('context', '').split('/')[1] if token_data.get('context', '').startswith("stores/") else token_data.get('context', '')
+    print('----------------')
     print(access_token)
+    
+    #client = BigcommerceApi(client_id=BigcommerceConfig.client_id, store_hash=shop_hash)
+    #access_token = client.oauth_fetch_token(BigcommerceConfig.client_secret, code, context, scope, BigcommerceConfig.redirect_uri)
+    
     
     if state:
         user_id, domain_id, is_pixell_install = (state.split(':') + [None, None, None])[:3]

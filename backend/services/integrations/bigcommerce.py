@@ -58,6 +58,7 @@ class BigcommerceIntegrationsService:
     def __get_store_info(self, store_hash: str, access_token: str):
         url = f'{store_hash}/v2/store'
         info = self.__handle_request(url, access_token=access_token)
+        print(info)
         return self.__mapped_info(info.json())
     
 
