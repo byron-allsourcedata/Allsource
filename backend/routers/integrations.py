@@ -198,21 +198,21 @@ def bigcommerce_auth(
         if not domain:
             return RedirectResponse(f'{redirect_url}?message=Failed')
         
-        # try:
-        with integration_service as service:
-            service.bigcommerce.add_integration_with_app(
-                new_credentials=IntegrationCredentials(
-                    bigcommerce=ShopifyOrBigcommerceCredentials(
-                        shop_domain=shop_hash,
-                        access_token=access_token
-                    )
-                ),
-                domain=domain,
-                user=user
-            )
-        return RedirectResponse(f'{redirect_url}?message=Successfully')
-        # except Exception:
-        #     return RedirectResponse(f'{redirect_url}?message=Failed')
+        try:
+            with integration_service as service:
+                service.bigcommerce.add_integration_with_app(
+                    new_credentials=IntegrationCredentials(
+                        bigcommerce=ShopifyOrBigcommerceCredentials(
+                            shop_domain=shop_hash,
+                            access_token=access_token
+                        )
+                    ),
+                    domain=domain,
+                    user=user
+                )
+            return RedirectResponse(f'{redirect_url}?message=Successfully')
+        except Exception:
+            return RedirectResponse(f'{redirect_url}?message=Failed')
     else:
         with httpx.Client() as client:
             shop_response = client.get(
@@ -262,7 +262,7 @@ def bigcommerce_auth(
             )
         )
             
-    return RedirectResponse(BigcommerceConfig.external_app_installed)
+    return RedirectResponse(BigcommerceConfig.frontend_redirect)
     
 @router.get("/bigcommerce/uninstall", status_code=status.HTTP_200_OK)
 def oauth_bigcommerce_uninstall(signed_payload: Annotated[str, Query()], signed_payload_jwt: Annotated[str, Query()], integration_service: IntegrationService = Depends(get_integration_service)):
