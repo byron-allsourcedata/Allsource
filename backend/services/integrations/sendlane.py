@@ -288,7 +288,6 @@ class SendlaneIntegrationService:
             'contacts': [{**profile.model_dump()}]
         }
         respsonse = self.__handle_request(f'/lists/{list_id}/contacts', api_key=credential.access_token, json=json, method="POST")
-        print(respsonse.json())
         if respsonse.status_code == 401:
             credential.is_failed = True
             credential.error_message = 'Invalid API Key'

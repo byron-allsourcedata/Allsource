@@ -163,8 +163,6 @@ async def bigcommerce_redirect_login(store_hash: str = Query(...), is_pixel_inst
 @router.get("/bigcommerce/auth/callback")
 def bigcommerce_auth(
     code: Optional[str],
-    context: Optional[str],
-    scope: Optional[str],
     state: str = Query(None),
     integration_service: IntegrationService = Depends(get_integration_service),
     user_persistence: UserPersistence = Depends(get_user_persistence_service),
@@ -187,11 +185,6 @@ def bigcommerce_auth(
         token_data = token_response.json()
 
     access_token = token_data.get('access_token')
-    print('---------')
-    print(access_token)
-    #token_data = {'access_token': 'bl9e2a6gmgzd5w390p8xkt3t59qrmop', 'scope': None, 'user': {'id': 2516593, 'username': 'login@lolly.com', 'email': 'login@lolly.com'}, 'owner': {'id': 2516593, 'username': 'login@lolly.com', 'email': 'login@lolly.com'}, 'context': 'stores/t1gy0670au', 'ajs_anonymous_id': None, 'account_uuid': '3d3d4711-1882-42fa-acb9-c1ceb3c1ba65'}
-    
-    #access_token = 'bl9e2a6gmgzd5w390p8xkt3t59qrmop'
     shop_hash = token_data.get('context', '').split('/')[1]
     
     if state:
