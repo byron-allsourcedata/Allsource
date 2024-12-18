@@ -275,7 +275,7 @@ def oauth_bigcommerce_uninstall(signed_payload: Annotated[str, Query()], signed_
 def oauth_bigcommerce_load(signed_payload: Annotated[str, Query()], signed_payload_jwt: Annotated[str, Query()], integration_service: IntegrationService = Depends(get_integration_service)):
     with integration_service as service:
         service.bigcommerce.oauth_bigcommerce_load(signed_payload=signed_payload, signed_payload_jwt=signed_payload_jwt)
-    return RedirectResponse(os.getenv("SITE_URL"))
+    return RedirectResponse(os.getenv("SITE_HOST_URL"))
 
 @router.get('/eai')
 async def get_eais_platform(platform: str = Query(...), integration_service: IntegrationService = Depends(get_integration_service), user = Depends(check_user_authorization)):
