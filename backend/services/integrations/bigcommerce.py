@@ -137,8 +137,7 @@ class BigcommerceIntegrationsService:
         
         user_integration = self.integrations_persistence.get_integration_by_shop_url(shop_url=payload.get("store_hash"))
         if user_integration:
-            self.db.delete(user_integration)
-            self.db.commit()
+            self.integrations_persistence.delete_integration(user_integration.domain_id, user_integration.service_name)
             
         return 'The BigCommerce Uninstall Was Successful'
 
