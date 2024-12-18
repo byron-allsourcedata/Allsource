@@ -187,6 +187,8 @@ def bigcommerce_auth(
         token_data = token_response.json()
 
     access_token = token_data.get('access_token')
+    print('---------')
+    print(access_token)
     shop_hash = token_data.get('context', '').split('/')[1]
     
     if state:
