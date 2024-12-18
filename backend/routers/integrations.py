@@ -150,7 +150,7 @@ async def bigcommerce_redirect_login(store_hash: str = Query(...), is_pixel_inst
         'context': f'stores/{store_hash}',
         "redirect_uri": BigcommerceConfig.redirect_uri,
         "response_type": "code",
-        "scope": "store_v2_content store_v2_default store_v2_information_read_only store_v2_orders_read_only",
+        "scope": "store_content_checkout store_v2_content store_v2_default store_v2_information_read_only store_v2_orders_read_only",
         'state': f'{user.get("id")}:{domain.id}:{is_pixel_install}'
     }
     query_string = urlencode(params, safe=':/')
@@ -189,6 +189,9 @@ def bigcommerce_auth(
     access_token = token_data.get('access_token')
     print('---------')
     print(access_token)
+    #token_data = {'access_token': 'bl9e2a6gmgzd5w390p8xkt3t59qrmop', 'scope': None, 'user': {'id': 2516593, 'username': 'login@lolly.com', 'email': 'login@lolly.com'}, 'owner': {'id': 2516593, 'username': 'login@lolly.com', 'email': 'login@lolly.com'}, 'context': 'stores/t1gy0670au', 'ajs_anonymous_id': None, 'account_uuid': '3d3d4711-1882-42fa-acb9-c1ceb3c1ba65'}
+    
+    #access_token = 'bl9e2a6gmgzd5w390p8xkt3t59qrmop'
     shop_hash = token_data.get('context', '').split('/')[1]
     
     if state:
@@ -201,22 +204,22 @@ def bigcommerce_auth(
         
         if not domain:
             return RedirectResponse(f'{redirect_url}?message=Failed')
-
-        try:
-            with integration_service as service:
-                service.bigcommerce.add_integration_with_app(
-                    new_credentials=IntegrationCredentials(
-                        bigcommerce=ShopifyOrBigcommerceCredentials(
-                            shop_domain=shop_hash,
-                            access_token=access_token
-                        )
-                    ),
-                    domain=domain,
-                    user=user
-                )
-            return RedirectResponse(f'{redirect_url}?message=Successfully')
-        except Exception:
-            return RedirectResponse(f'{redirect_url}?message=Failed')
+        
+        # try:
+        with integration_service as service:
+            service.bigcommerce.add_integration_with_app(
+                new_credentials=IntegrationCredentials(
+                    bigcommerce=ShopifyOrBigcommerceCredentials(
+                        shop_domain=shop_hash,
+                        access_token=access_token
+                    )
+                ),
+                domain=domain,
+                user=user
+            )
+        return RedirectResponse(f'{redirect_url}?message=Successfully')
+        # except Exception:
+        #     return RedirectResponse(f'{redirect_url}?message=Failed')
     else:
         with httpx.Client() as client:
             shop_response = client.get(

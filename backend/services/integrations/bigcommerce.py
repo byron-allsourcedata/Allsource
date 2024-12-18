@@ -141,18 +141,18 @@ class BigcommerceIntegrationsService:
             
         return 'The BigCommerce Uninstall Was Successful'
 
-    def add_integration_with_app(self, credentials: IntegrationCredentials, domain, user: dict):
+    def add_integration_with_app(self, new_credentials: IntegrationCredentials, domain, user: dict):
         credentials = self.get_credentials(domain_id=domain.id)
-        info = self.__get_store_info(store_hash=credentials.bigcommerce.shop_domain, 
-                                     access_token=credentials.bigcommerce.access_token)
+        info = self.__get_store_info(store_hash=new_credentials.bigcommerce.shop_domain, 
+                                     access_token=new_credentials.bigcommerce.access_token)
         if not info:
             raise HTTPException(status_code=409, detail=IntegrationCredentials.value)
         if info.domain.startswith('https://'):
             info.domain = f'{credentials.bigcommerce.shop_domain}'
         if not credentials and info.domain != domain.domain:
             raise HTTPException(status_code=400, detail=IntegrationsStatus.NOT_MATCHED_EARLIER.value)
-        integration = self.__save_integrations(store_hash=credentials.bigcommerce.shop_domain, 
-                                 access_token=credentials.bigcommerce.access_token, domain_id=domain.id, user=user)
+        integration = self.__save_integrations(store_hash=new_credentials.bigcommerce.shop_domain, 
+                                 access_token=new_credentials.bigcommerce.access_token, domain_id=domain.id, user=user)
         self.__set_pixel(user.get('id'), domain, shop_domain=integration.shop_domain, access_token=integration.access_token)
         if not integration:
             raise HTTPException(status_code=409, detail=IntegrationsStatus.CREATE_IS_FAILED.value)
