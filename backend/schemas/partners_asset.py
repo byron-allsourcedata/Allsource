@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, Any
 from enums import PartnersAssetsInfoEnum
 
 
@@ -15,3 +15,4 @@ class PartnersAssetResponse(BaseModel):
 
 class PartnersAssetsInfoResponse(BaseModel):
     status: PartnersAssetsInfoEnum
+    data: Optional[Any] = None

@@ -5,6 +5,7 @@ import FileUploadOutlinedIcon from '@mui/icons-material/FileUploadOutlined';
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { styled } from '@mui/material/styles';
+import { showErrorToast, showToast } from '@/components/ToastNotification';
 
 interface AssetsData {
     id: number;
@@ -137,8 +138,9 @@ const FormUploadAssetPopup: React.FC<FormUploadPopupProps> = ({ updateOrAddAsset
     }
 
     const handleSubmit = async () => {
-        setProcessing(true)
-        setButtonContain(false)
+        setProcessing(true);
+        setButtonContain(false);
+    
         const formData = new FormData();
         formData.append("description", description);
         formData.append("type", type);
@@ -159,12 +161,18 @@ const FormUploadAssetPopup: React.FC<FormUploadPopupProps> = ({ updateOrAddAsset
                     headers: { "Content-Type": "multipart/form-data" },
                 });
             }
-            updateOrAddAsset(response.data.type, {...response.data, isFavorite: false});
-        } catch (error) {
-            console.error("Error submitting asset:", error);
+    
+            if (response.data.status === "SUCCESS") {
+                updateOrAddAsset(response.data.data.type, { ...response.data.data, isFavorite: false });
+                showToast("Asset successfully submitted!");
+            } else {
+                showErrorToast("Asset data is not valid!");
+            }
+        } catch {
+            showErrorToast("Failed to submit the asset. Please try again.");
         } finally {
-            handleClose()
-            setProcessing(false)
+            handleClose();
+            setProcessing(false);
         }
     };
 

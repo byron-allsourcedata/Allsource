@@ -165,7 +165,7 @@ class AudienceInfoEnum(Enum):
 
 class PartnersAssetsInfoEnum(Enum):
     SUCCESS = "SUCCESS"
-    NOT_FOUND = "NOT_FOUND"
+    NOT_VALID_DATA = "NOT_VALID_DATA"
     NOT_VALID_ID = 'NOT_VALID_ID'
 
 

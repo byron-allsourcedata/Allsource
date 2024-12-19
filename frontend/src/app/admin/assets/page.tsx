@@ -1,6 +1,6 @@
 "use client"
 import axiosInstance from "@/axios/axiosInterceptorInstance";
-import { Box, Grid, Typography, Menu, MenuItem, Link, Button} from "@mui/material";
+import { Box, Grid, Typography, Menu, MenuItem, Link, Button, LinearProgress} from "@mui/material";
 import { useEffect, useState} from "react";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import PartnersAsset from '@/components/PartnersAsset';
@@ -8,6 +8,9 @@ import dynamic from "next/dynamic";
 import { assetsStyle } from "./assetsStyle";
 import Image from "next/image";
 import { resellerStyle } from "@/app/admin/reseller/resellerStyle";
+import Header from "@/components/Header";
+import { showErrorToast, showToast } from '@/components/ToastNotification';
+import { styled } from '@mui/material/styles';
 
 interface AssetsData {
     id: number;
@@ -35,6 +38,16 @@ const Assets: React.FC = () => {
     const open = Boolean(anchorEl);
     const [assets, setAssets] = useState<PartnersAssetsData[]>([{type: "Videos", asset: []}, {type: "Pitch decks", asset: []}, {type: "Images", asset: []}, {type: "Documents", asset: []}, ]);
 
+    const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
+        height: 4,
+        borderRadius: 0,
+        backgroundColor: '#c6dafc',
+        '& .MuiLinearProgress-bar': {
+          borderRadius: 5,
+          backgroundColor: '#4285f4',
+        },
+    }));
+
     const fetchRewards = async () => {
         setLoading(true);
         try {
@@ -56,7 +69,6 @@ const Assets: React.FC = () => {
                 {type: "Documents", asset: assetsByType["document"] || []},
             ]);
 
-
         } catch (error) {
             console.error("Error fetching rewards:", error);
         } finally {
@@ -67,11 +79,16 @@ const Assets: React.FC = () => {
     const handleDeleteAsset = async (id: number) => {
         setLoading(true)
         try {
-            await axiosInstance.delete(`partners-assets/${id}`);
-            removeAssetById(id);
-
-        } catch (error) {
-            console.error("Error fetching rewards:", error);
+            const response = await axiosInstance.delete(`partners-assets/${id}`);
+            const status = response.data.status;
+            if (status === "SUCCESS") {
+                removeAssetById(id);
+                showToast("Asset successfully deleted!")
+            } else {
+                showErrorToast("The provided ID is not valid.")
+            }
+        } catch {
+            showErrorToast("Failed to delete asset. Please try again later.");
         } finally {
             setLoading(false)
         }
@@ -125,10 +142,19 @@ const Assets: React.FC = () => {
 
     return (
         <>
-            {loading &&
-                <CustomizedProgressBar />
-            }
             <Box sx={assetsStyle.headers}>
+                {loading && (
+                            <Box
+                                sx={{
+                                width: '100%',
+                                position: 'fixed',
+                                top: '5.9rem',
+                                zIndex: 1200,   
+                                }}
+                            >
+                                <BorderLinearProgress variant="indeterminate" />
+                            </Box>
+                )}
                 <Box sx={resellerStyle.logoContainer}>
                     <Link href="/" underline="none" sx={{ zIndex: 10 }}>
                         <Image src='/logo.svg' alt='logo' height={80} width={60} />
@@ -166,7 +192,7 @@ const Assets: React.FC = () => {
                     </Menu>
                 </Box>
             </Box>
-
+            {/* <Header NewRequestNotification={false} /> */}
             <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
                 <Grid container width='100%'>
                     <Grid item xs={12} md={2} sx={{ padding: '0px' }}>

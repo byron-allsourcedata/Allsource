@@ -5,7 +5,7 @@ import tempfile
 import hashlib
 import zipfile
 from pathlib import Path
-from PIL import Image, UnidentifiedImageError
+from PIL import Image
 import subprocess
 from fastapi import HTTPException, UploadFile
 from io import BytesIO
@@ -38,93 +38,112 @@ class PartnersAssetService:
     
 
     def delete_asset(self, id: int):
-        if id:
-            try:
-                self.partners_asset_persistence.delete_asset(asset_id=id)
-                return PartnersAssetsInfoEnum.SUCCESS
-            except Exception as err:
-                logger.debug('Error deleting assets file', err)
-                return PartnersAssetsInfoEnum.NOT_FOUND
-        else:
+        if not id:
             return PartnersAssetsInfoEnum.NOT_VALID_ID
+        try:
+            self.partners_asset_persistence.delete_asset(asset_id=id)
+            return PartnersAssetsInfoEnum.SUCCESS
+        except Exception as e:
+            logger.debug('Error deleting assets file', e)
+            raise HTTPException(status_code=500, detail=f"Unexpected error during delete: {str(e)}")
 
 
     async def update_asset(self, asset_id: int, description: str, type: str, file: UploadFile = None):
+        if not asset_id or not description or not type:
+            return PartnersAssetsInfoEnum.NOT_VALID_DATA
+        
         updating_data = {"description": description}
 
         if file:
-            updating_data.update(await self.upload_files_asset(description, file, type))
+            updating_data.update(await self.upload_files_asset(file, type))
  
-        updated_data = self.partners_asset_persistence.update_asset(asset_id, updating_data)
+        try:
+            updated_data = self.partners_asset_persistence.update_asset(asset_id, updating_data)
 
-        if not updated_data:
-            raise HTTPException(status_code=500, detail="Asset not updated")
+            if not updated_data:
+                logger.debug('Database error during updation', e)
+                raise HTTPException(status_code=500, detail="Asset not updated")
 
-        return self.domain_mapped(updated_data)
+            return {"status": PartnersAssetsInfoEnum.SUCCESS, "data": self.domain_mapped(updated_data)}
+        except Exception as e:
+            logger.debug('Error updating assets file', e)
+            raise HTTPException(status_code=500, detail=f"Unexpected error during update: {str(e)}")
     
 
-    async def upload_files_asset(self, description: str, file: UploadFile, type: str):
+    async def upload_files_asset(self, file: UploadFile, type: str):
         files_data = {}
-        file_contents = await file.read()
-        file_extension = Path(file.filename).suffix.lower()
+        try:
+            file_contents = await file.read()
+            file_extension = Path(file.filename).suffix.lower()
 
-        file_hash = hashlib.sha256(file_contents).hexdigest()
-        file_key = f'partners-assets/{file_hash}{file_extension}'
-        file_url = f'https://maximiz-data.s3.us-east-2.amazonaws.com/{file_key}'
+            file_hash = hashlib.sha256(file_contents).hexdigest()
+            file_key = f'partners-assets/{file_hash}{file_extension}'
+            file_url = f'https://maximiz-data.s3.us-east-2.amazonaws.com/{file_key}'
 
-        if self.AWS.file_exists(file_key):
-            files_data["file_url"] = file_url
-        else: 
-            self.AWS.upload_string(file_contents, file_key)
-            files_data["file_url"] = file_url
+            if self.AWS.file_exists(file_key):
+                files_data["file_url"] = file_url
+            else: 
+                self.AWS.upload_string(file_contents, file_key)
+                files_data["file_url"] = file_url
 
-        preview = await self.generate_preview(file_contents, file_extension, type)
-        if preview:
-            file_preview_contents = preview.read()
-            preview_key = f'partners-assets/{file_hash}_preview.jpg'
-            preview_url = f'https://maximiz-data.s3.us-east-2.amazonaws.com/{preview_key}'
-            self.AWS.upload_string(file_preview_contents, preview_key)
-            files_data["preview_url"] = preview_url
-            if self.AWS.file_exists(preview_key):
-                files_data["preview_url"] = preview_url
-            else:
+            preview = await self.generate_preview(file_contents, file_extension, type)
+            if preview:
+                file_preview_contents = preview.read()
+                preview_key = f'partners-assets/{file_hash}_preview.jpg'
+                preview_url = f'https://maximiz-data.s3.us-east-2.amazonaws.com/{preview_key}'
                 self.AWS.upload_string(file_preview_contents, preview_key)
                 files_data["preview_url"] = preview_url
-        else:
-            files_data["preview_url"] = None
-        return files_data
+                if self.AWS.file_exists(preview_key):
+                    files_data["preview_url"] = preview_url
+                else:
+                    self.AWS.upload_string(file_preview_contents, preview_key)
+                    files_data["preview_url"] = preview_url
+            else:
+                files_data["preview_url"] = None
+            return files_data
+        except Exception as e:
+            logger.debug('Error uploading assets file', e)
+            raise HTTPException(status_code=500, detail=f"Error during file upload: {str(e)}")
 
 
     async def create_asset(self, description: str, type: str, file: UploadFile = None):
-        if(file):
-            creating_data = await self.upload_files_asset(description, file, type)
-            creating_data["description"] = description
-            creating_data["type"] = type
+        if not file or not description or not type:
+            return PartnersAssetsInfoEnum.NOT_VALID_DATA
+        
+        try:
+            creating_data = await self.upload_files_asset(file, type)
+            creating_data.update({"description": description, "type": type})
 
             created_data = self.partners_asset_persistence.create_data(creating_data)
 
             if not created_data:
+                logger.debug('Database error during creation', e)
                 raise HTTPException(status_code=500, detail="Asset not created")
-            
-            return self.domain_mapped(created_data)
-        else: 
-            raise HTTPException(status_code=404, detail="File not received")
+
+            return {"status": PartnersAssetsInfoEnum.SUCCESS, "data": self.domain_mapped(created_data)}
+        except Exception as e:
+            logger.debug('Error creating assets file', e)
+            raise HTTPException(status_code=500, detail=f"Unexpected error during creation: {str(e)}")
 
     
     async def generate_preview(self, file_contents: bytes, file_extension: str, type_asset: str) -> Union[BytesIO, None]:
-        with tempfile.NamedTemporaryFile(delete=False, suffix=file_extension) as temp_file:
-            temp_file.write(file_contents)
-            temp_file_path = temp_file.name
+        try:
+            with tempfile.NamedTemporaryFile(delete=False, suffix=file_extension) as temp_file:
+                temp_file.write(file_contents)
+                temp_file_path = temp_file.name
 
-        if type_asset == "image":
-            return self._generate_image_preview(temp_file_path)
+            if type_asset == "image":
+                return self._generate_image_preview(temp_file_path)
 
-        elif type_asset == "video":
-            return self._generate_video_preview(temp_file_path)
+            elif type_asset == "video":
+                return self._generate_video_preview(temp_file_path)
 
-        elif type_asset == "presentation":
-            return self._generate_presentation_preview(temp_file_path)
-        else:
+            elif type_asset == "presentation":
+                return self._generate_presentation_preview(temp_file_path)
+            else:
+                return None
+        except Exception as e:
+            logger.debug('Error generating preview', e)
             return None
     
 
@@ -138,27 +157,33 @@ class PartnersAssetService:
                 img.save(preview, format="JPEG")
                 preview.seek(0)
                 return preview
-        except UnidentifiedImageError:
-            raise HTTPException(status_code=400, detail="Invalid image file")
+        except Exception as e:
+            logger.debug('Error generating preview image', e)
+            return None
 
 
     def _generate_video_preview(self, file_path: str) -> BytesIO:
-        preview_path = f"{file_path}_preview.jpg"
-        subprocess.run(
-            [
-                "ffmpeg",
-                "-i", file_path,
-                "-ss", "00:00:01.000",
-                "-vframes", "1",
-                preview_path,
-            ],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-        )
+        try:
+            preview_path = f"{file_path}_preview.jpg"
+            subprocess.run(
+                [
+                    "ffmpeg",
+                    "-i", file_path,
+                    "-ss", "00:00:01.000",
+                    "-vframes", "1",
+                    preview_path,
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
 
-        with open(preview_path, "rb") as preview_file:
-            preview = BytesIO(preview_file.read())
-        return preview
+            with open(preview_path, "rb") as preview_file:
+                preview = BytesIO(preview_file.read())
+            return preview
+        except Exception as e:
+            logger.debug('Error generating preview video', e)
+            return None
+
     
 
     def _generate_presentation_preview(self, presentation_path: str) -> Union[BytesIO, None]:
@@ -178,35 +203,35 @@ class PartnersAssetService:
                             return preview_image
             return None
         except Exception as e:
+            logger.debug('Error generating preview presentation', e)
             return None
 
 
     def get_file_size(self, file_url: str) -> str:
-        if file_url:
-            try:
-                response = requests.head(file_url, allow_redirects=True, timeout=5)
-                if response.status_code == 200 and 'Content-Length' in response.headers:
-                    size_in_bytes = int(response.headers['Content-Length'])
-                    size_in_mb = size_in_bytes / (1024 ** 2)
-                    return f"{size_in_mb:.2f} MB"
-                else:
-                    return "0.00 MB"
-            except Exception as err:
-                logger.debug('Error fetching file size', err)
-                return "0.00 MB" 
-        else:
+        if not file_url:
             return "0.00 MB"
+        try:
+            response = requests.head(file_url, allow_redirects=True, timeout=5)
+            if response.status_code == 200 and 'Content-Length' in response.headers:
+                size_in_bytes = int(response.headers['Content-Length'])
+                size_in_mb = size_in_bytes / (1024 ** 2)
+                return f"{size_in_mb:.2f} MB"
+            else:
+                return "0.00 MB"
+        except Exception as err:
+            logger.debug('Error fetching file size', err)
+            return "0.00 MB" 
 
 
     def get_file_extension(self, file_url) -> str:
-        if file_url:
-            url_path = urlparse(file_url).path
-            extension = os.path.splitext(url_path)[-1][1:].capitalize()
-            if not extension:
-                return "Unknown"
-            return extension
-        else: 
+        if not file_url:
             return "Unknown"
+        url_path = urlparse(file_url).path
+        extension = os.path.splitext(url_path)[-1][1:].capitalize()
+        if not extension:
+            return "Unknown"
+        return extension
+
 
 
     def domain_mapped(self, asset: PartnersAsset):

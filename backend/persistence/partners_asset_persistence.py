@@ -33,7 +33,7 @@ class PartnersAssetPersistence:
         if "file_url" in updating_data:
             asset.file_url = updating_data["file_url"]
         if "preview_url" in updating_data:
-            asset.file_url = updating_data["preview_url"]
+            asset.preview_url = updating_data["preview_url"]
 
         self.db.commit()
         self.db.refresh(asset)
