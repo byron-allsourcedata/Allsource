@@ -41,9 +41,10 @@ async def create_asset(
 async def update_asset(
     asset_id: int,
     description: str = Form(...),
+    type: str = Form(...),
     file: UploadFile = File(None),
     get_partners_assets_service: PartnersAssetService = Depends(get_partners_assets_service),
 ):
     
-    updated_asset = await get_partners_assets_service.update_asset(asset_id, description, file)
+    updated_asset = await get_partners_assets_service.update_asset(asset_id, description, type, file)
     return updated_asset

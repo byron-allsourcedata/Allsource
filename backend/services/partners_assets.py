@@ -2,6 +2,7 @@ import logging
 import os
 from typing import Union
 import tempfile
+import hashlib
 import zipfile
 from pathlib import Path
 from PIL import Image, UnidentifiedImageError
@@ -48,11 +49,11 @@ class PartnersAssetService:
             return PartnersAssetsInfoEnum.NOT_VALID_ID
 
 
-    async def update_asset(self, asset_id: int, description: str, file: UploadFile = None):
+    async def update_asset(self, asset_id: int, description: str, type: str, file: UploadFile = None):
         updating_data = {"description": description}
 
         if file:
-            updating_data.update(await self.upload_files_asset(description, file))
+            updating_data.update(await self.upload_files_asset(description, file, type))
  
         updated_data = self.partners_asset_persistence.update_asset(asset_id, updating_data)
 
@@ -66,13 +67,29 @@ class PartnersAssetService:
         files_data = {}
         file_contents = await file.read()
         file_extension = Path(file.filename).suffix.lower()
-        self.AWS.upload_string(file_contents, f'partners-assets/{description}{file_extension}')
-        files_data["file_url"] = f'https://maximiz-data.s3.us-east-2.amazonaws.com/partners-assets/{description}{file_extension}'
+
+        file_hash = hashlib.sha256(file_contents).hexdigest()
+        file_key = f'partners-assets/{file_hash}{file_extension}'
+        file_url = f'https://maximiz-data.s3.us-east-2.amazonaws.com/{file_key}'
+
+        if self.AWS.file_exists(file_key):
+            files_data["file_url"] = file_url
+        else: 
+            self.AWS.upload_string(file_contents, file_key)
+            files_data["file_url"] = file_url
+
         preview = await self.generate_preview(file_contents, file_extension, type)
         if preview:
             file_preview_contents = preview.read()
-            self.AWS.upload_string(file_preview_contents, f'partners-assets/{description}_preview.jpg')
-            files_data["preview_url"] = f'https://maximiz-data.s3.us-east-2.amazonaws.com/partners-assets/{description}_preview.jpg',
+            preview_key = f'partners-assets/{file_hash}_preview.jpg'
+            preview_url = f'https://maximiz-data.s3.us-east-2.amazonaws.com/{preview_key}'
+            self.AWS.upload_string(file_preview_contents, preview_key)
+            files_data["preview_url"] = preview_url
+            if self.AWS.file_exists(preview_key):
+                files_data["preview_url"] = preview_url
+            else:
+                self.AWS.upload_string(file_preview_contents, preview_key)
+                files_data["preview_url"] = preview_url
         else:
             files_data["preview_url"] = None
         return files_data

@@ -138,8 +138,10 @@ const FormUploadAssetPopup: React.FC<FormUploadPopupProps> = ({ updateOrAddAsset
 
     const handleSubmit = async () => {
         setProcessing(true)
+        setButtonContain(false)
         const formData = new FormData();
         formData.append("description", description);
+        formData.append("type", type);
     
         if (file) {
             formData.append("file", file);
@@ -153,7 +155,6 @@ const FormUploadAssetPopup: React.FC<FormUploadPopupProps> = ({ updateOrAddAsset
                     headers: { "Content-Type": "multipart/form-data" },
                 });
             } else {
-                formData.append("type", type);
                 response = await axiosInstance.post(`partners-assets/`, formData, {
                     headers: { "Content-Type": "multipart/form-data" },
                 });
