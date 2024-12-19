@@ -1,15 +1,18 @@
 "use client"
 import axiosInstance from "@/axios/axiosInterceptorInstance";
-import { Box} from "@mui/material";
+import { Box, Grid, Typography, Menu, MenuItem, Link, Button} from "@mui/material";
 import { useEffect, useState} from "react";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import PartnersAsset from '@/components/PartnersAsset';
-
+import dynamic from "next/dynamic";
+import { assetsStyle } from "./assetsStyle";
+import Image from "next/image";
+import { resellerStyle } from "@/app/admin/reseller/resellerStyle";
 
 interface AssetsData {
     id: number;
     file_url: string;
-    preview_url: string;
+    preview_url: string | null;
     type: string;
     title: string;
     file_extension: string;
@@ -22,10 +25,15 @@ interface PartnersAssetsData {
     asset: AssetsData[] | [];
 }
 
-const Assets: React.FC = () => {
-    const [loading, setLoading] = useState(false);
-    const [assets, setAssets] = useState<PartnersAssetsData[]>([{type: "Videos", asset: []}, {type: "Pitch decks", asset: []}, {type: "Images", asset: []}, {type: "Documents", asset: []}, ]);
+const SidebarAdmin = dynamic(() => import('../../../components/SidebarAdmin'), {
+    suspense: true,
+});
 
+const Assets: React.FC = () => {
+    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+    const [loading, setLoading] = useState(false);
+    const open = Boolean(anchorEl);
+    const [assets, setAssets] = useState<PartnersAssetsData[]>([{type: "Videos", asset: []}, {type: "Pitch decks", asset: []}, {type: "Images", asset: []}, {type: "Documents", asset: []}, ]);
 
     const fetchRewards = async () => {
         setLoading(true);
@@ -57,12 +65,15 @@ const Assets: React.FC = () => {
     };
 
     const handleDeleteAsset = async (id: number) => {
+        setLoading(true)
         try {
             await axiosInstance.delete(`partners-assets/${id}`);
             removeAssetById(id);
 
         } catch (error) {
             console.error("Error fetching rewards:", error);
+        } finally {
+            setLoading(false)
         }
     }
 
@@ -104,16 +115,77 @@ const Assets: React.FC = () => {
         );
     };
 
+    const handleProfileMenuClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+        setAnchorEl(event.currentTarget);
+    };
+
+    const handleProfileMenuClose = () => {
+        setAnchorEl(null);
+    };
+
     return (
         <>
             {loading &&
                 <CustomizedProgressBar />
             }
-            <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }} >
-                {assets.map((data, index) => (
-                    <PartnersAsset deleteAsset={handleDeleteAsset} updateOrAddAsset={updateOrAddAsset} key={index} data={data} isAdmin={true} />
-                ))}
-            </Box> 
+            <Box sx={assetsStyle.headers}>
+                <Box sx={resellerStyle.logoContainer}>
+                    <Link href="/" underline="none" sx={{ zIndex: 10 }}>
+                        <Image src='/logo.svg' alt='logo' height={80} width={60} />
+                    </Link>
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <Button
+                        aria-controls={open ? "profile-menu" : undefined}
+                        aria-haspopup="true"
+                        aria-expanded={open ? "true" : undefined}
+                        onClick={handleProfileMenuClick}
+                        sx={{
+                            minWidth: '32px',
+                            padding: '8px',
+                            color: 'rgba(128, 128, 128, 1)',
+                            border: '1px solid rgba(184, 184, 184, 1)',
+                            borderRadius: '3.27px'
+                        }}
+                    >
+                        <Image src={'/Person.svg'} alt="Person" width={18} height={18} />
+                    </Button>
+                    <Menu
+                        id="profile-menu"
+                        anchorEl={anchorEl}
+                        open={open}
+                        onClose={handleProfileMenuClose}
+                        MenuListProps={{
+                            "aria-labelledby": "profile-menu-button",
+                        }}
+                        sx={{
+                            mt: 0.5,
+                            ml: -1
+                        }}
+                    >
+                    </Menu>
+                </Box>
+            </Box>
+
+            <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                <Grid container width='100%'>
+                    <Grid item xs={12} md={2} sx={{ padding: '0px' }}>
+                        <SidebarAdmin />
+                    </Grid>
+                    <Grid item xs={12} md={10} sx={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+                        <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <Typography variant="h4" component="h1" sx={assetsStyle.title}>
+                                Assets
+                            </Typography>
+                        </Box>
+                        <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }} >
+                            {assets.map((data, index) => (
+                                <PartnersAsset deleteAsset={handleDeleteAsset} updateOrAddAsset={updateOrAddAsset} key={index} data={data} isAdmin={true} />
+                            ))}
+                        </Box>
+                    </Grid>
+                </Grid>
+            </Box>
         </>
 )};
 

@@ -1,9 +1,10 @@
 import React, { ChangeEvent, useState, useEffect } from 'react';
-import { Drawer, Box, Typography, Button, IconButton, TextField } from '@mui/material';
+import { Drawer, Box, Typography, Button, IconButton, TextField, LinearProgress } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import FileUploadOutlinedIcon from '@mui/icons-material/FileUploadOutlined';
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
+import { styled } from '@mui/material/styles';
 
 interface AssetsData {
     id: number;
@@ -16,12 +17,12 @@ interface AssetsData {
     isFavorite: boolean;
 }
 
-interface FormDownloadPopupProps {
+interface FormUploadPopupProps {
     updateOrAddAsset: (type: string, newAsset: AssetsData) => void;
     fileData: {id: number, title: string} | null
     open: boolean;
     onClose: () => void;
-    type: string
+    type: string;
 }
 
 interface FileObject extends File{   
@@ -30,7 +31,7 @@ interface FileObject extends File{
     sizesStr: string; 
 }
 
-const FormDownloadPopup: React.FC<FormDownloadPopupProps> = ({ updateOrAddAsset, fileData, open, onClose, type }) => {
+const FormUploadAssetPopup: React.FC<FormUploadPopupProps> = ({ updateOrAddAsset, fileData, open, onClose, type }) => {
     const [action, setAction] = useState("Add");
     const [actionType, setActionType] = useState<keyof typeof allowedExtensions>("video");
     const [dragActive, setDragActive] = useState(false);
@@ -40,6 +41,7 @@ const FormDownloadPopup: React.FC<FormDownloadPopupProps> = ({ updateOrAddAsset,
     const [preview, setPreview] = useState<string | null>(null);
     const [fileSizeError, setFileSizeError] = useState(false); 
     const [description, setDescription] = useState(""); 
+    const [processing, setProcessing] = useState(false)
 
     const allowedExtensions = {
         image: ["jpg", "png", "jpeg", "gif", "webp", "svg", "tiff", "bmp", "heic", "heif"],
@@ -47,6 +49,16 @@ const FormDownloadPopup: React.FC<FormDownloadPopupProps> = ({ updateOrAddAsset,
         document: ["pdf", "xslx"],
         presentation: ["pptx"],
     };
+
+    const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
+        height: 4,
+        borderRadius: 0,
+        backgroundColor: '#c6dafc',
+        '& .MuiLinearProgress-bar': {
+          borderRadius: 5,
+          backgroundColor: '#4285f4',
+        },
+      }));
 
     const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
         event.preventDefault();
@@ -79,10 +91,10 @@ const FormDownloadPopup: React.FC<FormDownloadPopupProps> = ({ updateOrAddAsset,
         }
         if (
             fileExtension &&
-            (allowedExtensions.image.includes(fileExtension) ||
-                allowedExtensions.video.includes(fileExtension) ||
-                allowedExtensions.document.includes(fileExtension) ||
-                allowedExtensions.presentation.includes(fileExtension))
+            (type === "image" && allowedExtensions.image.includes(fileExtension) ||
+            type === "video" &&  allowedExtensions.video.includes(fileExtension) ||
+            type === "document" &&  allowedExtensions.document.includes(fileExtension) ||
+            type === "presentation" &&  allowedExtensions.presentation.includes(fileExtension))
         ) {
             if (allowedExtensions.image.includes(fileExtension) || allowedExtensions.video.includes(fileExtension)) {
                 setPreview(URL.createObjectURL(uploadedFile));
@@ -125,10 +137,10 @@ const FormDownloadPopup: React.FC<FormDownloadPopupProps> = ({ updateOrAddAsset,
     }
 
     const handleSubmit = async () => {
+        setProcessing(true)
         const formData = new FormData();
         formData.append("description", description);
     
-        console.log({file})
         if (file) {
             formData.append("file", file);
         }
@@ -151,6 +163,7 @@ const FormDownloadPopup: React.FC<FormDownloadPopupProps> = ({ updateOrAddAsset,
             console.error("Error submitting asset:", error);
         } finally {
             handleClose()
+            setProcessing(false)
         }
     };
 
@@ -166,12 +179,27 @@ const FormDownloadPopup: React.FC<FormDownloadPopupProps> = ({ updateOrAddAsset,
         if(type){
             setActionType(type as keyof typeof allowedExtensions)
         }
-        setButtonContain(description.trim().length > 0);
+        if(file || action == "Edit") {
+            setButtonContain(description.trim().length > 0);
+        }
     }, [description, type]);
 
     
     return (
+        <>
         <Drawer anchor="right" open={open}>
+        {processing && (
+            <Box
+                sx={{
+                width: '100%',
+                position: 'fixed',
+                top: '3.5rem',
+                zIndex: 1200,   
+                }}
+            >
+                <BorderLinearProgress variant="indeterminate" />
+            </Box>
+        )}
             <Box
             sx={{
             display: "flex",
@@ -252,7 +280,6 @@ const FormDownloadPopup: React.FC<FormDownloadPopupProps> = ({ updateOrAddAsset,
                                 backgroundColor: dragActive ? "rgba(80, 82, 178, 0.1)" : "transparent",
                             }}
                             onClick={() => document.getElementById("fileInput")?.click()}>
-                               
                             <FileUploadOutlinedIcon sx={{ fontSize: "32px", backgroundColor: "rgba(234, 235, 255, 1)", borderRadius: "4px", color: "rgba(80, 82, 178, 1)" }} />
                             <Typography sx={{ fontFamily: "Nunito Sans", fontSize: "14px" }}>
                                 Drag & drop
@@ -358,9 +385,8 @@ const FormDownloadPopup: React.FC<FormDownloadPopupProps> = ({ updateOrAddAsset,
                     padding: "20px 1em",
                 }}
             >
-                <Button variant="outlined" onClick={handleClose} sx={{
+                <Button variant="outlined" onClick={handleClose} disabled={!buttonContain}  sx={{
                     borderColor: "rgba(80, 82, 178, 1)",
-                    opacity: buttonContain ? "100%" : "20%",
                 }}>
                     <Typography
                         sx={{
@@ -376,8 +402,7 @@ const FormDownloadPopup: React.FC<FormDownloadPopupProps> = ({ updateOrAddAsset,
                         Cancel
                     </Typography>
                 </Button> 
-                <Button variant="contained" onClick={handleSubmit} sx={{
-                    opacity: buttonContain ? "100%" : "20%",
+                <Button variant="contained" onClick={handleSubmit} disabled={!buttonContain}  sx={{
                     backgroundColor: "rgba(80, 82, 178, 1)"
                 }}>
                     <Typography
@@ -396,7 +421,8 @@ const FormDownloadPopup: React.FC<FormDownloadPopupProps> = ({ updateOrAddAsset,
                 </Button> 
             </Box>
         </Drawer>
+        </>
     )
 };
 
-export default FormDownloadPopup;
+export default FormUploadAssetPopup;

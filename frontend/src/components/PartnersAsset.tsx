@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { Box, Typography} from "@mui/material";
-import PartnersAssetsVideo from '@/components/PartnersAssetsVideo';
-import PartnersAssetsImage from '@/components/PartnersAssetsImage';
-import PartnersAssetsDocuments from '@/components/PartnersAssetsDocuments';
+import PartnersAssetItem from '@/components/PartnersAssetItem';
 import FormUploadAssetPopup from '@/components/FormUploadAssetPopup'
 
 interface AssetsData {
@@ -33,8 +31,6 @@ const PartnersAsset: React.FC<PartnersAssetProps> = ({data, deleteAsset = () => 
     const [formPopupOpen, setFormPopupOpen] = useState(false);
     const [typeAsset, setTypeAsset] = useState("video")
     const [fileData, setFileData] = useState<{id: number, title: string} | null>(null);
-    const [adminMenuOpen, setAdminMenuOpen] = useState(false);
-    const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
 
     const handleDownloadFile = (fileUrl: string) => {;
         window.location.href = fileUrl;
@@ -69,19 +65,11 @@ const PartnersAsset: React.FC<PartnersAssetProps> = ({data, deleteAsset = () => 
         setFormPopupOpen(false)
     }
 
-
-    const handleAdminMenu = (e: React.MouseEvent<HTMLElement>) => {
-        setAdminMenuOpen((prevState) => !prevState)
-        setAnchorEl(e.currentTarget);
-    }
-
-    const handleDeleteAsset = async (id: number) => {
-        setAdminMenuOpen(false)
+    const handleDeleteAsset = (id: number) => {
         deleteAsset(id)
     }
 
     const handleEditAsset = (item: AssetsData) => {
-        setAdminMenuOpen(false)
         setTypeAsset(item.type)
         setFileData({ id: item.id, title: item.title});
         handleFormOpenPopup();
@@ -105,47 +93,15 @@ const PartnersAsset: React.FC<PartnersAssetProps> = ({data, deleteAsset = () => 
                 </Typography>
                 <Box sx={{ display: "flex", flexWrap: "wrap",  gap: 3, '@media (max-width: 360px)': { gap: 2 } }}>
                     {data.asset.map((item: AssetsData) => {
-                        switch (item.type) {
-                            case "video":
-                                return <PartnersAssetsVideo
-                                key={item.id} 
-                                asset={item} 
-                                isAdmin={isAdmin}  
-                                toggleFavorite={toggleFavorite} 
-                                handleDownloadFile={handleDownloadFile} 
-                                handleDeleteAsset={handleDeleteAsset}
-                                handleAdminMenu={handleAdminMenu}
-                                handleEditAsset={() => handleEditAsset(item)}
-                                adminMenuOpen={adminMenuOpen}
-                                anchorEl={anchorEl}
-                                />
-                            case "document":
-                                return <PartnersAssetsDocuments 
-                                key={item.id} 
-                                asset={item} 
-                                isAdmin={isAdmin}  
-                                toggleFavorite={toggleFavorite} 
-                                handleDownloadFile={handleDownloadFile} 
-                                handleDeleteAsset={handleDeleteAsset}
-                                handleAdminMenu={handleAdminMenu}
-                                handleEditAsset={() => handleEditAsset(item)}
-                                adminMenuOpen={adminMenuOpen}
-                                anchorEl={anchorEl}
-                                />
-                            default:
-                                return <PartnersAssetsImage
-                                key={item.id} 
-                                asset={item} 
-                                isAdmin={isAdmin}  
-                                toggleFavorite={toggleFavorite} 
-                                handleDownloadFile={handleDownloadFile} 
-                                handleDeleteAsset={handleDeleteAsset}
-                                handleAdminMenu={handleAdminMenu}
-                                handleEditAsset={() => handleEditAsset(item)}
-                                adminMenuOpen={adminMenuOpen}
-                                anchorEl={anchorEl}
-                                />
-                        }
+                        return <PartnersAssetItem
+                            key={item.id} 
+                            asset={item} 
+                            isAdmin={isAdmin}  
+                            toggleFavorite={toggleFavorite} 
+                            handleDownloadFile={() => handleDownloadFile(item.file_url)} 
+                            handleDeleteAsset={() => handleDeleteAsset(item.id)}
+                            handleEditAsset={() => handleEditAsset(item)}
+                        />
                     })}
                     <FormUploadAssetPopup 
                         fileData={fileData} 

@@ -1,9 +1,5 @@
-from datetime import datetime, timezone
 from models.partners_asset import PartnersAsset
 from sqlalchemy.orm import Session
-from sqlalchemy import func
-from fastapi import HTTPException
-import re
 from typing import Optional
 
 
@@ -38,8 +34,6 @@ class PartnersAssetPersistence:
             asset.file_url = updating_data["file_url"]
         if "preview_url" in updating_data:
             asset.file_url = updating_data["preview_url"]
-
-        # asset.updated_at = datetime.utcnow()
 
         self.db.commit()
         self.db.refresh(asset)
