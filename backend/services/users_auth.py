@@ -111,7 +111,7 @@ class UsersAuth:
     def add_user(self, is_with_card: bool, customer_id: str, user_form: dict, spi: str, awin_awc: str, access_token: str, shop_id: str, 
                  shop_data, coupon: str, utm_params: UtmParams):
         stripe_payment_url = None
-        shop_data = None
+        shop_domain = None
         if spi:
             plan = self.plan_persistence.get_plan_by_price_id(spi)
             if not plan:
@@ -128,7 +128,7 @@ class UsersAuth:
             stripe_payment_url = stripe_payment_url.get('link')
         
         if shop_data and shop_data.shop:
-            shop_data = shop_data.shop
+            shop_domain = shop_data.shop
             
         utm_params_dict = utm_params.model_dump() if utm_params else {}
         utm_params_cleaned = {key: value for key, value in utm_params_dict.items() if value is not None}
@@ -151,7 +151,7 @@ class UsersAuth:
             source_platform = SourcePlatformEnum.AWIN.value if awin_awc else None,
             shop_id=shop_id,
             shopify_token=access_token,
-            shop_domain=shop_data,
+            shop_domain=shop_domain,
             is_with_card=is_with_card,
             utm_params=utm_params_json
         )
