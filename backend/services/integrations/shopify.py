@@ -91,8 +91,9 @@ class ShopifyIntegrationService:
         with shopify.Session.temp(user.get('shop_domain'), ShopifyConfig.api_version, user.get('shopify_token')):
             charge = shopify.RecurringApplicationCharge.current()
             if charge is None:
-                raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail={'status': 'No shopify plan active'})
+                return {'status': 'No shopify plan active'}
             charge.destroy()
+            
         return {
             'status': 'cancel'
         }
