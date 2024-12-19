@@ -134,6 +134,7 @@ export const SettingsBilling: React.FC = () => {
     const [email, setEmail] = useState('');
     const [inactiveContactCounts, setInactiveContactCounts] = useState(0);
     const [inactiveDate, setInactiveDate] = useState<string | null>();
+    const [hide, setHide] = useState(false);
 
     const handleOpen = () => setOpen(true);
     const handleClose = () => setOpen(false);
@@ -142,14 +143,19 @@ export const SettingsBilling: React.FC = () => {
         try {
             setIsLoading(true);
             const response = await axiosInterceptorInstance.get('/settings/billing');
-            setCardDetails(response.data.card_details);
+            if (response.data.status == 'hide') {
+                setHide(true)
+            } else {
+                setCardDetails(response.data.card_details);
+                setContactsCollected(response.data.usages_credits.leads_credits);
+                setPlanContactsCollected(response.data.usages_credits.plan_leads_credits)
+                setProspectData(response.data.usages_credits.prospect_credits);
+            }
             setChecked(response.data.billing_details.is_leads_auto_charging);
             setBillingDetails(response.data.billing_details.subscription_details);
             setDowngrade_plan(response.data.billing_details.downgrade_plan);
             setCanceled_at(response.data.billing_details.canceled_at);
-            setContactsCollected(response.data.usages_credits.leads_credits);
-            setPlanContactsCollected(response.data.usages_credits.plan_leads_credits)
-            setProspectData(response.data.usages_credits.prospect_credits);
+
         } catch (error) {
         } finally {
             setIsLoading(false);
@@ -166,28 +172,32 @@ export const SettingsBilling: React.FC = () => {
                     per_page: rowsPerPage,
                 },
             });
-            const { billing_history, count } = response.data;
-            setBillingHistory(billing_history);
-            setTotalRows(count); // Устанавливаем общее количество строк
-            let newRowsPerPageOptions: number[] = [];
-            if (count <= 10) {
-                newRowsPerPageOptions = [5, 10];
-            } else if (count <= 50) {
-                newRowsPerPageOptions = [10, 20];
-            } else if (count <= 100) {
-                newRowsPerPageOptions = [10, 20, 50];
-            } else if (count <= 300) {
-                newRowsPerPageOptions = [10, 20, 50, 100];
-            } else if (count <= 500) {
-                newRowsPerPageOptions = [10, 20, 50, 100, 300];
+            if (response.data == 'hide') {
+                setHide(true)
             } else {
-                newRowsPerPageOptions = [10, 20, 50, 100, 300, 500];
+                const { billing_history, count } = response.data;
+                setBillingHistory(billing_history);
+                setTotalRows(count); // Устанавливаем общее количество строк
+                let newRowsPerPageOptions: number[] = [];
+                if (count <= 10) {
+                    newRowsPerPageOptions = [5, 10];
+                } else if (count <= 50) {
+                    newRowsPerPageOptions = [10, 20];
+                } else if (count <= 100) {
+                    newRowsPerPageOptions = [10, 20, 50];
+                } else if (count <= 300) {
+                    newRowsPerPageOptions = [10, 20, 50, 100];
+                } else if (count <= 500) {
+                    newRowsPerPageOptions = [10, 20, 50, 100, 300];
+                } else {
+                    newRowsPerPageOptions = [10, 20, 50, 100, 300, 500];
+                }
+                if (!newRowsPerPageOptions.includes(count)) {
+                    newRowsPerPageOptions.push(count);
+                    newRowsPerPageOptions.sort((a, b) => a - b); // Ensure the options remain sorted
+                }
+                setRowsPerPageOptions(newRowsPerPageOptions); // Update the options
             }
-            if (!newRowsPerPageOptions.includes(count)) {
-                newRowsPerPageOptions.push(count);
-                newRowsPerPageOptions.sort((a, b) => a - b); // Ensure the options remain sorted
-            }
-            setRowsPerPageOptions(newRowsPerPageOptions); // Update the options
         } catch (error) {
         } finally {
             setIsLoading(false);
@@ -567,28 +577,31 @@ export const SettingsBilling: React.FC = () => {
             <Grid container spacing={3} sx={{ mb: 3 }}>
                 <Grid item xs={12} md={6} sx={{ padding: '0px' }}>
                     <Box sx={{ border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)', p: 3, height: '100%' }}>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 2 }}>
 
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <Typography className="first-sub-title">
-                                    Card Details
-                                </Typography>
-                                <CustomTooltip title={"View detailed information about your card, including balance, transactions, and expiration date."} linkText="Learn more" linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/settings/add-the-credit-card" />
+                        {hide == true ? '' :
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 2 }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <Typography className="first-sub-title">
+                                        Card Details
+                                    </Typography>
+                                    <CustomTooltip title={"View detailed information about your card, including balance, transactions, and expiration date."} linkText="Learn more" linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/settings/add-the-credit-card" />
+                                </Box>
+                                <Box sx={{
+                                    border: '1px dashed #5052B2',
+                                    borderRadius: '4px',
+                                    width: '24px',
+                                    height: '24px',
+                                    display: 'flex',
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                }}>
+                                    <Button onClick={handleOpen} sx={{ padding: 2 }}>
+                                        <Image src="/add-square.svg" alt="add-square" height={24} width={24} />
+                                    </Button>
+                                </Box>
                             </Box>
-                            <Box sx={{
-                                border: '1px dashed #5052B2',
-                                borderRadius: '4px',
-                                width: '24px',
-                                height: '24px',
-                                display: 'flex',
-                                justifyContent: 'center',
-                                alignItems: 'center',
-                            }}>
-                                <Button onClick={handleOpen} sx={{ padding: 2 }}>
-                                    <Image src="/add-square.svg" alt="add-square" height={24} width={24} />
-                                </Button>
-                            </Box>
-                        </Box>
+                        }
+
                         {cardDetails.length > 0 && cardDetails.map((card) => (
                             <Box key={card.id} sx={{
                                 display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2,
@@ -847,7 +860,7 @@ export const SettingsBilling: React.FC = () => {
                         </Box>
                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                             {billingDetails && Object.entries(billingDetails).map(([key, value], index) => {
-                                if (key === 'overage') {
+                                if (key === 'overage' && hide === false) {
                                     // Custom flex layout for "Overage"
                                     return (
                                         <Box key={index} sx={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -867,6 +880,7 @@ export const SettingsBilling: React.FC = () => {
                                                 }}>
                                                     Overage
                                                 </Typography>
+
                                                 <Typography className="second-text" sx={{
                                                     fontSize: '12px',
                                                     fontWeight: '400',
@@ -1174,43 +1188,46 @@ export const SettingsBilling: React.FC = () => {
                         alignItems: 'center'
                     }
                 }}>
+                    {
+                        hide == true ? '' :
+                            <Box sx={{ width: '100%' }}>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                    <Typography className='second-sub-title' sx={{ lineHeight: '20px !important', mb: '12px' }}>
+                                        Contacts collected
+                                    </Typography>
+                                    <Typography className='second-sub-title' sx={{ lineHeight: '20px !important', mb: '12px' }}>
+                                        {planContactsCollected === -1 && contactsCollected === -1
+                                            ? 'Unlimited'
+                                            : planContactsCollected
+                                                ? `${Math.floor(((planContactsCollected - contactsCollected) / planContactsCollected) * 100)}% Used`
+                                                : 0}
+                                    </Typography>
+                                </Box>
+                                <LinearProgress
+                                    variant="determinate"
+                                    value={
+                                        planContactsCollected === -1 && contactsCollected === -1
+                                            ? 0
+                                            : Math.round(((planContactsCollected - contactsCollected) / planContactsCollected) * 100)
+                                    }
+                                    sx={{
+                                        height: '8px',
+                                        borderRadius: '4px',
+                                        backgroundColor: '#dbdbdb',
+                                        mb: 1,
+                                        '& .MuiLinearProgress-bar': {
+                                            backgroundColor: '#6ec125',
+                                        },
+                                    }}
+                                />
+                                <Typography className='paragraph' sx={{ color: '#787878' }}>
+                                    {planContactsCollected === -1 && contactsCollected === -1
+                                        ? ''
+                                        : `${Math.max(0, planContactsCollected - contactsCollected)} out of ${planContactsCollected} Remaining`}
+                                </Typography>
+                            </Box>
+                    }
 
-                    <Box sx={{ width: '100%' }}>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <Typography className='second-sub-title' sx={{ lineHeight: '20px !important', mb: '12px' }}>
-                                Contacts collected
-                            </Typography>
-                            <Typography className='second-sub-title' sx={{ lineHeight: '20px !important', mb: '12px' }}>
-                                {planContactsCollected === -1 && contactsCollected === -1
-                                    ? 'Unlimited'
-                                    : planContactsCollected
-                                        ? `${Math.floor(((planContactsCollected - contactsCollected) / planContactsCollected) * 100)}% Used`
-                                        : 0}
-                            </Typography>
-                        </Box>
-                        <LinearProgress
-                            variant="determinate"
-                            value={
-                                planContactsCollected === -1 && contactsCollected === -1
-                                    ? 0
-                                    : Math.round(((planContactsCollected - contactsCollected) / planContactsCollected) * 100)
-                            }
-                            sx={{
-                                height: '8px',
-                                borderRadius: '4px',
-                                backgroundColor: '#dbdbdb',
-                                mb: 1,
-                                '& .MuiLinearProgress-bar': {
-                                    backgroundColor: '#6ec125',
-                                },
-                            }}
-                        />
-                        <Typography className='paragraph' sx={{ color: '#787878' }}>
-                            {planContactsCollected === -1 && contactsCollected === -1
-                                ? ''
-                                : `${Math.max(0, planContactsCollected - contactsCollected)} out of ${planContactsCollected} Remaining`}
-                        </Typography>
-                    </Box>
                     <Box sx={{
                         width: '100%',
                         '@media (min-width: 601px)': {
@@ -1223,7 +1240,7 @@ export const SettingsBilling: React.FC = () => {
                             marginRight: '-24px'
                         }} />
                     </Box>
-                    <Box sx={{display: 'none', "@media (max-width: 600px)": { display: 'flex', width: '100%', justifyContent: 'end' }}}>
+                    <Box sx={{ display: 'none', "@media (max-width: 600px)": { display: 'flex', width: '100%', justifyContent: 'end' } }}>
                         <Chip
                             label='Coming soon'
                             className='second-sub-title'
@@ -1232,58 +1249,59 @@ export const SettingsBilling: React.FC = () => {
                             }}>
                         </Chip>
                     </Box>
+                    {
+                        hide == true ? '' :
+                            <Box sx={{ width: '100%', marginBottom: 2 }}>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', opacity: 0.6 }}>
+                                    <Typography className='second-sub-title' sx={{ lineHeight: '20px !important', mb: '12px' }}>
+                                        Prospect Data
+                                    </Typography>
+                                    <Typography className='second-sub-title' sx={{ lineHeight: '20px !important', mb: '12px' }}>
+                                        0% Used
+                                    </Typography>
+                                </Box>
 
-                    <Box sx={{ width: '100%', marginBottom: 2 }}>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', opacity: 0.6 }}>
-                            <Typography className='second-sub-title' sx={{ lineHeight: '20px !important', mb: '12px' }}>
-                                Prospect Data
-                            </Typography>
-                            <Typography className='second-sub-title' sx={{ lineHeight: '20px !important', mb: '12px' }}>
-                                0% Used
-                            </Typography>
+                                <LinearProgress
+                                    variant="determinate"
+                                    value={0}
+                                    sx={{
+                                        height: '8px',
+                                        borderRadius: '4px',
+                                        backgroundColor: '#dbdbdb',
+                                        mb: 1,
+                                        opacity: 0.6
+                                    }}
+                                />
+                                <Typography className='paragraph' sx={{ color: '#787878 !important', opacity: 0.6 }}>
+                                    {0}
+                                </Typography>
+
+                            </Box>
+                    }
+                    {hide == true ? '' :
+                        <Box sx={{ flexShrink: 0, opacity: 0.6 }}>
+                            <Button
+                                className='hyperlink-red'
+                                disabled={true}
+                                onClick={handleBuyCredits}
+                                sx={{
+                                    background: '#5052B2',
+                                    borderRadius: '4px',
+                                    border: '1px solid #5052b2',
+                                    boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
+                                    color: '#fff !important',
+                                    textTransform: 'none',
+                                    padding: '10px 24px',
+                                    '&:hover': {
+                                        color: '#5052B2 !important'
+                                    }
+                                }}
+                            >
+                                Buy Credits
+                            </Button>
+
                         </Box>
-
-                        <LinearProgress
-                            variant="determinate"
-                            value={0}
-                            sx={{
-                                height: '8px',
-                                borderRadius: '4px',
-                                backgroundColor: '#dbdbdb',
-                                mb: 1,
-                                opacity: 0.6
-                            }}
-                        />
-                        <Typography className='paragraph' sx={{ color: '#787878 !important', opacity: 0.6 }}>
-                            {0}
-                        </Typography>
-
-                    </Box>
-
-
-
-                    <Box sx={{ flexShrink: 0, opacity: 0.6 }}>
-                        <Button
-                            className='hyperlink-red'
-                            disabled={true}
-                            onClick={handleBuyCredits}
-                            sx={{
-                                background: '#5052B2',
-                                borderRadius: '4px',
-                                border: '1px solid #5052b2',
-                                boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                                color: '#fff !important',
-                                textTransform: 'none',
-                                padding: '10px 24px',
-                                '&:hover': {
-                                    color: '#5052B2 !important'
-                                }
-                            }}
-                        >
-                            Buy Credits
-                        </Button>
-
-                    </Box>
+                    }
 
                 </Box>
 
