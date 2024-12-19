@@ -246,7 +246,7 @@ export const SettingsSubscription: React.FC = () => {
             if (response.status === 200) {
                 if (response.data.link !== null && response.data.link !== undefined) {
                     window.location.href = response.data.link;
-                }                
+                }
                 if (response.data.status_subscription) {
                     if (response.data.status_subscription === 'active') {
                         showToast('Subscription was successful!');
@@ -280,7 +280,8 @@ export const SettingsSubscription: React.FC = () => {
                     }
                 }
                 else if (response.data.status === 'INCOMPLETE') {
-                    showErrorToast('Subscription not found!');
+                    const errorMessage = response?.data?.message || 'Subscription not found!';
+                    showErrorToast(errorMessage);
                 }
             }
         } catch (error) {
@@ -352,7 +353,7 @@ export const SettingsSubscription: React.FC = () => {
                 const response = await axiosInterceptorInstance.post('/subscriptions/cancel-plan', {
                     reason_unsubscribe: formValues.unsubscribe
                 });
-
+                console.log(response.data)
                 if (response.status === 200) {
                     switch (response.data) {
                         case 'SUCCESS':
@@ -363,6 +364,9 @@ export const SettingsSubscription: React.FC = () => {
                             break
                         case 'SUBSCRIPTION_ALREADY_CANCELED':
                             showErrorToast('Subscription already canceled!');
+                            break
+                        case 'INCOMPLETE':
+                            showErrorToast('Subscription cancellation error!');
                             break
                         default:
                             showErrorToast('Unknown response received.');
