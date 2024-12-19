@@ -664,7 +664,10 @@ async def process_files(session, rabbitmq_connection, root_user):
         five_x_five_cookie_sync_event_date = session.query(FiveXFiveCookieSyncFile.event_date)
     
         if last_processed_file:
-            date_object = datetime.strptime(last_processed_file, '%Y-%m-%d %H:%M:%S.%f')
+            if '.' in last_processed_file:
+                date_object = datetime.strptime(last_processed_file, '%Y-%m-%d %H:%M:%S.%f')
+            else:
+                date_object = datetime.strptime(last_processed_file, '%Y-%m-%d %H:%M:%S')
             five_x_five_cookie_sync_event_date = five_x_five_cookie_sync_event_date.filter(
                 FiveXFiveCookieSyncFile.event_date > date_object)
     
