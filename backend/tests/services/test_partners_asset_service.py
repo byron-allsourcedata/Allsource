@@ -9,6 +9,7 @@ parent_parent_dir = os.path.abspath(os.path.join(parent_dir, os.pardir))
 sys.path.append(parent_parent_dir)
 
 from services.partners_assets import PartnersAssetService 
+from services.aws import AWSService 
 from models.partners_asset import PartnersAsset 
 
 
@@ -16,10 +17,14 @@ from models.partners_asset import PartnersAsset
 def mock_persistence():
     return MagicMock()
 
+@pytest.fixture
+def mock_aws_service():
+    return MagicMock(spec=AWSService)
+
 
 @pytest.fixture
-def service(mock_persistence):
-    return PartnersAssetService(partners_asset_persistence=mock_persistence)
+def service(mock_persistence, mock_aws_service):
+    return PartnersAssetService(partners_asset_persistence=mock_persistence, aws_service=mock_aws_service)
 
 
 def test_get_assets(service, mock_persistence):
@@ -104,6 +109,26 @@ def test_get_file_extension_no_valid_type(service):
     file_url = None
     extension = service.get_file_extension(file_url)
     assert extension == "Unknown"
+
+
+def test_get_video_duration_success(mocker, service):
+    mocker.patch("requests.get", return_value=MagicMock(status_code=200, iter_content=lambda chunk_size: [b"data"]))
+    mocker.patch("ffmpeg.probe", return_value={"format": {"duration": "120.0"}})
+    mocker.patch("os.remove")
+
+    duration = service.get_video_duration("http://example.com/video.mp4")
+    assert duration == "02:00"
+
+
+def test_get_video_duration_no_file_url(service):
+    duration = service.get_video_duration("")
+    assert duration == "00:00"
+
+
+def test_get_video_duration_error_fetching_video(mocker, service):
+    mocker.patch("requests.get", side_effect=Exception("Network error"))
+    duration = service.get_video_duration("http://example.com/video.mp4")
+    assert duration == "00:00"
 
 
 def test_domain_mapped_with_unknown_extension_and_size(service):
