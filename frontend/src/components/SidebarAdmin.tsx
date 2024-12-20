@@ -14,6 +14,7 @@ import {usePathname} from 'next/navigation';
 import SpaceDashboardIcon from '@mui/icons-material/SpaceDashboard';
 import LeadsIcon from '@mui/icons-material/People';
 import CategoryIcon from '@mui/icons-material/Category';
+import FeaturedPlayListIcon from '@mui/icons-material/FeaturedPlayList';
 
 import Image from 'next/image';
 
@@ -95,6 +96,13 @@ const sidebarStyles = {
             color: 'rgba(80, 82, 178, 1)',
         },
     },
+    inactiveItem: {
+        backgroundColor: 'transparent',
+        color: '#000',
+        '&:hover': {
+            backgroundColor: '#e9ecef',
+        },
+    },
 };
 
 const SetupSection: React.FC = () => (
@@ -127,7 +135,7 @@ const SidebarAdmin: React.FC = () => {
             <List sx={sidebarStyles.menu}>
                 <ListItemButton
                     onClick={() => handleNavigation('/admin/users')}
-                    sx={isActive('/admin/users') ? sidebarStyles.activeItem : {}}
+                    sx={isActive('/admin/users') ? sidebarStyles.activeItem : sidebarStyles.inactiveItem}
                 >
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
                         <LeadsIcon />
@@ -136,14 +144,16 @@ const SidebarAdmin: React.FC = () => {
                 </ListItemButton>
                 <ListItemButton
                     onClick={() => handleNavigation('/admin/reseller')}
+                    sx={isActive('/admin/resellers') ? sidebarStyles.activeItem : sidebarStyles.inactiveItem}
                 >
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
                         <SpaceDashboardIcon />
                     </ListItemIcon>
-                    <ListItemText primary="Reseller" />
+                    <ListItemText primary="Resellers" />
                 </ListItemButton>
                 <ListItemButton
                     onClick={() => handleNavigation('/admin/assets')}
+                    sx={isActive('/admin/assets') ? sidebarStyles.activeItem : sidebarStyles.inactiveItem}
                 >
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
                         <CategoryIcon />
@@ -152,11 +162,21 @@ const SidebarAdmin: React.FC = () => {
                 </ListItemButton>
                 <ListItemButton
                     onClick={() => handleNavigation('/admin/payouts')}
+                    sx={isActive('/admin/payouts') ? sidebarStyles.activeItem : sidebarStyles.inactiveItem}
+                >
+                    <ListItemIcon sx={sidebarStyles.listItemIcon}>
+                        <FeaturedPlayListIcon />
+                    </ListItemIcon>
+                    <ListItemText primary="Payouts" />
+                </ListItemButton>
+                <ListItemButton
+                    onClick={() => handleNavigation('/admin/partners')}
+                    sx={isActive('/admin/partners') ? sidebarStyles.activeItem : sidebarStyles.inactiveItem}
                 >
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
                         <CategoryIcon />
                     </ListItemIcon>
-                    <ListItemText primary="Payouts" />
+                    <ListItemText primary="Partners" />
                 </ListItemButton>
             </List>
         </Box>
