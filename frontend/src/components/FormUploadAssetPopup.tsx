@@ -154,11 +154,11 @@ const FormUploadAssetPopup: React.FC<FormUploadPopupProps> = ({ updateOrAddAsset
             let response;
     
             if (action === "Edit" && fileData && fileData.id) {
-                response = await axiosInstance.put(`partners-assets/${fileData.id}/`, formData, {
+                response = await axiosInstance.put(`admin-assets/${fileData.id}/`, formData, {
                     headers: { "Content-Type": "multipart/form-data" },
                 });
             } else {
-                response = await axiosInstance.post(`partners-assets/`, formData, {
+                response = await axiosInstance.post(`admin-assets/`, formData, {
                     headers: { "Content-Type": "multipart/form-data" },
                 });
             }

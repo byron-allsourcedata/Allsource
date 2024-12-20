@@ -2,7 +2,6 @@
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { Box, Grid, Typography, Menu, MenuItem, Link, Button, LinearProgress} from "@mui/material";
 import { useEffect, useState} from "react";
-import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import PartnersAsset from '@/components/PartnersAsset';
 import dynamic from "next/dynamic";
 import { assetsStyle } from "./assetsStyle";
@@ -11,9 +10,9 @@ import { useUser } from "@/context/UserContext";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { resellerStyle } from "@/app/admin/reseller/resellerStyle";
-import Header from "@/components/Header";
 import { showErrorToast, showToast } from '@/components/ToastNotification';
 import { styled } from '@mui/material/styles';
+import { width } from "@mui/system";
 
 interface AssetsData {
     id: number;
@@ -76,7 +75,7 @@ const Assets: React.FC = () => {
         setLoading(true);
         try {
 
-            const response = await axiosInstance.get("/partners-assets");
+            const response = await axiosInstance.get("/admin-assets");
             const assetsByType = response.data.reduce((acc: Record<string, AssetsData[]>, item: AssetsData) => {
                 if (!acc[item.type]) {
                     acc[item.type] = [];
@@ -103,7 +102,7 @@ const Assets: React.FC = () => {
     const handleDeleteAsset = async (id: number) => {
         setLoading(true)
         try {
-            const response = await axiosInstance.delete(`partners-assets/${id}`);
+            const response = await axiosInstance.delete(`admin-assets/${id}`);
             const status = response.data.status;
             if (status === "SUCCESS") {
                 removeAssetById(id);
@@ -268,7 +267,7 @@ const Assets: React.FC = () => {
             </Box>
             <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
                 <Grid container width='100%'>
-                    <Grid item xs={12} md={2} sx={{ padding: '0px' }}>
+                    <Grid item xs={12} md={2} sx={{ padding: '0px'}} style={{maxWidth: "10%"}}>
                         <SidebarAdmin />
                     </Grid>
                     <Grid item xs={12} md={10} sx={{ display: 'flex', flexDirection: 'column', flex: 1 }}>

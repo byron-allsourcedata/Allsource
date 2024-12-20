@@ -72,7 +72,7 @@ const PartnersAssets: React.FC = () => {
         try {
             const userFavorites = JSON.parse(localStorage.getItem(`favorites_${currentUserId}`) || '[]');
 
-            const response = await axiosInstance.get("/partners-assets");
+            const response = await axiosInstance.get("/partners");
             const assetsByType = response.data.reduce((acc: Record<string, AssetsData[]>, item: AssetsData) => {
                 if (!acc[item.type]) {
                     acc[item.type] = [];
