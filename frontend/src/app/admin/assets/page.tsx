@@ -267,7 +267,7 @@ const Assets: React.FC = () => {
             </Box>
             <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
                 <Grid container width='100%'>
-                    <Grid item xs={12} md={2} sx={{ padding: '0px'}} style={{maxWidth: "10%"}}>
+                    <Grid item xs={12} md={2} sx={{ padding: '0px'}}>
                         <SidebarAdmin />
                     </Grid>
                     <Grid item xs={12} md={10} sx={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
