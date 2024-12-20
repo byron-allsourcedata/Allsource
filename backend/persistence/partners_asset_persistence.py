@@ -18,8 +18,8 @@ class PartnersAssetPersistence:
 
 
     def delete_asset(self, asset_id):
-        asset = self.get_asset_by_id(asset_id)
-        self.db.delete(asset)
+        self.db.query(PartnersAsset).filter(
+            PartnersAsset.id == asset_id).delete()
         self.db.commit()
 
     

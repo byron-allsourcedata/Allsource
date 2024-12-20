@@ -6,6 +6,9 @@ import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import PartnersAsset from '@/components/PartnersAsset';
 import dynamic from "next/dynamic";
 import { assetsStyle } from "./assetsStyle";
+import { useTrial } from '@/context/TrialProvider';
+import { useUser } from "@/context/UserContext";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { resellerStyle } from "@/app/admin/reseller/resellerStyle";
 import Header from "@/components/Header";
@@ -20,6 +23,7 @@ interface AssetsData {
     title: string;
     file_extension: string;
     file_size: string;
+    video_duration: string;
     isFavorite: boolean;
 }
 
@@ -36,6 +40,13 @@ const Assets: React.FC = () => {
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [loading, setLoading] = useState(false);
     const open = Boolean(anchorEl);
+    const router = useRouter();
+    const { full_name: userFullName, email: userEmail, resetUserData, } = useUser();
+    const meItem = typeof window !== "undefined" ? sessionStorage.getItem("me") : null;
+    const meData = meItem ? JSON.parse(meItem) : { full_name: '', email: '' };
+    const full_name = userFullName || meData.full_name;
+    const email = userEmail || meData.email;
+    const { resetTrialData } = useTrial();
     const [assets, setAssets] = useState<PartnersAssetsData[]>([{type: "Videos", asset: []}, {type: "Pitch decks", asset: []}, {type: "Images", asset: []}, {type: "Documents", asset: []}, ]);
 
     const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
@@ -47,6 +58,19 @@ const Assets: React.FC = () => {
           backgroundColor: '#4285f4',
         },
     }));
+
+    const handleSettingsClick = () => {
+        handleProfileMenuClose();
+        router.push("/settings");
+    };
+
+    const handleSignOut = () => {
+        localStorage.clear();
+        sessionStorage.clear();
+        resetUserData();
+        resetTrialData();
+        window.location.href = "/signin";
+    };
 
     const fetchRewards = async () => {
         setLoading(true);
@@ -160,7 +184,7 @@ const Assets: React.FC = () => {
                         <Image src='/logo.svg' alt='logo' height={80} width={60} />
                     </Link>
                 </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', paddingRight: "2.5em" }}>
                     <Button
                         aria-controls={open ? "profile-menu" : undefined}
                         aria-haspopup="true"
@@ -189,10 +213,59 @@ const Assets: React.FC = () => {
                             ml: -1
                         }}
                     >
+                        <Box sx={{ paddingTop: 1, paddingLeft: 2, paddingRight: 2, paddingBottom: 1 }}>
+                            <Typography
+                                variant="h6"
+                                sx={{
+                                    fontFamily: 'Nunito Sans',
+                                    fontSize: '14px',
+                                    fontWeight: 600,
+                                    lineHeight: '19.6px',
+                                    color: 'rgba(0, 0, 0, 0.89)',
+                                    mb: 0.25
+                                }}
+                            >
+                                {full_name}
+                            </Typography>
+                            <Typography
+                                variant="body2"
+                                color="textSecondary"
+                                sx={{
+                                    fontFamily: 'Nunito Sans',
+                                    fontSize: '14px',
+                                    fontWeight: 600,
+                                    lineHeight: '19.6px',
+                                    color: 'rgba(0, 0, 0, 0.89)',
+                                }}
+                            >
+                                {email}
+                            </Typography>
+                        </Box>
+                        <MenuItem
+                            sx={{
+                                fontFamily: 'Nunito Sans',
+                                fontSize: '14px',
+                                fontWeight: 500,
+                                lineHeight: '19.6px',
+                            }}
+                            onClick={handleSettingsClick}
+                        >
+                            Settings
+                        </MenuItem>
+                        <MenuItem
+                            sx={{
+                                fontFamily: 'Nunito Sans',
+                                fontSize: '14px',
+                                fontWeight: 500,
+                                lineHeight: '19.6px',
+                            }}
+                            onClick={handleSignOut}
+                        >
+                            Sign Out
+                        </MenuItem>
                     </Menu>
                 </Box>
             </Box>
-            {/* <Header NewRequestNotification={false} /> */}
             <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
                 <Grid container width='100%'>
                     <Grid item xs={12} md={2} sx={{ padding: '0px' }}>

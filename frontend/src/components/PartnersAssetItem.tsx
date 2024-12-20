@@ -20,6 +20,7 @@ interface AssetsData {
     title: string;
     file_extension: string;
     file_size: string;
+    video_duration: string;
     isFavorite: boolean;
 }
 
@@ -122,7 +123,7 @@ const PartnersAssetItem: React.FC<PartnersAseetsProps> = ({
                         padding: "2.74px 5.15px",
                         }}
                     >
-                        12:00
+                        {asset.video_duration}
                     </Box>
                 </>
                 : ""}

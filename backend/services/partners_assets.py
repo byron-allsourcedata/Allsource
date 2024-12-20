@@ -6,6 +6,7 @@ import hashlib
 import zipfile
 from pathlib import Path
 from PIL import Image
+import ffmpeg
 import subprocess
 from fastapi import HTTPException, UploadFile
 from io import BytesIO
@@ -233,6 +234,34 @@ class PartnersAssetService:
         return extension
 
 
+    def get_video_duration(self, file_url: str) -> str:
+        if not file_url:
+            return "00:00"
+        try:
+            response = requests.get(file_url, stream=True, timeout=10)
+            if response.status_code == 200:
+                local_file = "temp_video_file"
+                with open(local_file, 'wb') as f:
+                    for chunk in response.iter_content(chunk_size=8192):
+                        f.write(chunk)
+                
+                try:
+                    probe = ffmpeg.probe(local_file)
+                    duration = float(probe['format']['duration'])
+                    os.remove(local_file)
+
+                    minutes, seconds = divmod(int(duration), 60)
+                    return f"{minutes:02}:{seconds:02}"
+                except Exception as err:
+                    logger.debug("Error calculating video duration", err)
+                    os.remove(local_file)
+                    return "00:00"
+            else:
+                return "00:00"
+        except Exception as err:
+            logger.debug("Error fetching video file", err)
+            return "00:00"
+
 
     def domain_mapped(self, asset: PartnersAsset):
         return PartnersAssetResponse(
@@ -243,4 +272,5 @@ class PartnersAssetService:
             file_url=asset.file_url,
             file_extension=self.get_file_extension(asset.file_url),
             file_size=self.get_file_size(asset.file_url),
+            video_duration=self.get_video_duration(asset.file_url),
         ).model_dump()

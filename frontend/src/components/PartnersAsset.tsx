@@ -11,6 +11,7 @@ interface AssetsData {
     title: string;
     file_extension: string;
     file_size: string;
+    video_duration: string;
     isFavorite: boolean;
 }
 

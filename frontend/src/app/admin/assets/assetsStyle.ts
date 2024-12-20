@@ -40,7 +40,6 @@ export const assetsStyle: { [key: string]: SxProps<Theme> } = {
       },
       logoContainer: {
         paddingLeft: '2.5em',
-        paddingRight: '0.5em',
       },
       title: {
         mb: 2,
