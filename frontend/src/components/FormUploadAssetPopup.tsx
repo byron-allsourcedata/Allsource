@@ -118,6 +118,11 @@ const FormUploadAssetPopup: React.FC<FormUploadPopupProps> = ({ updateOrAddAsset
         setButtonContain(true)
     }
 
+    const getAcceptString = () => {
+        const extensions = allowedExtensions[actionType];
+        return extensions ? extensions.map(ext => `.${ext}`).join(",") : "";
+    };
+
     const handleFileUpload = (event: ChangeEvent<HTMLInputElement>) => {
         setFileSizeError(false)
         if (event.target.files && event.target.files[0]) {
@@ -312,7 +317,7 @@ const FormUploadAssetPopup: React.FC<FormUploadPopupProps> = ({ updateOrAddAsset
                                 id="fileInput"
                                 type="file"
                                 hidden
-                                accept=".jpg,.png,.jpeg,.gif,.webp,.svg.,tiff.,bmp,.heic.,heif,.mp4,.mov,.avi,.mkv,.pdf,.xslx,.pdf,.xslx,.pptx"
+                                accept={getAcceptString()}
                                 onChange={handleFileUpload}
                             />
                         </Box>
