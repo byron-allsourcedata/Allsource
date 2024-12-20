@@ -37,25 +37,6 @@ const TrialStatus: React.FC = () => {
     }
   }, [accessToken]);
 
-  useEffect(() => {
-    if (data?.user_info && data?.user_plan && data?.user_domains.length > 0) {
-      const userInfo = data.user_info;
-      const userPlan = data.user_plan;
-      const domains = data.user_domains;
-      sessionStorage.setItem('me', JSON.stringify({
-        email: userInfo.email,
-        full_name: userInfo.full_name,
-        company_website: userInfo.company_website,
-        trial: userPlan.is_trial,
-        plan_end: userPlan.plan_end,
-        percent_steps: userInfo.activate_percent,
-        is_trial_pending: userPlan.is_trial_pending,
-        domains: domains,
-        price: userPlan.price,
-        currency: userPlan.currency
-      }));
-    }
-  }, [data]);
 
   const [statusText, setStatusText] = useState('');
   const [backgroundColor, setBackgroundColor] = useState('');
@@ -217,7 +198,22 @@ const TrialStatus: React.FC = () => {
             {statusText}
           </Typography>
 
-          {((statusText.includes('Trial') && is_artificial_status) && !(statusText.includes('Pending'))) && (
+          {((statusText.includes('Trial') && is_artificial_status) && !(statusText.includes('Pending')) && ! (statusText.includes('Expired'))) && (
+            <Button onClick={handleChoosePlanSlider} sx={{ ml: 0, textTransform: 'none', padding: 0, color: 'rgba(80, 82, 178, 1) !important' }}>
+              <Typography className='first-sub-title' sx={{
+                color: 'rgba(20, 110, 246, 1) !important',
+                marginRight: '5px',
+                pt: '1px',
+                letterSpacing: '-0.02em',
+                textAlign: 'left',
+                fontSize: '13px !important',
+                fontWeight: '500 !important'
+              }}>
+                Choose Plan
+              </Typography>
+            </Button>
+          )}
+          {((statusText.includes('Expired') && is_artificial_status) && !(statusText.includes('Pending'))) && (
             <Button onClick={handleOpenSlider} sx={{ ml: 0, textTransform: 'none', padding: 0, color: 'rgba(80, 82, 178, 1) !important' }}>
               <Typography className='first-sub-title' sx={{
                 color: 'rgba(20, 110, 246, 1) !important',

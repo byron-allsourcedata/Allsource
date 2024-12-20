@@ -12,17 +12,21 @@ import { fetchUserData } from '@/services/meService';
 import { useUser } from '@/context/UserContext';
 import CustomizedProgressBar from '@/components/CustomizedProgressBar';
 
+const UTM_STORAGE_KEY = 'utm_params'
+
 const Signup: React.FC = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const isWithoutCard = searchParams.get('is_without_card') === 'false';
-
+  const is_with_card = searchParams.get('is_with_card');
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const user_teams_mail = searchParams.get('user_teams_mail');
   const teams_token = searchParams.get('token');
   const spi = searchParams.get('spi');
   const awin_awc = searchParams.get('awc')
+  const coupon = searchParams.get('coupon')
+  const ift = searchParams.get('ift')
+  const ftd = searchParams.get('ftd')
   const initialShopifyData = {
     code: searchParams.get('code') || null,
     hmac: searchParams.get('hmac') || null,
@@ -33,8 +37,14 @@ const Signup: React.FC = () => {
   };
   const isShopifyDataComplete = Object.values(initialShopifyData).every(value => value !== null);
   const [formValues, setFormValues] = useState({
-    full_name: '', email: user_teams_mail, password: '', is_without_card: !isWithoutCard, awc: awin_awc || null, termsAccepted: false, teams_token: teams_token, spi: spi,
-    ...(isShopifyDataComplete && { shopify_data: initialShopifyData })
+    full_name: '', email: user_teams_mail, password: '', is_with_card: is_with_card || false, termsAccepted: false,
+    ...(isShopifyDataComplete && { shopify_data: initialShopifyData }),
+    ...{ awc: awin_awc },
+    ...{ coupon: coupon },
+    ...{ teams_token: teams_token },
+    ...{ spi: spi },
+    ...{ ift: ift },
+    ...{ ftd: ftd },
   });
   const [formSubmitted, setFormSubmitted] = useState(false);
 
@@ -61,6 +71,23 @@ const Signup: React.FC = () => {
       }
     }
   }, [router]);
+
+  useEffect(() => {
+    const utm_keys = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term", "awc"];
+    const searchParams = new URLSearchParams(window.location.search);
+    const utmParams: Record<string, string> = {};
+
+    utm_keys.forEach((key) => {
+      const paramValue = searchParams.get(key);
+      if (paramValue) {
+        utmParams[key] = paramValue;
+      }
+    });
+
+    if (Object.keys(utmParams).length > 0) {
+      localStorage.setItem(UTM_STORAGE_KEY, JSON.stringify(utmParams));
+    }
+  }, []);
 
   const validateField = (name: string, value: string) => {
     const newErrors: { [key: string]: string } = { ...errors };
@@ -150,8 +177,12 @@ const Signup: React.FC = () => {
 
     if (Object.keys(newErrors).length === 0) {
       try {
-        const response = await axiosInstance.post('/sign-up', formValues);
+        const utmParams = localStorage.getItem("utm_params");
+        const utmData = utmParams ? JSON.parse(utmParams) : {};
+        const updatedFormValues = { ...formValues, utm_params: utmData };
+        const response = await axiosInstance.post('/sign-up', updatedFormValues);
         if (response.status === 200) {
+          localStorage.removeItem(UTM_STORAGE_KEY);
           const responseData = response.data;
           if (typeof window !== 'undefined') {
             if (responseData.token && responseData.token !== null) {
@@ -260,18 +291,25 @@ const Signup: React.FC = () => {
           <GoogleLogin
             onSuccess={async (credentialResponse) => {
               try {
+                const utmParams = localStorage.getItem("utm_params");
+                const utmData = utmParams ? JSON.parse(utmParams) : {};
                 const response = await axiosInstance.post('/sign-up-google', {
                   token: credentialResponse.credential,
                   ...(spi && { spi }),
                   ...(teams_token && { teams_token }),
-                  ...{ is_without_card: !isWithoutCard },
-                  ...{ awc: awin_awc || null },
+                  ...(is_with_card && { is_with_card }),
+                  awc: awin_awc,
+                  coupon,
+                  ift,
+                  ftd,
+                  utm_params: utmData,
                   ...(isShopifyDataComplete && { shopify_data: initialShopifyData })
                 });
 
                 const responseData = response.data;
                 if (typeof window !== 'undefined') {
                   if (responseData.token && responseData.token !== null) {
+                    localStorage.removeItem(UTM_STORAGE_KEY);
                     localStorage.setItem('token', responseData.token);
                   }
                 }

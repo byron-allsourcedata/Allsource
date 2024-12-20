@@ -4,7 +4,6 @@ from dependencies import get_partners_assets_service, check_user_partners_access
 
 router = APIRouter(dependencies=[Depends(check_user_partners_access)])
 
-
 @router.get('')
 @router.get('/')
 def partners_assets(

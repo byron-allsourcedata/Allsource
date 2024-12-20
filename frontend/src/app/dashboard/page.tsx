@@ -87,8 +87,6 @@ const VerifyPixelIntegration: React.FC = () => {
           const status = response.data.status;
           if (status === "PIXEL_CODE_INSTALLED") {
             showToast("Pixel code is installed successfully!");
-          } else if (status === "PIXEL_CODE_PARSE_FAILED") {
-            showErrorToast("Could not find pixel code on your site");
           }
         })
         .catch(error => {
@@ -205,10 +203,11 @@ const SupportSection: React.FC = () => {
 
   useEffect(() => {
     if (calendlyPopupRef.current) {
+      fetchPrefillData();
       setRootElement(calendlyPopupRef.current);
     }
   }, []);
-
+  const [utmParams, setUtmParams] = useState<string | null>(null);
   const [openmanually, setOpen] = useState(false);
   const [pixelCode, setPixelCode] = useState('');
   const { setShowSlider } = useSlider();
@@ -236,6 +235,44 @@ const SupportSection: React.FC = () => {
     finally {
       setIsLoading(false)
     }
+  };
+
+  const fetchPrefillData = async () => {
+    try {
+      const response = await axiosInstance.get('/calendly');
+      const user = response.data.user;
+
+      if (user) {
+        const { full_name, email, utm_params } = user;
+        setUtmParams(utm_params)
+      }
+    } catch (error) {
+      setUtmParams(null);
+    }
+  };
+
+  const calendlyPopupUrl = () => {
+    const baseUrl = "https://calendly.com/maximiz-support/30min";
+    const searchParams = new URLSearchParams();
+  
+    if (utmParams) {
+      try {
+        const parsedUtmParams = typeof utmParams === 'string' ? JSON.parse(utmParams) : utmParams;
+  
+        if (typeof parsedUtmParams === 'object' && parsedUtmParams !== null) {
+          Object.entries(parsedUtmParams).forEach(([key, value]) => {
+            if (value !== null && value !== undefined) {
+              searchParams.append(key, value as string);
+            }
+          });
+        }
+      } catch (error) {
+        console.error("Error parsing utmParams:", error);
+      }
+    }
+  
+    const finalUrl = `${baseUrl}${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
+    return finalUrl;
   };
 
 
@@ -318,7 +355,7 @@ const SupportSection: React.FC = () => {
                 textTransform: "none",
                 cursor: "pointer",
               }}
-              url="https://calendly.com/maximiz-support/30min"
+              url={calendlyPopupUrl()}
               rootElement={rootElement}
               text="Schedule a call with us"
             />
@@ -557,7 +594,7 @@ const Dashboard: React.FC = () => {
                   },
                 }}
               >
-                Dashboard <CustomTooltip title={"Text about dashboard"} />
+                Dashboard <CustomTooltip title={"Indicates the count of resolved identities and revenue figures for the specified time"} linkText="Learn More" linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/dashboard" />
               </Typography>
               <Box sx={{
                 display: 'none', width: '100%', justifyContent: 'space-between', alignItems: 'start', '@media (max-width: 600px)': {

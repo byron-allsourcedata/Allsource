@@ -664,7 +664,10 @@ async def process_files(session, rabbitmq_connection, root_user):
         five_x_five_cookie_sync_event_date = session.query(FiveXFiveCookieSyncFile.event_date)
     
         if last_processed_file:
-            date_object = datetime.strptime(last_processed_file, '%Y-%m-%d %H:%M:%S.%f')
+            if '.' in last_processed_file:
+                date_object = datetime.strptime(last_processed_file, '%Y-%m-%d %H:%M:%S.%f')
+            else:
+                date_object = datetime.strptime(last_processed_file, '%Y-%m-%d %H:%M:%S')
             five_x_five_cookie_sync_event_date = five_x_five_cookie_sync_event_date.filter(
                 FiveXFiveCookieSyncFile.event_date > date_object)
     
@@ -738,26 +741,22 @@ async def main():
     )
 
     logging.info("Started")
-    try:
-        result = session.query(Users, UserDomains) \
-            .join(UserDomains, UserDomains.user_id == Users.id) \
-            .filter((UserDomains.domain == ROOT_BOT_CLIENT_DOMAIN) & (Users.email == ROOT_BOT_CLIENT_EMAIL)) \
-            .first()
-
-        while True:
+    result = session.query(Users, UserDomains) \
+        .join(UserDomains, UserDomains.user_id == Users.id) \
+        .filter((UserDomains.domain == ROOT_BOT_CLIENT_DOMAIN) & (Users.email == ROOT_BOT_CLIENT_EMAIL)) \
+        .first()
+    while True:
+        try:
             await process_files(session=session, rabbitmq_connection=connection, root_user=result)
             await connection.close()
             logging.info('Sleeping for 10 minutes...')
             time.sleep(60 * 10)
             connection = await rabbitmq_connection.connect()
             logging.info("Reconnected to RabbitMQ")
-    except Exception as e:
-        session.rollback()
-        logging.error(f"An error occurred: {str(e)}")
-        traceback.print_exc()
-    finally:
-        session.close()
-        logging.info("Connection to the database closed")
-
+        except Exception as e:
+            session.rollback()
+            logging.error(f"An error occurred: {str(e)}")
+            traceback.print_exc()
+            time.sleep(30)
 
 asyncio.run(main())

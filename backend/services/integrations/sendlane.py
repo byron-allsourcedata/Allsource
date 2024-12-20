@@ -32,7 +32,7 @@ class SendlaneIntegrationService:
         self.client = client
 
     def get_credentials(self, domain_id: int):
-        return self.integrations_persisntece.get_credentials_for_service(domain_id=domain_id, service_name='Sendlane')
+        return self.integrations_persisntece.get_credentials_for_service(domain_id=domain_id, service_name=SourcePlatformEnum.SENDLANE.value)
     
     
     def __handle_request(self, url: str, headers: dict = None, json: dict = None, data: dict = None, params: dict = None, api_key: str = None,  method: str = 'GET'):
@@ -52,7 +52,7 @@ class SendlaneIntegrationService:
         return response
 
 
-    def __save_integrations(self, api_key: str, domain_id: int, user_id):
+    def __save_integrations(self, api_key: str, domain_id: int, user: dict):
         credential = self.get_credentials(domain_id)
         if credential:
             credential.access_token = api_key
@@ -63,8 +63,8 @@ class SendlaneIntegrationService:
         integartions = self.integrations_persisntece.create_integration({
             'domain_id': domain_id,
             'access_token': api_key,
-            'service_name': SourcePlatformEnum.SENDLANE.value,
-            'user_id': user_id
+            'full_name': user.get('full_name'),
+            'service_name': SourcePlatformEnum.SENDLANE.value
         })
         if not integartions:
             raise HTTPException(status_code=409, detail={'status': IntegrationsStatus.CREATE_IS_FAILED.value})
@@ -87,11 +87,11 @@ class SendlaneIntegrationService:
             return
         return [self.__mapped_list(list) for list in lists.json().get('data')]
 
-    def add_integration(self, credentials: IntegrationCredentials, domain, user_id):
+    def add_integration(self, credentials: IntegrationCredentials, domain, user: dict):
         lists = self.__get_list(credentials.sendlane.api_key)
         if lists.status_code == 401:
             raise HTTPException(status_code=400, detail={'status': IntegrationsStatus.CREDENTAILS_INVALID.value})
-        return self.__save_integrations(credentials.sendlane.api_key, domain_id=domain.id, user_id=user_id)
+        return self.__save_integrations(credentials.sendlane.api_key, domain_id=domain.id, user=user)
 
     
     def __get_sender(self, api_key):
@@ -191,7 +191,7 @@ class SendlaneIntegrationService:
             sync = IntegrationUserSync(**message.get('sync'))
             if sync:
                 serarch_sync = self.sync_persistence.get_integration_by_sync_id(sync_id=sync.id)
-                if not serarch_sync or serarch_sync.service_name != 'Sendlane':
+                if not serarch_sync or serarch_sync.service_name != SourcePlatformEnum.SENDLANE.value:
                     logging.info(f'Sync {sync.id} Sendlane not matched')
                     return
         leads_type = message.get('leads_type')
@@ -288,7 +288,6 @@ class SendlaneIntegrationService:
             'contacts': [{**profile.model_dump()}]
         }
         respsonse = self.__handle_request(f'/lists/{list_id}/contacts', api_key=credential.access_token, json=json, method="POST")
-        print(respsonse.json())
         if respsonse.status_code == 401:
             credential.is_failed = True
             credential.error_message = 'Invalid API Key'

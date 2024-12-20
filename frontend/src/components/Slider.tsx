@@ -15,10 +15,11 @@ interface SliderProps {
 }
 
 const Slider: React.FC<SliderProps> = ({ setShowSliders }) => {
-  const [prefillData, setPrefillData] = useState<{ email: '', name: '' } | null>(null);
+  const [prefillData, setPrefillData] = useState<{ email: '', name: ''} | null>(null);
   const [isPrefillLoaded, setIsPrefillLoaded] = useState(false);
   const [fullName, setFullName] = useState<string | null>(null);
   const [email, setEmail] = useState<string | null>(null);
+  const [utmParams, setUtmParams] = useState<string | null>(null);
 
   useEffect(() => {
     const meItem = typeof window !== 'undefined' ? sessionStorage.getItem('me') : null;
@@ -34,13 +35,38 @@ const Slider: React.FC<SliderProps> = ({ setShowSliders }) => {
     email: email || '',
   };
 
+  const calendlyPopupUrl = () => {
+    const baseUrl = "https://calendly.com/maximiz/activate-free-trial";
+    const searchParams = new URLSearchParams();
+  
+    if (utmParams) {
+      try {
+        const parsedUtmParams = typeof utmParams === 'string' ? JSON.parse(utmParams) : utmParams;
+  
+        if (typeof parsedUtmParams === 'object' && parsedUtmParams !== null) {
+          Object.entries(parsedUtmParams).forEach(([key, value]) => {
+            if (value !== null && value !== undefined) {
+              searchParams.append(key, value as string);
+            }
+          });
+        }
+      } catch (error) {
+        console.error("Error parsing utmParams:", error);
+      }
+    }
+  
+    const finalUrl = `${baseUrl}${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
+    return finalUrl;
+  };
+
   const fetchPrefillData = async () => {
     try {
       const response = await axiosInstance.get('/calendly');
       const user = response.data.user;
 
       if (user) {
-        const { full_name, email } = user;
+        const { full_name, email, utm_params } = user;
+        setUtmParams(utm_params)
         setPrefillData({
           email: email || '',
           name: full_name || '',
@@ -131,12 +157,12 @@ const Slider: React.FC<SliderProps> = ({ setShowSliders }) => {
           },
         }}
       >
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 2, borderBottom: '1px solid #e4e4e4' }}>
-          <Typography className='first-sub-title' sx={{ textAlign: 'center', '@media (max-width: 600px)': { fontSize: '16px', textAlign: 'left' } }}>
-            Unlock the full potential with our maximiz!
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 2, pb:1.4, borderBottom: '1px solid #e4e4e4' }}>
+          <Typography className='first-sub-title' sx={{ textAlign: 'center', '@media (max-width: 600px)': { fontSize: '16px', textAlign: 'left' }, '@media (min-width: 1500px)': { fontSize: '22px !important', lineHeight: '25.2px !important' } }}>
+            Activate your Free Trial 
           </Typography>
           <IconButton onClick={handleClose}>
-            <CloseIcon />
+            <CloseIcon sx={{'@media (min-width: 1500px)': { fontSize: '28px !important', lineHeight: '25.2px !important' }}} />
           </IconButton>
         </Box>
         <Box sx={{
@@ -146,7 +172,7 @@ const Slider: React.FC<SliderProps> = ({ setShowSliders }) => {
         }}>
           <img src="/slider-bookcall.png" alt="Setup" style={{ width: '40%', marginBottom: '3rem', marginTop: '2rem', }} />
           <div id='calendly-popup-wrapper' className="book-call-button__wrapper" style={{ zIndex: 2000 }}> </div>
-          {prefillData ? (
+          {prefillData && prefillData.email ? (
             <>
               <Typography
                 variant="body1"
@@ -203,7 +229,7 @@ const Slider: React.FC<SliderProps> = ({ setShowSliders }) => {
                       cursor: 'pointer',
                     }}
                     prefill={prefillData}
-                    url="https://calendly.com/maximiz-support/30min"
+                    url={calendlyPopupUrl()}
                     rootElement={document.getElementById("calendly-popup-wrapper")!}
                     text="Reschedule a Call"
                   />
@@ -212,29 +238,33 @@ const Slider: React.FC<SliderProps> = ({ setShowSliders }) => {
             </>
           ) : (
             <>
+            <Box sx={{display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height:'100%' }}>
               <Typography variant="body1" gutterBottom className="second-sub-title" sx={{
                 textAlign: 'left', marginBottom: '1.5rem',
-                '@media (max-width: 600px)': { fontSize: '10px', lineHeight: '22px', marginBottom: '1em' },
-                '@media (min-width: 1500px)': { fontSize: '22px', lineHeight: '25.2px', marginBottom: '2em' }
+                '@media (max-width: 600px)': { fontSize: '10px !important', lineHeight: '22px !important', marginBottom: '1em' },
+                '@media (min-width: 1500px)': { fontSize: '22px !important', lineHeight: '25.2px !important', marginBottom: '2em' },
+                '@media (min-width: 2000px)': { fontSize: '26px !important', lineHeight: '25.2px !important', marginBottom: '2em' }
               }}>
-                To activate your account, please speak with one of our onboarding specialists, and we&apos;ll get you started.
+                To activate your Free Trial, speak to one of our onboarding specialists, and we&apos;ll get you started. 
               </Typography>
               <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'start', '@media (min-width: 1500px)': { gap: 1, } }}>
                 <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1.5, alignItems: 'center' }}>
                   <CheckCircleIcon sx={{ color: 'rgba(110, 193, 37, 1)', fontSize: '20px', '@media (min-width: 1500px)': { fontSize: '24px' } }} />
                   <Typography variant="body1" className='table-heading' gutterBottom sx={{
-                    '@media (max-width: 600px)': { fontSize: '10px' },
-                    '@media (min-width: 1500px)': { fontSize: '20px', lineHeight: '25.2px', }
+                    '@media (max-width: 600px)': { fontSize: '10px !important' },
+                    '@media (min-width: 1500px)': { fontSize: '20px !important', lineHeight: '25.2px !important', },
+                    '@media (min-width: 2000px)': { fontSize: '24px !important', lineHeight: '25.2px !important', }
                   }}>
-                    Unlock Optimal Efficiency:
+                    Get your Pixel installed:
                   </Typography>
                 </Box>
                 <Box sx={{ display: 'flex', justifyContent: 'start', pl: 4.5, }}>
                   <Typography className='table-data' sx={{
-                    textAlign: 'left', marginBottom: '2rem', '@media (max-width: 600px)': { fontSize: '14px', lineHeight: '18px', marginBottom: '1em' },
-                    '@media (min-width: 1500px)': { fontSize: '18px', lineHeight: '19.6px', marginBottom: '2em', }
+                    textAlign: 'left', marginBottom: '2rem', '@media (max-width: 600px)': { fontSize: '14px !important', lineHeight: '18px !important', marginBottom: '1em' },
+                    '@media (min-width: 1500px)': { fontSize: '18px !important', lineHeight: '19.6px !important', marginBottom: '2em', },
+                    '@media (min-width: 2000px)': { fontSize: '22px !important', lineHeight: '23.2px !important', }
                   }}>
-                    Maximiz offers advanced tools and features designed to enhance your business performance, driving better outcomes and maximizing your potential.
+                    Once you are live within 30 minutes you will start collecting the details of your anonymous visitors. 
                   </Typography>
                 </Box>
               </Box>
@@ -242,39 +272,44 @@ const Slider: React.FC<SliderProps> = ({ setShowSliders }) => {
                 <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1.5, alignItems: 'center' }}>
                   <CheckCircleIcon sx={{ color: 'rgba(110, 193, 37, 1)', fontSize: '20px', '@media (min-width: 1500px)': { fontSize: '24px' } }} />
                   <Typography variant="body1" className='table-heading' gutterBottom sx={{
-                    '@media (max-width: 600px)': { fontSize: '10px' },
-                    '@media (min-width: 1500px)': { fontSize: '20px', lineHeight: '25.2px', }
+                    '@media (max-width: 600px)': { fontSize: '10px !important' },
+                    '@media (min-width: 1500px)': { fontSize: '20px !important', lineHeight: '25.2px !important', },
+                    '@media (min-width: 2000px)': { fontSize: '24px !important', lineHeight: '25.2px !important', }
                   }}>
-                    Tailored Expert Guidance:
+                    Connect your 3<span style={{ verticalAlign: 'super', fontSize: 'smaller' }}>rd</span> party integrations:
                   </Typography>
                 </Box>
                 <Box sx={{ display: 'flex', justifyContent: 'start', pl: 4.5 }}>
                 <Typography className='table-data' sx={{
-                    textAlign: 'left', marginBottom: '2rem', '@media (max-width: 600px)': { fontSize: '14px', lineHeight: '18px', marginBottom: '1em' },
-                    '@media (min-width: 1500px)': { fontSize: '18px', lineHeight: '19.6px', marginBottom: '2em', }
+                    textAlign: 'left', marginBottom: '2rem', '@media (max-width: 600px)': { fontSize: '14px !important', lineHeight: '18px !important', marginBottom: '1em' },
+                    '@media (min-width: 1500px)': { fontSize: '16px !important', lineHeight: '19.6px !important', marginBottom: '2em', },
+                    '@media (min-width: 2000px)': { fontSize: '22px !important', lineHeight: '23.2px !important', }
                   }}>
-                    Our marketing experts are available to provide personalized insights and strategies to help you fully leverage Maximiz&apos;s capabilities for your specific needs.
+                    Simply connect all your 3<span style={{ verticalAlign: 'super', fontSize: 'smaller' }}>rd</span> party integrations such as your store or email provider to start contacting your leads. 
                   </Typography>
                 </Box>
               </Box>
-              <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'start', '@media (min-width: 1500px)': { gap: 1, } }}>
-                <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1.5, alignItems: 'center' }}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'start', alignItems: 'start', '@media (min-width: 1500px)': { gap: 1, } }}>
+                <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1.5, alignItems: 'start', justifyContent: 'start' }}>
                   <CheckCircleIcon sx={{ color: 'rgba(110, 193, 37, 1)', fontSize: '20px', '@media (min-width: 1500px)': { fontSize: '24px' } }} />
                   <Typography variant="body1" className='table-heading' gutterBottom sx={{
-                    '@media (max-width: 600px)': { fontSize: '10px' },
-                    '@media (min-width: 1500px)': { fontSize: '20px', lineHeight: '25.2px', }
+                    '@media (max-width: 600px)': { fontSize: '10px !important' },
+                    '@media (min-width: 1500px)': { fontSize: '18px !important', lineHeight: '23.2px !important', },
+                    '@media (min-width: 2000px)': { fontSize: '24px !important', lineHeight: '25.2px !important', },
                   }}>
-                    Proven Success in Driving Growth:
+                    Watch the revenue roll in:
                   </Typography>
                 </Box>
                 <Box sx={{ display: 'flex', justifyContent: 'start', pl: 4.5 }}>
                 <Typography className='table-data' sx={{
-                    textAlign: 'left', marginBottom: '2rem', '@media (max-width: 600px)': { fontSize: '14px', lineHeight: '18px', marginBottom: '1em' },
-                    '@media (min-width: 1500px)': { fontSize: '18px', lineHeight: '19.6px', marginBottom: '2em', }
+                    textAlign: 'left', marginBottom: '2rem', '@media (max-width: 600px)': { fontSize: '12px !important', lineHeight: '18px !important', marginBottom: '1em' },
+                    '@media (min-width: 1500px)': { fontSize: '16px !important', lineHeight: '19.6px !important', marginBottom: '2em', },
+                    '@media (min-width: 2000px)': { fontSize: '22px !important', lineHeight: '23.2px !important', }
                   }}>
-                    With Maximiz, you can expect tangible results and significant improvements in your business metrics, backed by expert support every step of the way.
+                    Within a few days start watching the sales and revenue from your account.  
                   </Typography>
                 </Box>
+              </Box>
               </Box>
               <Box sx={{ width: '100%', height: '100%', display: 'flex', alignItems: 'end', pb: 5 }}>
                 <Button onClick={handleClose} sx={{ width: '100%' }}>
@@ -295,7 +330,7 @@ const Slider: React.FC<SliderProps> = ({ setShowSliders }) => {
                       textTransform: 'none',
                       cursor: 'pointer',
                     }}
-                    url="https://calendly.com/maximiz-support/30min"
+                    url={calendlyPopupUrl()}
                     rootElement={document.getElementById("calendly-popup-wrapper")!}
                     text="Get Started"
                     prefill={prefillDataStorage}

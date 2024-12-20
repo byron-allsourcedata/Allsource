@@ -45,11 +45,11 @@ class KlaviyoIntegrationsService:
         return response
 
     def get_credentials(self, domain_id: str):
-        credential = self.integrations_persisntece.get_credentials_for_service(domain_id, 'Klaviyo')
+        credential = self.integrations_persisntece.get_credentials_for_service(domain_id, SourcePlatformEnum.KLAVIYO.value)
         return credential
         
 
-    def __save_integrations(self, api_key: str, domain_id: int, user_id):
+    def __save_integrations(self, api_key: str, domain_id: int, user: dict):
         credential = self.get_credentials(domain_id)
         if credential:
             credential.access_token = api_key
@@ -60,8 +60,8 @@ class KlaviyoIntegrationsService:
         integartions = self.integrations_persisntece.create_integration({
             'domain_id': domain_id,
             'access_token': api_key,
-            'service_name': SourcePlatformEnum.KLAVIYO.value,
-            'user_id': user_id
+            'full_name': user.get('full_name'),
+            'service_name': SourcePlatformEnum.KLAVIYO.value
         })
         if not integartions:
             raise HTTPException(status_code=409, detail={'status': IntegrationsStatus.CREATE_IS_FAILED.value})
@@ -174,12 +174,12 @@ class KlaviyoIntegrationsService:
         return self.__mapped_list(response.json().get('data'))
 
 
-    def add_integration(self, credentials: IntegrationCredentials, domain, user_id):
+    def add_integration(self, credentials: IntegrationCredentials, domain, user: dict):
         try:
             self.__get_list(credentials.klaviyo.api_key)
         except:
             raise HTTPException(status_code=400, detail=IntegrationsStatus.CREDENTAILS_INVALID.value)
-        self.__save_integrations(credentials.klaviyo.api_key, domain.id, user_id=user_id)
+        self.__save_integrations(credentials.klaviyo.api_key, domain.id, user)
         return {
             'status': IntegrationsStatus.SUCCESS.value
         }
@@ -266,7 +266,7 @@ class KlaviyoIntegrationsService:
             sync = IntegrationUserSync(**message.get('sync'))
             if sync:
                 serarch_sync = self.sync_persistence.get_integration_by_sync_id(sync_id=sync.id)
-                if not serarch_sync or serarch_sync.service_name != 'Klaviyo':
+                if not serarch_sync or serarch_sync.service_name != SourcePlatformEnum.KLAVIYO.value:
                     logging.info(f'Sync {sync.id} Klaviyo not matched')
                     return
         leads_type = message.get('leads_type')

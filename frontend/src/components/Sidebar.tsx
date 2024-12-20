@@ -9,6 +9,7 @@ import CategoryIcon from '@mui/icons-material/Category';
 import IntegrationsIcon from '@mui/icons-material/IntegrationInstructions';
 import FeaturedPlayListIcon from '@mui/icons-material/FeaturedPlayList';
 import SettingsIcon from '@mui/icons-material/Settings';
+import AccountBoxIcon from '@mui/icons-material/AccountBox';
 import Image from 'next/image';
 import { AxiosError } from 'axios';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
@@ -185,11 +186,29 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading, hasNotification }) => {
-    const { percent_steps: userPercentSteps } = useUser();
+    const { domains, partner } = useUser();
     const router = useRouter();
     const pathname = usePathname();
     const [showBookSlider, setShowBookSlider] = useState(false);
 
+    const [currentDomain, setCurrentDomain] = useState<string | null>(null);
+    const [activatePercent, setActivatePercent] = useState<number>(0);
+    useEffect(() => {
+        const storedDomain = sessionStorage.getItem('current_domain');
+        if (storedDomain) {
+            setCurrentDomain(storedDomain);
+        }
+    }, []);
+
+    useEffect(() => {
+        if (currentDomain) {
+            const domain = domains.find(d => d.domain === currentDomain);
+            if (domain) {
+                setActivatePercent(domain.activate_percent);
+            }
+        }
+    }, [currentDomain, domains]);
+    
     const handleNavigation = async (route: string) => {
         try {
             setLoading(true)
@@ -265,6 +284,12 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading, hasNotific
                     </ListItemIcon>
                     <ListItemText primary="Suppressions" />
                 </ListItem>
+                {partner && <ListItem button onClick={() => handleNavigation('/partners')} sx={isActive('/partners') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
+                    <ListItemIcon sx={sidebarStyles.listItemIcon}>
+                        <AccountBoxIcon />
+                    </ListItemIcon>
+                    <ListItemText primary="Partners" />
+                </ListItem>}
                 {/* <ListItem button onClick={() => handleNavigation('/rules')} sx={isActive('/rules') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
                         <RuleFolderIcon />
@@ -285,7 +310,7 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading, hasNotific
                 right: '0',
                 width: '100%'
             }}>
-                <SetupSection percent_steps={userPercentSteps ? userPercentSteps : 0 } />
+                <SetupSection percent_steps={activatePercent ? activatePercent : 0 } />
                 <Box sx={sidebarStyles.settings}>
                     <ListItem button onClick={() => handleNavigation('settings?section=accountDetails')} sx={isActive('/settings') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
                         <ListItemIcon sx={sidebarStyles.listItemIcon}>

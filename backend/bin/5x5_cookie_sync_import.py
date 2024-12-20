@@ -116,18 +116,16 @@ async def main():
     session = Session()
 
     logging.info("Started")
-    try:
-        while True:
+    while True:
+        try:
             await process_files(sts_client=sts_client, session=session)
             logging.info('Sleeping for 10 minutes...')
             time.sleep(60 * 10)
-    except Exception as e:
-        session.rollback()
-        logging.error(f"An error occurred: {str(e)}")
-        traceback.print_exc()
-    finally:
-        session.close()
-        logging.info("Connection to the database closed")
+        except Exception as e:
+            session.rollback()
+            logging.error(f"An error occurred: {str(e)}")
+            traceback.print_exc()
+            time.sleep(30)
 
 
 asyncio.run(main())

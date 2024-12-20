@@ -27,7 +27,7 @@ class OmnisendIntegrationService:
         self.QUEUE_DATA_SYNC = 'data_sync_leads'
 
     def get_credentials(self, domain_id: int):
-        return self.integration_persistence.get_credentials_for_service(domain_id, 'Omnisend')
+        return self.integration_persistence.get_credentials_for_service(domain_id, SourcePlatformEnum.OMNISEND.value)
     
     def __handle_request(self, url: str, headers: dict = None, json: dict = None, data: dict = None, params: dict = None, api_key: str = None,  method: str = 'GET'):
         if not headers:
@@ -49,7 +49,7 @@ class OmnisendIntegrationService:
         contacts = self.__handle_request('/contacts', api_key=api_key)   
         return contacts
     
-    def __save_integrations(self, api_key: str, domain_id: int, user_id):
+    def __save_integrations(self, api_key: str, domain_id: int, user: dict):
         credential = self.get_credentials(domain_id)
         if credential:
             credential.access_token = api_key
@@ -58,20 +58,20 @@ class OmnisendIntegrationService:
         integartions = self.integration_persistence.create_integration({
             'domain_id': domain_id,
             'access_token': api_key,
-            'service_name': SourcePlatformEnum.OMNISEND.value,
-            'user_id': user_id
+            'full_name': user.get('full_name'),
+            'service_name': SourcePlatformEnum.OMNISEND.value
         })
         if not integartions:
             return IntegrationsStatus.CREATE_IS_FAILED 
         return IntegrationsStatus.SUCCESS
 
 
-    def add_integration(self, credentials: IntegrationCredentials, domain, user_id):
+    def add_integration(self, credentials: IntegrationCredentials, domain, user: dict):
         if self.get_credentials(domain.id):
             return IntegrationsStatus.ALREADY_EXIST
         if self.get_list_contact(credentials.omnisend.api_key).status_code != 200:
             return IntegrationsStatus.CREDENTAILS_INVALID
-        return self.__save_integrations(api_key=credentials.omnisend.api_key, domain_id=domain.id, user_id=user_id)
+        return self.__save_integrations(api_key=credentials.omnisend.api_key, domain_id=domain.id, user=user)
     
     async def create_sync(self, domain_id: int, created_by: str, data_map: List[DataMap] = None, leads_type: str = None, list_id: str = None, list_name: str = None,):
         credentials = self.get_credentials(domain_id)
@@ -135,7 +135,7 @@ class OmnisendIntegrationService:
             sync = IntegrationUserSync(**message.get('sync'))
             if sync:
                 serarch_sync = self.sync_persistence.get_integration_by_sync_id(sync_id=sync.id)
-                if not serarch_sync or serarch_sync.service_name != 'Omnisend':
+                if not serarch_sync or serarch_sync.service_name != SourcePlatformEnum.OMNISEND.value:
                     logging.info(f'Sync {sync.id} Omnisend not matched')
                     return
         leads_type = message.get('leads_type')

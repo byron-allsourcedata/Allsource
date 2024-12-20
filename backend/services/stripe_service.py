@@ -300,20 +300,49 @@ def fetch_last_id_of_previous_page(customer_id, per_page, page):
 def create_stripe_checkout_session(customer_id: str,
                                    line_items: List[dict],
                                    mode: str,
-                                   trial_period: int = 0):
-    session = stripe.checkout.Session.create(
-        success_url=StripeConfig.success_url,
-        cancel_url=StripeConfig.cancel_url,
-        allow_promotion_codes=True,
-        customer=customer_id,
-        payment_method_types=["card"],
-        line_items=line_items,
-        mode=mode,
-        subscription_data={
+                                   trial_period: int = 0,
+                                   coupon: str = None):
+    if trial_period > 0:
+        if coupon:
+            trial_period = 7
+        subscription_data = {
             'trial_period_days': trial_period
-        } if trial_period > 0 else None,
-    )
+        }
+    else:
+        subscription_data = {
+            'trial_period_days': None
+        }
+
+    discounts = [{'coupon': coupon}] if coupon else None
+    
+    try:
+        session = stripe.checkout.Session.create(
+            success_url=StripeConfig.success_url,
+            cancel_url=StripeConfig.cancel_url,
+            customer=customer_id,
+            payment_method_types=["card"],
+            line_items=line_items,
+            mode=mode,
+            subscription_data=subscription_data,
+            discounts=discounts
+        )
+    except stripe.error.InvalidRequestError as e:
+        if "Coupon" in str(e) and "is expired" in str(e):
+            session = stripe.checkout.Session.create(
+                success_url=StripeConfig.success_url,
+                cancel_url=StripeConfig.cancel_url,
+                customer=customer_id,
+                payment_method_types=["card"],
+                line_items=line_items,
+                mode=mode,
+                subscription_data=subscription_data,
+                discounts=None
+            )
+        else:
+            raise
+
     return {"link": session.url}
+
 
 
 def get_billing_history_by_userid(customer_id, page, per_page):

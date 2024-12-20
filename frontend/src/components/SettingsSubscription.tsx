@@ -1,12 +1,13 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Button, Tabs, Tab, TextField, Dialog, DialogActions, Tooltip, Slider, DialogContent, DialogTitle, IconButton, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, TableSortLabel, InputAdornment, Drawer, Divider, List, ListItem, ListItemIcon, ListItemText, Chip } from '@mui/material';
+import { Box, Typography, Button, Tabs, Tab, TextField, Slider, IconButton, Drawer, Divider, Chip, Link } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import PlanCard from '@/components/PlanCard';
 import axiosInterceptorInstance from '@/axios/axiosInterceptorInstance';
 import CustomTooltip from './customToolTip';
 import CustomizedProgressBar from '@/components/CustomizedProgressBar';
 import Image from 'next/image';
+import axiosInstance from "../axios/axiosInterceptorInstance";
 import { showErrorToast, showToast } from './ToastNotification';
 import axios from 'axios';
 
@@ -109,6 +110,12 @@ export const SettingsSubscription: React.FC = () => {
     const [errors, setErrors] = useState<{ [key: string]: string }>({});
     const [formValues, setFormValues] = useState({ unsubscribe: '', });
     const [hasActivePlan, setHasActivePlan] = useState<boolean>(false);
+    const [showSlider, setShowSlider] = useState(true);
+    const [utmParams, setUtmParams] = useState<string | null>(null);
+
+    const handleFilterPopupClose = () => {
+        setShowSlider(false);
+    };
 
 
     const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
@@ -162,6 +169,7 @@ export const SettingsSubscription: React.FC = () => {
         const fetchData = async () => {
             try {
                 setIsLoading(true);
+                fetchPrefillData();
                 const response = await axiosInterceptorInstance.get(`/subscriptions/stripe-plans`);
                 setAllPlans(response.data.stripe_plans)
                 const stripePlans: StripePlan[] = response.data.stripe_plans;
@@ -189,6 +197,45 @@ export const SettingsSubscription: React.FC = () => {
         // Логика для покупки кредитов
     };
 
+    const fetchPrefillData = async () => {
+        try {
+          const response = await axiosInstance.get('/calendly');
+          const user = response.data.user;
+    
+          if (user) {
+            const { full_name, email, utm_params } = user;
+            setUtmParams(utm_params)
+          }
+        } catch (error) {
+          setUtmParams(null);
+        }
+      };
+    
+      const calendlyPopupUrl = () => {
+        const baseUrl = "https://calendly.com/maximiz-support/30min";
+        const searchParams = new URLSearchParams();
+      
+        if (utmParams) {
+          try {
+            const parsedUtmParams = typeof utmParams === 'string' ? JSON.parse(utmParams) : utmParams;
+      
+            if (typeof parsedUtmParams === 'object' && parsedUtmParams !== null) {
+              Object.entries(parsedUtmParams).forEach(([key, value]) => {
+                if (value !== null && value !== undefined) {
+                  searchParams.append(key, value as string);
+                }
+              });
+            }
+          } catch (error) {
+            console.error("Error parsing utmParams:", error);
+          }
+        }
+      
+        const finalUrl = `${baseUrl}${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
+        return finalUrl;
+      };
+
+
     const handleChoosePlan = async (stripePriceId: string) => {
         let path = hasActivePlan
             ? '/subscriptions/upgrade-and-downgrade-user-subscription'
@@ -199,7 +246,7 @@ export const SettingsSubscription: React.FC = () => {
             if (response.status === 200) {
                 if (response.data.link !== null && response.data.link !== undefined) {
                     window.location.href = response.data.link;
-                }                
+                }
                 if (response.data.status_subscription) {
                     if (response.data.status_subscription === 'active') {
                         showToast('Subscription was successful!');
@@ -233,7 +280,8 @@ export const SettingsSubscription: React.FC = () => {
                     }
                 }
                 else if (response.data.status === 'INCOMPLETE') {
-                    showErrorToast('Subscription not found!');
+                    const errorMessage = response?.data?.message || 'Subscription not found!';
+                    showErrorToast(errorMessage);
                 }
             }
         } catch (error) {
@@ -305,7 +353,7 @@ export const SettingsSubscription: React.FC = () => {
                 const response = await axiosInterceptorInstance.post('/subscriptions/cancel-plan', {
                     reason_unsubscribe: formValues.unsubscribe
                 });
-
+                console.log(response.data)
                 if (response.status === 200) {
                     switch (response.data) {
                         case 'SUCCESS':
@@ -316,6 +364,9 @@ export const SettingsSubscription: React.FC = () => {
                             break
                         case 'SUBSCRIPTION_ALREADY_CANCELED':
                             showErrorToast('Subscription already canceled!');
+                            break
+                        case 'INCOMPLETE':
+                            showErrorToast('Subscription cancellation error!');
                             break
                         default:
                             showErrorToast('Unknown response received.');
@@ -726,22 +777,31 @@ export const SettingsSubscription: React.FC = () => {
                             }
                         }}>
                             <Box display="flex" justifyContent="flex-end" mt={2}>
-
-                                <Button className="hyperlink-red" sx={{
-                                    background: '#5052B2',
-                                    borderRadius: '4px',
-                                    border: '1px solid #5052b2',
-                                    boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                                    color: '#fff !important',
-                                    textTransform: 'none',
-                                    padding: '10px 24px',
-                                    width: '100%',
-                                    '&:hover': {
-                                        color: '#5052B2 !important'
-                                    }
-                                }}>
+                                <Link
+                                    href={calendlyPopupUrl()}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={handleCustomPlanPopupClose}
+                                    sx={{
+                                        display: 'inline-block',
+                                        width: '100%',
+                                        textDecoration: 'none',
+                                        color: '#fff',
+                                        padding: '1em 8em',
+                                        fontFamily: 'Nunito Sans',
+                                        fontWeight: '600',
+                                        fontSize: '14px',
+                                        borderRadius: '4px',
+                                        border: 'none',
+                                        lineHeight: '22.4px',
+                                        backgroundColor: '#5052B2',
+                                        textTransform: 'none',
+                                        textAlign: 'center',
+                                        cursor: 'pointer',
+                                    }}
+                                >
                                     Book a call
-                                </Button>
+                                </Link>
                             </Box>
                         </Box>
                     </Box>
@@ -1018,4 +1078,3 @@ export const SettingsSubscription: React.FC = () => {
         </Box>
     );
 };
-
