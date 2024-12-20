@@ -28,6 +28,7 @@ class PartnersAssetService:
         aws_service: AWSService):
         self.partners_asset_persistence = partners_asset_persistence
         self.AWS = aws_service
+        self.aws_cloud = os.getenv("S3_URL")
 
 
     def get_assets(self):
@@ -79,7 +80,7 @@ class PartnersAssetService:
 
             file_hash = hashlib.sha256(file_contents).hexdigest()
             file_key = f'partners-assets/{file_hash}{file_extension}'
-            file_url = f'https://maximiz-data.s3.us-east-2.amazonaws.com/{file_key}'
+            file_url = f'{self.aws_cloud}/{file_key}'
 
             if self.AWS.file_exists(file_key):
                 files_data["file_url"] = file_url
@@ -91,7 +92,7 @@ class PartnersAssetService:
             if preview:
                 file_preview_contents = preview.read()
                 preview_key = f'partners-assets/{file_hash}_preview.jpg'
-                preview_url = f'https://maximiz-data.s3.us-east-2.amazonaws.com/{preview_key}'
+                preview_url = f'{self.aws_cloud}/{preview_key}'
                 self.AWS.upload_string(file_preview_contents, preview_key)
                 files_data["preview_url"] = preview_url
                 if self.AWS.file_exists(preview_key):
@@ -234,8 +235,8 @@ class PartnersAssetService:
         return extension
 
 
-    def get_video_duration(self, file_url: str) -> str:
-        if not file_url:
+    def get_video_duration(self, type: str, file_url: str) -> str:
+        if not file_url or type != "video":
             return "00:00"
         try:
             response = requests.get(file_url, stream=True, timeout=10)
@@ -272,5 +273,5 @@ class PartnersAssetService:
             file_url=asset.file_url,
             file_extension=self.get_file_extension(asset.file_url),
             file_size=self.get_file_size(asset.file_url),
-            video_duration=self.get_video_duration(asset.file_url),
+            video_duration=self.get_video_duration(asset.type, asset.file_url),
         ).model_dump()
