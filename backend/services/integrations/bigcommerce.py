@@ -182,7 +182,7 @@ class BigcommerceIntegrationsService:
         }
 
         script_event_data = {
-            "name": "Bigcommerce Pixel Script",
+            "name": "Maximiz Pixel Script",
             "description": "Script for Bigcommerce pixel tracking",
             "src": script_event_url, 
             "auto_uninstall": True,

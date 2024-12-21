@@ -10,3 +10,4 @@ class BigcommerceConfig(Base):
     frontend_dashboard_redirect = f'{os.getenv("SITE_HOST_URL")}/{os.getenv("DASHBOARD_PART_URL")}'
     token_url = os.getenv('BIGCOMMERCE_TOKEN_URL')
     external_app_installed = f"{os.getenv('SITE_HOST_URL')}/{os.getenv('EXTERNAL_APP_INSTALLED')}"
+    frontend_sign_up_redirect = f'{os.getenv("SITE_HOST_URL")}/signup'
