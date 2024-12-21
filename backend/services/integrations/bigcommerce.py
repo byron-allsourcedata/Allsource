@@ -136,6 +136,7 @@ class BigcommerceIntegrationsService:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid Request [NON]")
         
         user_integration = self.integrations_persistence.get_integration_by_shop_url(shop_url=payload.get("store_hash"))
+        self.integrations_persistence.delete_external_apps_installations(shop_hash=payload.get("store_hash"))
         if user_integration:
             self.integrations_persistence.delete_integration(user_integration.domain_id, user_integration.service_name)
             
