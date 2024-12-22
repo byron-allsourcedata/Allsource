@@ -17,30 +17,28 @@ import CategoryIcon from '@mui/icons-material/Category';
 import FeaturedPlayListIcon from '@mui/icons-material/FeaturedPlayList';
 
 import Image from 'next/image';
+import { display, width } from '@mui/system';
 
 const sidebarStyles = {
     container: {
-        width: '80%',
+        width: '100%',
+        paddingTop: "24px",
         flexShrink: 0,
         fontFamily: 'Nunito Sans',
         fontSize: '14px',
         fontWeight: '500',
         backgroundColor: 'rgba(255, 255, 255, 1)',
-        borderRight: '1px solid rgba(228, 228, 228, 1)',
-        marginRight: '10em',
         height: '95vh',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'start',
-        '@media (min-width: 1500px)': {
-            width: '70%'
-
-        },
     },
     menu: {
+        display: "flex",
+        flexDirection: "column",
+        gap: "35px",
         alignItems: 'center',
         paddingTop: '0 !important',
-        paddingBottom: '4em !important',
         '& .MuiListItem-root': {
             paddingBottom: '2em',
             paddingTop: '2em',
@@ -90,6 +88,9 @@ const sidebarStyles = {
         boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
     },
     activeItem: {
+        width: "100%",
+        display: "flex",
+        gap: "16px",
         borderLeft: '4px solid rgba(80, 82, 178, 1)',
         color: 'rgba(80, 82, 178, 1)',
         '& .MuiSvgIcon-root': {
@@ -97,6 +98,9 @@ const sidebarStyles = {
         },
     },
     inactiveItem: {
+        width: "100%",
+        display: "flex",
+        gap: "16px",
         backgroundColor: 'transparent',
         color: '#000',
         '&:hover': {
