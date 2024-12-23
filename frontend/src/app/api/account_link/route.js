@@ -11,6 +11,7 @@ export async function POST(req) {
       }
 
       let accountLink;
+      let linkType = "login";
 
       try {
         accountLink = await stripe.accounts.createLoginLink(account);
@@ -22,6 +23,7 @@ export async function POST(req) {
             return_url: `https://app.maximiz.ai/referral`,
             type: "account_onboarding",
           });
+          linkType = "login";
         } else {
           throw error;
         }
@@ -29,6 +31,7 @@ export async function POST(req) {
 
       return NextResponse.json({
         url: accountLink.url,
+        type: linkType, 
       });
 
     } catch (error) {

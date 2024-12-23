@@ -4,7 +4,6 @@ import { stripe } from "../../../../lib/utils";
 export async function POST(req) {
   try {
     const account = await stripe.accounts.create({
-      email:'yopaxaw522@bawsny.com',
       controller: {
         stripe_dashboard: {
           type: "express",
