@@ -58,6 +58,9 @@ axiosInterceptorInstance.interceptors.response.use(
           break;
         case 403:
           switch (error.response.data.status) {
+            case "NEED_BOOK_CALL":
+              sessionStorage.setItem('is_slider_opened', 'true');
+              break;
             case "NEED_CONFIRM_EMAIL":
               navigateTo("/email-verificate");
               break;
