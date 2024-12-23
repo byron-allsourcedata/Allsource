@@ -76,7 +76,7 @@ const AlivbleIntagrationsSlider = ({open, isContactSync = false, integrations, i
               }
             }
           }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 3.5, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 2.85, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
                     <Typography variant="h6" className="first-sub-title" sx={{ textAlign: 'center' }}>
                         Add an Integration
                     </Typography>
@@ -220,9 +220,6 @@ const AlivbleIntagrationsSlider = ({open, isContactSync = false, integrations, i
                                     }}  />
                                 </ListItemButton>
                             </ListItem> )}
-
-
-
                                 {integrations.some(integration => integration.service_name === 'zepier') && (
                                     !integrationsCredentials.some(integration => integration.service_name === 'zepier') )&&(
                                 <ListItem sx={{p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',
