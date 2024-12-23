@@ -204,7 +204,6 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading, hasNotific
             if (domain) {
                 setActivatePercent(domain.activate_percent);
             }
-            console.log('123')
         }
     }, [currentDomain]);
     

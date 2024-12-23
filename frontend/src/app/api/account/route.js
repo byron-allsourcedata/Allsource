@@ -23,7 +23,6 @@ export async function POST(req) {
 
     return NextResponse.json({ account: account.id });
   } catch (error) {
-    console.error("An error occurred when calling the Stripe API to create an account:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

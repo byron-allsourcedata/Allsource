@@ -35,7 +35,6 @@ export async function POST(req) {
       });
 
     } catch (error) {
-      console.error("Ошибка:", error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
   }
