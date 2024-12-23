@@ -134,7 +134,10 @@ class UsersAuth:
         utm_params_cleaned = {key: value for key, value in utm_params_dict.items() if value is not None}
         utm_params_json = json.dumps(utm_params_cleaned) if utm_params_cleaned else None
 
-            
+        source_platform = utm_params_cleaned.get('utm_source')
+        if awin_awc:
+            source_platform = SourcePlatformEnum.AWIN.value
+        
         user_object = Users(
             email=user_form.get('email'),
             is_email_confirmed=user_form.get('is_email_confirmed', False),
@@ -148,7 +151,7 @@ class UsersAuth:
             added_on=datetime.now(),
             stripe_payment_url=stripe_payment_url,
             awin_awc = awin_awc,
-            source_platform = SourcePlatformEnum.AWIN.value if awin_awc else None,
+            source_platform = source_platform,
             shop_id=shop_id,
             shopify_token=access_token,
             shop_domain=shop_domain,
@@ -255,7 +258,7 @@ class UsersAuth:
 
         self.user_persistence_service.email_confirmed(user_object.id)
         
-        if ift and ift == 'arwt':
+        if (ift and ift == 'arwt') or user_object.source_platform in (SourcePlatformEnum.BIG_COMMERCE.value, SourcePlatformEnum.SHOPIFY.value):
             self.user_persistence_service.book_call_confirmed(user_object.id)
             self.subscription_service.create_subscription_from_free_trial(user_id=user_object.id, ftd=ftd)
             
@@ -486,7 +489,7 @@ class UsersAuth:
         if shopify_data:
             self._process_shopify_integration(user_object, shopify_data, shopify_access_token, shop_id)
             
-        if ift and ift == 'arwt':
+        if (ift and ift == 'arwt') or user_object.source_platform in (SourcePlatformEnum.BIG_COMMERCE.value, SourcePlatformEnum.SHOPIFY.value):
             self.user_persistence_service.book_call_confirmed(user_object.id)
             self.subscription_service.create_subscription_from_free_trial(user_id=user_object.id, ftd=ftd)
             
@@ -520,7 +523,6 @@ class UsersAuth:
             user_object.shopify_token = shopify_access_token
             user_object.shop_domain = shopify_data.shop
         user_object.source_platform = SourcePlatformEnum.SHOPIFY.value
-        user_object.is_book_call_passed = True
         user_object.is_email_confirmed = True
         self.db.commit()
        

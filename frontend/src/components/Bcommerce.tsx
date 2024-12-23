@@ -76,48 +76,45 @@ const metaStyles = {
 const BCommerceConnect = ({open, onClose, error_message, initShopHash}: BigcommerceConntectPopupProps) => {
     const [shopHash, setShopHash] = useState('')
     const [loading, setLoading] = useState(false)
-    const [externalStoreHash, setExternalStoreHash] = useState<any[]>([])
     
     const handleShopHashChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value
         setShopHash(value)
     }
 
-    const handleClick = async() => {
-        if(externalStoreHash.some(eai => eai.store_hash == shopHash))
-        {
-            const response = await axiosInstance.post('/integrations/', {
-                bigcommerce: {
-                    shop_domain: shopHash
-                }
-            }, {
-                params: {
-                    service_name: 'big_commerce'
-                }
-            })
-        }
-        else {
-            const response = await axiosInstance.get('/integrations/bigcommerce/oauth', {params: {store_hash: shopHash}})
-            window.location.href = response.data.url;
-        }
-    }
-
-    useEffect(() => {
-        if(open && !initShopHash) {
-            const fetchData = async() => {
-                const response = await axiosInstance.get('/integrations/eai', {
+    const handleClick = async () => {
+        setLoading(true);
+        try {
+            const response = await axiosInstance.post(
+                '/integrations/connect',
+                {
+                    bigcommerce: {
+                        shop_domain: shopHash,
+                    },
+                },
+                {
                     params: {
-                        platform: 'big_commerce'
-                    }
-                })
-                if(response.status == 200) {
-                    setExternalStoreHash(response.data)
+                        service_name: 'big_commerce',
+                    },
                 }
+            );
+    
+            const { url, status } = response.data || {};
+    
+            if (url) {
+                window.location.href = url;
+            } else if (status === 'SUCCESS') {
+                showToast('The integration with BigCommerce was successful')
+            } else {
+                console.warn('Unexpected response format:', response.data);
             }
-            fetchData()
+        } catch (error) {
+            console.error('Error connecting integration:', error);
+        } finally {
+            setLoading(false);
         }
-    }, [open, initShopHash])
-
+    };
+    
     useEffect(() => {
         if (open && initShopHash) {
             setShopHash(initShopHash)
@@ -147,6 +144,37 @@ const BCommerceConnect = ({open, onClose, error_message, initShopHash}: Bigcomme
                 },
             }}
         >
+            {loading && (
+                <Box
+                    sx={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        background: 'rgba(255, 255, 255, 0.8)',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        zIndex: 1000,
+                    }}
+                >
+                    <Box
+                        sx={{
+                            border: '8px solid #f3f3f3',
+                            borderTop: '8px solid #3498db',
+                            borderRadius: '50%',
+                            width: '40px',
+                            height: '40px',
+                            animation: 'spin 1s linear infinite',
+                            '@keyframes spin': {
+                                '0%': {transform: 'rotate(0deg)'},
+                                '100%': {transform: 'rotate(360deg)'},
+                            },
+                        }}
+                    />
+                </Box>
+            )}
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 3.5, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
                 <Typography variant="h6" sx={{ textAlign: 'center', color: '#202124', fontFamily: 'Nunito Sans', fontWeight: '600', fontSize: '16px', lineHeight: 'normal' }}>
                     Connect to Bigcommerce
