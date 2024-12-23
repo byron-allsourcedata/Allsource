@@ -32,7 +32,7 @@ class SendlaneIntegrationService:
         self.client = client
 
     def get_credentials(self, domain_id: int):
-        return self.integrations_persisntece.get_credentials_for_service(domain_id=domain_id, service_name='Sendlane')
+        return self.integrations_persisntece.get_credentials_for_service(domain_id=domain_id, service_name=SourcePlatformEnum.SENDLANE.value)
     
     
     def __handle_request(self, url: str, headers: dict = None, json: dict = None, data: dict = None, params: dict = None, api_key: str = None,  method: str = 'GET'):
@@ -191,7 +191,7 @@ class SendlaneIntegrationService:
             sync = IntegrationUserSync(**message.get('sync'))
             if sync:
                 serarch_sync = self.sync_persistence.get_integration_by_sync_id(sync_id=sync.id)
-                if not serarch_sync or serarch_sync.service_name != 'Sendlane':
+                if not serarch_sync or serarch_sync.service_name != SourcePlatformEnum.SENDLANE.value:
                     logging.info(f'Sync {sync.id} Sendlane not matched')
                     return
         leads_type = message.get('leads_type')
@@ -288,7 +288,6 @@ class SendlaneIntegrationService:
             'contacts': [{**profile.model_dump()}]
         }
         respsonse = self.__handle_request(f'/lists/{list_id}/contacts', api_key=credential.access_token, json=json, method="POST")
-        print(respsonse.json())
         if respsonse.status_code == 401:
             credential.is_failed = True
             credential.error_message = 'Invalid API Key'

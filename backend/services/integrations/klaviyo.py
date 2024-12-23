@@ -45,7 +45,7 @@ class KlaviyoIntegrationsService:
         return response
 
     def get_credentials(self, domain_id: str):
-        credential = self.integrations_persisntece.get_credentials_for_service(domain_id, 'Klaviyo')
+        credential = self.integrations_persisntece.get_credentials_for_service(domain_id, SourcePlatformEnum.KLAVIYO.value)
         return credential
         
 
@@ -266,7 +266,7 @@ class KlaviyoIntegrationsService:
             sync = IntegrationUserSync(**message.get('sync'))
             if sync:
                 serarch_sync = self.sync_persistence.get_integration_by_sync_id(sync_id=sync.id)
-                if not serarch_sync or serarch_sync.service_name != 'Klaviyo':
+                if not serarch_sync or serarch_sync.service_name != SourcePlatformEnum.KLAVIYO.value:
                     logging.info(f'Sync {sync.id} Klaviyo not matched')
                     return
         leads_type = message.get('leads_type')

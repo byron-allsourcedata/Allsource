@@ -351,7 +351,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                             </Typography>
                             <List sx={{ display: 'flex', gap: '16px', py: 2, flexWrap: 'wrap' }}>
                                 {/* Meta */}
-                                {integrationsCredentials.some(integration => integration.service_name === 'Meta')&&(
+                                {integrationsCredentials.some(integration => integration.service_name === 'meta')&&(
                                 <ListItem  sx={{p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',
                                     '@media (max-width:600px)': {
                                         flexBasis: 'calc(50% - 8px)'
@@ -373,14 +373,14 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                     </ListItemButton>
                                 </ListItem>  )}
                                 {/* HubSpot */}
-                                {integrationsCredentials.some(integration => integration.service_name === 'HubSpot') && (
-                                    <ListItem sx={{p: 0, borderRadius: '4px', border: selectedIntegration === 'HubSpot' ? '1px solid #5052B2' : '1px solid #e4e4e4', width: 'auto',
+                                {integrationsCredentials.some(integration => integration.service_name === 'hubspot') && (
+                                    <ListItem sx={{p: 0, borderRadius: '4px', border: selectedIntegration === 'hubspot' ? '1px solid #5052B2' : '1px solid #e4e4e4', width: 'auto',
                                         '@media (max-width:600px)': {
                                             flexBasis: 'calc(50% - 8px)'
                                         }
                                     }}>
                                         <ListItemButton sx={{p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center',
-                                            backgroundColor: selectedIntegration === 'HubSpot' ? 'rgba(80, 82, 178, 0.10)' : 'transparent'
+                                            backgroundColor: selectedIntegration === 'hubSpot' ? 'rgba(80, 82, 178, 0.10)' : 'transparent'
                                         }}>
                                         <ListItemIcon sx={{minWidth: 'auto'}}>
                                             <Image src="/hubspot.svg" alt="hubspot" height={28} width={27} />
@@ -398,17 +398,17 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                     </ListItem>
                                 )}
                                 {/* Klaviyo */}
-                                {integrationsCredentials.some(integration => integration.service_name === 'Klaviyo') && (
+                                {integrationsCredentials.some(integration => integration.service_name === 'klaviyo') && (
                                     <ListItem sx={{
                                         p: 0,
                                         borderRadius: '4px',
-                                        border: selectedIntegration === 'Klaviyo' ? '1px solid #5052B2' : '1px solid #e4e4e4',
+                                        border: selectedIntegration === 'klaviyo' ? '1px solid #5052B2' : '1px solid #e4e4e4',
                                         width: 'auto',
                                         '@media (max-width:600px)': {
                                             flexBasis: 'calc(50% - 8px)',
                                         },
                                     }}>
-                                        <ListItemButton onClick={!integrationsCredentials.find(integration => integration.service_name === 'Klaviyo')?.is_failed
+                                        <ListItemButton onClick={!integrationsCredentials.find(integration => integration.service_name === 'klaviyo')?.is_failed
                                                 ? handleKlaviyoIconPopupOpen
                                                 : handleCreateKlaviyoOpen
                                             } sx={{
@@ -419,7 +419,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                             width: '102px',
                                             height: '72px',
                                             justifyContent: 'center',
-                                            backgroundColor: selectedIntegration === 'Klaviyo' ? 'rgba(80, 82, 178, 0.10)' : 'transparent',
+                                            backgroundColor: selectedIntegration === 'klaviyo' ? 'rgba(80, 82, 178, 0.10)' : 'transparent',
                                         }}>
                                             <ListItemIcon sx={{ minWidth: 'auto' }}>
                                                 <Image src="/klaviyo.svg" alt="klaviyo" height={26} width={32} />
@@ -437,17 +437,17 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                     </ListItem>
                                 )}
                                 {/* Omnisend */}
-                                {integrationsCredentials.some(integration => integration.service_name === 'Omnisend') && (
+                                {integrationsCredentials.some(integration => integration.service_name === 'omnisend') && (
                                     <ListItem sx={{
                                         p: 0,
                                         borderRadius: '4px',
-                                        border: selectedIntegration === 'Omnisend' ? '1px solid #5052B2' : '1px solid #e4e4e4',
+                                        border: selectedIntegration === 'omnisend' ? '1px solid #5052B2' : '1px solid #e4e4e4',
                                         width: 'auto',
                                         '@media (max-width:600px)': {
                                             flexBasis: 'calc(50% - 8px)',
                                         },
                                     }}>
-                                        <ListItemButton onClick={!integrationsCredentials.find(integration => integration.service_name === 'Omnisend')?.is_failed
+                                        <ListItemButton onClick={!integrationsCredentials.find(integration => integration.service_name === 'omnisend')?.is_failed
                                                 ? handleOmnisendIconPopupOpen
                                                 : handleOmnisendConnectOpen
                                             } sx={{
@@ -458,10 +458,10 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                             width: '102px',
                                             height: '72px',
                                             justifyContent: 'center',
-                                            backgroundColor: selectedIntegration === 'Omnisend' ? 'rgba(80, 82, 178, 0.10)' : 'transparent',
+                                            backgroundColor: selectedIntegration === 'omnisend' ? 'rgba(80, 82, 178, 0.10)' : 'transparent',
                                         }}>
                                             <ListItemIcon sx={{ minWidth: 'auto' }}>
-                                                <Image src="/omnisend_icon_black.svg" alt="Omnisend" height={26} width={32} />
+                                                <Image src="/omnisend_icon_black.svg" alt="omnisend" height={26} width={32} />
                                             </ListItemIcon>
                                             <ListItemText primary="Omnisend" primaryTypographyProps={{
                                                 sx: {
@@ -476,17 +476,17 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                     </ListItem>
                                 )}
                                 {/* Mailchimp */}
-                                {integrationsCredentials.some(integration => integration.service_name === 'Mailchimp') && (
+                                {integrationsCredentials.some(integration => integration.service_name === 'mailchimp') && (
                                     <ListItem sx={{
                                         p: 0,
                                         borderRadius: '4px',
-                                        border: selectedIntegration === 'Mailchimp' ? '1px solid #5052B2' : '1px solid #e4e4e4',
+                                        border: selectedIntegration === 'mailchimp' ? '1px solid #5052B2' : '1px solid #e4e4e4',
                                         width: 'auto',
                                         '@media (max-width:600px)': {
                                             flexBasis: 'calc(50% - 8px)',
                                         },
                                     }}>
-                                        <ListItemButton onClick={!integrationsCredentials.find(integration => integration.service_name === 'Mailchimp')?.is_failed
+                                        <ListItemButton onClick={!integrationsCredentials.find(integration => integration.service_name === 'mailchimp')?.is_failed
                                                 ? handleMailchimpIconPopupIconOpen
                                                 : handleOpenMailchimpConnect
                                             } sx={{
@@ -497,10 +497,10 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                             width: '102px',
                                             height: '72px',
                                             justifyContent: 'center',
-                                            backgroundColor: selectedIntegration === 'Mailchimp' ? 'rgba(80, 82, 178, 0.10)' : 'transparent',
+                                            backgroundColor: selectedIntegration === 'mailchimp' ? 'rgba(80, 82, 178, 0.10)' : 'transparent',
                                         }}>
                                             <ListItemIcon sx={{ minWidth: 'auto' }}>
-                                                <Image src="/mailchimp-icon.svg" alt="Mailchimp" height={26} width={32} />
+                                                <Image src="/mailchimp-icon.svg" alt="mailchimp" height={26} width={32} />
                                             </ListItemIcon>
                                             <ListItemText primary="Mailchimp" primaryTypographyProps={{
                                                 sx: {
@@ -515,17 +515,17 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                     </ListItem>
                                 )}
                                 {/* Sendlane */}
-                                {integrationsCredentials.some(integration => integration.service_name === 'Sendlane') && (
+                                {integrationsCredentials.some(integration => integration.service_name === 'sendlane') && (
                                     <ListItem sx={{
                                         p: 0,
                                         borderRadius: '4px',
-                                        border: selectedIntegration === 'Sendlane' ? '1px solid #5052B2' : '1px solid #e4e4e4',
+                                        border: selectedIntegration === 'sendlane' ? '1px solid #5052B2' : '1px solid #e4e4e4',
                                         width: 'auto',
                                         '@media (max-width:600px)': {
                                             flexBasis: 'calc(50% - 8px)',
                                         },
                                     }}>
-                                        <ListItemButton onClick={!integrationsCredentials.find(integration => integration.service_name === 'Sendlane')?.is_failed
+                                        <ListItemButton onClick={!integrationsCredentials.find(integration => integration.service_name === 'sendlane')?.is_failed
                                                 ? handleSendlaneIconPopupOpen
                                                 : handleSendlaneConnectOpen
                                             } sx={{
@@ -536,7 +536,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                             width: '102px',
                                             height: '72px',
                                             justifyContent: 'center',
-                                            backgroundColor: selectedIntegration === 'Sendlane' ? 'rgba(80, 82, 178, 0.10)' : 'transparent',
+                                            backgroundColor: selectedIntegration === 'sendlane' ? 'rgba(80, 82, 178, 0.10)' : 'transparent',
                                         }}>
                                             <ListItemIcon sx={{ minWidth: 'auto' }}>
                                                 <Image src="/sendlane-icon.svg" alt="sendlane" height={26} width={32} />
@@ -553,17 +553,17 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                         </ListItemButton>
                                     </ListItem>
                                 )}
-                                {integrationsCredentials.some(integration => integration.service_name === 'Zapier') && (
+                                {integrationsCredentials.some(integration => integration.service_name === 'zapier') && (
                                     <ListItem sx={{
                                         p: 0,
                                         borderRadius: '4px',
-                                        border: selectedIntegration === 'Sendlane' ? '1px solid #5052B2' : '1px solid #e4e4e4',
+                                        border: selectedIntegration === 'sendlane' ? '1px solid #5052B2' : '1px solid #e4e4e4',
                                         width: 'auto',
                                         '@media (max-width:600px)': {
                                             flexBasis: 'calc(50% - 8px)',
                                         },
                                     }}>
-                                        <ListItemButton onClick={!integrationsCredentials.find(integration => integration.service_name === 'Zapier')?.is_failed
+                                        <ListItemButton onClick={!integrationsCredentials.find(integration => integration.service_name === 'zapier')?.is_failed
                                                 ? handleOpenZapierDataSync
                                                 : handleOpenZapierConnect
                                             } sx={{
@@ -574,7 +574,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                             width: '102px',
                                             height: '72px',
                                             justifyContent: 'center',
-                                            backgroundColor: selectedIntegration === 'Zapier' ? 'rgba(80, 82, 178, 0.10)' : 'transparent',
+                                            backgroundColor: selectedIntegration === 'zapier' ? 'rgba(80, 82, 178, 0.10)' : 'transparent',
                                         }}>
                                             <ListItemIcon sx={{ minWidth: 'auto' }}>
                                                 <Image src="/zapier-icon.svg" alt="zapier" height={26} width={26} />

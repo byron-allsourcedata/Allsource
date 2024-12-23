@@ -81,16 +81,19 @@ class ShopifyIntegrationService:
     def initialize_subscription_charge(self, plan: SubscriptionPlan, user: dict):
         test_mode = True if os.getenv("APP_MODE") == "dev" else False
         if user.get('shopify_token') is None:
-            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail={'status': 'Shopify token not found'})
+            return {'status': 'INCOMPLETE', 'message': 'Shopify token not found, please install Shopify app'}
         
         return self.create_new_recurring_charge(shopify_domain=user.get('shop_domain'), shopify_access_token=user.get('shopify_token'), plan=plan, test_mode=test_mode)
     
     def cancel_current_subscription(self, user: User):
+        if user.get('shopify_token') is None:
+            return {'status': 'incomplete'}
         with shopify.Session.temp(user.get('shop_domain'), ShopifyConfig.api_version, user.get('shopify_token')):
             charge = shopify.RecurringApplicationCharge.current()
             if charge is None:
-                raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail={'status': 'No shopify plan active'})
+                return {'status': 'No shopify plan active'}
             charge.destroy()
+            
         return {
             'status': 'cancel'
         }
