@@ -224,7 +224,6 @@ const BCommerceConnect = ({open, onClose, error_message, initShopHash}: Bigcomme
             fontFamily: 'Nunito Sans',
             fontSize: '14px',
             fontWeight: '600',
-            // color: '#202124',
             marginTop: '12px',
             lineHeight: 'normal'
             }}>
@@ -245,7 +244,6 @@ const BCommerceConnect = ({open, onClose, error_message, initShopHash}: Bigcomme
                 fullWidth
                 value={shopHash}
                 onChange={handleShopHashChange}
-                error={!!shopHash}
                 margin="normal"
                 InputLabelProps={{ sx: metaStyles.inputLabel }}
                 InputProps={{ sx: metaStyles.formInput }}
