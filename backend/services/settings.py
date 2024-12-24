@@ -318,9 +318,12 @@ class SettingsService:
     def get_billing(self, user: dict):
         result = {}
         current_plan = self.plan_persistence.get_current_plan(user_id=user.get('id'))
-        result['card_details'] = get_card_details_by_customer_id(user.get('customer_id'))
         result['billing_details'] = self.extract_subscription_details(user.get('customer_id'),
                                                                       user.get('prospect_credits'), user.get('id'))
+        if user.get('source_platform') == 'shopify':
+            result['status'] = 'hide'
+            return result
+        result['card_details'] = get_card_details_by_customer_id(user.get('customer_id'))
         result['billing_details']['is_leads_auto_charging'] = user.get('is_leads_auto_charging')
         result['usages_credits'] = {
             'leads_credits': user.get('leads_credits'),
@@ -373,6 +376,8 @@ class SettingsService:
 
     def get_billing_history(self, user: dict, page, per_page):
         result = {}
+        if user.get('source_platform') == 'shopify':
+            return 'hide'
         result['billing_history'], result['count'], result['max_page'] = self.extract_billing_history(
             user.get('customer_id'), page, per_page)
         return result
