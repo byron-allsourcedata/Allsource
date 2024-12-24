@@ -51,13 +51,20 @@ axiosInterceptorInstance.interceptors.response.use(
   (error) => {
     if (error.response) {
       switch (error.response.status) {
+        case 307: 
+        case 400:
+          navigateTo('/signin');
+          break;
         case 401:
           // 401 error handler (Unauthorized)
           localStorage.clear();
-          navigateTo.push("/login");
+          navigateTo.push("/signin");
           break;
         case 403:
           switch (error.response.data.status) {
+            case "DOMAIN_NOT_FOUND":
+              navigateTo("/account-setup");
+              break;
             case "NEED_BOOK_CALL":
               sessionStorage.setItem('is_slider_opened', 'true');
               break;
@@ -98,11 +105,7 @@ axiosInterceptorInstance.interceptors.response.use(
           );
       }
     } else if (error.request) {
-      // The request was made but no response was received
-      showErrorToast('Unexpected status: Service is not available now, try again or contact with us support@maximiz.ai');
     } else {
-      // Something happened in setting up the request that triggered an Error
-      showErrorToast(`Error: ${error.message}`);
     }
 
     return Promise.reject(error);
