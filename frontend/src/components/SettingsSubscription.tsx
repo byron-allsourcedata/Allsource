@@ -245,7 +245,11 @@ export const SettingsSubscription: React.FC = () => {
             const response = await axiosInterceptorInstance.get(`${path}?price_id=${stripePriceId}`);
             if (response.status === 200) {
                 if (response.data.link !== null && response.data.link !== undefined) {
-                    window.location.href = response.data.link;
+                    if (response.data?.source_platform == 'big_commerce'){
+                        window.open(response.data.link, '_blank');
+                    }else{
+                        window.location.href = response.data.link;
+                    }
                 }
                 if (response.data.status_subscription) {
                     if (response.data.status_subscription === 'active') {
