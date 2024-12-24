@@ -1046,7 +1046,7 @@ export const SettingsBilling: React.FC = () => {
                                     );
                                 }
 
-                                if (key === 'next_billing_date') {
+                                if (key === 'next_billing_date' && value !== null) {
                                     return (
                                         <Box key={index} sx={{
                                             display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '64px',
@@ -1085,7 +1085,6 @@ export const SettingsBilling: React.FC = () => {
                                                     }}>On {renderValue(value)}</Typography>
                                                 </Box>
                                             </Box>
-
                                             {/* Divider */}
                                             <Divider orientation="vertical" flexItem sx={{ height: '32px', alignSelf: 'center' }} />
 

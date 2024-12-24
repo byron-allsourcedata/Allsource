@@ -3,9 +3,19 @@ import { Box, Typography, Button, Divider } from '@mui/material';
 import Image from 'next/image';
 import CustomTooltip from './customToolTip';
 
-const PlanCard: React.FC<{ plan: any; activePlanTitle: string; onChoose: (stripePriceId: string) => void }> = ({ plan, activePlanTitle, onChoose }) => {
+const PlanCard: React.FC<{ plan: any; activePlanTitle: string, tabValue: number, onChoose: (stripePriceId: string) => void }> = ({ plan, activePlanTitle, tabValue, onChoose }) => {
     const getButtonLabel = () => {
         if (plan.is_active) return 'Current Plan';
+        if (activePlanTitle === '' && tabValue === 0){
+            if (plan.title === 'Launch') return 'Downgrade';
+            if (plan.title === 'Pro') return 'Downgrade';
+            if (plan.title === 'Growth') return 'Downgrade';
+        }
+        if (activePlanTitle === '' && tabValue === 1){
+            if (plan.title === 'Launch') return 'Upgrade';
+            if (plan.title === 'Pro') return 'Upgrade';
+            if (plan.title === 'Growth') return 'Upgrade';
+        }
         if (activePlanTitle === 'Launch') {
             if (plan.title === 'Pro') return 'Upgrade';
             if (plan.title === 'Growth') return 'Upgrade';
@@ -23,26 +33,7 @@ const PlanCard: React.FC<{ plan: any; activePlanTitle: string; onChoose: (stripe
         <Box sx={{
             padding: '30px 24px', border: '1px solid #e4e4e4', borderRadius: '4px', boxShadow: '0px 1px 4px 0px rgba(0, 0, 0, 0.25)',
             height: '100%',
-            // minHeight: '809px',
-            // transition: '.5s ease-in-out',
             position: 'relative'
-            // '&:hover': {
-            //     border: '3px solid #f8464b',
-            //     background: '#FFF7F7',
-            //     boxShadow: '0px 1px 4px 2px rgba(248, 70, 75, 0.25)',
-            //     // transform: 'translateY(-32px)',
-            //     '@media (max-width: 900px)': {
-            //         transform: 'none'
-            //     }
-            // },
-            // '&:hover .hyperlink-red': {
-            //     background: '#F8464B',
-            //     border: '1px solid #F8464B',
-            //     color: '#fff !important'
-            // },
-            // '&:hover .first-sub-title': {
-            //     background: '#fff'
-            // }
         }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -64,15 +55,11 @@ const PlanCard: React.FC<{ plan: any; activePlanTitle: string; onChoose: (stripe
                         </Typography>
                     )}
                 </Box>
-
                 <Typography variant="h4" component="div" className='heading-text' sx={{ fontSize: '24px !important', fontWeight: '600 !important', textAlign: 'center' }}>
                     <Typography variant="h6" component="sup" className='third-sub-title' sx={{ letterSpacing: '0.06px' }}>$</Typography>{plan.price.toLocaleString('en-US')} <Typography variant="h6" component="span" className='paragraph' sx={{ marginLeft: '-4px' }}>/month</Typography>
                 </Typography>
             </Box>
-
-
             <Divider sx={{ borderColor: '#e4e4e4', marginLeft: '-8px', marginRight: '-8px' }} />
-
             <Box sx={{
                 display: 'flex',
                 flexDirection: 'column',
@@ -103,7 +90,6 @@ const PlanCard: React.FC<{ plan: any; activePlanTitle: string; onChoose: (stripe
                             boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
                             textTransform: 'none',
                             padding: '9px 24px',
-                            // maxWidth: '232px',
                             '&:hover': {
                                 backgroundColor: '#5052B2',
                                 color: '#fff !important'
@@ -114,24 +100,6 @@ const PlanCard: React.FC<{ plan: any; activePlanTitle: string; onChoose: (stripe
                     </Button>
                 </Box>
             </Box>
-
-
-            {/* <Typography variant="h4" component="div" className='heading-text' sx={{ fontSize: '40px !important', fontWeight: '700 !important', textAlign: 'center', marginTop: 2, marginBottom: 2 }}>
-                ${plan.price} <Typography variant="h6" component="span" className='paragraph' sx={{ marginLeft: '-8px' }}>{plan.interval === 'monthly' ? '/month' : '/year'}</Typography>
-            </Typography> */}
-            {/* <Divider sx={{ borderColor: '#e4e4e4', marginLeft: '-8px', marginRight: '-8px'}} /> */}
-            {/* <Box sx={{ my: 3, display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                <Box sx={{ display: 'flex', flexDirection: 'row', gap: '6px'}}>
-                    <Image src='/electric-bolt.svg' alt='electric-bolt' width={20} height={20} />
-                    <Typography variant="h6" className='second-sub-title' sx={{lineHeight: '20px !important', letterSpacing: '0.07px'}}>{plan.leads_credits} Contacts</Typography>
-                </Box>
-                <Box sx={{ display: 'flex', flexDirection: 'row', gap: '6px'}}>
-                    <Image src='/electric-bolt.svg' alt='electric-bolt' width={20} height={20} />
-                    <Typography variant="h6" className='second-sub-title' sx={{lineHeight: '20px !important', letterSpacing: '0.07px'}}>{plan.prospect_credits} Prospect</Typography>
-                </Box>
-            </Box> */}
-            {/* <Divider sx={{ borderColor: '#e4e4e4', marginLeft: '-8px', marginRight: '-8px'}} /> */}
-
             <Box sx={{ my: 2, display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 {plan.features?.map((feature: any, index: number) => (
                     <Box key={index} sx={{ display: 'flex', flexDirection: 'row', gap: '8px' }}>
@@ -150,63 +118,6 @@ const PlanCard: React.FC<{ plan: any; activePlanTitle: string; onChoose: (stripe
                     </Box>
                 ))}
             </Box>
-
-            {/* <Box 
-            // sx={{
-            //     position: 'absolute',
-            //     bottom: '24px',
-            //     width: '100%',
-            //     left: '0',
-            //     paddingLeft: '16px',
-            //     paddingRight: '16px'
-            // }}
-            sx={{
-                display: 'flex', flexDirection: 'row', gap: '8px'
-            }}
-            >
-                <Image 
-                    src='/tick-green-icon.svg'
-                    alt='tick'
-                    width={20} 
-                    height={20} 
-                />
-            <Typography variant="body1" className='second-sub-title' sx={{ display: 'flex', gap: '8px', alignItems: 'center', lineHeight: '20px !important', letterSpacing: '0.07px',
-            paddingBottom: '24px'
-            }}>
-                Overage $0.49/contact
-                    <CustomTooltip title="" linkText="" linkUrl="" />
-            </Typography> */}
-            {/* <Divider sx={{ borderColor: '#e4e4e4'}} /> */}
-
-            {/* <Box sx={{ textAlign: 'center'}}>
-                    <Button
-                        className='hyperlink-red'
-                        variant="outlined"
-                        fullWidth
-                        onClick={() => onChoose(plan.stripe_price_id)}
-                        disabled={plan.is_active}
-                        sx={{
-                            color: plan.is_active ? '#fff !important' : '#5052B2 !important',
-                            backgroundColor: plan.is_active ? '#f8464b' : 'transparent',
-                            borderRadius: '4px',
-                            border: plan.is_active ? '1px solid #f8464b' : '1px solid #5052B2',
-                            boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                            textTransform: 'none',
-                            padding: '9px 24px',
-                            marginTop: '16px',
-                            maxWidth: '232px',
-                            '&:hover': {
-                                background: 'transparent'
-                            }
-                        }}
-                    >
-                        {getButtonLabel()}
-                    </Button>
-                </Box> */}
-            {/* </Box> */}
-
-
-
         </Box>
     );
 };
