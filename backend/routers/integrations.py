@@ -283,8 +283,7 @@ def oauth_bigcommerce_load(signed_payload: Annotated[str, Query()], signed_paylo
     with integration_service as service:
         service.bigcommerce.oauth_bigcommerce_load(signed_payload=signed_payload, signed_payload_jwt=signed_payload_jwt)
         
-    url = f"{os.getenv("SITE_HOST_URL")}/signup?utm_source=bigcommerce"
-    return RedirectResponse(url)
+    return RedirectResponse(BigcommerceConfig.frontend_sign_up_redirect)
 
 @router.get('/zapier')
 async def auth(domain = Depends(check_api_key), integration_service: IntegrationService = Depends(get_integration_service)):
