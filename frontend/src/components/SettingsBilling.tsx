@@ -216,7 +216,7 @@ export const SettingsBilling: React.FC = () => {
 
     const renderValue = (value: any) => {
         if (value === null || value === undefined) {
-            return 'N/A'; // Fallback value if undefined or null
+            return '--'; // Fallback value if undefined or null
         }
         if (typeof value === 'object') {
             return JSON.stringify(value); // Convert objects/arrays to string
