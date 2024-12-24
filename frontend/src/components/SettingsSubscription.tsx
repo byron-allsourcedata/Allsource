@@ -123,7 +123,7 @@ export const SettingsSubscription: React.FC = () => {
         const period = newValue === 0 ? 'month' : 'year';
         const period_plans = allPlans.filter((plan: any) => plan.interval === period);
         setPlans(period_plans);
-        const activePlan = allPlans.find((plan: any) => plan.is_active) !== undefined;
+        const activePlan = allPlans.find((plan: any) => plan.is_active && plan.title !== 'Free Trial') !== undefined;
         setHasActivePlan(activePlan);
     };
 
@@ -162,6 +162,7 @@ export const SettingsSubscription: React.FC = () => {
     interface StripePlan {
         id: string;
         interval: string;
+        title: string;
         is_active: boolean;
     }
 
@@ -173,7 +174,7 @@ export const SettingsSubscription: React.FC = () => {
                 const response = await axiosInterceptorInstance.get(`/subscriptions/stripe-plans`);
                 setAllPlans(response.data.stripe_plans)
                 const stripePlans: StripePlan[] = response.data.stripe_plans;
-                const activePlan = stripePlans.find(plan => plan.is_active);
+                const activePlan = stripePlans.find(plan => plan.is_active && plan.title !== 'Free Trial');
                 setHasActivePlan(!!activePlan);
                 let interval = 'month'
                 if (activePlan) {

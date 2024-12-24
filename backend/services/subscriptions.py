@@ -320,9 +320,7 @@ class SubscriptionService:
             self.trackAwinConversion(user, 0, 'FREE_TRIAL', add_subscription_obj.created_at.strftime('%Y-%m-%d'), add_subscription_obj.id)
 
     def remove_trial(self, user_id: int):
-        trial_subscription = self.db.query(UserSubscriptions).filter(
-            UserSubscriptions.user_id == user_id
-        ).order_by(UserSubscriptions.id.desc()).limit(1).scalar()
+        trial_subscription = self.get_user_subscription(user_id)
         trial_subscription.is_trial = False
 
         trial_subscription.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
