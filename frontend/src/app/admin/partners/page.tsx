@@ -262,8 +262,8 @@ const Assets: React.FC = () => {
                         Partners
                     </Typography>
                 </Box>
-                <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-                    <Box sx={{ width: '100%', padding: 0, "@media (max-width: 600px)": { mt: '4.5rem' }, "@media (max-width: 440px)": { mt: '7.5rem' }, }}>
+                <Box sx={{ display: "flex", flexDirection: "column"}}>
+                    <Box sx={{ width: '100%', padding: 0, margin: 0 }}>
                         <TabPanel value={tabIndex} index={0}>
                             <PartnersAdmin tabIndex={tabIndex} handleTabChange={handleTabChange}/>
                         </TabPanel>

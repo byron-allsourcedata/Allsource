@@ -11,3 +11,15 @@ class PartnersAssetResponse(BaseModel):
     file_url: str
     file_extension: str
     file_size: str
+
+class PartnersResponse(BaseModel):
+    id: int
+    partner_name: str
+    email: str
+    join_date: Optional[str] = None
+    commission: int
+    subscription: str
+    sources: Optional[str] = None
+    last_payment_date: str
+    status: str
+

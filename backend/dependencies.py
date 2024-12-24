@@ -26,6 +26,7 @@ from persistence.sendgrid_persistence import SendgridPersistence
 from persistence.settings_persistence import SettingsPersistence
 from persistence.suppression_persistence import SuppressionPersistence
 from persistence.partners_asset_persistence import PartnersAssetPersistence
+from persistence.partners_persistence import PartnersPersistence
 from persistence.user_persistence import UserPersistence
 from persistence.integrations.external_apps_installations import ExternalAppsInstallationsPersistence
 from persistence.referral_persistence import ReferralPersistence
@@ -52,6 +53,7 @@ from services.users_auth import UsersAuth
 from services.users_email_verification import UsersEmailVerificationService
 from services.webhook import WebhookService
 from services.partners_assets import PartnersAssetService
+from services.partners import PartnersService
 from services.referral import ReferralService
 
 
@@ -71,6 +73,10 @@ def get_partners_asset_persistence(db: Session = Depends(get_db)) -> PartnersAss
 
 def get_partners_assets_service(partners_asset_persistence: PartnersAssetPersistence = Depends(get_partners_asset_persistence)):
     return PartnersAssetService(partners_asset_persistence=partners_asset_persistence)
+
+def get_partners_persistence(db: Session = Depends(get_db)) -> PartnersPersistence:
+    return PartnersPersistence(db)
+
 
 def get_plans_persistence(db: Session = Depends(get_db)):
     return PlansPersistence(db=db)
@@ -333,6 +339,14 @@ def get_users_service(user=Depends(check_user_authentication),
                       ):
     return UsersService(user=user, user_persistence_service=user_persistence, plan_persistence=plan_persistence,
                         subscription_service=subscription_service, domain_persistence=domain_persistence)
+
+def get_partners_service(
+                        partners_persistence: PartnersPersistence = Depends(get_partners_persistence),
+                        user_persistence_service: UserPersistence = Depends(get_user_persistence_service)):
+    return PartnersService(
+        partners_persistence,
+        user_persistence_service
+    )
 
 def get_notification_service(notification_persistence: NotificationPersistence = Depends(get_notification_persistence),
                              subscription_service: SubscriptionService = Depends(get_subscription_service),

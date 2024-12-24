@@ -192,7 +192,8 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({tabIndex, handleTabChange}
     const fetchRules = useCallback(async () => {
         setLoading(true);
         try {
-            // const response = await axiosInstance
+            const response = await axiosInstance.get("/admin-partners")
+            setAccounts([...response.data])
 
         } catch {
         } finally {
@@ -201,49 +202,49 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({tabIndex, handleTabChange}
     }, []);
 
     useEffect(() => {
-        // fetchRules();
-        setAccounts([
-            {
-                partner_name: "Lolly",
-                email: "abc@gmail.com",
-                join_date: "2024-08-27T10:00:00Z",
-                commission: '20%',
-                subscription: 'Basic',
-                sources: "Direct",
-                last_payment_date: "2024-08-27T10:00:00Z",
-                status: "Free trial",
-            },
-            {
-                partner_name: "Maximiz",
-                email: "abc@gmail.com",
-                join_date: "2024-06-27T10:00:00Z",
-                commission: '20%',
-                subscription: 'Basic',
-                sources: "Direct",
-                last_payment_date: "2024-08-26T10:00:00Z",
-                status: "Free trial",
-            },
-            {
-                partner_name: "Bigcomerce",
-                email: "abc@gmail.com",
-                join_date: "2024-12-27T10:00:00Z",
-                commission: '20%',
-                subscription: 'Basic',
-                sources: "Direct",
-                last_payment_date: "2024-08-27T10:00:00Z",
-                status: "Free trial",
-            },
-            {
-                partner_name: "Lolly",
-                email: "abc@gmail.com",
-                join_date: "2024-10-27T10:00:00Z",
-                commission: '20%',
-                subscription: 'Basic',
-                sources: "Direct",
-                last_payment_date: "2024-08-15T10:00:00Z",
-                status: "Free trial",
-            },
-        ])
+        fetchRules();
+        // setAccounts([
+        //     {
+        //         partner_name: "Lolly",
+        //         email: "abc@gmail.com",
+        //         join_date: "2024-08-27T10:00:00Z",
+        //         commission: '20%',
+        //         subscription: 'Basic',
+        //         sources: "Direct",
+        //         last_payment_date: "2024-08-27T10:00:00Z",
+        //         status: "Free trial",
+        //     },
+        //     {
+        //         partner_name: "Maximiz",
+        //         email: "abc@gmail.com",
+        //         join_date: "2024-06-27T10:00:00Z",
+        //         commission: '20%',
+        //         subscription: 'Basic',
+        //         sources: "Direct",
+        //         last_payment_date: "2024-08-26T10:00:00Z",
+        //         status: "Free trial",
+        //     },
+        //     {
+        //         partner_name: "Bigcomerce",
+        //         email: "abc@gmail.com",
+        //         join_date: "2024-12-27T10:00:00Z",
+        //         commission: '20%',
+        //         subscription: 'Basic',
+        //         sources: "Direct",
+        //         last_payment_date: "2024-08-27T10:00:00Z",
+        //         status: "Free trial",
+        //     },
+        //     {
+        //         partner_name: "Lolly",
+        //         email: "abc@gmail.com",
+        //         join_date: "2024-10-27T10:00:00Z",
+        //         commission: '20%',
+        //         subscription: 'Basic',
+        //         sources: "Direct",
+        //         last_payment_date: "2024-08-15T10:00:00Z",
+        //         status: "Free trial",
+        //     },
+        // ])
     }, [fetchRules]);
 
 
