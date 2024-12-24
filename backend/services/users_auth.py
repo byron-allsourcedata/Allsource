@@ -523,7 +523,6 @@ class UsersAuth:
             user_object.shopify_token = shopify_access_token
             user_object.shop_domain = shopify_data.shop
         user_object.source_platform = SourcePlatformEnum.SHOPIFY.value
-        user_object.is_email_confirmed = True
         self.db.commit()
        
     def _send_email_verification(self, user_object, token):
