@@ -6,8 +6,8 @@ class Partners(Base):
     __tablename__ = "partners"
 
     id = Column(Integer, primary_key=True, nullable=False)
-    user_id = Column(Integer, nullable=False)
-    commission = Column(Integer, nullable=False)
+    user_id = Column(Integer, nullable=True)
+    commission = Column(TEXT, nullable=False)
     status = Column(TEXT, default="Inactive", nullable=False)
     created_at = Column(TIMESTAMP, nullable=False)
     updated_at = Column(TIMESTAMP, nullable=False)

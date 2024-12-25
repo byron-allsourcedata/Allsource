@@ -13,8 +13,8 @@ def partners(
     return assets
 
 
-@router.delete("/{id}/")
-@router.delete("/{id}/")
+@router.post("")
+@router.post("/")
 async def create_partner(
     full_name: str = Form(...),
     email: str = Form(...),
@@ -26,11 +26,21 @@ async def create_partner(
     return partner
 
 
+@router.delete("/{id}")
+@router.delete("/{id}/")
+async def delete_partner(
+    id: int,
+    get_partners_service: PartnersService = Depends(get_partners_service)):
+    
+    status = get_partners_service.delete_asset(id)
+    return {"status": status, "data": None}
+
+
 @router.put("/{partner_id}")
-@router.put("/{partner_id}")
+@router.put("/{partner_id}/")
 async def update_partner(
     partner_id: int,
-    commission: int,
+    commission: str = Form(...),
     get_partners_service: PartnersService = Depends(get_partners_service)):
     
     partner = await get_partners_service.update_partner(partner_id, commission)

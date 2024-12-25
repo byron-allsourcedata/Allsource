@@ -21,7 +21,7 @@ class PartnersPersistence:
         return self.db.query(Partners).filter(Partners.id == partner_id).first()
     
 
-    def update_partner(self, partner_id: int, commission: int) -> Optional[Partners]:
+    def update_partner(self, partner_id: int, commission: str) -> Optional[Partners]:
         partner = self.get_asset_by_id(partner_id)
 
         if not partner:
@@ -42,7 +42,6 @@ class PartnersPersistence:
 
     def create_partner(self, creating_data: dict) -> Optional[Partners]:
         partner = Partners(
-            user_id=creating_data["user_id"],
             commission=creating_data["commission"],
         )
 

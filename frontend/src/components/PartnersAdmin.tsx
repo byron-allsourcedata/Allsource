@@ -13,6 +13,20 @@ import CalendarPopup from "./CustomCalendar";
 import { DateRangeIcon } from "@mui/x-date-pickers/icons";
 import SwapVertIcon from '@mui/icons-material/SwapVert';
 import SearchIcon from '@mui/icons-material/Search';
+import InvitePartnerPopup from "@/components/InvitePartnerPopup"
+import { showErrorToast, showToast } from '@/components/ToastNotification';
+
+interface PartnerData {
+    id: number;
+    partner_name: string;
+    email: string;
+    join_date: string;
+    commission: string;
+    subscription: string;
+    sources: string;
+    last_payment_date: string;
+    status: string;
+}
 
 const tableHeaders = [
     { key: 'partner_name', label: 'Partner name', sortable: false },
@@ -76,7 +90,7 @@ interface PartnersAdminProps {
 const PartnersAdmin: React.FC<PartnersAdminProps> = ({tabIndex, handleTabChange}) => {
     const [loading, setLoading] = useState(false);
     const [expanded, setExpanded] = useState<number | false>(false);
-    const [accounts, setAccounts] = useState<any[]>([]);
+    const [accounts, setAccounts] = useState<PartnerData[]>([]);
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(5);
     const [totalCount, setTotalCount] = useState(0);
@@ -89,6 +103,8 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({tabIndex, handleTabChange}
     const [selectedDateLabel, setSelectedDateLabel] = useState<string>('');
     // const [tabIndex, setTabIndex] = useState(0);
     const [menuAnchor, setMenuAnchor] = useState(null);
+    const [formPopupOpen, setFormPopupOpen] = useState(false);
+    const [fileData, setFileData] = useState<{id: number, email: string, fullName: string, companyName: string, commission: string} | null>(null);
     // const handleTabChange = (event: React.SyntheticEvent, newIndex: number) => {
     //     setTabIndex(newIndex);
     // };
@@ -171,11 +187,11 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({tabIndex, handleTabChange}
                     ? aValue.localeCompare(bValue)
                     : bValue.localeCompare(aValue);
             }
-            if (aValue instanceof Date && bValue instanceof Date) {
-                return newOrder === 'asc'
-                    ? new Date(aValue).getTime() - new Date(bValue).getTime()
-                    : new Date(bValue).getTime() - new Date(aValue).getTime();
-            }
+            // if (aValue instanceof Date && bValue instanceof Date) {
+            //     return newOrder === 'asc'
+            //         ? new Date(aValue).getTime() - new Date(bValue).getTime()
+            //         : new Date(bValue).getTime() - new Date(aValue).getTime();
+            // }
             return 0;
         });
     
@@ -189,6 +205,14 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({tabIndex, handleTabChange}
         setExpanded(isExpanded ? panel : false);
     };
 
+    const handleFormOpenPopup = () => {
+        setFormPopupOpen(true)
+    }
+
+    const handleFormClosePopup = () => {
+        setFormPopupOpen(false)
+    }
+
     const fetchRules = useCallback(async () => {
         setLoading(true);
         try {
@@ -200,6 +224,40 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({tabIndex, handleTabChange}
             setLoading(false);
         }
     }, []);
+
+    const handleDeletePartner = async (id: number) => {
+        setLoading(true)
+        try {
+            const response = await axiosInstance.delete(`admin-partners/${id}`);
+            const status = response.data.status;
+            if (status.status === "SUCCESS") {
+                removePartnerById(id);
+                showToast("Partner successfully deleted!")
+            }
+        } catch {
+            showErrorToast("Failed to delete partner. Please try again later.");
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    const updateOrAddAsset = (updatedPartner: PartnerData) => {
+        setAccounts((prevAccounts) => {
+            const index = prevAccounts.findIndex((account) => account.id === updatedPartner.id);
+            if (index !== -1) {
+                const newAccounts = [...prevAccounts];
+                newAccounts[index] = updatedPartner;
+                return newAccounts;
+            }
+            return [...prevAccounts, updatedPartner];
+        });
+    };
+
+    const removePartnerById = (id: number) => {
+        setAccounts((prevAccounts) =>
+            prevAccounts.filter((item) => item.id !== id)
+        );
+    };
 
     useEffect(() => {
         fetchRules();
@@ -403,6 +461,9 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({tabIndex, handleTabChange}
                                             backgroundColor: 'rgba(80, 82, 178, 0.1)',
                                         },
                                     }}
+                                    onClick={() => {
+                                        handleFormOpenPopup()
+                                    }}
                                 >
                                     Add Partner
                                 </Button>
@@ -569,10 +630,22 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({tabIndex, handleTabChange}
                                                                 <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {}}>
                                                                     <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Enable"/>
                                                                 </ListItemButton>
-                                                                <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {}}>
+                                                                <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {
+                                                                    handleDeletePartner(data.id)
+                                                                    handleCloseMenu()
+                                                                }}>
                                                                     <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Terminate"/>
                                                                 </ListItemButton>
-                                                                <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {}}>
+                                                                <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {
+                                                                    setFileData({ 
+                                                                        id: data.id, 
+                                                                        email: data.email,
+                                                                        fullName: data.partner_name, 
+                                                                        companyName: "Company", 
+                                                                        commission: data.commission});
+                                                                    handleFormOpenPopup()
+                                                                    handleCloseMenu()
+                                                                }}>
                                                                     <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Edit"/>
                                                                 </ListItemButton>
                                                                 <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {}}>
@@ -587,6 +660,12 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({tabIndex, handleTabChange}
                                 </Table>
                             </TableContainer>
                         </Box>
+
+                        <InvitePartnerPopup 
+                        updateOrAddAsset={updateOrAddAsset}
+                        fileData={fileData} 
+                        open={formPopupOpen} 
+                        onClose={handleFormClosePopup}  />
                     </Box>
                     <Box sx={{ display: 'flex', justifyContent: 'end' }}>
                         <CustomTablePagination
