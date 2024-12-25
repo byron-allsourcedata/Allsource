@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, VARCHAR, TIMESTAMP, Boolean, ARRAY, JSON
+from sqlalchemy import Column, Integer, VARCHAR, TIMESTAMP, Boolean, JSON
 from datetime import datetime
 from models.base import Base
 
@@ -20,4 +20,4 @@ class IntegrationUserSync(Base):
     created_by = Column(VARCHAR, nullable=False)
     last_lead_sync_id = Column(VARCHAR(64))
     hook_url = Column(VARCHAR)
-
+    last_sent_lead_id = Column(Integer)
