@@ -72,7 +72,7 @@ const AlivbleIntagrationsSlider = ({open, isContactSync = false, integrations, i
         slotProps={{
             backdrop: {
               sx: {
-                backgroundColor: 'rgba(0, 0, 0, .1)'
+                backgroundColor: 'rgba(0, 0, 0, 0.1)'
               }
             }
           }}>

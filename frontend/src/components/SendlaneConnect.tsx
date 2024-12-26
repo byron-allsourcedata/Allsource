@@ -8,11 +8,12 @@ import { useEffect, useState } from "react";
 import CustomizedProgressBar from "./CustomizedProgressBar";
 import CloseIcon from '@mui/icons-material/Close';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
-import { showToast } from "./ToastNotification";
+import { showErrorToast, showToast } from "./ToastNotification";
+import { useAxiosHook } from "@/hooks/AxiosHooks";
 
 interface CreateSendlaneProps {
     handleClose: () => void
-    onSave: (new_integration: any) => void
+    onSave?: (new_integration: any) => void
     open: boolean
     initApiKey?: string 
 }
@@ -50,7 +51,7 @@ const klaviyoStyles = {
     },
     inputLabel: {
         fontFamily: 'Nunito Sans',
-        fontSize: '12px',
+        fontSize: '14.5px',
         lineHeight: '16px',
         color: 'rgba(17, 17, 19, 0.60)',
         '&.Mui-focused': {
@@ -87,13 +88,13 @@ const klaviyoStyles = {
 const SendlaneConnect = ({ handleClose, open, onSave, initApiKey}: CreateSendlaneProps) => {
     const [apiKey, setApiKey] = useState('');
     const [apiKeyError, setApiKeyError] = useState(false);
-    const [loading, setLoading] = useState(false)
     const [value, setValue] = useState<string>('1')
     const [checked, setChecked] = useState(false);
     const [tab2Error, setTab2Error] = useState(false);
     const label = { inputProps: { 'aria-label': 'Switch demo' } };
     const [selectedRadioValue, setSelectedRadioValue] = useState('');
     const [isDropdownValid, setIsDropdownValid] = useState(false);
+    const { data, loading, error, sendRequest } = useAxiosHook();
 
     useEffect(() => {
         setApiKey(initApiKey || '')
@@ -157,18 +158,24 @@ const SendlaneConnect = ({ handleClose, open, onSave, initApiKey}: CreateSendlan
         return <>{parts}</>;
     };
 
-    const handleApiKeySave = async() => {
-        const response = await axiosInstance.post('/integrations/', {
-            sendlane: {
-                api_key: apiKey
-            }
-        }, {params: {service_name: 'sendlane'}})
-        if(response.status === 200) {
-            showToast('Integration Sendlane Succcessfully')
-            onSave({service_name: 'Sendlane', is_failed: false, access_token: apiKey})
-            handleNextTab()
+
+    const handleApiKeySave = async () => {
+          const response = await sendRequest({
+            url: "/integrations/",
+            method: "POST",
+            data: {
+              sendlane: {
+                api_key: apiKey, 
+              },
+            },
+            params: {service_name: 'sendlane'},
+          });
+      
+          if (response?.status === 200) {
+            showToast("Integration Sendlane Successfully");
+            handleNextTab();
+          }
         }
-    }
 
     const highlightConfig: HighlightConfig = {
         'Klaviyo': { color: '#5052B2', fontWeight: '500' }, 
@@ -304,17 +311,17 @@ const SendlaneConnect = ({ handleClose, open, onSave, initApiKey}: CreateSendlan
             slotProps={{
                 backdrop: {
                   sx: {
-                    backgroundColor: 'rgba(0, 0, 0, .1)'
+                    backgroundColor: 'transparent'
                   }
                 }
               }}
         >
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 3.5, px: 2, borderBottom: '1px solid #e4e4e4' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 2.85, px: 2, borderBottom: '0.25px solid #e4e4e4' }}>
                 <Typography variant="h6" sx={{ textAlign: 'center', color: '#202124', fontFamily: 'Nunito Sans', fontWeight: '600', fontSize: '16px', lineHeight: 'normal' }}>
                     Connect to Sendlane
                 </Typography>
                 <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
-                    <Link href="#" sx={{
+                    <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/integrate-sendlane-to-maximiz" target="_blank" rel="noopener noreferrer" sx={{
                         fontFamily: 'Nunito Sans',
                         fontSize: '14px',
                         fontWeight: '600',

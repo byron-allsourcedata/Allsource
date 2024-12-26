@@ -57,6 +57,8 @@ axiosInterceptorInstance.interceptors.response.use(
     if (error.response) {
       switch (error.response.status) {
         case 307:
+        case 400:
+          break;
         case 401:
           // 401 error handler (Unauthorized)
           localStorage.clear();

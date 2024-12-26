@@ -12,11 +12,12 @@ interface OnmisendDataSyncProps {
     open: boolean;
     onClose: () => void;
     data?: any;
-    isEdit: boolean;
+    isEdit?: boolean;
+    boxShadow?: string
 }
 
 
-const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data = null, isEdit }) => {
+const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data = null, isEdit, boxShadow }) => {
     const [loading, setLoading] = useState(false)
     const [value, setValue] = React.useState('1');
     const [checked, setChecked] = useState(false);
@@ -589,6 +590,7 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data
                     zIndex: 1301,
                     top: 0,
                     bottom: 0,
+                    boxShadow: boxShadow ? '0px 8px 10px -5px rgba(0, 0, 0, 0.2), 0px 16px 24px 2px rgba(0, 0, 0, 0.14), 0px 6px 30px 5px rgba(0, 0, 0, 0.12)' : 'none',
                     msOverflowStyle: 'none',
                     scrollbarWidth: 'none',
                     '&::-webkit-scrollbar': {
@@ -602,7 +604,7 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data
             slotProps={{
                 backdrop: {
                   sx: {
-                    backgroundColor: 'rgba(0, 0, 0, 0)'
+                    backgroundColor: boxShadow ? boxShadow : 'rgba(0, 0, 0, 0.01)'
                   }
                 }
               }}
