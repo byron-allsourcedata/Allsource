@@ -21,17 +21,31 @@ class PartnersPersistence:
         return self.db.query(Partners).filter(Partners.id == partner_id).first()
     
 
-    def update_partner(self, partner_id: int, commission: str) -> Optional[Partners]:
+    def update_partner(self, partner_id: int, **kwargs) -> Optional[Partners]:
         partner = self.get_asset_by_id(partner_id)
 
         if not partner:
             return None
 
-        partner.commission = commission
+        for key, value in kwargs.items():
+            if hasattr(partner, key) and value is not None:
+                setattr(partner, key, value)
 
         self.db.commit()
         self.db.refresh(partner)
         return partner
+
+    # def update_partner(self, partner_id: int, commission: str) -> Optional[Partners]:
+    #     partner = self.get_asset_by_id(partner_id)
+
+    #     if not partner:
+    #         return None
+
+    #     partner.commission = commission
+
+    #     self.db.commit()
+    #     self.db.refresh(partner)
+    #     return partner
     
 
     def terminate_partner(self, partner_id):
@@ -43,6 +57,7 @@ class PartnersPersistence:
     def create_partner(self, creating_data: dict) -> Optional[Partners]:
         partner = Partners(
             commission=creating_data["commission"],
+            token=creating_data["token"],
         )
 
         self.db.add(partner)

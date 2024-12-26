@@ -218,12 +218,12 @@ class SettingsService:
 
         md5_token_info = {
             'id': user.get('id'),
-            'user_teams_mail': invite_user,
+            'user_mail': invite_user,
             'salt': os.getenv('SECRET_SALT')
         }
         json_string = json.dumps(md5_token_info, sort_keys=True)
         md5_hash = hashlib.md5(json_string.encode()).hexdigest()
-        confirm_email_url = f"{os.getenv('SITE_HOST_URL')}/signup?token={md5_hash}&user_teams_mail={invite_user}"
+        confirm_email_url = f"{os.getenv('SITE_HOST_URL')}/signup?teams_token={md5_hash}&user_mail={invite_user}"
         mail_object = SendgridHandler()
         mail_object.send_sign_up_mail(
             to_emails=invite_user,

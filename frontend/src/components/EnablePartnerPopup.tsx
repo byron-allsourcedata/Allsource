@@ -18,8 +18,8 @@ interface FileObject extends File{
     sizesStr: string; 
 }
 
-const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ open, fileData, onClose, updateOrAddAsset }) => {
-    const [action, setAction] = useState("Add");
+const EnablePartnerPopup: React.FC<FormUploadPopupProps> = ({ open, fileData, onClose, updateOrAddAsset }) => {
+    const [action, setAction] = useState("Disable");
     const [actionType, setActionType] = useState<keyof typeof allowedExtensions>("video");
     const [dragActive, setDragActive] = useState(false);
     const [buttonContain, setButtonContain] = useState(false);
@@ -28,7 +28,7 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ open, fileData, on
     const [preview, setPreview] = useState<string | null>(null);
     const [fileSizeError, setFileSizeError] = useState(false); 
     const [fullName, setFullName] = useState(""); 
-    const [email, setEmail] = useState(""); 
+    const [account, setAccount] = useState(""); 
     const [companyName, setCompanyName] = useState(""); 
     const [commission, setCommission] = useState(""); 
     const [processing, setProcessing] = useState(false)
@@ -55,7 +55,6 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ open, fileData, on
         onClose()
         setAction("Add")
         setFullName(""); 
-        setEmail(""); 
         setCompanyName(""); 
         setCommission(""); 
     }
@@ -74,7 +73,6 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ open, fileData, on
             if (action === "Edit" && fileData && fileData.id) {
                 response = await axiosInstance.put(`admin-partners/${fileData.id}/`, formData);
             } else {
-                formData.append("email", email);
                 formData.append("full_name", fullName);
                 formData.append("company_name", companyName);
                 response = await axiosInstance.post(`admin-partners/`, formData);
@@ -88,7 +86,6 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ open, fileData, on
         } finally {
             handleClose();
             setFullName(""); 
-            setEmail(""); 
             setCompanyName(""); 
             setCommission(""); 
             setProcessing(false);
@@ -97,7 +94,6 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ open, fileData, on
 
     useEffect(() => {
         if (fileData) {
-            setEmail(fileData.email);
             setCommission(fileData.commission);
             setCompanyName(fileData.companyName);
             setFullName(fileData.fullName);
@@ -107,8 +103,8 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ open, fileData, on
     }, [fileData]);
 
     useEffect(() => {
-        setButtonContain([email, fullName, companyName, commission].every(field => typeof field === "string" && field.trim().length > 0));
-    }, [email, fullName, companyName, commission]);
+        setButtonContain([fullName, companyName, commission].every(field => typeof field === "string" && field.trim().length > 0));
+    }, [fullName, companyName, commission]);
     
     return (
         <>
@@ -172,83 +168,47 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ open, fileData, on
                                 margin: "24px 0 40px"
                             }}
                             >
-                            {action == "Add" 
-                            ? "Invite your contacts to become official partners and grow together."
-                            : "Edit partner information to ensure accuracy and relevance."
+                            {action == "Disable" 
+                            ? "Are you sure you want to disable account?"
+                            : "Are you sure you want to terminate account?"
                             }
-                        </Typography>    
-                                        
-                        <TextField
-                            disabled={action === "Edit"}
+                        </Typography>
+
+                        {action == "Terminate" && <TextField
+                            disabled
                             id="outlined-required"
-                            label="Full name"
-                            placeholder='Full name'
+                            label="Account name"
+                            placeholder='Account name'
                             sx={{
                                 paddingBottom: "24px",
                                 "& .MuiInputLabel-root.Mui-focused": {
                                     color: "rgba(17, 17, 19, 0.6)",
                                 },
                                 "& .MuiInputLabel-root[data-shrink='false']": {
-                                    transform: "translate(12px, 50%) scale(1)",
+                                    transform: "translate(15%, 50%) scale(1)",
+                                },  
+                            }}
+                            value={account}
+                        />}
+                                        
+                        <TextField
+                            disabled={action === "Edit"}
+                            id="outlined-required"
+                            label="Enter the reason for disable account"
+                            placeholder='Need to custom my plan according to my usage'
+                            sx={{
+                                paddingBottom: "24px",
+                                "& .MuiInputLabel-root.Mui-focused": {
+                                    color: "rgba(17, 17, 19, 0.6)",
+                                },
+                                "& .MuiInputLabel-root[data-shrink='false']": {
+                                    transform: "translate(15%, 50%) scale(1)",
                                 },  
                             }}
                             value={fullName}
                             onChange={(e) => setFullName(e.target.value)}
                         />
 
-                        <TextField
-                            disabled={action === "Edit"}
-                            id="outlined-required"
-                            label="Email"
-                            type="email"
-                            placeholder='Email'
-                            sx={{
-                                paddingBottom: "24px",
-                                "& .MuiInputLabel-root.Mui-focused": {
-                                    color: "rgba(17, 17, 19, 0.6)",
-                                },
-                                "& .MuiInputLabel-root[data-shrink='false']": {
-                                    transform: "translate(12px, 50%) scale(1)",
-                                },  
-                            }}
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                        />
-
-                        <TextField
-                            disabled={action === "Edit"}
-                            id="outlined-required"
-                            label="Company name"
-                            placeholder='Company name'
-                            sx={{
-                                paddingBottom: "24px",
-                                "& .MuiInputLabel-root.Mui-focused": {
-                                    color: "rgba(17, 17, 19, 0.6)",
-                                },
-                                "& .MuiInputLabel-root[data-shrink='false']": {
-                                    transform: "translate(12px, 50%) scale(1)",
-                                },  
-                            }}
-                            value={companyName}
-                            onChange={(e) => setCompanyName(e.target.value)}
-                        />
-
-                        <TextField
-                            id="outlined-required"
-                            label="Commission %"
-                            placeholder='Commission'
-                            sx={{
-                                paddingBottom: "24px",
-                                "& .MuiInputLabel-root.Mui-focused": {
-                                    color: "rgba(17, 17, 19, 0.6)",
-                                },
-                                "& .MuiInputLabel-root[data-shrink='false']": {
-                                    transform: "translate(12px, 50%) scale(1)",
-                                },  
-                            }}
-                            value={commission}
-                            onChange={(e) => setCommission(e.target.value)}
-                        />
                 </Box>
             </Box>
             <Box
@@ -304,4 +264,4 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ open, fileData, on
     )
 };
 
-export default InvitePartnerPopup;
+export default EnablePartnerPopup;

@@ -3,7 +3,7 @@ import os
 from typing import Union
 import tempfile
 import hashlib
-import zipfile
+import json
 from pathlib import Path
 from PIL import Image
 import ffmpeg
@@ -16,7 +16,11 @@ from models.partners_asset import PartnersAsset
 from services.aws import AWSService
 from persistence.user_persistence import UserPersistence
 from persistence.partners_persistence import PartnersPersistence
+from persistence.sendgrid_persistence import SendgridPersistence
 from schemas.partners_asset import PartnersResponse
+from datetime import datetime, timedelta
+from services.sendgrid import SendgridHandler
+from enums import SendgridTemplate
 
 logger = logging.getLogger(__name__)
 
@@ -25,9 +29,11 @@ class PartnersService:
 
     def __init__(self,
         partners_persistence: PartnersPersistence,
-        user_persistence_service: UserPersistence):
+        user_persistence_service: UserPersistence,
+        send_grid_persistence_service: SendgridPersistence):
         self.partners_persistence = partners_persistence
         self.user_persistence_service = user_persistence_service
+        self.send_grid_persistence_service = send_grid_persistence_service
         self.default_user = {
             "full_name": "Default User",
             "email": "default@example.com",
@@ -61,16 +67,37 @@ class PartnersService:
             raise HTTPException(status_code=500, detail=f"Unexpected error during delete: {str(e)}")
     
 
+    def send_referral_in_email(self, full_name: str, email: str):
+        mail_object = SendgridHandler()
+        template_id = self.send_grid_persistence_service.get_template_by_alias(
+            SendgridTemplate.PARTNER_TEMPLATE.value)
+        md5_token_info = {
+            'user_mail': email,
+            'salt': os.getenv('SECRET_SALT')
+        }
+        json_string = json.dumps(md5_token_info, sort_keys=True)
+        md5_hash = hashlib.md5(json_string.encode()).hexdigest()
+        referral_token = f"{os.getenv('SITE_HOST_URL')}/signup?referral_token={md5_hash}&user_mail={email}"
+        mail_object.send_sign_up_mail(
+            to_emails=email,
+            template_id=template_id,
+            template_placeholder={"full_name": full_name, "link": referral_token, "email": email},
+        )
+        return md5_hash
+    
+
     async def create_partner(self, full_name: str, email: str, company_name: str, commission: str):
         if not full_name or not email or not company_name or not commission:
             raise HTTPException(status_code=404, detail="Partner data not found")
         
         try:
+            hash = self.send_referral_in_email(full_name, email)
             creating_data = {
                 "full_name": full_name,
                 "email": email,
                 "company_name": company_name,
-                "commission": commission
+                "commission": commission,
+                "token": hash
             }
 
             created_data = self.partners_persistence.create_partner(creating_data)
@@ -83,6 +110,23 @@ class PartnersService:
         except Exception as e:
             logger.debug('Error creating assets file', e)
             raise HTTPException(status_code=500, detail=f"Unexpected error during creation: {str(e)}")
+    
+
+    async def setUser(self, partner_id: int, user_id: int, status: str):
+        if not partner_id or not user_id or not status:
+            raise HTTPException(status_code=404, detail="Partner data not found")
+        
+        try:
+            updated_data = self.partners_persistence.update_partner(partner_id=partner_id, user_id=user_id, status=status)
+
+            if not updated_data:
+                logger.debug('Database error during updation', e)
+                raise HTTPException(status_code=500, detail="Partner not updated")
+
+            return {"status": "SUCCESS", "data": self.domain_mapped(updated_data, self.default_user)}
+        except Exception as e:
+            logger.debug('Error updating assets file', e)
+            raise HTTPException(status_code=500, detail=f"Unexpected error during updation: {str(e)}")
         
     
     async def update_partner(self, partner_id: int, commission: str):
@@ -90,7 +134,7 @@ class PartnersService:
             raise HTTPException(status_code=404, detail="Partner data not found")
         
         try:
-            updated_data = self.partners_persistence.update_partner(partner_id, commission)
+            updated_data = self.partners_persistence.update_partner(partner_id=partner_id, commission=commission)
 
             if not updated_data:
                 logger.debug('Database error during updation', e)

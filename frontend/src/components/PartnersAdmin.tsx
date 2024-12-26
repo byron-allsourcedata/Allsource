@@ -42,22 +42,12 @@ const tableHeaders = [
 
 const getStatusStyle = (status: any) => {
     switch (status) {
-        case "Accepted":
-            return {
-                background: 'rgba(234, 248, 221, 1)',
-                color: 'rgba(43, 91, 0, 1)',
-            };
-        case 'Paid':
-            return {
-                background: 'rgba(234, 248, 221, 1)',
-                color: 'rgba(43, 91, 0, 1)',
-            };
         case 'Active':
             return {
                 background: 'rgba(234, 248, 221, 1)',
                 color: 'rgba(43, 91, 0, 1)',
             };
-        case 'Pending':
+        case 'Inactive':
             return {
                 background: 'rgba(236, 236, 236, 1)',
                 color: 'rgba(74, 74, 74, 1)',
@@ -67,7 +57,7 @@ const getStatusStyle = (status: any) => {
                 background: 'rgba(241, 241, 249, 1)',
                 color: 'rgba(80, 82, 178, 1)',
             };
-        case 'Free trial':
+        case 'Invite sent':
             return {
                 background: 'rgba(235, 243, 254, 1)',
                 color: 'rgba(20, 110, 246, 1)',
@@ -83,12 +73,13 @@ const getStatusStyle = (status: any) => {
 interface PartnersAdminProps {
     tabIndex: number;
     handleTabChange: (event: React.SyntheticEvent, newIndex: number) => void;
+    setLoading: (state: boolean) => void
 }
 
 
 
-const PartnersAdmin: React.FC<PartnersAdminProps> = ({tabIndex, handleTabChange}) => {
-    const [loading, setLoading] = useState(false);
+const PartnersAdmin: React.FC<PartnersAdminProps> = ({tabIndex, handleTabChange, setLoading}) => {
+    // const [loading, setLoading] = useState(false);
     const [expanded, setExpanded] = useState<number | false>(false);
     const [accounts, setAccounts] = useState<PartnerData[]>([]);
     const [page, setPage] = useState(0);
@@ -308,9 +299,6 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({tabIndex, handleTabChange}
 
     return (
         <>
-            {loading &&
-                <CustomizedProgressBar />
-            }
             <Box sx={{
                 backgroundColor: '#fff',
                 width: '100%',

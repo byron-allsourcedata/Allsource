@@ -21,6 +21,7 @@ from persistence.user_persistence import UserPersistence
 from schemas.auth_google_token import AuthGoogleData
 from schemas.users import UserSignUpForm, UserLoginForm, ResetPasswordForm, UtmParams
 from services.integrations.base import IntegrationService
+from services.partners import PartnersService
 from schemas.integrations.integrations import ShopifyOrBigcommerceCredentials
 from services.payments_plans import PaymentsPlans
 from . import stripe_service
@@ -36,7 +37,7 @@ logger = logging.getLogger(__name__)
 class UsersAuth:
     def __init__(self, db: Session, payments_service: PaymentsPlans, user_persistence_service: UserPersistence,
                  send_grid_persistence_service: SendgridPersistence, subscription_service: SubscriptionService,
-                 plans_persistence: PlansPersistence, integration_service: IntegrationService
+                 plans_persistence: PlansPersistence, integration_service: IntegrationService, partners_service: PartnersService
                  ):
         self.db = db
         self.payments_service = payments_service
@@ -45,6 +46,7 @@ class UsersAuth:
         self.subscription_service = subscription_service
         self.plan_persistence = plans_persistence
         self.integration_service = integration_service
+        self.partners_service = partners_service
 
     def get_utc_aware_date(self):
         return datetime.now(timezone.utc).replace(microsecond=0)
@@ -161,6 +163,7 @@ class UsersAuth:
 
     def create_account_google(self, auth_google_data: AuthGoogleData):
         teams_token = auth_google_data.teams_token
+        referral_token = auth_google_data.referral_token
         owner_id = None
         status = SignUpStatus.NEED_CHOOSE_PLAN
         client_id = os.getenv("CLIENT_GOOGLE_ID")
@@ -409,6 +412,7 @@ class UsersAuth:
         owner_id = None
         shopify_data = user_form.shopify_data
         teams_token = user_form.teams_token
+        referral_token = user_form.referral_token
         coupon = user_form.coupon
         shopify_access_token = None
         shop_id = None
@@ -437,6 +441,17 @@ class UsersAuth:
         if teams_token:
             status = SignUpStatus.SUCCESS
             status_result = self.user_persistence_service.check_status_invitations(teams_token=teams_token,
+                                                                                   user_mail=user_form.email)
+            if status_result['success'] is False:
+                return {
+                    'is_success': True,
+                    'status': status_result['error']
+                }
+            owner_id = status_result['team_owner_id']
+        
+        if referral_token:
+            status = SignUpStatus.SUCCESS
+            status_result = self.user_persistence_service.check_status_invitations(referral_token=referral_token,
                                                                                    user_mail=user_form.email)
             if status_result['success'] is False:
                 return {
@@ -492,8 +507,14 @@ class UsersAuth:
             
         if is_with_card is False and teams_token is None:
             return self._send_email_verification(user_object, token)
+        
+        if is_with_card is False and referral_token is None:
+            return self._send_email_verification(user_object, token)
+        
+        if referral_token is not None:
+            self.partners_service.setUser(user_object.id, "Active")
             
-        if teams_token is None:
+        if teams_token is None or referral_token is None:
             return {
                 'is_success': True,
                 'status': SignUpStatus.FILL_COMPANY_DETAILS,
