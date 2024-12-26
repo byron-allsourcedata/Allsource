@@ -6,10 +6,10 @@ import { styled } from '@mui/material/styles';
 import { showErrorToast, showToast } from '@/components/ToastNotification';
 
 interface FormUploadPopupProps {
+    enabledData: any;
     open: boolean;
-    fileData: {id: number, email: string, fullName: string, companyName: string, commission: string} | null
     onClose: () => void;
-    updateOrAddAsset:  any
+    removePartnerById:  any
 }
 
 interface FileObject extends File{   
@@ -18,7 +18,7 @@ interface FileObject extends File{
     sizesStr: string; 
 }
 
-const EnablePartnerPopup: React.FC<FormUploadPopupProps> = ({ open, fileData, onClose, updateOrAddAsset }) => {
+const EnablePartnerPopup: React.FC<FormUploadPopupProps> = ({ enabledData, open, onClose, removePartnerById }) => {
     const [action, setAction] = useState("Disable");
     const [actionType, setActionType] = useState<keyof typeof allowedExtensions>("video");
     const [dragActive, setDragActive] = useState(false);
@@ -59,6 +59,22 @@ const EnablePartnerPopup: React.FC<FormUploadPopupProps> = ({ open, fileData, on
         setCommission(""); 
     }
 
+    const handleDeletePartner = async (id: number) => {
+        setProcessing(true)
+        try {
+            const response = await axiosInstance.delete(`admin-partners/${id}`);
+            const status = response.data.status;
+            if (status.status === "SUCCESS") {
+                removePartnerById(id);
+                showToast("Partner successfully deleted!")
+            }
+        } catch {
+            showErrorToast("Failed to delete partner. Please try again later.");
+        } finally {
+            setProcessing(false)
+        }
+    }
+
     const handleSubmit = async () => {
         setProcessing(true);
         setButtonContain(false);
@@ -70,15 +86,15 @@ const EnablePartnerPopup: React.FC<FormUploadPopupProps> = ({ open, fileData, on
         try {
             let response;
     
-            if (action === "Edit" && fileData && fileData.id) {
-                response = await axiosInstance.put(`admin-partners/${fileData.id}/`, formData);
+            if (action === "Disable") {
+                response = await axiosInstance.put(`admin-partners/${enabledData.id}/`, formData);
             } else {
                 formData.append("full_name", fullName);
                 formData.append("company_name", companyName);
                 response = await axiosInstance.post(`admin-partners/`, formData);
             }
             if (response.data.status === "SUCCESS") {
-                updateOrAddAsset(response.data.data);
+                removePartnerById(enabledData.id);
                 showToast("Partner successfully submitted!");
             }
         } catch {
@@ -92,15 +108,15 @@ const EnablePartnerPopup: React.FC<FormUploadPopupProps> = ({ open, fileData, on
         }
     };
 
-    useEffect(() => {
-        if (fileData) {
-            setCommission(fileData.commission);
-            setCompanyName(fileData.companyName);
-            setFullName(fileData.fullName);
-            setButtonContain(true)
-            setAction("Edit")
-        }
-    }, [fileData]);
+    // useEffect(() => {
+    //     if (fileData) {
+    //         setCommission(fileData.commission);
+    //         setCompanyName(fileData.companyName);
+    //         setFullName(fileData.fullName);
+    //         setButtonContain(true)
+    //         setAction("Edit")
+    //     }
+    // }, [fileData]);
 
     useEffect(() => {
         setButtonContain([fullName, companyName, commission].every(field => typeof field === "string" && field.trim().length > 0));
@@ -142,7 +158,7 @@ const EnablePartnerPopup: React.FC<FormUploadPopupProps> = ({ open, fileData, on
                     lineHeight: "21.82px"
                 }}
                 >
-                {action} partner details
+                {action} account
                 </Typography>
                 <Box sx={{ display: "flex", flexDirection: "row" }}>
                     <IconButton onClick={handleClose}>

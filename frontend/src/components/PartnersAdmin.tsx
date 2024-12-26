@@ -14,6 +14,7 @@ import { DateRangeIcon } from "@mui/x-date-pickers/icons";
 import SwapVertIcon from '@mui/icons-material/SwapVert';
 import SearchIcon from '@mui/icons-material/Search';
 import InvitePartnerPopup from "@/components/InvitePartnerPopup"
+import EnablePartnerPopup from "@/components/EnablePartnerPopup"
 import { showErrorToast, showToast } from '@/components/ToastNotification';
 
 interface PartnerData {
@@ -95,7 +96,9 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({tabIndex, handleTabChange,
     // const [tabIndex, setTabIndex] = useState(0);
     const [menuAnchor, setMenuAnchor] = useState(null);
     const [formPopupOpen, setFormPopupOpen] = useState(false);
+    const [noticePopupOpen, setNoticePopupOpen] = useState(false);
     const [fileData, setFileData] = useState<{id: number, email: string, fullName: string, companyName: string, commission: string} | null>(null);
+    const [enabledData, setEnabledData] = useState<{id: number, fullName: string} | null>(null);
     // const handleTabChange = (event: React.SyntheticEvent, newIndex: number) => {
     //     setTabIndex(newIndex);
     // };
@@ -196,6 +199,14 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({tabIndex, handleTabChange,
         setExpanded(isExpanded ? panel : false);
     };
 
+    const handleNoticeOpenPopup = () => {
+        setNoticePopupOpen(true)
+    }
+
+    const handleNoticeClosePopup = () => {
+        setNoticePopupOpen(false)
+    }
+
     const handleFormOpenPopup = () => {
         setFormPopupOpen(true)
     }
@@ -216,21 +227,21 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({tabIndex, handleTabChange,
         }
     }, []);
 
-    const handleDeletePartner = async (id: number) => {
-        setLoading(true)
-        try {
-            const response = await axiosInstance.delete(`admin-partners/${id}`);
-            const status = response.data.status;
-            if (status.status === "SUCCESS") {
-                removePartnerById(id);
-                showToast("Partner successfully deleted!")
-            }
-        } catch {
-            showErrorToast("Failed to delete partner. Please try again later.");
-        } finally {
-            setLoading(false)
-        }
-    }
+    // const handleDeletePartner = async (id: number) => {
+    //     setLoading(true)
+    //     try {
+    //         const response = await axiosInstance.delete(`admin-partners/${id}`);
+    //         const status = response.data.status;
+    //         if (status.status === "SUCCESS") {
+    //             removePartnerById(id);
+    //             showToast("Partner successfully deleted!")
+    //         }
+    //     } catch {
+    //         showErrorToast("Failed to delete partner. Please try again later.");
+    //     } finally {
+    //         setLoading(false)
+    //     }
+    // }
 
     const updateOrAddAsset = (updatedPartner: PartnerData) => {
         setAccounts((prevAccounts) => {
@@ -538,6 +549,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({tabIndex, handleTabChange,
                                     </TableHead>
                                     <TableBody>
                                         {accounts.map((data, index) => (
+                                            <>
                                             <TableRow key={index} sx={{
                                                 ...suppressionsStyles.tableBodyRow,
                                                 '&:hover': {
@@ -619,7 +631,11 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({tabIndex, handleTabChange,
                                                                     <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Enable"/>
                                                                 </ListItemButton>
                                                                 <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {
-                                                                    handleDeletePartner(data.id)
+                                                                    handleNoticeOpenPopup()
+                                                                    setEnabledData({ 
+                                                                        id: data.id, 
+                                                                        fullName: data.partner_name});
+                                                                    // handleDeletePartner(data.id)
                                                                     handleCloseMenu()
                                                                 }}>
                                                                     <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Terminate"/>
@@ -643,17 +659,22 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({tabIndex, handleTabChange,
                                                         </Popover>
                                                 </TableCell>
                                             </TableRow>
+                                            </>
                                         ))}
                                     </TableBody>
                                 </Table>
                             </TableContainer>
                         </Box>
-
                         <InvitePartnerPopup 
-                        updateOrAddAsset={updateOrAddAsset}
-                        fileData={fileData} 
-                        open={formPopupOpen} 
-                        onClose={handleFormClosePopup}  />
+                                            updateOrAddAsset={updateOrAddAsset}
+                                            fileData={fileData} 
+                                            open={formPopupOpen} 
+                                            onClose={handleFormClosePopup}  />
+                        <EnablePartnerPopup 
+                                            removePartnerById={removePartnerById}
+                                            enabledData={enabledData} 
+                                            open={noticePopupOpen} 
+                                            onClose={handleNoticeClosePopup}  />
                     </Box>
                     <Box sx={{ display: 'flex', justifyContent: 'end' }}>
                         <CustomTablePagination
