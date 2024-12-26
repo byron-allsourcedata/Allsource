@@ -357,7 +357,6 @@ export const SettingsSubscription: React.FC = () => {
                 const response = await axiosInterceptorInstance.post('/subscriptions/cancel-plan', {
                     reason_unsubscribe: formValues.unsubscribe
                 });
-                console.log(response.data)
                 if (response.status === 200) {
                     switch (response.data) {
                         case 'SUCCESS':

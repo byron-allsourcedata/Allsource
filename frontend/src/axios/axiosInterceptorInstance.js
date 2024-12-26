@@ -6,30 +6,36 @@ const axiosInterceptorInstance = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
 });
 
-
 axiosInterceptorInstance.interceptors.request.use(
-  async (config) => { 
+  async (config) => {
     const accessToken = localStorage.getItem("token");
-    let currentDomain = sessionStorage.getItem('current_domain');
+    let currentDomain = sessionStorage.getItem("current_domain");
 
-    if (accessToken && config.headers) {
-      config.headers.Authorization = `Bearer ${accessToken}`;
-      if (!currentDomain) {
-        try {
-          const response = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}domains/`, {
-            headers: { Authorization: `Bearer ${accessToken}` }
-          });
+    if (config.headers) {
+      if (accessToken) {
+        config.headers.Authorization = `Bearer ${accessToken}`;
+        if (!currentDomain) {
+          try {
+            const response = await axios.get(
+              `${process.env.NEXT_PUBLIC_API_BASE_URL}domains/`,
+              {
+                headers: { Authorization: `Bearer ${accessToken}` },
+              }
+            );
 
-          if (response.status === 200 && response.data.length > 0) {
-            currentDomain = response.data[0].domain;
-            sessionStorage.setItem('current_domain', currentDomain);
+            if (response.status === 200 && response.data.length > 0) {
+              currentDomain = response.data[0].domain;
+              sessionStorage.setItem("current_domain", currentDomain);
+            }
+          } catch (error) {
+            console.error("Error fetching domain:", error);
           }
-        } catch (error) {
-          console.error('Error fetching domain:', error);
         }
-      }
-      if (currentDomain) {
-        config.headers.CurrentDomain = currentDomain;
+        if (currentDomain) {
+          config.headers.CurrentDomain = currentDomain;
+        }
+      } else{
+        config.headers.Authorization = `Bearer`;
       }
     }
 
@@ -39,7 +45,6 @@ axiosInterceptorInstance.interceptors.request.use(
     return Promise.reject(error);
   }
 );
-
 
 const navigateTo = (path) => {
   window.location.href = path;
@@ -51,10 +56,7 @@ axiosInterceptorInstance.interceptors.response.use(
   (error) => {
     if (error.response) {
       switch (error.response.status) {
-        case 307: 
-        case 400:
-          navigateTo('/signin');
-          break;
+        case 307:
         case 401:
           // 401 error handler (Unauthorized)
           localStorage.clear();
@@ -66,12 +68,12 @@ axiosInterceptorInstance.interceptors.response.use(
               navigateTo("/account-setup");
               break;
             case "NEED_BOOK_CALL":
-              sessionStorage.setItem('is_slider_opened', 'true');
+              sessionStorage.setItem("is_slider_opened", "true");
               break;
             case "NEED_CONFIRM_EMAIL":
               navigateTo("/email-verificate");
               break;
-            case "PIXEL_INSTALLATION_NEEDED": 
+            case "PIXEL_INSTALLATION_NEEDED":
               break;
             case "FILL_COMPANY_DETAILS":
               navigateTo("/account-setup");
@@ -88,8 +90,8 @@ axiosInterceptorInstance.interceptors.response.use(
               navigateTo(`${error.response.data.stripe_payment_url}`);
               break;
             case "FORBIDDEN":
-              navigateTo(`/dashboard`)
-              break
+              navigateTo(`/dashboard`);
+              break;
           }
           break;
         case 500:

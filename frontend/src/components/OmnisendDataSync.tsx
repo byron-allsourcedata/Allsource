@@ -1,32 +1,22 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Drawer, Box, Typography, IconButton, TextField, Divider, FormGroup, FormControlLabel, FormControl, FormLabel, Radio, Collapse, Checkbox, Button, List, ListItem, Link, Tab, Tooltip, Switch, RadioGroup, InputLabel, MenuItem, Select, Dialog, DialogActions, DialogContent, DialogTitle, Popover, Menu, SelectChangeEvent, ListItemText, ClickAwayListener, InputAdornment, Grid, LinearProgress } from '@mui/material';
+import { Drawer, Box, Typography, IconButton, TextField, Divider, FormControlLabel, FormControl, FormLabel, Radio, Button, Link, Tab, RadioGroup, MenuItem, Popover, Grid, LinearProgress } from '@mui/material';
 import TabContext from '@mui/lab/TabContext';
 import TabList from '@mui/lab/TabList';
 import TabPanel from '@mui/lab/TabPanel';
 import Image from 'next/image';
 import CloseIcon from '@mui/icons-material/Close';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
-import { showErrorToast, showToast } from './ToastNotification';
-import CustomizedProgressBar from './CustomizedProgressBar';
-import { stringify } from 'querystring';
-
-interface Integrations {
-    id: number
-    access_token: string
-    shop_domain: string
-    data_center: string
-    service_name: string
-    suppression: boolean
-}
+import { showToast } from './ToastNotification';
 
 interface OnmisendDataSyncProps {
     open: boolean;
     onClose: () => void;
-    data?: any
+    data?: any;
+    isEdit: boolean;
 }
 
 
-const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data = null }) => {
+const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data = null, isEdit }) => {
     const [loading, setLoading] = useState(false)
     const [value, setValue] = React.useState('1');
     const [checked, setChecked] = useState(false);
@@ -139,9 +129,9 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data
     const handleSaveSync = async () => {
         setLoading(true);
         try {
-            if (UpdateKlaviuo) {
+            if (isEdit) {
                 const response = await axiosInstance.put(`/data-sync/sync`, {
-                    integrations_users_sync_id: UpdateKlaviuo,
+                    integrations_users_sync_id: data.id,
                     leads_type: selectedRadioValue,
                     data_map: customFields
                 }, {
@@ -617,7 +607,7 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data
                 }
               }}
         >
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 3.5, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 2.85, px: 2, borderBottom: '0.125px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
                 <Typography variant="h6" className="first-sub-title" sx={{ textAlign: 'center' }}>
                     Connect to Omnisend
                 </Typography>
@@ -1219,7 +1209,7 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data
                                                 </Grid>
                                             </Grid>
                                         ))}
-                                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2, mr: 6 }}>
+                                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 6, mr: 6 }}>
                                             <Button
                                                 onClick={handleAddField}
                                                 aria-haspopup="true"
@@ -1254,7 +1244,7 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data
                         {/* Button based on selected tab */}
 
                     </Box>
-                    <Box sx={{ px: 2, py: 3.5, border: '1px solid #e4e4e4', position: 'fixed', bottom: 0, right: 0, background: '#fff', zIndex: '1',
+                    <Box sx={{ px: 2, py: 1.5, border: '1px solid #e4e4e4', position: 'fixed', bottom: 0, right: 0, background: '#fff', zIndex: '1',
                         width: '620px',
                         '@media (max-width: 600px)': {
                                 width: '100%',

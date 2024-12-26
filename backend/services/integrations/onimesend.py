@@ -288,7 +288,23 @@ class OmnisendIntegrationService:
             lastName=getattr(lead, 'last_name', None),
             gender=getattr(lead, 'gender', None).lower()
         )
-    
+
+    def edit_sync(self, leads_type: str, integrations_users_sync_id: int,
+                  data_map: List[DataMap], domain_id: int, created_by: str):
+        credentials = self.get_credentials(domain_id)
+        data_syncs = self.sync_persistence.get_filter_by(domain_id=domain_id)
+        for sync in data_syncs:
+            if sync.get('integration_id') == credentials.id and sync.get('leads_type') == leads_type:
+                return
+        sync = self.sync_persistence.edit_sync({
+            'integration_id': credentials.id,
+            'domain_id': domain_id,
+            'leads_type': leads_type,
+            'data_map': data_map,
+            'created_by': created_by,
+        }, integrations_users_sync_id)
+
+        return sync
 
     def __map_properties(self, lead: FiveXFiveUser, data_map: List[DataMap]) -> dict:
         properties = {}
