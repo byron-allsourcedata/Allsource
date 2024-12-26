@@ -488,12 +488,13 @@ class UsersAuth:
         
         if shopify_data:
             self._process_shopify_integration(user_object, shopify_data, shopify_access_token, shop_id)
+            self.user_persistence_service.email_confirmed(user_object.id)
             
         if (ift and ift == 'arwt') or user_object.source_platform in (SourcePlatformEnum.BIG_COMMERCE.value, SourcePlatformEnum.SHOPIFY.value):
             self.user_persistence_service.book_call_confirmed(user_object.id)
             self.subscription_service.create_subscription_from_free_trial(user_id=user_object.id, ftd=ftd)
             
-        if is_with_card is False and teams_token is None:
+        if is_with_card is False and teams_token is None and shopify_data is None:
             return self._send_email_verification(user_object, token)
             
         if teams_token is None:

@@ -269,8 +269,9 @@ class SettingsService:
         total_key = 'monthly_total' if current_plan.interval == 'month' else 'yearly_total'
         plan_name = f"{current_plan.title} {'yearly' if current_plan.interval == 'year' else ''}".strip()
         if subscription is None and user_subscription:
+            billing_cycle = f"{user_subscription.plan_start.strftime('%b %d, %Y')} to {user_subscription.plan_end.strftime('%b %d, %Y')}" if user_subscription.plan_start else 'Free trial'
             subscription_details = {
-                'billing_cycle': 'Free trial',
+                'billing_cycle': billing_cycle,
                 'plan_name': plan_name,
                 'domains': f"{user_limit_domain}/{plan_limit_domain}",
                 'prospect_credits': 'Coming soon',
