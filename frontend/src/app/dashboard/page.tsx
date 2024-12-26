@@ -833,7 +833,7 @@ const Dashboard: React.FC = () => {
             </Typography>
             <PixelInstallation />
             <VerifyPixelIntegration />
-            <RevenueTracking />
+            {/* <RevenueTracking /> */}
           </Grid>
           <Grid item xs={12} lg={4} sx={{ display: { xs: 'none', md: 'block' } }}>
             <ProgressSection />

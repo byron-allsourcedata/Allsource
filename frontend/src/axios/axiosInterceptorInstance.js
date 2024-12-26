@@ -62,7 +62,7 @@ axiosInterceptorInstance.interceptors.response.use(
         case 401:
           // 401 error handler (Unauthorized)
           localStorage.clear();
-          navigateTo.push("/signin");
+          navigateTo("/signin");
           break;
         case 403:
           switch (error.response.data.status) {
