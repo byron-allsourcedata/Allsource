@@ -9,7 +9,7 @@ from persistence.domains import UserDomainsPersistence
 from schemas.integrations.integrations import *
 from schemas.integrations.klaviyo import *
 from fastapi import HTTPException
-from enums import IntegrationsStatus, SourcePlatformEnum
+from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult
 import httpx
 import json
 from typing import List
@@ -33,7 +33,7 @@ class KlaviyoIntegrationsService:
         if not headers:
             headers = {
                 'Authorization': f'Klaviyo-API-Key {api_key}',
-                'revision': '2024-07-15',
+                'revision': '2024-10-15',
                 'accept': 'application/json', 
                 'content-type': 'application/json'
             }
@@ -258,119 +258,18 @@ class KlaviyoIntegrationsService:
         await rabbitmq_connection.close()
 
 
-    async def process_data_sync(self, message):
-        counter = 0
-        last_leads_sync = None
-        sync = None
-        if message.get('sync'):
-            sync = IntegrationUserSync(**message.get('sync'))
-            if sync:
-                serarch_sync = self.sync_persistence.get_integration_by_sync_id(sync_id=sync.id)
-                if not serarch_sync or serarch_sync.service_name != SourcePlatformEnum.KLAVIYO.value:
-                    logging.info(f'Sync {sync.id} Klaviyo not matched')
-                    return
-        leads_type = message.get('leads_type')
-        domain_id = message.get('domain_id', None)
-        lead = message.get('lead', None)
-        if domain_id and lead:
-            lead_user =  self.leads_persistence.get_leads_domain(domain_id=domain_id, five_x_five_user_id=lead.get('five_x_five_user_id'))
-            lead = lead_user[0] if lead_user else None
-            if message.get('lead') and not lead:
-                logging.info(f'Contact {message.get("lead").get("five_x_five_user_id") if message.get("lead") else None} in domain id {domain_id} not found')
-                return
-        stage = message.get('stage') if message.get('stage') else 1
-        next_try = message.get('next_try') if message.get('next_try') else None
-
+    async def process_data_sync(self, five_x_five_user, access_token, data_sync):
+        data_map = data_sync.data_map if data_sync.data_map else None
+        profile = self.__create_profile(five_x_five_user, access_token, data_map)
         
-        logging.info("RabbitMQ queue declared.")
-
-        domains = self.domain_persistence.get_domain_by_filter(**{'id': domain_id} if domain_id else {})
-        logging.info(f"Retrieved domains: {[domain.id for domain in domains]}",)
-
-        for domain in domains:
-            logging.info('start')
-            credentials = self.get_credentials(domain.id)
-            if not credentials:
-                logging.warning("No credentials found for domain id %s.", domain.id)
-                return
+        if profile == ProccessDataSyncResult.AUTHENTICATION_FAILED.value or profile == ProccessDataSyncResult.INCORRECT_FORMAT.value:
+            return profile
+        
+        list_response = self.__add_profile_to_list(data_sync.list_id, profile.get('id'), access_token)
+        if list_response.status_code == 404:
+            return ProccessDataSyncResult.LIST_NOT_EXISTS.value
             
-            data_syncs_list = self.sync_persistence.get_data_sync_filter_by(
-                domain_id=domain.id,
-                integration_id=credentials.id,
-                is_active=True
-            )
-
-            leads = [lead] if lead else (
-                self.leads_persistence.get_leads_domain(domain.id, behavior_type=leads_type)
-                if leads_type and leads_type != 'allContacts' else
-                self.leads_persistence.get_leads_domain(domain.id)
-            )
-
-            for data_sync_item in data_syncs_list if not sync else [sync]:
-                if lead and lead.behavior_type != data_sync_item.leads_type and data_sync_item.leads_type not in ('allContacts', None):
-                    logging.warning("Lead behavior type mismatch: %s vs %s", lead.behavior_type, data_sync_item.leads_type)
-                else:
-                    data_map = data_sync_item.data_map if data_sync_item.data_map else None
-                    last_lead_sync_id = data_sync_item.last_lead_sync_id
-                    if last_lead_sync_id:
-                        last_leads_sync = self.leads_persistence.get_lead_user_by_up_id(domain_id=domain.id, up_id=last_lead_sync_id)
-                    for lead in leads:
-                        if not sync and last_leads_sync and lead.five_x_five_user_id < last_leads_sync.five_x_five_user_id:
-                            logging.info(f'lead {lead.five_x_five_user_id} already sync')
-                        else:
-                            if stage > 3:
-                                logging.info("Stage limit reached. Exiting.")
-                                return
-                            
-                            if next_try and datetime.now() < datetime.fromisoformat(next_try):
-                                await asyncio.sleep(1)
-                                logging.info("Processing lead sync with next try: %s", next_try)
-                                await self.process_lead_sync(
-                                    lead_user=lead,
-                                    user_domain_id=domain.id, 
-                                    behavior_type=lead.behavior_type, 
-                                    stage=stage, 
-                                    next_try=next_try  
-                                )
-                            else:
-                                profile = self.__create_profile(lead.five_x_five_user_id, credentials.access_token, data_map)
-            
-                                if not profile:
-                                    self.sync_persistence.db.query(IntegrationUserSync).filter(IntegrationUserSync.id == data_sync_item.id).update({
-                                    'sync_status': False
-                                    })
-                                    self.sync_persistence.db.commit()
-                                    logging.error("Profile creation failed for lead: %s", lead.five_x_five_user_id)
-                                    if stage != 3:
-                                        next_try_str = (datetime.now() + timedelta(hours=3)).isoformat()
-                                        await self.process_lead_sync(
-                                            lead_user=lead,
-                                            user_domain_id=domain.id, 
-                                            behavior_type=lead.behavior_type, 
-                                            stage=stage + 1, 
-                                            next_try=next_try_str
-                                        )
-                                else:
-                                    list_response = self.__add_profile_to_list(data_sync_item.list_id, profile.get('id'), credentials.access_token)
-                                    if list_response.status_code == 404:
-                                        data_sync_item.sync_status = False
-                                        self.integrations_persisntece.db.commit()
-                                    else:
-                                        data_sync_item.sync_status = True
-                                        self.integrations_persisntece.db.commit()
-                                        logging.info("Profile added successfully for lead: %s", lead.five_x_five_user_id)
-                                        self.sync_persistence.db.query(IntegrationUserSync).filter(IntegrationUserSync.id == data_sync_item.id).update({
-                                            'sync_status': True
-                                        })
-                                        self.sync_persistence.db.commit()
-                                        counter += 1
-                                        last_leads_sync = lead
-                    self.sync_persistence.update_sync({
-                        'last_sync_date': datetime.now(),
-                        'last_lead_sync_id': self.leads_persistence.get_lead_data(last_leads_sync.five_x_five_user_id).up_id if counter > 0 else last_lead_sync_id
-                    },counter=counter, id=data_sync_item.id)
-                    logging.info("Sync updated for item id: %s", data_sync_item.id)
-
+        return ProccessDataSyncResult.SUCCESS.value
 
     def validate_and_format_phone(self, phone_number: str) -> str:
         if phone_number:
@@ -391,14 +290,32 @@ class KlaviyoIntegrationsService:
             logging.debug(f"Formatted phone number: {formatted_phone_number}")  
             return formatted_phone_number
         return None
+    
+    def get_count_profiles(self, list_id: str, api_key: str):
+        url = f'https://a.klaviyo.com/api/lists/{list_id}?additional-fields[list]=profile_count'
+        response = self.__handle_request(
+            method='GET',
+            url=url,
+            api_key=api_key,
+        )
+        if response.status_code == 200:
+            data = response.json()
+            return data.get('data', {}).get('attributes', {}).get('profile_count', 0)
+        
+        if response.status_code == 404:
+            return ProccessDataSyncResult.LIST_NOT_EXISTS.value
 
-    def __create_profile(self, lead_id: int, api_key: str, data_map):
-        lead_data = self.leads_persistence.get_lead_data(lead_id)
-        try:
-            profile = self.__mapped_klaviyo_profile(lead_data)
-        except: return
+        if response.status_code == 401:
+            return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
+        
+        if response.status_code == 429:
+            return ProccessDataSyncResult.TOO_MANY_REQUESTS.value
+
+
+    def __create_profile(self, five_x_five_user, api_key: str, data_map):
+        profile = self.__mapped_klaviyo_profile(five_x_five_user)
         if data_map:
-            properties = self.__map_properties(lead_data, data_map)
+            properties = self.__map_properties(five_x_five_user, data_map)
         else:
             properties = {}
         json_data = {
@@ -423,9 +340,12 @@ class KlaviyoIntegrationsService:
             api_key=api_key,
             json=json_data
         )
-
         if response.status_code == 201:
                 return response.json().get('data')
+        if response.status_code == 400:
+                return ProccessDataSyncResult.INCORRECT_FORMAT.value
+        if response.status_code == 401:
+                return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
         if response.status_code == 409:
             return {'id': response.json().get('errors')[0].get('meta').get('duplicate_profile_id')}
         
@@ -464,44 +384,50 @@ class KlaviyoIntegrationsService:
             raise HTTPException(status_code=400, detail={'status': "Profiles from Klaviyo could not be retrieved"})
         return [self.__mapped_profile_from_klaviyo(profile) for profile in response.json().get('data')]
 
+    def extract_first_email(self, text: str) -> str:
+        email_regex = r"[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+"
+        emails = re.findall(email_regex, text)
+        if emails:
+            return emails[0]
+        return None
 
-
-    def __mapped_klaviyo_profile(self, lead: FiveXFiveUser) -> KlaviyoProfile:
+    def __mapped_klaviyo_profile(self, five_x_five_user: FiveXFiveUser) -> KlaviyoProfile:
         first_email = (
-            getattr(lead, 'business_email') or 
-            getattr(lead, 'personal_emails') or 
-            getattr(lead, 'programmatic_business_emails', None)
+            getattr(five_x_five_user, 'business_email') or 
+            getattr(five_x_five_user, 'personal_emails') or 
+            getattr(five_x_five_user, 'programmatic_business_emails', None)
         )
+        first_email = self.extract_first_email(first_email) if first_email else None
         
         first_phone = (
-            getattr(lead, 'mobile_phone') or 
-            getattr(lead, 'personal_phone') or 
-            getattr(lead, 'direct_number') or 
-            getattr(lead, 'company_phone', None)
+            getattr(five_x_five_user, 'mobile_phone') or 
+            getattr(five_x_five_user, 'personal_phone') or 
+            getattr(five_x_five_user, 'direct_number') or 
+            getattr(five_x_five_user, 'company_phone', None)
         )
 
         location = {
-            "address1": getattr(lead, 'personal_address') or getattr(lead, 'company_address', None),
-            "city": getattr(lead, 'personal_city') or getattr(lead, 'company_city', None),
-            "region": getattr(lead, 'personal_state') or getattr(lead, 'company_state', None),
-            "zip": getattr(lead, 'personal_zip') or getattr(lead, 'company_zip', None),
+            "address1": getattr(five_x_five_user, 'personal_address') or getattr(five_x_five_user, 'company_address', None),
+            "city": getattr(five_x_five_user, 'personal_city') or getattr(five_x_five_user, 'company_city', None),
+            "region": getattr(five_x_five_user, 'personal_state') or getattr(five_x_five_user, 'company_state', None),
+            "zip": getattr(five_x_five_user, 'personal_zip') or getattr(five_x_five_user, 'company_zip', None),
         }
         return KlaviyoProfile(
             email=first_email,
             phone_number=first_phone,
-            first_name=getattr(lead, 'first_name', None),
-            last_name=getattr(lead, 'last_name', None),
-            organization=getattr(lead, 'company_name', None),
+            first_name=getattr(five_x_five_user, 'first_name', None),
+            last_name=getattr(five_x_five_user, 'last_name', None),
+            organization=getattr(five_x_five_user, 'company_name', None),
             location=location,
-            title=getattr(lead, 'job_title', None))
+            title=getattr(five_x_five_user, 'job_title', None))
 
-    def __map_properties(self, lead: FiveXFiveUser, data_map: List[DataMap]) -> dict:
+    def __map_properties(self, five_x_five_user: FiveXFiveUser, data_map: List[DataMap]) -> dict:
         properties = {}
         
         for mapping in data_map:
             five_x_five_field = mapping.get("type")  
             new_field = mapping.get("value")  
-            value_field = getattr(lead, five_x_five_field, None)
+            value_field = getattr(five_x_five_user, five_x_five_field, None)
             
             if value_field is not None: 
                 if isinstance(value_field, datetime):

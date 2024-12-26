@@ -1,22 +1,19 @@
-from sqlalchemy import Column, Integer, VARCHAR, Index, TIMESTAMP, event
-
-from .base import Base, create_timestamps
-
+from sqlalchemy import Column, Integer, VARCHAR, Index
+from sqlalchemy.dialects.postgresql import TIMESTAMP
+from .base import Base
 
 class DataSyncImportedLeads(Base):
     __tablename__ = 'data_sync_imported_leads'
 
     id = Column(Integer, primary_key=True)
     status = Column(VARCHAR(64), nullable=False)
-    access_token = Column(VARCHAR(128), nullable=False)
-    five_x_five_up_id = Column(Integer, nullable=False)
+    five_x_five_up_id = Column(VARCHAR, nullable=False)
     service_name = Column(VARCHAR(128), nullable=False)
-    integration_id = Column(Integer, nullable=False)
-    message = Column(VARCHAR(128), nullable=True)
-    created_at = Column(TIMESTAMP, nullable=True)
+    data_sync_id = Column(Integer, nullable=False)
+    created_at = Column(TIMESTAMP(precision=7), nullable=True)
+    updated_at = Column(TIMESTAMP(precision=7), nullable=True)
+    lead_users_id = Column(Integer, nullable=False)
     
     __table_args__ = (
-        Index('data_sync_imported_leads_access_token_five_x_five_up_id_service', 'access_token', 'five_x_five_up_id', 'service_name', 'integration_id'),
+        Index('data_sync_imported_leads_five_x_five_up_id_service_name_data_sy', 'five_x_five_up_id','service_name','data_sync_id','lead_users_id'),
     )
-
-event.listen(DataSyncImportedLeads, "before_insert", create_timestamps)
