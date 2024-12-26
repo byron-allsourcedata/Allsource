@@ -116,7 +116,7 @@ class KlaviyoIntegrationsService:
             raise HTTPException(status_code=400, detail={'status': IntegrationsStatus.CREATE_IS_FAILED.value})
         
     
-    async def edit_sync(self, leads_type: str, list_id: str, list_name: str, integrations_users_sync_id: int,  data_map: List[DataMap], domain_id: int, created_by: str,tags_id: str = None):
+    def edit_sync(self, leads_type: str, list_id: str, list_name: str, integrations_users_sync_id: int,  data_map: List[DataMap], domain_id: int, created_by: str,tags_id: str = None):
         credentials = self.get_credentials(domain_id)
         data_syncs = self.sync_persistence.get_filter_by(domain_id=domain_id)
         for sync in data_syncs:
@@ -133,30 +133,6 @@ class KlaviyoIntegrationsService:
         }, integrations_users_sync_id)
         if tags_id: 
             self.update_tag_relationships_lists(tags_id=tags_id, list_id=list_id, api_key=credentials.access_token)
-        message = {
-            'sync':  {
-                'id': sync.id,
-                "domain_id": sync.domain_id, 
-                "integration_id": sync.integration_id, 
-                "leads_type": sync.leads_type, 
-                "list_id": sync.list_id, 
-                'data_map': sync.data_map
-                },
-            'leads_type': leads_type,
-            'domain_id': domain_id
-        }
-        rabbitmq_connection = RabbitMQConnection()
-        connection = await rabbitmq_connection.connect()
-        channel = await connection.channel()
-        await channel.declare_queue(
-            name=self.QUEUE_DATA_SYNC,
-            durable=True
-        )
-        await publish_rabbitmq_message(
-            connection=connection,
-            queue_name=self.QUEUE_DATA_SYNC, 
-            message_body=message)
-
 
     def create_list(self, list, domain_id: int):
         credential = self.get_credentials(domain_id)

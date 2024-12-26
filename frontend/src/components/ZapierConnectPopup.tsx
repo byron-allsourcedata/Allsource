@@ -131,6 +131,7 @@ const ZapierConnectPopup = ({open, handlePopupClose}: ApIkeyPopup) => {
                     position: 'fixed',
                     zIndex: 1301,
                     top: 0,
+                    boxShadow: 'none',
                     bottom: 0,
                     // msOverflowStyle: 'none',
                     // scrollbarWidth: 'none',
@@ -145,14 +146,14 @@ const ZapierConnectPopup = ({open, handlePopupClose}: ApIkeyPopup) => {
             slotProps={{
                 backdrop: {
                   sx: {
-                    backgroundColor: 'rgba(0, 0, 0, .2)'
+                    backgroundColor: 'rgba(0, 0, 0, 0.01)'
                   }
                 }
               }}
         >
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 3.5, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 2.85, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
                 <Typography variant="h6" sx={{ textAlign: 'center', color: '#202124', fontFamily: 'Nunito Sans', fontWeight: '600', fontSize: '16px', lineHeight: 'normal' }}>
-                    Connect to Klaviyo
+                    Connect to Zapier
                 </Typography>
                 <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
                     <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/integrate-klaviyo-to-maximiz" target="_blank"rel="noopener noreferrer" 
@@ -169,7 +170,6 @@ const ZapierConnectPopup = ({open, handlePopupClose}: ApIkeyPopup) => {
                     </IconButton>
                 </Box>
             </Box>
-            <Divider />
             <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', height: '100%' }}>
             <Box sx={{ width: '100%', padding: '16px 24px 24px 24px', position: 'relative' }}>
                 <TabContext value={value}>

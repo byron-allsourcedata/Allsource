@@ -14,6 +14,7 @@ class IntegrationsUserSyncPersistence:
         return sync
     
     def edit_sync(self, data: dict, integrations_users_sync_id: int) -> IntegrationUserSync:
+        self.try_reset_error(integrations_users_sync_id)
         sync = self.db.query(IntegrationUserSync).filter_by(id=integrations_users_sync_id).first()
         if sync:
             for key, value in data.items():
@@ -60,7 +61,8 @@ class IntegrationsUserSyncPersistence:
             IntegrationUserSync.data_map,
             UserIntegration.service_name,
             UserIntegration.is_with_suppression,
-            UserIntegration.platform_user_id
+            UserIntegration.platform_user_id,
+            UserIntegration.error_message,
         ).join(UserIntegration, UserIntegration.id == IntegrationUserSync.integration_id) \
         .filter(IntegrationUserSync.domain_id == domain_id)
 
@@ -83,7 +85,8 @@ class IntegrationsUserSyncPersistence:
                     'createdBy': sync.created_by,
                     'accountId': sync.platform_user_id,
                     'data_map': sync.data_map,
-                    'syncStatus': sync.sync_status
+                    'syncStatus': sync.sync_status,
+                    'type_error': sync.error_message
                 }
         
         syncs = query.all()
@@ -102,8 +105,8 @@ class IntegrationsUserSyncPersistence:
             'accountId': sync.platform_user_id,
             'data_map': sync.data_map,
             'syncStatus': sync.sync_status,
+            'type_error': sync.error_message,
         } for sync in syncs]
-
 
     def get_data_sync_filter_by(self, **filter_by):
         return self.db.query(IntegrationUserSync).filter_by(**filter_by).all()
@@ -113,6 +116,24 @@ class IntegrationsUserSyncPersistence:
         update = self.db.query(IntegrationUserSync).filter_by(**filter_by).update(update_data) 
         self.db.commit()
         return update
+
+    def try_reset_error(self, integrations_users_sync_id: int):
+        sync_record = self.db.query(IntegrationUserSync).filter_by(id=integrations_users_sync_id).first()
+
+        if not sync_record:
+            return False
+
+        if not sync_record.sync_status:
+            integration_record = (
+                self.db.query(UserIntegration).filter(UserIntegration.id == sync_record.integration_id).first()
+            )
+
+            if integration_record and not integration_record.is_failed:
+                sync_record.sync_status = True
+                self.db.commit()
+                return True
+
+        return False
 
     def get_integration_by_sync_id(self, sync_id: int):
         return self.db.query(UserIntegration).join(IntegrationUserSync, IntegrationUserSync.integration_id == UserIntegration.id).filter(IntegrationUserSync.id == sync_id).first()

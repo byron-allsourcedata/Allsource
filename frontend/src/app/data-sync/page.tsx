@@ -291,7 +291,7 @@ const DataSync = () => {
 const DatasyncPage: React.FC = () => {
   return (
     <Suspense fallback={<CustomizedProgressBar />}>
-      <DataSync />;
+      <DataSync />
     </Suspense>
   );
 

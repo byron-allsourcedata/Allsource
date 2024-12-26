@@ -65,7 +65,7 @@ async def switch_toggle(data: SyncCreate,
 async def edit_sync(data: SyncCreate,
                       service_name: str | None = Query(None),
                       integration_service: IntegrationService = Depends(get_integration_service),
-                      user = Depends(check_user_authorization), domain = Depends(check_pixel_install_domain)):
+                      user=Depends(check_user_authorization), domain=Depends(check_pixel_install_domain)):
     if user.get('team_member'):
         team_member = user.get('team_member')
         if team_member.get('team_access_level') not in {TeamAccessLevel.ADMIN.value, TeamAccessLevel.OWNER.value, TeamAccessLevel.STANDARD.value}:
@@ -76,7 +76,7 @@ async def edit_sync(data: SyncCreate,
     data = {k: v for k, v in data.model_dump().items() if v}
     with integration_service as service:
         service = getattr(service, service_name.lower())
-        await service.edit_sync(
+        service.edit_sync(
             **data,
             domain_id=domain.id,
             created_by=user.get('full_name'),

@@ -187,6 +187,7 @@ const MetaConnectButton = ({open, onClose, onSave}: MetaConnectPopupProps) => {
                     position: 'fixed',
                     zIndex: 1301,
                     top: 0,
+                    boxShadow: 'none',
                     bottom: 0,
                     msOverflowStyle: 'none',
                     scrollbarWidth: 'none',
@@ -201,7 +202,7 @@ const MetaConnectButton = ({open, onClose, onSave}: MetaConnectPopupProps) => {
             slotProps={{
                 backdrop: {
                   sx: {
-                    backgroundColor: 'rgba(0, 0, 0, .1)'
+                    backgroundColor: 'rgba(0, 0, 0, 0.01)'
                   }
                 }
               }}
