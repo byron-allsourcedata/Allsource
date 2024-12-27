@@ -76,12 +76,6 @@ class AdminCustomersService:
         default_plan = self.db.query(SubscriptionPlan).filter(SubscriptionPlan.is_default == True).first()
         return default_plan
 
-    def update_book_call(self, user_id):
-        self.db.query(Users).filter(Users.id == user_id).update(
-            {Users.is_book_call_passed: True},
-            synchronize_session=False)
-        self.db.commit()
-
     def set_user_subscription(self, user_id, plan_start, plan_end):
         (
             self.db.query(UserSubscriptions)
@@ -99,7 +93,6 @@ class AdminCustomersService:
             self.subscription_service.create_subscription_from_free_trial(user_id=user_data.id)
         else:
             self.subscription_service.remove_trial(user_data.id)
-        self.update_book_call(user_data.id)
         
         return user_data
 

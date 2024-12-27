@@ -462,7 +462,7 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
                           sx={styles.formField}
                           onFocus={handleFocus}
                           onBlur={handleBlur}
-                          error={storeHashError}
+                          
                           InputProps={{ sx: styles.formInput }}
                           onChange={handleStoreHashChange}
                           InputLabelProps={{ sx: styles.inputLabel }}

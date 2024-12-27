@@ -22,7 +22,8 @@ interface Integrations {
 interface ConnectKlaviyoPopupProps {
     open: boolean;
     onClose: () => void;
-    data: any
+    data: any;
+    isEdit?: boolean;
 }
 
 
@@ -38,7 +39,7 @@ type KlaviyoTags = {
 
 
 
-const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, data }) => {
+const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, data, isEdit }) => {
     const [loading, setLoading] = useState(false)
     const [value, setValue] = React.useState('1');
     const [checked, setChecked] = useState(false);
@@ -242,9 +243,9 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
             if (tagName) {
                 tag = await createTag();
             }
-            if (UpdateKlaviuo) {
+            if (isEdit) {
                 const response = await axiosInstance.put(`/data-sync/sync`, {
-                    integrations_users_sync_id: UpdateKlaviuo,
+                    integrations_users_sync_id: data.id,
                     list_id: list?.id,
                     list_name: list?.list_name,
                     tags_id: tag ? tag.id : null,
@@ -740,6 +741,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                     position: 'fixed',
                     zIndex: 1301,
                     top: 0,
+                    boxShadow: 'none',
                     bottom: 0,
                     // msOverflowStyle: 'none',
                     // scrollbarWidth: 'none',
@@ -754,17 +756,17 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
             slotProps={{
                 backdrop: {
                   sx: {
-                    backgroundColor: 'rgba(0, 0, 0, 0)'
+                    backgroundColor: 'transparent'
                   }
                 }
               }}
         >
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 3.5, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 2.85, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
                 <Typography variant="h6" className="first-sub-title" sx={{ textAlign: 'center' }}>
                     Connect to Klaviyo
                 </Typography>
                 <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
-                    <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/how-the-maximiz-contact-sync-work" className="main-text" sx={{
+                    <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/how-the-maximiz-contact-sync-work" target="_blank" rel="noopener referrer" className="main-text" sx={{
                         fontSize: '14px',
                         fontWeight: '600',
                         lineHeight: '20px',
@@ -776,7 +778,6 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                     </IconButton>
                 </Box>
             </Box>
-            <Divider />
             <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', height: '100%' }}>
                 <Box sx={{ width: '100%', padding: '16px 24px 24px 24px', position: 'relative' }}>
                 <TabContext value={value}>
@@ -1566,16 +1567,21 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                                                         InputLabelProps={{
                                                             sx: {
                                                                 fontFamily: 'Nunito Sans',
-                                                                fontSize: '12px',
+                                                                fontSize: '14px',
                                                                 lineHeight: '16px',
                                                                 color: 'rgba(17, 17, 19, 0.60)',
                                                                 top: '-5px',
+                                                                left: '2px',
+                                                                flexShrink: 0,
                                                                 '&.Mui-focused': {
                                                                     color: '#0000FF',
                                                                     top: 0
                                                                 },
                                                                 '&.MuiInputLabel-shrink': {
-                                                                    top: 0
+                                                                    top: 0,
+                                                                    padding:0,
+                                                                    margin:0,
+                                                                    flexShrink: 0
                                                                 }
                                                             }
                                                         }}
@@ -1687,7 +1693,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                                                 </Grid>
                                             </Grid>
                                         ))}
-                                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2, mr: 6 }}>
+                                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 6, mr: 6 }}>
                                             <Button
                                                 onClick={handleAddField}
                                                 aria-haspopup="true"
@@ -1722,7 +1728,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                         {/* Button based on selected tab */}
 
                     </Box>
-                    <Box sx={{ px: 2, py: 3.5, border: '1px solid #e4e4e4', position: 'fixed', bottom: 0, right: 0, background: '#fff', zIndex: '1',
+                    <Box sx={{ px: 2, py: 2, border: '1px solid #e4e4e4', position: 'fixed', bottom: 0, right: 0, background: '#fff', zIndex: '1',
                         width: '620px',
                         '@media (max-width: 600px)': {
                                 width: '100%',

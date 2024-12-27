@@ -186,10 +186,26 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading, hasNotification }) => {
-    const { percent_steps: userPercentSteps, partner } = useUser();
+    const { domains, partner } = useUser();
     const router = useRouter();
     const pathname = usePathname();
-    const [showBookSlider, setShowBookSlider] = useState(false);
+    const [currentDomain, setCurrentDomain] = useState<string | null>(null);
+    const [activatePercent, setActivatePercent] = useState<number>(0);
+    useEffect(() => {
+        const storedDomain = sessionStorage.getItem('current_domain');
+        if (storedDomain) {
+            setCurrentDomain(storedDomain);
+        }
+    }, []);
+
+    useEffect(() => {
+        if (currentDomain) {
+            const domain = domains.find(d => d.domain === currentDomain);
+            if (domain) {
+                setActivatePercent(domain.activate_percent);
+            }
+        }
+    }, [currentDomain]);
     
     const handleNavigation = async (route: string) => {
         try {
@@ -292,7 +308,7 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading, hasNotific
                 right: '0',
                 width: '100%'
             }}>
-                <SetupSection percent_steps={userPercentSteps ? userPercentSteps : 0 } />
+                <SetupSection percent_steps={activatePercent ? activatePercent : 0 } />
                 <Box sx={sidebarStyles.settings}>
                     <ListItem button onClick={() => handleNavigation('settings?section=accountDetails')} sx={isActive('/settings') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
                         <ListItemIcon sx={sidebarStyles.listItemIcon}>

@@ -109,7 +109,8 @@ class UserPersistence:
                 'source_platform': user.source_platform,
                 'shop_domain': user.shop_domain,
                 'shopify_token': user.shopify_token,
-                'connected_stripe_account_id': user.connected_stripe_account_id
+                'connected_stripe_account_id': user.connected_stripe_account_id,
+                'utm_params': user.utm_params
             }
         self.db.rollback()
         if result_as_object:
@@ -157,6 +158,11 @@ class UserPersistence:
         if query:
             self.db.query(Users).filter(Users.id == user_id).update({"is_email_confirmed": True})
             self.db.commit()
+            
+    def book_call_confirmed(self, user_id: int):
+        self.db.query(Users).filter(Users.id == user_id).update({Users.is_book_call_passed: True},
+                                                                synchronize_session=False)
+        self.db.commit()
 
     def update_password(self, user_id: int, password: str):
         self.db.query(Users).filter(Users.id == user_id).update({Users.password: password},

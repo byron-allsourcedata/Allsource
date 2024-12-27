@@ -27,6 +27,7 @@ const ReferralOverview: React.FC = () => {
     const [accountCreatePending, setAccountCreatePending] = useState(false);
     const [error, setError] = useState(false);
     const [connectedAccountId, setConnectedAccountId] = useState();
+    const [buttonText, setButtonText] = useState('View Dashboard');
 
     const handleOpenSection = (panel: number) => (
         event: React.SyntheticEvent,
@@ -92,143 +93,53 @@ const ReferralOverview: React.FC = () => {
                                             {connectedAccountId}
                                         </Typography>
                                     </Box>
-                                            <Button
-                                                variant="outlined"
-                                                sx={{
-                                                    display: accountCreatePending ? 'flex' : 'none',
-                                                    mt: 2,
-                                                    ml: 2,
-                                                    textWrap: 'nowrap',
-                                                    backgroundColor: '#fff',
-                                                    color: 'rgba(80, 82, 178, 1)',
-                                                    fontFamily: "Nunito Sans",
-                                                    textTransform: 'none',
-                                                    lineHeight: '22.4px',
-                                                    fontWeight: '600',
-                                                    padding: '0.75em 2em',
-                                                    border: '1px solid rgba(80, 82, 178, 1)',
-                                                    '&:hover': {
-                                                        backgroundColor: '#fff',
-                                                        boxShadow: '0 2px 2px rgba(0, 0, 0, 0.3)',
-                                                        '&.Mui-disabled': {
-                                                            backgroundColor: 'rgba(80, 82, 178, 0.6)',
-                                                            color: 'rgba(80, 82, 178, 1)',
-                                                            cursor: 'not-allowed',
-                                                        }
-                                                    }
-                                                }}
-                                                onClick={async () => {
-                                                    setAccountCreatePending(true);
-                                                    setError(false);
-                                                    setLoading(true);
-                                                    try {
-                                                        const linkResponse = await fetch("/api/account_link", {
-                                                            method: "POST",
-                                                            headers: {
-                                                                "Content-Type": "application/json",
-                                                            },
-                                                            body: JSON.stringify({ account: connectedAccountId })
-                                                        });
-                                                        const linkData = await linkResponse.json();
+                                    <Button
+                                        variant="outlined"
+                                        sx={{
 
-                                                        const { url, error: linkError } = linkData;
-                                                        if (url) {
-                                                            window.open(url, '_blank');
-                                                        }
-
-                                                        if (linkError) {
-                                                            setError(true);
-                                                        }
-
-                                                        if (error) {
-                                                            setError(true);
-                                                        }
-                                                    } catch (err) {
-                                                        setAccountCreatePending(false);
-                                                        setError(true);
-                                                        console.error("Error occurred:", err);
-                                                    } finally {
-                                                        setLoading(false);
-                                                    }
-                                                }}
-                                            >
-                                                Add information
-                                            </Button>
-                                </Box>
-                            </>
-                        ) : (
-                            <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', border: '1px solid rgba(235, 235, 235, 1)', justifyContent: 'center', alignItems: 'center', borderRadius: '4px', pt: 2, pb: 2, gap: 2.5, }}>
-                                <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', width: '100%', gap: 1 }}>
-                                    <Image src={'/stripe-image.svg'} width={97} height={97} alt="stripe-icon" />
-                                    <Typography className="second-sub-title">
-                                        Start by connecting your stripe account
-                                    </Typography>
-                                </Box>
-
-                                <Button
-                                    variant="outlined"
-                                    sx={{
-                                        display: 'flex',
-                                        textWrap: 'nowrap',
-                                        backgroundColor: '#fff',
-                                        color: 'rgba(80, 82, 178, 1)',
-                                        fontFamily: "Nunito Sans",
-                                        textTransform: 'none',
-                                        lineHeight: '22.4px',
-                                        fontWeight: '600',
-                                        padding: '0.75em 2em',
-                                        border: '1px solid rgba(80, 82, 178, 1)',
-                                        '&:hover': {
+                                            mt: 2,
+                                            ml: 2,
+                                            textWrap: 'nowrap',
                                             backgroundColor: '#fff',
-                                            boxShadow: '0 2px 2px rgba(0, 0, 0, 0.3)',
-                                            '&.Mui-disabled': {
-                                                backgroundColor: 'rgba(80, 82, 178, 0.6)',
-                                                color: 'rgba(80, 82, 178, 1)',
-                                                cursor: 'not-allowed',
+                                            color: 'rgba(80, 82, 178, 1)',
+                                            fontFamily: "Nunito Sans",
+                                            textTransform: 'none',
+                                            lineHeight: '22.4px',
+                                            fontWeight: '600',
+                                            padding: '0.75em 2em',
+                                            border: '1px solid rgba(80, 82, 178, 1)',
+                                            '&:hover': {
+                                                backgroundColor: '#fff',
+                                                boxShadow: '0 2px 2px rgba(0, 0, 0, 0.3)',
+                                                '&.Mui-disabled': {
+                                                    backgroundColor: 'rgba(80, 82, 178, 0.6)',
+                                                    color: 'rgba(80, 82, 178, 1)',
+                                                    cursor: 'not-allowed',
+                                                }
                                             }
-                                        }
-                                    }}
-                                    onClick={async () => {
+                                        }}
+                                        onClick={async () => {
+                                        setAccountCreatePending(true);
                                         setError(false);
                                         setLoading(true);
                                         try {
-                                            const accountResponse = await fetch("/api/account", {
+                                            const linkResponse = await fetch("/api/account_link", {
                                                 method: "POST",
+                                                headers: {
+                                                    "Content-Type": "application/json",
+                                                },
+                                                body: JSON.stringify({ account: connectedAccountId })
                                             });
-                                            const accountData = await accountResponse.json();
-                                            setConnectedAccountId(accountData.account);
+                                            const linkData = await linkResponse.json();
 
-                                            await axiosInstance.post('/connect-stripe', {
-                                                stripe_connect_account_id: accountData.account,
-                                            });
+                                            const { url, type, error: linkError } = linkData;
 
-                                            const { account, error } = accountData;
-
-
-
-                                            if (account) {
-                                                setAccountCreatePending(true);
-                                                setConnectedAccountId(account);
-                                                const linkResponse = await fetch("/api/account_link", {
-                                                    method: "POST",
-                                                    headers: {
-                                                        "Content-Type": "application/json",
-                                                    },
-                                                    body: JSON.stringify({ account: connectedAccountId || account })
-                                                });
-                                                const linkData = await linkResponse.json();
-
-                                                const { url, error: linkError } = linkData;
-                                                if (url) {
-                                                    window.open(url, '_blank');
-                                                }
-
-                                                if (linkError) {
-                                                    setError(true);
-                                                }
+                                            if (url) {
+                                                window.open(url, '_blank');
+                                                setButtonText(type === "onboarding" ? "Add Information" : "View Dashboard");
                                             }
 
-                                            if (error) {
+                                            if (linkError) {
                                                 setError(true);
                                             }
                                         } catch (err) {
@@ -238,65 +149,128 @@ const ReferralOverview: React.FC = () => {
                                         } finally {
                                             setLoading(false);
                                         }
-                                    }}
-                                >
-                                    Connect to stripe
+                                    }} >
+                                    {buttonText}
                                 </Button>
                             </Box>
+                    </>
+                    ) : (
+                    <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', border: '1px solid rgba(235, 235, 235, 1)', justifyContent: 'center', alignItems: 'center', borderRadius: '4px', pt: 2, pb: 2, gap: 2.5, }}>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', width: '100%', gap: 1 }}>
+                            <Image src={'/stripe-image.svg'} width={97} height={97} alt="stripe-icon" />
+                            <Typography className="second-sub-title">
+                                Start by connecting your stripe account
+                            </Typography>
+                        </Box>
+
+                        <Button
+                            variant="outlined"
+                            sx={{
+                                display: 'flex',
+                                textWrap: 'nowrap',
+                                backgroundColor: '#fff',
+                                color: 'rgba(80, 82, 178, 1)',
+                                fontFamily: "Nunito Sans",
+                                textTransform: 'none',
+                                lineHeight: '22.4px',
+                                fontWeight: '600',
+                                padding: '0.75em 2em',
+                                border: '1px solid rgba(80, 82, 178, 1)',
+                                '&:hover': {
+                                    backgroundColor: '#fff',
+                                    boxShadow: '0 2px 2px rgba(0, 0, 0, 0.3)',
+                                    '&.Mui-disabled': {
+                                        backgroundColor: 'rgba(80, 82, 178, 0.6)',
+                                        color: 'rgba(80, 82, 178, 1)',
+                                        cursor: 'not-allowed',
+                                    }
+                                }
+                            }}
+                            onClick={async () => {
+                                setError(false);
+                                setLoading(true);
+                                try {
+                                    const accountResponse = await fetch("/api/account", {
+                                        method: "POST",
+                                    });
+                                    const accountData = await accountResponse.json();
+                                    setConnectedAccountId(accountData.account);
+
+                                    await axiosInstance.post('/connect-stripe', {
+                                        stripe_connect_account_id: accountData.account,
+                                    });
+
+                                    const { error } = accountData;
+
+                                    if (error) {
+                                        setError(true);
+                                    }
+                                } catch (err) {
+                                    setAccountCreatePending(false);
+                                    setError(true);
+                                    console.error("Error occurred:", err);
+                                } finally {
+                                    setLoading(false);
+                                }
+                            }}
+                        >
+                            Connect to stripe
+                        </Button>
+                    </Box>
                         )}
 
 
-                        <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', border: '1px solid rgba(235, 235, 235, 1)', justifyContent: 'start', borderRadius: '4px', padding: '1rem 1.5rem', gap: 4 }}>
-                            <Box sx={{ display: 'flex', justifyContent: 'start', alignItems: 'center', width: '100%' }}>
-                                <Typography className="second-sub-title">
-                                    Referral Details
-                                </Typography>
-                            </Box>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', border: '1px solid rgba(235, 235, 235, 1)', justifyContent: 'start', borderRadius: '4px', padding: '1rem 1.5rem', gap: 4 }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'start', alignItems: 'center', width: '100%' }}>
+                            <Typography className="second-sub-title">
+                                Referral Details
+                            </Typography>
+                        </Box>
 
-                            <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'start', alignItems: 'center', width: '100%', gap: 3 }}>
-                                <FormControl
+                        <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'start', alignItems: 'center', width: '100%', gap: 3 }}>
+                            <FormControl
+                                sx={{
+                                    width: '100%',
+                                }}
+                            >
+                                <InputLabel
                                     sx={{
-                                        width: '100%',
+                                        fontFamily: 'Roboto',
+                                        fontSize: '14px',
+                                        color: 'rgba(74, 74, 74, 1)',
                                     }}
                                 >
-                                    <InputLabel
-                                        sx={{
-                                            fontFamily: 'Roboto',
-                                            fontSize: '14px',
-                                            color: 'rgba(74, 74, 74, 1)',
-                                        }}
-                                    >
-                                        Discount Code
-                                    </InputLabel>
-                                    <Select
-                                        // value={days}
-                                        // onChange={handleDaysChange}
-                                        label="Select"
-                                        sx={{
-                                            backgroundColor: '#fff',
-                                            borderRadius: '4px',
-                                            height: '48px',
-                                            fontFamily: 'Nunito Sans',
-                                            fontSize: '1.75rem',
-                                            fontWeight: 400,
-                                            zIndex: 0,
-                                            color: 'rgba(17, 17, 19, 1)',
-                                            "& .MuiOutlinedInput-root": {
-                                                "& fieldset": {
-                                                    borderColor: 'rgba(208, 213, 221, 1)', // обычная рамка
-                                                },
-                                            }
-                                        }}
-                                        MenuProps={{
-                                            PaperProps: { style: { maxHeight: 200, zIndex: 100 } }
-                                        }}
-                                    // IconComponent={(props) => (
-                                    //     days === '' ?
-                                    //         <KeyboardArrowDownIcon {...props} sx={{ color: 'rgba(74, 74, 74, 1)' }} /> :
-                                    //         <KeyboardArrowUpIcon {...props} sx={{ color: 'rgba(74, 74, 74, 1)' }} />
-                                    // )}
-                                    >
-                                        {/* {daysOptions.map((option, index) => (
+                                    Discount Code
+                                </InputLabel>
+                                <Select
+                                    // value={days}
+                                    // onChange={handleDaysChange}
+                                    label="Select"
+                                    sx={{
+                                        backgroundColor: '#fff',
+                                        borderRadius: '4px',
+                                        height: '48px',
+                                        fontFamily: 'Nunito Sans',
+                                        fontSize: '1.75rem',
+                                        fontWeight: 400,
+                                        zIndex: 0,
+                                        color: 'rgba(17, 17, 19, 1)',
+                                        "& .MuiOutlinedInput-root": {
+                                            "& fieldset": {
+                                                borderColor: 'rgba(208, 213, 221, 1)', // обычная рамка
+                                            },
+                                        }
+                                    }}
+                                    MenuProps={{
+                                        PaperProps: { style: { maxHeight: 200, zIndex: 100 } }
+                                    }}
+                                // IconComponent={(props) => (
+                                //     days === '' ?
+                                //         <KeyboardArrowDownIcon {...props} sx={{ color: 'rgba(74, 74, 74, 1)' }} /> :
+                                //         <KeyboardArrowUpIcon {...props} sx={{ color: 'rgba(74, 74, 74, 1)' }} />
+                                // )}
+                                >
+                                    {/* {daysOptions.map((option, index) => (
                                             <MenuItem
                                                 key={index}
                                                 value={typeof option === 'number' ? option.toString() : option}
@@ -311,153 +285,153 @@ const ReferralOverview: React.FC = () => {
                                                 {typeof option === 'number' ? `${option} days` : 'Eternal'}
                                             </MenuItem>
                                         ))} */}
-                                    </Select>
-                                </FormControl>
+                                </Select>
+                            </FormControl>
 
-                                <TextField
-                                    label="Referral Link"
-                                    variant="outlined"
-                                    type="text"
-                                    rows={2}
-                                    disabled={!referralLink}
-                                    value={referralLink}
-                                    InputProps={{
-                                        style: { color: 'rgba(17, 17, 19, 1)', fontFamily: 'Nunito Sans', fontWeight: 400, fontSize: '14px' },
-                                        endAdornment: (
-                                            (referralLink && (
-                                                <InputAdornment position="end">
-                                                    <IconButton onClick={handleCopyClick} edge="end" >
-                                                        <ContentCopyIcon fontSize="small" />
-                                                    </IconButton>
-                                                </InputAdornment>
-                                            ))
+                            <TextField
+                                label="Referral Link"
+                                variant="outlined"
+                                type="text"
+                                rows={2}
+                                disabled={!referralLink}
+                                value={referralLink}
+                                InputProps={{
+                                    style: { color: 'rgba(17, 17, 19, 1)', fontFamily: 'Nunito Sans', fontWeight: 400, fontSize: '14px' },
+                                    endAdornment: (
+                                        (referralLink && (
+                                            <InputAdornment position="end">
+                                                <IconButton onClick={handleCopyClick} edge="end" >
+                                                    <ContentCopyIcon fontSize="small" />
+                                                </IconButton>
+                                            </InputAdornment>
+                                        ))
 
-                                        )
-                                    }}
-                                    InputLabelProps={{ style: { color: 'rgba(17, 17, 19, 0.6)', fontFamily: 'Nunito Sans', fontWeight: 400, fontSize: '14px', padding: 0 } }}
-                                    sx={{
-                                        marginBottom: '32px',
-                                        backgroundColor: '#fff',
-                                        borderRadius: '4px',
-                                        width: '100%',
-                                        "& .MuiOutlinedInput-root": {
-                                            "& fieldset": {
-                                                borderColor: 'rgba(208, 213, 221, 1)',
-                                            },
-                                            "&:hover fieldset": {
-                                                borderColor: 'rgba(208, 213, 221, 1)',
-                                            },
-                                            "&.Mui-focused fieldset": {
-                                                borderColor: 'rgba(208, 213, 221, 1)',
-                                            },
-                                        },
-                                        "@media (max-width: 900px)": { width: '100%', height: '48px' },
-                                    }}
-                                />
-                            </Box>
-                        </Box>
-                    </Box>
-
-                    <Box sx={{ display: 'flex', flexDirection: 'row', width: '100%', backgroundColor: 'rgba(255, 247, 247, 1)', borderRadius: '4px', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 1.5rem' }}>
-                        <Box sx={{ display: 'flex', flexDirection: 'row', width: '100%', gap: 2, alignItems: 'center', '@media (max-width: 600px)': { flexDirection: 'column', gap: 3 } }}>
-                            <Box sx={{ display: 'flex', flexDirection: 'row', width: '100%', gap: 2, alignItems: 'center' }}>
-                                <Box sx={{
-                                    display: 'flex',
-                                    justifyContent: 'center',
-                                    alignItems: 'center',
-                                    backgroundColor: 'rgba(248, 70, 75, 0.2)',
+                                    )
+                                }}
+                                InputLabelProps={{ style: { color: 'rgba(17, 17, 19, 0.6)', fontFamily: 'Nunito Sans', fontWeight: 400, fontSize: '14px', padding: 0 } }}
+                                sx={{
+                                    marginBottom: '32px',
+                                    backgroundColor: '#fff',
                                     borderRadius: '4px',
-                                    width: '49px',
-                                    height: '52px',
-                                    padding: '3px 12px'
-                                }}>
-                                    <Image src={'/partner-icon.svg'} alt={'hands-icon'} width={42} height={28} />
-                                </Box>
+                                    width: '100%',
+                                    "& .MuiOutlinedInput-root": {
+                                        "& fieldset": {
+                                            borderColor: 'rgba(208, 213, 221, 1)',
+                                        },
+                                        "&:hover fieldset": {
+                                            borderColor: 'rgba(208, 213, 221, 1)',
+                                        },
+                                        "&.Mui-focused fieldset": {
+                                            borderColor: 'rgba(208, 213, 221, 1)',
+                                        },
+                                    },
+                                    "@media (max-width: 900px)": { width: '100%', height: '48px' },
+                                }}
+                            />
+                        </Box>
+                    </Box>
+                </Box>
 
-                                <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', gap: 1 }}>
-                                    <Typography className="second-sub-title">
-                                        Become a official partner
-                                    </Typography>
-                                    <Typography className="paragraph">
-                                        Unlock exclusive rewards and benefits by partnering with us—schedule a call with our sales executive today to get started!
-                                    </Typography>
-                                </Box>
+                <Box sx={{ display: 'flex', flexDirection: 'row', width: '100%', backgroundColor: 'rgba(255, 247, 247, 1)', borderRadius: '4px', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 1.5rem' }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'row', width: '100%', gap: 2, alignItems: 'center', '@media (max-width: 600px)': { flexDirection: 'column', gap: 3 } }}>
+                        <Box sx={{ display: 'flex', flexDirection: 'row', width: '100%', gap: 2, alignItems: 'center' }}>
+                            <Box sx={{
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                backgroundColor: 'rgba(248, 70, 75, 0.2)',
+                                borderRadius: '4px',
+                                width: '49px',
+                                height: '52px',
+                                padding: '3px 12px'
+                            }}>
+                                <Image src={'/partner-icon.svg'} alt={'hands-icon'} width={42} height={28} />
                             </Box>
 
-                            <Button variant="outlined" sx={{
-                                textWrap: 'nowrap',
-                                backgroundColor: '#fff', color: 'rgba(80, 82, 178, 1)', fontFamily: "Nunito Sans", textTransform: 'none', lineHeight: '22.4px',
-                                fontWeight: '600', padding: '0.75em 3em', marginRight: '16px', border: '1px solid rgba(80, 82, 178, 1)', maxWidth: '109px', '&:hover': {
-                                    backgroundColor: '#fff', boxShadow: '0 2px 2px rgba(0, 0, 0, 0.3)', '&.Mui-disabled': {
-                                        backgroundColor: 'rgba(80, 82, 178, 0.6)',
-                                        color: 'rgba(80, 82, 178, 1)',
-                                        cursor: 'not-allowed',
-                                    }
-                                }
-                            }}>
-                                Talk to us
-                            </Button>
-                        </Box>
-
-                    </Box>
-
-                    <Box sx={{ display: 'flex', flexDirection: 'row', width: '100%', gap: 1, '@media (max-width: 1200px)': { flexDirection: 'column' } }}>
-                        <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', border: '1px solid rgba(235, 235, 235, 1)', justifyContent: 'center', alignItems: 'start', borderRadius: '4px', padding: '1rem 1.5rem', gap: 2, maxHeight: '245px', '@media (max-width: 900px)': { display: 'none' }, }}>
-                            <Typography className="second-sub-title">
-                                How it works
-                            </Typography>
-                            <Image src={'/how-works.svg'} width={659} height={140} alt="stripe-icon" />
-                        </Box>
-
-                        <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', border: '1px solid rgba(235, 235, 235, 1)', justifyContent: 'start', borderRadius: '4px', padding: '1rem 1.5rem', gap: 2 }}>
-                            <Box sx={{ display: 'flex', justifyContent: 'start', alignItems: 'center', width: '100%' }}>
+                            <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', gap: 1 }}>
                                 <Typography className="second-sub-title">
-                                    Frequently asked questions
+                                    Become a official partner
+                                </Typography>
+                                <Typography className="paragraph">
+                                    Unlock exclusive rewards and benefits by partnering with us—schedule a call with our sales executive today to get started!
                                 </Typography>
                             </Box>
-
-                            <Box>
-                                {faqItems.map((item, index) => (
-                                    <Accordion
-                                        key={index}
-                                        expanded={expanded === index}
-                                        onChange={handleOpenSection(index)}
-                                        sx={{
-                                            borderRadius: '8px',
-                                            borderBottom: '1px solid rgba(228, 228, 228, 1)',
-                                            boxShadow: 'none',
-                                            mb: 0,
-                                            "&:before": { display: "none", borderBottom: 'none', },
-                                        }}
-                                    >
-                                        <AccordionSummary
-                                            expandIcon={
-                                                expanded === index ? (
-                                                    <RemoveCircleOutlineIcon sx={{ color: 'black' }} fontSize="small" />
-                                                ) : (
-                                                    <AddIcon sx={{ color: 'black' }} fontSize="small" />
-                                                )
-                                            }
-                                            sx={{ display: 'flex', alignItems: 'center', padding: 0, margin: 0, minHeight: 0, cursor: 'pointer', }}
-                                        >
-                                            <Typography className="second-sub-title" sx={{ fontWeight: '400 !important', }}>
-                                                {item.question}
-                                            </Typography>
-                                        </AccordionSummary>
-                                        <AccordionDetails sx={{ margin: 0, paddingTop: 0 }}>
-                                            <Typography className="table-data">
-                                                {item.answer}
-                                            </Typography>
-                                        </AccordionDetails>
-                                    </Accordion>
-                                ))}
-                            </Box>
                         </Box>
+
+                        <Button variant="outlined" sx={{
+                            textWrap: 'nowrap',
+                            backgroundColor: '#fff', color: 'rgba(80, 82, 178, 1)', fontFamily: "Nunito Sans", textTransform: 'none', lineHeight: '22.4px',
+                            fontWeight: '600', padding: '0.75em 3em', marginRight: '16px', border: '1px solid rgba(80, 82, 178, 1)', maxWidth: '109px', '&:hover': {
+                                backgroundColor: '#fff', boxShadow: '0 2px 2px rgba(0, 0, 0, 0.3)', '&.Mui-disabled': {
+                                    backgroundColor: 'rgba(80, 82, 178, 0.6)',
+                                    color: 'rgba(80, 82, 178, 1)',
+                                    cursor: 'not-allowed',
+                                }
+                            }
+                        }}>
+                            Talk to us
+                        </Button>
                     </Box>
 
                 </Box>
 
-            </Box >
+                <Box sx={{ display: 'flex', flexDirection: 'row', width: '100%', gap: 1, '@media (max-width: 1200px)': { flexDirection: 'column' } }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', border: '1px solid rgba(235, 235, 235, 1)', justifyContent: 'center', alignItems: 'start', borderRadius: '4px', padding: '1rem 1.5rem', gap: 2, maxHeight: '245px', '@media (max-width: 900px)': { display: 'none' }, }}>
+                        <Typography className="second-sub-title">
+                            How it works
+                        </Typography>
+                        <Image src={'/how-works.svg'} width={659} height={140} alt="stripe-icon" />
+                    </Box>
+
+                    <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', border: '1px solid rgba(235, 235, 235, 1)', justifyContent: 'start', borderRadius: '4px', padding: '1rem 1.5rem', gap: 2 }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'start', alignItems: 'center', width: '100%' }}>
+                            <Typography className="second-sub-title">
+                                Frequently asked questions
+                            </Typography>
+                        </Box>
+
+                        <Box>
+                            {faqItems.map((item, index) => (
+                                <Accordion
+                                    key={index}
+                                    expanded={expanded === index}
+                                    onChange={handleOpenSection(index)}
+                                    sx={{
+                                        borderRadius: '8px',
+                                        borderBottom: '1px solid rgba(228, 228, 228, 1)',
+                                        boxShadow: 'none',
+                                        mb: 0,
+                                        "&:before": { display: "none", borderBottom: 'none', },
+                                    }}
+                                >
+                                    <AccordionSummary
+                                        expandIcon={
+                                            expanded === index ? (
+                                                <RemoveCircleOutlineIcon sx={{ color: 'black' }} fontSize="small" />
+                                            ) : (
+                                                <AddIcon sx={{ color: 'black' }} fontSize="small" />
+                                            )
+                                        }
+                                        sx={{ display: 'flex', alignItems: 'center', padding: 0, margin: 0, minHeight: 0, cursor: 'pointer', }}
+                                    >
+                                        <Typography className="second-sub-title" sx={{ fontWeight: '400 !important', }}>
+                                            {item.question}
+                                        </Typography>
+                                    </AccordionSummary>
+                                    <AccordionDetails sx={{ margin: 0, paddingTop: 0 }}>
+                                        <Typography className="table-data">
+                                            {item.answer}
+                                        </Typography>
+                                    </AccordionDetails>
+                                </Accordion>
+                            ))}
+                        </Box>
+                    </Box>
+                </Box>
+
+            </Box>
+
+        </Box >
         </>
 
     );

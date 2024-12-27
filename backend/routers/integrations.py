@@ -1,6 +1,6 @@
-from datetime import datetime, timedelta
 import json
-from urllib.parse import quote, urlencode
+import os
+from urllib.parse import urlencode
 from fastapi import APIRouter, Depends, Query, HTTPException, status, Body, Request
 from fastapi.responses import RedirectResponse
 from enums import UserAuthorizationStatus
@@ -12,6 +12,7 @@ from schemas.integrations.integrations import *
 from enums import TeamAccessLevel
 from schemas.integrations.shopify import ShopifyLandingResponse, GenericEcommerceResponse
 import httpx
+from typing_extensions import Annotated
 from config.bigcommerce import BigcommerceConfig
 
 
@@ -49,7 +50,7 @@ async def get_credential_service(platform: str,
 
 
 @router.post('/', status_code=200)
-async def create_integration(creditional: IntegrationCredentials, service_name: str = Query(...),
+async def create_integration(credentials: IntegrationCredentials, service_name: str = Query(...),
                              integration_service: IntegrationService = Depends(get_integration_service),
                              user=Depends(check_user_authentication), domain=Depends(check_domain)):
     if user.get('team_member'):
@@ -60,15 +61,33 @@ async def create_integration(creditional: IntegrationCredentials, service_name: 
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Access denied. Admins and standard only."
             )
-    if not creditional.pixel_install and not domain.is_pixel_installed:
+    if not credentials.pixel_install and not domain.is_pixel_installed:
         raise HTTPException(status_code=403, detail={'status': UserAuthorizationStatus.PIXEL_INSTALLATION_NEEDED.value})
     with integration_service as service:
         service = getattr(service, service_name.lower())
         if not service:
             raise HTTPException(status_code=404, detail=f'Service {service_name} not found')
-        service.add_integration(creditional, domain=domain, user_id=user.get('id'))
+        service.add_integration(credentials=credentials, domain=domain, user=user)
         return {'message': 'Successfuly'}
+    
+@router.post('/connect', status_code=200)
+async def connect_integration(credentials: IntegrationCredentials, service_name: str = Query(...),
+                             integration_service: IntegrationService = Depends(get_integration_service),
+                             user=Depends(check_user_authentication), domain=Depends(check_domain)):
+    if user.get('team_member'):
+        team_member = user.get('team_member')
+        if team_member.get('team_access_level') not in {TeamAccessLevel.ADMIN.value, TeamAccessLevel.OWNER.value,
+                                                        TeamAccessLevel.STANDARD.value}:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied. Admins and standard only."
+            )
 
+    with integration_service as service:
+        service = getattr(service, service_name.lower())
+        if not service:
+            raise HTTPException(status_code=404, detail=f'Service {service_name} not found')
+        return service.connect_integration(credentials=credentials, domain=domain, user=user)
 
 @router.delete('/')
 async def delete_integration(service_name: str = Query(...),
@@ -143,28 +162,22 @@ async def set_suppression(suppression_data: SupperssionSet, service_name: str = 
 
 
 @router.get("/bigcommerce/oauth")
-async def bigcommerce_redirect_login(store_hash: str = Query(...), is_pixel_install: bool = Query(False), user = Depends(check_user_authentication), domain = Depends(check_domain)):
-    # scope = ['store_v2_orders_read_only', 'store_v2_content', 'store_v2_information_read_only']
-
-    params = {
-        "client_id": BigcommerceConfig.client_id,
-        'context': f'stores/{store_hash}',
-        "redirect_uri": BigcommerceConfig.redirect_uri,
-        "response_type": "code",
-        "scope": "store_content_checkout store_v2_content store_v2_default store_v2_information_read_only store_v2_orders_read_only",
-        'state': f'{user.get("id")}:{domain.id}:{is_pixel_install}'
-    }
-    query_string = urlencode(params, safe=':/')
-
-    authorize_url = f"https://login.bigcommerce.com/oauth2/authorize?{query_string}"
-    return {
-        'url': authorize_url
-    }
-
-@router.get('/bigcommerce/oauth/callback')
-async def bigcommerce_oauth_callback(code: str, state: str = Query(None), integration_service: IntegrationService = Depends(get_integration_service),
-                                     user_persistence: UserPersistence = Depends(get_user_persistence_service), domain_persistence: UserDomainsPersistence = Depends(get_user_domain_persistence)):
-    status_oauth = False
+async def bigcommerce_redirect_login(store_hash: str = Query(...), is_pixel_install: bool = Query(False), user = Depends(check_user_authentication), domain = Depends(check_domain), 
+                                     integration_service: IntegrationService = Depends(get_integration_service)):
+    
+    with integration_service as service:
+        return service.bigcommerce.bigcommerce_redirect_login(store_hash=store_hash, is_pixel_install=is_pixel_install, domain=domain, user=user)
+    
+    
+@router.get("/bigcommerce/auth/callback")
+def bigcommerce_auth(
+    code: Optional[str],
+    state: str = Query(None),
+    integration_service: IntegrationService = Depends(get_integration_service),
+    user_persistence: UserPersistence = Depends(get_user_persistence_service),
+    domain_persistence: UserDomainsPersistence = Depends(get_user_domain_persistence)
+):
+    
     payload = {
         'client_id': BigcommerceConfig.client_id,
         'client_secret': BigcommerceConfig.client_secret,
@@ -172,50 +185,105 @@ async def bigcommerce_oauth_callback(code: str, state: str = Query(None), integr
         'redirect_uri': BigcommerceConfig.redirect_uri,
         'grant_type': 'authorization_code'
     }
+
     with httpx.Client() as client:
-        response = client.post(BigcommerceConfig.token_url, data=payload)
-        if response.status_code == 200:
-            status_oauth = True
-            shop_hash = response.json().get('context').split('/')[1]
-            access_token = response.json().get('access_token')
+        token_response = client.post(BigcommerceConfig.token_url, data=payload)
+        if token_response.status_code != 200:
+            return "The pixel is not installed. Please visit https://app.maximiz.ai/dashboard and complete the integration there."
+
+        token_data = token_response.json()
+
+    access_token = token_data.get('access_token')
+    shop_hash = token_data.get('context', '').split('/')[1]
+    
     if state:
-        parts = state.split(':')
-        user_id = parts[0] if len(parts) > 0 else None
-        domain_id = parts[1] if len(parts) > 1 else None
-        is_pixell_install = parts[2] if len(parts) > 2 else None
-    else:
-        user_id, domain_id, is_pixell_install = None, None, None
-    if status_oauth:
-        if state:
-            url = BigcommerceConfig.frontend_dashboard_redirect if is_pixell_install else BigcommerceConfig.frontend_redirect
-            user = user_persistence.get_user_by_id(user_id)
-            domain = domain_persistence.get_domain_by_filter(id=domain_id)
-            domain = domain[0] if domain else None
-            if not domain:
-                return RedirectResponse(f'{url}?message=Failed')
-            try:
-                with integration_service as service:
-                    service.bigcommerce.add_integration_with_app(new_credentials=IntegrationCredentials(
+        user_id, domain_id, is_pixell_install = (state.split(':') + [None, None, None])[:3]
+        redirect_url = BigcommerceConfig.frontend_dashboard_redirect if is_pixell_install else BigcommerceConfig.frontend_redirect
+    
+        user = user_persistence.get_user_by_id(user_id)
+        domain_entry = domain_persistence.get_domain_by_filter(id=domain_id)
+        domain = domain_entry[0] if domain_entry else None
+        
+        if not domain:
+            return RedirectResponse(f'{redirect_url}?message=Failed')
+        
+        try:
+            with integration_service as service:
+                service.bigcommerce.add_integration_with_app(
+                    new_credentials=IntegrationCredentials(
                         bigcommerce=ShopifyOrBigcommerceCredentials(
                             shop_domain=shop_hash,
                             access_token=access_token
                         )
-                    ), domain=domain, user=user)
-                return RedirectResponse(f'{url}?message=Successfully')
-            except:
-                return RedirectResponse(f'{url}?message=Failed')
-        with integration_service as service:
-            eai = service.bigcommerce.add_external_apps_install(new_credentials=IntegrationCredentials(
-                        bigcommerce=ShopifyOrBigcommerceCredentials(
-                            shop_domain=shop_hash,
-                            access_token=access_token
-                        )))
-            return RedirectResponse(BigcommerceConfig.external_app_installed)
+                    ),
+                    domain=domain,
+                    user=user
+                )
+            return RedirectResponse(f'{redirect_url}?message=Successfully')
+        except Exception:
+            return RedirectResponse(f'{redirect_url}?message=Failed')
+    else:
+        with httpx.Client() as client:
+            shop_response = client.get(
+                url=f"https://api.bigcommerce.com/stores/{shop_hash}/v2/store",
+                headers={
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-Auth-Token': access_token
+                }
+            )
+            
+            if shop_response.status_code != 200:
+                return RedirectResponse(BigcommerceConfig.external_app_installed)
 
-@router.get('/eai')
-async def get_eais_platform(platform: str = Query(...), integration_service: IntegrationService = Depends(get_integration_service), user = Depends(check_user_authorization)):
-    return integration_service.get_external(platform)
+            shop_data = shop_response.json()
+            domain_url = shop_data.get("domain")
+
+            domain_entry = domain_persistence.get_domain_by_filter(domain=domain_url)
+            if domain_entry:
+                redirect_url = BigcommerceConfig.frontend_redirect
+                domain = domain_entry[0]
+                user = user_persistence.get_user_by_id(domain_entry[0].user_id)
+                if user:
+                    try:
+                        with integration_service as service:
+                            service.bigcommerce.add_integration_with_app(
+                                new_credentials=IntegrationCredentials(
+                                    bigcommerce=ShopifyOrBigcommerceCredentials(
+                                        shop_domain=shop_hash,
+                                        access_token=access_token
+                                    )
+                                ),
+                                domain=domain,
+                                user=user
+                            )
+                        return RedirectResponse(f'{redirect_url}?message=Successfully')
+                    except Exception:
+                        return RedirectResponse(f'{redirect_url}?message=Failed')
+        
+    with integration_service as service:
+            service.bigcommerce.add_external_apps_install(
+            new_credentials=IntegrationCredentials(
+                bigcommerce=ShopifyOrBigcommerceCredentials(
+                    shop_domain=shop_hash,
+                    access_token=access_token
+                )
+            )
+        )
+            
+    return RedirectResponse(BigcommerceConfig.frontend_sign_up_redirect)
     
+@router.get("/bigcommerce/uninstall", status_code=status.HTTP_200_OK)
+def oauth_bigcommerce_uninstall(signed_payload: Annotated[str, Query()], signed_payload_jwt: Annotated[str, Query()], integration_service: IntegrationService = Depends(get_integration_service)):
+    with integration_service as service:
+        return service.bigcommerce.oauth_bigcommerce_uninstall(signed_payload=signed_payload, signed_payload_jwt=signed_payload_jwt)
+
+@router.get("/bigcommerce/load", status_code=status.HTTP_200_OK)
+def oauth_bigcommerce_load(signed_payload: Annotated[str, Query()], signed_payload_jwt: Annotated[str, Query()], integration_service: IntegrationService = Depends(get_integration_service)):
+    with integration_service as service:
+        service.bigcommerce.oauth_bigcommerce_load(signed_payload=signed_payload, signed_payload_jwt=signed_payload_jwt)
+        
+    return RedirectResponse(BigcommerceConfig.frontend_sign_up_redirect)
 
 @router.get('/zapier')
 async def auth(domain = Depends(check_api_key), integration_service: IntegrationService = Depends(get_integration_service)):

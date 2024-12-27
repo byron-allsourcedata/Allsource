@@ -30,7 +30,7 @@ class MailchimpIntegrationsService:
         self.client = MailchimpMarketing.Client()
 
     def get_credentials(self, domain_id: int):
-        return self.integrations_persisntece.get_credentials_for_service(domain_id, 'Mailchimp')
+        return self.integrations_persisntece.get_credentials_for_service(domain_id, SourcePlatformEnum.MAILCHIMP.value)
     
 
     def get_list(self, domain_id: int = None, api_key: str = None, server: str = None):
@@ -76,15 +76,15 @@ class MailchimpIntegrationsService:
         return integartions
 
 
-    def add_integration(self, credential: IntegrationCredentials, domain, user):
-        data_center = credential.mailchimp.api_key.split('-')[-1]
+    def add_integration(self, credentials: IntegrationCredentials, domain, user: dict):
+        data_center = credentials.mailchimp.api_key.split('-')[-1]
         try:
-            lists = self.get_list(api_key=credential.mailchimp.api_key, server=data_center)
+            lists = self.get_list(api_key=credentials.mailchimp.api_key, server=data_center)
             if not lists:
                 raise HTTPException(status_code=400, detail={"status": IntegrationsStatus.CREDENTAILS_INVALID.value})
         except:
             raise HTTPException(status_code=400, detail={'status': IntegrationsStatus.CREDENTAILS_INVALID.value})
-        integration = self.__save_integation(domain_id=domain.id, api_key=credential.mailchimp.api_key, server=data_center)
+        integration = self.__save_integation(domain_id=domain.id, api_key=credentials.mailchimp.api_key, server=data_center)
         return integration
 
     async def create_sync(self, leads_type: str, list_id: str, list_name: str, data_map: List[DataMap], domain_id: int, created_by: str, tags_id: str = None):
@@ -150,7 +150,7 @@ class MailchimpIntegrationsService:
             sync = IntegrationUserSync(**message.get('sync'))
             if sync:
                 serarch_sync = self.sync_persistence.get_integration_by_sync_id(sync_id=sync.id)
-                if not serarch_sync or serarch_sync.service_name != 'Mailchimp':
+                if not serarch_sync or serarch_sync.service_name != SourcePlatformEnum.MAILCHIMP.value:
                     logging.info(f'Sync {sync.id} Mailchimp not matched')
                     return
         counter = 0
@@ -262,6 +262,25 @@ class MailchimpIntegrationsService:
                 self.integrations_persisntece.db.commit()
                 return
         return response
+
+    def edit_sync(self, leads_type: str, list_id: str, list_name: str, integrations_users_sync_id: int,
+                  data_map: List[DataMap], domain_id: int, created_by: str):
+        credentials = self.get_credentials(domain_id)
+        data_syncs = self.sync_persistence.get_filter_by(domain_id=domain_id)
+        for sync in data_syncs:
+            if sync.get('integration_id') == credentials.id and sync.get('leads_type') == leads_type:
+                return
+        sync = self.sync_persistence.edit_sync({
+            'integration_id': credentials.id,
+            'list_id': list_id,
+            'list_name': list_name,
+            'domain_id': domain_id,
+            'leads_type': leads_type,
+            'data_map': data_map,
+            'created_by': created_by,
+        }, integrations_users_sync_id)
+
+        return sync
 
     def __mapped_list(self, list):
         return ListFromIntegration(id=list['id'], list_name=list['name'])

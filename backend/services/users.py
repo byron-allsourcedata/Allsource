@@ -96,50 +96,42 @@ class UsersService:
         ).model_dump()
 
     def get_calendly_info(self):
+        result = {
+            'utm_params': None,
+            'email': None,
+            'full_name': None
+        }
+        if self.user.get('utm_params'):
+            result['utm_params'] = self.user['utm_params']
         try:
-            if self.user.get('calendly_uuid'):
-                if self.user.get('calendly_invitee_uuid'):
-                    calendly_uuid = self.get_calendly_uuid()
-                    invitee_uuid = self.get_calendly_invitee_uuid()
+            calendly_uuid = self.user.get('calendly_uuid')
+            invitee_uuid = self.user.get('calendly_invitee_uuid')
+            if calendly_uuid and invitee_uuid:
+                calendly_uuid = calendly_uuid.replace("uuid=", "").strip("'")
+                invitee_uuid = invitee_uuid.replace("uuid=", "").strip("'")
+                url = f"https://api.calendly.com/scheduled_events/{calendly_uuid}/invitees/{invitee_uuid}"
 
-                    if calendly_uuid and invitee_uuid:
-                        url = f"https://api.calendly.com/scheduled_events/{calendly_uuid}/invitees/{invitee_uuid}"
-
-                        headers = {
-                            'Authorization': f'Bearer {os.getenv("CALENDLY_TOKEN")}',
-                            'Content-Type': 'application/json'
-                        }
-
-                        response = requests.get(url, headers=headers).json()
-
-                        return {"email": response.get('resource').get('email'),
-                                "full_name": response.get('resource').get('name')
-                                }
+                headers = {
+                    'Authorization': f'Bearer {os.getenv("CALENDLY_TOKEN")}',
+                    'Content-Type': 'application/json'
+                }
+                
+                response = requests.get(url, headers=headers).json()
+                result['email'] = response.get('resource').get('email')
+                result['full_name'] = response.get('resource').get('name')
 
         except requests.exceptions.RequestException as e:
             logger.error(f"Request failed: {str(e)}")
         except Exception as e:
             logger.error(f"An error occurred: {str(e)}")
-
-    def get_calendly_uuid(self):
-        uuid_str = self.user.get('calendly_uuid')
-        if uuid_str:
-            uuid_cleaned = uuid_str.replace("uuid=", "").strip("'")
-            return uuid_cleaned
-        return None
-
-    def get_calendly_invitee_uuid(self):
-        uuid_str = self.user.get('calendly_invitee_uuid')
-        if uuid_str:
-            uuid_cleaned = uuid_str.replace("uuid=", "").strip("'")
-            return uuid_cleaned
-        return None
+            
+        return result
 
     def update_calendly_info(self, uuid: str, invitees: str):
         try:
-            calendly_uuid = self.get_calendly_uuid()
-
+            calendly_uuid = self.user.get('calendly_uuid')
             if calendly_uuid:
+                calendly_uuid = calendly_uuid.replace("uuid=", "").strip("'")
                 url = f"https://api.calendly.com/scheduled_events/{calendly_uuid}/cancellation"
 
                 headers = {
@@ -150,10 +142,8 @@ class UsersService:
                 data = {
                     "reason": 'Reschedule a Call'
                 }
-
                 response = requests.post(url, headers=headers, json=data)
-
-                if response.status_code == 204:
+                if response.status_code == 204 and response.status_code == 201 and response.status_code == 200:
                     logger.info('Event completed successfully')
                 else:
                     logger.error(f"Calendly cancel response code: {response.status_code}")

@@ -6,6 +6,7 @@ class BaseEnum(Enum):
     FAILURE = 'FAILURE'
     
 class OauthShopify(Enum):
+    USER_NOT_FOUND = 'USER_NOT_FOUND'
     NO_USER_CONNECTED = 'NO_USER_CONNECTED'
     ERROR_SHOPIFY_TOKEN = 'ERROR_SHOPIFY_TOKEN'
     NON_SHOPIFY_ACCOUNT = 'NON_SHOPIFY_ACCOUNT'
@@ -22,6 +23,8 @@ class SourcePlatformEnum(Enum):
     OMNISEND = 'omnisend'
     SENDLANE = 'sendlane'
     ZAPIER = 'zapier'
+    WORDPRESS = 'wordpress'
+    HUBSPOT = 'hubspot'
 
 
 class UserPaymentStatusEnum(Enum):
@@ -161,6 +164,12 @@ class AudienceInfoEnum(Enum):
     SUCCESS = "SUCCESS"
     NOT_FOUND = "NOT_FOUND"
     NOT_VALID_NAME = 'NOT_VALID_NAME'
+
+
+class PartnersAssetsInfoEnum(Enum):
+    SUCCESS = "SUCCESS"
+    NOT_VALID_DATA = "NOT_VALID_DATA"
+    NOT_VALID_ID = 'NOT_VALID_ID'
 
 
 class VerifyToken(Enum):

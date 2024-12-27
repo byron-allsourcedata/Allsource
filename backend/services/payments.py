@@ -101,11 +101,12 @@ class PaymentsService:
         schedule = stripe.SubscriptionSchedule.retrieve(current_subscription.get("schedule"))
         stripe.SubscriptionSchedule.release(schedule.id)
 
-    def create_customer_session(self, price_id: str, user):
+    def create_customer_session(self, price_id: str, user: dict):
         if user.get('source_platform') == SourcePlatformEnum.SHOPIFY.value:
             plan = self.plan_persistence.get_plan_by_price_id(price_id)
             with self.integration_service as service:
                 return service.shopify.initialize_subscription_charge(plan=plan, user=user)
+            
         customer_id = self.plans_service.get_customer_id(user)
         trial_period = 0
         if not self.plan_persistence.get_user_subscription(user.get('id')):
@@ -113,12 +114,14 @@ class PaymentsService:
         if get_default_payment_method(customer_id):
             status_subscription = renew_subscription(price_id, customer_id, trial_period)
             return {"status_subscription": status_subscription}
-        return create_stripe_checkout_session(
+        result_url = create_stripe_checkout_session(
             customer_id=self.plans_service.get_customer_id(user),
             line_items=[{"price": price_id, "quantity": 1}],
             mode="subscription",
             trial_period=trial_period
         )
+        result_url['source_platform'] = user.get('source_platform')
+        return result_url
 
     def get_user_subscription_authorization_status(self):
         return self.plans_service.get_user_subscription_authorization_status()
@@ -137,6 +140,8 @@ class PaymentsService:
         if user.get('source_platform') == SourcePlatformEnum.SHOPIFY.value:
             with self.integration_service as service:
                 subscription_data = service.shopify.cancel_current_subscription(user=user)
+                if subscription_data['status'] == 'incomplete' or subscription_data['status'] == 'No shopify plan active':
+                    return SubscriptionStatus.INCOMPLETE
         else:
             subscription_data = cancel_subscription_at_period_end(user_subscription.platform_subscription_id)
             

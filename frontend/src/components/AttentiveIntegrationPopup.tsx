@@ -273,6 +273,7 @@ const AttentiveIntegrationPopup = ({ handleClose, open, onSave, initApiKey}: Cre
                     zIndex: 1301,
                     top: 0,
                     bottom: 0,
+                    boxShadow: 'none',
                     msOverflowStyle: 'none',
                     scrollbarWidth: 'none',
                     '&::-webkit-scrollbar': {
@@ -286,12 +287,12 @@ const AttentiveIntegrationPopup = ({ handleClose, open, onSave, initApiKey}: Cre
             slotProps={{
                 backdrop: {
                   sx: {
-                    backgroundColor: 'rgba(0, 0, 0, .1)'
+                    backgroundColor: 'transparent'
                   }
                 }
               }}
         >
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 3.5, px: 2, borderBottom: '1px solid #e4e4e4' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 2.85, px: 2, borderBottom: '1px solid #e4e4e4' }}>
                 <Typography variant="h6" sx={{ textAlign: 'center', color: '#202124', fontFamily: 'Nunito Sans', fontWeight: '600', fontSize: '16px', lineHeight: 'normal' }}>
                     Connect to Attentive
                 </Typography>
@@ -309,7 +310,6 @@ const AttentiveIntegrationPopup = ({ handleClose, open, onSave, initApiKey}: Cre
                     </IconButton>
                 </Box>
             </Box>
-            <Divider />
             <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', height: '100%' }}>
                 <Box sx={{ width: '100%', padding: '16px 24px 24px 24px', position: 'relative' }}>
                 <TabContext value={value}>
@@ -549,7 +549,7 @@ const AttentiveIntegrationPopup = ({ handleClose, open, onSave, initApiKey}: Cre
                     </TabPanel>
                     </TabContext>
                     </Box>
-                    <Box sx={{ px: 2, py: 3.5, width: '100%', border: '1px solid #e4e4e4' }}>
+                    <Box sx={{ px: 2, py: 2, width: '100%', border: '1px solid #e4e4e4' }}>
                         <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
                                 {getButton(value)}
                         </Box>

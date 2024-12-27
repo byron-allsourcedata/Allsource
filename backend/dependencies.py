@@ -69,9 +69,6 @@ def get_db():
 def get_partners_asset_persistence(db: Session = Depends(get_db)) -> PartnersAssetPersistence:
     return PartnersAssetPersistence(db)
 
-def get_partners_assets_service(partners_asset_persistence: PartnersAssetPersistence = Depends(get_partners_asset_persistence)):
-    return PartnersAssetService(partners_asset_persistence=partners_asset_persistence)
-
 def get_plans_persistence(db: Session = Depends(get_db)):
     return PlansPersistence(db=db)
 
@@ -131,6 +128,15 @@ def get_subscription_service(db: Session = Depends(get_db),
                              plans_persistence: PlansPersistence = Depends(get_plans_persistence)):
     return SubscriptionService(db=db, user_persistence_service=user_persistence_service,
                                plans_persistence=plans_persistence)
+
+
+def get_partners_assets_service(
+                                partners_asset_persistence: PartnersAssetPersistence = Depends(get_partners_asset_persistence),
+                                aws_service: AWSService = Depends(get_aws_service)):
+    return PartnersAssetService(
+        partners_asset_persistence,
+        aws_service
+    )
 
 
 def get_payments_plans_service(db: Session = Depends(get_db),
@@ -314,6 +320,10 @@ def check_domain(
     if not CurrentDomain:
         return None
     if not current_domain or len(current_domain) == 0:
+        if user.get('is_email_confirmed') is False and user.get('is_with_card') is False:
+            raise HTTPException(status_code=404, detail={'status': 'NEED_CONFIRM_EMAIL'})
+        if user.get('is_company_details_filled') is False:
+            raise HTTPException(status_code=404, detail={'status': 'FILL_COMPANY_DETAILS'})
         raise HTTPException(status_code=404, detail={'status': "DOMAIN_NOT_FOUND"})
     return current_domain[0]
 

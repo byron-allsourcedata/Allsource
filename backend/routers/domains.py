@@ -1,11 +1,11 @@
 from fastapi import APIRouter, HTTPException, Depends, Response, Request, status
 from fastapi.responses import JSONResponse
-from dependencies import get_domain_service, check_user_authentication, UserDomainsService, check_pixel_install_domain
+from dependencies import get_domain_service, check_user_authentication, UserDomainsService, check_pixel_install_domain, check_user_authorization
 from schemas.domains import DomainScheme
 from urllib.parse import unquote
 from enums import TeamAccessLevel
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(check_user_authorization)])
 
 
 @router.post('/', status_code=201)
