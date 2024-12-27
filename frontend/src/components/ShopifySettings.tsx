@@ -51,8 +51,9 @@ const shopifySettingsStyle = {
     },
     inputLabel: {
         fontFamily: 'Nunito Sans',
-        fontSize: '12px',
-        lineHeight: '16px',
+        fontSize: '15px',
+        left: '2px',
+        lineHeight: '15px',
         color: 'rgba(17, 17, 19, 0.60)',
         '&.Mui-focused': {
             color: '#0000FF',
@@ -286,12 +287,15 @@ const ShopifySettings = ({ handleClose, open, onSave, initApiKey, initShopDomain
                 }
               }}
         >
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 3.5, px: 2, borderBottom: '1px solid #e4e4e4' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 2.85, px: 2, borderBottom: '1px solid #e4e4e4' }}>
                 <Typography variant="h6" sx={{ textAlign: 'center', color: '#202124', fontFamily: 'Nunito Sans', fontWeight: '600', fontSize: '16px', lineHeight: 'normal' }}>
                     Shopify Connect
                 </Typography>
                 <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
-                    <Link href="#" sx={{
+                    <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/how-do-i-install-maximiz-pixel-on-shopify-store"
+                    target="_blank"
+                    rel="noopener refferer"
+                    sx={{
                         fontFamily: 'Nunito Sans',
                         fontSize: '14px',
                         fontWeight: '600',
@@ -304,7 +308,7 @@ const ShopifySettings = ({ handleClose, open, onSave, initApiKey, initShopDomain
                     </IconButton>
                 </Box>
             </Box>
-            <Divider />
+
             <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', height: '100%' }}>
                 <Box sx={{ width: '100%', padding: '16px 24px 24px 24px', position: 'relative' }}>
                 <TabContext value={value}>
@@ -418,7 +422,7 @@ const ShopifySettings = ({ handleClose, open, onSave, initApiKey, initShopDomain
                     </TabPanel>
                     </TabContext>
                     </Box>
-                    <Box sx={{ px: 2, py: 3.5, width: '100%', border: '1px solid #e4e4e4' }}>
+                    <Box sx={{ px: 2, py: 2, width: '100%', border: '1px solid #e4e4e4' }}>
                         <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
                                 {getButton(value)}
                         </Box>

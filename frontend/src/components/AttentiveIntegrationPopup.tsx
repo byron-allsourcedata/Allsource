@@ -9,6 +9,7 @@ import CustomizedProgressBar from "./CustomizedProgressBar";
 import CloseIcon from '@mui/icons-material/Close';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { showToast } from "./ToastNotification";
+import { useIntegrationContext } from "@/context/IntegrationContext";
 
 interface CreateAttentiveProps {
     handleClose: () => void
@@ -76,6 +77,7 @@ const attentiveStyles = {
 }
 
 const AttentiveIntegrationPopup = ({ handleClose, open, onSave, initApiKey}: CreateAttentiveProps) => {
+    const { triggerSync } = useIntegrationContext();
     const [apiKey, setApiKey] = useState('');
     const [apiKeyError, setApiKeyError] = useState(false);
     const [loading, setLoading] = useState(false)
@@ -156,6 +158,7 @@ const AttentiveIntegrationPopup = ({ handleClose, open, onSave, initApiKey}: Cre
                     is_failed: false,
                     access_token: apiKey
                 })
+                triggerSync()
                 handleNextTab()
             }
         } catch (error) {

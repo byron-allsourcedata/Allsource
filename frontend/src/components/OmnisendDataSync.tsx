@@ -7,6 +7,7 @@ import Image from 'next/image';
 import CloseIcon from '@mui/icons-material/Close';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { showToast } from './ToastNotification';
+import { useIntegrationContext } from "@/context/IntegrationContext";
 
 interface OnmisendDataSyncProps {
     open: boolean;
@@ -18,6 +19,7 @@ interface OnmisendDataSyncProps {
 
 
 const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data = null, isEdit, boxShadow }) => {
+    const { triggerSync } = useIntegrationContext();
     const [loading, setLoading] = useState(false)
     const [value, setValue] = React.useState('1');
     const [checked, setChecked] = useState(false);
@@ -158,6 +160,7 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data
                     resetToDefaultValues();
                     onClose();
                     showToast('Data sync created successfully');
+                    triggerSync();
                 }
             }
 
@@ -614,7 +617,10 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data
                     Connect to Omnisend
                 </Typography>
                 <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
-                    <Link href="#" className="main-text" sx={{
+                    <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/integrate-omnisend-to-maximiz" className="main-text"
+                    target="_blank"
+                    rel="noopener referrer"
+                    sx={{
                         fontSize: '14px',
                         fontWeight: '600',
                         lineHeight: '20px',
@@ -1246,7 +1252,7 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data
                         {/* Button based on selected tab */}
 
                     </Box>
-                    <Box sx={{ px: 2, py: 1.5, border: '1px solid #e4e4e4', position: 'fixed', bottom: 0, right: 0, background: '#fff', zIndex: '1',
+                    <Box sx={{ px: 2, py: 2, borderTop: '1px solid #e4e4e4', position: 'fixed', bottom: 0, right: 0, background: '#fff', zIndex: '1',
                         width: '620px',
                         '@media (max-width: 600px)': {
                                 width: '100%',

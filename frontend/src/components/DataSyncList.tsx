@@ -41,6 +41,7 @@ import OmnisendConnect from "./OmnisendConnect";
 import SendlaneConnect from "./SendlaneConnect";
 import ShopifySettings from "./ShopifySettings";
 import ZapierConnectPopup from "./ZapierConnectPopup";
+import { useIntegrationContext } from "@/context/IntegrationContext";
 
 interface DataSyncProps {
   service_name?: string | null;
@@ -58,6 +59,7 @@ interface IntegrationsCredentials {
 }
 
 const DataSyncList = ({ service_name, filters }: DataSyncProps) => {
+  const { needsSync, setNeedsSync } = useIntegrationContext();
   const [order, setOrder] = useState<"asc" | "desc" | undefined>(undefined);
   const [orderBy, setOrderBy] = useState<string | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(true);
@@ -102,14 +104,17 @@ const DataSyncList = ({ service_name, filters }: DataSyncProps) => {
     setOrderBy(property);
   };
 
-  const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   useEffect(() => {
-    if (isInitialLoad) {
       handleIntegrationsSync();
-      setIsInitialLoad(false);
+  }, []);
+
+  useEffect(() => {
+    if (needsSync) {
+      handleIntegrationsSync();
+      setNeedsSync(false);
     }
-  }, [isInitialLoad]);
+  }, [needsSync, setNeedsSync]);
 
   const handleIntegrationsSync = async () => {
     try {
@@ -357,6 +362,7 @@ const DataSyncList = ({ service_name, filters }: DataSyncProps) => {
   const handleKlaviyoIconPopupClose = async () => {
     setKlaviyoIconPopupOpen(false);
     setSelectedId(null);
+    setIsEdit(false);
     try {
       const response = await axiosInstance.get(
         `/data-sync/sync?integrations_users_sync_id=${selectedId}`
@@ -426,6 +432,7 @@ const DataSyncList = ({ service_name, filters }: DataSyncProps) => {
     const foundItem = data.find((item) => item.id === selectedId);
     const dataSyncPlatform = foundItem ? foundItem.platform : null;
     if (dataSyncPlatform) {
+      setIsEdit(true);
       if (dataSyncPlatform === "klaviyo") {
         setKlaviyoIconPopupOpen(true);
       } else if (dataSyncPlatform === "meta") {
@@ -433,10 +440,8 @@ const DataSyncList = ({ service_name, filters }: DataSyncProps) => {
       } else if (dataSyncPlatform === "mailchimp") {
         setMailchimpIconPopupOpen(true);
       } else if (dataSyncPlatform === "omnisend") {
-        setIsEdit(true);
         setOmnisendIconPopupOpen(true);
       } else if (dataSyncPlatform === "sendlane") {
-        setIsEdit(true);
         setOpenSendlaneIconPopup(true);
       }
       setIsLoading(false);
@@ -538,25 +543,7 @@ const DataSyncList = ({ service_name, filters }: DataSyncProps) => {
 
   if (isLoading) {
     return (
-      <Box
-        sx={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: "rgba(0, 0, 0, 0)",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          zIndex: 1400,
-          overflow: "hidden",
-        }}
-      >
-        <Box sx={{ width: "100%", top: 0, height: "100vh" }}>
-          <LinearProgress />
-        </Box>
-      </Box>
+      <CustomizedProgressBar />
     );
   }
 
@@ -1029,14 +1016,12 @@ const DataSyncList = ({ service_name, filters }: DataSyncProps) => {
           </>
         )}
         {/* <MetaConnectButton open={openMetaConnect} onClose={handleCloseIntegrate} onSave={saveIntegration}/>
-        
         <AttentiveIntegrationPopup open={openAttentiveConnect} handleClose={() => setOpenShopifyConnect(false)} onSave={saveIntegration}/>
         <ShopifySettings open={openShopifuConnect} handleClose={() => setOpenShopifyConnect(false)} onSave={saveIntegration} />
         <BCommerceConnect 
                     open={openBigcommrceConnect} 
                     onClose={() => setOpenBigcommerceConnect(false)}
                 />
-       
          */}
          <MailchimpConnect open={openMailchimpConnect} handleClose={() => setOpenMailchimpConnect(false)} 
          initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'mailchimp')?.access_token} boxShadow="rgba(0, 0, 0, 0.01)" />
@@ -1047,7 +1032,7 @@ const DataSyncList = ({ service_name, filters }: DataSyncProps) => {
         <SendlaneConnect
           open={openSendlaneConnect}
           handleClose={() => setOpenSendlaneConnect(false)}
-          initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'sendlane')?.access_token}
+          initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'sendlane')?.access_token} boxShadow="rgba(0, 0, 0, 0.01)"
         />
         <ZapierConnectPopup
           open={openZapierConnect}

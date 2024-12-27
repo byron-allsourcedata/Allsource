@@ -7,8 +7,7 @@ import Image from 'next/image';
 import CloseIcon from '@mui/icons-material/Close';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { showErrorToast, showToast } from './ToastNotification';
-import CustomizedProgressBar from './CustomizedProgressBar';
-import { stringify } from 'querystring';
+import { useIntegrationContext } from "@/context/IntegrationContext";
 
 interface Integrations {
     id: number
@@ -40,6 +39,7 @@ type KlaviyoTags = {
 
 
 const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, data, isEdit }) => {
+    const { triggerSync } = useIntegrationContext();
     const [loading, setLoading] = useState(false)
     const [value, setValue] = React.useState('1');
     const [checked, setChecked] = useState(false);
@@ -260,6 +260,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                     resetToDefaultValues();
                     onClose();
                     showToast('Data sync updated successfully');
+                    //triggerSync();
                 }
             } else {
                 const response = await axiosInstance.post('/data-sync/sync', {
@@ -277,6 +278,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                     resetToDefaultValues();
                     onClose();
                     showToast('Data sync created successfully');
+                    triggerSync();
                 }
             }
 
@@ -741,7 +743,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                     position: 'fixed',
                     zIndex: 1301,
                     top: 0,
-                    boxShadow: 'none',
+                    boxShadow: isEdit ? '0px 8px 10px -5px rgba(0, 0, 0, 0.2), 0px 16px 24px 2px rgba(0, 0, 0, 0.14), 0px 6px 30px 5px rgba(0, 0, 0, 0.12)' :'none',
                     bottom: 0,
                     // msOverflowStyle: 'none',
                     // scrollbarWidth: 'none',
@@ -756,7 +758,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
             slotProps={{
                 backdrop: {
                   sx: {
-                    backgroundColor: 'transparent'
+                    backgroundColor: 'rgba(0, 0, 0, 0.1)'
                   }
                 }
               }}

@@ -43,10 +43,11 @@ interface IntegrationBoxProps {
     handleDelete?: () => void;
     service_name: string;
     active?: boolean;
-    is_avalible?: boolean
-    error_message?: string
-    is_failed?: boolean
-    is_integrated?: boolean 
+    is_avalible?: boolean;
+    error_message?: string;
+    is_failed?: boolean;
+    is_integrated?: boolean ;
+    isEdit?: boolean;
 }
 
 interface IntegrationCredentials {
@@ -85,7 +86,7 @@ const integrationStyle = {
 };
 
 
-const IntegrationBox = ({ image, handleClick, handleDelete, service_name, active, is_avalible, is_failed, is_integrated = false }: IntegrationBoxProps) => {
+const IntegrationBox = ({ image, handleClick, handleDelete, service_name, active, is_avalible, is_failed, is_integrated = false, isEdit }: IntegrationBoxProps) => {
   const [anchorEl, setAnchorEl] = useState(null);
   const openPopover = Boolean(anchorEl);
   const [isHovered, setIsHovered] = useState(false); 
@@ -137,6 +138,16 @@ const IntegrationBox = ({ image, handleClick, handleDelete, service_name, active
 
   const handleClose = () => {
       setAnchorEl(null);
+  };
+
+  const formatServiceName = (name: string): string => {
+    if (name === "big_commerce") {
+      return "BigCommerce";
+    }
+    return name
+      .split("_")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
   };
   
 
@@ -253,7 +264,7 @@ const IntegrationBox = ({ image, handleClick, handleDelete, service_name, active
               </Box>
           </Tooltip>
           <Typography mt={0.5} fontSize={'14px'} fontWeight={500} textAlign={'center'} fontFamily={'Nunito Sans'}>
-              {service_name}
+          {formatServiceName(service_name)}
           </Typography>
           <Popover
               open={openPopover}
@@ -673,6 +684,7 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
             handleClose={handleClose}
             onSave={handleSaveSettings}  
             initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'klaviyo')?.access_token}
+            boxShadow="rgba(0, 0, 0, 0.1)"
         />
         <AttentiveIntegrationPopup 
             open={OpenAttentiveConnect} 
@@ -684,6 +696,7 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
             open={openMetaConnect} 
             onClose={handleClose} 
             onSave={handleSaveSettings}
+            isEdit={true}
         />
         <ShopifySettings 
             open={openShopifyConnect} 
@@ -698,9 +711,9 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
             initShopHash={integrationsCredentials?.find(integration => integration.service_name === 'big_commerce')?.shop_domain}
             error_message={integrationsCredentials?.find(integration => integration.service_name === 'big_commerce')?.error_message}
         />
-        <OmnisendConnect open={openOmnisendConnect} handleClose={handleClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'omnisend')?.access_token}/>
-        <MailchimpConnect open={openMailchinpConnect} handleClose={handleClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'mailchimp')?.access_token} />
-        <SendlaneConnect open={openSendlaneConnect} handleClose={handleClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'sendlane')?.access_token}/>
+        <OmnisendConnect open={openOmnisendConnect} handleClose={handleClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'omnisend')?.access_token} boxShadow="rgba(0, 0, 0, 0.1)"/>
+        <MailchimpConnect open={openMailchinpConnect} handleClose={handleClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'mailchimp')?.access_token} boxShadow="rgba(0, 0, 0, 0.1)" />
+        <SendlaneConnect open={openSendlaneConnect} handleClose={handleClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'sendlane')?.access_token} boxShadow="rgba(0, 0, 0, 0.1)"/>
         <AttentiveIntegrationPopup open={OpenAttentiveConnect} handleClose={handleClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'attentive')?.access_token}/>
         <ZapierConnectPopup open={openZapierConnect} handlePopupClose={handleClose} />
         <AlivbleIntagrationsSlider 
@@ -735,6 +748,7 @@ const IntegrationsAvaliable = ({ integrationsCredentials, integrations, handleSa
 
     const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
         setSearch(event.target.value);
+        console.log(event.target.value)
     };
 
     const integrationsAvailable = [
@@ -765,6 +779,7 @@ const IntegrationsAvaliable = ({ integrationsCredentials, integrations, handleSa
 
     const handleAddIntegration = (service_name: string) => {
       const isIntegrated = integrationsCredentials.some(integration_cred => integration_cred.service_name === service_name);
+      console.log(service_name)
       if(isIntegrated) {
         return
       }
@@ -791,7 +806,8 @@ const IntegrationsAvaliable = ({ integrationsCredentials, integrations, handleSa
             setOpenSendlaneConnect(true);
             break;
         case 'meta':
-            setOpenMetaConnect(true)
+            setOpenMetaConnect(true);
+            break;
         case 'zapier':
           setOpenZapierConnect(true)
         default:
@@ -857,11 +873,11 @@ const IntegrationsAvaliable = ({ integrationsCredentials, integrations, handleSa
             />
             <ShopifySettings open={openShopifyConnect} handleClose={handleClose} onSave={handleSaveSettings}/>
             <BCommerceConnect open={openBigcommrceConnect} onClose={handleClose} />
-            <OmnisendConnect open={openOmnisendConnect} handleClose={handleClose} onSave={handleSaveSettings} />
-            <MailchimpConnect open={openMailchinpConnect} handleClose={handleClose} onSave={handleSaveSettings} />
-            <SendlaneConnect open={openSendlaneConnect} handleClose={handleClose} onSave={handleSaveSettings} />
+            <OmnisendConnect open={openOmnisendConnect} handleClose={handleClose} onSave={handleSaveSettings} boxShadow="rgba(0, 0, 0, 0.1)" />
+            <MailchimpConnect open={openMailchinpConnect} handleClose={handleClose} onSave={handleSaveSettings} boxShadow="rgba(0, 0, 0, 0.1)" />
+            <SendlaneConnect open={openSendlaneConnect} handleClose={handleClose} onSave={handleSaveSettings} boxShadow="rgba(0, 0, 0, 0.1)" />
             <AttentiveIntegrationPopup open={openAttentiveConnect} handleClose={handleClose} onSave={handleSaveSettings} />
-            <ZapierConnectPopup open={openZapierConnect} handlePopupClose={handleClose}/>
+            <ZapierConnectPopup open={openZapierConnect} handlePopupClose={handleClose} boxShadow="rgba(0, 0, 0, 0.1)"/>
         </Box>
     );
 };
