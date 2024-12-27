@@ -1,5 +1,7 @@
 from pydantic import BaseModel
 from typing import Optional
+from datetime import datetime
+
 class DomainScheme(BaseModel):
     domain: str
 
@@ -16,7 +18,7 @@ class PartnersResponse(BaseModel):
     id: int
     partner_name: str
     email: str
-    join_date: Optional[str] = None
+    join_date: Optional[datetime] = None
     commission: int
     subscription: str
     sources: Optional[str] = None

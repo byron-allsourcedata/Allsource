@@ -5,40 +5,33 @@ import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { styled } from '@mui/material/styles';
 import { showErrorToast, showToast } from '@/components/ToastNotification';
 
-interface FormUploadPopupProps {
-    open: boolean;
-    fileData: {id: number, email: string, fullName: string, companyName: string, commission: string} | null
-    onClose: () => void;
-    updateOrAddAsset:  any
+interface PartnerData {
+    id: number;
+    partner_name: string;
+    email: string;
+    join_date: Date;
+    commission: string;
+    subscription: string;
+    sources: string;
+    last_payment_date: string;
+    status: string;
 }
 
-interface FileObject extends File{   
-    name: string;
-    type: string; 
-    sizesStr: string; 
+interface FormUploadPopupProps {
+    open: boolean;
+    fileData: {id: number, email: string, fullName: string, companyName: string, commission: string}
+    onClose: () => void;
+    updateOrAddAsset: (partner: PartnerData) => void
 }
 
 const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ open, fileData, onClose, updateOrAddAsset }) => {
     const [action, setAction] = useState("Add");
-    const [actionType, setActionType] = useState<keyof typeof allowedExtensions>("video");
-    const [dragActive, setDragActive] = useState(false);
     const [buttonContain, setButtonContain] = useState(false);
-    const [file, setFile] = useState<File | null>(null);
-    const [fileObject, setFileobjet] = useState<FileObject | null>(null);
-    const [preview, setPreview] = useState<string | null>(null);
-    const [fileSizeError, setFileSizeError] = useState(false); 
     const [fullName, setFullName] = useState(""); 
     const [email, setEmail] = useState(""); 
     const [companyName, setCompanyName] = useState(""); 
     const [commission, setCommission] = useState(""); 
     const [processing, setProcessing] = useState(false)
-
-    const allowedExtensions = {
-        image: ["jpg", "png", "jpeg", "gif", "webp", "svg", "tiff", "bmp", "heic", "heif"],
-        video: ["mp4", "mov", "avi", "mkv"],
-        document: ["pdf", "xslx"],
-        presentation: ["pptx"],
-    };
 
     const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
         height: 4,
@@ -96,7 +89,7 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ open, fileData, on
     };
 
     useEffect(() => {
-        if (fileData) {
+        if (fileData && fileData.email) {
             setEmail(fileData.email);
             setCommission(fileData.commission);
             setCompanyName(fileData.companyName);

@@ -5,7 +5,7 @@ from schemas.users import ShopifyPayloadModel, UtmParams
 class AuthGoogleData(BaseModel):
     token: str
     is_with_card: bool = Field(default=False)
-    alien_token: Optional[str] = None
+    teams_token: Optional[str] = None
     referral_token: Optional[str] = None
     spi: Optional[str] = None
     awc: Optional[str] = None

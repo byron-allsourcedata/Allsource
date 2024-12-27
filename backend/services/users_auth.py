@@ -257,6 +257,11 @@ class UsersAuth:
             self._process_shopify_integration(user_object, shopify_data, shopify_access_token, shop_id)
 
         self.user_persistence_service.email_confirmed(user_object.id)
+
+        if referral_token is not None:
+            self.user_persistence_service.book_call_confirmed(user_object.id)
+            self.user_persistence_service.set_partner_role(user_object.id)
+            self.partners_service.setUser(user_object.email, user_object.id, "Active")
         
         if ift and ift == 'arwt':
             self.user_persistence_service.book_call_confirmed(user_object.id)
@@ -448,17 +453,6 @@ class UsersAuth:
                     'status': status_result['error']
                 }
             owner_id = status_result['team_owner_id']
-        
-        if referral_token:
-            status = SignUpStatus.SUCCESS
-            status_result = self.user_persistence_service.check_status_invitations(referral_token=referral_token,
-                                                                                   user_mail=user_form.email)
-            if status_result['success'] is False:
-                return {
-                    'is_success': True,
-                    'status': status_result['error']
-                }
-            owner_id = status_result['team_owner_id']
             
         check_user_object = self.user_persistence_service.get_user_by_email(user_form.email)
         is_with_card = user_form.is_with_card
@@ -505,16 +499,16 @@ class UsersAuth:
             self.user_persistence_service.book_call_confirmed(user_object.id)
             self.subscription_service.create_subscription_from_free_trial(user_id=user_object.id, ftd=ftd)
             
-        if is_with_card is False and teams_token is None:
-            return self._send_email_verification(user_object, token)
-        
-        if is_with_card is False and referral_token is None:
+        if is_with_card is False and teams_token is None and referral_token is None:
             return self._send_email_verification(user_object, token)
         
         if referral_token is not None:
-            self.partners_service.setUser(user_object.id, "Active")
+            self.user_persistence_service.book_call_confirmed(user_object.id)
+            self.user_persistence_service.email_confirmed(user_object.id)
+            self.user_persistence_service.set_partner_role(user_object.id)
+            self.partners_service.setUser(user_object.email, user_object.id, "Active")
             
-        if teams_token is None or referral_token is None:
+        if teams_token is None:
             return {
                 'is_success': True,
                 'status': SignUpStatus.FILL_COMPANY_DETAILS,

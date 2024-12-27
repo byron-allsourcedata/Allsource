@@ -5,40 +5,33 @@ import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { styled } from '@mui/material/styles';
 import { showErrorToast, showToast } from '@/components/ToastNotification';
 
+interface PartnerData {
+    id: number;
+    partner_name: string;
+    email: string;
+    join_date: Date;
+    commission: string;
+    subscription: string;
+    sources: string;
+    last_payment_date: string;
+    status: string;
+}
+
 interface FormUploadPopupProps {
-    enabledData: any;
+    enabledData: {id: number, fullName?: string};
     open: boolean;
     onClose: () => void;
-    removePartnerById:  any
+    removePartnerById:  (id: number) => void
+    updateOrAddAsset: (partner: PartnerData) => void
 }
 
-interface FileObject extends File{   
-    name: string;
-    type: string; 
-    sizesStr: string; 
-}
-
-const EnablePartnerPopup: React.FC<FormUploadPopupProps> = ({ enabledData, open, onClose, removePartnerById }) => {
+const EnablePartnerPopup: React.FC<FormUploadPopupProps> = ({ enabledData, open, onClose, removePartnerById, updateOrAddAsset }) => {
     const [action, setAction] = useState("Disable");
-    const [actionType, setActionType] = useState<keyof typeof allowedExtensions>("video");
-    const [dragActive, setDragActive] = useState(false);
     const [buttonContain, setButtonContain] = useState(false);
-    const [file, setFile] = useState<File | null>(null);
-    const [fileObject, setFileobjet] = useState<FileObject | null>(null);
-    const [preview, setPreview] = useState<string | null>(null);
-    const [fileSizeError, setFileSizeError] = useState(false); 
-    const [fullName, setFullName] = useState(""); 
-    const [account, setAccount] = useState(""); 
-    const [companyName, setCompanyName] = useState(""); 
-    const [commission, setCommission] = useState(""); 
+    const [fullName, setFullName] = useState("");
+    const [message, setMessage] = useState(""); 
+    const [id, setId] = useState(0);
     const [processing, setProcessing] = useState(false)
-
-    const allowedExtensions = {
-        image: ["jpg", "png", "jpeg", "gif", "webp", "svg", "tiff", "bmp", "heic", "heif"],
-        video: ["mp4", "mov", "avi", "mkv"],
-        document: ["pdf", "xslx"],
-        presentation: ["pptx"],
-    };
 
     const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
         height: 4,
@@ -53,16 +46,18 @@ const EnablePartnerPopup: React.FC<FormUploadPopupProps> = ({ enabledData, open,
     
     const handleClose = () => {
         onClose()
-        setAction("Add")
-        setFullName(""); 
-        setCompanyName(""); 
-        setCommission(""); 
+        setAction("Disable")
+        setMessage(""); 
     }
 
-    const handleDeletePartner = async (id: number) => {
+    const handleDeletePartner = async () => {
         setProcessing(true)
+        
+        const formData = new FormData();
+        formData.append("message", message);
+
         try {
-            const response = await axiosInstance.delete(`admin-partners/${id}`);
+        const response = await axiosInstance.delete(`admin-partners/${id}`, {params: { message }});
             const status = response.data.status;
             if (status.status === "SUCCESS") {
                 removePartnerById(id);
@@ -71,6 +66,7 @@ const EnablePartnerPopup: React.FC<FormUploadPopupProps> = ({ enabledData, open,
         } catch {
             showErrorToast("Failed to delete partner. Please try again later.");
         } finally {
+            handleClose();
             setProcessing(false)
         }
     }
@@ -80,47 +76,43 @@ const EnablePartnerPopup: React.FC<FormUploadPopupProps> = ({ enabledData, open,
         setButtonContain(false);
     
         const formData = new FormData();
-        formData.append("commission", commission);
+        formData.append("status", "Inactive");
         
     
         try {
-            let response;
-    
-            if (action === "Disable") {
-                response = await axiosInstance.put(`admin-partners/${enabledData.id}/`, formData);
-            } else {
-                formData.append("full_name", fullName);
-                formData.append("company_name", companyName);
-                response = await axiosInstance.post(`admin-partners/`, formData);
-            }
+            const response = await axiosInstance.put(`admin-partners/${id}/`, formData);
             if (response.data.status === "SUCCESS") {
-                removePartnerById(enabledData.id);
-                showToast("Partner successfully submitted!");
+                updateOrAddAsset(response.data.data);
+                showToast("Partner stsatus successfully updated!");
             }
         } catch {
-            showErrorToast("Failed to submit the asset. Please try again.");
+            showErrorToast("Failed to update status. Please try again.");
         } finally {
             handleClose();
-            setFullName(""); 
-            setCompanyName(""); 
-            setCommission(""); 
             setProcessing(false);
         }
     };
 
-    // useEffect(() => {
-    //     if (fileData) {
-    //         setCommission(fileData.commission);
-    //         setCompanyName(fileData.companyName);
-    //         setFullName(fileData.fullName);
-    //         setButtonContain(true)
-    //         setAction("Edit")
-    //     }
-    // }, [fileData]);
+    useEffect(() => {
+        if (enabledData) {
+            const { fullName, id } = enabledData;
+    
+            if (fullName) {
+                setFullName(fullName);
+                setId(id);
+                setAction("Terminate");
+            } else {
+                setAction("Disable");
+                setId(id);
+            }
+        } else {
+            setAction("Disable");
+        }
+    }, [enabledData]);
 
     useEffect(() => {
-        setButtonContain([fullName, companyName, commission].every(field => typeof field === "string" && field.trim().length > 0));
-    }, [fullName, companyName, commission]);
+        setButtonContain(message.trim().length > 0);
+    }, [message]);
     
     return (
         <>
@@ -201,16 +193,15 @@ const EnablePartnerPopup: React.FC<FormUploadPopupProps> = ({ enabledData, open,
                                     color: "rgba(17, 17, 19, 0.6)",
                                 },
                                 "& .MuiInputLabel-root[data-shrink='false']": {
-                                    transform: "translate(15%, 50%) scale(1)",
+                                    transform: "translate(12px, 50%) scale(1)",
                                 },  
                             }}
-                            value={account}
+                            value={fullName}
                         />}
                                         
                         <TextField
-                            disabled={action === "Edit"}
                             id="outlined-required"
-                            label="Enter the reason for disable account"
+                            label={`Enter the reason for ${action.toLowerCase()} account`}
                             placeholder='Need to custom my plan according to my usage'
                             sx={{
                                 paddingBottom: "24px",
@@ -218,11 +209,11 @@ const EnablePartnerPopup: React.FC<FormUploadPopupProps> = ({ enabledData, open,
                                     color: "rgba(17, 17, 19, 0.6)",
                                 },
                                 "& .MuiInputLabel-root[data-shrink='false']": {
-                                    transform: "translate(15%, 50%) scale(1)",
+                                    transform: "translate(12px, 50%) scale(1)",
                                 },  
                             }}
-                            value={fullName}
-                            onChange={(e) => setFullName(e.target.value)}
+                            value={message}
+                            onChange={(e) => setMessage(e.target.value)}
                         />
 
                 </Box>
@@ -240,6 +231,23 @@ const EnablePartnerPopup: React.FC<FormUploadPopupProps> = ({ enabledData, open,
                     padding: "20px 1em",
                 }}
             >
+                <Button variant="contained" onClick={action === "Terminate" ? handleDeletePartner : handleSubmit} disabled={!buttonContain}  sx={{
+                    backgroundColor: "rgba(80, 82, 178, 1)"
+                }}>
+                    <Typography
+                        sx={{
+                        textAlign: "center",
+                        color: "rgba(255, 255, 255, 1)",
+                        fontFamily: "Nunito Sans",
+                        textTransform: "none",
+                        fontWeight: "600",
+                        fontSize: "14px",
+                        lineHeight: "19.6px",
+                        }}
+                    >
+                        Yes
+                    </Typography>
+                </Button> 
                 <Button variant="outlined" onClick={handleClose} disabled={!buttonContain}  sx={{
                     borderColor: "rgba(80, 82, 178, 1)",
                 }}>
@@ -254,24 +262,7 @@ const EnablePartnerPopup: React.FC<FormUploadPopupProps> = ({ enabledData, open,
                         lineHeight: "19.6px",
                         }}
                     >
-                        Cancel
-                    </Typography>
-                </Button> 
-                <Button variant="contained" onClick={handleSubmit} disabled={!buttonContain}  sx={{
-                    backgroundColor: "rgba(80, 82, 178, 1)"
-                }}>
-                    <Typography
-                        sx={{
-                        textAlign: "center",
-                        color: "rgba(255, 255, 255, 1)",
-                        fontFamily: "Nunito Sans",
-                        textTransform: "none",
-                        fontWeight: "600",
-                        fontSize: "14px",
-                        lineHeight: "19.6px",
-                        }}
-                    >
-                        Send
+                        No
                     </Typography>
                 </Button> 
             </Box>

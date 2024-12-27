@@ -1,9 +1,5 @@
-from datetime import datetime, timezone
 from models.partners import Partners
 from sqlalchemy.orm import Session
-from sqlalchemy import func
-from fastapi import HTTPException
-import re
 from typing import Optional
 
 
@@ -34,19 +30,24 @@ class PartnersPersistence:
         self.db.commit()
         self.db.refresh(partner)
         return partner
-
-    # def update_partner(self, partner_id: int, commission: str) -> Optional[Partners]:
-    #     partner = self.get_asset_by_id(partner_id)
-
-    #     if not partner:
-    #         return None
-
-    #     partner.commission = commission
-
-    #     self.db.commit()
-    #     self.db.refresh(partner)
-    #     return partner
     
+    def get_asset_by_email(self, email):
+        return self.db.query(Partners).filter(Partners.email == email).first()
+    
+
+    def update_partner_by_email(self, email: int, **kwargs) -> Optional[Partners]:
+        partner = self.get_asset_by_email(email)
+
+        if not partner:
+            return None
+
+        for key, value in kwargs.items():
+            if hasattr(partner, key) and value is not None:
+                setattr(partner, key, value)
+
+        self.db.commit()
+        self.db.refresh(partner)
+        return partner
 
     def terminate_partner(self, partner_id):
         self.db.query(Partners).filter(
@@ -58,6 +59,8 @@ class PartnersPersistence:
         partner = Partners(
             commission=creating_data["commission"],
             token=creating_data["token"],
+            email=creating_data["email"],
+            name=creating_data["full_name"],
         )
 
         self.db.add(partner)
