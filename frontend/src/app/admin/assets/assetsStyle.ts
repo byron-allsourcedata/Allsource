@@ -24,7 +24,6 @@ export const assetsStyle: { [key: string]: SxProps<Theme> } = {
       },
       headers: {
         display: 'flex',
-        marginTop: '10px',
         justifyContent: 'space-between',
         alignItems: 'center',
         width: '100%',
@@ -42,12 +41,10 @@ export const assetsStyle: { [key: string]: SxProps<Theme> } = {
         paddingLeft: '2.5em',
       },
       title: {
-        mb: 2,
         fontWeight: 'bold',
         fontSize: '16px',
         whiteSpace: 'nowrap',
         textAlign: 'start',
-        padding: '1.5rem 0rem 0',
         fontFamily: 'Nunito Sans',
       },
       button_success: {

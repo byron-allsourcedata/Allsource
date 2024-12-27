@@ -271,7 +271,13 @@ const FormUploadAssetPopup: React.FC<FormUploadPopupProps> = ({ updateOrAddAsset
                             placeholder='Name'
                             sx={{
                                 borderBottom: "1px solid #e4e4e4",
-                                paddingBottom: "24px"  
+                                paddingBottom: "24px",
+                                "& .MuiInputLabel-root.Mui-focused": {
+                                    color: "rgba(17, 17, 19, 0.6)",
+                                },
+                                "& .MuiInputLabel-root[data-shrink='false']": {
+                                    transform: "translate(15%, 50%) scale(1)",
+                                },  
                             }}
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
@@ -295,7 +301,10 @@ const FormUploadAssetPopup: React.FC<FormUploadPopupProps> = ({ updateOrAddAsset
                                 backgroundColor: dragActive ? "rgba(80, 82, 178, 0.1)" : "transparent",
                             }}
                             onClick={() => document.getElementById("fileInput")?.click()}>
-                            <FileUploadOutlinedIcon sx={{ fontSize: "32px", backgroundColor: "rgba(234, 235, 255, 1)", borderRadius: "4px", color: "rgba(80, 82, 178, 1)" }} />
+                            <IconButton sx={{ width: "40px", height: "40px", borderRadius: "4px", backgroundColor: "rgba(234, 235, 255, 1)",  }} >
+                                <FileUploadOutlinedIcon sx={{
+                                    color: "rgba(80, 82, 178, 1)" }} />
+                            </IconButton>
                             <Typography sx={{ fontFamily: "Nunito Sans", fontSize: "14px" }}>
                                 Drag & drop
                             </Typography>
