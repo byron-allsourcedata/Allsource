@@ -1,15 +1,11 @@
-import asyncio
-from datetime import timedelta
-import re
-from persistence.leads_persistence import LeadsPersistence, LeadUser, FiveXFiveUser
+from persistence.leads_persistence import LeadsPersistence, FiveXFiveUser
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
-from persistence.integrations.user_sync import IntegrationsUserSyncPersistence, IntegrationUserSync
+from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.domains import UserDomainsPersistence
 from schemas.integrations.integrations import *
 from schemas.integrations.klaviyo import *
 from fastapi import HTTPException
-from enums import IntegrationsStatus, SourcePlatformEnum
-import httpx
+from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult
 import json
 from typing import List
 import logging 
@@ -143,124 +139,26 @@ class MailchimpIntegrationsService:
         await rabbitmq_connection.close()
 
 
-    async def process_data_sync(self, message):
-        sync = None
-        last_leads_sync = None
-        if message.get('sync'):
-            sync = IntegrationUserSync(**message.get('sync'))
-            if sync:
-                serarch_sync = self.sync_persistence.get_integration_by_sync_id(sync_id=sync.id)
-                if not serarch_sync or serarch_sync.service_name != SourcePlatformEnum.MAILCHIMP.value:
-                    logging.info(f'Sync {sync.id} Mailchimp not matched')
-                    return
-        counter = 0
-        leads_type = message.get('leads_type')
-        domain_id = message.get('domain_id')
-        lead = message.get('lead', None)
-        if domain_id and lead:
-            lead_user =  self.leads_persistence.get_leads_domain(domain_id=domain_id, five_x_five_user_id=lead.get('five_x_five_user_id'))
-            lead = lead_user[0] if lead_user else None
-            if message.get('lead') and not lead:
-                logging.info(f'Contact {message.get("lead").get("five_x_five_user_id") if message.get("lead") else None} in domain id {domain_id} not found')
-                return
-        stage = message.get('stage') if message.get('stage') else 1
-        next_try = message.get('next_try') if message.get('next_try') else None
-
-        domains = self.domain_persistence.get_domain_by_filter(**{'id': domain_id} if domain_id else {})
-        logging.info(f"Retrieved domains: {[domain.id for domain in domains]}",)
-
-        for domain in domains:
-            credentials = self.get_credentials(domain.id)
-            if not credentials:
-                logging.warning("No credentials found for domain id %s.", domain.id)
-                return
+    async def process_data_sync(self, five_x_five_user, access_token, integration_data_sync):
+        profile = self.__create_profile(five_x_five_user, access_token, integration_data_sync)
+        if profile == ProccessDataSyncResult.AUTHENTICATION_FAILED.value or profile == ProccessDataSyncResult.INCORRECT_FORMAT.value:
+            return profile
             
-            data_syncs_list = self.sync_persistence.get_data_sync_filter_by(
-                domain_id=domain.id,
-                integration_id=credentials.id,
-                is_active=True
-            )
+        return ProccessDataSyncResult.SUCCESS.value
 
-            leads = [lead] if lead else (
-                self.leads_persistence.get_leads_domain(domain.id, behavior_type=leads_type)
-                if leads_type and leads_type != 'allContacts' else
-                self.leads_persistence.get_leads_domain(domain.id)
-            )
-
-            for data_sync_item in data_syncs_list if not sync else [sync]:
-                if lead and lead.behavior_type != data_sync_item.leads_type and data_sync_item.leads_type not in ('allContacts', None):
-                    logging.warning("Lead behavior type mismatch: %s vs %s", lead.behavior_type, data_sync_item.leads_type)
-                    continue
-
-                last_lead_sync_id = data_sync_item.last_lead_sync_id
-                if last_lead_sync_id:
-                    last_leads_sync = self.leads_persistence.get_lead_user_by_up_id(domain_id=domain.id, up_id=last_lead_sync_id)
-                for lead in leads:
-                    if last_leads_sync and lead.five_x_five_user_id < last_leads_sync.five_x_five_user_id:
-                        continue
-                    if stage > 3:
-                        logging.info("Stage limit reached. Exiting.")
-                        return
-                    
-                    if next_try and datetime.now() < datetime.fromisoformat(next_try):
-                        await asyncio.sleep(1)
-                        logging.info("Processing lead sync with next try: %s", next_try)
-                        await self.process_lead_sync(
-                            lead_user=lead,
-                            user_domain_id=domain.id, 
-                            behavior_type=lead.behavior_type, 
-                            stage=stage, 
-                            next_try=next_try  
-                        )
-                        continue
-                    
-                    profile = self.__create_profile(lead.five_x_five_user_id, credentials, data_sync_item.list_id)
-
-                    if not profile:
-                        data_sync_item.sync_status = False
-                        self.sync_persistence.db.commit()
-                        logging.error("Profile creation failed for lead: %s", lead.five_x_five_user_id)
-                        if stage != 3:
-                            next_try_str = (datetime.now() + timedelta(hours=3)).isoformat()
-                            await self.process_lead_sync(
-                                lead_user=lead,
-                                user_domain_id=domain.id, 
-                                behavior_type=lead.behavior_type, 
-                                stage=stage + 1, 
-                                next_try=next_try_str
-                            )
-                        continue
-                    data_sync_item.sync_status = True
-                    self.sync_persistence.db.commit()
-                    counter += 1
-                    logging.info("Profile added successfully for lead: %s", lead.five_x_five_user_id)
-                    last_leads_sync = lead
-                self.sync_persistence.update_sync({
-                    'last_sync_date': datetime.now(),
-                    'last_lead_sync_id': self.leads_persistence.get_lead_data(last_leads_sync.five_x_five_user_id).up_id if counter > 0 else last_lead_sync_id
-                },counter=counter, id=data_sync_item.id)
-                logging.info("Sync updated for item id: %s", data_sync_item.id)
-
-    def __create_profile(self, lead_id: int, credentials, list_id):
-        lead_data = self.leads_persistence.get_lead_data(lead_id)
-        try:
-            lead = self.__mapped_member_into_list(lead_data)
-        except: return
+    def __create_profile(self, five_x_five_user, access_token, integration_data_sync):
+        lead = self.__mapped_member_into_list(five_x_five_user)
+        if lead == ProccessDataSyncResult.INCORRECT_FORMAT.value:
+            return lead
         self.client.set_config({
-            'api_key': credentials.access_token,
-            'server': credentials.data_center
+            'api_key': access_token,
+            'server': integration_data_sync.data_center
         })
         try:
-            response = self.client.lists.add_list_member(list_id, lead)
+            response = self.client.lists.add_list_member(integration_data_sync.list_id, lead)
         except ApiClientError as error:
-            logging.error(f'{error.text}')
             if error.status_code == 400:
                 return "Already exist"
-            if credentials:
-                credentials.error_message = json.loads(error.text).get('detail')
-                credentials.is_failed = True
-                self.integrations_persisntece.db.commit()
-                return
         return response
 
     def __mapped_list(self, list):
@@ -272,6 +170,9 @@ class MailchimpIntegrationsService:
             getattr(lead, 'personal_emails') or 
             getattr(lead, 'programmatic_business_emails', None)
         )
+        first_email = self.extract_first_email(first_email) if first_email else None
+        if not first_email:
+            return ProccessDataSyncResult.INCORRECT_FORMAT.value
         return {
             'email_address': first_email,
             'status': 'subscribed',
