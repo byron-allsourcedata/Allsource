@@ -9,10 +9,7 @@ from integrations.shopify import ShopifyConfig
 from fastapi import HTTPException, status
 from models.users_domains import UserDomains
 from models.users import User
-from decimal import Decimal
 import requests
-from gql import Client, gql
-from gql.transport.requests import RequestsHTTPTransport
 from models.plans import SubscriptionPlan
 from ..jwt_service import create_access_token
 from schemas.integrations.shopify import ShopifyCustomer, ShopifyOrderAPI
