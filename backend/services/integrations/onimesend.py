@@ -9,6 +9,7 @@ from persistence.leads_persistence import LeadsPersistence
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
 from persistence.domains import UserDomainsPersistence
+from utils import extract_first_email
 from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult
 from models.five_x_five_users import FiveXFiveUser
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
@@ -148,12 +149,6 @@ class OmnisendIntegrationService:
             logging.error("Error response: %s", response.text)
         return response.json()
     
-    def extract_first_email(self, text: str) -> str:
-        email_regex = r"[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+"
-        emails = re.findall(email_regex, text)
-        if emails:
-            return emails[0]
-        return None
 
     def __mapped_identifiers(self, lead: FiveXFiveUser):
         first_email = (
@@ -161,7 +156,7 @@ class OmnisendIntegrationService:
             getattr(lead, 'personal_emails') or 
             getattr(lead, 'programmatic_business_emails', None)
         )
-        first_email = self.extract_first_email(first_email) if first_email else None
+        first_email = extract_first_email(first_email) if first_email else None
         if not first_email:
             return ProccessDataSyncResult.INCORRECT_FORMAT.value
         return Identifiers(id=first_email)

@@ -9,6 +9,7 @@ from models.five_x_five_users import FiveXFiveUser
 from schemas.integrations.sendlane import SendlaneContact, SendlaneSender
 from schemas.integrations.integrations import DataMap, IntegrationCredentials, ListFromIntegration
 from persistence.domains import UserDomainsPersistence
+from utils import extract_first_email
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.leads_persistence import LeadsPersistence
@@ -239,7 +240,7 @@ class SendlaneIntegrationService:
             getattr(lead, 'programmatic_business_emails', None)
         )
         
-        first_email = self.extract_first_email(first_email) if first_email else None
+        first_email = extract_first_email(first_email) if first_email else None
         if not first_email:
             return ProccessDataSyncResult.INCORRECT_FORMAT.value
         

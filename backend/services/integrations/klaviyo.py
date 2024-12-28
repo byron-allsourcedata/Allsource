@@ -7,6 +7,7 @@ from persistence.domains import UserDomainsPersistence
 from schemas.integrations.integrations import *
 from schemas.integrations.klaviyo import *
 from fastapi import HTTPException
+from utils import extract_first_email
 from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult
 import httpx
 import json
@@ -382,20 +383,13 @@ class KlaviyoIntegrationsService:
             raise HTTPException(status_code=400, detail={'status': "Profiles from Klaviyo could not be retrieved"})
         return [self.__mapped_profile_from_klaviyo(profile) for profile in response.json().get('data')]
 
-    def extract_first_email(self, text: str) -> str:
-        email_regex = r"[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+"
-        emails = re.findall(email_regex, text)
-        if emails:
-            return emails[0]
-        return None
-
     def __mapped_klaviyo_profile(self, five_x_five_user: FiveXFiveUser) -> KlaviyoProfile:
         first_email = (
             getattr(five_x_five_user, 'business_email') or 
             getattr(five_x_five_user, 'personal_emails') or 
             getattr(five_x_five_user, 'programmatic_business_emails', None)
         )
-        first_email = self.extract_first_email(first_email) if first_email else None
+        first_email = extract_first_email(first_email) if first_email else None
         
         first_phone = (
             getattr(five_x_five_user, 'mobile_phone') or 

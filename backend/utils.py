@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta, timezone
-
+import re
 
 def get_utc_aware_date():
     return datetime.now(timezone.utc).replace(microsecond=0)
@@ -7,6 +7,13 @@ def get_utc_aware_date():
 
 def get_utc_aware_date_for_postgres():
     return get_utc_aware_date().isoformat()[:-6] + "Z"
+
+def extract_first_email(self, text: str) -> str:
+        email_regex = r"[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+"
+        emails = re.findall(email_regex, text)
+        if emails:
+            return emails[0]
+        return None
 
 
 def normalize_url(url):

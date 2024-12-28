@@ -7,6 +7,7 @@ from schemas.integrations.klaviyo import *
 from fastapi import HTTPException
 from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult
 import json
+from utils import extract_first_email
 from typing import List
 import logging 
 from config.rmq_connection import publish_rabbitmq_message, RabbitMQConnection
@@ -170,7 +171,7 @@ class MailchimpIntegrationsService:
             getattr(lead, 'personal_emails') or 
             getattr(lead, 'programmatic_business_emails', None)
         )
-        first_email = self.extract_first_email(first_email) if first_email else None
+        first_email = extract_first_email(first_email) if first_email else None
         if not first_email:
             return ProccessDataSyncResult.INCORRECT_FORMAT.value
         return {

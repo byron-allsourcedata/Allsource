@@ -13,6 +13,7 @@ from facebook_business.adobjects.adaccount import AdAccount
 from facebook_business.api import FacebookAdsApi
 from fastapi import HTTPException
 from datetime import datetime
+from utils import extract_first_email
 from schemas.integrations.integrations import IntegrationCredentials, DataMap, ListFromIntegration
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 from typing import List
@@ -222,6 +223,8 @@ class MetaIntegrationsService:
     def __create_user(self, session_id: int, five_x_five_user, custom_audience_id: str, access_token: str):
         lead_data = self.leads_persistence.get_lead_data(five_x_five_user)
         profile = self.__mapped_meta_user(lead_data)
+        if profile == ProccessDataSyncResult.INCORRECT_FORMAT.value:
+            return profile
         payload = {
             "schema": [
                 "EMAIL",
@@ -249,6 +252,9 @@ class MetaIntegrationsService:
             getattr(lead, 'personal_emails') or 
             getattr(lead, 'programmatic_business_emails', None)
         )
+        first_email = extract_first_email(first_email) if first_email else None
+        if not first_email:
+            return ProccessDataSyncResult.INCORRECT_FORMAT.value
         
         first_phone = (
             getattr(lead, 'mobile_phone') or 
