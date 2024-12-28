@@ -21,13 +21,18 @@ router = APIRouter()
 
 @router.get('')
 @router.get('/')
-async def get_integrations_service(type: str | None = Query(None), data_sync: bool | None = Query(None),
+async def get_integrations_service(type: str | None = Query(None), data_sync: bool | None = Query(None), user=Depends(check_user_authentication),
                                    persistence: IntegrationsPresistence = Depends(get_user_integrations_presistence)):
     filter = {}
     if type:
         filter['type'] = type
     if data_sync is not None:
         filter['data_sync'] = data_sync
+        
+    source_platform = user.get('source_platform')
+    if source_platform in ['big_commerce', 'shopify']:
+        filter['service_name'] = ['klaviyo', 'omnisend']
+        
     return persistence.get_integrations_service(**filter)
 
 
