@@ -1,10 +1,8 @@
-import asyncio
-from datetime import timedelta
 import re
-import time
-from persistence.leads_persistence import LeadsPersistence, LeadUser, FiveXFiveUser
+from datetime import datetime
+from persistence.leads_persistence import LeadsPersistence, FiveXFiveUser
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
-from persistence.integrations.user_sync import IntegrationsUserSyncPersistence, IntegrationUserSync
+from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.domains import UserDomainsPersistence
 from schemas.integrations.integrations import *
 from schemas.integrations.klaviyo import *
@@ -423,12 +421,10 @@ class KlaviyoIntegrationsService:
 
     def __map_properties(self, five_x_five_user: FiveXFiveUser, data_map: List[DataMap]) -> dict:
         properties = {}
-        
         for mapping in data_map:
             five_x_five_field = mapping.get("type")  
             new_field = mapping.get("value")  
             value_field = getattr(five_x_five_user, five_x_five_field, None)
-            
             if value_field is not None: 
                 if isinstance(value_field, datetime):
                     properties[new_field] = value_field.isoformat() 

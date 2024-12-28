@@ -121,7 +121,7 @@ async def ensure_integration(message: IncomingMessage, integration_service: Inte
         }
         
         service = service_map.get(service_name)
-        lead_user, five_x_five_user_id, access_token, integration_data_sync = get_lead_attributes(session, lead_users_id, user_domain_integration_id)
+        lead_user, five_x_five_user, access_token, integration_data_sync = get_lead_attributes(session, lead_users_id, user_domain_integration_id)
         
         if lead_user and lead_user.behavior_type != integration_data_sync.leads_type and integration_data_sync.leads_type not in ('allContacts', None):
             logging.info("Lead behavior type mismatch: %s vs %s", lead_user.behavior_type, integration_data_sync.leads_type)
@@ -131,22 +131,23 @@ async def ensure_integration(message: IncomingMessage, integration_service: Inte
             return
         
         if service:
-            result = await service.process_data_sync(five_x_five_user_id, access_token, integration_data_sync)
+            result = await service.process_data_sync(five_x_five_user, access_token, integration_data_sync)
             import_status = DataSyncImportedStatus.SENT.value
             match result:
                 case ProccessDataSyncResult.INCORRECT_FORMAT.value:
+                    logging.debug(f"incorrect_format: {service_name}")
                     import_status = DataSyncImportedStatus.INCORRECT_FORMAT.value
                     
                 case ProccessDataSyncResult.SUCCESS.value:
+                    logging.debug(f"success: {service_name}")
                     import_status = DataSyncImportedStatus.SUCCESS.value
                     
                 case ProccessDataSyncResult.LIST_NOT_EXISTS.value:
+                    logging.debug(f"list_not_exists: {service_name}")
                     update_users_integrations(session, ProccessDataSyncResult.LIST_NOT_EXISTS.value, integration_data_sync.id)
                     
-                case ProccessDataSyncResult.INCORRECT_FORMAT.value:
-                    import_status = DataSyncImportedStatus.INCORRECT_FORMAT.value
-                    
                 case ProccessDataSyncResult.AUTHENTICATION_FAILED.value:
+                    logging.debug(f"authenticatioNn_failed: {service_name}")
                     update_users_integrations(session, ProccessDataSyncResult.AUTHENTICATION_FAILED.value, integration_data_sync.id, user_domain_integration_id)
                     
             if import_status != DataSyncImportedStatus.SENT.value:
