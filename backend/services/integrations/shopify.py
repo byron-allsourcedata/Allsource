@@ -131,11 +131,9 @@ class ShopifyIntegrationService:
                     raise ValueError(f"Unexpected response: {result}")
             
             except ValueError as e:
-                print(f"Error: {str(e)}")
                 raise e
             
             except Exception as e:
-                print(f"Unexpected error: {str(e)}")
                 raise e
             
     def initialize_subscription_charge(self, plan: SubscriptionPlan, user: dict):
