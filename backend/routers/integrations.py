@@ -9,6 +9,7 @@ from dependencies import get_integration_service, IntegrationService, Integratio
             check_pixel_install_domain, check_user_authentication, get_user_persistence_service, \
             UserPersistence, get_user_domain_persistence, UserDomainsPersistence, check_api_key
 from schemas.integrations.integrations import *
+from persistence.domains import UserDomains
 from enums import TeamAccessLevel
 from schemas.integrations.shopify import ShopifyLandingResponse, GenericEcommerceResponse
 import httpx
@@ -42,8 +43,7 @@ async def get_integrations_credentials(integration_serivce: IntegrationService =
 @router.get('/credentials/{platform}')
 async def get_credential_service(platform: str,
                                  integration_service: IntegrationService = Depends(get_integration_service),
-                                 user=Depends(check_user_authorization), domain=Depends(check_pixel_install_domain)
-                                 ):
+                                 user=Depends(check_user_authorization), domain: UserDomains = Depends(check_domain)):
     with integration_service as service:
         service = getattr(service, platform.lower())
         return service.get_credentials(domain.id)
@@ -67,8 +67,7 @@ async def create_integration(credentials: IntegrationCredentials, service_name: 
         service = getattr(service, service_name.lower())
         if not service:
             raise HTTPException(status_code=404, detail=f'Service {service_name} not found')
-        service.add_integration(credentials=credentials, domain=domain, user=user)
-        return {'message': 'Successfuly'}
+        return service.add_integration(credentials=credentials, domain=domain, user=user)
     
 @router.post('/connect', status_code=200)
 async def connect_integration(credentials: IntegrationCredentials, service_name: str = Query(...),

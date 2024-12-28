@@ -176,6 +176,7 @@ const KlaviyoIntegrationPopup = ({ handleClose, open, onSave, initApiKey, boxSha
       
           if (response?.status === 200) {
             showToast("Integration Klaviyo Successfully");
+            
             handleNextTab();
           }
         } catch (err) {
