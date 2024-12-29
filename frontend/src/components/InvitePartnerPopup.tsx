@@ -18,13 +18,14 @@ interface PartnerData {
 }
 
 interface FormUploadPopupProps {
+    isMaster: boolean;
     open: boolean;
     fileData: {id: number, email: string, fullName: string, companyName: string, commission: string}
     onClose: () => void;
     updateOrAddAsset: (partner: PartnerData) => void
 }
 
-const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ open, fileData, onClose, updateOrAddAsset }) => {
+const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ isMaster, open, fileData, onClose, updateOrAddAsset }) => {
     const [action, setAction] = useState("Add");
     const [buttonContain, setButtonContain] = useState(false);
     const [fullName, setFullName] = useState(""); 
@@ -139,7 +140,7 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ open, fileData, on
                     lineHeight: "21.82px"
                 }}
                 >
-                {action} partner details
+                {action === "Add" ? "Invite" : "Edit"} {isMaster ? "master" : "" } partner details
                 </Typography>
                 <Box sx={{ display: "flex", flexDirection: "row" }}>
                     <IconButton onClick={handleClose}>
@@ -166,7 +167,7 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ open, fileData, on
                             }}
                             >
                             {action == "Add" 
-                            ? "Invite your contacts to become official partners and grow together."
+                            ? `Invite your contacts to become official ${isMaster ? "master" : ""} partners and grow together.`
                             : "Edit partner information to ensure accuracy and relevance."
                             }
                         </Typography>    
@@ -196,6 +197,7 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ open, fileData, on
                             type="email"
                             placeholder='Email'
                             sx={{
+                                width: "556px",
                                 paddingBottom: "24px",
                                 "& .MuiInputLabel-root.Mui-focused": {
                                     color: "rgba(17, 17, 19, 0.6)",
@@ -279,6 +281,8 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ open, fileData, on
                 }}>
                     <Typography
                         sx={{
+                        width: "120px",
+                        // height: "40px",
                         textAlign: "center",
                         color: "rgba(255, 255, 255, 1)",
                         fontFamily: "Nunito Sans",

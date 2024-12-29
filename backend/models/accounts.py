@@ -1,29 +1,27 @@
-from sqlalchemy import Column, event, Integer, TIMESTAMP, Boolean, VARCHAR
+from sqlalchemy import Column, event, Integer, TIMESTAMP, VARCHAR
 from .base import Base, create_timestamps, update_timestamps
 
 
-class Partners(Base):
-    __tablename__ = "partners"
+class Accounts(Base):
+    __tablename__ = "accounts"
 
     id = Column(Integer, primary_key=True, nullable=False)
     user_id = Column(Integer, nullable=True)
-    commission = Column(VARCHAR(16), nullable=False)
+    partner_id = Column(Integer, nullable=True)
     email = Column(VARCHAR(64), nullable=False)
     name = Column(VARCHAR(64), nullable=False)
-    token = Column(VARCHAR(256), nullable=False)
     status = Column(VARCHAR(16), default="Invite sent", nullable=False)
-    isMaster = Column(Boolean, default=False, nullable=False)
     created_at = Column(TIMESTAMP, nullable=False)
     updated_at = Column(TIMESTAMP, nullable=False)
     
     def to_dict(self):
             return {
                 "user_id": self.user_id,
-                "commission": self.commission,
+                "name": self.name,
+                "partner_id": self.partner_id,
                 "status": self.status,
                 "email": self.email,
-                "name": self.name
             }
 
-event.listen(Partners, "before_insert", create_timestamps)
-event.listen(Partners, "before_update", update_timestamps)
+event.listen(Accounts, "before_insert", create_timestamps)
+event.listen(Accounts, "before_update", update_timestamps)

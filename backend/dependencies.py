@@ -27,10 +27,12 @@ from persistence.settings_persistence import SettingsPersistence
 from persistence.suppression_persistence import SuppressionPersistence
 from persistence.partners_asset_persistence import PartnersAssetPersistence
 from persistence.partners_persistence import PartnersPersistence
+from persistence.accounts_persistence import AccountsPersistence
 from persistence.user_persistence import UserPersistence
 from persistence.integrations.external_apps_installations import ExternalAppsInstallationsPersistence
 from persistence.referral_persistence import ReferralPersistence
 from schemas.auth_token import Token
+from services.accounts import AccountsService
 from services.admin_customers import AdminCustomersService
 from services.audience import AudienceService
 from services.aws import AWSService
@@ -76,6 +78,12 @@ def get_partners_assets_service(partners_asset_persistence: PartnersAssetPersist
 
 def get_partners_persistence(db: Session = Depends(get_db)) -> PartnersPersistence:
     return PartnersPersistence(db)
+
+def get_accounts_persistence(db: Session = Depends(get_db)) -> AccountsPersistence:
+    return AccountsPersistence(db)
+
+def get_accounts_service(accounts_persistence: AccountsPersistence = Depends(get_accounts_persistence)):
+    return AccountsService(accounts_persistence=accounts_persistence)
 
 
 def get_plans_persistence(db: Session = Depends(get_db)):

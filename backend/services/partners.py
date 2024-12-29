@@ -39,8 +39,8 @@ class PartnersService:
             return self.default_user
 
 
-    def get_partners(self):
-        partners = self.partners_persistence.get_partners()
+    def get_partners(self, isMaster):
+        partners = self.partners_persistence.get_partners(isMaster)
 
         result = []
         for partner in partners:

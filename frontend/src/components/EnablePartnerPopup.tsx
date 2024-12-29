@@ -4,6 +4,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { styled } from '@mui/material/styles';
 import { showErrorToast, showToast } from '@/components/ToastNotification';
+import { width } from '@mui/system';
 
 interface PartnerData {
     id: number;
@@ -53,8 +54,6 @@ const EnablePartnerPopup: React.FC<FormUploadPopupProps> = ({ enabledData, open,
     const handleDeletePartner = async () => {
         setProcessing(true)
         
-        const formData = new FormData();
-        formData.append("message", message);
 
         try {
         const response = await axiosInstance.delete(`admin-partners/${id}`, {params: { message }});
@@ -204,6 +203,7 @@ const EnablePartnerPopup: React.FC<FormUploadPopupProps> = ({ enabledData, open,
                             label={`Enter the reason for ${action.toLowerCase()} account`}
                             placeholder='Need to custom my plan according to my usage'
                             sx={{
+                                width: "556px",
                                 paddingBottom: "24px",
                                 "& .MuiInputLabel-root.Mui-focused": {
                                     color: "rgba(17, 17, 19, 0.6)",

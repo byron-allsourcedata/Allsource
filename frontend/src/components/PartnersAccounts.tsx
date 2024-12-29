@@ -10,6 +10,7 @@ import CustomTablePagination from "./CustomTablePagination";
 import Image from "next/image";
 import CalendarPopup from "./CustomCalendar";
 import { DateRangeIcon } from "@mui/x-date-pickers/icons";
+import SwapVertIcon from '@mui/icons-material/SwapVert';
 
 const tableHeaders = [
     { key: 'account_name', label: 'Account name', sortable: false },
@@ -62,9 +63,13 @@ const getStatusStyle = (status: any) => {
     }
 };
 
+interface PartnersAccountsProps {
+    id: number | null
+}
 
 
-const PartnersAccounts: React.FC = () => {
+
+const PartnersAccounts: React.FC<PartnersAccountsProps> = ({id}) => {
     const [loading, setLoading] = useState(false);
     const [expanded, setExpanded] = useState<number | false>(false);
     const [accounts, setAccounts] = useState<any[]>([]);
@@ -132,10 +137,30 @@ const PartnersAccounts: React.FC = () => {
         setRowsPerPage(parseInt(event.target.value as string, 10));
     };
 
-    const handleSortRequest = (property: string) => {
-        const isAsc = orderBy === property && order === 'asc';
-        setOrder(isAsc ? 'desc' : 'asc');
-        setOrderBy(property);
+    const handleSortRequest = (key: string) => {
+        const isAsc = orderBy === key && order === 'asc';
+        const newOrder = isAsc ? 'desc' : 'asc';
+        setOrder(newOrder);
+        setOrderBy(key);
+
+        const sortedAccounts = [...accounts].sort((a, b) => {
+            const aValue = a[key as keyof typeof a];
+            const bValue = b[key as keyof typeof b];
+    
+            if (typeof aValue === 'string' && typeof bValue === 'string') {
+                return newOrder === 'asc'
+                    ? aValue.localeCompare(bValue)
+                    : bValue.localeCompare(aValue);
+            }
+            if (aValue instanceof Date && bValue instanceof Date) {
+                return newOrder === 'asc'
+                    ? new Date(aValue).getTime() - new Date(bValue).getTime()
+                    : new Date(bValue).getTime() - new Date(aValue).getTime();
+            }
+            return 0;
+        });
+    
+        setAccounts(sortedAccounts);
     };
 
     const handleOpenSection = (panel: number) => (
@@ -145,62 +170,72 @@ const PartnersAccounts: React.FC = () => {
         setExpanded(isExpanded ? panel : false);
     };
 
-    const fetchRules = useCallback(async () => {
-        setLoading(true);
-        try {
-            // const response = await axiosInstance
+    const fetchRules = async () => {
+        // setLoading(true)
 
-        } catch (err) {
+        try {
+        const response = await axiosInstance.get(`/accounts`, {params: { id }});
+        setAccounts([...response.data])
+        } catch {
+            // showErrorToast("Failed to delete partner. Please try again later.");
         } finally {
-            setLoading(false);
+            // setLoading(false)
         }
-    }, []);
+    }
 
     useEffect(() => {
-        // fetchRules();
-        setAccounts([
-            {
-                account_name: "Lolly",
-                email: "abc@gmail.com",
-                join_date: "2024-08-27T10:00:00Z",
-                plan_amount: '$200',
-                reward_status: 'Paid',
-                reward_payout_date: "2024-08-27T10:00:00Z",
-                last_payment_date: "2024-08-27T10:00:00Z",
-                status: "Free trial",
-            },
-            {
-                account_name: "Lolly",
-                email: "abc@gmail.com",
-                join_date: "2024-08-27T10:00:00Z",
-                plan_amount: '$200',
-                reward_status: 'Pending',
-                reward_payout_date: "2024-08-28T10:00:00Z",
-                last_payment_date: "2024-08-27T10:00:00Z",
-                status: "Active",
-            },
-            {
-                account_name: "Lolly",
-                email: "abc@gmail.com",
-                join_date: "2024-08-29T10:00:00Z",
-                plan_amount: '--',
-                reward_status: 'Accepted',
-                reward_payout_date: "2024-08-27T10:00:00Z",
-                last_payment_date: "2024-08-27T10:00:00Z",
-                status: "Signup",
-            },
-            {
-                account_name: "Lolly",
-                email: "abc@gmail.com",
-                join_date: "2024-10-27T10:00:00Z",
-                plan_amount: '$200',
-                reward_status: 'Paid',
-                reward_payout_date: "2024-08-27T10:00:00Z",
-                last_payment_date: "2024-08-27T10:00:00Z",
-                status: "Pending",
-            },
-        ])
-    }, [fetchRules]);
+        if (id) {
+            fetchRules();
+        }
+        else {
+            // setAccounts([
+            //     {
+            //         account_name: "Lolly",
+            //         email: "abc@gmail.com",
+            //         join_date: "2024-08-27T10:00:00Z",
+            //         plan_amount: '$200',
+            //         reward_status: 'Paid',
+            //         reward_amount: '$2000',
+            //         reward_payout_date: "2024-08-27T10:00:00Z",
+            //         last_payment_date: "2024-08-27T10:00:00Z",
+            //         status: "Free trial",
+            //     },
+            //     {
+            //         account_name: "Lolly",
+            //         email: "abc@gmail.com",
+            //         join_date: "2024-08-27T10:00:00Z",
+            //         plan_amount: '$200',
+            //         reward_status: 'Pending',
+            //         reward_amount: '$2000',
+            //         reward_payout_date: "2024-08-28T10:00:00Z",
+            //         last_payment_date: "2024-08-27T10:00:00Z",
+            //         status: "Active",
+            //     },
+            //     {
+            //         account_name: "Lolly",
+            //         email: "abc@gmail.com",
+            //         join_date: "2024-08-29T10:00:00Z",
+            //         plan_amount: '--',
+            //         reward_status: 'Accepted',
+            //         reward_amount: '$2000',
+            //         reward_payout_date: "2024-08-27T10:00:00Z",
+            //         last_payment_date: "2024-08-27T10:00:00Z",
+            //         status: "Signup",
+            //     },
+            //     {
+            //         account_name: "Lolly",
+            //         email: "abc@gmail.com",
+            //         join_date: "2024-10-27T10:00:00Z",
+            //         plan_amount: '$200',
+            //         reward_status: 'Paid',
+            //         reward_amount: '$2000',
+            //         reward_payout_date: "2024-08-27T10:00:00Z",
+            //         last_payment_date: "2024-08-27T10:00:00Z",
+            //         status: "Pending",
+            //     },
+            // ])
+        }
+    }, [id]);
 
     const [referralLink, setReferralLink] = useState('1233213213tttttt');
 
@@ -221,7 +256,7 @@ const PartnersAccounts: React.FC = () => {
                 backgroundColor: '#fff',
                 width: '100%',
                 padding: 0,
-                margin: '3rem auto 0rem',
+                margin: '0 auto',
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'space-between',
@@ -256,7 +291,7 @@ const PartnersAccounts: React.FC = () => {
                 ) : (<>
                     <Box>
                         <Box sx={{ display: 'flex', width: '100%', justifyContent: 'end', mb: 2, alignItems: 'center', gap: 2 }}>
-                            <Typography className="second-sub-title">{selectedDateLabel ? selectedDateLabel : 'All time'}</Typography>
+                            {/* <Typography className="second-sub-title">{selectedDateLabel ? selectedDateLabel : 'All time'}</Typography> */}
                             <Button
                                 aria-controls={isCalendarOpen ? 'calendar-popup' : undefined}
                                 aria-haspopup="true"
@@ -314,32 +349,27 @@ const PartnersAccounts: React.FC = () => {
                                             {tableHeaders.map(({ key, label, sortable }) => (
                                                 <TableCell
                                                     key={key}
-                                                    sx={{
-                                                        ...suppressionsStyles.tableColumn,
-                                                        ...(key === 'account_name' && {
-                                                            position: 'sticky',
-                                                            left: 0,
-                                                            zIndex: 99,
-                                                            backgroundColor: '#fff',
-                                                        }),
-                                                    }}
+                                                    sx={{...suppressionsStyles.tableColumn, paddingLeft: "16px", cursor: sortable ? 'pointer' : 'default'}}
                                                     onClick={sortable ? () => handleSortRequest(key) : undefined}
-                                                    style={{ cursor: sortable ? 'pointer' : 'default' }}
                                                 >
                                                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
                                                         <Typography variant="body2" className='table-heading'>{label}</Typography>
-                                                        {sortable && orderBy === key && (
-                                                            <IconButton size="small" sx={{ ml: 1 }}>
-                                                                {order === 'asc' ? (
-                                                                    <ArrowUpwardIcon fontSize="inherit" />
-                                                                ) : (
-                                                                    <ArrowDownwardIcon fontSize="inherit" />
-                                                                )}
-                                                            </IconButton>
+                                                        {sortable && (
+                                                        <IconButton size="small" sx={{ ml: 1 }}>
+                                                            {orderBy === key ? (
+                                                            order === 'asc' ? (
+                                                                <ArrowUpwardIcon fontSize="inherit" />
+                                                            ) : (
+                                                                <ArrowDownwardIcon fontSize="inherit" />
+                                                            )
+                                                            ) : (
+                                                            <SwapVertIcon fontSize="inherit" />
+                                                            )}
+                                                        </IconButton>
                                                         )}
                                                     </Box>
                                                 </TableCell>
-                                            ))}
+                                                ))}
                                         </TableRow>
                                     </TableHead>
                                     <TableBody>
@@ -353,55 +383,57 @@ const PartnersAccounts: React.FC = () => {
                                                     }
                                                 },
                                             }}>
-                                                <TableCell className='sticky-cell table-data' sx={{
-                                                    ...suppressionsStyles.tableBodyColumn,
-                                                    position: 'sticky',
-                                                    left: 0,
-                                                    zIndex: 1,
-                                                    backgroundColor: '#fff',
-                                                }}>
+                                                <TableCell className='table-data' sx={{...suppressionsStyles.tableBodyColumn, paddingLeft: "16px"}}>
                                                     {data.account_name}
                                                 </TableCell>
 
-                                                <TableCell className='table-data' sx={suppressionsStyles.tableBodyColumn}>
+                                                <TableCell className='table-data' sx={{...suppressionsStyles.tableBodyColumn, paddingLeft: "16px"}}>
                                                     {data.email}
                                                 </TableCell>
 
-                                                <TableCell className='table-data' sx={suppressionsStyles.tableBodyColumn}>
+                                                <TableCell className='table-data' sx={{...suppressionsStyles.tableBodyColumn, paddingLeft: "16px"}}>
                                                     {dayjs(data.join_date).format('MMM D, YYYY')}
                                                 </TableCell>
 
-                                                <TableCell className='table-data' sx={suppressionsStyles.tableBodyColumn}>
+                                                <TableCell className='table-data' sx={{...suppressionsStyles.tableBodyColumn, paddingLeft: "16px"}}>
                                                     {data.plan_amount}
                                                 </TableCell>
 
-                                                <TableCell sx={{ ...suppressionsStyles.tableColumn, textAlign: 'center', pl: 0 }}>
-                                                    <Typography component="span" sx={{
-                                                        background: getStatusStyle(data.reward_status).background,
-                                                        padding: '6px 8px',
+                                                <TableCell sx={{ ...suppressionsStyles.tableColumn, paddingLeft: "16px", textAlign: 'center', pl: 0 }}>
+                                                    <Typography component="div" sx={{
+                                                        width: "74px",
+                                                        margin: "0 auto",
+                                                        background: getStatusStyle(data.status).background,
+                                                        padding: '3px 8px',
                                                         borderRadius: '2px',
                                                         fontFamily: 'Roboto',
                                                         fontSize: '12px',
                                                         fontWeight: '400',
                                                         lineHeight: '16px',
-                                                        color: getStatusStyle(data.reward_status).color,
+                                                        color: getStatusStyle(data.status).color,
                                                     }}>
                                                         {data.reward_status}
                                                     </Typography>
                                                 </TableCell>
 
-                                                <TableCell className='table-data' sx={suppressionsStyles.tableBodyColumn}>
+                                                {/* {id && <TableCell className='table-data' sx={suppressionsStyles.tableBodyColumn}>
+                                                    {data.reward_amount}
+                                                </TableCell>} */}
+
+                                                <TableCell className='table-data' sx={{...suppressionsStyles.tableBodyColumn, paddingLeft: "16px"}}>
                                                     {dayjs(data.reward_payout_date).format('MMM D, YYYY')}
                                                 </TableCell>
 
-                                                <TableCell className='table-data' sx={suppressionsStyles.tableBodyColumn}>
+                                                <TableCell className='table-data' sx={{...suppressionsStyles.tableBodyColumn, paddingLeft: "16px"}}>
                                                     {dayjs(data.last_payment_date).format('MMM D, YYYY')}
                                                 </TableCell>
 
-                                                <TableCell sx={{ ...suppressionsStyles.tableColumn, textAlign: 'center', pl: 0 }}>
-                                                    <Typography component="span" sx={{
+                                                <TableCell sx={{ ...suppressionsStyles.tableColumn, paddingLeft: "16px", textAlign: 'center', pl: 0 }}>
+                                                    <Typography component="div" sx={{
+                                                        width: "74px",
+                                                        margin: "0 auto",
                                                         background: getStatusStyle(data.status).background,
-                                                        padding: '6px 8px',
+                                                        padding: '3px 8px',
                                                         borderRadius: '2px',
                                                         fontFamily: 'Roboto',
                                                         fontSize: '12px',

@@ -9,12 +9,16 @@ class PartnersPersistence:
         self.db = db
 
 
-    def get_partners(self):
-        return self.db.query(Partners).all()
+    def get_partners(self, isMaster):
+        return self.db.query(Partners).filter(Partners.isMaster == isMaster).all()
     
 
     def get_asset_by_id(self, partner_id):
         return self.db.query(Partners).filter(Partners.id == partner_id).first()
+    
+
+    def get_asset_by_email(self, email):
+        return self.db.query(Partners).filter(Partners.email == email).first()
     
 
     def update_partner(self, partner_id: int, **kwargs) -> Optional[Partners]:
@@ -30,9 +34,6 @@ class PartnersPersistence:
         self.db.commit()
         self.db.refresh(partner)
         return partner
-    
-    def get_asset_by_email(self, email):
-        return self.db.query(Partners).filter(Partners.email == email).first()
     
 
     def update_partner_by_email(self, email: int, **kwargs) -> Optional[Partners]:
