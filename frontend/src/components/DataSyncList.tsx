@@ -13,6 +13,9 @@ import {
   Popover,
   Tooltip,
   LinearProgress,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
 } from "@mui/material";
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
@@ -106,7 +109,7 @@ const DataSyncList = ({ service_name, filters }: DataSyncProps) => {
 
 
   useEffect(() => {
-      handleIntegrationsSync();
+    handleIntegrationsSync();
   }, []);
 
   useEffect(() => {
@@ -302,6 +305,8 @@ const DataSyncList = ({ service_name, filters }: DataSyncProps) => {
   // Action
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [confirmAnchorEl, setConfirmAnchorEl] = useState<null | HTMLElement>(null);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
   const handleClick = (event: any, id: number) => {
     setAnchorEl(event.currentTarget);
@@ -451,6 +456,11 @@ const DataSyncList = ({ service_name, filters }: DataSyncProps) => {
 
   const handleSendlaneIconPopupClose = () => {
     setOpenSendlaneIconPopup(false);
+  };
+
+  const handleDeleteClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setConfirmAnchorEl(event.currentTarget);
+    setIsConfirmOpen(true);
   };
 
   const handleDelete = async () => {
@@ -923,10 +933,88 @@ const DataSyncList = ({ service_name, filters }: DataSyncProps) => {
                     backgroundColor: "background: rgba(80, 82, 178, 0.1)",
                   },
                 }}
-                onClick={handleDelete}
+                onClick={handleDeleteClick}
               >
                 Delete
               </Button>
+              <>
+              <Popover
+                open={isConfirmOpen}
+                anchorEl={confirmAnchorEl}
+                onClose={() => setIsConfirmOpen(false)}
+                anchorOrigin={{
+                  vertical: "bottom",
+                  horizontal: "right",
+                }}
+                transformOrigin={{
+                  vertical: "top",
+                  horizontal: "center",
+                }}
+                PaperProps={{
+                  sx: {
+                    padding: "0.125rem",
+                    width: "15.875rem",
+                    boxShadow: 0,
+                    borderRadius: "8px",
+                    border: "0.5px solid rgba(175, 175, 175, 1)",
+                  },
+                }}
+              >
+                <Typography className="first-sub-title" sx={{ paddingLeft: 2, pt: 1, pb: 0 }}>
+                  Confirm Deletion
+                </Typography>
+                <DialogContent sx={{ padding: 2 }}>
+                  <DialogContentText className="table-data">
+                    Are you sure you want to delete this list data?
+                  </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                  <Button
+                    className="second-sub-title"
+                    onClick={() => setIsConfirmOpen(false)}
+                    sx={{
+                      backgroundColor: "#fff",
+                      color: "rgba(80, 82, 178, 1) !important",
+                      fontSize: "14px",
+                      textTransform: "none",
+                      padding: "0.75em 1em",
+                      border: "1px solid rgba(80, 82, 178, 1)",
+                      maxWidth: "50px",
+                      maxHeight: "30px",
+                      "&:hover": {
+                        backgroundColor: "#fff",
+                        boxShadow: "0 2px 2px rgba(0, 0, 0, 0.3)",
+                      },
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    className="second-sub-title"
+                    onClick={() => {
+                      handleDelete();
+                      setIsConfirmOpen(false);
+                    }}
+                    sx={{
+                      backgroundColor: "rgba(80, 82, 178, 1)",
+                      color: "#fff !important",
+                      fontSize: "14px",
+                      textTransform: "none",
+                      padding: "0.75em 1em",
+                      border: "1px solid rgba(80, 82, 178, 1)",
+                      maxWidth: "60px",
+                      maxHeight: "30px",
+                      "&:hover": {
+                        backgroundColor: "rgba(80, 82, 178, 1)",
+                        boxShadow: "0 2px 2px rgba(0, 0, 0, 0.3)",
+                      },
+                    }}
+                  >
+                    Delete
+                  </Button>
+                </DialogActions>
+              </Popover>
+              </>
               {data.find((row) => row.id === selectedId)?.syncStatus ===
                 false && (
                   <Button
@@ -986,13 +1074,13 @@ const DataSyncList = ({ service_name, filters }: DataSyncProps) => {
         />
         {mailchimpIconPopupOpen && isEdit === true && (
           <>
-        <MailchimpDatasync
-          open={mailchimpIconPopupOpen}
-          onClose={handleMailchimpIconPopupClose}
-          data={data.find((item) => item.id === selectedId)}
-          isEdit={isEdit}
-        />
-        </>
+            <MailchimpDatasync
+              open={mailchimpIconPopupOpen}
+              onClose={handleMailchimpIconPopupClose}
+              data={data.find((item) => item.id === selectedId)}
+              isEdit={isEdit}
+            />
+          </>
         )}
         {omnisendIconPopupOpen && isEdit === true && (
           <>
@@ -1023,8 +1111,8 @@ const DataSyncList = ({ service_name, filters }: DataSyncProps) => {
                     onClose={() => setOpenBigcommerceConnect(false)}
                 />
          */}
-         <MailchimpConnect open={openMailchimpConnect} handleClose={() => setOpenMailchimpConnect(false)} 
-         initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'mailchimp')?.access_token} boxShadow="rgba(0, 0, 0, 0.01)" />
+        <MailchimpConnect open={openMailchimpConnect} handleClose={() => setOpenMailchimpConnect(false)}
+          initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'mailchimp')?.access_token} boxShadow="rgba(0, 0, 0, 0.01)" />
         <KlaviyoIntegrationPopup open={openKlaviyoConnect} handleClose={() => setOpenKlaviyoConnect(false)}
           initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'klaviyo')?.access_token} boxShadow="rgba(0, 0, 0, 0.01)" />
         <OmnisendConnect open={openOmnisendConnect} handleClose={() => setOpenOmnisendConnect(false)}

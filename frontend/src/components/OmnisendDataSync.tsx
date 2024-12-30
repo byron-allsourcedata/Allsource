@@ -845,7 +845,7 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data
                                                 minWidth: '196px'
                                             }
                                         }}>
-                                            <Image src='/omnisend_icon_black.svg' alt='klaviyo' height={20} width={24} />
+                                            <Image src='/omnisend_icon_black.svg' alt='omnisend' height={20} width={24} />
                                         </Grid>
                                         <Grid item xs="auto" sm={1}>&nbsp;</Grid>
                                     </Grid>

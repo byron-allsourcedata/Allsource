@@ -171,8 +171,8 @@ const OmnisendConnect = ({ handleClose, open, onSave, initApiKey, boxShadow}: Cr
         }, {params: {service_name: 'omnisend'}})
         if(response.status === 200) {
             showToast('Integration Omnisend Successfully')
-            if (onSave){
-                onSave({service_name: 'omnisend', is_failed: false, acess_token: apiKey})
+            if(onSave){
+                onSave({'service_name': 'omnisend', 'is_failed': false, access_token: apiKey})
             }
             handleNextTab()
         }

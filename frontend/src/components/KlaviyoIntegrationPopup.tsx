@@ -21,13 +21,13 @@ interface CreateKlaviyoProps {
 }
 
 interface IntegrationsCredentials {
-    id: number
+    id?: number
     access_token: string
-    ad_account_id: string
-    shop_domain: string
-    data_center: string
+    ad_account_id?: string
+    shop_domain?: string
+    data_center?: string
     service_name: string
-    is_with_suppression: boolean
+    is_with_suppression?: boolean
 }
 
 const klaviyoStyles = {
@@ -177,6 +177,12 @@ const KlaviyoIntegrationPopup = ({ handleClose, open, onSave, initApiKey, boxSha
             });
 
             if (response?.status === 200) {
+                if (onSave) {
+                    onSave({
+                        service_name: 'klaviyo',
+                        access_token: apiKey,
+                    })
+                }
                 showToast("Integration Klaviyo Successfully");
                 handleNextTab();
             }
@@ -215,15 +221,15 @@ const KlaviyoIntegrationPopup = ({ handleClose, open, onSave, initApiKey, boxSha
         if (onSave) {
             onSave({
                 id: -1,
-                service_name: 'Klaviyo',
+                'service_name': 'klaviyo',
                 data_center: '',
                 access_token: apiKey,
                 is_with_suppression: checked,
                 ad_account_id: '',
                 shop_domain: ''
             })
-            handleClose()
         }
+            handleClose()
     }
 
     const getButton = (tabValue: string) => {
