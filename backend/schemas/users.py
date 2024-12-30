@@ -29,6 +29,7 @@ class UserSignUpForm(BaseModel):
     password: str = Field(...)
     is_with_card: bool = Field(default=False)
     teams_token: Optional[str] = None
+    referral_token: Optional[str] = None
     spi: Optional[str] = None
     shopify_data: Optional[ShopifyPayloadModel] = None
     awc: Optional[str] = None

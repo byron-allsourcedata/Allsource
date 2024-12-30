@@ -1,0 +1,304 @@
+import React, { ChangeEvent, useState, useEffect } from 'react';
+import { Drawer, Box, Typography, Button, IconButton, TextField, LinearProgress } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
+import axiosInstance from '@/axios/axiosInterceptorInstance';
+import { styled } from '@mui/material/styles';
+import { showErrorToast, showToast } from '@/components/ToastNotification';
+
+interface PartnerData {
+    id: number;
+    partner_name: string;
+    email: string;
+    join_date: Date;
+    commission: string;
+    subscription: string;
+    sources: string;
+    last_payment_date: string;
+    status: string;
+}
+
+interface FormUploadPopupProps {
+    isMaster: boolean;
+    open: boolean;
+    fileData: {id: number, email: string, fullName: string, companyName: string, commission: string}
+    onClose: () => void;
+    updateOrAddAsset: (partner: PartnerData) => void
+}
+
+const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ isMaster, open, fileData, onClose, updateOrAddAsset }) => {
+    const [action, setAction] = useState("Add");
+    const [buttonContain, setButtonContain] = useState(false);
+    const [fullName, setFullName] = useState(""); 
+    const [email, setEmail] = useState(""); 
+    const [companyName, setCompanyName] = useState(""); 
+    const [commission, setCommission] = useState(""); 
+    const [processing, setProcessing] = useState(false)
+
+    const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
+        height: 4,
+        borderRadius: 0,
+        backgroundColor: '#c6dafc',
+        '& .MuiLinearProgress-bar': {
+          borderRadius: 5,
+          backgroundColor: '#4285f4',
+        },
+      }));
+
+    
+    const handleClose = () => {
+        onClose()
+        setAction("Add")
+        setFullName(""); 
+        setEmail(""); 
+        setCompanyName(""); 
+        setCommission(""); 
+    }
+
+    const handleSubmit = async () => {
+        setProcessing(true);
+        setButtonContain(false);
+    
+        const formData = new FormData();
+        formData.append("commission", commission);
+        
+    
+        try {
+            let response;
+    
+            if (action === "Edit" && fileData && fileData.id) {
+                response = await axiosInstance.put(`admin-partners/${fileData.id}/`, formData);
+            } else {
+                formData.append("email", email);
+                formData.append("full_name", fullName);
+                formData.append("company_name", companyName);
+                response = await axiosInstance.post(`admin-partners/`, formData);
+            }
+            if (response.data.status === "SUCCESS") {
+                updateOrAddAsset(response.data.data);
+                showToast("Partner successfully submitted!");
+            }
+        } catch {
+            showErrorToast("Failed to submit the asset. Please try again.");
+        } finally {
+            handleClose();
+            setFullName(""); 
+            setEmail(""); 
+            setCompanyName(""); 
+            setCommission(""); 
+            setProcessing(false);
+        }
+    };
+
+    useEffect(() => {
+        if (fileData && fileData.email) {
+            setEmail(fileData.email);
+            setCommission(fileData.commission);
+            setCompanyName(fileData.companyName);
+            setFullName(fileData.fullName);
+            setButtonContain(true)
+            setAction("Edit")
+        }
+    }, [fileData]);
+
+    useEffect(() => {
+        setButtonContain([email, fullName, companyName, commission].every(field => typeof field === "string" && field.trim().length > 0));
+    }, [email, fullName, companyName, commission]);
+    
+    return (
+        <>
+        <Drawer anchor="right" open={open}>
+        {processing && (
+            <Box
+                sx={{
+                width: '100%',
+                position: 'fixed',
+                top: '3.5rem',
+                zIndex: 1200,   
+                }}
+            >
+                <BorderLinearProgress variant="indeterminate" />
+            </Box>
+        )}
+            <Box
+            sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            padding: "0.75em 1em 0.25em 1em",
+            borderBottom: "1px solid #e4e4e4",
+            position: "sticky",
+            top: 0,
+            zIndex: 9900,
+            backgroundColor: "#fff",
+            }}
+        >
+                <Typography
+                sx={{
+                    fontFamily: "Nunito Sans",
+                    fontSize: "16px",
+                    fontWeight: "600",
+                    lineHeight: "21.82px"
+                }}
+                >
+                {action === "Add" ? "Invite" : "Edit"} {isMaster ? "master" : "" } partner details
+                </Typography>
+                <Box sx={{ display: "flex", flexDirection: "row" }}>
+                    <IconButton onClick={handleClose}>
+                        <CloseIcon />
+                    </IconButton>
+                </Box>
+            </Box>
+            <Box 
+                sx={{
+                    padding: "0 32px"
+                }}>
+                <Box 
+                    sx={{
+                        display: "flex",
+                        flexDirection: "column"
+                    }}>
+                        <Typography
+                            sx={{
+                                fontFamily: "Nunito Sans",
+                                fontSize: "16px",
+                                fontWeight: "600",
+                                lineHeight: "21.82px",
+                                margin: "24px 0 40px"
+                            }}
+                            >
+                            {action == "Add" 
+                            ? `Invite your contacts to become official ${isMaster ? "master" : ""} partners and grow together.`
+                            : "Edit partner information to ensure accuracy and relevance."
+                            }
+                        </Typography>    
+                                        
+                        <TextField
+                            disabled={action === "Edit"}
+                            id="outlined-required"
+                            label="Full name"
+                            placeholder='Full name'
+                            sx={{
+                                paddingBottom: "24px",
+                                "& .MuiInputLabel-root.Mui-focused": {
+                                    color: "rgba(17, 17, 19, 0.6)",
+                                },
+                                "& .MuiInputLabel-root[data-shrink='false']": {
+                                    transform: "translate(12px, 50%) scale(1)",
+                                },  
+                            }}
+                            value={fullName}
+                            onChange={(e) => setFullName(e.target.value)}
+                        />
+
+                        <TextField
+                            disabled={action === "Edit"}
+                            id="outlined-required"
+                            label="Email"
+                            type="email"
+                            placeholder='Email'
+                            sx={{
+                                width: "556px",
+                                paddingBottom: "24px",
+                                "& .MuiInputLabel-root.Mui-focused": {
+                                    color: "rgba(17, 17, 19, 0.6)",
+                                },
+                                "& .MuiInputLabel-root[data-shrink='false']": {
+                                    transform: "translate(12px, 50%) scale(1)",
+                                },  
+                            }}
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                        />
+
+                        <TextField
+                            disabled={action === "Edit"}
+                            id="outlined-required"
+                            label="Company name"
+                            placeholder='Company name'
+                            sx={{
+                                paddingBottom: "24px",
+                                "& .MuiInputLabel-root.Mui-focused": {
+                                    color: "rgba(17, 17, 19, 0.6)",
+                                },
+                                "& .MuiInputLabel-root[data-shrink='false']": {
+                                    transform: "translate(12px, 50%) scale(1)",
+                                },  
+                            }}
+                            value={companyName}
+                            onChange={(e) => setCompanyName(e.target.value)}
+                        />
+
+                        <TextField
+                            id="outlined-required"
+                            label="Commission %"
+                            placeholder='Commission'
+                            sx={{
+                                paddingBottom: "24px",
+                                "& .MuiInputLabel-root.Mui-focused": {
+                                    color: "rgba(17, 17, 19, 0.6)",
+                                },
+                                "& .MuiInputLabel-root[data-shrink='false']": {
+                                    transform: "translate(12px, 50%) scale(1)",
+                                },  
+                            }}
+                            value={commission}
+                            onChange={(e) => setCommission(e.target.value)}
+                        />
+                </Box>
+            </Box>
+            <Box
+                sx={{
+                    display: "flex",
+                    justifyContent: "flex-end",
+                    gap: "16px",
+                    borderTop: "1px solid #e4e4e4",
+                    position: "absolute",
+                    width: "100%",
+                    bottom: 0,
+                    zIndex: 9901,
+                    padding: "20px 1em",
+                }}
+            >
+                <Button variant="outlined" onClick={handleClose} disabled={!buttonContain}  sx={{
+                    borderColor: "rgba(80, 82, 178, 1)",
+                }}>
+                    <Typography
+                        sx={{
+                        textAlign: "center",
+                        color: "rgba(80, 82, 178, 1)",
+                        textTransform: "none",
+                        fontFamily: "Nunito Sans",
+                        fontWeight: "600",
+                        fontSize: "14px",
+                        lineHeight: "19.6px",
+                        }}
+                    >
+                        Cancel
+                    </Typography>
+                </Button> 
+                <Button variant="contained" onClick={handleSubmit} disabled={!buttonContain}  sx={{
+                    backgroundColor: "rgba(80, 82, 178, 1)"
+                }}>
+                    <Typography
+                        sx={{
+                        width: "120px",
+                        // height: "40px",
+                        textAlign: "center",
+                        color: "rgba(255, 255, 255, 1)",
+                        fontFamily: "Nunito Sans",
+                        textTransform: "none",
+                        fontWeight: "600",
+                        fontSize: "14px",
+                        lineHeight: "19.6px",
+                        }}
+                    >
+                        Send
+                    </Typography>
+                </Button> 
+            </Box>
+        </Drawer>
+        </>
+    )
+};
+
+export default InvitePartnerPopup;

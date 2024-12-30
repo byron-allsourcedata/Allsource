@@ -1,6 +1,6 @@
 "use client"
 import axiosInstance from "@/axios/axiosInterceptorInstance";
-import { Box, Grid, Typography, Menu, MenuItem, Link, Button, LinearProgress} from "@mui/material";
+import { Box, Grid, Typography, Menu, MenuItem, Link, Button, Tabs, Tab, LinearProgress} from "@mui/material";
 import { useEffect, useState} from "react";
 import PartnersAsset from '@/components/PartnersAsset';
 import dynamic from "next/dynamic";
@@ -13,27 +13,31 @@ import { resellerStyle } from "@/app/admin/reseller/resellerStyle";
 import { showErrorToast, showToast } from '@/components/ToastNotification';
 import { styled } from '@mui/material/styles';
 import { width } from "@mui/system";
-
-interface AssetsData {
-    id: number;
-    file_url: string;
-    preview_url: string | null;
-    type: string;
-    title: string;
-    file_extension: string;
-    file_size: string;
-    video_duration: string;
-    isFavorite: boolean;
-}
-
-interface PartnersAssetsData {
-    type: string;
-    asset: AssetsData[] | [];
-}
+import  PartnersAdmin from '@/components/PartnersAdmin'
 
 const SidebarAdmin = dynamic(() => import('../../../components/SidebarAdmin'), {
     suspense: true,
 });
+
+interface TabPanelProps {
+    children?: React.ReactNode;
+    value: number;
+    index: number;
+}
+
+const TabPanel: React.FC<TabPanelProps> = ({ children, value, index, ...other }) => {
+    return (
+        <div
+            role="tabpanel"
+            hidden={value !== index}
+            id={`tabpanel-${index}`}
+            aria-labelledby={`tab-${index}`}
+            {...other}
+        >
+            {value === index && <Box sx={{ margin: 0, '@media (max-width: 900px)': { pl: 3, pr: 3 }, '@media (max-width: 700px)': { pl: 1, pr: 1 } }}>{children}</Box>}
+        </div>
+    );
+};
 
 const Assets: React.FC = () => {
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -46,7 +50,10 @@ const Assets: React.FC = () => {
     const full_name = userFullName || meData.full_name;
     const email = userEmail || meData.email;
     const { resetTrialData } = useTrial();
-    const [assets, setAssets] = useState<PartnersAssetsData[]>([{type: "Videos", asset: []}, {type: "Pitch decks", asset: []}, {type: "Images", asset: []}, {type: "Documents", asset: []}, ]);
+    const [tabIndex, setTabIndex] = useState(0);
+    const handleTabChange = (event: React.SyntheticEvent, newIndex: number) => {
+        setTabIndex(newIndex);
+    };
 
     const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
         height: 4,
@@ -71,89 +78,6 @@ const Assets: React.FC = () => {
         window.location.href = "/signin";
     };
 
-    const fetchRewards = async () => {
-        setLoading(true);
-        try {
-
-            const response = await axiosInstance.get("/admin-assets");
-            const assetsByType = response.data.reduce((acc: Record<string, AssetsData[]>, item: AssetsData) => {
-                if (!acc[item.type]) {
-                    acc[item.type] = [];
-                }
-                acc[item.type].push({ ...item });
-                return acc;
-            }, {});
-
-
-            setAssets([
-                {type: "Videos", asset: assetsByType["video"] || []},
-                {type: "Pitch decks", asset: assetsByType["presentation"] || []},
-                {type: "Images", asset: assetsByType["image"] || []},
-                {type: "Documents", asset: assetsByType["document"] || []},
-            ]);
-
-        } catch (error) {
-            console.error("Error fetching rewards:", error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleDeleteAsset = async (id: number) => {
-        setLoading(true)
-        try {
-            const response = await axiosInstance.delete(`admin-assets/${id}`);
-            const status = response.data.status;
-            if (status === "SUCCESS") {
-                removeAssetById(id);
-                showToast("Asset successfully deleted!")
-            } else {
-                showErrorToast("The provided ID is not valid.")
-            }
-        } catch {
-            showErrorToast("Failed to delete asset. Please try again later.");
-        } finally {
-            setLoading(false)
-        }
-    }
-
-    useEffect(() => {
-        fetchRewards()
-    }, []);
-
-    const removeAssetById = (id: number) => {
-        setAssets((prevAssets) =>
-            prevAssets.map((group) => ({
-                ...group,
-                asset: group.asset.filter((item) => item.id !== id),
-            }))
-        );
-    };
-
-    const assetTypeMap: Record<string, string> = {
-        video: "Videos",
-        image: "Images",
-        presentation: "Pitch decks",
-        document: "Documents",
-    }
-
-    const updateOrAddAsset = (type: string, newAsset: AssetsData) => {
-        setAssets((prevAssets) => 
-            prevAssets.map((group) => {
-                if (group.type === assetTypeMap[type]) {
-                    const existingAssetIndex = group.asset.findIndex((item) => item.id === newAsset.id);
-                    if (existingAssetIndex !== -1) {
-                        const updatedAssets = [...group.asset];
-                        updatedAssets[existingAssetIndex] = newAsset;
-                        return { ...group, asset: updatedAssets };
-                    } else {
-                        return { ...group, asset: [...group.asset, newAsset] };
-                    }
-                }
-                return group;
-            })
-        );
-    };
 
     const handleProfileMenuClick = (event: React.MouseEvent<HTMLButtonElement>) => {
         setAnchorEl(event.currentTarget);
@@ -316,15 +240,17 @@ const Assets: React.FC = () => {
 
         <Grid container spacing={3}>
             <Grid item xs={12} sx={{ display: 'flex', flexDirection: 'column', gap: '24px', marginTop: '85px' }}>
-                <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <Typography variant="h4" component="h1" sx={assetsStyle.title}>
-                        Assets
-                    </Typography>
-                </Box>
-                <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-                    {assets.map((data, index) => (
-                        <PartnersAsset deleteAsset={handleDeleteAsset} updateOrAddAsset={updateOrAddAsset} key={index} data={data} isAdmin={true} />
-                    ))}
+                <Box sx={{ display: "flex", flexDirection: "column"}}>
+                    <Box sx={{ width: '100%', padding: 0, margin: 0 }}>
+                        <TabPanel value={tabIndex} index={0}>
+                            <PartnersAdmin isMaster={false} loading={loading} setLoading={setLoading} tabIndex={tabIndex} handleTabChange={handleTabChange}/>
+                        </TabPanel>
+                    </Box>
+                    <Box sx={{ width: '100%', padding: 0, margin: 0 }}>
+                        <TabPanel value={tabIndex} index={1}>
+                            <PartnersAdmin isMaster={true} loading={loading} setLoading={setLoading} tabIndex={tabIndex} handleTabChange={handleTabChange}/>
+                        </TabPanel>
+                    </Box>
                 </Box>
             </Grid>
         </Grid>
