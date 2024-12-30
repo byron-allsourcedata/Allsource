@@ -1,0 +1,181 @@
+import logging
+import os
+import hashlib
+import json
+from datetime import datetime
+from fastapi import HTTPException
+from models.partners_asset import PartnersAsset
+from persistence.user_persistence import UserPersistence
+from persistence.partners_persistence import PartnersPersistence
+from persistence.sendgrid_persistence import SendgridPersistence
+from schemas.partners_asset import PartnersResponse
+from datetime import datetime
+from services.sendgrid import SendgridHandler
+from enums import SendgridTemplate
+
+logger = logging.getLogger(__name__)
+
+
+class PartnersService:
+
+    def __init__(self,
+        partners_persistence: PartnersPersistence,
+        user_persistence_service: UserPersistence,
+        send_grid_persistence_service: SendgridPersistence):
+        self.partners_persistence = partners_persistence
+        self.user_persistence_service = user_persistence_service
+        self.send_grid_persistence_service = send_grid_persistence_service
+        self.default_user = {
+            "full_name": "Default User",
+            "email": "default@example.com",
+            "source_platform": "N/A",
+            "created_at": datetime.strptime("1880-12-19 12:54:55", "%Y-%m-%d %H:%M:%S"),
+        }
+
+    def get_user_info(self, id):
+        if id is not None:
+            return self.user_persistence_service.get_user_by_id(id)
+        else:
+            return self.default_user
+
+
+    def get_partners(self, isMaster, search):
+        if search is None:
+            partners = self.partners_persistence.get_partners(isMaster)
+        else:
+            search_term = f"%{search}%"
+            partners = self.partners_persistence.get_partners_search(isMaster, search_term)
+
+        result = []
+        for partner in partners:
+            user_id = partner.user_id
+            user = self.get_user_info(user_id)
+            result.append(self.domain_mapped(partner, user))
+
+        return result
+    
+
+    def delete_asset(self, id: int, message: str):
+        if not id:
+            raise HTTPException(status_code=404, detail="Partner data not found")
+        try:
+            partner = self.partners_persistence.get_asset_by_id(id)
+            self.partners_persistence.terminate_partner(partner_id=id)
+            self.send_message_in_email(message, partner.email)
+            return {"status": "SUCCESS"}
+        except Exception as e:
+            logger.debug('Error deleting partner', e)
+            raise HTTPException(status_code=500, detail=f"Unexpected error during delete: {str(e)}")
+    
+
+    def send_message_in_email(self, message: str, email: str):
+        mail_object = SendgridHandler()
+        template_id = self.send_grid_persistence_service.get_template_by_alias(
+            SendgridTemplate.PARTNER_TEMPLATE.value)
+        mail_object.send_sign_up_mail(
+            to_emails=email,
+            template_id=template_id,
+            template_placeholder={"plan_name": message, "email": email},
+        )
+    
+
+    def send_referral_in_email(self, full_name: str, email: str):
+        mail_object = SendgridHandler()
+        template_id = self.send_grid_persistence_service.get_template_by_alias(
+            SendgridTemplate.PARTNER_TEMPLATE.value)
+        md5_token_info = {
+            'user_mail': email,
+            'salt': os.getenv('SECRET_SALT')
+        }
+        json_string = json.dumps(md5_token_info, sort_keys=True)
+        md5_hash = hashlib.md5(json_string.encode()).hexdigest()
+        referral_token = f"{os.getenv('SITE_HOST_URL')}/signup?referral_token={md5_hash}&user_mail={email}"
+        mail_object.send_sign_up_mail(
+            to_emails=email,
+            template_id=template_id,
+            template_placeholder={"full_name": full_name, "link": referral_token, "email": email},
+        )
+        return md5_hash
+    
+
+    async def create_partner(self, full_name: str, email: str, company_name: str, commission: str):
+        if not full_name or not email or not company_name or not commission:
+            raise HTTPException(status_code=404, detail="Partner data not found")
+        
+        try:
+            hash = self.send_referral_in_email(full_name, email)
+            creating_data = {
+                "full_name": full_name,
+                "email": email,
+                "company_name": company_name,
+                "commission": commission,
+                "token": hash
+            }
+
+            created_data = self.partners_persistence.create_partner(creating_data)
+
+            if not created_data:
+                logger.debug('Database error during creation', e)
+                raise HTTPException(status_code=500, detail="Partner not created")
+
+            user = self.get_user_info(created_data.user_id)
+            return {"status": "SUCCESS", "data": self.domain_mapped(created_data, user)}
+        except Exception as e:
+            logger.debug('Error creating assets file', e)
+            raise HTTPException(status_code=500, detail=f"Unexpected error during creation: {str(e)}")
+    
+
+    def setUser(self, email: str, user_id: int, status: str):
+        if not email or not user_id or not status:
+            raise HTTPException(status_code=404, detail="Partner data not found")
+        
+        try:
+            updated_data = self.partners_persistence.update_partner_by_email(email=email, user_id=user_id, status=status)
+
+            if not updated_data:
+                logger.debug('Database error during updation', e)
+                raise HTTPException(status_code=500, detail="Partner not updated")
+
+            user = self.get_user_info(updated_data.user_id)
+            return {"status": "SUCCESS", "data": self.domain_mapped(updated_data, user)}
+        except Exception as e:
+            logger.debug('Error updating assets file', e)
+            raise HTTPException(status_code=500, detail=f"Unexpected error during updation: {str(e)}")
+        
+    
+    async def update_partner(self, partner_id: int, field: str, value: str, message):
+        if not partner_id or not field or not value:
+            raise HTTPException(status_code=404, detail="Partner data not found")
+        
+        try:
+            updated_data = self.partners_persistence.update_partner(partner_id=partner_id, **{field: value})
+
+            if not updated_data:
+                logger.debug("Database error during updation")
+                raise HTTPException(status_code=500, detail="Partner not updated")
+            
+            if not message:
+                message="Your commission has been changed"
+
+            self.send_message_in_email(message, updated_data.email)
+
+            user = self.get_user_info(updated_data.user_id)
+            return {"status": "SUCCESS", "data": self.domain_mapped(updated_data, user)}
+        except Exception as e:
+            logger.debug("Error updating partner data", e)
+            raise HTTPException(status_code=500, detail=f"Unexpected error during updation: {str(e)}")
+
+
+
+    def domain_mapped(self, partner: PartnersAsset, user: dict):
+        return PartnersResponse(
+            id=partner.id,
+            partner_name=partner.name,
+            email=partner.email,
+            join_date=user['created_at'],
+            commission=partner.commission,
+            subscription="Basic",
+            sources=user.get('source_platform', 'N/A'),
+            last_payment_date="1880-12-19 12:54:55",
+            status=partner.status,
+        ).model_dump()
