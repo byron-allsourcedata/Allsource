@@ -15,23 +15,6 @@ import { styled } from '@mui/material/styles';
 import { width } from "@mui/system";
 import  PartnersAdmin from '@/components/PartnersAdmin'
 
-interface AssetsData {
-    id: number;
-    file_url: string;
-    preview_url: string | null;
-    type: string;
-    title: string;
-    file_extension: string;
-    file_size: string;
-    video_duration: string;
-    isFavorite: boolean;
-}
-
-interface PartnersAssetsData {
-    type: string;
-    asset: AssetsData[] | [];
-}
-
 const SidebarAdmin = dynamic(() => import('../../../components/SidebarAdmin'), {
     suspense: true,
 });
@@ -257,20 +240,15 @@ const Assets: React.FC = () => {
 
         <Grid container spacing={3}>
             <Grid item xs={12} sx={{ display: 'flex', flexDirection: 'column', gap: '24px', marginTop: '85px' }}>
-                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', justifyContent: 'space-between' }}>
-                    <Typography variant="h4" component="h1" sx={assetsStyle.title}>
-                        Partners
-                    </Typography>
-                </Box>
                 <Box sx={{ display: "flex", flexDirection: "column"}}>
                     <Box sx={{ width: '100%', padding: 0, margin: 0 }}>
                         <TabPanel value={tabIndex} index={0}>
-                            <PartnersAdmin isMaster={false} setLoading={setLoading} tabIndex={tabIndex} handleTabChange={handleTabChange}/>
+                            <PartnersAdmin isMaster={false} loading={loading} setLoading={setLoading} tabIndex={tabIndex} handleTabChange={handleTabChange}/>
                         </TabPanel>
                     </Box>
                     <Box sx={{ width: '100%', padding: 0, margin: 0 }}>
                         <TabPanel value={tabIndex} index={1}>
-                            <PartnersAdmin isMaster={true} setLoading={setLoading} tabIndex={tabIndex} handleTabChange={handleTabChange}/>
+                            <PartnersAdmin isMaster={true} loading={loading} setLoading={setLoading} tabIndex={tabIndex} handleTabChange={handleTabChange}/>
                         </TabPanel>
                     </Box>
                 </Box>

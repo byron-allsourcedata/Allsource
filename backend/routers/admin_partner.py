@@ -8,10 +8,11 @@ router = APIRouter(dependencies=[Depends(check_user_admin)])
 @router.get('')
 @router.get('/')
 def partners(
-    isMaster: Optional[str] = Query(...),
+    isMaster: Optional[bool] = Query(None),
+    search: Optional[str] = Query(None),
     get_partners_service: PartnersService = Depends(get_partners_service)):
     
-    assets = get_partners_service.get_partners(isMaster)
+    assets = get_partners_service.get_partners(isMaster, search)
     return assets
 
 

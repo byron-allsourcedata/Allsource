@@ -12,6 +12,11 @@ class PartnersPersistence:
     def get_partners(self, isMaster):
         return self.db.query(Partners).filter(Partners.isMaster == isMaster).all()
     
+    def get_partners_search(self, isMaster, search_term):
+        return self.db.query(Partners).filter(
+            (Partners.isMaster == isMaster) & 
+            ((Partners.name.ilike(search_term)) | (Partners.email.ilike(search_term)))
+        ).all()
 
     def get_asset_by_id(self, partner_id):
         return self.db.query(Partners).filter(Partners.id == partner_id).first()

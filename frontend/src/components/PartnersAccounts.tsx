@@ -10,6 +10,7 @@ import CustomTablePagination from "./CustomTablePagination";
 import Image from "next/image";
 import CalendarPopup from "./CustomCalendar";
 import { DateRangeIcon } from "@mui/x-date-pickers/icons";
+import SearchIcon from '@mui/icons-material/Search';
 import SwapVertIcon from '@mui/icons-material/SwapVert';
 
 const tableHeaders = [
@@ -64,13 +65,15 @@ const getStatusStyle = (status: any) => {
 };
 
 interface PartnersAccountsProps {
-    id: number | null
+    id: number | null;
+    loading: boolean;
+    setLoading: (state: boolean) => void;
 }
 
 
 
-const PartnersAccounts: React.FC<PartnersAccountsProps> = ({id}) => {
-    const [loading, setLoading] = useState(false);
+const PartnersAccounts: React.FC<PartnersAccountsProps> = ({id, loading, setLoading}) => {
+
     const [expanded, setExpanded] = useState<number | false>(false);
     const [accounts, setAccounts] = useState<any[]>([]);
     const [page, setPage] = useState(0);
@@ -171,7 +174,7 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({id}) => {
     };
 
     const fetchRules = async () => {
-        // setLoading(true)
+        setLoading(true)
 
         try {
         const response = await axiosInstance.get(`/accounts`, {params: { id }});
@@ -179,7 +182,7 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({id}) => {
         } catch {
             // showErrorToast("Failed to delete partner. Please try again later.");
         } finally {
-            // setLoading(false)
+            setLoading(false)
         }
     }
 
@@ -249,9 +252,6 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({id}) => {
 
     return (
         <>
-            {loading &&
-                <CustomizedProgressBar />
-            }
             <Box sx={{
                 backgroundColor: '#fff',
                 width: '100%',
@@ -263,7 +263,7 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({id}) => {
                 minHeight: '77vh',
                 '@media (max-width: 600px)': {margin: '0rem auto 0rem'}
             }}>
-                {accounts.length === 0 ? (
+                {accounts.length === 0 && !loading ? (
                     <Box sx={suppressionsStyles.centerContainerStyles}>
                         <Typography variant="h5" sx={{
                             mb: 3,
@@ -290,8 +290,46 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({id}) => {
                     </Box>
                 ) : (<>
                     <Box>
-                        <Box sx={{ display: 'flex', width: '100%', justifyContent: 'end', mb: 2, alignItems: 'center', gap: 2 }}>
+                        <Box sx={{ display: 'flex', width: '100%', justifyContent: 'space-between', mb: 2, alignItems: 'center', gap: 2 }}>
                             {/* <Typography className="second-sub-title">{selectedDateLabel ? selectedDateLabel : 'All time'}</Typography> */}
+                            <Typography  variant="h4" component="h2"
+                                sx={{
+                                    fontWeight: 'bold',
+                                    fontSize: '16px',
+                                    whiteSpace: 'nowrap',
+                                    textAlign: 'start',
+                                    fontFamily: 'Nunito Sans',                                  
+                                }}>
+                                Accounts
+                            </Typography>
+                            <Box sx={{display: 'flex', gap: "16px"}}>
+                                            <TextField
+                                                id="input-with-icon-textfield"
+                                                placeholder="Search by account name, emails"
+                                                InputProps={{
+                                                    startAdornment: (
+                                                        <InputAdornment position="start">
+                                                            <SearchIcon />
+                                                        </InputAdornment>
+                                                    ),
+                                                }}
+                                                variant="outlined"
+                                                sx={{
+                                                    flex: 1,
+                                                    width: '360px',
+                                                    '& .MuiOutlinedInput-root': {
+                                                        borderRadius: '4px',
+                                                        height: '40px',
+                                                    },
+                                                    '& input': {
+                                                        paddingLeft: 0,
+                                                    },
+                                                    '& input::placeholder': {
+                                                        fontSize: '14px',
+                                                        color: '#8C8C8C',
+                                                    },
+                                                }}
+                                            />
                             <Button
                                 aria-controls={isCalendarOpen ? 'calendar-popup' : undefined}
                                 aria-haspopup="true"
@@ -336,6 +374,7 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({id}) => {
                                     </Box>
                                 }
                             </Button>
+                            </Box>
                         </Box>
 
                         <Box sx={{ display: 'flex', }}>
@@ -352,7 +391,7 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({id}) => {
                                                     sx={{...suppressionsStyles.tableColumn, paddingLeft: "16px", cursor: sortable ? 'pointer' : 'default'}}
                                                     onClick={sortable ? () => handleSortRequest(key) : undefined}
                                                 >
-                                                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                                    <Box sx={{ display: 'flex', alignItems: 'center' }} style={key === "status" || key === "reward_status" ? { justifyContent: "center" } : {}}>
                                                         <Typography variant="body2" className='table-heading'>{label}</Typography>
                                                         {sortable && (
                                                         <IconButton size="small" sx={{ ml: 1 }}>
@@ -399,21 +438,23 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({id}) => {
                                                     {data.plan_amount}
                                                 </TableCell>
 
-                                                <TableCell sx={{ ...suppressionsStyles.tableColumn, paddingLeft: "16px", textAlign: 'center', pl: 0 }}>
-                                                    <Typography component="div" sx={{
-                                                        width: "74px",
-                                                        margin: "0 auto",
-                                                        background: getStatusStyle(data.status).background,
-                                                        padding: '3px 8px',
-                                                        borderRadius: '2px',
-                                                        fontFamily: 'Roboto',
-                                                        fontSize: '12px',
-                                                        fontWeight: '400',
-                                                        lineHeight: '16px',
-                                                        color: getStatusStyle(data.status).color,
-                                                    }}>
-                                                        {data.reward_status}
-                                                    </Typography>
+                                                <TableCell sx={{ ...suppressionsStyles.tableColumn, paddingLeft: "16px", textAlign: 'center' }}>
+                                                    <Box sx={{display: "flex", justifyContent: "center"}}>
+                                                        <Typography component="div" sx={{
+                                                            width: "74px",
+                                                            margin: "0",
+                                                            background: getStatusStyle(data.status).background,
+                                                            padding: '3px 8px',
+                                                            borderRadius: '2px',
+                                                            fontFamily: 'Roboto',
+                                                            fontSize: '12px',
+                                                            fontWeight: '400',
+                                                            lineHeight: '16px',
+                                                            color: getStatusStyle(data.status).color,
+                                                        }}>
+                                                            {data.reward_status}
+                                                        </Typography>
+                                                    </Box>
                                                 </TableCell>
 
                                                 {/* {id && <TableCell className='table-data' sx={suppressionsStyles.tableBodyColumn}>
@@ -428,21 +469,23 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({id}) => {
                                                     {dayjs(data.last_payment_date).format('MMM D, YYYY')}
                                                 </TableCell>
 
-                                                <TableCell sx={{ ...suppressionsStyles.tableColumn, paddingLeft: "16px", textAlign: 'center', pl: 0 }}>
-                                                    <Typography component="div" sx={{
-                                                        width: "74px",
-                                                        margin: "0 auto",
-                                                        background: getStatusStyle(data.status).background,
-                                                        padding: '3px 8px',
-                                                        borderRadius: '2px',
-                                                        fontFamily: 'Roboto',
-                                                        fontSize: '12px',
-                                                        fontWeight: '400',
-                                                        lineHeight: '16px',
-                                                        color: getStatusStyle(data.status).color,
-                                                    }}>
-                                                        {data.status}
-                                                    </Typography>
+                                                <TableCell sx={{ ...suppressionsStyles.tableColumn, paddingLeft: "16px", textAlign: 'center'}}>
+                                                    <Box sx={{display: "flex", justifyContent: "center"}}>
+                                                        <Typography component="div" sx={{
+                                                            width: "74px",
+                                                            margin: "0",
+                                                            background: getStatusStyle(data.status).background,
+                                                            padding: '3px 8px',
+                                                            borderRadius: '2px',
+                                                            fontFamily: 'Roboto',
+                                                            fontSize: '12px',
+                                                            fontWeight: '400',
+                                                            lineHeight: '16px',
+                                                            color: getStatusStyle(data.status).color,
+                                                        }}>
+                                                            {data.status}
+                                                        </Typography>
+                                                    </Box>
                                                 </TableCell>
                                             </TableRow>
                                         ))}

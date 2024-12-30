@@ -39,8 +39,12 @@ class PartnersService:
             return self.default_user
 
 
-    def get_partners(self, isMaster):
-        partners = self.partners_persistence.get_partners(isMaster)
+    def get_partners(self, isMaster, search):
+        if search is None:
+            partners = self.partners_persistence.get_partners(isMaster)
+        else:
+            search_term = f"%{search}%"
+            partners = self.partners_persistence.get_partners_search(isMaster, search_term)
 
         result = []
         for partner in partners:
@@ -171,7 +175,7 @@ class PartnersService:
             join_date=user['created_at'],
             commission=partner.commission,
             subscription="Basic",
-            sources=user['source_platform'],
+            sources=user.get('source_platform', 'N/A'),
             last_payment_date="1880-12-19 12:54:55",
             status=partner.status,
         ).model_dump()

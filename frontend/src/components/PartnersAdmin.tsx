@@ -17,6 +17,7 @@ import InvitePartnerPopup from "@/components/InvitePartnerPopup"
 import EnablePartnerPopup from "@/components/EnablePartnerPopup"
 import { showErrorToast, showToast } from '@/components/ToastNotification';
 import PartnersAccounts from "./PartnersAccounts";
+import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 
 interface PartnerData {
     id: number;
@@ -64,7 +65,8 @@ interface PartnersAdminProps {
     isMaster: boolean;
     tabIndex: number;
     handleTabChange: (event: React.SyntheticEvent, newIndex: number) => void;
-    setLoading: (state: boolean) => void
+    setLoading: (state: boolean) => void;
+    loading: boolean
 }
 
 interface NewPartner {
@@ -83,7 +85,7 @@ interface EnabledPartner {
 type CombinedPartnerData = NewPartner & EnabledPartner;
 
 
-const PartnersAdmin: React.FC<PartnersAdminProps> = ({isMaster, tabIndex, handleTabChange, setLoading}) => {
+const PartnersAdmin: React.FC<PartnersAdminProps> = ({isMaster, tabIndex, handleTabChange, setLoading, loading}) => {
     const [expanded, setExpanded] = useState<number | false>(false);
     const [partners, setPartners] = useState<PartnerData[]>([]);
     const [page, setPage] = useState(0);
@@ -104,6 +106,8 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({isMaster, tabIndex, handle
     const [selectedRowData, setSelectedRowData] = useState<any>(null);
     const [accountPage, setAccountPage] = useState(false);
     const [id, setId] = useState<number | null>(null);
+    const [accountName, setAccountName] = useState<string | null>(null);
+    const [search, setSearch] = useState("");
 
     const tableHeaders = [
         { key: 'partner_name', label: `Partner  ${isMaster ? "master" : ''} name`, sortable: false },
@@ -257,14 +261,14 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({isMaster, tabIndex, handle
     const fetchRules = useCallback(async () => {
         setLoading(true);
         try {
-            const response = await axiosInstance.get("/admin-partners", {params: { isMaster }})
+            const response = await axiosInstance.get("/admin-partners", {params: { isMaster, search }})
             setPartners([...response.data])
 
         } catch {
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [search]);
 
     const updateOrAddAsset = (updatedPartner: PartnerData) => {
         setPartners((prevAccounts) => {
@@ -284,14 +288,40 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({isMaster, tabIndex, handle
         );
     };
 
+    const handleSearchChange = (event: any) => {
+        setSearch(event.target.value);
+    };
+
     useEffect(() => {
         fetchRules();
-    }, [fetchRules]);
+    }, []);
 
 
     return (
         <>
-            {accountPage && <PartnersAccounts id={id}/>}
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', gap: "24px", justifyContent: 'space-between' }}>
+            {accountPage 
+            ?
+            <Box sx={{display: "flex", alignItems: "center", gap: "5px" }}>
+                <Typography onClick={() => {setAccountPage(false)}}
+                sx={{fontWeight: 'bold', fontSize: '12px', fontFamily: 'Nunito Sans', color: "#808080", cursor: "pointer"}}>
+                    {isMaster ? "Master" : ""} Partner 
+                </Typography>
+                <NavigateNextIcon width={16}/>
+                <Typography sx={{fontWeight: 'bold', fontSize: '12px', fontFamily: 'Nunito Sans', color: "#808080"}}>
+                    {accountName} 
+                </Typography>
+            </Box> 
+            : 
+            <Typography variant="h4" component="h1" sx={{
+                fontWeight: 'bold',
+                fontSize: '16px',
+                whiteSpace: 'nowrap',
+                textAlign: 'start',
+                fontFamily: 'Nunito Sans'}}>
+                Partners
+            </Typography>}
+            {accountPage && <PartnersAccounts id={id} setLoading={setLoading} loading={loading}/>}
             {!accountPage &&
                 <>
                     <Box sx={{
@@ -305,7 +335,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({isMaster, tabIndex, handle
                         minHeight: '77vh',
                         '@media (max-width: 600px)': {margin: '0rem auto 0rem'}
                     }}>
-                        {partners.length === 0 ? (
+                        {partners.length === 0 && !loading ? (
                             <Box sx={suppressionsStyles.centerContainerStyles}>
                                 <Typography variant="h5" sx={{
                                     mb: 3,
@@ -400,17 +430,19 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({isMaster, tabIndex, handle
                                                         },
                                                     }
                                                 }}
-                                                label="Master partner"
+                                                label="Master partners"
                                             />
                                         </Tabs>
                                         <Box sx={{display: 'flex', gap: "16px"}}>
                                             <TextField
                                                 id="input-with-icon-textfield"
                                                 placeholder="Search by account name, emails"
+                                                value={search}
+                                                onChange={handleSearchChange}
                                                 InputProps={{
                                                     startAdornment: (
                                                         <InputAdornment position="start">
-                                                            <SearchIcon />
+                                                             <SearchIcon onClick={fetchRules} style={{ cursor: "pointer" }}/>
                                                         </InputAdornment>
                                                     ),
                                                 }}
@@ -513,7 +545,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({isMaster, tabIndex, handle
                                                                 sx={{...suppressionsStyles.tableColumn, paddingLeft: "16px", cursor: sortable ? 'pointer' : 'default'}}
                                                                 onClick={sortable ? () => handleSortRequest(key) : undefined}
                                                             >
-                                                                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                                                <Box sx={{ display: 'flex', alignItems: 'center' }} style={key === "status" || key === "actions" ? { justifyContent: "center" } : {}}>
                                                                     <Typography variant="body2" className='table-heading'>{label}</Typography>
                                                                     {sortable && (
                                                                     <IconButton size="small" sx={{ ml: 1 }}>
@@ -550,6 +582,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({isMaster, tabIndex, handle
                                                                     {data.partner_name}
                                                                     <IconButton onClick={() => {
                                                                         setId(data.id)
+                                                                        setAccountName(data.partner_name)
                                                                         setAccountPage(true)
                                                                         }} sx={{ ':hover': { backgroundColor: 'transparent'}}} >
                                                                         <Image src='/outband.svg' alt="outband" width={15.98} height={16}/>
@@ -581,24 +614,26 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({isMaster, tabIndex, handle
                                                                 {dayjs(data.last_payment_date).format('MMM D, YYYY')}
                                                             </TableCell>
 
-                                                            <TableCell sx={{ ...suppressionsStyles.tableColumn, paddingLeft: "16px", textAlign: 'center', pl: 0 }}>
-                                                                <Typography component="div" sx={{
-                                                                    width: "74px",
-                                                                    margin: "0 auto",
-                                                                    background: getStatusStyle(data.status).background,
-                                                                    padding: '3px 8px',
-                                                                    borderRadius: '2px',
-                                                                    fontFamily: 'Roboto',
-                                                                    fontSize: '12px',
-                                                                    fontWeight: '400',
-                                                                    lineHeight: '16px',
-                                                                    color: getStatusStyle(data.status).color,
-                                                                }}>
-                                                                    {data.status}
-                                                                </Typography>
+                                                            <TableCell sx={{ ...suppressionsStyles.tableBodyColumn, paddingLeft: "16px", textAlign: 'center' }}>
+                                                                <Box sx={{display: "flex", justifyContent: "center"}}>
+                                                                    <Typography component="div" sx={{
+                                                                        width: "74px",
+                                                                        margin: 0,
+                                                                        background: getStatusStyle(data.status).background,
+                                                                        padding: '3px 8px',
+                                                                        borderRadius: '2px',
+                                                                        fontFamily: 'Roboto',
+                                                                        fontSize: '12px',
+                                                                        fontWeight: '400',
+                                                                        lineHeight: '16px',
+                                                                        color: getStatusStyle(data.status).color,
+                                                                    }}>
+                                                                        {data.status}
+                                                                    </Typography>
+                                                                </Box>
                                                             </TableCell>
 
-                                                            <TableCell sx={{ ...suppressionsStyles.tableColumn, paddingLeft: "16px", textAlign: 'center', pl: 0 }}>
+                                                            <TableCell sx={{ ...suppressionsStyles.tableBodyColumn, paddingLeft: "16px", textAlign: 'center' }}>
                                                                 <IconButton onClick={(event) => handleOpenMenu(event, data)} sx={{ ':hover': { backgroundColor: 'transparent', }}} >
                                                                     <MoreHorizIcon sx={{ width: '22.91px', height: '16.18px',}} />
                                                                 </IconButton>
@@ -710,6 +745,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({isMaster, tabIndex, handle
                     />
                 </>
             }
+        </Box>
         </>
     );
 };
