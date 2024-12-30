@@ -39,13 +39,16 @@ class PlansService:
     def get_subscription_plans(self, user):
         stripe_plans = self.plans_persistence.get_stripe_plans()
         user_subscription = self.plans_persistence.get_user_subscription(user_id=user.get('id'))
+        current_plan = self.plans_persistence.get_current_plan(user_id=user.get('id'))
+        if current_plan.is_free_trial:
+            stripe_plans.append(current_plan)
         response = {"stripe_plans": []}
-        plan_order = ["Launch", "Pro", "Growth"]
+        plan_order = ["Free Trial", "Launch", "Pro", "Growth"]
         stripe_plans.sort(
             key=lambda plan: plan_order.index(plan.title) if plan.title in plan_order else len(plan_order))
         for stripe_plan in stripe_plans:
             is_active = (
-                        user_subscription.plan_id == stripe_plan.id and user_subscription.status == 'active') if user_subscription else False
+                        current_plan.id == stripe_plan.id and user_subscription.status == 'active') if user_subscription else False
             response["stripe_plans"].append(
                 {
                     "interval": stripe_plan.interval,

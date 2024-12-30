@@ -12,9 +12,10 @@ import { showToast } from "./ToastNotification";
 
 interface CreateOmnisendProps {
     handleClose: () => void
-    onSave: (new_integration: any) => void
+    onSave?: (new_integration: any) => void
     open: boolean
-    initApiKey?: string 
+    initApiKey?: string;
+    boxShadow?: string;
 }
 
 interface IntegrationsCredentials {
@@ -84,7 +85,7 @@ const klaviyoStyles = {
       },
 }
 
-const MailchimpConnect = ({ handleClose, open, onSave, initApiKey}: CreateOmnisendProps) => {
+const MailchimpConnect = ({ handleClose, open, onSave, initApiKey, boxShadow}: CreateOmnisendProps) => {
     const [apiKey, setApiKey] = useState('');
     const [apiKeyError, setApiKeyError] = useState(false);
     const [loading, setLoading] = useState(false)
@@ -165,7 +166,9 @@ const MailchimpConnect = ({ handleClose, open, onSave, initApiKey}: CreateOmnise
         }, {params: {service_name: 'mailchimp'}})
         if(response.status === 200) {
             showToast('Integration Mailchimp Successfully')
-            onSave({'service_name': 'Mailchimp', 'is_failed': false, access_token: apiKey})
+            if(onSave){
+                onSave({'service_name': 'Mailchimp', 'is_failed': false, access_token: apiKey})
+            }
             handleNextTab()
         }
     }
@@ -290,6 +293,7 @@ const MailchimpConnect = ({ handleClose, open, onSave, initApiKey}: CreateOmnise
                     position: 'fixed',
                     zIndex: 1301,
                     top: 0,
+                    boxShadow: boxShadow ? '0px 8px 10px -5px rgba(0, 0, 0, 0.2), 0px 16px 24px 2px rgba(0, 0, 0, 0.14), 0px 6px 30px 5px rgba(0, 0, 0, 0.12)' : 'none',
                     bottom: 0,
                     msOverflowStyle: 'none',
                     scrollbarWidth: 'none',
@@ -301,8 +305,15 @@ const MailchimpConnect = ({ handleClose, open, onSave, initApiKey}: CreateOmnise
                     }
                 },
             }}
+            slotProps={{
+                backdrop: {
+                  sx: {
+                    backgroundColor: boxShadow? boxShadow : 'rgba(0, 0, 0, 0.01)'
+                  }
+                }
+              }}
         >
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 3.5, px: 2, borderBottom: '1px solid #e4e4e4' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 2.85, px: 2, borderBottom: '0.25px solid #e4e4e4' }}>
                 <Typography variant="h6" sx={{ textAlign: 'center', color: '#202124', fontFamily: 'Nunito Sans', fontWeight: '600', fontSize: '16px', lineHeight: 'normal' }}>
                     Connect to Mailchimp
                 </Typography>

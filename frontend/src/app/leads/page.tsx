@@ -240,9 +240,6 @@ const Leads: React.FC = () => {
             const normalDateSmr = startEpoch 
             ? new Date(startEpoch * 1000).toLocaleString('ru-RU', { timeZone: 'Europe/Samara' }) 
             : null;
-            console.log(appliedDates)
-            console.log('normal',normalDate);
-            console.log('normal smr', normalDateSmr);
             
 
             const endEpoch = appliedDates.end

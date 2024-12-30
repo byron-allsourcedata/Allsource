@@ -167,6 +167,12 @@ class AudienceInfoEnum(Enum):
     NOT_VALID_NAME = 'NOT_VALID_NAME'
 
 
+class PartnersAssetsInfoEnum(Enum):
+    SUCCESS = "SUCCESS"
+    NOT_VALID_DATA = "NOT_VALID_DATA"
+    NOT_VALID_ID = 'NOT_VALID_ID'
+
+
 class VerifyToken(Enum):
     SUCCESS = 'SUCCESS'
     EMAIL_ALREADY_VERIFIED = 'EMAIL_ALREADY_VERIFIED'

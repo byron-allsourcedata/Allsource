@@ -16,7 +16,6 @@ import LeadsIcon from '@mui/icons-material/People';
 import CategoryIcon from '@mui/icons-material/Category';
 import FeaturedPlayListIcon from '@mui/icons-material/FeaturedPlayList';
 import AccountBoxIcon from '@mui/icons-material/AccountBox';
-
 import Image from 'next/image';
 import { display, width } from '@mui/system';
 
@@ -150,6 +149,7 @@ const SidebarAdmin: React.FC = () => {
                 <ListItemButton
                     onClick={() => handleNavigation('/admin/partners')}
                     sx={isActive('/admin/partners') ? sidebarStyles.activeItem : sidebarStyles.inactiveItem}
+
                 >
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
                         <AccountBoxIcon />
@@ -173,6 +173,15 @@ const SidebarAdmin: React.FC = () => {
                         <FeaturedPlayListIcon />
                     </ListItemIcon>
                     <ListItemText primary="Payouts" />
+                </ListItemButton>
+                <ListItemButton
+                    onClick={() => handleNavigation('/admin/partners')}
+                    sx={isActive('/admin/partners') ? sidebarStyles.activeItem : sidebarStyles.inactiveItem}
+                >
+                    <ListItemIcon sx={sidebarStyles.listItemIcon}>
+                        <CategoryIcon />
+                    </ListItemIcon>
+                    <ListItemText primary="Partners" />
                 </ListItemButton>
             </List>
         </Box>

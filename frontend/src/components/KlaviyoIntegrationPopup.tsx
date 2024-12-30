@@ -2,19 +2,22 @@ import React from "react";
 import TabContext from "@mui/lab/TabContext";
 import TabList from "@mui/lab/TabList";
 import TabPanel from "@mui/lab/TabPanel";
-import { Box, List, ListItem, TextField, Tooltip, Typography, Drawer, Backdrop, Link, IconButton, Button, RadioGroup, FormControl, FormControlLabel, Radio, FormLabel, Divider, Tab, Switch, LinearProgress } from "@mui/material";
+import { Box, List, ListItem, TextField, Tooltip, Typography, Drawer, Backdrop, Link, IconButton, Button, RadioGroup, FormControl, FormControlLabel, Radio, FormLabel, Divider, Tab, Switch, LinearProgress, Tabs } from "@mui/material";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import CustomizedProgressBar from "./CustomizedProgressBar";
 import CloseIcon from '@mui/icons-material/Close';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
-import { showToast } from "./ToastNotification";
+import { showErrorToast, showToast } from "./ToastNotification";
+import {useAxiosHook} from "@/hooks/AxiosHooks";
 
 interface CreateKlaviyoProps {
     handleClose: () => void
-    onSave: (integration: IntegrationsCredentials) => void
+    onSave?: (integration: IntegrationsCredentials) => void
     open: boolean
     initApiKey?: string
+    boxShadow?: string;
+    isEdit?: boolean;
 }
 
 interface IntegrationsCredentials {
@@ -38,7 +41,6 @@ const klaviyoStyles = {
         padding: 0,
         minWidth: 'auto',
         px: 2,
-        pointerEvents: 'none',
         '@media (max-width: 600px)': {
             alignItems: 'flex-start',
             p: 0
@@ -50,8 +52,9 @@ const klaviyoStyles = {
     },
     inputLabel: {
         fontFamily: 'Nunito Sans',
-        fontSize: '12px',
+        fontSize: '14px',
         lineHeight: '16px',
+        left: '2px',
         color: 'rgba(17, 17, 19, 0.60)',
         '&.Mui-focused': {
             color: '#0000FF',
@@ -84,24 +87,25 @@ const klaviyoStyles = {
     },
 }
 
-const KlaviyoIntegrationPopup = ({ handleClose, open, onSave, initApiKey }: CreateKlaviyoProps) => {
+const KlaviyoIntegrationPopup = ({ handleClose, open, onSave, initApiKey, boxShadow }: CreateKlaviyoProps) => {
     const [apiKey, setApiKey] = useState('');
     const [apiKeyError, setApiKeyError] = useState(false);
-    const [loading, setLoading] = useState(false)
-    const [value, setValue] = useState<string>('1')
     const [checked, setChecked] = useState(false);
     const [tab2Error, setTab2Error] = useState(false);
     const label = { inputProps: { 'aria-label': 'Switch demo' } };
-    const [selectedRadioValue, setSelectedRadioValue] = useState('');
-    const [isDropdownValid, setIsDropdownValid] = useState(false);
+    const { data, loading, error, sendRequest } = useAxiosHook();
+    
+
+    const [value, setValue] = useState("1");
+
+    const handleChange = (event: React.SyntheticEvent, newValue: string) => {
+        setValue(newValue);
+    };
 
     useEffect(() => {
         setApiKey(initApiKey || '')
     }, [initApiKey])
 
-    const handleRadioChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setSelectedRadioValue(event.target.value);
-    };
 
     const handleSwitchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setChecked(event.target.checked);
@@ -158,16 +162,28 @@ const KlaviyoIntegrationPopup = ({ handleClose, open, onSave, initApiKey }: Crea
     };
 
     const handleApiKeySave = async () => {
-        const response = await axiosInstance.post('/integrations/', {
-            klaviyo: {
-                api_key: apiKey
-            }
-        }, { params: { service_name: 'klaviyo' } })
-        if (response.status === 200) {
-            showToast('Integration Klaviyo Successfully')
-            handleNextTab()
+        try {
+          const response = await sendRequest({
+            url: "/integrations/",
+            method: "POST",
+            data: {
+              klaviyo: {
+                api_key: apiKey, 
+              },
+            },
+            params: { service_name: "klaviyo" },
+          });
+      
+          if (response?.status === 200) {
+            showToast("Integration Klaviyo Successfully");
+            
+            handleNextTab();
+          }
+        } catch (err) {
+          console.error("Error saving integration:", err);
         }
-    }
+      };
+
 
     const highlightConfig: HighlightConfig = {
         'Klaviyo': { color: '#5052B2', fontWeight: '500' },
@@ -195,6 +211,7 @@ const KlaviyoIntegrationPopup = ({ handleClose, open, onSave, initApiKey }: Crea
     };
 
     const handleSave = async () => {
+        if(onSave){
         onSave({
             id: -1,
             service_name: 'Klaviyo',
@@ -205,6 +222,7 @@ const KlaviyoIntegrationPopup = ({ handleClose, open, onSave, initApiKey }: Crea
             shop_domain: ''
         })
         handleClose()
+    }
     }
 
     const getButton = (tabValue: string) => {
@@ -278,6 +296,7 @@ const KlaviyoIntegrationPopup = ({ handleClose, open, onSave, initApiKey }: Crea
                         zIndex: 1301,
                         top: 0,
                         bottom: 0,
+                        boxShadow: boxShadow ? '0px 8px 10px -5px rgba(0, 0, 0, 0.2), 0px 16px 24px 2px rgba(0, 0, 0, 0.14), 0px 6px 30px 5px rgba(0, 0, 0, 0.12)' : 'none',
                         msOverflowStyle: 'none',
                         scrollbarWidth: 'none',
                         '&::-webkit-scrollbar': {
@@ -291,17 +310,17 @@ const KlaviyoIntegrationPopup = ({ handleClose, open, onSave, initApiKey }: Crea
                 slotProps={{
                     backdrop: {
                         sx: {
-                            backgroundColor: 'rgba(0, 0, 0, .1)'
+                            backgroundColor: boxShadow? boxShadow : 'rgba(0, 0, 0, 0.01)'
                         }
                     }
                 }}
             >
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 3.5, px: 2, borderBottom: '1px solid #e4e4e4' }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 2.85, px: 2, borderBottom: '1px solid #e4e4e4' }}>
                     <Typography variant="h6" sx={{ textAlign: 'center', color: '#202124', fontFamily: 'Nunito Sans', fontWeight: '600', fontSize: '16px', lineHeight: 'normal' }}>
                         Connect to Klaviyo
                     </Typography>
                     <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
-                        <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/integrate-klaviyo-to-maximiz" target="_blank"rel="noopener noreferrer" 
+                        <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/integrate-klaviyo-to-maximiz" target="_blank" rel="noopener noreferrer"
                             sx={{
                                 fontFamily: 'Nunito Sans',
                                 fontSize: '14px',
@@ -315,14 +334,18 @@ const KlaviyoIntegrationPopup = ({ handleClose, open, onSave, initApiKey }: Crea
                         </IconButton>
                     </Box>
                 </Box>
-                <Divider />
                 <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', height: '100%' }}>
                     <Box sx={{ width: '100%', padding: '16px 24px 24px 24px', position: 'relative' }}>
                         <TabContext value={value}>
                             <Box sx={{ pb: 4 }}>
-                                <TabList centered aria-label="Connect to Klaviyo Tabs"
+                                <Tabs
+                                    value={value}
+                                    onChange={handleChange}
+                                    centered
+                                    aria-label="Connect to Klaviyo Tabs"
                                     TabIndicatorProps={{ sx: { backgroundColor: "#5052b2" } }}
                                     sx={{
+                                        cursor: 'pointer',
                                         "& .MuiTabs-scroller": {
                                             overflowX: 'auto !important',
                                         },
@@ -330,13 +353,23 @@ const KlaviyoIntegrationPopup = ({ handleClose, open, onSave, initApiKey }: Crea
                                             justifyContent: 'center',
                                             '@media (max-width: 600px)': {
                                                 gap: '16px',
-                                                justifyContent: 'flex-start'
-                                            }
-                                        }
-                                    }}>
-                                    <Tab label="API Key" value="1" sx={{ ...klaviyoStyles.tabHeading, cursor: 'pointer' }} />
-                                    <Tab label="Suppression Sync" value="2" sx={klaviyoStyles.tabHeading} />
-                                </TabList>
+                                                justifyContent: 'flex-start',
+                                            },
+                                        },
+                                    }}
+                                >
+                                    <Tab
+                                        label="API Key"
+                                        value="1"
+                                        sx={{ ...klaviyoStyles.tabHeading, cursor: 'pointer' }}
+                                    />
+                                    <Tab
+                                        label="Suppression Sync"
+                                        value="2"
+                                        sx={{ ...klaviyoStyles.tabHeading, cursor: 'pointer' }}
+                                    />
+                                </Tabs>
+
                             </Box>
                             <TabPanel value="1" sx={{ p: 0 }}>
                                 <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)' }}>
@@ -556,7 +589,7 @@ const KlaviyoIntegrationPopup = ({ handleClose, open, onSave, initApiKey }: Crea
                             </TabPanel>
                         </TabContext>
                     </Box>
-                    <Box sx={{ px: 2, py: 3.5, width: '100%', border: '1px solid #e4e4e4' }}>
+                    <Box sx={{ px: 2, py: 3.5, width: '100%' }}>
                         <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
                             {getButton(value)}
                         </Box>

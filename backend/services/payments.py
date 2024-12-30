@@ -114,12 +114,14 @@ class PaymentsService:
         if get_default_payment_method(customer_id):
             status_subscription = renew_subscription(price_id, customer_id, trial_period)
             return {"status_subscription": status_subscription}
-        return create_stripe_checkout_session(
+        result_url = create_stripe_checkout_session(
             customer_id=self.plans_service.get_customer_id(user),
             line_items=[{"price": price_id, "quantity": 1}],
             mode="subscription",
             trial_period=trial_period
         )
+        result_url['source_platform'] = user.get('source_platform')
+        return result_url
 
     def get_user_subscription_authorization_status(self):
         return self.plans_service.get_user_subscription_authorization_status()
