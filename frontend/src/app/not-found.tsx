@@ -25,7 +25,7 @@ export default function FourOhFour() {
         sx={{ maxWidth: '100%', width: 354, mb: 2 }}
       />
       <Typography className='paragraph' sx={{ mb: 2 }}>
-        The page you're looking for was not found.
+        The page you`&apos;`re looking for was not found.
       </Typography>
       <Button variant="contained" onClick={handleNavigate} sx={{
                     backgroundColor: 'rgba(80, 82, 178, 1)', fontFamily: "Nunito Sans", textTransform: 'none', lineHeight: '22.4px',
