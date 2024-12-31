@@ -7,6 +7,7 @@ import Image from 'next/image';
 import CloseIcon from '@mui/icons-material/Close';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { showErrorToast, showToast } from './ToastNotification';
+import { useIntegrationContext } from "@/context/IntegrationContext";
 
 interface ConnectKlaviyoPopupProps {
     open: boolean;
@@ -27,6 +28,7 @@ type KlaviyoTags = {
 
 
 const SendlaneDatasync: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, data, isEdit }) => {
+    const { triggerSync } = useIntegrationContext();
     const [loading, setLoading] = useState(false)
     const [value, setValue] = React.useState('1');
     const [checked, setChecked] = useState(false);
@@ -268,6 +270,7 @@ const SendlaneDatasync: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, d
                 if (response.status === 201 || response.status === 200) {
                     onClose();
                     showToast('Data sync created successfully');
+                    triggerSync();
                 }
             }
 

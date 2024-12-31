@@ -12,7 +12,8 @@ import { ContentCopy } from '@mui/icons-material';
 
 interface ApIkeyPopup {
     open: boolean
-    handlePopupClose: () => void
+    handlePopupClose: () => void;
+    boxShadow?: string;
 }
 
 const klaviyoStyles = {
@@ -66,7 +67,7 @@ const klaviyoStyles = {
     },
 }
 
-const ZapierConnectPopup = ({open, handlePopupClose}: ApIkeyPopup) => {
+const ZapierConnectPopup = ({open, handlePopupClose, boxShadow}: ApIkeyPopup) => {
     const [apiKey, setApiKey] = useState('')
     const [value, setValue] = useState('1')
     const [checked, setChecked] = useState(false);
@@ -131,7 +132,7 @@ const ZapierConnectPopup = ({open, handlePopupClose}: ApIkeyPopup) => {
                     position: 'fixed',
                     zIndex: 1301,
                     top: 0,
-                    boxShadow: 'none',
+                    boxShadow: boxShadow ? '0px 8px 10px -5px rgba(0, 0, 0, 0.2), 0px 16px 24px 2px rgba(0, 0, 0, 0.14), 0px 6px 30px 5px rgba(0, 0, 0, 0.12)' : 'none',
                     bottom: 0,
                     // msOverflowStyle: 'none',
                     // scrollbarWidth: 'none',
@@ -146,7 +147,7 @@ const ZapierConnectPopup = ({open, handlePopupClose}: ApIkeyPopup) => {
             slotProps={{
                 backdrop: {
                   sx: {
-                    backgroundColor: 'rgba(0, 0, 0, 0.01)'
+                    backgroundColor: boxShadow ? boxShadow : 'transparent'
                   }
                 }
               }}
@@ -336,7 +337,7 @@ const ZapierConnectPopup = ({open, handlePopupClose}: ApIkeyPopup) => {
                     </TabPanel>
                 </TabContext>
                 </Box>
-                <Box sx={{ px: 2, py: 3.5, width: '100%', border: '1px solid #e4e4e4' }}>
+                <Box sx={{ px: 2, py: 2, width: '100%', borderTop: '1px solid #e4e4e4' }}>
                     <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
                     <Button
                         variant="contained"

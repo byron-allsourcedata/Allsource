@@ -9,6 +9,7 @@ import { GoogleOAuthProvider } from '@react-oauth/google';
 import { TrialProvider } from '../context/TrialProvider';
 import { SSEProvider } from '../context/SSEContext';
 import { ClientLayout } from "@/context/ClientLayout";
+import { IntegrationProvider } from "@/context/IntegrationContext";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -40,7 +41,9 @@ export default function RootLayout({
             <TrialProvider>
               <UserProvider>
                 <ClientLayout>
-                  {children}
+                  <IntegrationProvider>
+                    {children}
+                  </IntegrationProvider>
                 </ClientLayout>
               </UserProvider>
             </TrialProvider>

@@ -8,6 +8,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { showErrorToast, showToast } from './ToastNotification';
 import LinearProgress from '@mui/material/LinearProgress';
+import { useIntegrationContext } from '@/context/IntegrationContext';
 
 
 interface ConnectMetaPopupProps {
@@ -27,7 +28,7 @@ interface MetaAuidece {
 }
 
 const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) => {
-
+    const { triggerSync } = useIntegrationContext();
     const [value, setValue] = React.useState('1');
     const [listID, setListID] = useState<string>('')
     const [checked, setChecked] = useState(false);
@@ -597,6 +598,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
                     resetToDefaultValues();
                     onClose();
                     showToast('Data sync created successfully');
+                    triggerSync();
                 }
             }
 
