@@ -370,7 +370,7 @@ class SubscriptionService:
         result = {'status': None, 'lead_credit_price': None}
         
         status = subscription_info.get("status", "").lower()
-        if status == 'cancelled':
+        if status in ('cancelled', 'declined'):
             status = 'canceled'
         created_at = datetime.fromisoformat(subscription_info.get("created_at"))
         start_date = created_at
