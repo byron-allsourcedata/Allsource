@@ -13,6 +13,9 @@ import {
   Popover,
   Tooltip,
   LinearProgress,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
 } from "@mui/material";
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
@@ -41,6 +44,7 @@ import OmnisendConnect from "./OmnisendConnect";
 import SendlaneConnect from "./SendlaneConnect";
 import ShopifySettings from "./ShopifySettings";
 import ZapierConnectPopup from "./ZapierConnectPopup";
+import { useIntegrationContext } from "@/context/IntegrationContext";
 
 interface DataSyncProps {
   service_name?: string | null;
@@ -58,6 +62,7 @@ interface IntegrationsCredentials {
 }
 
 const DataSyncList = ({ service_name, filters }: DataSyncProps) => {
+  const { needsSync, setNeedsSync } = useIntegrationContext();
   const [order, setOrder] = useState<"asc" | "desc" | undefined>(undefined);
   const [orderBy, setOrderBy] = useState<string | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(true);
@@ -102,14 +107,17 @@ const DataSyncList = ({ service_name, filters }: DataSyncProps) => {
     setOrderBy(property);
   };
 
-  const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   useEffect(() => {
-    if (isInitialLoad) {
+    handleIntegrationsSync();
+  }, []);
+
+  useEffect(() => {
+    if (needsSync) {
       handleIntegrationsSync();
-      setIsInitialLoad(false);
+      setNeedsSync(false);
     }
-  }, [isInitialLoad]);
+  }, [needsSync, setNeedsSync]);
 
   const handleIntegrationsSync = async () => {
     try {
@@ -297,6 +305,8 @@ const DataSyncList = ({ service_name, filters }: DataSyncProps) => {
   // Action
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [confirmAnchorEl, setConfirmAnchorEl] = useState<null | HTMLElement>(null);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
   const handleClick = (event: any, id: number) => {
     setAnchorEl(event.currentTarget);
@@ -357,6 +367,7 @@ const DataSyncList = ({ service_name, filters }: DataSyncProps) => {
   const handleKlaviyoIconPopupClose = async () => {
     setKlaviyoIconPopupOpen(false);
     setSelectedId(null);
+    setIsEdit(false);
     try {
       const response = await axiosInstance.get(
         `/data-sync/sync?integrations_users_sync_id=${selectedId}`
@@ -426,6 +437,7 @@ const DataSyncList = ({ service_name, filters }: DataSyncProps) => {
     const foundItem = data.find((item) => item.id === selectedId);
     const dataSyncPlatform = foundItem ? foundItem.platform : null;
     if (dataSyncPlatform) {
+      setIsEdit(true);
       if (dataSyncPlatform === "klaviyo") {
         setKlaviyoIconPopupOpen(true);
       } else if (dataSyncPlatform === "meta") {
@@ -433,10 +445,8 @@ const DataSyncList = ({ service_name, filters }: DataSyncProps) => {
       } else if (dataSyncPlatform === "mailchimp") {
         setMailchimpIconPopupOpen(true);
       } else if (dataSyncPlatform === "omnisend") {
-        setIsEdit(true);
         setOmnisendIconPopupOpen(true);
       } else if (dataSyncPlatform === "sendlane") {
-        setIsEdit(true);
         setOpenSendlaneIconPopup(true);
       }
       setIsLoading(false);
@@ -446,6 +456,11 @@ const DataSyncList = ({ service_name, filters }: DataSyncProps) => {
 
   const handleSendlaneIconPopupClose = () => {
     setOpenSendlaneIconPopup(false);
+  };
+
+  const handleDeleteClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setConfirmAnchorEl(event.currentTarget);
+    setIsConfirmOpen(true);
   };
 
   const handleDelete = async () => {
@@ -538,25 +553,7 @@ const DataSyncList = ({ service_name, filters }: DataSyncProps) => {
 
   if (isLoading) {
     return (
-      <Box
-        sx={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: "rgba(0, 0, 0, 0)",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          zIndex: 1400,
-          overflow: "hidden",
-        }}
-      >
-        <Box sx={{ width: "100%", top: 0, height: "100vh" }}>
-          <LinearProgress />
-        </Box>
-      </Box>
+      <CustomizedProgressBar />
     );
   }
 
@@ -936,10 +933,88 @@ const DataSyncList = ({ service_name, filters }: DataSyncProps) => {
                     backgroundColor: "background: rgba(80, 82, 178, 0.1)",
                   },
                 }}
-                onClick={handleDelete}
+                onClick={handleDeleteClick}
               >
                 Delete
               </Button>
+              <>
+              <Popover
+                open={isConfirmOpen}
+                anchorEl={confirmAnchorEl}
+                onClose={() => setIsConfirmOpen(false)}
+                anchorOrigin={{
+                  vertical: "bottom",
+                  horizontal: "right",
+                }}
+                transformOrigin={{
+                  vertical: "top",
+                  horizontal: "center",
+                }}
+                PaperProps={{
+                  sx: {
+                    padding: "0.125rem",
+                    width: "15.875rem",
+                    boxShadow: 0,
+                    borderRadius: "8px",
+                    border: "0.5px solid rgba(175, 175, 175, 1)",
+                  },
+                }}
+              >
+                <Typography className="first-sub-title" sx={{ paddingLeft: 2, pt: 1, pb: 0 }}>
+                  Confirm Deletion
+                </Typography>
+                <DialogContent sx={{ padding: 2 }}>
+                  <DialogContentText className="table-data">
+                    Are you sure you want to delete this list data?
+                  </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                  <Button
+                    className="second-sub-title"
+                    onClick={() => setIsConfirmOpen(false)}
+                    sx={{
+                      backgroundColor: "#fff",
+                      color: "rgba(80, 82, 178, 1) !important",
+                      fontSize: "14px",
+                      textTransform: "none",
+                      padding: "0.75em 1em",
+                      border: "1px solid rgba(80, 82, 178, 1)",
+                      maxWidth: "50px",
+                      maxHeight: "30px",
+                      "&:hover": {
+                        backgroundColor: "#fff",
+                        boxShadow: "0 2px 2px rgba(0, 0, 0, 0.3)",
+                      },
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    className="second-sub-title"
+                    onClick={() => {
+                      handleDelete();
+                      setIsConfirmOpen(false);
+                    }}
+                    sx={{
+                      backgroundColor: "rgba(80, 82, 178, 1)",
+                      color: "#fff !important",
+                      fontSize: "14px",
+                      textTransform: "none",
+                      padding: "0.75em 1em",
+                      border: "1px solid rgba(80, 82, 178, 1)",
+                      maxWidth: "60px",
+                      maxHeight: "30px",
+                      "&:hover": {
+                        backgroundColor: "rgba(80, 82, 178, 1)",
+                        boxShadow: "0 2px 2px rgba(0, 0, 0, 0.3)",
+                      },
+                    }}
+                  >
+                    Delete
+                  </Button>
+                </DialogActions>
+              </Popover>
+              </>
               {data.find((row) => row.id === selectedId)?.syncStatus ===
                 false && (
                   <Button
@@ -999,13 +1074,13 @@ const DataSyncList = ({ service_name, filters }: DataSyncProps) => {
         />
         {mailchimpIconPopupOpen && isEdit === true && (
           <>
-        <MailchimpDatasync
-          open={mailchimpIconPopupOpen}
-          onClose={handleMailchimpIconPopupClose}
-          data={data.find((item) => item.id === selectedId)}
-          isEdit={isEdit}
-        />
-        </>
+            <MailchimpDatasync
+              open={mailchimpIconPopupOpen}
+              onClose={handleMailchimpIconPopupClose}
+              data={data.find((item) => item.id === selectedId)}
+              isEdit={isEdit}
+            />
+          </>
         )}
         {omnisendIconPopupOpen && isEdit === true && (
           <>
@@ -1029,17 +1104,15 @@ const DataSyncList = ({ service_name, filters }: DataSyncProps) => {
           </>
         )}
         {/* <MetaConnectButton open={openMetaConnect} onClose={handleCloseIntegrate} onSave={saveIntegration}/>
-        
         <AttentiveIntegrationPopup open={openAttentiveConnect} handleClose={() => setOpenShopifyConnect(false)} onSave={saveIntegration}/>
         <ShopifySettings open={openShopifuConnect} handleClose={() => setOpenShopifyConnect(false)} onSave={saveIntegration} />
         <BCommerceConnect 
                     open={openBigcommrceConnect} 
                     onClose={() => setOpenBigcommerceConnect(false)}
                 />
-       
          */}
-         <MailchimpConnect open={openMailchimpConnect} handleClose={() => setOpenMailchimpConnect(false)} 
-         initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'mailchimp')?.access_token} boxShadow="rgba(0, 0, 0, 0.01)" />
+        <MailchimpConnect open={openMailchimpConnect} handleClose={() => setOpenMailchimpConnect(false)}
+          initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'mailchimp')?.access_token} boxShadow="rgba(0, 0, 0, 0.01)" />
         <KlaviyoIntegrationPopup open={openKlaviyoConnect} handleClose={() => setOpenKlaviyoConnect(false)}
           initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'klaviyo')?.access_token} boxShadow="rgba(0, 0, 0, 0.01)" />
         <OmnisendConnect open={openOmnisendConnect} handleClose={() => setOpenOmnisendConnect(false)}
@@ -1047,7 +1120,7 @@ const DataSyncList = ({ service_name, filters }: DataSyncProps) => {
         <SendlaneConnect
           open={openSendlaneConnect}
           handleClose={() => setOpenSendlaneConnect(false)}
-          initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'sendlane')?.access_token}
+          initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'sendlane')?.access_token} boxShadow="rgba(0, 0, 0, 0.01)"
         />
         <ZapierConnectPopup
           open={openZapierConnect}

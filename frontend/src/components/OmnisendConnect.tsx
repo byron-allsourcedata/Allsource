@@ -94,6 +94,7 @@ const OmnisendConnect = ({ handleClose, open, onSave, initApiKey, boxShadow}: Cr
     const [checked, setChecked] = useState(false);
     const [tab2Error, setTab2Error] = useState(false);
     const label = { inputProps: { 'aria-label': 'Switch demo' } };
+    const [disableButton, setDisableButton] = useState(false);
     const [selectedRadioValue, setSelectedRadioValue] = useState('');
     const [isDropdownValid, setIsDropdownValid] = useState(false);
 
@@ -160,6 +161,9 @@ const OmnisendConnect = ({ handleClose, open, onSave, initApiKey, boxShadow}: Cr
     };
 
     const handleApiKeySave = async() => {
+        try{
+        setDisableButton(true)
+        setLoading(true)
         const response = await axiosInstance.post('/integrations/', {
             omnisend: {
                 api_key: apiKey
@@ -167,14 +171,19 @@ const OmnisendConnect = ({ handleClose, open, onSave, initApiKey, boxShadow}: Cr
         }, {params: {service_name: 'omnisend'}})
         if(response.status === 200) {
             showToast('Integration Omnisend Successfully')
-            if (onSave){
-                onSave({service_name: 'omnisend', is_failed: false, acess_token: apiKey})
+            if(onSave){
+                onSave({'service_name': 'omnisend', 'is_failed': false, access_token: apiKey})
             }
             handleNextTab()
         }
         if(response.status === 400){
             showErrorToast('Invalid API Key, please, try another')
         }
+    } catch (error) {}
+    finally {
+     setDisableButton(true)
+     setLoading(false)
+    }
     }
 
     const highlightConfig: HighlightConfig = {
@@ -213,7 +222,7 @@ const OmnisendConnect = ({ handleClose, open, onSave, initApiKey, boxShadow}: Cr
                     <Button
                         variant="contained"
                         onClick={handleApiKeySave}
-                        disabled={!apiKey}
+                        disabled={!apiKey || disableButton}
                         sx={{
                             backgroundColor: '#5052B2',
                             fontFamily: "Nunito Sans",
@@ -322,7 +331,14 @@ const OmnisendConnect = ({ handleClose, open, onSave, initApiKey, boxShadow}: Cr
                     Connect to Omnisend
                 </Typography>
                 <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
-                    <Link href="#" sx={{
+                    <Link href={initApiKey ?
+                        "https://maximizai.zohodesk.eu/portal/en/kb/articles/update-omnisend-integration-configuration"
+                        :
+                        "https://maximizai.zohodesk.eu/portal/en/kb/articles/integrate-omnisend-to-maximiz"
+                    }
+                    target="_blank"
+                    rel="noopener referrer" 
+                    sx={{
                         fontFamily: 'Nunito Sans',
                         fontSize: '14px',
                         fontWeight: '600',

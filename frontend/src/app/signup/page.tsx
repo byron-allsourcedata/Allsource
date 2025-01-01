@@ -20,8 +20,9 @@ const Signup: React.FC = () => {
   const is_with_card = searchParams.get('is_with_card');
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
-  const user_teams_mail = searchParams.get('user_teams_mail');
-  const teams_token = searchParams.get('token');
+  const user_mail = searchParams.get('user_mail');
+  const teams_token = searchParams.get('teams_token');
+  const referral_token = searchParams.get('referral_token');
   const spi = searchParams.get('spi');
   const awin_awc = searchParams.get('awc')
   const coupon = searchParams.get('coupon')
@@ -37,11 +38,12 @@ const Signup: React.FC = () => {
   };
   const isShopifyDataComplete = Object.values(initialShopifyData).every(value => value !== null);
   const [formValues, setFormValues] = useState({
-    full_name: '', email: user_teams_mail, password: '', is_with_card: is_with_card || false, termsAccepted: false,
+    full_name: '', email: user_mail, password: '', is_with_card: is_with_card || false, termsAccepted: false,
     ...(isShopifyDataComplete && { shopify_data: initialShopifyData }),
     ...{ awc: awin_awc },
     ...{ coupon: coupon },
     ...{ teams_token: teams_token },
+    ...{ referral_token: referral_token },
     ...{ spi: spi },
     ...{ ift: ift },
     ...{ ftd: ftd },
@@ -297,6 +299,7 @@ const Signup: React.FC = () => {
                   token: credentialResponse.credential,
                   ...(spi && { spi }),
                   ...(teams_token && { teams_token }),
+                  ...(referral_token && { referral_token }),
                   ...(is_with_card && { is_with_card }),
                   awc: awin_awc,
                   coupon,
@@ -412,7 +415,7 @@ const Signup: React.FC = () => {
               InputProps={{
                 className: "form-input"
               }}
-              disabled={user_teams_mail !== null}
+              disabled={user_mail !== null}
             />
             <TextField sx={signupStyles.formField}
               InputLabelProps={{

@@ -15,7 +15,8 @@ interface CreateSendlaneProps {
     handleClose: () => void
     onSave?: (new_integration: any) => void
     open: boolean
-    initApiKey?: string 
+    initApiKey?: string;
+    boxShadow?: string;
 }
 
 interface IntegrationsCredentials {
@@ -56,36 +57,36 @@ const klaviyoStyles = {
         color: 'rgba(17, 17, 19, 0.60)',
         '&.Mui-focused': {
             color: '#0000FF',
-          },
+        },
     },
     formInput: {
         '&.MuiOutlinedInput-root': {
-          height: '48px',
-          '& .MuiOutlinedInput-input': {
-            padding: '12px 16px 13px 16px',
-            fontFamily: 'Roboto',
-            color: '#202124',
-            fontSize: '14px',
-            lineHeight: '20px',
-            fontWeight: '400'
-          },
-          '& .MuiOutlinedInput-notchedOutline': {
-            borderColor: '#A3B0C2',
-          },
-          '&:hover .MuiOutlinedInput-notchedOutline': {
-            borderColor: '#A3B0C2',
-          },
-          '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-            borderColor: '#0000FF',
-          },
+            height: '48px',
+            '& .MuiOutlinedInput-input': {
+                padding: '12px 16px 13px 16px',
+                fontFamily: 'Roboto',
+                color: '#202124',
+                fontSize: '14px',
+                lineHeight: '20px',
+                fontWeight: '400'
+            },
+            '& .MuiOutlinedInput-notchedOutline': {
+                borderColor: '#A3B0C2',
+            },
+            '&:hover .MuiOutlinedInput-notchedOutline': {
+                borderColor: '#A3B0C2',
+            },
+            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                borderColor: '#0000FF',
+            },
         },
         '&+.MuiFormHelperText-root': {
             marginLeft: '0',
         },
-      },
+    },
 }
 
-const SendlaneConnect = ({ handleClose, open, onSave, initApiKey}: CreateSendlaneProps) => {
+const SendlaneConnect = ({ handleClose, open, onSave, initApiKey, boxShadow }: CreateSendlaneProps) => {
     const [apiKey, setApiKey] = useState('');
     const [apiKeyError, setApiKeyError] = useState(false);
     const [value, setValue] = useState<string>('1')
@@ -93,6 +94,7 @@ const SendlaneConnect = ({ handleClose, open, onSave, initApiKey}: CreateSendlan
     const [tab2Error, setTab2Error] = useState(false);
     const label = { inputProps: { 'aria-label': 'Switch demo' } };
     const [selectedRadioValue, setSelectedRadioValue] = useState('');
+    const [disableButton, setDisableButton] = useState(false);
     const [isDropdownValid, setIsDropdownValid] = useState(false);
     const { data, loading, error, sendRequest } = useAxiosHook();
 
@@ -106,12 +108,12 @@ const SendlaneConnect = ({ handleClose, open, onSave, initApiKey}: CreateSendlan
 
     const handleSwitchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setChecked(event.target.checked);
-      };
+    };
 
     const handleApiKeyChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const value = event.target.value;
         setApiKey(value);
-        setApiKeyError(!value); 
+        setApiKeyError(!value);
     };
 
     const instructions: any[] = [
@@ -151,7 +153,7 @@ const SendlaneConnect = ({ handleClose, open, onSave, initApiKey}: CreateSendlan
                             ]
                             : [segment]
                     )
-                    : [part] 
+                    : [part]
             );
         });
 
@@ -160,49 +162,55 @@ const SendlaneConnect = ({ handleClose, open, onSave, initApiKey}: CreateSendlan
 
 
     const handleApiKeySave = async () => {
-          const response = await sendRequest({
-            url: "/integrations/",
-            method: "POST",
-            data: {
-              sendlane: {
-                api_key: apiKey, 
-              },
-            },
-            params: {service_name: 'sendlane'},
-          });
-      
-          if (response?.status === 200) {
-            showToast("Integration Sendlane Successfully");
-            handleNextTab();
-          }
+        try {
+            setDisableButton(true)
+            const response = await sendRequest({
+                url: "/integrations/",
+                method: "POST",
+                data: {
+                    sendlane: {
+                        api_key: apiKey,
+                    },
+                },
+                params: { service_name: 'sendlane' },
+            });
+
+            if (response?.status === 200) {
+                showToast("Integration Sendlane Successfully");
+                handleNextTab();
+            }
+        } catch (error) {}
+        finally{
+            setDisableButton(false)
         }
+    }
 
     const highlightConfig: HighlightConfig = {
-        'Klaviyo': { color: '#5052B2', fontWeight: '500' }, 
-        'Settings': { color: '#707071', fontWeight: '500' }, 
-        'Create Private API Key': { color: '#707071', fontWeight: '500' }, 
-        'Lists': { color: '#707071', fontWeight: '500' }, 
-        'Profiles': { color: '#707071', fontWeight: '500' }, 
-        'Metrics': { color: '#707071', fontWeight: '500' }, 
-        'Events': { color: '#707071', fontWeight: '500' }, 
+        'Klaviyo': { color: '#5052B2', fontWeight: '500' },
+        'Settings': { color: '#707071', fontWeight: '500' },
+        'Create Private API Key': { color: '#707071', fontWeight: '500' },
+        'Lists': { color: '#707071', fontWeight: '500' },
+        'Profiles': { color: '#707071', fontWeight: '500' },
+        'Metrics': { color: '#707071', fontWeight: '500' },
+        'Events': { color: '#707071', fontWeight: '500' },
         'Templates': { color: '#707071', fontWeight: '500' },
-        'Create': { color: '#707071', fontWeight: '500' }, 
-        'API Key': { color: '#707071', fontWeight: '500' }, 
-        'Connect': { color: '#707071', fontWeight: '500' }, 
-        'Export': { color: '#707071', fontWeight: '500' } 
+        'Create': { color: '#707071', fontWeight: '500' },
+        'API Key': { color: '#707071', fontWeight: '500' },
+        'Connect': { color: '#707071', fontWeight: '500' },
+        'Export': { color: '#707071', fontWeight: '500' }
     };
 
-    const handleNextTab = async() => {
-        
-        if(value === '1') {
-          setValue((prevValue) => {
-              const nextValue = String(Number(prevValue) + 1);
-              return nextValue;
+    const handleNextTab = async () => {
+
+        if (value === '1') {
+            setValue((prevValue) => {
+                const nextValue = String(Number(prevValue) + 1);
+                return nextValue;
             })
         }
     };
 
-    const handleSave = async() => {
+    const handleSave = async () => {
         handleClose()
     }
 
@@ -213,7 +221,7 @@ const SendlaneConnect = ({ handleClose, open, onSave, initApiKey}: CreateSendlan
                     <Button
                         variant="contained"
                         onClick={handleApiKeySave}
-                        disabled={!apiKey}
+                        disabled={!apiKey || disableButton}
                         sx={{
                             backgroundColor: '#5052B2',
                             fontFamily: "Nunito Sans",
@@ -224,7 +232,7 @@ const SendlaneConnect = ({ handleClose, open, onSave, initApiKey}: CreateSendlan
                             color: "#fff",
                             textTransform: 'none',
                             padding: '10px 24px',
-                            boxShadow:'0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
+                            boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
                             '&:hover': {
                                 backgroundColor: '#5052B2'
                             },
@@ -249,7 +257,7 @@ const SendlaneConnect = ({ handleClose, open, onSave, initApiKey}: CreateSendlan
                             color: "#fff",
                             textTransform: 'none',
                             padding: '10px 24px',
-                            boxShadow:'0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
+                            boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
                             '&:hover': {
                                 backgroundColor: '#5052B2'
                             },
@@ -264,196 +272,205 @@ const SendlaneConnect = ({ handleClose, open, onSave, initApiKey}: CreateSendlan
         }
     };
 
-    return ( 
+    return (
         <>
-        {loading && (
-            <Box
-                sx={{
-                    position: 'fixed',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    background: 'rgba(0, 0, 0, 0.2)',
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    zIndex: 1400,
-                    overflow: 'hidden'
+            {loading && (
+                <Box
+                    sx={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        background: 'rgba(0, 0, 0, 0.2)',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        zIndex: 1400,
+                        overflow: 'hidden'
+                    }}
+                >
+                    <Box sx={{ width: '100%', top: 0, height: '100vh' }}>
+                        <LinearProgress />
+                    </Box>
+                </Box>
+            )}
+            <Drawer
+                anchor="right"
+                open={open}
+                onClose={handleClose}
+                PaperProps={{
+                    sx: {
+                        width: '620px',
+                        position: 'fixed',
+                        zIndex: 1301,
+                        top: 0,
+                        boxShadow: boxShadow ? '0px 8px 10px -5px rgba(0, 0, 0, 0.2), 0px 16px 24px 2px rgba(0, 0, 0, 0.14), 0px 6px 30px 5px rgba(0, 0, 0, 0.12)' : 'none',
+                        bottom: 0,
+                        msOverflowStyle: 'none',
+                        scrollbarWidth: 'none',
+                        '&::-webkit-scrollbar': {
+                            display: 'none',
+                        },
+                        '@media (max-width: 600px)': {
+                            width: '100%',
+                        }
+                    },
+                }}
+                slotProps={{
+                    backdrop: {
+                        sx: {
+                            backgroundColor: boxShadow ? boxShadow : 'transparent'
+                        }
+                    }
                 }}
             >
-            <Box sx={{width: '100%', top: 0, height: '100vh'}}>
-                <LinearProgress />
-            </Box>
-            </Box>
-        )}
-        <Drawer
-            anchor="right"
-            open={open}
-            onClose={handleClose}
-            PaperProps={{
-                sx: {
-                    width: '620px',
-                    position: 'fixed',
-                    zIndex: 1301,
-                    top: 0,
-                    bottom: 0,
-                    msOverflowStyle: 'none',
-                    scrollbarWidth: 'none',
-                    '&::-webkit-scrollbar': {
-                        display: 'none',
-                    },
-                    '@media (max-width: 600px)': {
-                        width: '100%',
-                    }
-                },
-            }}
-            slotProps={{
-                backdrop: {
-                  sx: {
-                    backgroundColor: 'transparent'
-                  }
-                }
-              }}
-        >
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 2.85, px: 2, borderBottom: '0.25px solid #e4e4e4' }}>
-                <Typography variant="h6" sx={{ textAlign: 'center', color: '#202124', fontFamily: 'Nunito Sans', fontWeight: '600', fontSize: '16px', lineHeight: 'normal' }}>
-                    Connect to Sendlane
-                </Typography>
-                <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
-                    <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/integrate-sendlane-to-maximiz" target="_blank" rel="noopener noreferrer" sx={{
-                        fontFamily: 'Nunito Sans',
-                        fontSize: '14px',
-                        fontWeight: '600',
-                        lineHeight: '20px',
-                        color: '#5052b2',
-                        textDecorationColor: '#5052b2'
-                    }}>Tutorial</Link>
-                    <IconButton onClick={handleClose} sx={{ p: 0 }}>
-                        <CloseIcon sx={{ width: '20px', height: '20px' }} />
-                    </IconButton>
-                </Box>
-            </Box>
-            <Divider />
-            <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', height: '100%' }}>
-                <Box sx={{ width: '100%', padding: '16px 24px 24px 24px', position: 'relative' }}>
-                <TabContext value={value}>
-                    <Box sx={{pb: 4}}>
-                        <TabList centered aria-label="Connect to Sendlaene Tabs"
-                        TabIndicatorProps={{sx: {backgroundColor: "#5052b2" } }} 
-                        sx={{
-                            "& .MuiTabs-scroller": {
-                                overflowX: 'auto !important',
-                            },
-                            "& .MuiTabs-flexContainer": {
-                            justifyContent:'center',
-                            '@media (max-width: 600px)': {
-                                gap: '16px',
-                                justifyContent:'flex-start'
-                            }
-                        }}}>
-                        <Tab label="API Key" value="1" sx={{...klaviyoStyles.tabHeading, cursor: 'pointer'}} />
-                        <Tab label="Suppression Sync" value="2" sx={klaviyoStyles.tabHeading} />
-                        </TabList>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 2.85, px: 2, borderBottom: '1px solid #e4e4e4' }}>
+                    <Typography variant="h6" sx={{ textAlign: 'center', color: '#202124', fontFamily: 'Nunito Sans', fontWeight: '600', fontSize: '16px', lineHeight: 'normal' }}>
+                        Connect to Sendlane
+                    </Typography>
+                    <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
+                        <Link
+                            href={initApiKey
+                                ? "https://maximizai.zohodesk.eu/portal/en/kb/articles/integrate-sendlane-to-maximiz"
+                                : "https://maximizai.zohodesk.eu/portal/en/kb/articles/update-sendlane-integration-configuration"}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            sx={{
+                                fontFamily: 'Nunito Sans',
+                                fontSize: '14px',
+                                fontWeight: '600',
+                                lineHeight: '20px',
+                                color: '#5052b2',
+                                textDecorationColor: '#5052b2'
+                            }}>Tutorial</Link>
+
+                        <IconButton onClick={handleClose} sx={{ p: 0 }}>
+                            <CloseIcon sx={{ width: '20px', height: '20px' }} />
+                        </IconButton>
                     </Box>
-                    <TabPanel value="1" sx={{p: 0}}>
-                        <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)' }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <Image src='/sendlane-icon.svg' alt='sendlane' height={26} width={32} />
-                                <Typography variant="h6" sx={{
-                                    fontFamily: 'Nunito Sans',
-                                    fontSize: '16px',
-                                    fontWeight: '600',
-                                    color: '#202124'
-                                }}>API Key</Typography>
-                                <Tooltip title="Enter the API key provided by Sendlane" placement="right">
-                                    <Image src='/baseline-info-icon.svg' alt='baseline-info-icon' height={16} width={16} />
-                                </Tooltip>
+                </Box>
+
+                <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', height: '100%' }}>
+                    <Box sx={{ width: '100%', padding: '16px 24px 24px 24px', position: 'relative' }}>
+                        <TabContext value={value}>
+                            <Box sx={{ pb: 4 }}>
+                                <TabList centered aria-label="Connect to Sendlaene Tabs"
+                                    TabIndicatorProps={{ sx: { backgroundColor: "#5052b2" } }}
+                                    sx={{
+                                        "& .MuiTabs-scroller": {
+                                            overflowX: 'auto !important',
+                                        },
+                                        "& .MuiTabs-flexContainer": {
+                                            justifyContent: 'center',
+                                            '@media (max-width: 600px)': {
+                                                gap: '16px',
+                                                justifyContent: 'flex-start'
+                                            }
+                                        }
+                                    }}>
+                                    <Tab label="API Key" value="1" sx={{ ...klaviyoStyles.tabHeading, cursor: 'pointer' }} />
+                                    <Tab label="Suppression Sync" value="2" sx={klaviyoStyles.tabHeading} />
+                                </TabList>
                             </Box>
-                            <TextField
-                                label="Enter API Key"
-                                variant="outlined"
-                                fullWidth
-                                margin="normal"
-                                error={apiKeyError}
-                                helperText={apiKeyError ? 'API Key is required' : ''}
-                                value={apiKey}
-                                onChange={handleApiKeyChange}
-                                InputLabelProps={{ sx: klaviyoStyles.inputLabel }}
-                                InputProps={{ sx: klaviyoStyles.formInput }}
-                            />
-                        </Box>
-                        {instructions.length > 0 && ( <Box sx={{ background: '#f0f0f0', border: '1px solid #efefef', borderRadius: '4px', p: 2 }}>
-                            
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', mb: 2 }}>
-                                <Image src='/info-circle.svg' alt='info-circle' height={20} width={20} />
-                                <Typography variant="subtitle1" sx={{
-                                    fontFamily: 'Nunito Sans',
-                                    fontSize: '16px',
-                                    fontWeight: '600',
-                                    color: '#202124',
-                                    lineHeight: 'normal'
-                                }}>How to integrate Sendlane</Typography>
-                            </Box>
-                            <List dense sx={{ p: 0 }}>
-                                {instructions.map((instruction, index) => (
-                                    <ListItem key={instruction.id} sx={{ p: 0, alignItems: 'flex-start' }}>
-                                        <Typography
-                                            variant="body1"
-                                            sx={{
-                                                display: 'inline-block',
-                                                marginRight: '4px',
-                                                fontFamily: 'Roboto',
-                                                fontSize: '12px',
-                                                fontWeight: '400',
-                                                color: '#808080',
-                                                lineHeight: '24px'
-                                            }}
-                                        >
-                                            {index + 1}.
-                                        </Typography>
-                                        <Typography
-                                            variant="body1"
-                                            sx={{
-                                                display: 'inline',
-                                                fontFamily: 'Roboto',
-                                                fontSize: '12px',
-                                                fontWeight: '400',
-                                                color: '#808080',
-                                                lineHeight: '24px'
-                                            }}
-                                        >
-                                            {highlightText(instruction.text, highlightConfig)}
-                                        </Typography>
-                                    </ListItem>
-                                ))}
-                            </List>
-                        </Box>)
-                            }
-                    </TabPanel>
-                    <TabPanel value="2" sx={{ p: 0 }}>
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                            <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)', display: 'flex', flexDirection:'column', gap: '16px' }}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <Image src='/sendlane-icon.svg' alt='sendlane' height={26} width={32} />
-                                    <Typography variant="h6" sx={{
-                                        fontFamily: 'Nunito Sans',
-                                        fontSize: '16px',
-                                        fontWeight: '600',
-                                        color: '#202124',
-                                        lineHeight: 'normal'
-                                    }}>Eliminate Redundancy: Stop Paying for Contacts You Already Own</Typography>
+                            <TabPanel value="1" sx={{ p: 0 }}>
+                                <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)' }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <Image src='/sendlane-icon.svg' alt='sendlane' height={26} width={32} />
+                                        <Typography variant="h6" sx={{
+                                            fontFamily: 'Nunito Sans',
+                                            fontSize: '16px',
+                                            fontWeight: '600',
+                                            color: '#202124'
+                                        }}>API Key</Typography>
+                                        <Tooltip title="Enter the API key provided by Sendlane" placement="right">
+                                            <Image src='/baseline-info-icon.svg' alt='baseline-info-icon' height={16} width={16} />
+                                        </Tooltip>
+                                    </Box>
+                                    <TextField
+                                        label="Enter API Key"
+                                        variant="outlined"
+                                        fullWidth
+                                        margin="normal"
+                                        error={apiKeyError}
+                                        helperText={apiKeyError ? 'API Key is required' : ''}
+                                        value={apiKey}
+                                        onChange={handleApiKeyChange}
+                                        InputLabelProps={{ sx: klaviyoStyles.inputLabel }}
+                                        InputProps={{ sx: klaviyoStyles.formInput }}
+                                    />
                                 </Box>
-                                <Typography variant="subtitle1" sx={{
-                                        fontFamily: 'Roboto',
-                                        fontSize: '12px',
-                                        fontWeight: '400',
-                                        color: '#808080',
-                                        lineHeight: '20px',
-                                        letterSpacing: '0.06px'
-                                    }}>Sync your current list to avoid collecting contacts you already possess.
-                                    Newly added contacts in Sendlane will be automatically suppressed each day.</Typography>
-                                
+                                {instructions.length > 0 && (<Box sx={{ background: '#f0f0f0', border: '1px solid #efefef', borderRadius: '4px', p: 2 }}>
+
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', mb: 2 }}>
+                                        <Image src='/info-circle.svg' alt='info-circle' height={20} width={20} />
+                                        <Typography variant="subtitle1" sx={{
+                                            fontFamily: 'Nunito Sans',
+                                            fontSize: '16px',
+                                            fontWeight: '600',
+                                            color: '#202124',
+                                            lineHeight: 'normal'
+                                        }}>How to integrate Sendlane</Typography>
+                                    </Box>
+                                    <List dense sx={{ p: 0 }}>
+                                        {instructions.map((instruction, index) => (
+                                            <ListItem key={instruction.id} sx={{ p: 0, alignItems: 'flex-start' }}>
+                                                <Typography
+                                                    variant="body1"
+                                                    sx={{
+                                                        display: 'inline-block',
+                                                        marginRight: '4px',
+                                                        fontFamily: 'Roboto',
+                                                        fontSize: '12px',
+                                                        fontWeight: '400',
+                                                        color: '#808080',
+                                                        lineHeight: '24px'
+                                                    }}
+                                                >
+                                                    {index + 1}.
+                                                </Typography>
+                                                <Typography
+                                                    variant="body1"
+                                                    sx={{
+                                                        display: 'inline',
+                                                        fontFamily: 'Roboto',
+                                                        fontSize: '12px',
+                                                        fontWeight: '400',
+                                                        color: '#808080',
+                                                        lineHeight: '24px'
+                                                    }}
+                                                >
+                                                    {highlightText(instruction.text, highlightConfig)}
+                                                </Typography>
+                                            </ListItem>
+                                        ))}
+                                    </List>
+                                </Box>)
+                                }
+                            </TabPanel>
+                            <TabPanel value="2" sx={{ p: 0 }}>
+                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                    <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <Image src='/sendlane-icon.svg' alt='sendlane' height={26} width={32} />
+                                            <Typography variant="h6" sx={{
+                                                fontFamily: 'Nunito Sans',
+                                                fontSize: '16px',
+                                                fontWeight: '600',
+                                                color: '#202124',
+                                                lineHeight: 'normal'
+                                            }}>Eliminate Redundancy: Stop Paying for Contacts You Already Own</Typography>
+                                        </Box>
+                                        <Typography variant="subtitle1" sx={{
+                                            fontFamily: 'Roboto',
+                                            fontSize: '12px',
+                                            fontWeight: '400',
+                                            color: '#808080',
+                                            lineHeight: '20px',
+                                            letterSpacing: '0.06px'
+                                        }}>Sync your current list to avoid collecting contacts you already possess.
+                                            Newly added contacts in Sendlane will be automatically suppressed each day.</Typography>
+
 
                                         <Box sx={{ display: 'flex', gap: '32px', alignItems: 'center' }}>
                                             <Typography variant="subtitle1" sx={{
@@ -501,7 +518,7 @@ const SendlaneConnect = ({ handleClose, open, onSave, initApiKey}: CreateSendlan
                                                             opacity: checked ? '1' : '1',
                                                             '& .MuiSwitch-track.Mui-checked': {
                                                                 backgroundColor: checked ? '#5052b2' : '#7b7b7b',
-                                                            opacity: checked ? '1' : '1',
+                                                                opacity: checked ? '1' : '1',
                                                             }
                                                         },
                                                     }}
@@ -558,32 +575,32 @@ const SendlaneConnect = ({ handleClose, open, onSave, initApiKey}: CreateSendlan
 
 
 
-                            </Box>
-                            <Box sx={{ background: '#efefef', borderRadius: '4px', px: 1.5, py: 1 }}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <Image src='/info-circle.svg' alt='info-circle' height={20} width={20} />
-                                    <Typography variant="subtitle1" sx={{
-                                        fontFamily: 'Roboto',
-                                        fontSize: '12px',
-                                        fontWeight: '400',
-                                        color: '#808080',
-                                        lineHeight: '20px',
-                                        letterSpacing: '0.06px'
-                                    }}>By performing this action, all your Sendlane contacts will be added to your Grow suppression list, and new contacts will be imported daily around 6pm EST.</Typography>
+                                    </Box>
+                                    <Box sx={{ background: '#efefef', borderRadius: '4px', px: 1.5, py: 1 }}>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <Image src='/info-circle.svg' alt='info-circle' height={20} width={20} />
+                                            <Typography variant="subtitle1" sx={{
+                                                fontFamily: 'Roboto',
+                                                fontSize: '12px',
+                                                fontWeight: '400',
+                                                color: '#808080',
+                                                lineHeight: '20px',
+                                                letterSpacing: '0.06px'
+                                            }}>By performing this action, all your Sendlane contacts will be added to your Grow suppression list, and new contacts will be imported daily around 6pm EST.</Typography>
+                                        </Box>
+                                    </Box>
                                 </Box>
-                            </Box>
-                        </Box>
-                    </TabPanel>
-                    </TabContext>
+                            </TabPanel>
+                        </TabContext>
                     </Box>
-                    <Box sx={{ px: 2, py: 3.5, width: '100%', border: '1px solid #e4e4e4' }}>
+                    <Box sx={{ px: 2, py: 2, width: '100%', borderTop: '1px solid #e4e4e4' }}>
                         <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
-                                {getButton(value)}
+                            {getButton(value)}
                         </Box>
                     </Box>
-                    </Box>
-                    </Drawer>
-                    </>
+                </Box>
+            </Drawer>
+        </>
     );
 }
 

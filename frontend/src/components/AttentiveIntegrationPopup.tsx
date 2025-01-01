@@ -9,12 +9,15 @@ import CustomizedProgressBar from "./CustomizedProgressBar";
 import CloseIcon from '@mui/icons-material/Close';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { showToast } from "./ToastNotification";
+import { useIntegrationContext } from "@/context/IntegrationContext";
 
 interface CreateAttentiveProps {
     handleClose: () => void
     onSave: (integration: any) => void 
     open: boolean
     initApiKey?: string 
+    boxShadow?: string;
+    isEdit?: boolean;
 }
 
 
@@ -75,7 +78,8 @@ const attentiveStyles = {
       },
 }
 
-const AttentiveIntegrationPopup = ({ handleClose, open, onSave, initApiKey}: CreateAttentiveProps) => {
+const AttentiveIntegrationPopup = ({ handleClose, open, onSave, initApiKey, isEdit, boxShadow}: CreateAttentiveProps) => {
+    const { triggerSync } = useIntegrationContext();
     const [apiKey, setApiKey] = useState('');
     const [apiKeyError, setApiKeyError] = useState(false);
     const [loading, setLoading] = useState(false)
@@ -156,6 +160,7 @@ const AttentiveIntegrationPopup = ({ handleClose, open, onSave, initApiKey}: Cre
                     is_failed: false,
                     access_token: apiKey
                 })
+                triggerSync()
                 handleNextTab()
             }
         } catch (error) {
@@ -273,7 +278,7 @@ const AttentiveIntegrationPopup = ({ handleClose, open, onSave, initApiKey}: Cre
                     zIndex: 1301,
                     top: 0,
                     bottom: 0,
-                    boxShadow: 'none',
+                    boxShadow: boxShadow ? '0px 8px 10px -5px rgba(0, 0, 0, 0.2), 0px 16px 24px 2px rgba(0, 0, 0, 0.14), 0px 6px 30px 5px rgba(0, 0, 0, 0.12)' : 'none',
                     msOverflowStyle: 'none',
                     scrollbarWidth: 'none',
                     '&::-webkit-scrollbar': {
@@ -287,7 +292,7 @@ const AttentiveIntegrationPopup = ({ handleClose, open, onSave, initApiKey}: Cre
             slotProps={{
                 backdrop: {
                   sx: {
-                    backgroundColor: 'transparent'
+                    backgroundColor: boxShadow ? boxShadow : 'rgba(0,0,0,0.01)',
                   }
                 }
               }}

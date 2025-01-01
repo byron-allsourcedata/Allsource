@@ -9,7 +9,7 @@ import CustomizedProgressBar from "./CustomizedProgressBar";
 import CloseIcon from '@mui/icons-material/Close';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { showErrorToast, showToast } from "./ToastNotification";
-import {useAxiosHook} from "@/hooks/AxiosHooks";
+import { useAxiosHook } from "@/hooks/AxiosHooks";
 
 interface CreateKlaviyoProps {
     handleClose: () => void
@@ -21,13 +21,13 @@ interface CreateKlaviyoProps {
 }
 
 interface IntegrationsCredentials {
-    id: number
+    id?: number
     access_token: string
-    ad_account_id: string
-    shop_domain: string
-    data_center: string
+    ad_account_id?: string
+    shop_domain?: string
+    data_center?: string
     service_name: string
-    is_with_suppression: boolean
+    is_with_suppression?: boolean
 }
 
 const klaviyoStyles = {
@@ -92,9 +92,10 @@ const KlaviyoIntegrationPopup = ({ handleClose, open, onSave, initApiKey, boxSha
     const [apiKeyError, setApiKeyError] = useState(false);
     const [checked, setChecked] = useState(false);
     const [tab2Error, setTab2Error] = useState(false);
+    const [disableButton, setDisableButton] = useState(false);
     const label = { inputProps: { 'aria-label': 'Switch demo' } };
     const { data, loading, error, sendRequest } = useAxiosHook();
-    
+
 
     const [value, setValue] = useState("1");
 
@@ -163,26 +164,32 @@ const KlaviyoIntegrationPopup = ({ handleClose, open, onSave, initApiKey, boxSha
 
     const handleApiKeySave = async () => {
         try {
-          const response = await sendRequest({
-            url: "/integrations/",
-            method: "POST",
-            data: {
-              klaviyo: {
-                api_key: apiKey, 
-              },
-            },
-            params: { service_name: "klaviyo" },
-          });
-      
-          if (response?.status === 200) {
-            showToast("Integration Klaviyo Successfully");
-            
-            handleNextTab();
-          }
+            setDisableButton(true)
+            const response = await sendRequest({
+                url: "/integrations/",
+                method: "POST",
+                data: {
+                    klaviyo: {
+                        api_key: apiKey,
+                    },
+                },
+                params: { service_name: "klaviyo" },
+            });
+
+            if (response?.status === 200) {
+                if (onSave) {
+                    onSave({
+                        service_name: 'klaviyo',
+                        access_token: apiKey,
+                    })
+                }
+                showToast("Integration Klaviyo Successfully");
+                handleNextTab();
+            }
         } catch (err) {
-          console.error("Error saving integration:", err);
+            console.error("Error saving integration:", err);
         }
-      };
+    };
 
 
     const highlightConfig: HighlightConfig = {
@@ -211,18 +218,18 @@ const KlaviyoIntegrationPopup = ({ handleClose, open, onSave, initApiKey, boxSha
     };
 
     const handleSave = async () => {
-        if(onSave){
-        onSave({
-            id: -1,
-            service_name: 'Klaviyo',
-            data_center: '',
-            access_token: apiKey,
-            is_with_suppression: checked,
-            ad_account_id: '',
-            shop_domain: ''
-        })
-        handleClose()
-    }
+        if (onSave) {
+            onSave({
+                id: -1,
+                'service_name': 'klaviyo',
+                data_center: '',
+                access_token: apiKey,
+                is_with_suppression: checked,
+                ad_account_id: '',
+                shop_domain: ''
+            })
+        }
+            handleClose()
     }
 
     const getButton = (tabValue: string) => {
@@ -232,7 +239,7 @@ const KlaviyoIntegrationPopup = ({ handleClose, open, onSave, initApiKey, boxSha
                     <Button
                         variant="contained"
                         onClick={handleApiKeySave}
-                        disabled={!apiKey}
+                        disabled={!apiKey || disableButton}
                         sx={{
                             backgroundColor: '#5052B2',
                             fontFamily: "Nunito Sans",
@@ -285,6 +292,27 @@ const KlaviyoIntegrationPopup = ({ handleClose, open, onSave, initApiKey, boxSha
 
     return (
         <>
+        {loading && (
+            <Box
+                sx={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    background: 'rgba(0, 0, 0, 0.2)',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    zIndex: 1400,
+                    overflow: 'hidden'
+                }}
+            >
+            <Box sx={{width: '100%', top: 0, height: '100vh'}}>
+                <LinearProgress />
+            </Box>
+            </Box>
+        )}
             <Drawer
                 anchor="right"
                 open={open}
@@ -310,7 +338,7 @@ const KlaviyoIntegrationPopup = ({ handleClose, open, onSave, initApiKey, boxSha
                 slotProps={{
                     backdrop: {
                         sx: {
-                            backgroundColor: boxShadow? boxShadow : 'rgba(0, 0, 0, 0.01)'
+                            backgroundColor: boxShadow ? boxShadow : 'rgba(0, 0, 0, 0.01)'
                         }
                     }
                 }}
@@ -320,7 +348,12 @@ const KlaviyoIntegrationPopup = ({ handleClose, open, onSave, initApiKey, boxSha
                         Connect to Klaviyo
                     </Typography>
                     <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
-                        <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/integrate-klaviyo-to-maximiz" target="_blank" rel="noopener noreferrer"
+                        <Link href={initApiKey ?
+                            "https://maximizai.zohodesk.eu/portal/en/kb/articles/update-klaviyo-integration-configuration" :
+                            "https://maximizai.zohodesk.eu/portal/en/kb/articles/integrate-klaviyo-to-maximiz"
+                        }
+                            target="_blank"
+                            rel="noopener noreferrer"
                             sx={{
                                 fontFamily: 'Nunito Sans',
                                 fontSize: '14px',

@@ -163,6 +163,11 @@ class UserPersistence:
         self.db.query(Users).filter(Users.id == user_id).update({Users.is_book_call_passed: True},
                                                                 synchronize_session=False)
         self.db.commit()
+    
+    def set_partner_role(self, user_id: int):
+        self.db.query(Users).filter(Users.id == user_id).update({Users.is_partner: True},
+                                                                synchronize_session=False)
+        self.db.commit()
 
     def update_password(self, user_id: int, password: str):
         self.db.query(Users).filter(Users.id == user_id).update({Users.password: password},

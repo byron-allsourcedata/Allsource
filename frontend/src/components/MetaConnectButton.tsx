@@ -10,7 +10,8 @@ import axiosInstance from '@/axios/axiosInterceptorInstance';
 interface MetaConnectPopupProps {
     open: boolean
     onClose: () => void
-    onSave: (integration: any) => void 
+    onSave: (integration: any) => void
+    isEdit?: boolean
 }
 
 declare global {
@@ -104,7 +105,7 @@ const metaStyles = {
       
 }
 
-const MetaConnectButton = ({open, onClose, onSave}: MetaConnectPopupProps) => {
+const MetaConnectButton = ({open, onClose, onSave, isEdit}: MetaConnectPopupProps) => {
     const [accessToken, setAccessToken] = useState('')
     const [loading, setLoading] = useState(false)
     const appID = process.env.NEXT_PUBLIC_META_APP_ID
@@ -187,7 +188,6 @@ const MetaConnectButton = ({open, onClose, onSave}: MetaConnectPopupProps) => {
                     position: 'fixed',
                     zIndex: 1301,
                     top: 0,
-                    boxShadow: 'none',
                     bottom: 0,
                     msOverflowStyle: 'none',
                     scrollbarWidth: 'none',
@@ -202,17 +202,23 @@ const MetaConnectButton = ({open, onClose, onSave}: MetaConnectPopupProps) => {
             slotProps={{
                 backdrop: {
                   sx: {
-                    backgroundColor: 'rgba(0, 0, 0, 0.01)'
+                    backgroundColor: 'rgba(0, 0, 0, 0.1)'
                   }
                 }
               }}
         >
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 3.5, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 2.85, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
                 <Typography variant="h6" sx={{ textAlign: 'center', color: '#202124', fontFamily: 'Nunito Sans', fontWeight: '600', fontSize: '16px', lineHeight: 'normal' }}>
                     Connect to Meta
                 </Typography>
                 <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
-                    <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/integrate-meta-to-maximiz" sx={{
+                    <Link href={isEdit? 
+                        "https://maximizai.zohodesk.eu/portal/en/kb/articles/update-meta-integration-configuration" :
+                        "https://maximizai.zohodesk.eu/portal/en/kb/articles/integrate-meta-to-maximiz"
+                        }
+                        target="_blank"
+                        rel="noopener referrer"
+                        sx={{
                         fontFamily: 'Nunito Sans',
                         fontSize: '14px',
                         fontWeight: '600',
